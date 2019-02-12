@@ -27,8 +27,8 @@ import (
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionsAcc  = staking.TokensFromTendermintPower(150)
-	defaultBondDenom = staking.DefaultBondDenom
+	freeFermionsAcc  = sdk.TokensFromTendermintPower(150)
+	defaultBondDenom = sdk.DefaultBondDenom
 )
 
 // State to Unmarshal

@@ -16,7 +16,7 @@ type StakingKeeper interface {
 	// used for invariants
 	IterateValidators(ctx sdk.Context,
 		fn func(index int64, validator sdk.Validator) (stop bool))
-	GetAllDelegations(ctx sdk.Context)
+	GetAllSDKDelegations(ctx sdk.Context) []sdk.Delegation
 }
 
 // expected coin keeper

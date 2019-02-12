@@ -72,7 +72,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	// create a validator
-	bondAmount := staking.TokensFromTendermintPower(10)
+	bondAmount := sdk.TokensFromTendermintPower(10)
 	valPubKey := pks[0]
 	valAddr, consAddr := addrs[1], sdk.ConsAddress(addrs[0])
 

@@ -54,6 +54,14 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
+// ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
+func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+	for _, val := range v {
+		validators = append(validators, val)
+	}
+	return validators
+}
+
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{

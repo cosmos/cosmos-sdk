@@ -13,7 +13,7 @@ import (
 // AllInvariants runs all invariants of the staking module.
 // Currently: total supply, positive power
 func AllInvariants(k staking.Keeper,
-	f FeeCollectionKeeper, d DistributionKeeper,
+	f staking.FeeCollectionKeeper, d staking.DistributionKeeper,
 	am auth.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
@@ -44,7 +44,7 @@ func AllInvariants(k staking.Keeper,
 // SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
 func SupplyInvariants(k staking.Keeper,
-	f auth.FeeCollectionKeeper, d DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+	f staking.FeeCollectionKeeper, d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)
 

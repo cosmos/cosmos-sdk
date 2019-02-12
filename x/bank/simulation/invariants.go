@@ -9,9 +9,9 @@ import (
 )
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
-func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) sdk.Invariant {
+func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		accts := sdk.GetAllAccounts(mapper, ctx)
+		accts := ak.GetAllAccounts(ctx)
 		for _, acc := range accts {
 			coins := acc.GetCoins()
 			if coins.IsAnyNegative() {
@@ -26,7 +26,7 @@ func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) sdk.Invariant {
 
 // TotalCoinsInvariant checks that the sum of the coins across all accounts
 // is what is expected
-func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
+func TotalCoinsInvariant(ak auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.Coins{}
 
@@ -36,7 +36,7 @@ func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coi
 			return false
 		}
 
-		mapper.IterateAccounts(ctx, chkAccount)
+		ak.IterateAccounts(ctx, chkAccount)
 		if !totalSupplyFn().IsEqual(totalCoins) {
 			return errors.New("total calculated coins doesn't equal expected coins")
 		}

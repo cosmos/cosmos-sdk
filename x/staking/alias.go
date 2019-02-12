@@ -10,6 +10,9 @@ import (
 
 type (
 	Keeper                  = keeper.Keeper
+	FeeCollectionKeeper     = types.FeeCollectionKeeper
+	BankKeeper              = types.BankKeeper
+	DistributionKeeper      = types.DistributionKeeper
 	Validator               = types.Validator
 	Validators              = types.Validators
 	Description             = types.Description

@@ -70,14 +70,14 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, staking.TokensFromTendermintPower(4))}
-	fiveSteak := sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, staking.TokensFromTendermintPower(5))}
+	fourSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4))}
+	fiveSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	expTokens := staking.TokensFromTendermintPower(42)
-	require.Equal(t, sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, expTokens)}, addr0Initial)
+	expTokens := sdk.TokensFromTendermintPower(42)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)}, addr0Initial)
 	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
 	// Check no deposits at beginning

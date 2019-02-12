@@ -52,9 +52,9 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 		})
 
 		// iterate over all current delegations, withdraw rewards
-		dels := sk.GetAllDelegations(ctx)
+		dels := sk.GetAllSDKDelegations(ctx)
 		for _, delegation := range dels {
-			_ = k.WithdrawDelegationRewards(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 		}
 
 		remaining := k.GetOutstandingRewards(ctx)
@@ -76,7 +76,7 @@ func ReferenceCountInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invaria
 			valCount++
 			return false
 		})
-		dels := sk.GetAllDelegations(ctx)
+		dels := sk.GetAllSDKDelegations(ctx)
 		slashCount := uint64(0)
 		k.IterateValidatorSlashEvents(ctx,
 			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {

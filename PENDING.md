@@ -9,6 +9,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+ - \#3621 staking.GenesisState.Bonds -> Delegations
 
 * Tendermint
 

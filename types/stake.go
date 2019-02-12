@@ -42,16 +42,16 @@ func BondStatusToString(b BondStatus) string {
 }
 
 // utility functions
-var PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
-func TokensToTendermintPower(tokens sdk.Int) int64 {
+func TokensToTendermintPower(tokens Int) int64 {
 	return (tokens.Div(PowerReduction)).Int64()
 }
 
 // TokensFromTendermintPower - convert input power to tokens
-func TokensFromTendermintPower(power int64) sdk.Int {
-	return sdk.NewInt(power).Mul(PowerReduction)
+func TokensFromTendermintPower(power int64) Int {
+	return NewInt(power).Mul(PowerReduction)
 }
 
 // nolint

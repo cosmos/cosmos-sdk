@@ -8,16 +8,16 @@ import (
 
 func TestNewDecCoin(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoin("a", 5)
+		NewInt64DecCoin("a", 5)
 	})
 	require.NotPanics(t, func() {
-		NewDecCoin("a", 0)
+		NewInt64DecCoin("a", 0)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("A", 5)
+		NewInt64DecCoin("A", 5)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("a", -5)
+		NewInt64DecCoin("a", -5)
 	})
 }
 
@@ -52,10 +52,10 @@ func TestNewDecCoinFromCoin(t *testing.T) {
 }
 
 func TestDecCoinIsPositive(t *testing.T) {
-	dc := NewDecCoin("a", 5)
+	dc := NewInt64DecCoin("a", 5)
 	require.True(t, dc.IsPositive())
 
-	dc = NewDecCoin("a", 0)
+	dc = NewInt64DecCoin("a", 0)
 	require.False(t, dc.IsPositive())
 }
 
@@ -97,32 +97,32 @@ func TestPlusDecCoins(t *testing.T) {
 
 func TestSortDecCoins(t *testing.T) {
 	good := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
-		NewDecCoin("tree", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
+		NewInt64DecCoin("tree", 1),
 	}
 	empty := DecCoins{
-		NewDecCoin("gold", 0),
+		NewInt64DecCoin("gold", 0),
 	}
 	badSort1 := DecCoins{
-		NewDecCoin("tree", 1),
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("tree", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 	badSort2 := DecCoins{ // both are after the first one, but the second and third are in the wrong order
-		NewDecCoin("gas", 1),
-		NewDecCoin("tree", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("tree", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 	badAmt := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("tree", 0),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("tree", 0),
+		NewInt64DecCoin("mineral", 1),
 	}
 	dup := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 
 	cases := []struct {

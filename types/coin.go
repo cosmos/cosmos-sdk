@@ -357,6 +357,7 @@ func (coins Coins) AmountOf(denom string) Int {
 	if strings.ToLower(denom) != denom {
 		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
 	}
+
 	switch len(coins) {
 	case 0:
 		return ZeroInt()
@@ -403,6 +404,7 @@ func (coins Coins) IsPositive() bool {
 // IsAnyNegative returns true if there is at least one coin whose amount
 // is negative; returns false otherwise. It returns false if the coin set
 // is empty too.
+//
 // TODO: Remove once unsigned integers are used.
 func (coins Coins) IsAnyNegative() bool {
 	if len(coins) == 0 {

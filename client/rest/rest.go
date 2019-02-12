@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	. "github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
@@ -24,24 +24,24 @@ import (
 // NOTE: Also see CompleteAndBroadcastTxCLI.
 func CompleteAndBroadcastTxREST(
 	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
-	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
+	baseReq rest.BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
 
-	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
 	simAndExec, gas, err := client.ParseGas(baseReq.Gas)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// derive the from account address and name from the Keybase
 	fromAddress, fromName, err := context.GetFromFields(baseReq.From)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -54,62 +54,61 @@ func CompleteAndBroadcastTxREST(
 
 	txBldr, err = utils.PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if baseReq.Simulate || simAndExec {
 		if gasAdj < 0 {
-			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
 		}
 
 		txBldr, err = utils.EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, cdc, txBldr.Gas())
+			rest.WriteSimulationResponse(w, cdc, txBldr.Gas())
 			return
 		}
 	}
 
 	txBytes, err := txBldr.BuildAndSign(cliCtx.GetFromName(), baseReq.Password, msgs)
 	if keyerror.IsErrKeyNotFound(err) {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	} else if keyerror.IsErrWrongPassword(err) {
-		WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+		rest.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	} else if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	res, err := cliCtx.BroadcastTx(txBytes)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 }
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
-func WriteGenerateStdTxResponse(
-	w http.ResponseWriter, cdc *codec.Codec, cliCtx context.CLIContext, br BaseReq, msgs []sdk.Msg,
-) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
+	cliCtx context.CLIContext, br rest.BaseReq, msgs []sdk.Msg) {
 
-	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
+	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
 	simAndExec, gas, err := client.ParseGas(br.Gas)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -120,26 +119,26 @@ func WriteGenerateStdTxResponse(
 
 	if simAndExec {
 		if gasAdj < 0 {
-			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
 		}
 
 		txBldr, err = utils.EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
 	stdMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	output, err := cdc.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
 	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

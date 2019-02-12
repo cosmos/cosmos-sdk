@@ -118,7 +118,8 @@ unmarshals to the req interface. Returns false if errors occurred.
     if ok := ReadRESTReq(w, r, cdc, req); !ok {
         return
     }
-*/func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
+*/
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

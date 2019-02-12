@@ -54,6 +54,8 @@ BUG FIXES
 
 * Gaia
   * [\#3585] Fix setting the tx hash in `NewResponseFormatBroadcastTxCommit`.
+  * [\#3585] Return an empty `TxResponse` when Tendermint returns an empty
+  `ResultBroadcastTx`.
 
 * SDK
   * [\#3582](https://github.com/cosmos/cosmos-sdk/pull/3582) Running `make test_unit was failing due to a missing tag

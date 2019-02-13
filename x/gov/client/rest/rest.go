@@ -52,7 +52,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn(cdc, cliCtx)).Methods("GET")
 }
 
-type postProposalReq struct {
+type PostProposalReq struct {
 	BaseReq        rest.BaseReq   `json:"base_req"`
 	Title          string         `json:"title"`           // Title of the proposal
 	Description    string         `json:"description"`     // Description of the proposal
@@ -75,7 +75,7 @@ type voteReq struct {
 
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req postProposalReq
+		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}

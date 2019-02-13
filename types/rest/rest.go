@@ -149,16 +149,6 @@ type SendReq struct {
 	BaseReq BaseReq     `json:"base_req"`
 }
 
-// PostProposalReq requests a proposals
-type PostProposalReq struct {
-	BaseReq        BaseReq          `json:"base_req"`
-	Title          string           `json:"title"`           //  Title of the proposal
-	Description    string           `json:"description"`     //  Description of the proposal
-	ProposalType   string           `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       types.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit types.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
-}
-
 // DepositReq requests a deposit of an amount of coins
 type DepositReq struct {
 	BaseReq   BaseReq          `json:"base_req"`

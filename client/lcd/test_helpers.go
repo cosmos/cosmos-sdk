@@ -1075,7 +1075,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	pr := rest.PostProposalReq{
+	pr := govrest.PostProposalReq{
 		Title:          "Test",
 		Description:    "test",
 		ProposalType:   "Text",
@@ -1096,15 +1096,6 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	require.Nil(t, err)
 
 	return results
-}
-
-type postProposalReq struct {
-	BaseReq        rest.BaseReq   `json:"base_req"`
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals Query proposals

@@ -707,7 +707,7 @@ func doTransferWithGas(
 		generateOnly, simulate,
 	)
 
-	sr := rest.SendReq{
+	sr := bankrest.SendReq{
 		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
@@ -740,7 +740,7 @@ func doTransferWithGasAccAuto(
 		fmt.Sprintf("%f", gasAdjustment), 0, 0, fees, nil, generateOnly, simulate,
 	)
 
-	sr := rest.SendReq{
+	sr := bankrest.SendReq{
 		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
@@ -750,11 +750,6 @@ func doTransferWithGasAccAuto(
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
 	return
-}
-
-type sendReq struct {
-	Amount  sdk.Coins    `json:"amount"`
-	BaseReq rest.BaseReq `json:"base_req"`
 }
 
 // ----------------------------------------------------------------------

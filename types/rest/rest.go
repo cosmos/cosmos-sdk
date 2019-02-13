@@ -143,12 +143,6 @@ type AddrSeed struct {
 	Password string
 }
 
-// SendReq requests sending an amount of coins
-type SendReq struct {
-	Amount  types.Coins `json:"amount"`
-	BaseReq BaseReq     `json:"base_req"`
-}
-
 // ErrorResponse defines the attributes of a JSON error response.
 type ErrorResponse struct {
 	Code    int    `json:"code,omitempty"`

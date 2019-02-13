@@ -20,7 +20,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
-type sendReq struct {
+type SendReq struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Amount  sdk.Coins    `json:"amount"`
 }
@@ -43,7 +43,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		var req sendReq
+		var req SendReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}

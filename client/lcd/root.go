@@ -115,7 +115,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
-		Short: "Start LCD (light-client daemon), a local REST server",
+		Short: "Start a local client REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 

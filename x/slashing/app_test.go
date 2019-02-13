@@ -61,7 +61,7 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := staking.TokensFromTendermintPower(100000)
+		tokens := sdk.TokensFromTendermintPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 		validators, err := staking.InitGenesis(ctx, keeper, stakingGenesis)
 		if err != nil {
@@ -93,10 +93,10 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakingKeeper, keeper := getMockApp(t)
 
-	genTokens := staking.TokensFromTendermintPower(42)
-	bondTokens := staking.TokensFromTendermintPower(10)
-	genCoin := sdk.NewCoin(staking.DefaultBondDenom, genTokens)
-	bondCoin := sdk.NewCoin(staking.DefaultBondDenom, bondTokens)
+	genTokens := sdk.TokensFromTendermintPower(42)
+	bondTokens := sdk.TokensFromTendermintPower(10)
+	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
+	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

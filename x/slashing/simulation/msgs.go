@@ -12,7 +12,10 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
+
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		msg := slashing.NewMsgUnjail(address)

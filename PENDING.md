@@ -9,6 +9,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+ * \#3621 staking.GenesisState.Bonds -> Delegations
 
 * Tendermint
 
@@ -34,6 +35,7 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * \#3621 remove many inter-module dependancies
   * [\#3601] JSON-stringify the ABCI log response which includes the log and message
   index.
   * [\#3604] Improve SDK funds related error messages and allow for unicode in

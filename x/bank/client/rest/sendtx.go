@@ -20,6 +20,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
+// SendReq defines the properties of a send request's body.
 type SendReq struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Amount  sdk.Coins    `json:"amount"`

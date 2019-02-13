@@ -31,6 +31,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type (
+	// MsgBeginRedelegateInput defines the properties of a delegation request's body.
 	MsgDelegationsInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
@@ -38,6 +39,7 @@ type (
 		Delegation    sdk.Coin       `json:"delegation"`
 	}
 
+	// MsgBeginRedelegateInput defines the properties of a redelegate request's body.
 	MsgBeginRedelegateInput struct {
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
@@ -46,6 +48,7 @@ type (
 		SharesAmount     sdk.Dec        `json:"shares"`
 	}
 
+	// MsgUndelegateInput defines the properties of a undelegate request's body.
 	MsgUndelegateInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32

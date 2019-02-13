@@ -52,6 +52,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn(cdc, cliCtx)).Methods("GET")
 }
 
+// PostProposalReq defines the properties of a proposal request's body.
 type PostProposalReq struct {
 	BaseReq        rest.BaseReq   `json:"base_req"`
 	Title          string         `json:"title"`           // Title of the proposal
@@ -61,12 +62,14 @@ type PostProposalReq struct {
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
+// DepositReq defines the properties of a deposit request's body.
 type DepositReq struct {
 	BaseReq   rest.BaseReq   `json:"base_req"`
 	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
 	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
+// VoteReq defines the properties of a vote request's body.
 type VoteReq struct {
 	BaseReq rest.BaseReq   `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  // address of the voter

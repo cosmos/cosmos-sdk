@@ -1332,7 +1332,7 @@ func doUnjail(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
 
-	ur := rest.UnjailReq{
+	ur := slashingrest.UnjailReq{
 		BaseReq: baseReq,
 	}
 	req, err := cdc.MarshalJSON(ur)

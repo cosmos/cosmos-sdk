@@ -18,11 +18,6 @@ type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
 }
 
-// UnjailReq request unjailing
-type UnjailReq struct {
-	BaseReq BaseReq `json:"base_req"`
-}
-
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {

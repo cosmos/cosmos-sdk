@@ -99,21 +99,8 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	return true
 }
 
-/*
-ReadRESTReq is a simple convenience wrapper that reads the body and
-unmarshals to the req interface. Returns false if errors occurred.
-
-  Usage:
-    type SomeReq struct {
-      BaseReq            `json:"base_req"`
-      CustomField string `json:"custom_field"`
-		}
-
-    req := new(SomeReq)
-    if ok := ReadRESTReq(w, r, cdc, req); !ok {
-        return
-    }
-*/
+// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq stuct.
+// Writes an error response to ResponseWriter and returns true if errors occured.
 func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

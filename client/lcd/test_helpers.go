@@ -1163,7 +1163,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	dr := rest.DepositReq{
+	dr := govrest.DepositReq{
 		Depositor: proposerAddr,
 		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
 		BaseReq:   baseReq,
@@ -1180,12 +1180,6 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	require.Nil(t, err)
 
 	return results
-}
-
-type depositReq struct {
-	BaseReq   rest.BaseReq   `json:"base_req"`
-	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
-	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals/{proposalId}/deposits Query deposits
@@ -1217,7 +1211,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	vr := rest.VoteReq{
+	vr := govrest.VoteReq{
 		Voter:   proposerAddr,
 		Option:  option,
 		BaseReq: baseReq,
@@ -1234,12 +1228,6 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	require.Nil(t, err)
 
 	return results
-}
-
-type voteReq struct {
-	BaseReq rest.BaseReq   `json:"base_req"`
-	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
-	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 // GET /gov/proposals/{proposalId}/votes Query voters

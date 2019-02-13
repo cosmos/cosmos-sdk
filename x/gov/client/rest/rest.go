@@ -61,13 +61,13 @@ type PostProposalReq struct {
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
-type depositReq struct {
+type DepositReq struct {
 	BaseReq   rest.BaseReq   `json:"base_req"`
 	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
 	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
-type voteReq struct {
+type VoteReq struct {
 	BaseReq rest.BaseReq   `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  // address of the voter
 	Option  string         `json:"option"` // option from OptionSet chosen by the voter
@@ -123,7 +123,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		var req depositReq
+		var req DepositReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
@@ -165,7 +165,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		var req voteReq
+		var req VoteReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}

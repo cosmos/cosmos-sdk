@@ -149,20 +149,6 @@ type SendReq struct {
 	BaseReq BaseReq     `json:"base_req"`
 }
 
-// DepositReq requests a deposit of an amount of coins
-type DepositReq struct {
-	BaseReq   BaseReq          `json:"base_req"`
-	Depositor types.AccAddress `json:"depositor"` // Address of the depositor
-	Amount    types.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
-}
-
-// VoteReq requests sending a vote
-type VoteReq struct {
-	BaseReq BaseReq          `json:"base_req"`
-	Voter   types.AccAddress `json:"voter"`  //  address of the voter
-	Option  string           `json:"option"` //  option from OptionSet chosen by the voter
-}
-
 // ErrorResponse defines the attributes of a JSON error response.
 type ErrorResponse struct {
 	Code    int    `json:"code,omitempty"`

@@ -842,7 +842,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	msg := rest.MsgBeginRedelegateInput{
+	msg := stakingrest.MsgBeginRedelegateInput{
 		BaseReq:          baseReq,
 		DelegatorAddr:    delAddr,
 		ValidatorSrcAddr: valSrcAddr,

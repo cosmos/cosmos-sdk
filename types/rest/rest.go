@@ -149,15 +149,6 @@ type SendReq struct {
 	BaseReq BaseReq     `json:"base_req"`
 }
 
-// MsgBeginRedelegateInput request to begin a redelegation
-type MsgBeginRedelegateInput struct {
-	BaseReq          BaseReq          `json:"base_req"`
-	DelegatorAddr    types.AccAddress `json:"delegator_addr"`     // in bech32
-	ValidatorSrcAddr types.ValAddress `json:"validator_src_addr"` // in bech32
-	ValidatorDstAddr types.ValAddress `json:"validator_dst_addr"` // in bech32
-	SharesAmount     types.Dec        `json:"shares"`
-}
-
 // PostProposalReq requests a proposals
 type PostProposalReq struct {
 	BaseReq        BaseReq          `json:"base_req"`

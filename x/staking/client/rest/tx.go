@@ -31,14 +31,14 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type (
-	msgDelegationsInput struct {
+	MsgDelegationsInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
 		Delegation    sdk.Coin       `json:"delegation"`
 	}
 
-	msgBeginRedelegateInput struct {
+	MsgBeginRedelegateInput struct {
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
 		ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
@@ -46,7 +46,7 @@ type (
 		SharesAmount     sdk.Dec        `json:"shares"`
 	}
 
-	msgUndelegateInput struct {
+	MsgUndelegateInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
@@ -56,7 +56,7 @@ type (
 
 func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req msgDelegationsInput
+		var req MsgDelegationsInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -98,7 +98,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 
 func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req msgBeginRedelegateInput
+		var req MsgBeginRedelegateInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -140,7 +140,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 
 func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req msgUndelegateInput
+		var req MsgUndelegateInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return

@@ -26,18 +26,18 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Matches this txhash over all committed blocks",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// find the key to look up the account
-			hashHexStr := args[0]
-
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr)
+			output, err := queryTx(cdc, cliCtx, args[0])
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(output))
-			return nil
+			if output.Empty() {
+				return fmt.Errorf("No transaction found with hash %s", args[0])
+			}
+
+			return cliCtx.PrintOutput(output)
 		},
 	}
 
@@ -48,38 +48,31 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
+func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (out sdk.TxResponse, err error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	node, err := cliCtx.GetNode()
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	res, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
-	if !cliCtx.TrustNode {
-		err := ValidateTxResult(cliCtx, res)
-		if err != nil {
-			return nil, err
-		}
+	if err = ValidateTxResult(cliCtx, res); !cliCtx.TrustNode && err != nil {
+		return out, err
 	}
 
-	info, err := formatTxResult(cdc, res)
-	if err != nil {
-		return nil, err
+	if out, err = formatTxResult(cdc, res); err != nil {
+		return out, err
 	}
 
-	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(info, "", "  ")
-	}
-	return cdc.MarshalJSON(info)
+	return out, nil
 }
 
 // ValidateTxResult performs transaction verification
@@ -118,7 +111,7 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 
 // REST
 
-// transaction query REST handler
+// QueryTxRequestHandlerFn transaction query REST handler
 func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -129,6 +122,11 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		if output.Empty() {
+			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
+		}
+
 		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

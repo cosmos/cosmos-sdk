@@ -35,6 +35,8 @@ IMPROVEMENTS
 
 * SDK
 
+  * \#3638 Add Bcrypt benchmarks & justification of security parameter choice
+
 * Tendermint
   * [\#3618] Upgrade to Tendermint 0.30.03
 

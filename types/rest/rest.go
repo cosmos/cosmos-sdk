@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -21,24 +21,24 @@ type GasEstimateResponse struct {
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {
-	From          string         `json:"from"`
-	Password      string         `json:"password"`
-	Memo          string         `json:"memo"`
-	ChainID       string         `json:"chain_id"`
-	AccountNumber uint64         `json:"account_number"`
-	Sequence      uint64         `json:"sequence"`
-	Fees          types.Coins    `json:"fees"`
-	GasPrices     types.DecCoins `json:"gas_prices"`
-	Gas           string         `json:"gas"`
-	GasAdjustment string         `json:"gas_adjustment"`
-	GenerateOnly  bool           `json:"generate_only"`
-	Simulate      bool           `json:"simulate"`
+	From          string       `json:"from"`
+	Password      string       `json:"password"`
+	Memo          string       `json:"memo"`
+	ChainID       string       `json:"chain_id"`
+	AccountNumber uint64       `json:"account_number"`
+	Sequence      uint64       `json:"sequence"`
+	Fees          sdk.Coins    `json:"fees"`
+	GasPrices     sdk.DecCoins `json:"gas_prices"`
+	Gas           string       `json:"gas"`
+	GasAdjustment string       `json:"gas_adjustment"`
+	GenerateOnly  bool         `json:"generate_only"`
+	Simulate      bool         `json:"simulate"`
 }
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
 	from, password, memo, chainID string, gas, gasAdjustment string,
-	accNumber, seq uint64, fees types.Coins, gasPrices types.DecCoins, genOnly, simulate bool,
+	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
 ) BaseReq {
 
 	return BaseReq{
@@ -128,14 +128,6 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 	}
 
 	return true
-}
-
-// AddrSeed combines an Address with the mnemonic of the private key to that address
-type AddrSeed struct {
-	Address  types.AccAddress
-	Seed     string
-	Name     string
-	Password string
 }
 
 // ErrorResponse defines the attributes of a JSON error response.

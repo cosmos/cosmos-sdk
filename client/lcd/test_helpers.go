@@ -146,6 +146,14 @@ func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.Acc
 	return addrs, seeds, names, passwords
 }
 
+// AddrSeed combines an Address with the mnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
 // AddrSeedSlice implements `Interface` in sort package.
 type AddrSeedSlice []rest.AddrSeed
 

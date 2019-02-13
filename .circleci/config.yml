@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.4
+    - image: circleci/golang:1.11.5
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.4"
+    GO_VERSION: "1.11.5"
 
 set_macos_env: &macos_env
   run:
@@ -44,7 +44,7 @@ deps: &dependencies
     name: dependencies
     command: |
       export PATH="$GOBIN:$PATH"
-      make get_vendor_deps
+      make vendor-deps
 
 jobs:
   setup_dependencies:
@@ -64,7 +64,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -83,6 +82,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
+            make devtools-clean
             make devtools
       - run:
           name: Lint source
@@ -103,7 +103,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-            make test_examples
 
   test_sim_gaia_nondeterminism:
     <<: *linux_defaults
@@ -173,7 +172,7 @@ jobs:
           name: Test multi-seed Gaia simulation long
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 800 50 TestFullGaiaSimulation
+            scripts/multisim.sh 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -202,11 +201,10 @@ jobs:
           name: Run tests
           command: |
             export PATH="$GOBIN:$PATH"
-            make install
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
-            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
-              id=$(basename "$pkg")
-              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
+            for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
+              id=$(echo "$pkg" | sed 's|[/.]|_|g')
+              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace
@@ -228,9 +226,19 @@ jobs:
           command: |
             set -ex
 
+            echo "--> Concatenating profiles:"
+            ls /tmp/workspace/profiles/
             echo "mode: atomic" > coverage.txt
             for prof in $(ls /tmp/workspace/profiles/); do
               tail -n +2 /tmp/workspace/profiles/"$prof" >> coverage.txt
+            done
+      - run:
+          name: filter out DONTCOVER
+          command: |
+            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
+            for filename in ${excludelist}; do
+              echo "Excluding ${filename} ..."
+              sed -i "\%${filename}:%d" coverage.txt
             done
       - run:
           name: upload
@@ -245,7 +253,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
-        GO_VERSION: "1.11.4"
+        GO_VERSION: "1.11.5"
       parallelism: 1
       steps:
         - checkout
@@ -260,7 +268,7 @@ jobs:
               popd
               set -x
               make tools
-              make get_vendor_deps
+              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
@@ -292,7 +300,7 @@ jobs:
           command: |
             source $BASH_ENV
             make tools
-            make get_vendor_deps
+            make vendor-deps
             make install
       - run:
           name: Integration tests
@@ -382,9 +390,7 @@ workflows:
       - test_cover:
           requires:
             - setup_dependencies
-      - localnet:
-          requires:
-            - setup_dependencies
+      - localnet
       - upload_coverage:
           requires:
             - test_cover

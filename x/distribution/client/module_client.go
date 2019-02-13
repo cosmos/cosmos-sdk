@@ -20,19 +20,33 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 
 // GetQueryCmd returns the cli query commands for this module
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
-	return &cobra.Command{Hidden: true}
+	distQueryCmd := &cobra.Command{
+		Use:   "distr",
+		Short: "Querying commands for the distribution module",
+	}
+
+	distQueryCmd.AddCommand(client.GetCommands(
+		distCmds.GetCmdQueryParams(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryOutstandingRewards(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryValidatorCommission(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryValidatorSlashes(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryDelegatorRewards(mc.storeKey, mc.cdc),
+	)...)
+
+	return distQueryCmd
 }
 
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   "dist",
+		Use:   "distr",
 		Short: "Distribution transactions subcommands",
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(
 		distCmds.GetCmdWithdrawRewards(mc.cdc),
 		distCmds.GetCmdSetWithdrawAddr(mc.cdc),
+		distCmds.GetCmdWithdrawAllRewards(mc.cdc, mc.storeKey),
 	)...)
 
 	return distTxCmd

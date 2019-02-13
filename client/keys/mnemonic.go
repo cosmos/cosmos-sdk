@@ -4,11 +4,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	bip39 "github.com/bartekn/go-bip39"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
-	bip39 "github.com/bartekn/go-bip39"
 )
 
 const (
@@ -45,9 +44,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		if len(inputEntropy) < 43 {
 			return fmt.Errorf("256-bits is 43 characters in Base-64, and 100 in Base-6. You entered %v, and probably want more", len(inputEntropy))
 		}
-		conf, err := client.GetConfirmation(
-			fmt.Sprintf("> Input length: %d", len(inputEntropy)),
-			buf)
+		conf, err := client.GetConfirmation(fmt.Sprintf("> Input length: %d", len(inputEntropy)), buf)
 		if err != nil {
 			return err
 		}
@@ -58,7 +55,6 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		// hash input entropy to get entropy seed
 		hashedEntropy := sha256.Sum256([]byte(inputEntropy))
 		entropySeed = hashedEntropy[:]
-		printStep()
 	} else {
 		// read entropy seed straight from crypto.Rand
 		var err error

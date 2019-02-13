@@ -10,14 +10,22 @@ import (
 )
 
 const (
-	// defaultUnbondingTime reflects three weeks in seconds as the default
+	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
-	defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+	// TODO: Justify our choice of default here.
+	DefaultUnbondingTime time.Duration = time.Second * 60 * 60 * 24 * 3
+
+	// Default maximum number of bonded validators
+	DefaultMaxValidators uint16 = 100
+
+	// Default maximum entries in a UBD/RED pair
+	DefaultMaxEntries uint16 = 7
 
 	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied
 	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
 	// if this is 1, the validator set at the end of a block will sign the block after the next.
 	// Constant as this should not change without a hard fork.
+	// TODO: Link to some Tendermint docs, this is very unobvious.
 	ValidatorUpdateDelay int64 = 1
 
 	// Default bondable coin denomination
@@ -28,6 +36,7 @@ const (
 var (
 	KeyUnbondingTime = []byte("UnbondingTime")
 	KeyMaxValidators = []byte("MaxValidators")
+	KeyMaxEntries    = []byte("KeyMaxEntries")
 	KeyBondDenom     = []byte("BondDenom")
 )
 
@@ -35,22 +44,36 @@ var _ params.ParamSet = (*Params)(nil)
 
 // Params defines the high level settings for staking
 type Params struct {
-	UnbondingTime time.Duration `json:"unbonding_time"`
+	UnbondingTime time.Duration `json:"unbonding_time"` // time duration of unbonding
+	MaxValidators uint16        `json:"max_validators"` // maximum number of validators (max uint16 = 65535)
+	MaxEntries    uint16        `json:"max_entries"`    // max entries for either unbonding delegation or redelegation (per pair/trio)
+	// note: we need to be a bit careful about potential overflow here, since this is user-determined
+	BondDenom string `json:"bond_denom"` // bondable coin denomination
+}
 
-	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
-	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
+	bondDenom string) Params {
+
+	return Params{
+		UnbondingTime: unbondingTime,
+		MaxValidators: maxValidators,
+		MaxEntries:    maxEntries,
+		BondDenom:     bondDenom,
+	}
 }
 
 // Implements params.ParamSet
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyUnbondingTime, &p.UnbondingTime},
 		{KeyMaxValidators, &p.MaxValidators},
+		{KeyMaxEntries, &p.MaxEntries},
 		{KeyBondDenom, &p.BondDenom},
 	}
 }
 
 // Equal returns a boolean determining if two Param types are identical.
+// TODO: This is slower than comparing struct fields directly
 func (p Params) Equal(p2 Params) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
@@ -59,22 +82,17 @@ func (p Params) Equal(p2 Params) bool {
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	return Params{
-		UnbondingTime: defaultUnbondingTime,
-		MaxValidators: 100,
-		BondDenom:     DefaultBondDenom,
-	}
+	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, DefaultBondDenom)
 }
 
-// HumanReadableString returns a human readable string representation of the
-// parameters.
-func (p Params) HumanReadableString() string {
-
-	resp := "Params \n"
-	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %d\n", p.MaxValidators)
-	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
-	return resp
+// String returns a human readable string representation of the parameters.
+func (p Params) String() string {
+	return fmt.Sprintf(`Params:
+  Unbonding Time:    %s
+  Max Validators:    %d
+  Max Entries:       %d
+  Bonded Coin Denom: %s`, p.UnbondingTime,
+		p.MaxValidators, p.MaxEntries, p.BondDenom)
 }
 
 // unmarshal the current staking params value from store key or panic
@@ -93,4 +111,15 @@ func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) 
 		return
 	}
 	return
+}
+
+// validate a set of params
+func (p Params) Validate() error {
+	if p.BondDenom == "" {
+		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
+	}
+	if p.MaxValidators == 0 {
+		return fmt.Errorf("staking parameter MaxValidators must be a positive integer")
+	}
+	return nil
 }

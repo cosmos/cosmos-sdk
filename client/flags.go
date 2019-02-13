@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -10,9 +11,9 @@ import (
 
 // nolint
 const (
-	// DefaultGasAdjustment is applied to gas estimates to avoid tx
-	// execution failures due to state changes that might
-	// occur between the tx simulation and the actual run.
+	// DefaultGasAdjustment is applied to gas estimates to avoid tx execution
+	// failures due to state changes that might occur between the tx simulation
+	// and the actual run.
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
@@ -30,8 +31,8 @@ const (
 	FlagSequence           = "sequence"
 	FlagMemo               = "memo"
 	FlagFees               = "fees"
+	FlagGasPrices          = "gas-prices"
 	FlagAsync              = "async"
-	FlagJson               = "json"
 	FlagPrintResponse      = "print-response"
 	FlagDryRun             = "dry-run"
 	FlagGenerateOnly       = "generate-only"
@@ -39,7 +40,7 @@ const (
 	FlagListenAddr         = "laddr"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
-	FlagInsecure           = "insecure"
+	FlagTLS                = "tls"
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
@@ -79,11 +80,11 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
 		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
+		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 0.00001stake)")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
 		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
-		c.Flags().Bool(FlagJson, false, "return output in json format")
 		c.Flags().Bool(FlagPrintResponse, true, "return tx response (only works with async = false)")
 		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
@@ -102,21 +103,15 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 
 // RegisterRestServerFlags registers the flags required for rest server
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
+	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Bool(FlagInsecure, false, "Do not set up SSL/TLS layer")
+	cmd.Flags().Bool(FlagTLS, false, "Enable SSL/TLS layer")
 	cmd.Flags().String(FlagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(FlagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
 	cmd.Flags().String(FlagCORS, "", "Set the domains that can make CORS requests (* for all)")
-	cmd.Flags().String(FlagChainID, "", "Chain ID of Tendermint node")
-	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	cmd.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 
-	viper.BindPFlag(FlagTrustNode, cmd.Flags().Lookup(FlagTrustNode))
-	viper.BindPFlag(FlagChainID, cmd.Flags().Lookup(FlagChainID))
-	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
 	return cmd
 }
 
@@ -159,4 +154,36 @@ func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
 		}
 	}
 	return
+}
+
+// NewCompletionCmd builds a cobra.Command that generate bash completion
+// scripts for the given root command. If hidden is true, the command
+// will not show up in the root command's list of available commands.
+func NewCompletionCmd(rootCmd *cobra.Command, hidden bool) *cobra.Command {
+	flagZsh := "zsh"
+	cmd := &cobra.Command{
+		Use:   "completion",
+		Short: "Generate Bash/Zsh completion script to STDOUT",
+		Long: `To load completion script run
+
+. <(completion_script)
+
+To configure your bash shell to load completions for each session add to your bashrc
+
+# ~/.bashrc or ~/.profile
+. <(completion_script)
+`,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if viper.GetBool(flagZsh) {
+				return rootCmd.GenZshCompletion(os.Stdout)
+			}
+			return rootCmd.GenBashCompletion(os.Stdout)
+		},
+		Hidden: hidden,
+		Args:   cobra.NoArgs,
+	}
+
+	cmd.Flags().Bool(flagZsh, false, "Generate Zsh completion script")
+
+	return cmd
 }

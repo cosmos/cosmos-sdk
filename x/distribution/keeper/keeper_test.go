@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -31,9 +32,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
-	require.Equal(t, balance, sdk.Coins{
-		{"stake", sdk.NewInt(1000)},
-	})
+	expTokens := staking.TokensFromTendermintPower(1000)
+	require.Equal(t, sdk.Coins{
+		{"stake", staking.TokensFromTendermintPower(1000)},
+	}, balance)
 
 	// set commission
 	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr3, sdk.DecCoins{
@@ -46,17 +48,17 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check balance increase
 	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
-	require.Equal(t, balance, sdk.Coins{
+	require.Equal(t, sdk.Coins{
 		{"mytoken", sdk.NewInt(1)},
-		{"stake", sdk.NewInt(1001)},
-	})
+		{"stake", expTokens.AddRaw(1)},
+	}, balance)
 
 	// check remainder
 	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
-	require.Equal(t, remainder, sdk.DecCoins{
+	require.Equal(t, sdk.DecCoins{
 		{"mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))},
 		{"stake", sdk.NewDec(1).Quo(sdk.NewDec(2))},
-	})
+	}, remainder)
 
 	require.True(t, true)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// Prefix for account-by-address store
+	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}
 
 	globalAccountNumberKey = []byte("globalAccountNumber")
@@ -21,7 +21,7 @@ var (
 	FeeStoreKey = "fee"
 )
 
-// This AccountKeeper encodes/decodes accounts using the go-amino (binary)
+// AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
 	// The (unexposed) key used to access the store from the Context.
@@ -47,11 +47,11 @@ func NewAccountKeeper(
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
-		paramSubspace: paramstore.WithTypeTable(ParamTypeTable()),
+		paramSubspace: paramstore.WithKeyTable(ParamKeyTable()),
 	}
 }
 
-// Implaements sdk.AccountKeeper.
+// NewAccountWithAddress implements sdk.AccountKeeper.
 func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
@@ -67,22 +67,20 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 	return acc
 }
 
-// New Account
+// NewAccount creates a new account
 func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
-	err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
-	if err != nil {
-		// TODO: Handle with #870
+	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
 	return acc
 }
 
-// Turn an address to key used to get it from the account store
+// AddressStoreKey turn an address to key used to get it from the account store
 func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append(AddressStoreKeyPrefix, addr.Bytes()...)
 }
 
-// Implements sdk.AccountKeeper.
+// GetAccount implements sdk.AccountKeeper.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(AddressStoreKey(addr))
@@ -93,22 +91,26 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account
 	return acc
 }
 
-// Implements sdk.AccountKeeper.
+// SetAccount implements sdk.AccountKeeper.
 func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
-	bz := ak.encodeAccount(acc)
+	bz, err := ak.cdc.MarshalBinaryBare(acc)
+	if err != nil {
+		panic(err)
+	}
 	store.Set(AddressStoreKey(addr), bz)
 }
 
 // RemoveAccount removes an account for the account mapper store.
+// NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(AddressStoreKey(addr))
 }
 
-// Implements sdk.AccountKeeper.
+// IterateAccounts implements sdk.AccountKeeper.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iter := sdk.KVStorePrefixIterator(store, AddressStoreKeyPrefix)
@@ -126,7 +128,7 @@ func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (
 	}
 }
 
-// Returns the PubKey of the account at address
+// GetPubKey Returns the PubKey of the account at address
 func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
@@ -135,7 +137,7 @@ func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 	return acc.GetPubKey(), nil
 }
 
-// Returns the Sequence of the account at address
+// GetSequence Returns the Sequence of the account at address
 func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
@@ -149,16 +151,16 @@ func (ak AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
 	}
-	err := acc.SetSequence(newSequence)
-	if err != nil {
-		// Handle w/ #870
+
+	if err := acc.SetSequence(newSequence); err != nil {
 		panic(err)
 	}
+
 	ak.SetAccount(ctx, acc)
 	return nil
 }
 
-// Returns and increments the global account number counter
+// GetNextAccountNumber Returns and increments the global account number counter
 func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64
 	store := ctx.KVStore(ak.key)
@@ -194,14 +196,6 @@ func (ak AccountKeeper) GetParams(ctx sdk.Context) (params Params) {
 
 //-----------------------------------------------------------------------------
 // Misc.
-
-func (ak AccountKeeper) encodeAccount(acc Account) []byte {
-	bz, err := ak.cdc.MarshalBinaryBare(acc)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
 
 func (ak AccountKeeper) decodeAccount(bz []byte) (acc Account) {
 	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)

@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"strings"
 
@@ -194,6 +198,15 @@ func ExtractPortFromAddress(listenAddress string) string {
 		panic(fmt.Errorf("expected listen address: tcp://0.0.0.0:12345, got %s", listenAddress))
 	}
 	return stringList[2]
+}
+
+// NewTestCaseDir creates a new temporary directory for a test case.
+// Returns the directory path and a cleanup function.
+// nolint: errcheck
+func NewTestCaseDir(t *testing.T) (string, func()) {
+	dir, err := ioutil.TempDir("", t.Name()+"_")
+	require.NoError(t, err)
+	return dir, func() { os.RemoveAll(dir) }
 }
 
 var cdc = amino.NewCodec()

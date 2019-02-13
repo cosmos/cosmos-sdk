@@ -128,6 +128,33 @@ gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 For more information regarding how to generate, sign and broadcast transactions with a
 multi signature account see [Multisig Transactions](#multisig-transactions).
 
+### Fees & Gas
+
+Each transaction may either supply fees or gas prices, but not both. Most users
+will typically provide fees as this is the cost you will end up incurring for
+the transaction being included in the ledger.
+
+Validator's have a minimum gas price (multi-denom) configuration and they use
+this value when when determining if they should include the transaction in a block
+during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
+supply fees that are greater than or equal to __any__ of the denominations the validator requires.
+
+__Note__: With such a mechanism in place, validators may start to prioritize
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
+higher tx priority.
+
+e.g.
+
+```bash
+gaiacli tx send ... --fees=100photino
+```
+
+or
+
+```bash
+gaiacli tx send ... --gas-prices=0.000001stake
+```
+
 ### Account
 
 #### Get Tokens
@@ -152,11 +179,9 @@ When you query an account balance with zero tokens, you will get this error: `No
 The following command could be used to send coins from one account to another:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmos> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmos>
 ```
 
 ::: warning Note
@@ -182,29 +207,25 @@ You can also check your balance at a given block by using the `--block` flag:
 gaiacli query account <account_cosmos> --block=<block_height>
 ```
 
-You can simulate a transaction without actually broadcasting it by appending the `--dry-run` flag to the command line:
+You can simulate a transaction without actually broadcasting it by appending the
+`--dry-run` flag to the command line:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --dry-run
 ```
 
-Furthermore, you can build a transaction and print its JSON format to STDOUT by appending `--generate-only` to the list of the command line arguments:
+Furthermore, you can build a transaction and print its JSON format to STDOUT by
+appending `--generate-only` to the list of the command line arguments:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --generate-only > unsignedSendTx.json
 ```
-
-You can now sign the transaction file generated through the `--generate-only` flag by providing your key to the following command:
 
 ```bash
 gaiacli tx sign \
@@ -353,15 +374,13 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval>
+gaiacli query staking delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli query staking delegations <account_cosmos>
+gaiacli query staking delegations <delegator_addr>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -385,9 +404,7 @@ The unbonding will be automatically completed when the unbonding period has pass
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking unbonding-delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval> \
+gaiacli query staking unbonding-delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
@@ -399,7 +416,7 @@ gaiacli query staking unbonding-delegations <account_cosmos>
 Additionally, as you can get all the unbonding-delegations from a particular validator:
 
 ```bash
-  gaiacli query staking unbonding-delegations-from <account_cosmosval>
+gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
@@ -426,10 +443,7 @@ The redelegation will be automatically completed when the unbonding period has p
 Once you begin an redelegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking redelegation \
-	--address-delegator=<account_cosmos> \
-	--addr-validator-source=<account_cosmosval> \
-	--addr-validator-dest=<account_cosmosval> \
+gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
@@ -451,7 +465,7 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 Parameters define high level settings for staking. You can get the current values by using:
 
 ```bash
-gaiacli query staking parameters
+gaiacli query staking params
 ```
 
 With the above command you will get the values for:
@@ -472,9 +486,9 @@ gaiacli query staking pool
 
 With the `pool` command you will get the values for:
 
-- Loose and bonded tokens
+- Not-bonded and bonded tokens
 - Token supply
-- Current anual inflation and the block in which the last inflation was processed
+- Current annual inflation and the block in which the last inflation was processed
 - Last recorded bonded shares
 
 ##### Query Delegations To Validator
@@ -603,9 +617,65 @@ gaiacli query gov tally <proposal_id>
 To check the current governance parameters run:
 
 ```bash
+gaiacli query gov params
+```
+
+To query subsets of the governance parameters run:
+
+```bash
 gaiacli query gov param voting
 gaiacli query gov param tallying
 gaiacli query gov param deposit
+```
+
+### Fee Distribution
+
+#### Query distribution parameters
+
+To check the current distribution parameters, run:
+
+```bash
+gaiacli query distr params
+```
+
+#### Query outstanding rewards
+
+To check the current outstanding (un-withdrawn) rewards, run:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### Query validator commission
+
+To check the current outstanding commission for a validator, run:
+
+```bash
+gaiacli query distr commission <validator_address>
+```
+
+#### Query validator slashes
+
+To check historical slashes for a validator, run:
+
+```bash
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
+```
+
+#### Query delegator rewards
+
+To check current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
+#### Query all delegator rewards
+
+To check all current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address>
 ```
 
 ### Multisig transactions
@@ -646,10 +716,8 @@ The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 
 ```bash
-gaiacli tx send \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
   --from=<multisig_address> \
-  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
-  --amount=10stake \
   --generate-only > unsignedTx.json
 ```
 
@@ -692,3 +760,36 @@ The transaction can now be sent to the node:
 ```bash
 gaiacli tx broadcast signedTx.json
 ```
+
+## Shells completion scripts
+
+Completion scripts for popular UNIX shell interpreters such as `Bash` and `Zsh`
+can be generated through the `completion` command, which is available for both
+`gaiad` and `gaiacli`.
+
+If you want to generate `Bash` completion scripts run the following command:
+
+```bash
+gaiad completion > gaiad_completion
+gaiacli completion > gaiacli_completion
+```
+
+If you want to generate `Zsh` completion scripts run the following command:
+
+```bash
+gaiad completion --zsh > gaiad_completion
+gaiacli completion --zsh > gaiacli_completion
+```
+
+::: tip Note
+On most UNIX systems, such scripts may be loaded in `.bashrc` or
+`.bash_profile` to enable Bash autocompletion:
+
+```bash
+echo '. gaiad_completion' >> ~/.bashrc
+echo '. gaiacli_completion' >> ~/.bashrc
+```
+
+Refer to the user's manual of your interpreter provided by your
+operating system for information on how to enable shell autocompletion.
+:::

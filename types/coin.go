@@ -262,7 +262,7 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 // negative coin amount was returned.
 func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	diff := coins.safePlus(coinsB.negative())
-	return diff, !diff.IsNotNegative()
+	return diff, diff.IsAnyNegative()
 }
 
 // IsAllGT returns true if for every denom in coins, the denom is present at a
@@ -284,7 +284,7 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 		return true
 	}
 
-	return diff.IsNotNegative()
+	return !diff.IsAnyNegative()
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
@@ -302,32 +302,17 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 // IsAnyGTE returns true iff coins contains at least one denom that is present
 // at a greater or equal amount in coinsB; it returns false otherwise.
 //
-// NOTE: IsAnyGTE operates under the invariant that coins are sorted by
-// denominations.
+// NOTE: IsAnyGTE operates under the invariant that both coin sets are sorted
+// by denominations and there exists no zero coins.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 	if len(coinsB) == 0 {
 		return false
 	}
 
-	j := 0
 	for _, coin := range coins {
-		searchOther := true // terminator in case coins breaks the sorted invariant
-
-		for j < len(coinsB) && searchOther {
-			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
-			case -1:
-				// coin denom in less than the current other coin, so move to next coin
-				searchOther = false
-			case 0:
-				if coin.IsGTE(coinsB[j]) {
-					return true
-				}
-
-				fallthrough // skip to next other coin
-			case 1:
-				// coin denom is greater than the current other coin, so move to next other coin
-				j++
-			}
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GTE(amt) && !amt.IsZero() {
+			return true
 		}
 	}
 
@@ -415,22 +400,22 @@ func (coins Coins) IsPositive() bool {
 	return true
 }
 
-// IsNotNegative returns true if there is no coin amount with a negative value
-// (even no coins is true here).
-//
+// IsAnyNegative returns true if there is at least one coin whose amount
+// is negative; returns false otherwise. It returns false if the coin set
+// is empty too.
 // TODO: Remove once unsigned integers are used.
-func (coins Coins) IsNotNegative() bool {
+func (coins Coins) IsAnyNegative() bool {
 	if len(coins) == 0 {
-		return true
+		return false
 	}
 
 	for _, coin := range coins {
 		if coin.IsNegative() {
-			return false
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
 // negative returns a set of coins with all amount negative.
@@ -492,10 +477,12 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm  = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt  = `[[:digit:]]+`
-	reSpc  = `[[:space:]]*`
-	reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
+	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
+	reAmt     = `[[:digit:]]+`
+	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc     = `[[:space:]]*`
+	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
 )
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.

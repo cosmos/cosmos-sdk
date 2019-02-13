@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"bytes"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -62,8 +61,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 
 		resTags.AppendTags(sdk.NewTags(
 			tags.Action, ActionCompleteUnbonding,
-			tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
-			tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
+			tags.Delegator, dvPair.DelegatorAddr.String(),
+			tags.SrcValidator, dvPair.ValidatorAddr.String(),
 		))
 	}
 
@@ -78,29 +77,25 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 
 		resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteRedelegation,
-			tags.Delegator, []byte(dvvTriplet.DelegatorAddr.String()),
-			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
-			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
+			tags.Delegator, dvvTriplet.DelegatorAddr.String(),
+			tags.SrcValidator, dvvTriplet.ValidatorSrcAddr.String(),
+			tags.DstValidator, dvvTriplet.ValidatorDstAddr.String(),
 		))
 	}
 
 	return validatorUpdates, resTags
 }
 
-//_____________________________________________________________________
-
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
 func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
 	// check to see if the pubkey or sender has been registered before
-	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
-	if found {
+	if _, found := k.GetValidator(ctx, msg.ValidatorAddr); found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
 
-	_, found = k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey))
-	if found {
+	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 
@@ -108,10 +103,16 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
+	if _, err := msg.Description.EnsureLength(); err != nil {
+		return err.Result()
+	}
+
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
 		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return ErrValidatorPubKeyTypeUnsupported(k.Codespace(), tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes).Result()
+			return ErrValidatorPubKeyTypeUnsupported(k.Codespace(),
+				tmPubKey.Type,
+				ctx.ConsensusParams().Validator.PubKeyTypes).Result()
 		}
 	}
 
@@ -125,23 +126,26 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
+	validator.MinSelfDelegation = msg.MinSelfDelegation
+
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
+	// call the after-creation hook
 	k.AfterValidatorCreated(ctx, validator.OperatorAddr)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
+	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Value.Amount, validator, true)
 	if err != nil {
 		return err.Result()
 	}
 
 	tags := sdk.NewTags(
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
-		tags.Moniker, []byte(msg.Description.Moniker),
-		tags.Identity, []byte(msg.Description.Identity),
+		tags.DstValidator, msg.ValidatorAddr.String(),
+		tags.Moniker, msg.Description.Moniker,
+		tags.Identity, msg.Description.Identity,
 	)
 
 	return sdk.Result{
@@ -170,16 +174,28 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 			return err.Result()
 		}
 
+		// call the before-modification hook since we're about to update the commission
 		k.BeforeValidatorModified(ctx, msg.ValidatorAddr)
+
 		validator.Commission = commission
+	}
+
+	if msg.MinSelfDelegation != nil {
+		if !(*msg.MinSelfDelegation).GT(validator.MinSelfDelegation) {
+			return ErrMinSelfDelegationDecreased(k.Codespace()).Result()
+		}
+		if (*msg.MinSelfDelegation).GT(validator.Tokens) {
+			return ErrSelfDelegationBelowMinimum(k.Codespace()).Result()
+		}
+		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
 	}
 
 	k.SetValidator(ctx, validator)
 
 	tags := sdk.NewTags(
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
-		tags.Moniker, []byte(description.Moniker),
-		tags.Identity, []byte(description.Identity),
+		tags.DstValidator, msg.ValidatorAddr.String(),
+		tags.Moniker, description.Moniker,
+		tags.Identity, description.Identity,
 	)
 
 	return sdk.Result{
@@ -197,18 +213,14 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
-	if validator.Jailed && !bytes.Equal(validator.OperatorAddr, msg.DelegatorAddr) {
-		return ErrValidatorJailed(k.Codespace()).Result()
-	}
-
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Value.Amount, validator, true)
 	if err != nil {
 		return err.Result()
 	}
 
 	tags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.DstValidator, msg.ValidatorAddr.String(),
 	)
 
 	return sdk.Result{
@@ -224,9 +236,9 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	tags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
-		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.SrcValidator, msg.ValidatorAddr.String(),
+		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: tags}
@@ -241,10 +253,10 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
-		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
-		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.SrcValidator, msg.ValidatorSrcAddr.String(),
+		tags.DstValidator, msg.ValidatorDstAddr.String(),
+		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: resTags}

@@ -368,22 +368,6 @@ func TestCoinsLTE(t *testing.T) {
 	assert.True(t, Coins{}.IsAllLTE(Coins{{"a", one}}))
 }
 
-func TestCoinsIsAnyGTE(t *testing.T) {
-	one := NewInt(1)
-	two := NewInt(2)
-
-	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
-	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{}))
-	assert.False(t, Coins{}.IsAnyGTE(Coins{{"a", one}}))
-	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", two}}))
-	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", two}, {"b", one}}))
-	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}}))
-	assert.True(t, Coins{{"a", two}}.IsAnyGTE(Coins{{"a", one}}))
-	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
-	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", one}, {"b", one}}))
-	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
-}
-
 func TestParse(t *testing.T) {
 	one := NewInt(1)
 
@@ -523,4 +507,24 @@ func TestAmountOf(t *testing.T) {
 	}
 
 	assert.Panics(t, func() { cases[0].coins.AmountOf("Invalid") })
+}
+
+func TestCoinsIsAnyGTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{}))
+	assert.False(t, Coins{}.IsAnyGTE(Coins{{"a", one}}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", two}}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"b", one}}))
+	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", two}, {"b", one}}))
+	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}}))
+	assert.True(t, Coins{{"a", two}}.IsAnyGTE(Coins{{"a", one}}))
+	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
+	assert.True(t, Coins{{"b", two}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
+	assert.False(t, Coins{{"b", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
+	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", one}, {"b", one}}))
+	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
+	assert.True(t, Coins{{"x", one}, {"y", one}}.IsAnyGTE(Coins{{"b", one}, {"c", one}, {"y", one}, {"z", one}}))
 }

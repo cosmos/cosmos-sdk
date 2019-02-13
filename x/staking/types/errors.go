@@ -12,7 +12,7 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = "staking"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeInvalidValidator  CodeType = 101
 	CodeInvalidDelegation CodeType = 102
@@ -91,6 +91,18 @@ func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
 }
 
+func ErrSelfDelegationBelowMinimum(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator's self delegation must be greater than their minimum self delegation")
+}
+
+func ErrMinSelfDelegationInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation must be a positive integer")
+}
+
+func ErrMinSelfDelegationDecreased(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation cannot be decrease")
+}
+
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "delegator address is nil")
 }
@@ -149,8 +161,9 @@ func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no unbonding delegation found")
 }
 
-func ErrExistingUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "existing unbonding delegation found")
+func ErrMaxUnbondingDelegationEntries(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		"too many unbonding delegation entries in this delegator/validator duo, please wait for some entries to mature")
 }
 
 func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
@@ -176,6 +189,11 @@ func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
 func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation,
 		"redelegation to this validator already in progress, first redelegation to this validator must complete before next redelegation")
+}
+
+func ErrMaxRedelegationEntries(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		"too many redelegation entries in this delegator/src-validator/dst-validator trio, please wait for some entries to mature")
 }
 
 func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {

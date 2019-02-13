@@ -72,22 +72,20 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return delegations[:i] // trim if the array length < maxRetrieve
 }
 
-// set the delegation
+// set a delegation
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
-	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 }
 
-// remove a delegation from store
+// remove a delegation
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
 	k.BeforeDelegationRemoved(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr))
 }
-
-//_____________________________________________________________________________________
 
 // return a given amount of all the delegator unbonding-delegations
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
@@ -154,6 +152,17 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 	}
 }
 
+// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries
+func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) bool {
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		return false
+	}
+	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
+}
+
 // set the unbonding delegation and associated index
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -175,7 +184,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 // the given addresses. It creates the unbonding delegation if it does not exist
 func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Coin) types.UnbondingDelegation {
+	creationHeight int64, minTime time.Time, balance sdk.Int) types.UnbondingDelegation {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if found {
@@ -187,7 +196,6 @@ func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
 	return ubd
 }
 
-//________________________________________________
 // unbonding delegation queue timeslice operations
 
 // gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs
@@ -214,7 +222,7 @@ func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation,
 	completionTime time.Time) {
 
 	timeSlice := k.GetUBDQueueTimeSlice(ctx, completionTime)
-	dvPair := types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}
+	dvPair := types.DVPair{DelegatorAddr: ubd.DelegatorAddr, ValidatorAddr: ubd.ValidatorAddr}
 	if len(timeSlice) == 0 {
 		k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair})
 	} else {
@@ -247,8 +255,6 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context,
 	}
 	return matureUnbonds
 }
-
-//_____________________________________________________________________________________
 
 // return a given amount of all the delegator redelegations
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
@@ -308,11 +314,19 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
-	found := false
-	if iterator.Valid() {
-		found = true
+	return iterator.Valid()
+}
+
+// HasMaxRedelegationEntries - redelegation has maximum number of entries
+func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorSrcAddr,
+	validatorDstAddr sdk.ValAddress) bool {
+
+	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
+	if !found {
+		return false
 	}
-	return found
+	return len(red.Entries) >= int(k.MaxEntries(ctx))
 }
 
 // set a redelegation and associated index
@@ -330,16 +344,15 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
-	minTime time.Time, balance sdk.Coin,
+	minTime time.Time, balance sdk.Int,
 	sharesSrc, sharesDst sdk.Dec) types.Redelegation {
 
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if found {
-		red.AddEntry(creationHeight, minTime, balance, sharesSrc, sharesDst)
+		red.AddEntry(creationHeight, minTime, balance, sharesDst)
 	} else {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesSrc,
-			sharesDst)
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst)
 	}
 	k.SetRedelegation(ctx, red)
 	return red
@@ -369,7 +382,6 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr))
 }
 
-//________________________________________________
 // redelegation queue timeslice operations
 
 // Gets a specific redelegation queue timeslice. A timeslice is a slice of DVVTriplets corresponding to redelegations
@@ -396,7 +408,11 @@ func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
 	completionTime time.Time) {
 
 	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, completionTime)
-	dvvTriplet := types.DVVTriplet{red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr}
+	dvvTriplet := types.DVVTriplet{
+		DelegatorAddr:    red.DelegatorAddr,
+		ValidatorSrcAddr: red.ValidatorSrcAddr,
+		ValidatorDstAddr: red.ValidatorDstAddr}
+
 	if len(timeSlice) == 0 {
 		k.SetRedelegationQueueTimeSlice(ctx, completionTime, []types.DVVTriplet{dvvTriplet})
 	} else {
@@ -427,27 +443,21 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	return matureRedelegations
 }
 
-//_____________________________________________________________________________________
-
 // Perform a delegation, set/update everything necessary within the store.
-func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Coin,
+func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int,
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
 	// In some situations, the exchange rate becomes invalid, e.g. if
-	// validator loses all tokens due to slashing.  In this case,
+	// Validator loses all tokens due to slashing. In this case,
 	// make all future delegations invalid.
 	if validator.DelegatorShareExRate().IsZero() {
 		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())
 	}
 
-	// Get or create the delegator delegation
+	// Get or create the delegation object
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {
-		delegation = types.Delegation{
-			DelegatorAddr: delAddr,
-			ValidatorAddr: validator.OperatorAddr,
-			Shares:        sdk.ZeroDec(),
-		}
+		delegation = types.NewDelegation(delAddr, validator.OperatorAddr, sdk.ZeroDec())
 	}
 
 	// call the appropriate hook if present
@@ -458,34 +468,38 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	}
 
 	if subtractAccount {
-		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{sdk.NewCoin(k.GetParams(ctx).BondDenom, bondAmt)})
 		if err != nil {
 			return sdk.Dec{}, err
 		}
 	}
 
-	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt.Amount)
+	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
 	k.SetDelegation(ctx, delegation)
 
+	// Call the after-modification hook
+	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+
 	return newShares, nil
 }
 
-// unbond the the delegation return
+// unbond a particular delegation and perform associated store operations
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Int, err sdk.Error) {
 
-	// check if delegation has any shares in it unbond
+	// check if a delegation object exists in the store
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return amount, types.ErrNoDelegatorForAddress(k.Codespace())
 	}
 
+	// call the before-delegation-modified hook
 	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 
-	// retrieve the amount to remove
+	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
 		return amount, types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
 	}
@@ -496,26 +510,28 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		return amount, types.ErrNoValidatorFound(k.Codespace())
 	}
 
-	// subtract shares from delegator
+	// subtract shares from delegation
 	delegation.Shares = delegation.Shares.Sub(shares)
+
+	isValidatorOperator := bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr)
+
+	// if the delegation is the operator of the validator and undelegating will decrease the validator's self delegation below their minimum
+	// trigger a jail validator
+	if isValidatorOperator && !validator.Jailed && validator.DelegatorShareExRate().Mul(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
+		k.jailValidator(ctx, validator)
+		validator = k.mustGetValidator(ctx, validator.OperatorAddr)
+	}
 
 	// remove the delegation
 	if delegation.Shares.IsZero() {
-
-		// if the delegation is the operator of the validator then
-		// trigger a jail validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && !validator.Jailed {
-			k.jailValidator(ctx, validator)
-			validator = k.mustGetValidator(ctx, validator.OperatorAddr)
-		}
-
 		k.RemoveDelegation(ctx, delegation)
 	} else {
-		// update the delegation
 		k.SetDelegation(ctx, delegation)
+		// call the after delegation modification hook
+		k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	// remove the coins from the validator
+	// remove the shares and coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
 	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
@@ -526,8 +542,6 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	return amount, nil
 }
 
-//______________________________________________________________________________________________________
-
 // get info for begin functions: completionTime and CreationHeight
 func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	completionTime time.Time, height int64, completeNow bool) {
@@ -535,6 +549,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	validator, found := k.GetValidator(ctx, valSrcAddr)
 
 	switch {
+	// TODO: when would the validator not be found?
 	case !found || validator.Status == sdk.Bonded:
 
 		// the longest wait - just unbonding period from now
@@ -555,7 +570,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	}
 }
 
-// begin unbonding an unbonding record
+// begin unbonding part or all of a delegation
 func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (completionTime time.Time, sdkErr sdk.Error) {
 
@@ -570,15 +585,22 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	// no need to create the ubd object just complete now
 	if completeNow {
-		_, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance})
-		if err != nil {
-			return completionTime, err
+		// track undelegation only when remaining or truncated shares are non-zero
+		if !balance.IsZero() {
+			if _, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance}); err != nil {
+				return completionTime, err
+			}
 		}
+
 		return completionTime, nil
 	}
 
+	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
+		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
+	}
+
 	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr,
-		valAddr, height, completionTime, balance)
+		valAddr, height, completionTime, returnAmount)
 
 	k.InsertUBDQueue(ctx, ubd, completionTime)
 	return completionTime, nil
@@ -603,9 +625,12 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 			ubd.RemoveEntry(int64(i))
 			i--
 
-			_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
-			if err != nil {
-				return err
+			// track undelegation only when remaining or truncated shares are non-zero
+			if !entry.Balance.IsZero() {
+				_, err := k.bankKeeper.UndelegateCoins(ctx, ubd.DelegatorAddr, sdk.Coins{sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance)})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -634,6 +659,10 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return time.Time{}, types.ErrTransitiveRedelegation(k.Codespace())
 	}
 
+	if k.HasMaxRedelegationEntries(ctx, delAddr, valSrcAddr, valDstAddr) {
+		return time.Time{}, types.ErrMaxRedelegationEntries(k.Codespace())
+	}
+
 	returnAmount, err := k.unbond(ctx, delAddr, valSrcAddr, sharesAmount)
 	if err != nil {
 		return time.Time{}, err
@@ -642,14 +671,12 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	if returnAmount.IsZero() {
 		return time.Time{}, types.ErrVerySmallRedelegation(k.Codespace())
 	}
-	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
-
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnCoin, dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, dstValidator, false)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -662,7 +689,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	red := k.SetRedelegationEntry(ctx, delAddr, valSrcAddr, valDstAddr,
-		height, completionTime, returnCoin, sharesAmount, sharesCreated)
+		height, completionTime, returnAmount, sharesAmount, sharesCreated)
 	k.InsertRedelegationQueue(ctx, red, completionTime)
 	return completionTime, nil
 }

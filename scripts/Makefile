@@ -45,7 +45,7 @@ $(GOPATH)/bin/dep:
 
 #v2.0.11
 $(GOPATH)/bin/gometalinter:
-	$(call go_install,alecthomas,gometalinter,17a7ffa42374937bfecabfb8d2efbd4db0c26741)
+	$(call go_install,alecthomas,gometalinter,v3.0.0)
 
 $(GOPATH)/bin/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
@@ -53,4 +53,7 @@ $(GOPATH)/bin/statik:
 $(GOPATH)/bin/goimports:
 	go get golang.org/x/tools/cmd/goimports
 
-.PHONY: all
+tools-clean:
+	cd $(GOPATH)/bin && rm -f dep gometalinter statik goimports
+
+.PHONY: all clean-tools

@@ -19,11 +19,11 @@ These instructions are for setting up a brand new full node from scratch.
 First, initialize the node and create the necessary config files:
 
 ```bash
-gaiad init --moniker <your_custom_moniker>
+gaiad init <your_custom_moniker>
 ```
 
 ::: warning Note
-Only ASCII characters are supported for the `--moniker`. Using Unicode characters will render your node unreachable.
+Monikers can contain only ASCII characters. Using Unicode characters will render your node unreachable.
 :::
 
 You can edit this `moniker` later, in the `~/.gaiad/config/config.toml` file:
@@ -76,7 +76,7 @@ Now it is time to upgrade the software:
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all && git checkout master
-make update_tools && make get_vendor_deps && make install
+make update_tools install
 ```
 
 ::: tip

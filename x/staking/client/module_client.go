@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ModuleClient exports all client functionality from this module
@@ -21,7 +22,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 // GetQueryCmd returns the cli query commands for this module
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	stakingQueryCmd := &cobra.Command{
-		Use:   "staking",
+		Use:   types.ModuleName,
 		Short: "Querying commands for the staking module",
 	}
 	stakingQueryCmd.AddCommand(client.GetCommands(
@@ -46,7 +47,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	stakingTxCmd := &cobra.Command{
-		Use:   "staking",
+		Use:   types.ModuleName,
 		Short: "Staking transaction subcommands",
 	}
 

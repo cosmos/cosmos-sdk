@@ -49,7 +49,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
 //_______________________________________________________________________________________
@@ -75,7 +75,10 @@ func MakeTestCodec() *codec.Codec {
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+// init power is converted to an amount of tokens
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+
+	initCoins := types.TokensFromTendermintPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
@@ -112,7 +115,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(
+		accountKeeper,
+		pk.Subspace(bank.DefaultParamspace),
+		bank.DefaultCodespace,
+	)
 
 	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
@@ -122,10 +129,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
 		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
-			{keeper.BondDenom(ctx), sdk.NewInt(initCoins)},
+			{keeper.BondDenom(ctx), initCoins},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewInt(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
 		keeper.SetPool(ctx, pool)
 	}
 
@@ -159,7 +166,7 @@ func TestAddr(addr string, bech string) sdk.AccAddress {
 	if err != nil {
 		panic(err)
 	}
-	if bytes.Compare(bechres, res) != 0 {
+	if !bytes.Equal(bechres, res) {
 		panic("Bech decode and hex decode don't match")
 	}
 
@@ -215,6 +222,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	{ // Remove any existing power key for validator.
 		store := ctx.KVStore(keeper.storeKey)
 		iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
+		defer iterator.Close()
 		deleted := false
 		for ; iterator.Valid(); iterator.Next() {
 			valAddr := parseValidatorPowerRankKey(iterator.Key())

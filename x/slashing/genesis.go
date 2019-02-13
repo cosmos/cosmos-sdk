@@ -21,7 +21,7 @@ type MissedBlock struct {
 	Missed bool  `json:"missed"`
 }
 
-// HubDefaultGenesisState - default GenesisState used by Cosmos Hub
+// DefaultGenesisState - default GenesisState used by Cosmos Hub
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:       DefaultParams(),

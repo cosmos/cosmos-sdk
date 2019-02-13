@@ -8,13 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Pool - dynamic parameters of the current state
+// Pool - tracking bonded and not-bonded token supply of the bond denomination
 type Pool struct {
-	LooseTokens  sdk.Int `json:"loose_tokens"`  // tokens which are not bonded in a validator
-	BondedTokens sdk.Int `json:"bonded_tokens"` // reserve of bonded tokens
+	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
+	BondedTokens    sdk.Int `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
 }
 
 // nolint
+// TODO: This is slower than comparing struct fields directly
 func (p Pool) Equal(p2 Pool) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
@@ -24,21 +25,17 @@ func (p Pool) Equal(p2 Pool) bool {
 // initial pool for testing
 func InitialPool() Pool {
 	return Pool{
-		LooseTokens:  sdk.ZeroInt(),
-		BondedTokens: sdk.ZeroInt(),
+		NotBondedTokens: sdk.ZeroInt(),
+		BondedTokens:    sdk.ZeroInt(),
 	}
 }
 
-//____________________________________________________________________
-
 // Sum total of all staking tokens in the pool
 func (p Pool) TokenSupply() sdk.Int {
-	return p.LooseTokens.Add(p.BondedTokens)
+	return p.NotBondedTokens.Add(p.BondedTokens)
 }
 
-//____________________________________________________________________
-
-// get the bond ratio of the global state
+// Get the fraction of the staking token which is currently bonded
 func (p Pool) BondedRatio() sdk.Dec {
 	supply := p.TokenSupply()
 	if supply.IsPositive() {
@@ -48,36 +45,33 @@ func (p Pool) BondedRatio() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
-//_______________________________________________________________________
-
-func (p Pool) looseTokensToBonded(bondedTokens sdk.Int) Pool {
+func (p Pool) notBondedTokensToBonded(bondedTokens sdk.Int) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)
-	p.LooseTokens = p.LooseTokens.Sub(bondedTokens)
-	if p.LooseTokens.IsNegative() {
-		panic(fmt.Sprintf("sanity check: loose tokens negative, pool: %v", p))
+	p.NotBondedTokens = p.NotBondedTokens.Sub(bondedTokens)
+	if p.NotBondedTokens.IsNegative() {
+		panic(fmt.Sprintf("sanity check: not-bonded tokens negative, pool: %v", p))
 	}
 	return p
 }
 
-func (p Pool) bondedTokensToLoose(bondedTokens sdk.Int) Pool {
+func (p Pool) bondedTokensToNotBonded(bondedTokens sdk.Int) Pool {
 	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
-	p.LooseTokens = p.LooseTokens.Add(bondedTokens)
+	p.NotBondedTokens = p.NotBondedTokens.Add(bondedTokens)
 	if p.BondedTokens.IsNegative() {
 		panic(fmt.Sprintf("sanity check: bonded tokens negative, pool: %v", p))
 	}
 	return p
 }
 
-// HumanReadableString returns a human readable string representation of a
-// pool.
-func (p Pool) HumanReadableString() string {
-
-	resp := "Pool \n"
-	resp += fmt.Sprintf("Loose Tokens: %s\n", p.LooseTokens)
-	resp += fmt.Sprintf("Bonded Tokens: %s\n", p.BondedTokens)
-	resp += fmt.Sprintf("Token Supply: %s\n", p.TokenSupply())
-	resp += fmt.Sprintf("Bonded Ratio: %v\n", p.BondedRatio())
-	return resp
+// String returns a human readable string representation of a pool.
+func (p Pool) String() string {
+	return fmt.Sprintf(`Pool:
+  Loose Tokens:  %s
+  Bonded Tokens: %s
+  Token Supply:  %s
+  Bonded Ratio:  %v`, p.NotBondedTokens,
+		p.BondedTokens, p.TokenSupply(),
+		p.BondedRatio())
 }
 
 // unmarshal the current pool value from store key or panics

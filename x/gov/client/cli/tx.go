@@ -2,10 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strconv"
-
-	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -14,12 +11,9 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
-	"encoding/json"
-	"io/ioutil"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
@@ -86,10 +80,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				WithAccountDecoder(cdc)
 
 			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Pull associated account
 			account, err := cliCtx.GetAccount(from)
@@ -105,7 +96,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
@@ -119,14 +110,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to Tendermint
-			// proposalID must be returned, and it is a part of response.
-			cliCtx.PrintResponse = true
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 
@@ -139,40 +123,9 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 	return cmd
 }
 
-func parseSubmitProposalFlags() (*proposal, error) {
-	proposal := &proposal{}
-	proposalFile := viper.GetString(flagProposal)
-
-	if proposalFile == "" {
-		proposal.Title = viper.GetString(flagTitle)
-		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
-		proposal.Deposit = viper.GetString(flagDeposit)
-		return proposal, nil
-	}
-
-	for _, flag := range proposalFlags {
-		if viper.GetString(flag) != "" {
-			return nil, fmt.Errorf("--%s flag provided alongside --proposal, which is a noop", flag)
-		}
-	}
-
-	contents, err := ioutil.ReadFile(proposalFile)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(contents, proposal)
-	if err != nil {
-		return nil, err
-	}
-
-	return proposal, nil
-}
-
 // GetCmdDeposit implements depositing tokens for an active proposal.
 func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for activing proposal",
@@ -194,16 +147,12 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Fetch associated account
 			account, err := cliCtx.GetAccount(from)
@@ -219,7 +168,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			msg := gov.NewMsgDeposit(from, proposalID, amount)
@@ -228,21 +177,14 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	return cmd
 }
 
 // GetCmdVote implements creating a new vote command.
 func GetCmdVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -258,10 +200,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				WithAccountDecoder(cdc)
 
 			// Get voting address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -270,7 +209,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -288,15 +227,9 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			// If generate only print the transaction
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	return cmd
 }
+
+// DONTCOVER

@@ -6,7 +6,7 @@ import (
 
 // Slashing tags
 var (
-	ActionValidatorUnjailed = []byte("validator-unjailed")
+	ActionValidatorUnjailed = "validator-unjailed"
 
 	Action    = sdk.TagAction
 	Validator = "validator"

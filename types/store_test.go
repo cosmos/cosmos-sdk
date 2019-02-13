@@ -30,8 +30,7 @@ func TestCommitID(t *testing.T) {
 	var empty CommitID
 	require.True(t, empty.IsZero())
 
-	var nonempty CommitID
-	nonempty = CommitID{
+	var nonempty = CommitID{
 		Version: 1,
 		Hash:    []byte("testhash"),
 	}

@@ -27,7 +27,7 @@ import (
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionsAcc  = sdk.TokensFromTendermintPower(150)
+	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
 	defaultBondDenom = sdk.DefaultBondDenom
 )
 
@@ -401,7 +401,7 @@ func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
 		sdk.NewCoin("footoken", sdk.NewInt(1000)),
-		sdk.NewCoin(defaultBondDenom, freeFermionsAcc),
+		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
 	}
 
 	coins.Sort()

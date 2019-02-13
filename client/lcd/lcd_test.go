@@ -521,10 +521,10 @@ func TestPoolParamsQuery(t *testing.T) {
 
 	initialPool := staking.InitialPool()
 	tokens := sdk.TokensFromTendermintPower(100)
-	freeFermions := sdk.TokensFromTendermintPower(50)
+	freeTokens := sdk.TokensFromTendermintPower(50)
 	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(tokens)
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)             // Delegate tx on GaiaAppGenState
-	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeFermions) // freeFermionsAcc = 50 on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)           // Delegate tx on GaiaAppGenState
+	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens) // freeTokensPerAcc = 50 on GaiaAppGenState
 
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 

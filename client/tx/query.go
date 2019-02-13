@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -77,14 +78,15 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (ou
 
 // ValidateTxResult performs transaction verification
 func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
-	check, err := cliCtx.Verify(res.Height)
-	if err != nil {
-		return err
-	}
-
-	err = res.Proof.Validate(check.Header.DataHash)
-	if err != nil {
-		return err
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Verify(res.Height)
+		if err != nil {
+			return err
+		}
+		err = res.Proof.Validate(check.Header.DataHash)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -119,6 +121,10 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 
 		output, err := queryTx(cdc, cliCtx, hashHexStr)
 		if err != nil {
+			if strings.Contains(err.Error(), hashHexStr) {
+				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}

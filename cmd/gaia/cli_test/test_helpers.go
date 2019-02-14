@@ -14,7 +14,7 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -253,11 +253,11 @@ func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, i
 }
 
 // KeysShow is gaiacli keys show
-func (f *Fixtures) KeysShow(name string, flags ...string) keys.KeyOutput {
+func (f *Fixtures) KeysShow(name string, flags ...string) clientkeyscmn.KeyOutput {
 	cmd := fmt.Sprintf("gaiacli keys show --home=%s %s", f.GCLIHome, name)
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var ko keys.KeyOutput
-	err := keys.UnmarshalJSON([]byte(out), &ko)
+	var ko clientkeyscmn.KeyOutput
+	err := codec.Cdc.UnmarshalJSON([]byte(out), &ko)
 	require.NoError(f.T, err)
 	return ko
 }

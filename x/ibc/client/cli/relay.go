@@ -8,7 +8,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -93,7 +93,7 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 	cliCtx := context.NewCLIContext()
 
 	name := cliCtx.GetFromName()
-	passphrase, err := keys.ReadPassphraseFromStdin(name)
+	passphrase, err := clientkeyscmn.ReadPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}

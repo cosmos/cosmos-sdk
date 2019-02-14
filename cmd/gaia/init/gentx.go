@@ -28,13 +28,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 var (
-	defaultTokens                  = staking.TokensFromTendermintPower(100)
-	defaultAmount                  = defaultTokens.String() + staking.DefaultBondDenom
+	defaultTokens                  = sdk.TokensFromTendermintPower(100)
+	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"

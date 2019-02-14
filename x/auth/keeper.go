@@ -91,6 +91,17 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account
 	return acc
 }
 
+// GetAllAccounts returns all accounts in the accountKeeper.
+func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) []Account {
+	accounts := []Account{}
+	appendAccount := func(acc Account) (stop bool) {
+		accounts = append(accounts, acc)
+		return false
+	}
+	ak.IterateAccounts(ctx, appendAccount)
+	return accounts
+}
+
 // SetAccount implements sdk.AccountKeeper.
 func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenesisState - all slashing state that must be provided at genesis
@@ -67,8 +66,8 @@ func ValidateGenesis(data GenesisState) error {
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.GenesisState) {
-	for _, validator := range sdata.Validators {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, validators []sdk.Validator) {
+	for _, validator := range validators {
 		keeper.addPubkey(ctx, validator.GetConsPubKey())
 	}
 

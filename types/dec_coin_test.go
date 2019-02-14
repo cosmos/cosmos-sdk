@@ -235,3 +235,52 @@ func TestDecCoinsString(t *testing.T) {
 		require.Equal(t, tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
 	}
 }
+
+func TestDecCoinTruncateDecimal(t *testing.T) {
+	type fields struct {
+		Denom  string
+		Amount Dec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   Coin
+		want1  DecCoin
+	}{
+		{
+			"truncate 1.1",
+			fields{"atom", MustNewDecFromStr("1.1")},
+			NewCoin("atom", NewInt(1)),
+			NewDecCoinFromDec("atom", MustNewDecFromStr("0.1")),
+		},
+		{
+			"truncate 0.1",
+			fields{"atom", MustNewDecFromStr("0.1")},
+			NewCoin("atom", NewInt(0)),
+			NewDecCoinFromDec("atom", MustNewDecFromStr("0.1")),
+		},
+		{
+			"truncate 0.0",
+			fields{"atom", MustNewDecFromStr("0.0")},
+			NewCoin("atom", NewInt(0)),
+			NewDecCoinFromDec("atom", MustNewDecFromStr("0.0")),
+		},
+		{
+			"truncate 0",
+			fields{"atom", MustNewDecFromStr("0")},
+			NewCoin("atom", NewInt(0)),
+			NewDecCoinFromDec("atom", MustNewDecFromStr("0.0")),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			coin := DecCoin{
+				Denom:  tt.fields.Denom,
+				Amount: tt.fields.Amount,
+			}
+			got, got1 := coin.TruncateDecimal()
+			require.True(t, tt.want.IsEqual(got))
+			require.Equal(t, tt.want1, got1)
+		})
+	}
+}

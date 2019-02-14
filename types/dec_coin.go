@@ -118,7 +118,7 @@ func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
 	change := coin.Amount.Sub(NewDecFromInt(truncated))
-	return NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
+	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 
 // IsPositive returns true if coin amount is positive.

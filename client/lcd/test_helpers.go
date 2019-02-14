@@ -131,7 +131,7 @@ func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.Acc
 		password := "1234567890"
 		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 		require.NoError(t, err)
-		addrSeeds = append(addrSeeds, rest.AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
 	}
 
 	sort.Sort(addrSeeds)
@@ -155,7 +155,7 @@ type AddrSeed struct {
 }
 
 // AddrSeedSlice implements `Interface` in sort package.
-type AddrSeedSlice []rest.AddrSeed
+type AddrSeedSlice []AddrSeed
 
 func (b AddrSeedSlice) Len() int {
 	return len(b)

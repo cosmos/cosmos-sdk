@@ -34,6 +34,9 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API
+  * [\#3560] Add a `--allow-unsafe` flag to the REST client command to mount and
+  expose all unsafe routes. Unsafe routes will not be exposed by default, instead
+  returning a standard error response.
 
 * Gaia CLI
 

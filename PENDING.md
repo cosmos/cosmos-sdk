@@ -42,6 +42,7 @@ IMPROVEMENTS
   JSON ABCI log.
   * [\#3620](https://github.com/cosmos/cosmos-sdk/pull/3620) Version command shows build tags
   * [\#3638] Add Bcrypt benchmarks & justification of security parameter choice
+  * [\#3648] Add JSON struct tags to vesting accounts.
 
 * Tendermint
   * [\#3618] Upgrade to Tendermint 0.30.03

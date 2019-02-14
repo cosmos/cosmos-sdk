@@ -39,9 +39,14 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 // REST
 
 // query key list REST handler
-func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
+func QueryKeysRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		kb, err := NewKeyBaseFromHomeFlag()
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
+		kb, err := common.NewKeyBaseFromHomeFlag()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte(err.Error()))

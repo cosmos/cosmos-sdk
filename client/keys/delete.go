@@ -13,9 +13,11 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"github.com/spf13/cobra"
 )
@@ -112,41 +114,48 @@ type DeleteKeyBody struct {
 }
 
 // delete key REST handler
-func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	var kb keys.Keybase
-	var m DeleteKeyBody
+func DeleteKeyRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(err.Error()))
-		return
+		vars := mux.Vars(r)
+		name := vars["name"]
+		var kb keys.Keybase
+		var m DeleteKeyBody
+
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&m)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+
+		kb, err = common.NewKeyBaseFromHomeFlag()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+
+		err = kb.Delete(name, m.Password, false)
+		if keyerror.IsErrKeyNotFound(err) {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		} else if keyerror.IsErrWrongPassword(err) {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		} else if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
-
-	kb, err = common.NewKeyBaseFromHomeFlag()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-
-	err = kb.Delete(name, m.Password, false)
-	if keyerror.IsErrKeyNotFound(err) {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	} else if keyerror.IsErrWrongPassword(err) {
-		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
 }

@@ -402,7 +402,7 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
 func registerRoutes(rs *RestServer) {
-	keys.RegisterRoutes(rs.Router, rs.CliCtx.Indent)
+	keys.RegisterRoutes(rs.CliCtx, rs.Router)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Router)
 	tx.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc)
 	authrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, auth.StoreKey)

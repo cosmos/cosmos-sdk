@@ -333,12 +333,17 @@ func CheckAndWriteErrorResponse(w http.ResponseWriter, httpErr int, err error) b
 }
 
 // add new key REST handler
-func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
+func AddNewKeyRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var kb keys.Keybase
-		var m AddNewKey
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
 
-		kb, err := NewKeyBaseFromHomeFlag()
+		var kb keys.Keybase
+		var m common.AddNewKey
+
+		kb, err := common.NewKeyBaseFromHomeFlag()
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
@@ -408,40 +413,52 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 }
 
 // Seed REST request handler
-func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	algoType := vars["type"]
+func SeedRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
 
-	// algo type defaults to secp256k1
-	if algoType == "" {
-		algoType = "secp256k1"
+		vars := mux.Vars(r)
+		algoType := vars["type"]
+
+		// algo type defaults to secp256k1
+		if algoType == "" {
+			algoType = "secp256k1"
+		}
+
+		algo := keys.SigningAlgo(algoType)
+		seed := generateMnemonic(algo)
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(seed))
 	}
-
-	algo := keys.SigningAlgo(algoType)
-	seed := generateMnemonic(algo)
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write([]byte(seed))
 }
 
 // RecoverRequestHandler performs key recover request
-func RecoverRequestHandler(indent bool) http.HandlerFunc {
+func RecoverRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		vars := mux.Vars(r)
 		name := vars["name"]
-		var m RecoverKey
+		var m common.RecoverKey
 
 		body, err := ioutil.ReadAll(r.Body)
 		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
-		err = cdc.UnmarshalJSON(body, &m)
+		err = codec.Cdc.UnmarshalJSON(body, &m)
 		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
-		kb, err := NewKeyBaseFromHomeFlag()
+		kb, err := common.NewKeyBaseFromHomeFlag()
 		CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
 
 		if name == "" {

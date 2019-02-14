@@ -158,7 +158,7 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 // NOTE: If making updates here you also need to update the test helper in client/lcd/test_helper.go
 func registerRoutes(rs *lcd.RestServer) {
 	registerSwaggerUI(rs)
-	keys.RegisterRoutes(rs.Router, rs.CliCtx.Indent)
+	keys.RegisterRoutes(rs.CliCtx, rs.Router)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Router)
 	tx.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc)
 	auth.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, at.StoreKey)

@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 // Commands registers a sub-tree of commands to interact with
@@ -31,13 +32,13 @@ func Commands() *cobra.Command {
 	return cmd
 }
 
-// resgister REST routes
-func RegisterRoutes(r *mux.Router, indent bool) {
-	r.HandleFunc("/keys", QueryKeysRequestHandler(indent)).Methods("GET")
-	r.HandleFunc("/keys", AddNewKeyRequestHandler(indent)).Methods("POST")
-	r.HandleFunc("/keys/seed", SeedRequestHandler).Methods("GET")
-	r.HandleFunc("/keys/{name}/recover", RecoverRequestHandler(indent)).Methods("POST")
-	r.HandleFunc("/keys/{name}", GetKeyRequestHandler(indent)).Methods("GET")
-	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler).Methods("PUT")
-	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
+// register REST routes
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+	r.HandleFunc("/keys", QueryKeysRequestHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/keys", AddNewKeyRequestHandler(cliCtx)).Methods("POST")
+	r.HandleFunc("/keys/seed", SeedRequestHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/keys/{name}/recover", RecoverRequestHandler(cliCtx)).Methods("POST")
+	r.HandleFunc("/keys/{name}", GetKeyRequestHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler(cliCtx)).Methods("PUT")
+	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler(cliCtx)).Methods("DELETE")
 }

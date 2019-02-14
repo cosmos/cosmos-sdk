@@ -6,36 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
-
-// ClientRouter defines a client router wrapper containing and underlying HTTP
-// router and various metadata.
-type ClientRouter struct {
-	router      *mux.Router
-	allowUnsafe bool
-}
-
-func NewClientRouter(r *mux.Router, allowUnsafe bool) ClientRouter {
-	return ClientRouter{
-		router:      r,
-		allowUnsafe: allowUnsafe,
-	}
-}
-
-// Router returns the mux HTTP router.
-func (cr *ClientRouter) Router() *mux.Router {
-	return cr.router
-}
-
-// AllowUnsafe returns if unsafe routes are allowed to be exposed.
-func (cr *ClientRouter) AllowUnsafe() bool {
-	return cr.allowUnsafe
-}
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {

@@ -31,18 +31,10 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, cr rest.ClientRouter, cdc *codec.Codec) {
-	r := cr.Router()
-
-	if cr.AllowUnsafe() {
-		r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, cliCtx)).Methods("POST")
-		r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
-		r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
-	} else {
-		r.HandleFunc("/gov/proposals", rest.UnsafeRouteHandler()).Methods("POST")
-		r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), rest.UnsafeRouteHandler()).Methods("POST")
-		r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), rest.UnsafeRouteHandler()).Methods("POST")
-	}
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
 
 	r.HandleFunc(
 		fmt.Sprintf("/gov/parameters/{%s}", RestParamsType),

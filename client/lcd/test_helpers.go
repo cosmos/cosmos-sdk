@@ -230,12 +230,12 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 			pubKey = ed25519.GenPrivKey().PubKey()
 			power = 1
 		}
-		startTokens := staking.TokensFromTendermintPower(power)
+		startTokens := sdk.TokensFromTendermintPower(power)
 
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin(staking.DefaultBondDenom, startTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
 			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 			sdk.OneInt(),
@@ -255,8 +255,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accTokens := staking.TokensFromTendermintPower(150)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
+		accTokens := sdk.TokensFromTendermintPower(150)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
@@ -270,8 +270,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accTokens := staking.TokensFromTendermintPower(100)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
+		accTokens := sdk.TokensFromTendermintPower(100)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
 		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
@@ -376,29 +376,27 @@ func startTM(
 
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
-	rs := NewRestServer(cdc, true)
+	rs := NewRestServer(cdc)
 	registerRoutes(rs)
-
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
 	if err != nil {
 		return nil, err
 	}
-
-	go tmrpc.StartHTTPServer(listener, rs.ClientRouter.Router(), logger)
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger)
 	return listener, nil
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
 func registerRoutes(rs *RestServer) {
-	keys.RegisterRoutes(rs.ClientRouter.Router(), rs.CliCtx.Indent)
-	rpc.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router())
-	tx.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc)
-	authrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, auth.StoreKey)
-	bankrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
-	distrrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, distr.StoreKey)
-	stakingrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
-	slashingrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
-	govrest.RegisterRoutes(rs.CliCtx, rs.ClientRouter, rs.Cdc)
+	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
+	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
+	bankrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
+	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a
@@ -709,7 +707,7 @@ func doTransferWithGas(
 	)
 
 	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -742,7 +740,7 @@ func doTransferWithGasAccAuto(
 	)
 
 	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -775,7 +773,7 @@ func doDelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin(staking.DefaultBondDenom, amount),
+		Delegation:    sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -1081,7 +1079,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		Description:    "test",
 		ProposalType:   "Text",
 		Proposer:       proposerAddr,
-		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
+		InitialDeposit: sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
 		BaseReq:        baseReq,
 	}
 
@@ -1175,7 +1173,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 
 	dr := rest.DepositReq{
 		Depositor: proposerAddr,
-		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
+		Amount:    sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
 		BaseReq:   baseReq,
 	}
 

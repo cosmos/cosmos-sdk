@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var regexAnySpace = regexp.MustCompile(`\s`)
-
 //-----------------------------------------------------------------------------
 // Coin
 
@@ -509,12 +507,14 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
+	reDnmString = `[[:lower:]][[:alnum:]]{2,15}`
+	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
+
 	reAmt     = `[[:digit:]]+`
 	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc     = `[[:space:]]*`
-	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.
@@ -600,8 +600,8 @@ func validateCoinDenomCase(denom string) error {
 }
 
 func validateCoinDenomContainsSpace(denom string) error {
-	if regexAnySpace.MatchString(denom) {
-		return errors.New("denom cannot contain space characters")
+	if !reDnm.MatchString(denom) {
+		return errors.New("illegal characters")
 	}
 	return nil
 }

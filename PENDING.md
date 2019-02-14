@@ -61,5 +61,6 @@ BUG FIXES
 * Gaia
 
 * SDK
+  * \#3646 Mint use total supply instead of total power
 
 * Tendermint

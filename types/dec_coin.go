@@ -18,46 +18,84 @@ type DecCoin struct {
 	Amount Dec    `json:"amount"`
 }
 
+// NewDecCoin returns a new coin with a denomination and amount.
+// It will panic if the amount is negative.
 func NewDecCoin(denom string, amount int64) DecCoin {
-	if amount < 0 {
-		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	c := DecCoin{Denom: denom, Amount: NewDec(amount)}
+	if err := c.Validate(false); err != nil {
+		panic(err)
 	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
-	}
-
-	return DecCoin{
-		Denom:  denom,
-		Amount: NewDec(amount),
-	}
+	return c
 }
 
+// NewDecCoin returns a new coin with a denomination and amount.
+// It will panic if the amount is less than or equal to zero.
+func NewPositiveDecCoin(denom string, amount int64) DecCoin {
+	c := DecCoin{Denom: denom, Amount: NewDec(amount)}
+	if err := c.Validate(true); err != nil {
+		panic(err)
+	}
+	return c
+}
+
+// NewDecCoinFromDec returns a new coin with a denomination and
+// decimal amount. It will panic if the amount is negative.
 func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
-	if amount.LT(ZeroDec()) {
-		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	c := DecCoin{Denom: denom, Amount: amount}
+	if err := c.Validate(false); err != nil {
+		panic(err)
 	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
-	}
-
-	return DecCoin{
-		Denom:  denom,
-		Amount: amount,
-	}
+	return c
 }
 
-func NewDecCoinFromCoin(coin Coin) DecCoin {
-	if coin.Amount.LT(ZeroInt()) {
-		panic(fmt.Sprintf("negative decimal coin amount: %v\n", coin.Amount))
+// NewDecCoinFromDec returns a new coin with a denomination and
+// It will panic if the amount is less than or equal to zero.
+func NewPositiveDecCoinFromDec(denom string, amount Dec) DecCoin {
+	c := DecCoin{Denom: denom, Amount: amount}
+	if err := c.Validate(true); err != nil {
+		panic(err)
 	}
-	if strings.ToLower(coin.Denom) != coin.Denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", coin.Denom))
+	return c
+}
+
+// NewDecCoinFromCoin returns a new DecCoin from a Coin.
+// It will panic if the amount is negative.
+func NewDecCoinFromCoin(coin Coin) DecCoin {
+	c := DecCoin{Denom: coin.Denom, Amount: NewDecFromInt(coin.Amount)}
+	if err := c.Validate(false); err != nil {
+		panic(err)
+	}
+	return c
+}
+
+// NewDecCoinFromCoin returns a new DecCoin from a Coin.
+// It will panic if the amount is negative.
+func NewPositiveDecCoinFromCoin(coin Coin) DecCoin {
+	c := DecCoin{Denom: coin.Denom, Amount: NewDecFromInt(coin.Amount)}
+	if err := c.Validate(true); err != nil {
+		panic(err)
+	}
+	return c
+}
+
+// Validate validates coin's Amount and Denom. If failifzero is true, then
+// it returns an error if Amount less than or equal to zero.
+// If failifzero is false, then it returns an error if and only if Amount
+// is less than zero.
+func (c DecCoin) Validate(failifzero bool) error {
+	if err := validateDecCoinAmount(c.Amount, failifzero); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Amount))
 	}
 
-	return DecCoin{
-		Denom:  coin.Denom,
-		Amount: NewDecFromInt(coin.Amount),
+	if err := validateCoinDenomContainsSpace(c.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Denom))
 	}
+
+	if err := validateCoinDenomCase(c.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Denom))
+	}
+
+	return nil
 }
 
 // Adds amounts of two coins with same denom
@@ -396,4 +434,14 @@ func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
 	}
 
 	return coins, nil
+}
+
+func validateDecCoinAmount(amount Dec, failifzero bool) error {
+	if failifzero && amount.LTE(ZeroDec()) {
+		return errors.New("non-positive coin amount")
+	}
+	if !failifzero && amount.LT(ZeroDec()) {
+		return errors.New("negative coin amount")
+	}
+	return nil
 }

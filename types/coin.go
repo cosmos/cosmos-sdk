@@ -1,11 +1,14 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 )
+
+var regexAnySpace = regexp.MustCompile(`\s`)
 
 //-----------------------------------------------------------------------------
 // Coin
@@ -24,26 +27,58 @@ type Coin struct {
 	Amount Int `json:"amount"`
 }
 
-// NewCoin returns a new coin with a denomination and amount. It will panic if
-// the amount is negative.
+// NewCoin returns a new coin with a denomination and amount.
+// It will panic if the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
-	if amount.LT(ZeroInt()) {
-		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
-	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	c := Coin{Denom: denom, Amount: amount}
+	if err := c.Validate(false); err != nil {
+		panic(err)
 	}
 
-	return Coin{
-		Denom:  denom,
-		Amount: amount,
-	}
+	return c
 }
 
-// NewInt64Coin returns a new coin with a denomination and amount. It will panic
-// if the amount is negative.
+// NewCoin returns a new coin with a denomination and amount.
+// It will panic if the amount is less than or equal to zero.
+func NewPositiveCoin(denom string, amount Int) Coin {
+	c := Coin{Denom: denom, Amount: amount}
+	if err := c.Validate(true); err != nil {
+		panic(err)
+	}
+
+	return c
+}
+
+// NewInt64Coin returns a new coin with a denomination and amount.
+// It will panic if the amount is negative.
 func NewInt64Coin(denom string, amount int64) Coin {
 	return NewCoin(denom, NewInt(amount))
+}
+
+// NewInt64Coin returns a new coin with a denomination and amount.
+// It will panic if the amount less than or equal to zero.
+func NewPositiveInt64Coin(denom string, amount int64) Coin {
+	return NewPositiveCoin(denom, NewInt(amount))
+}
+
+// Validate validates coin's Amount and Denom. If failifzero is true, then
+// it returns an error if Amount less than or equal to zero.
+// If failifzero is false, then it returns an error if and only if Amount
+// is less than zero.
+func (c Coin) Validate(failifzero bool) error {
+	if err := validateIntCoinAmount(c.Amount, failifzero); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Amount))
+	}
+
+	if err := validateCoinDenomContainsSpace(c.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Denom))
+	}
+
+	if err := validateCoinDenomCase(c.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, c.Denom))
+	}
+
+	return nil
 }
 
 // String provides a human-readable representation of a coin
@@ -502,8 +537,8 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if denomStr != strings.ToLower(denomStr) {
-		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	if err := validateCoinDenomCase(denomStr); err != nil {
+		return Coin{}, fmt.Errorf("%s: %s", err, denomStr)
 	}
 
 	return NewCoin(denomStr, amount), nil
@@ -536,4 +571,28 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	}
 
 	return coins, nil
+}
+
+func validateCoinDenomCase(denom string) error {
+	if denom != strings.ToLower(denom) {
+		return errors.New("denom cannot contain upper case characters")
+	}
+	return nil
+}
+
+func validateCoinDenomContainsSpace(denom string) error {
+	if regexAnySpace.MatchString(denom) {
+		return errors.New("denom cannot contain space characters")
+	}
+	return nil
+}
+
+func validateIntCoinAmount(amount Int, failifzero bool) error {
+	if failifzero && amount.LTE(ZeroInt()) {
+		return errors.New("non-positive coin amount")
+	}
+	if !failifzero && amount.LT(ZeroInt()) {
+		return errors.New("negative coin amount")
+	}
+	return nil
 }

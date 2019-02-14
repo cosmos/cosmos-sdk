@@ -11,10 +11,34 @@ import (
 // Coin tests
 
 func TestCoin(t *testing.T) {
+	require.NotPanics(t, func() { NewInt64Coin("a", 0) })
+	require.Panics(t, func() { NewPositiveInt64Coin("a", 0) })
 	require.Panics(t, func() { NewInt64Coin("a", -1) })
+	require.Panics(t, func() { NewPositiveInt64Coin("a", -1) })
+
+	require.NotPanics(t, func() { NewCoin("a", NewInt(0)) })
 	require.Panics(t, func() { NewCoin("a", NewInt(-1)) })
+	require.Panics(t, func() { NewPositiveCoin("a", NewInt(0)) })
+	require.Panics(t, func() { NewPositiveCoin("a", NewInt(-1)) })
+
+	// test denom case
 	require.Panics(t, func() { NewInt64Coin("Atom", 10) })
+	require.Panics(t, func() { NewPositiveInt64Coin("Atom", 10) })
 	require.Panics(t, func() { NewCoin("Atom", NewInt(10)) })
+	require.Panics(t, func() { NewPositiveCoin("Atom", NewInt(10)) })
+
+	// test leading/trailing spaces
+
+	require.Panics(t, func() { NewInt64Coin("atom ", 10) })
+	require.Panics(t, func() { NewPositiveInt64Coin("atom ", 10) })
+	require.Panics(t, func() { NewCoin("atom ", NewInt(10)) })
+	require.Panics(t, func() { NewPositiveCoin("atom ", NewInt(10)) })
+
+	require.Panics(t, func() { NewInt64Coin("atom ", 10) })
+	require.Panics(t, func() { NewPositiveInt64Coin("atom ", 10) })
+	require.Panics(t, func() { NewCoin("atom ", NewInt(10)) })
+	require.Panics(t, func() { NewPositiveCoin("atom ", NewInt(10)) })
+
 	require.Equal(t, NewInt(5), NewInt64Coin("a", 5).Amount)
 	require.Equal(t, NewInt(5), NewCoin("a", NewInt(5)).Amount)
 }
@@ -458,55 +482,35 @@ func TestSortCoins(t *testing.T) {
 func TestAmountOf(t *testing.T) {
 	case0 := Coins{}
 	case1 := Coins{
-		NewInt64Coin("", 0),
-	}
-	case2 := Coins{
-		NewInt64Coin(" ", 0),
-	}
-	case3 := Coins{
 		NewInt64Coin("gold", 0),
 	}
-	case4 := Coins{
+	case2 := Coins{
 		NewInt64Coin("gas", 1),
 		NewInt64Coin("mineral", 1),
 		NewInt64Coin("tree", 1),
 	}
-	case5 := Coins{
+	case3 := Coins{
 		NewInt64Coin("mineral", 1),
 		NewInt64Coin("tree", 1),
 	}
-	case6 := Coins{
-		NewInt64Coin("", 6),
-	}
-	case7 := Coins{
-		NewInt64Coin(" ", 7),
-	}
-	case8 := Coins{
+	case4 := Coins{
 		NewInt64Coin("gas", 8),
 	}
 
 	cases := []struct {
 		coins           Coins
-		amountOf        int64
-		amountOfSpace   int64
 		amountOfGAS     int64
 		amountOfMINERAL int64
 		amountOfTREE    int64
 	}{
-		{case0, 0, 0, 0, 0, 0},
-		{case1, 0, 0, 0, 0, 0},
-		{case2, 0, 0, 0, 0, 0},
-		{case3, 0, 0, 0, 0, 0},
-		{case4, 0, 0, 1, 1, 1},
-		{case5, 0, 0, 0, 1, 1},
-		{case6, 6, 0, 0, 0, 0},
-		{case7, 0, 7, 0, 0, 0},
-		{case8, 0, 0, 8, 0, 0},
+		{case0, 0, 0, 0},
+		{case1, 0, 0, 0},
+		{case2, 1, 1, 1},
+		{case3, 0, 1, 1},
+		{case4, 8, 0, 0},
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, NewInt(tc.amountOf), tc.coins.AmountOf(""))
-		assert.Equal(t, NewInt(tc.amountOfSpace), tc.coins.AmountOf(" "))
 		assert.Equal(t, NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"))
 		assert.Equal(t, NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"))
 		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))

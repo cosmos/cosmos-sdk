@@ -3,16 +3,15 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func Test_runListCmd(t *testing.T) {
+func TestRunListCmd(t *testing.T) {
 	type args struct {
 		cmd  *cobra.Command
 		args []string

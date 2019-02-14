@@ -5,16 +5,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func Test_runDeleteCmd(t *testing.T) {
+func TestRunDeleteCmd(t *testing.T) {
 	deleteKeyCommand := deleteKeyCommand()
 
 	yesF, _ := deleteKeyCommand.Flags().GetBool(flagYes)
@@ -72,7 +72,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	// TODO: Write another case for !keys.Local
 }
 
-func Test_confirmDeletion(t *testing.T) {
+func TestConfirmDeletion(t *testing.T) {
 	type args struct {
 		buf *bufio.Reader
 	}

@@ -3,18 +3,16 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func Test_multiSigKey_Properties(t *testing.T) {
+func TestMultiSigKeyProperties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
 
 	tmp := multiSigKey{
@@ -28,14 +26,14 @@ func Test_multiSigKey_Properties(t *testing.T) {
 	assert.Equal(t, "cosmos1q9dtl7cfmdec53t5t2g733qpgglvusqk6xdntl", tmp.GetAddress().String())
 }
 
-func Test_showKeysCmd(t *testing.T) {
+func TestShowKeysCmd(t *testing.T) {
 	cmd := showKeysCmd()
 	assert.NotNil(t, cmd)
 	assert.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
 	assert.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
 }
 
-func Test_runShowCmd(t *testing.T) {
+func TestRunShowCmd(t *testing.T) {
 	cmd := showKeysCmd()
 
 	err := runShowCmd(cmd, []string{"invalid"})
@@ -82,7 +80,7 @@ func Test_runShowCmd(t *testing.T) {
 	// TODO: Capture stdout and compare
 }
 
-func Test_validateMultisigThreshold(t *testing.T) {
+func TestValidateMultisigThreshold(t *testing.T) {
 	type args struct {
 		k     int
 		nKeys int
@@ -107,7 +105,7 @@ func Test_validateMultisigThreshold(t *testing.T) {
 	}
 }
 
-func Test_getBechKeyOut(t *testing.T) {
+func TestGetBechKeyOut(t *testing.T) {
 	type args struct {
 		bechPrefix string
 	}

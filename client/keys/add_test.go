@@ -7,19 +7,16 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
-
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-
 	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func Test_runAddCmdBasic(t *testing.T) {
+func TestRunAddCmdBasic(t *testing.T) {
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 

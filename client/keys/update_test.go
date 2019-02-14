@@ -5,22 +5,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func Test_updateKeyCommand(t *testing.T) {
+func TestUpdateKeyCommand(t *testing.T) {
 	cmd := updateKeyCommand()
 	assert.NotNil(t, cmd)
 	// No flags  or defaults to validate
 }
 
-func Test_runUpdateCmd(t *testing.T) {
+func TestRunUpdateCmd(t *testing.T) {
 	fakeKeyName1 := "runUpdateCmd_Key1"
 	fakeKeyName2 := "runUpdateCmd_Key2"
 

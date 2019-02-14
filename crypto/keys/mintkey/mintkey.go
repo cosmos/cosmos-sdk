@@ -34,7 +34,7 @@ const (
 // variables in runtime), one can cause the user to sign a different tx
 // than what they see, which is a significantly cheaper attack then breaking
 // a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
-// TODO: Consider increasing default
+// For further notes on security parameter choice, see README.md
 var BcryptSecurityParameter = 12
 
 //-----------------------------------------------------------------

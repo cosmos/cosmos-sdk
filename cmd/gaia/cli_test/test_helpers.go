@@ -41,14 +41,14 @@ const (
 
 var (
 	startCoins = sdk.Coins{
-		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
-		sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
-		sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
-		sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
+		sdk.NewCoin(feeDenom, sdk.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fee2Denom, sdk.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fooDenom, sdk.TokensFromTendermintPower(1000)),
+		sdk.NewCoin(denom, sdk.TokensFromTendermintPower(150)),
 	}
 
 	vestingCoins = sdk.Coins{
-		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(500000)),
+		sdk.NewCoin(feeDenom, sdk.TokensFromTendermintPower(500000)),
 	}
 )
 

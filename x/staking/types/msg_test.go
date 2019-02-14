@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	coinPos  = sdk.NewInt64Coin(DefaultBondDenom, 1000)
-	coinZero = sdk.NewInt64Coin(DefaultBondDenom, 0)
+	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	coinZero = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 )
 
 // test ValidateBasic for MsgCreateValidator

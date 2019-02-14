@@ -1,14 +1,16 @@
+// Package rest provides HTTP types and primitives for REST
+// requests validation and responses handling.
 package rest
 
 import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -97,21 +99,8 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	return true
 }
 
-/*
-ReadRESTReq is a simple convenience wrapper that reads the body and
-unmarshals to the req interface. Returns false if errors occurred.
-
-  Usage:
-    type SomeReq struct {
-      BaseReq            `json:"base_req"`
-      CustomField string `json:"custom_field"`
-		}
-
-    req := new(SomeReq)
-    if ok := ReadRESTReq(w, r, cdc, req); !ok {
-        return
-    }
-*/
+// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq stuct.
+// Writes an error response to ResponseWriter and returns true if errors occurred.
 func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -128,60 +117,111 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 	return true
 }
 
-// AddrSeed combines an Address with the mnemonic of the private key to that address
-type AddrSeed struct {
-	Address  sdk.AccAddress
-	Seed     string
-	Name     string
-	Password string
+// ErrorResponse defines the attributes of a JSON error response.
+type ErrorResponse struct {
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message"`
 }
 
-// SendReq requests sending an amount of coins
-type SendReq struct {
-	Amount  sdk.Coins `json:"amount"`
-	BaseReq BaseReq   `json:"base_req"`
+// NewErrorResponse creates a new ErrorResponse instance.
+func NewErrorResponse(code int, msg string) ErrorResponse {
+	return ErrorResponse{Code: code, Message: msg}
 }
 
-// MsgBeginRedelegateInput request to begin a redelegation
-type MsgBeginRedelegateInput struct {
-	BaseReq          BaseReq        `json:"base_req"`
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
-	SharesAmount     sdk.Dec        `json:"shares"`
+// WriteErrorResponse prepares and writes a HTTP error
+// given a status code and an error message.
+func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = w.Write(codec.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
 }
 
-// PostProposalReq requests a proposals
-type PostProposalReq struct {
-	BaseReq        BaseReq        `json:"base_req"`
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
+// WriteSimulationResponse prepares and writes an HTTP
+// response for transactions simulations.
+func WriteSimulationResponse(w http.ResponseWriter, cdc *codec.Codec, gas uint64) {
+	gasEst := GasEstimateResponse{GasEstimate: gas}
+	resp, err := cdc.MarshalJSON(gasEst)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(resp)
 }
 
-// BroadcastReq requests broadcasting a transaction
-type BroadcastReq struct {
-	Tx     auth.StdTx `json:"tx"`
-	Return string     `json:"return"`
+// ParseInt64OrReturnBadRequest converts s to a int64 value.
+func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok bool) {
+	var err error
+
+	n, err = strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		err := fmt.Errorf("'%s' is not a valid int64", s)
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return n, false
+	}
+
+	return n, true
 }
 
-// DepositReq requests a deposit of an amount of coins
-type DepositReq struct {
-	BaseReq   BaseReq        `json:"base_req"`
-	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
-	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
+// ParseUint64OrReturnBadRequest converts s to a uint64 value.
+func ParseUint64OrReturnBadRequest(w http.ResponseWriter, s string) (n uint64, ok bool) {
+	var err error
+
+	n, err = strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		err := fmt.Errorf("'%s' is not a valid uint64", s)
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return n, false
+	}
+
+	return n, true
 }
 
-// VoteReq requests sending a vote
-type VoteReq struct {
-	BaseReq BaseReq        `json:"base_req"`
-	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
-	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
+// ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a
+// default value, defaultIfEmpty, if the string is empty.
+func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {
+	if len(s) == 0 {
+		return defaultIfEmpty, true
+	}
+
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return n, false
+	}
+
+	return n, true
 }
 
-// UnjailReq request unjailing
-type UnjailReq struct {
-	BaseReq BaseReq `json:"base_req"`
+// PostProcessResponse performs post processing for a REST response.
+func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+	var output []byte
+
+	switch response.(type) {
+	default:
+		var err error
+		if indent {
+			output, err = cdc.MarshalJSONIndent(response, "", "  ")
+		} else {
+			output, err = cdc.MarshalJSON(response)
+		}
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	case []byte:
+		output = response.([]byte)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(output)
+}
+
+// UnsafeRouteHandler implements a generic handler for when an unsafe route is
+// invoked.
+func UnsafeRouteHandler(w http.ResponseWriter) {
+	WriteErrorResponse(w, http.StatusInternalServerError, "unsafe route not exposed on client")
+	return
 }

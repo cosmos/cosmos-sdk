@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	"github.com/gorilla/mux"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
@@ -31,14 +31,16 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type (
-	msgDelegationsInput struct {
+	// MsgBeginRedelegateInput defines the properties of a delegation request's body.
+	MsgDelegationsInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
 		Delegation    sdk.Coin       `json:"delegation"`
 	}
 
-	msgBeginRedelegateInput struct {
+	// MsgBeginRedelegateInput defines the properties of a redelegate request's body.
+	MsgBeginRedelegateInput struct {
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
 		ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
@@ -46,7 +48,8 @@ type (
 		SharesAmount     sdk.Dec        `json:"shares"`
 	}
 
-	msgUndelegateInput struct {
+	// MsgUndelegateInput defines the properties of a undelegate request's body.
+	MsgUndelegateInput struct {
 		BaseReq       rest.BaseReq   `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
@@ -61,7 +64,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		var req msgDelegationsInput
+		var req MsgDelegationsInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -79,7 +82,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -97,7 +100,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -108,7 +111,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		var req msgBeginRedelegateInput
+		var req MsgBeginRedelegateInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -126,7 +129,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -144,7 +147,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -155,7 +158,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		var req msgUndelegateInput
+		var req MsgUndelegateInput
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -173,7 +176,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -191,6 +194,6 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

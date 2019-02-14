@@ -1,21 +1,19 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
-
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-
-	"errors"
-
 	"github.com/gorilla/mux"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
@@ -54,7 +52,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn(cdc, cliCtx)).Methods("GET")
 }
 
-type postProposalReq struct {
+// PostProposalReq defines the properties of a proposal request's body.
+type PostProposalReq struct {
 	BaseReq        rest.BaseReq   `json:"base_req"`
 	Title          string         `json:"title"`           // Title of the proposal
 	Description    string         `json:"description"`     // Description of the proposal
@@ -63,13 +62,15 @@ type postProposalReq struct {
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
-type depositReq struct {
+// DepositReq defines the properties of a deposit request's body.
+type DepositReq struct {
 	BaseReq   rest.BaseReq   `json:"base_req"`
 	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
 	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
-type voteReq struct {
+// VoteReq defines the properties of a vote request's body.
+type VoteReq struct {
 	BaseReq rest.BaseReq   `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  // address of the voter
 	Option  string         `json:"option"` // option from OptionSet chosen by the voter
@@ -82,7 +83,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		var req postProposalReq
+		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
@@ -106,11 +107,11 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -135,7 +136,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		var req depositReq
+		var req DepositReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
@@ -153,11 +154,11 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -182,7 +183,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		var req voteReq
+		var req VoteReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
@@ -206,11 +207,11 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 

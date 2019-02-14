@@ -506,7 +506,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	acc1 = input.ak.GetAccount(ctx, addr1)
-	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
+	require.Equal(t, acc1.GetPubKey(), sdk.AccPubKeyFromCryptoPubKey(priv1.PubKey()))
 
 	// test public key not found
 	msg = newTestMsg(addr2)
@@ -517,14 +517,14 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	acc2 = input.ak.GetAccount(ctx, addr2)
-	require.Nil(t, acc2.GetPubKey())
+	require.Equal(t, acc2.GetPubKey(), sdk.NewEmptyAccPubKey())
 
 	// test invalid signature and public key
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	acc2 = input.ak.GetAccount(ctx, addr2)
-	require.Nil(t, acc2.GetPubKey())
+	require.Equal(t, acc2.GetPubKey(), sdk.NewEmptyAccPubKey())
 }
 
 func TestProcessPubKey(t *testing.T) {

@@ -163,7 +163,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	addr := sdk.ValAddress(keep.Addrs[0])
-	invalidPk := secp256k1.GenPrivKey().PubKey()
+	invalidPk := sdk.ConsPubKeyFromCryptoPubKey(secp256k1.GenPrivKey().PubKey())
 
 	// invalid pukKey type should not be allowed
 	msgCreateValidator := NewTestMsgCreateValidator(addr, invalidPk, sdk.NewInt(10))

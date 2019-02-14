@@ -200,12 +200,12 @@ func (k Keeper) addPubkey(ctx sdk.Context, consPubkey sdk.ConsPubKey) {
 	k.setAddrPubkeyRelation(ctx, addr, consPubkey)
 }
 
-func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
+func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (sdk.ConsPubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-	var pubkey crypto.PubKey
+	var pubkey sdk.ConsPubKey
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
-		return nil, fmt.Errorf("address %v not found", address)
+		return sdk.NewEmptyConsPubKey(), fmt.Errorf("address %v not found", address)
 	}
 	return pubkey, nil
 }

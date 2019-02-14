@@ -71,8 +71,8 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 		consPub, err = types.ConsPubKeyFromBech32(bech32ConsPub)
 		require.Nil(t, err)
 
-		require.Equal(t, valPub, accPub)
-		require.Equal(t, valPub, consPub)
+		require.Equal(t, valPub.CryptoPubKey(), accPub.CryptoPubKey())
+		require.Equal(t, valPub.CryptoPubKey(), consPub.CryptoPubKey())
 	}
 }
 

@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,7 +23,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		commissionMsg                             CommissionMsg
 		minSelfDelegation                         sdk.Int
 		validatorAddr                             sdk.ValAddress
-		pubkey                                    crypto.PubKey
+		pubkey                                    sdk.ConsPubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
@@ -33,7 +31,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"partial description", "", "", "c", "", commission1, sdk.OneInt(), addr1, pk1, coinPos, true},
 		{"empty description", "", "", "", "", commission2, sdk.OneInt(), addr1, pk1, coinPos, false},
 		{"empty address", "a", "b", "c", "d", commission2, sdk.OneInt(), emptyAddr, pk1, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), addr1, emptyPubkey, coinPos, true},
+		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), addr1, sdk.NewEmptyConsPubKey(), coinPos, true},
 		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), addr1, pk1, coinZero, false},
 		{"zero min self delegation", "a", "b", "c", "d", commission1, sdk.ZeroInt(), addr1, pk1, coinPos, false},
 		{"negative min self delegation", "a", "b", "c", "d", commission1, sdk.NewInt(-1), addr1, pk1, coinPos, false},
@@ -89,7 +87,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 		minSelfDelegation                         sdk.Int
 		delegatorAddr                             sdk.AccAddress
 		validatorAddr                             sdk.ValAddress
-		validatorPubKey                           crypto.PubKey
+		consensusPubKey                           sdk.ConsPubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
@@ -108,7 +106,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		msg := NewMsgCreateValidatorOnBehalfOf(
-			tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation,
+			tc.delegatorAddr, tc.validatorAddr, tc.consensusPubKey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation,
 		)
 
 		if tc.expectPass {

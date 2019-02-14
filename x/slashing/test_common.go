@@ -26,9 +26,9 @@ import (
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
 var (
-	pk0, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50")
-	pk1, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51")
-	pk2, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52")
+	pk0, _ = sdk.ConsPubKeyFromBech32("cosmosvalconspub1zcjduepqpdy9elqwanrpj3qyfppklr7fmaq9vmerd8njgqpgz32vk4f2ldgq905z2j")
+	pk1, _ = sdk.ConsPubKeyFromBech32("cosmosvalconspub1zcjduepqpdy9elqwanrpj3qyfppklr7fmaq9vmerd8njgqpgz32vk4f2ldgsswu6lp")
+	pk2, _ = sdk.ConsPubKeyFromBech32("cosmosvalconspub1zcjduepqpdy9elqwanrpj3qyfppklr7fmaq9vmerd8njgqpgz32vk4f2ldfq2jmcp5")
 	pks    = []sdk.ConsPubKey{pk0, pk1, pk2}
 	addrs  = []sdk.ValAddress{
 		sdk.ValAddress(pks[0].Address()),

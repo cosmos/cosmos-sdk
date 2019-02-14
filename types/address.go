@@ -567,9 +567,9 @@ func (apk AccPubKey) String() string {
 		return ""
 	}
 
-	bech32AccountPubPrefix := GetConfig().GetBech32AccountPubPrefix()
+	bech32PrefixAccPub := GetConfig().GetBech32AccountPubPrefix()
 
-	bech32Pub, err := bech32.ConvertAndEncode(bech32AccountPubPrefix, apk.Bytes())
+	bech32Pub, err := bech32.ConvertAndEncode(bech32PrefixAccPub, apk.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -703,20 +703,15 @@ func (vpk *ValPubKey) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Bytes returns the raw address bytes.
-func (vpk ValPubKey) Bytes() []byte {
-	return vpk.Bytes()
-}
-
 // String implements the Stringer interface.
 func (vpk ValPubKey) String() string {
 	if vpk.Empty() {
 		return ""
 	}
 
-	bech32ValidatorPubPrefix := GetConfig().GetBech32ValidatorPubPrefix()
+	bech32PrefixValPub := GetConfig().GetBech32ValidatorPubPrefix()
 
-	bech32Pub, err := bech32.ConvertAndEncode(bech32ValidatorPubPrefix, vpk.Bytes())
+	bech32Pub, err := bech32.ConvertAndEncode(bech32PrefixValPub, vpk.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -850,20 +845,15 @@ func (cpk *ConsPubKey) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Bytes returns the raw address bytes.
-func (cpk ConsPubKey) Bytes() []byte {
-	return cpk.Bytes()
-}
-
 // String implements the Stringer interface.
 func (cpk ConsPubKey) String() string {
 	if cpk.Empty() {
 		return ""
 	}
 
-	bech32ConsensusAddrPrefix := GetConfig().GetBech32ConsensusAddrPrefix()
+	bech32PrefixConsensusPub := GetConfig().GetBech32ConsensusPubPrefix()
 
-	bech32Pub, err := bech32.ConvertAndEncode(bech32ConsensusAddrPrefix, cpk.Bytes())
+	bech32Pub, err := bech32.ConvertAndEncode(bech32PrefixConsensusPub, cpk.Bytes())
 	if err != nil {
 		panic(err)
 	}

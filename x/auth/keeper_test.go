@@ -20,7 +20,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = input.ak.NewAccountWithAddress(input.ctx, addr)
 	require.NotNil(t, acc)
 	require.Equal(t, addr, acc.GetAddress())
-	require.EqualValues(t, nil, acc.GetPubKey())
+	require.EqualValues(t, sdk.NewEmptyAccPubKey(), acc.GetPubKey())
 	require.EqualValues(t, 0, acc.GetSequence())
 
 	// NewAccount doesn't call Set, so it's still nil

@@ -24,7 +24,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 
 	// check the address (set) and pubkey (not set)
 	require.EqualValues(t, addr1, acc.GetAddress())
-	require.EqualValues(t, nil, acc.GetPubKey())
+	require.EqualValues(t, sdk.NewEmptyAccPubKey(), acc.GetPubKey())
 
 	// can't override address
 	err := acc.SetAddress(addr2)

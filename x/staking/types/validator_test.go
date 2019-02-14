@@ -58,7 +58,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey.CryptoPubKey()), abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
 }
 
@@ -66,7 +66,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdateZero()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey.CryptoPubKey()), abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 

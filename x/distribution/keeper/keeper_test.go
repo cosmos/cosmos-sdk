@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -36,9 +35,9 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
-	expTokens := staking.TokensFromTendermintPower(1000)
+	expTokens := sdk.TokensFromTendermintPower(1000)
 	require.Equal(t, sdk.Coins{
-		sdk.NewCoin("stake", staking.TokensFromTendermintPower(1000)),
+		sdk.NewCoin("stake", sdk.TokensFromTendermintPower(1000)),
 	}, balance)
 
 	// set commission

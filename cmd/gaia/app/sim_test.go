@@ -97,7 +97,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
-		coins := sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))}
+		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))}
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
@@ -154,7 +154,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, int64(r.Intn(1e3)))},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))},
 			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
@@ -173,7 +173,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Params: staking.Params{
 			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
-			BondDenom:     staking.DefaultBondDenom,
+			BondDenom:     sdk.DefaultBondDenom,
 		},
 	}
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
@@ -194,7 +194,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Minter: mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
 		Params: mint.NewParams(
-			staking.DefaultBondDenom,
+			sdk.DefaultBondDenom,
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),
@@ -221,7 +221,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
-	stakingGenesis.Bonds = delegations
+	stakingGenesis.Delegations = delegations
 
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
@@ -270,7 +270,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakingKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
 		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},
@@ -281,13 +281,13 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	}
 }
 
-func invariants(app *GaiaApp) []simulation.Invariant {
-	return []simulation.Invariant{
+func invariants(app *GaiaApp) []sdk.Invariant {
+	return []sdk.Invariant{
 		simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(govsim.AllInvariants(), period, 0),
 		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
-		simulation.PeriodicInvariant(stakingsim.AllInvariants(app.bankKeeper, app.stakingKeeper,
-			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper), period, 0),
+		simulation.PeriodicInvariant(stakingsim.AllInvariants(app.stakingKeeper, app.feeCollectionKeeper,
+			app.distrKeeper, app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(slashingsim.AllInvariants(), period, 0),
 	}
 }
@@ -571,7 +571,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
-				[]simulation.Invariant{},
+				[]sdk.Invariant{},
 				50,
 				100,
 				true,

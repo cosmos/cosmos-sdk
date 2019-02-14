@@ -2,14 +2,12 @@ package keys
 
 import (
 	"fmt"
-	"net/http"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -216,27 +214,4 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	fmt.Println(ko.PubKey)
-}
-
-// PostProcessResponse performs post process for rest response
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
-	var output []byte
-	switch response.(type) {
-	default:
-		var err error
-		if indent {
-			output, err = cdc.MarshalJSONIndent(response, "", "  ")
-		} else {
-			output, err = cdc.MarshalJSON(response)
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-	case []byte:
-		output = response.([]byte)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(output)
 }

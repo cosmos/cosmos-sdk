@@ -20,10 +20,14 @@ type SignBody struct {
 	BaseReq   rest.BaseReq `json:"base_req"`
 }
 
-// nolint: unparam
 // sign tx REST handler
 func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var m SignBody
 
 		if !rest.ReadRESTReq(w, r, cdc, &m) {

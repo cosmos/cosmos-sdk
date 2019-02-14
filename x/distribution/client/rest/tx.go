@@ -56,9 +56,16 @@ type (
 )
 
 // Withdraw delegator rewards
-func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext,
-	queryRoute string) http.HandlerFunc {
+func withdrawDelegatorRewardsHandlerFn(
+	cdc *codec.Codec, cliCtx context.CLIContext, queryRoute string,
+) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -93,6 +100,11 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 // Withdraw delegation rewards
 func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var req withdrawRewardsReq
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
@@ -133,6 +145,11 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 // Replace the rewards withdrawal address
 func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var req setWithdrawalAddrReq
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
@@ -168,6 +185,11 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 // Withdraw validator rewards and commission
 func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var req withdrawRewardsReq
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {

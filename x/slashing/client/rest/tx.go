@@ -29,6 +29,11 @@ type UnjailReq struct {
 
 func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		vars := mux.Vars(r)
 
 		bech32validator := vars["validatorAddr"]

@@ -158,15 +158,15 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 // NOTE: If making updates here you also need to update the test helper in client/lcd/test_helper.go
 func registerRoutes(rs *lcd.RestServer) {
 	registerSwaggerUI(rs)
-	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
-	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
-	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
-	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	dist.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distcmd.StoreKey)
-	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	keys.RegisterRoutes(rs.ClientRouter.Router(), rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router())
+	tx.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc)
+	auth.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, at.StoreKey)
+	bank.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
+	dist.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, distcmd.StoreKey)
+	staking.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
+	slashing.RegisterRoutes(rs.CliCtx, rs.ClientRouter.Router(), rs.Cdc, rs.KeyBase)
+	gov.RegisterRoutes(rs.CliCtx, rs.ClientRouter, rs.Cdc)
 }
 
 func registerSwaggerUI(rs *lcd.RestServer) {
@@ -175,7 +175,7 @@ func registerSwaggerUI(rs *lcd.RestServer) {
 		panic(err)
 	}
 	staticServer := http.FileServer(statikFS)
-	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
+	rs.ClientRouter.Router().PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }
 
 func initConfig(cmd *cobra.Command) error {

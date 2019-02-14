@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -26,10 +27,10 @@ import (
 
 // RestServer represents the Light Client Rest server
 type RestServer struct {
-	Mux     *mux.Router
-	CliCtx  context.CLIContext
-	KeyBase keybase.Keybase
-	Cdc     *codec.Codec
+	ClientRouter rest.ClientRouter
+	CliCtx       context.CLIContext
+	KeyBase      keybase.Keybase
+	Cdc          *codec.Codec
 
 	log         log.Logger
 	listener    net.Listener
@@ -37,23 +38,23 @@ type RestServer struct {
 }
 
 // NewRestServer creates a new rest server instance
-func NewRestServer(cdc *codec.Codec) *RestServer {
+func NewRestServer(cdc *codec.Codec, allowUnsafe bool) *RestServer {
 	r := mux.NewRouter()
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{
-		Mux:    r,
-		CliCtx: cliCtx,
-		Cdc:    cdc,
-
-		log: logger,
+		ClientRouter: rest.NewClientRouter(r, allowUnsafe),
+		CliCtx:       cliCtx,
+		Cdc:          cdc,
+		log:          logger,
 	}
 }
 
-// Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, sslHosts string,
-	certFile string, keyFile string, maxOpen int, secure bool) (err error) {
+// Start starts the rest server.
+func (rs *RestServer) Start(
+	listenAddr string, sslHosts string, certFile string, keyFile string, maxOpen int, secure bool,
+) (err error) {
 
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
@@ -67,12 +68,17 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	if err != nil {
 		return
 	}
-	rs.log.Info(fmt.Sprintf("Starting Gaia Lite REST service (chain-id: %q)...",
-		viper.GetString(client.FlagChainID)))
+
+	rs.log.Info(
+		fmt.Sprintf(
+			"Starting Gaia REST service (chain-id: %s)...",
+			viper.GetString(client.FlagChainID),
+		),
+	)
 
 	// launch rest-server in insecure mode
 	if !secure {
-		return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
+		return rpcserver.StartHTTPServer(rs.listener, rs.ClientRouter.Router(), rs.log)
 	}
 
 	// handle certificates
@@ -82,7 +88,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			return err
 		}
 
-		//  cert/key pair is provided, read the fingerprint
+		// cert/key pair is provided, read the fingerprint
 		rs.fingerprint, err = fingerprintFromFile(certFile)
 		if err != nil {
 			return err
@@ -103,7 +109,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	rs.log.Info(rs.fingerprint)
 	return rpcserver.StartHTTPAndTLSServer(
 		rs.listener,
-		rs.Mux,
+		rs.ClientRouter.Router(),
 		certFile, keyFile,
 		rs.log,
 	)
@@ -117,7 +123,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		Use:   "rest-server",
 		Short: "Start a local client REST server",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rs := NewRestServer(cdc)
+			rs := NewRestServer(cdc, viper.GetBool(client.FlagUnsafeRoutes))
 
 			registerRoutesFn(rs)
 
@@ -142,7 +148,7 @@ func (rs *RestServer) registerSwaggerUI() {
 		panic(err)
 	}
 	staticServer := http.FileServer(statikFS)
-	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
+	rs.ClientRouter.Router().PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }
 
 func validateCertKeyFiles(certFile, keyFile string) error {

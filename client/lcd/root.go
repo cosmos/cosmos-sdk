@@ -122,6 +122,14 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start a local client REST server",
+		Long: `Start a local client REST server listening on "--laddr". The REST client
+will forward requests to a Tendermint RPC node defined by "--node". By default the
+REST client will not expose unsafe routes, which are enabled by "--allow-unsafe".
+Unsafe routes are defined as routes that sign txs or that expose any addresses.
+
+The REST client may also accept a SSL/TLS certificate enabling a secure connection.
+By default, the REST server will not trust the full node it is connected to, requiring
+the client to verify proofs. This can be bypassed via the "--trust-node" flag.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rs := NewRestServer(cdc, viper.GetBool(client.FlagUnsafeRoutes))
 

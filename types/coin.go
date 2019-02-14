@@ -267,7 +267,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 		return false
 	}
 
-	return diff.IsPositive()
+	return diff.IsAllPositive()
 }
 
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
@@ -375,11 +375,11 @@ func (coins Coins) AmountOf(denom string) Int {
 	}
 }
 
-// IsPositive returns true if there is at least one coin and all currencies
+// IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 //
 // TODO: Remove once unsigned integers are used.
-func (coins Coins) IsPositive() bool {
+func (coins Coins) IsAllPositive() bool {
 	if len(coins) == 0 {
 		return false
 	}

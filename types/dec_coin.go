@@ -434,11 +434,11 @@ func (coins DecCoins) IsValid() bool {
 	}
 }
 
-// IsPositive returns true if there is at least one coin and all currencies
+// IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 //
 // TODO: Remove once unsigned integers are used.
-func (coins DecCoins) IsPositive() bool {
+func (coins DecCoins) IsAllPositive() bool {
 	if len(coins) == 0 {
 		return false
 	}

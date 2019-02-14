@@ -716,7 +716,7 @@ func doTransferWithGas(
 	)
 
 	sr := bankrest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -749,7 +749,7 @@ func doTransferWithGasAccAuto(
 	)
 
 	sr := bankrest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 

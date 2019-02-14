@@ -272,10 +272,6 @@ func (coins DecCoins) SafeMinus(coinsB DecCoins) (DecCoins, bool) {
 //
 // TODO: Remove once unsigned integers are used.
 func (coins DecCoins) IsAnyNegative() bool {
-	if len(coins) == 0 {
-		return false
-	}
-
 	for _, coin := range coins {
 		if coin.IsNegative() {
 			return true

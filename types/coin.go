@@ -399,10 +399,6 @@ func (coins Coins) IsPositive() bool {
 //
 // TODO: Remove once unsigned integers are used.
 func (coins Coins) IsAnyNegative() bool {
-	if len(coins) == 0 {
-		return false
-	}
-
 	for _, coin := range coins {
 		if coin.IsNegative() {
 			return true

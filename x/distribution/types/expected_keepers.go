@@ -12,6 +12,11 @@ type StakingKeeper interface {
 	TotalPower(ctx sdk.Context) sdk.Int
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
+
+	// used for invariants
+	IterateValidators(ctx sdk.Context,
+		fn func(index int64, validator sdk.Validator) (stop bool))
+	GetAllSDKDelegations(ctx sdk.Context) []sdk.Delegation
 }
 
 // expected coin keeper

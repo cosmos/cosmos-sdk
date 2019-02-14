@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -20,16 +21,6 @@ const (
 
 	// Default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint16 = 7
-
-	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied
-	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
-	// if this is 1, the validator set at the end of a block will sign the block after the next.
-	// Constant as this should not change without a hard fork.
-	// TODO: Link to some Tendermint docs, this is very unobvious.
-	ValidatorUpdateDelay int64 = 1
-
-	// Default bondable coin denomination
-	DefaultBondDenom = "stake"
 )
 
 // nolint - Keys for parameter access
@@ -82,7 +73,7 @@ func (p Params) Equal(p2 Params) bool {
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, DefaultBondDenom)
+	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, sdk.DefaultBondDenom)
 }
 
 // String returns a human readable string representation of the parameters.

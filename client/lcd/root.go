@@ -115,21 +115,22 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
-		Short: "Start a local client REST server",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Short: "Start LCD (light-client daemon), a local REST server",
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
 
-			// start the rest server and return error if one exists
-			return rs.Start(
+			// Start the rest server and return error if one exists
+			err = rs.Start(
 				viper.GetString(client.FlagListenAddr),
 				viper.GetString(client.FlagSSLHosts),
 				viper.GetString(client.FlagSSLCertFile),
 				viper.GetString(client.FlagSSLKeyFile),
 				viper.GetInt(client.FlagMaxOpenConnections),
-				viper.GetBool(client.FlagTLS),
-			)
+				viper.GetBool(client.FlagTLS))
+
+			return err
 		},
 	}
 

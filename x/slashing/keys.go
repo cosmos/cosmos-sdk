@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -64,7 +63,7 @@ func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
 	// this needs to be height + ValidatorUpdateDelay because the slashing period for genesis validators starts at height -ValidatorUpdateDelay
-	binary.BigEndian.PutUint64(b, uint64(startHeight+staking.ValidatorUpdateDelay))
+	binary.BigEndian.PutUint64(b, uint64(startHeight+sdk.ValidatorUpdateDelay))
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 

@@ -65,17 +65,17 @@ func NewPositiveInt64Coin(denom string, amount int64) Coin {
 // it returns an error if Amount less than or equal to zero.
 // If failifzero is false, then it returns an error if and only if Amount
 // is less than zero.
-func (c Coin) Validate(failifzero bool) error {
-	if err := validateIntCoinAmount(c.Amount, failifzero); err != nil {
-		panic(fmt.Errorf("%s: %s", err, c.Amount))
+func (coin Coin) Validate(failifzero bool) error {
+	if err := validateIntCoinAmount(coin.Amount, failifzero); err != nil {
+		panic(fmt.Errorf("%s: %s", err, coin.Amount))
 	}
 
-	if err := validateCoinDenomContainsSpace(c.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, c.Denom))
+	if err := validateCoinDenomContainsSpace(coin.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, coin.Denom))
 	}
 
-	if err := validateCoinDenomCase(c.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, c.Denom))
+	if err := validateCoinDenomCase(coin.Denom); err != nil {
+		panic(fmt.Errorf("%s: %s", err, coin.Denom))
 	}
 
 	return nil

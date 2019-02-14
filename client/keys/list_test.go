@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -28,7 +29,7 @@ func TestRunListCmd(t *testing.T) {
 	defer cleanUp2()
 	viper.Set(cli.HomeFlag, kbHome2)
 
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)

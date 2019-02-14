@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -41,7 +40,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
+	info, err = clientkeyscmn.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }

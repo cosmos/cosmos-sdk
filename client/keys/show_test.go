@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
@@ -50,7 +51,7 @@ func TestRunShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
@@ -112,14 +113,14 @@ func TestGetBechKeyOut(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    bechKeyOutFn
+		want    common.BechKeyOutFn
 		wantErr bool
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{"acc"}, Bech32KeyOutput, false},
-		{"val", args{"val"}, Bech32ValKeyOutput, false},
-		{"cons", args{"cons"}, Bech32ConsKeyOutput, false},
+		{"acc", args{"acc"}, common.Bech32KeyOutput, false},
+		{"val", args{"val"}, common.Bech32ValKeyOutput, false},
+		{"cons", args{"cons"}, common.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

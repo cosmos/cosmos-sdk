@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -42,7 +43,7 @@ func TestRunUpdateCmd(t *testing.T) {
 	defer cleanUp1()
 	viper.Set(cli.HomeFlag, kbHome)
 
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)

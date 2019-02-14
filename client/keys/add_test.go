@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -27,7 +28,7 @@ func TestRunAddCmdBasic(t *testing.T) {
 	viper.Set(cli.HomeFlag, kbHome)
 
 	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	viper.Set(cli.OutputFlag, common.OutputFormatText)
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
@@ -35,7 +36,7 @@ func TestRunAddCmdBasic(t *testing.T) {
 	assert.NoError(t, err)
 
 	/// Test Text - Replace? >> FAIL
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	viper.Set(cli.OutputFlag, common.OutputFormatText)
 	// Now enter password
 	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp2()
@@ -43,7 +44,7 @@ func TestRunAddCmdBasic(t *testing.T) {
 	assert.Error(t, err)
 
 	/// Test Text - Replace? Answer >> PASS
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	viper.Set(cli.OutputFlag, common.OutputFormatText)
 	// Now enter password
 	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
 	defer cleanUp3()
@@ -51,7 +52,7 @@ func TestRunAddCmdBasic(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check JSON
-	viper.Set(cli.OutputFlag, OutputFormatJSON)
+	viper.Set(cli.OutputFlag, common.OutputFormatJSON)
 	// Now enter password
 	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp4()

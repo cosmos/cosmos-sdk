@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -30,7 +31,7 @@ func TestRunAddCmdLedger(t *testing.T) {
 	viper.Set(client.FlagUseLedger, true)
 
 	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	viper.Set(cli.OutputFlag, common.OutputFormatText)
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
@@ -38,7 +39,7 @@ func TestRunAddCmdLedger(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Now check that it has been stored properly
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
 	assert.NotNil(t, kb)
 	key1, err := kb.Get("keyname1")

@@ -377,7 +377,7 @@ func (coins DecCoins) IsEqual(coinsB DecCoins) bool {
 	coinsB = coinsB.Sort()
 
 	for i := 0; i < len(coins); i++ {
-		if coins[i].Denom != coinsB[i].Denom || !coins[i].Amount.Equal(coinsB[i].Amount) {
+		if !coins[i].IsEqual(coinsB[i]) {
 			return false
 		}
 	}

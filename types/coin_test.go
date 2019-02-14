@@ -30,15 +30,20 @@ func TestIsEqualCoin(t *testing.T) {
 		inputOne Coin
 		inputTwo Coin
 		expected bool
+		panics   bool
 	}{
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true, false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false, true},
+		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false, false},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
+		if tc.panics {
+			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsEqual(tc.inputTwo)
+			require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
+		}
 	}
 }
 
@@ -101,15 +106,20 @@ func TestIsGTECoin(t *testing.T) {
 		inputOne Coin
 		inputTwo Coin
 		expected bool
+		panics   bool
 	}{
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true},
-		{NewInt64Coin(testDenom1, 2), NewInt64Coin(testDenom1, 1), true},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true, false},
+		{NewInt64Coin(testDenom1, 2), NewInt64Coin(testDenom1, 1), true, false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false, true},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.IsGTE(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+		if tc.panics {
+			require.Panics(t, func() { tc.inputOne.IsGTE(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsGTE(tc.inputTwo)
+			require.Equal(t, tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+		}
 	}
 }
 
@@ -118,18 +128,23 @@ func TestIsLTCoin(t *testing.T) {
 		inputOne Coin
 		inputTwo Coin
 		expected bool
+		panics   bool
 	}{
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false},
-		{NewInt64Coin(testDenom1, 2), NewInt64Coin(testDenom1, 1), false},
-		{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1), false},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 2), true},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false, false},
+		{NewInt64Coin(testDenom1, 2), NewInt64Coin(testDenom1, 1), false, false},
+		{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1), false, true},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false, true},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false, false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 2), true, false},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.IsLT(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "coin LT relation is incorrect, tc #%d", tcIndex)
+		if tc.panics {
+			require.Panics(t, func() { tc.inputOne.IsLT(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsLT(tc.inputTwo)
+			require.Equal(t, tc.expected, res, "coin LT relation is incorrect, tc #%d", tcIndex)
+		}
 	}
 }
 
@@ -169,19 +184,24 @@ func TestEqualCoins(t *testing.T) {
 		inputOne Coins
 		inputTwo Coins
 		expected bool
+		panics   bool
 	}{
-		{Coins{}, Coins{}, true},
-		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0)}, true},
-		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, true},
-		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom2, 0)}, false},
-		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 1)}, false},
-		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, false},
-		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom2, 1), NewInt64Coin(testDenom1, 0)}, true},
+		{Coins{}, Coins{}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0)}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom2, 0)}, false, true},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 1)}, false, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, false, false},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, true, false},
 	}
 
 	for tcnum, tc := range cases {
-		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+		if tc.panics {
+			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsEqual(tc.inputTwo)
+			require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+		}
 	}
 }
 

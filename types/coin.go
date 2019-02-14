@@ -69,7 +69,7 @@ func (coin Coin) IsLT(other Coin) bool {
 
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
-	return coin.Denom == other.Denom && (coin.Amount.Equal(other.Amount))
+	return coin.Denom == other.Denom && coin.Amount.Equal(other.Amount)
 }
 
 // Adds amounts of two coins with same denom. If the coins differ in denom then

@@ -382,21 +382,21 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 	if err != nil {
 		return nil, err
 	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger)
+	go tmrpc.StartHTTPServer(listener, rs.Router, logger)
 	return listener, nil
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
 func registerRoutes(rs *RestServer) {
-	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
-	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
-	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
-	bankrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
-	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	keys.RegisterRoutes(rs.Router, rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Router)
+	tx.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc)
+	authrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, auth.StoreKey)
+	bankrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, rs.KeyBase)
+	distrrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, distr.StoreKey)
+	stakingrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, rs.KeyBase)
+	slashingrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc, rs.KeyBase)
+	govrest.RegisterRoutes(rs.CliCtx, rs.Router, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a

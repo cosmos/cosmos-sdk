@@ -37,7 +37,7 @@ type RestServer struct {
 }
 
 // NewRestServer creates a new rest server instance
-func NewRestServer(cdc *codec.Codec, allowUnsafe bool) *RestServer {
+func NewRestServer(cdc *codec.Codec) *RestServer {
 	router := mux.NewRouter()
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
@@ -130,7 +130,7 @@ The REST client may also accept a SSL/TLS certificate enabling a secure connecti
 By default, the REST server will not trust the full node it is connected to, requiring
 the client to verify proofs. This can be bypassed via the "--trust-node" flag.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rs := NewRestServer(cdc, viper.GetBool(client.FlagUnsafeRoutes))
+			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
 

@@ -377,11 +377,15 @@ func startTM(
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
+	rs.CliCtx = rs.CliCtx.WithAllowUnsafe(true)
+
 	registerRoutes(rs)
+
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
 	if err != nil {
 		return nil, err
 	}
+
 	go tmrpc.StartHTTPServer(listener, rs.Router, logger)
 	return listener, nil
 }

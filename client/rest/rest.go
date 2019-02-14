@@ -96,13 +96,11 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	return n, true
 }
 
-// UnsafeRouteHandler returns a generic request handler for when an unmounted
-// unsafe route has been invoked.
-func UnsafeRouteHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		WriteErrorResponse(w, http.StatusInternalServerError, "unsafe route not exposed on client")
-		return
-	}
+// UnsafeRouteHandler implements a generic handler for when an unsafe route is
+// invoked.
+func UnsafeRouteHandler(w http.ResponseWriter) {
+	WriteErrorResponse(w, http.StatusInternalServerError, "unsafe route not exposed on client")
+	return
 }
 
 //-----------------------------------------------------------------------------

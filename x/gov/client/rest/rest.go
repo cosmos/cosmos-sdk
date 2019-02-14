@@ -77,6 +77,11 @@ type voteReq struct {
 
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		var req postProposalReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -111,6 +116,11 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
@@ -153,6 +163,11 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 
 func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 

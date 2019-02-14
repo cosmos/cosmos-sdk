@@ -1,4 +1,4 @@
-package keys
+package common
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,7 +22,8 @@ const (
 	defaultKeyDBName = "keys"
 )
 
-type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
+// BechKeyOutFn defines a function signature for Bech32 key output.
+type BechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
@@ -154,7 +156,9 @@ func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	}, nil
 }
 
-func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
+// PrintKeyInfo formats and prints a keys.Info object with a given Bech32 output
+// function.
+func PrintKeyInfo(keyInfo keys.Info, bechKeyOut BechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
 		panic(err)
@@ -165,16 +169,13 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
-		out, err := MarshalJSON(ko)
-		if err != nil {
-			panic(err)
-		}
-
+		out := codec.Cdc.MustMarshalJSON(ko)
 		fmt.Println(string(out))
 	}
 }
 
-func printInfos(infos []keys.Info) {
+// PrintInfos formats and prints a slice of key.Info objects.
+func PrintInfos(infos []keys.Info) {
 	kos, err := Bech32KeysOutput(infos)
 	if err != nil {
 		panic(err)
@@ -186,10 +187,7 @@ func printInfos(infos []keys.Info) {
 			printKeyOutput(ko)
 		}
 	case OutputFormatJSON:
-		out, err := MarshalJSON(kos)
-		if err != nil {
-			panic(err)
-		}
+		out := codec.Cdc.MustMarshalJSON(kos)
 		fmt.Println(string(out))
 	}
 }
@@ -198,7 +196,8 @@ func printKeyOutput(ko KeyOutput) {
 	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
 }
 
-func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
+// PrintKeyAddress prints a keys.Info address given a Bech32 output function.
+func PrintKeyAddress(info keys.Info, bechKeyOut BechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)
@@ -207,7 +206,8 @@ func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
 	fmt.Println(ko.Address)
 }
 
-func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
+// PrintPubKey prints a keys.Info pubkey given a Bech32 output function.
+func PrintPubKey(info keys.Info, bechKeyOut BechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)

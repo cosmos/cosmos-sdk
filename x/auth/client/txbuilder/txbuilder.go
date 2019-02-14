@@ -7,7 +7,7 @@ import (
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -55,7 +55,7 @@ func NewTxBuilder(
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI() TxBuilder {
-	kb, err := keys.NewKeyBaseFromHomeFlag()
+	kb, err := clientkeyscmn.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		panic(err)
 	}
@@ -274,7 +274,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig auth.StdSignature, err error) {
 	if keybase == nil {
-		keybase, err = keys.NewKeyBaseFromHomeFlag()
+		keybase, err = clientkeyscmn.NewKeyBaseFromHomeFlag()
 		if err != nil {
 			return
 		}

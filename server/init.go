@@ -5,16 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
-	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
 func GenerateCoinKey() (sdk.AccAddress, string, error) {
-
 	// generate a private key, with recovery phrase
-	info, secret, err := clkeys.NewInMemoryKeyBase().CreateMnemonic(
+	info, secret, err := clientkeyscmn.NewInMemoryKeyBase().CreateMnemonic(
 		"name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
@@ -29,7 +28,7 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string,
 	overwrite bool) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
-	keybase, err := clkeys.NewKeyBaseFromDir(clientRoot)
+	keybase, err := clientkeyscmn.NewKeyBaseFromDir(clientRoot)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

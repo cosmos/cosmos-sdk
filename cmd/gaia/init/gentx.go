@@ -20,7 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -87,7 +87,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+			kb, err := clientkeyscmn.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
 			}

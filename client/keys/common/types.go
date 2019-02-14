@@ -1,4 +1,4 @@
-package keys
+package common
 
 // used for outputting keys.Info over REST
 type KeyOutput struct {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -57,7 +57,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 			return
 		}
 
-		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		keybase, err := clientkeyscmn.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
 		if err != nil {
 			return
 		}

@@ -20,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -546,25 +547,25 @@ func getTransactions(t *testing.T, port string, tags ...string) []sdk.TxResponse
 // ICS 1 - Keys
 // ----------------------------------------------------------------------
 // GET /keys List of accounts stored locally
-func getKeys(t *testing.T, port string) []keys.KeyOutput {
+func getKeys(t *testing.T, port string) []clientkeyscmn.KeyOutput {
 	res, body := Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m []keys.KeyOutput
+	var m []clientkeyscmn.KeyOutput
 	err := cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 	return m
 }
 
 // POST /keys Create a new account locally
-func doKeysPost(t *testing.T, port, name, password, mnemonic string, account int, index int) keys.KeyOutput {
-	pk := keys.AddNewKey{name, password, mnemonic, account, index}
+func doKeysPost(t *testing.T, port, name, password, mnemonic string, account int, index int) clientkeyscmn.KeyOutput {
+	pk := clientkeyscmn.AddNewKey{name, password, mnemonic, account, index}
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
 	res, body := Request(t, port, "POST", "/keys", req)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var resp keys.KeyOutput
+	var resp clientkeyscmn.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 	return resp
@@ -583,14 +584,14 @@ func getKeysSeed(t *testing.T, port string) string {
 
 // POST /keys/{name}/recove Recover a account from a seed
 func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, mnemonic string, account uint32, index uint32) {
-	pk := keys.RecoverKey{recoverPassword, mnemonic, int(account), int(index)}
+	pk := clientkeyscmn.RecoverKey{recoverPassword, mnemonic, int(account), int(index)}
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), req)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var resp keys.KeyOutput
+	var resp clientkeyscmn.KeyOutput
 	err = codec.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
@@ -600,10 +601,10 @@ func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, mnemonic str
 }
 
 // GET /keys/{name} Get a certain locally stored account
-func getKey(t *testing.T, port, name string) keys.KeyOutput {
+func getKey(t *testing.T, port, name string) clientkeyscmn.KeyOutput {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/keys/%s", name), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var resp keys.KeyOutput
+	var resp clientkeyscmn.KeyOutput
 	err := cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err)
 	return resp
@@ -611,7 +612,7 @@ func getKey(t *testing.T, port, name string) keys.KeyOutput {
 
 // PUT /keys/{name} Update the password for this account in the KMS
 func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail bool) {
-	kr := keys.UpdateKeyReq{oldPassword, newPassword}
+	kr := clientkeyscmn.UpdateKeyReq{oldPassword, newPassword}
 	req, err := cdc.MarshalJSON(kr)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)
@@ -625,7 +626,7 @@ func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail b
 
 // DELETE /keys/{name} Remove an account
 func deleteKey(t *testing.T, port, name, password string) {
-	dk := keys.DeleteKeyReq{password}
+	dk := clientkeyscmn.DeleteKeyReq{password}
 	req, err := cdc.MarshalJSON(dk)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)

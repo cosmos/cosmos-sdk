@@ -12,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -64,7 +64,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(fromName)
+	passphrase, err := clientkeyscmn.GetPassphrase(fromName)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := clientkeyscmn.GetPassphrase(name)
 	if err != nil {
 		return signedStdTx, err
 	}
@@ -182,7 +182,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := clientkeyscmn.GetPassphrase(name)
 	if err != nil {
 		return signedStdTx, err
 	}

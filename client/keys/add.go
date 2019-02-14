@@ -10,7 +10,10 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -108,7 +111,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = app.DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
+		kb, err = common.NewKeyBaseFromHomeFlag()
 		if err != nil {
 			return err
 		}
@@ -266,9 +269,9 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
-	case OutputFormatText:
+	case common.OutputFormatText:
 		fmt.Fprintln(os.Stderr)
-		printKeyInfo(info, Bech32KeyOutput)
+		common.PrintKeyInfo(info, common.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -277,8 +280,8 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, mnemonic)
 		}
-	case OutputFormatJSON:
-		out, err := Bech32KeyOutput(info)
+	case common.OutputFormatJSON:
+		out, err := common.Bech32KeyOutput(info)
 		if err != nil {
 			return err
 		}
@@ -289,9 +292,9 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 
 		var jsonString []byte
 		if viper.GetBool(client.FlagIndentResponse) {
-			jsonString, err = cdc.MarshalJSONIndent(out, "", "  ")
+			jsonString, err = codec.Cdc.MarshalJSONIndent(out, "", "  ")
 		} else {
-			jsonString, err = cdc.MarshalJSON(out)
+			jsonString, err = codec.Cdc.MarshalJSON(out)
 		}
 
 		if err != nil {
@@ -393,14 +396,14 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		keyOutput, err := Bech32KeyOutput(info)
+		keyOutput, err := common.Bech32KeyOutput(info)
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput.Mnemonic = mnemonic
 
-		rest.PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, codec.Cdc, keyOutput, cliCtx.Indent)
 	}
 }
 
@@ -484,11 +487,11 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		keyOutput, err := Bech32KeyOutput(info)
+		keyOutput, err := common.Bech32KeyOutput(info)
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, codec.Cdc, keyOutput, cliCtx.Indent)
 	}
 }

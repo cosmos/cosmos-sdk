@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -28,7 +28,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+				kb, err := clientkeyscmn.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 				if err != nil {
 					return err
 				}

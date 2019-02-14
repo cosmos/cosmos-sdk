@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -210,7 +210,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 			sdk.OneInt(),
 		)
-		kb, err := keys.NewKeyBaseFromDir(clientDir)
+		kb, err := clientkeyscmn.NewKeyBaseFromDir(clientDir)
 		if err != nil {
 			return err
 		}

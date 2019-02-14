@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
@@ -29,7 +30,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := client.BufferStdin()
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
@@ -77,7 +78,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kb, err = NewKeyBaseFromHomeFlag()
+	kb, err = common.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))

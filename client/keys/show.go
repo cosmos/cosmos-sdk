@@ -6,6 +6,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
@@ -66,14 +69,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
 	if len(args) == 1 {
-		info, err = GetKeyInfo(args[0])
+		info, err = common.GetKeyInfo(args[0])
 		if err != nil {
 			return err
 		}
 	} else {
 		pks := make([]crypto.PubKey, len(args))
 		for i, keyName := range args {
-			info, err := GetKeyInfo(keyName)
+			info, err := common.GetKeyInfo(keyName)
 			if err != nil {
 				return err
 			}
@@ -116,11 +119,11 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	switch {
 	case isShowAddr:
-		printKeyAddress(info, bechKeyOut)
+		common.PrintKeyAddress(info, bechKeyOut)
 	case isShowPubKey:
-		printPubKey(info, bechKeyOut)
+		common.PrintPubKey(info, bechKeyOut)
 	default:
-		printKeyInfo(info, bechKeyOut)
+		common.PrintKeyInfo(info, bechKeyOut)
 	}
 
 	return nil
@@ -137,14 +140,14 @@ func validateMultisigThreshold(k, nKeys int) error {
 	return nil
 }
 
-func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
+func getBechKeyOut(bechPrefix string) (common.BechKeyOutFn, error) {
 	switch bechPrefix {
 	case "acc":
-		return Bech32KeyOutput, nil
+		return common.Bech32KeyOutput, nil
 	case "val":
-		return Bech32ValKeyOutput, nil
+		return common.Bech32ValKeyOutput, nil
 	case "cons":
-		return Bech32ConsKeyOutput, nil
+		return common.Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
@@ -154,8 +157,13 @@ func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 // REST
 
 // get key REST handler
-func GetKeyRequestHandler(indent bool) http.HandlerFunc {
+func GetKeyRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !cliCtx.AllowUnsafe {
+			rest.UnsafeRouteHandler(w)
+			return
+		}
+
 		vars := mux.Vars(r)
 		name := vars["name"]
 		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
@@ -171,7 +179,7 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		info, err := GetKeyInfo(name)
+		info, err := common.GetKeyInfo(name)
 		if keyerror.IsErrKeyNotFound(err) {
 			w.WriteHeader(http.StatusNotFound)
 			_, _ = w.Write([]byte(err.Error()))
@@ -189,6 +197,6 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, codec.Cdc, keyOutput, cliCtx.Indent)
 	}
 }

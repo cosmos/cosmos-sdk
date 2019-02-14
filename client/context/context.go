@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeyscmn "github.com/cosmos/cosmos-sdk/client/keys/common"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -287,7 +287,7 @@ func GetFromFields(from string) (sdk.AccAddress, string, error) {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	keybase, err := clientkeyscmn.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, "", err
 	}

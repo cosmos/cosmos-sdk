@@ -3,8 +3,12 @@ package keys
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys/common"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 func listKeysCmd() *cobra.Command {
@@ -18,15 +22,16 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := common.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
 
 	infos, err := kb.List()
 	if err == nil {
-		printInfos(infos)
+		common.PrintInfos(infos)
 	}
+
 	return err
 }
 
@@ -50,15 +55,15 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 		}
 		// an empty list will be JSONized as null, but we want to keep the empty list
 		if len(infos) == 0 {
-			rest.PostProcessResponse(w, cdc, []string{}, indent)
+			rest.PostProcessResponse(w, codec.Cdc, []string{}, cliCtx.Indent)
 			return
 		}
-		keysOutput, err := Bech32KeysOutput(infos)
+		keysOutput, err := common.Bech32KeysOutput(infos)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
-		rest.PostProcessResponse(w, cdc, keysOutput, indent)
+		rest.PostProcessResponse(w, codec.Cdc, keysOutput, cliCtx.Indent)
 	}
 }

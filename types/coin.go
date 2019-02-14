@@ -61,12 +61,12 @@ func NewPositiveInt64Coin(denom string, amount int64) Coin {
 	return NewPositiveCoin(denom, NewInt(amount))
 }
 
-// Validate validates coin's Amount and Denom. If failifzero is true, then
+// Validate validates coin's Amount and Denom. If strict is true, then
 // it returns an error if Amount less than or equal to zero.
-// If failifzero is false, then it returns an error if and only if Amount
+// If strict is false, then it returns an error if and only if Amount
 // is less than zero.
-func (coin Coin) Validate(failifzero bool) error {
-	if err := validateIntCoinAmount(coin.Amount, failifzero); err != nil {
+func (coin Coin) Validate(strict bool) error {
+	if err := validateIntCoinAmount(coin.Amount, strict); err != nil {
 		panic(fmt.Errorf("%s: %s", err, coin.Amount))
 	}
 
@@ -522,26 +522,38 @@ var (
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.
 // This returns an error on an empty string as well.
-func ParseCoin(coinStr string) (coin Coin, err error) {
-	coinStr = strings.TrimSpace(coinStr)
+func ParseCoin(coinStr string) (Coin, error) {
+	coin, err := parseCoinString(coinStr)
+	if err != nil {
+		return Coin{}, fmt.Errorf("failed to parse coin: %s", err)
+	}
+	return coin, coin.Validate(false)
+}
 
+// ParseCoin parses a cli input for one coin type, returning errors if invalid.
+// This returns an error on an empty string as well.
+func ParsePositiveCoin(coinStr string) (Coin, error) {
+	coin, err := parseCoinString(coinStr)
+	if err != nil {
+		return Coin{}, fmt.Errorf("failed to parse coin: %s", err)
+	}
+	return coin, coin.Validate(true)
+}
+
+func parseCoinString(coinStr string) (Coin, error) {
+	coinStr = strings.TrimSpace(coinStr)
 	matches := reCoin.FindStringSubmatch(coinStr)
 	if matches == nil {
-		return Coin{}, fmt.Errorf("invalid coin expression: %s", coinStr)
+		return Coin{}, fmt.Errorf("invalid coin expression %q", coinStr)
 	}
 
 	denomStr, amountStr := matches[2], matches[1]
-
 	amount, ok := NewIntFromString(amountStr)
 	if !ok {
-		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
+		return Coin{}, fmt.Errorf("failed to parse coin amount %q", amountStr)
 	}
 
-	if err := validateCoinDenomCase(denomStr); err != nil {
-		return Coin{}, fmt.Errorf("%s: %s", err, denomStr)
-	}
-
-	return NewCoin(denomStr, amount), nil
+	return Coin{Denom: denomStr, Amount: amount}, nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.
@@ -587,11 +599,11 @@ func validateCoinDenomContainsSpace(denom string) error {
 	return nil
 }
 
-func validateIntCoinAmount(amount Int, failifzero bool) error {
-	if failifzero && amount.LTE(ZeroInt()) {
+func validateIntCoinAmount(amount Int, strict bool) error {
+	if strict && amount.LTE(ZeroInt()) {
 		return errors.New("non-positive coin amount")
 	}
-	if !failifzero && amount.LT(ZeroInt()) {
+	if !strict && amount.LT(ZeroInt()) {
 		return errors.New("negative coin amount")
 	}
 	return nil

@@ -78,12 +78,12 @@ func NewPositiveDecCoinFromCoin(coin Coin) DecCoin {
 	return c
 }
 
-// Validate validates coin's Amount and Denom. If failifzero is true, then
-// it returns an error if Amount less than or equal to zero.
-// If failifzero is false, then it returns an error if and only if Amount
-// is less than zero.
-func (coin DecCoin) Validate(failifzero bool) error {
-	if err := validateDecCoinAmount(coin.Amount, failifzero); err != nil {
+// Validate validates coin's Amount and Denom. If strict is true,
+// then it returns an error if Amount less than or equal to zero.
+// If strict is false, then it returns an error if and only if
+// Amount is less than zero.
+func (coin DecCoin) Validate(strict bool) error {
+	if err := validateDecCoinAmount(coin.Amount, strict); err != nil {
 		panic(fmt.Errorf("%s: %s", err, coin.Amount))
 	}
 
@@ -436,11 +436,11 @@ func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
 	return coins, nil
 }
 
-func validateDecCoinAmount(amount Dec, failifzero bool) error {
-	if failifzero && amount.LTE(ZeroDec()) {
+func validateDecCoinAmount(amount Dec, strict bool) error {
+	if strict && amount.LTE(ZeroDec()) {
 		return errors.New("non-positive coin amount")
 	}
-	if !failifzero && amount.LT(ZeroDec()) {
+	if !strict && amount.LT(ZeroDec()) {
 		return errors.New("negative coin amount")
 	}
 	return nil

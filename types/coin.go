@@ -50,11 +50,6 @@ func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
-// SameDenomAs returns true if the two coins are the same denom
-func (coin Coin) SameDenomAs(other Coin) bool {
-	return (coin.Denom == other.Denom)
-}
-
 // IsZero returns if this represents no money
 func (coin Coin) IsZero() bool {
 	return coin.Amount.IsZero()
@@ -63,24 +58,24 @@ func (coin Coin) IsZero() bool {
 // IsGTE returns true if they are the same type and the receiver is
 // an equal or greater value
 func (coin Coin) IsGTE(other Coin) bool {
-	return coin.SameDenomAs(other) && (!coin.Amount.LT(other.Amount))
+	return coin.Denom == other.Denom && !coin.Amount.LT(other.Amount)
 }
 
 // IsLT returns true if they are the same type and the receiver is
 // a smaller value
 func (coin Coin) IsLT(other Coin) bool {
-	return coin.SameDenomAs(other) && coin.Amount.LT(other.Amount)
+	return coin.Denom == other.Denom && coin.Amount.LT(other.Amount)
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
-	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
+	return coin.Denom == other.Denom && (coin.Amount.Equal(other.Amount))
 }
 
 // Adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
 func (coin Coin) Plus(coinB Coin) Coin {
-	if !coin.SameDenomAs(coinB) {
+	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
 
@@ -90,7 +85,7 @@ func (coin Coin) Plus(coinB Coin) Coin {
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Minus(coinB Coin) Coin {
-	if !coin.SameDenomAs(coinB) {
+	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
 

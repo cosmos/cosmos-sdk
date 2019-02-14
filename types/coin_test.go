@@ -25,23 +25,6 @@ func TestCoin(t *testing.T) {
 	require.Equal(t, NewInt(5), NewCoin(testDenom1, NewInt(5)).Amount)
 }
 
-func TestSameDenomAsCoin(t *testing.T) {
-	cases := []struct {
-		inputOne Coin
-		inputTwo Coin
-		expected bool
-	}{
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true},
-		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), true},
-	}
-
-	for tcIndex, tc := range cases {
-		res := tc.inputOne.SameDenomAs(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "coin denominations didn't match, tc #%d", tcIndex)
-	}
-}
-
 func TestIsEqualCoin(t *testing.T) {
 	cases := []struct {
 		inputOne Coin

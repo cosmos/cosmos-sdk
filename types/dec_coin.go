@@ -64,11 +64,6 @@ func NewInt64DecCoin(denom string, amount int64) DecCoin {
 	return NewDecCoin(denom, NewInt(amount))
 }
 
-// SameDenomAs returns true if the two DecCoin have the same denom.
-func (coin DecCoin) SameDenomAs(other DecCoin) bool {
-	return (coin.Denom == other.Denom)
-}
-
 // IsZero returns if the DecCoin amount is zero.
 func (coin DecCoin) IsZero() bool {
 	return coin.Amount.IsZero()
@@ -77,18 +72,18 @@ func (coin DecCoin) IsZero() bool {
 // IsGTE returns true if they are the same type and the receiver is
 // an equal or greater value.
 func (coin DecCoin) IsGTE(other DecCoin) bool {
-	return coin.SameDenomAs(other) && (!coin.Amount.LT(other.Amount))
+	return coin.Denom == other.Denom && !coin.Amount.LT(other.Amount)
 }
 
 // IsLT returns true if they are the same type and the receiver is
 // a smaller value.
 func (coin DecCoin) IsLT(other DecCoin) bool {
-	return coin.SameDenomAs(other) && coin.Amount.LT(other.Amount)
+	return coin.Denom == other.Denom && coin.Amount.LT(other.Amount)
 }
 
 // IsEqual returns true if the two sets of Coins have the same value.
 func (coin DecCoin) IsEqual(other DecCoin) bool {
-	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
+	return coin.Denom == other.Denom && coin.Amount.Equal(other.Amount)
 }
 
 // Adds amounts of two coins with same denom

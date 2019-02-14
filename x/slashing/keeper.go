@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // Keeper of the slashing store
@@ -86,7 +85,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - staking.ValidatorUpdateDelay
+	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
 	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
@@ -175,7 +174,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - staking.ValidatorUpdateDelay - 1
+			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))

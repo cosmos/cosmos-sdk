@@ -8,8 +8,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
+
+// assertAll asserts the all invariants against application state
+func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
+	event string, displayLogs func()) {
+
+	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
+
+	for i := 0; i < len(invs); i++ {
+		if err := invs[i](ctx); err != nil {
+			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
+			displayLogs()
+			t.Fatal()
+		}
+	}
+}
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	testingMode = false
@@ -112,7 +129,7 @@ func getBlockSize(r *rand.Rand, params Params,
 // NOTE this function is intended to be used manually used while running
 // computationally heavy simulations.
 // TODO reference this function in the codebase probably through use of a switch
-func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
+func PeriodicInvariant(invariant sdk.Invariant, period int, offset int) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		if int(ctx.BlockHeight())%period == offset {
 			return invariant(ctx)

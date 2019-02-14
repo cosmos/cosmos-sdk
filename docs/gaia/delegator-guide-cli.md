@@ -178,6 +178,10 @@ Then, to create an account, use the following command:
 gaiacli keys add <yourAccountName> --ledger 
 ```
 
+::: warning
+**This command will only work while the Ledger is plugged in and unlocked**
+:::
+
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
 
@@ -380,8 +384,8 @@ gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas
 gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 ```
 
-::: tip
-If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network
+::: warning
+**If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network. Note that the command will only work while the Ledger is plugged in and unlocked.**
 ::: 
 
 To confirm that your transaction went through, you can use the following queries:

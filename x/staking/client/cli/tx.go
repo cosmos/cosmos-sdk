@@ -128,7 +128,7 @@ $ gaiacli tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			amount, err := sdk.ParseCoin(args[1])
+			amount, err := sdk.ParsePositiveCoin(args[1])
 			if err != nil {
 				return err
 			}

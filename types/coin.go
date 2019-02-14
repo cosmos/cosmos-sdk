@@ -67,15 +67,15 @@ func NewPositiveInt64Coin(denom string, amount int64) Coin {
 // is less than zero.
 func (coin Coin) Validate(strict bool) error {
 	if err := validateIntCoinAmount(coin.Amount, strict); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Amount))
+		return fmt.Errorf("%s: %s", err, coin.Amount)
 	}
 
 	if err := validateCoinDenomContainsSpace(coin.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Denom))
+		return fmt.Errorf("%s: %s", err, coin.Denom)
 	}
 
 	if err := validateCoinDenomCase(coin.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Denom))
+		return fmt.Errorf("%s: %s", err, coin.Denom)
 	}
 
 	return nil
@@ -177,10 +177,10 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		if err := coins[0].Validate(true); err != nil {
 			return false
 		}
-		return coins[0].IsPositive()
+		return true
 	default:
 		// check single coin case
 		if !(Coins{coins[0]}).IsValid() {
@@ -189,13 +189,10 @@ func (coins Coins) IsValid() bool {
 
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
-			if strings.ToLower(coin.Denom) != coin.Denom {
+			if err := coin.Validate(true); err != nil {
 				return false
 			}
 			if coin.Denom <= lowDenom {
-				return false
-			}
-			if !coin.IsPositive() {
 				return false
 			}
 
@@ -527,7 +524,12 @@ func ParseCoin(coinStr string) (Coin, error) {
 	if err != nil {
 		return Coin{}, fmt.Errorf("failed to parse coin: %s", err)
 	}
-	return coin, coin.Validate(false)
+
+	if err := coin.Validate(false); err != nil {
+		return Coin{}, fmt.Errorf("validation error: %s", err)
+	}
+
+	return coin, nil
 }
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.
@@ -537,7 +539,12 @@ func ParsePositiveCoin(coinStr string) (Coin, error) {
 	if err != nil {
 		return Coin{}, fmt.Errorf("failed to parse coin: %s", err)
 	}
-	return coin, coin.Validate(true)
+
+	if err := coin.Validate(true); err != nil {
+		return Coin{}, fmt.Errorf("validation error: %s", err)
+	}
+
+	return coin, nil
 }
 
 func parseCoinString(coinStr string) (Coin, error) {

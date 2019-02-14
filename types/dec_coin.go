@@ -84,15 +84,15 @@ func NewPositiveDecCoinFromCoin(coin Coin) DecCoin {
 // Amount is less than zero.
 func (coin DecCoin) Validate(strict bool) error {
 	if err := validateDecCoinAmount(coin.Amount, strict); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Amount))
+		return fmt.Errorf("%s: %s", err, coin.Amount)
 	}
 
 	if err := validateCoinDenomContainsSpace(coin.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Denom))
+		return fmt.Errorf("%s: %s", err, coin.Denom)
 	}
 
 	if err := validateCoinDenomCase(coin.Denom); err != nil {
-		panic(fmt.Errorf("%s: %s", err, coin.Denom))
+		return fmt.Errorf("%s: %s", err, coin.Denom)
 	}
 
 	return nil
@@ -329,13 +329,11 @@ func (coins DecCoins) IsValid() bool {
 	switch len(coins) {
 	case 0:
 		return true
-
 	case 1:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		if err := coins[0].Validate(true); err != nil {
 			return false
 		}
-		return coins[0].IsPositive()
-
+		return true
 	default:
 		// check single coin case
 		if !(DecCoins{coins[0]}).IsValid() {
@@ -344,13 +342,10 @@ func (coins DecCoins) IsValid() bool {
 
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
-			if strings.ToLower(coin.Denom) != coin.Denom {
+			if err := coin.Validate(true); err != nil {
 				return false
 			}
 			if coin.Denom <= lowDenom {
-				return false
-			}
-			if !coin.IsPositive() {
 				return false
 			}
 
@@ -383,26 +378,32 @@ func (coins DecCoins) Sort() DecCoins {
 
 // ParseDecCoin parses a decimal coin from a string, returning an error if
 // invalid. An empty string is considered invalid.
-func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
-	coinStr = strings.TrimSpace(coinStr)
-
-	matches := reDecCoin.FindStringSubmatch(coinStr)
-	if matches == nil {
-		return DecCoin{}, fmt.Errorf("invalid decimal coin expression: %s", coinStr)
-	}
-
-	amountStr, denomStr := matches[1], matches[2]
-
-	amount, err := NewDecFromStr(amountStr)
+func ParseDecCoin(coinStr string) (DecCoin, error) {
+	coin, err := parseDecCoinString(coinStr)
 	if err != nil {
-		return DecCoin{}, errors.Wrap(err, fmt.Sprintf("failed to parse decimal coin amount: %s", amountStr))
+		return DecCoin{}, fmt.Errorf("failed to parse decimal coin: %s", err)
 	}
 
-	if denomStr != strings.ToLower(denomStr) {
-		return DecCoin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	if err := coin.Validate(false); err != nil {
+		return DecCoin{}, fmt.Errorf("validation error: %s", err)
 	}
 
-	return NewDecCoinFromDec(denomStr, amount), nil
+	return coin, nil
+}
+
+// ParsePositiveDecCoin parses a decimal coin from a string, returning an error if
+// invalid. An empty string is considered invalid.
+func ParsePositiveDecCoin(coinStr string) (DecCoin, error) {
+	coin, err := parseDecCoinString(coinStr)
+	if err != nil {
+		return DecCoin{}, fmt.Errorf("failed to parse decimal coin: %s", err)
+	}
+
+	if err := coin.Validate(true); err != nil {
+		return DecCoin{}, fmt.Errorf("validation error: %s", err)
+	}
+
+	return coin, nil
 }
 
 // ParseDecCoins will parse out a list of decimal coins separated by commas.
@@ -444,4 +445,20 @@ func validateDecCoinAmount(amount Dec, strict bool) error {
 		return errors.New("negative coin amount")
 	}
 	return nil
+}
+
+func parseDecCoinString(coinStr string) (DecCoin, error) {
+	coinStr = strings.TrimSpace(coinStr)
+	matches := reDecCoin.FindStringSubmatch(coinStr)
+	if matches == nil {
+		return DecCoin{}, fmt.Errorf("invalid decimal coin expression %q", coinStr)
+	}
+
+	amountStr, denomStr := matches[1], matches[2]
+	amount, err := NewDecFromStr(amountStr)
+	if err != nil {
+		return DecCoin{}, fmt.Errorf("failed to parse decimal coin amount: %s", amountStr)
+	}
+
+	return DecCoin{Denom: denomStr, Amount: amount}, nil
 }

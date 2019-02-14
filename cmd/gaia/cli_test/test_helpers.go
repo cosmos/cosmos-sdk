@@ -319,6 +319,12 @@ func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
 //___________________________________________________________________________________
 // gaiacli tx staking
 
+// TxStakingDelegate is gaiacli tx delegate
+func (f *Fixtures) TxStakingDelegate(from, validatorAddr, amount string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("gaiacli tx staking delegate %v --from=%s %s %s", f.Flags(), from, validatorAddr, amount)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
 // TxStakingCreateValidator is gaiacli tx staking create-validator
 func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx staking create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)

@@ -177,6 +177,8 @@ func TestParseDecCoins(t *testing.T) {
 		{"5.5atom,4stake", nil, true},
 		{"0.0stake", nil, true},
 		{"0.004STAKE", nil, true},
+		{"-1.0stake", nil, true},
+		{"0.004STAKE", nil, true},
 		{
 			"0.004stake",
 			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
@@ -190,6 +192,16 @@ func TestParseDecCoins(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"0.004 stake",
+			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
+			false,
+		},
+		{
+			"\n0.004\tstake",
+			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
+			false,
+		},
 	}
 
 	for i, tc := range testCases {
@@ -197,7 +209,7 @@ func TestParseDecCoins(t *testing.T) {
 		if tc.expectedErr {
 			require.Error(t, err, "expected error for test case #%d, input: %v", i, tc.input)
 		} else {
-			require.NoError(t, err, "unexpected error for test case #%d, input: %v", i, tc.input)
+			require.NoError(t, err, "unexpected error for test case #%d, input: %v", i, tc.input, err)
 			require.Equal(t, tc.expectedResult, res, "unexpected result for test case #%d, input: %v", i, tc.input)
 		}
 	}

@@ -379,6 +379,20 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	f.Cleanup()
 }
 
+func TestDelegateCoinParsing(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	// coins parsing take place first, thus other args can be invalid
+	ok, _, stderr := f.TxStakingDelegate("foo", "skipped", "0atom")
+	require.False(t, ok)
+	require.Contains(t, stderr, "non-positive coin amount")
+}
+
 func TestGaiaCLISubmitProposal(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

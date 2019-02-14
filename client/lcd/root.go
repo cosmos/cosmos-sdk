@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -27,10 +26,10 @@ import (
 
 // RestServer represents the Light Client Rest server
 type RestServer struct {
-	ClientRouter rest.ClientRouter
-	CliCtx       context.CLIContext
-	KeyBase      keybase.Keybase
-	Cdc          *codec.Codec
+	Router  *mux.Router
+	CliCtx  context.CLIContext
+	KeyBase keybase.Keybase
+	Cdc     *codec.Codec
 
 	log         log.Logger
 	listener    net.Listener
@@ -39,15 +38,15 @@ type RestServer struct {
 
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec, allowUnsafe bool) *RestServer {
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{
-		ClientRouter: rest.NewClientRouter(r, allowUnsafe),
-		CliCtx:       cliCtx,
-		Cdc:          cdc,
-		log:          logger,
+		Router: router,
+		CliCtx: cliCtx,
+		Cdc:    cdc,
+		log:    logger,
 	}
 }
 
@@ -78,7 +77,7 @@ func (rs *RestServer) Start(
 
 	// launch rest-server in insecure mode
 	if !secure {
-		return rpcserver.StartHTTPServer(rs.listener, rs.ClientRouter.Router(), rs.log)
+		return rpcserver.StartHTTPServer(rs.listener, rs.Router, rs.log)
 	}
 
 	// handle certificates
@@ -109,7 +108,7 @@ func (rs *RestServer) Start(
 	rs.log.Info(rs.fingerprint)
 	return rpcserver.StartHTTPAndTLSServer(
 		rs.listener,
-		rs.ClientRouter.Router(),
+		rs.Router,
 		certFile, keyFile,
 		rs.log,
 	)
@@ -156,7 +155,7 @@ func (rs *RestServer) registerSwaggerUI() {
 		panic(err)
 	}
 	staticServer := http.FileServer(statikFS)
-	rs.ClientRouter.Router().PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
+	rs.Router.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }
 
 func validateCertKeyFiles(certFile, keyFile string) error {

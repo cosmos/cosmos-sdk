@@ -1,4 +1,4 @@
-package simulation
+package invariants
 
 import (
 	"bytes"

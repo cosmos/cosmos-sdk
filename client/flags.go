@@ -40,7 +40,7 @@ const (
 	FlagListenAddr         = "laddr"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
-	FlagUnsafeRoutes       = "unsafe-routes"
+	FlagUnsafeRoutes       = "allow-unsafe"
 	FlagTLS                = "tls"
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
@@ -113,7 +113,7 @@ func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
 	cmd.Flags().String(FlagCORS, "", "Set the domains that can make CORS requests (* for all)")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(FlagUnsafeRoutes, false, "Mount and expose unsafe routes (should only be exposed on localhost)")
+	cmd.Flags().Bool(FlagUnsafeRoutes, false, "Expose unsafe routes (should only be exposed on localhost)")
 
 	return cmd
 }

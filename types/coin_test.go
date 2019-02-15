@@ -416,37 +416,47 @@ func TestParse(t *testing.T) {
 	one := NewInt(1)
 
 	cases := []struct {
-		input    string
-		valid    bool  // if false, we expect an error on parse
-		expected Coins // if valid is true, make sure this is returned
+		input         string
+		valid         bool // if false, we expect an error on parse
+		validPositive bool
+		expected      Coins // if valid is true, make sure this is returned
 	}{
-		{"", true, nil},
-		{"0", false, nil}, // // empty denom
-		{"1foo", true, Coins{{"foo", one}}},
-		{"10bar", true, Coins{{"bar", NewInt(10)}}},
-		{"99bar,1foo", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
-		{"98 bar , 1 foo  ", true, Coins{{"bar", NewInt(98)}, {"foo", one}}},
-		{"  55\t \t bling\n", true, Coins{{"bling", NewInt(55)}}},
-		{"2foo, 97 bar", true, Coins{{"bar", NewInt(97)}, {"foo", NewInt(2)}}},
-		{"5 mycoin,", false, nil},             // no empty coins in a list
-		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
-		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
-		{"1.2btc", false, nil},                // amount must be integer
-		{"5foo-bar", false, nil},              // once more, only letters in coin name
-		{"5foo,-3bar", false, nil},            // all coins must pass validation
-		{"5.2foo", false, nil},                // decimal coin
-		{"-5foo", false, nil},                 // negative coin
-		{"0foo", false, nil},                  // invalid zero
-		{"-0foo", false, nil},                 // negative zero
+		{"", true, false, nil},
+		{"0", false, false, nil}, // // empty denom
+		{"1foo", true, true, Coins{{"foo", one}}},
+		{"10bar", true, true, Coins{{"bar", NewInt(10)}}},
+		{"99bar,1foo", true, true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
+		{"98 bar , 1 foo  ", true, true, Coins{{"bar", NewInt(98)}, {"foo", one}}},
+		{"  55\t \t bling\n", true, true, Coins{{"bling", NewInt(55)}}},
+		{"2foo, 97 bar", true, true, Coins{{"bar", NewInt(97)}, {"foo", NewInt(2)}}},
+		{"5 mycoin,", false, false, nil},             // no empty coins in a list
+		{"2 3foo, 97 bar", false, false, nil},        // 3foo is invalid coin name
+		{"11me coin, 12you coin", false, false, nil}, // no spaces in coin names
+		{"1.2btc", false, false, nil},                // amount must be integer
+		{"5foo-bar", false, false, nil},              // once more, only letters in coin name
+		{"5foo,-3bar", false, false, nil},            // all coins must pass validation
+		{"5.2foo", false, false, nil},                // decimal coin
+		{"-5foo", false, false, nil},                 // negative coin
+		{"0foo", false, false, nil},                  // invalid zero
+		{"-0foo", false, false, nil},                 // negative zero
 	}
 
 	for tcIndex, tc := range cases {
-		res, err := ParseCoins(tc.input)
-		if !tc.valid {
-			require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
-		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
-			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			res, err := ParseCoins(tc.input)
+			if !tc.valid {
+				require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
+			} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
+				require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
+			}
+
+			res, err = ParsePositiveCoins(tc.input)
+			if !tc.validPositive {
+				require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
+			} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
+				require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
+			}
+		})
 	}
 }
 
@@ -560,4 +570,44 @@ func TestCoinsIsAnyGTE(t *testing.T) {
 	assert.True(t, Coins{{"atom", one}, {"btc", two}}.IsAnyGTE(Coins{{"atom", one}, {"btc", one}}))
 	assert.True(t, Coins{{"atom", one}, {"btc", one}}.IsAnyGTE(Coins{{"atom", one}, {"btc", two}}))
 	assert.True(t, Coins{{"atom", one}, {"btc", one}}.IsAnyGTE(Coins{{"abc", one}, {"cde", one}, {"btc", one}, {"xyz", one}}))
+}
+
+func TestCoinString(t *testing.T) {
+	type fields struct {
+		Denom  string
+		Amount Int
+	}
+	tests := []struct {
+		name string
+		coin Coin
+		want string
+	}{
+		{"zero", NewInt64Coin("atom", 0), ""},
+		{"value", NewInt64Coin("atom", 10), "10atom"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.coin.String())
+		})
+	}
+}
+
+func TestCoinsString(t *testing.T) {
+	zero := NewInt64Coin("atom", 0)
+	tests := []struct {
+		name  string
+		coins Coins
+		want  string
+	}{
+		{"zero", Coins{zero}, ""},
+		{"value", Coins{NewInt64Coin("atom", 10)}, "10atom"},
+		{"zero,positive", Coins{zero, NewInt64Coin("atom", 10)}, "10atom"},
+		{"order does not matter", Coins{zero, NewInt64Coin("atom", 10)}, Coins{NewInt64Coin("atom", 10), zero}.String()},
+		{"sort", Coins{NewInt64Coin("btc", 5), NewInt64Coin("atom", 10)}, "10atom,5btc"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.coins.String())
+		})
+	}
 }

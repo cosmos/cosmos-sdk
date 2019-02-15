@@ -81,6 +81,9 @@ func (coin Coin) Validate(strict bool) error {
 
 // String provides a human-readable representation of a coin
 func (coin Coin) String() string {
+	if coin.IsZero() {
+		return ""
+	}
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
@@ -156,16 +159,20 @@ func (coin Coin) IsNegative() bool {
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
+// String implements the Stringer interface.
 func (coins Coins) String() string {
 	if len(coins) == 0 {
 		return ""
 	}
 
-	out := ""
+	coins.Sort()
+	out := []string{}
 	for _, coin := range coins {
-		out += fmt.Sprintf("%v,", coin.String())
+		if coinStr := coin.String(); coinStr != "" {
+			out = append(out, coinStr)
+		}
 	}
-	return out[:len(out)-1]
+	return strings.Join(out, ",")
 }
 
 // IsValid asserts the Coins are sorted, have positive amount,
@@ -564,7 +571,7 @@ func parseCoinString(coinStr string) (Coin, error) {
 }
 
 // ParseCoins will parse out a list of coins separated by commas.
-// If nothing is provided, it returns nil Coins.
+// If empty string is provided, it returns nil Coins and no error.
 // Returned coins are sorted.
 func ParseCoins(coinsStr string) (coins Coins, err error) {
 	coinsStr = strings.TrimSpace(coinsStr)
@@ -587,6 +594,35 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	// Validate coins before returning.
 	if !coins.IsValid() {
 		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
+	}
+
+	return coins, nil
+}
+
+// ParseCoins will parse out a list of coins separated by commas.
+// If nothing is provided, it returns an error.
+// Returned coins are sorted.
+func ParsePositiveCoins(coinsStr string) (coins Coins, err error) {
+	coinsStr = strings.TrimSpace(coinsStr)
+	if len(coinsStr) == 0 {
+		return nil, errors.New("empty coin set")
+	}
+
+	coinStrs := strings.Split(coinsStr, ",")
+	for _, coinStr := range coinStrs {
+		coin, err := ParsePositiveCoin(coinStr)
+		if err != nil {
+			return nil, err
+		}
+		coins = append(coins, coin)
+	}
+
+	// Sort coins for determinism.
+	coins.Sort()
+
+	// Validate coins before returning.
+	if !coins.IsValid() {
+		return nil, fmt.Errorf("parsePositiveCoins invalid: %#v", coins)
 	}
 
 	return coins, nil

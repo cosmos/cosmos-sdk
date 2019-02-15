@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"strconv"
+	"math"
 )
 
 //-----------------------------------------------------------------------------
@@ -480,11 +482,14 @@ func (coins Coins) Sort() Coins {
 var (
 	// Denominations can be 3 ~ 16 characters long.
 	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt     = `[[:digit:]]+`
+	reAmt     = `\d*\.?\d+(?:[eE][+\-]?\d+)?`
+	reScin 	  = `(\d*\.?\d+)(e|E)([+\-]?\d+)`
 	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc     = `[[:space:]]*`
 	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
 	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reScinAmt = regexp.MustCompile(reScin)
+	reDecPart = regexp.MustCompile(`\.(\d+)`)
 )
 
 func validateDenom(denom string) {
@@ -494,6 +499,39 @@ func validateDenom(denom string) {
 	if strings.ToLower(denom) != denom {
 		panic(fmt.Sprintf("denom cannot contain upper case characters: %s", denom))
 	}
+}
+
+// ParseScientificNotation returns parsed Int is amount is specified using scientific notation
+// This returns ok == false if no scientific notation and error if parsing errors
+func ParseScientificNotation(amountStr string) (amount Int, ok bool, err error) {
+	matches := reScinAmt.FindStringSubmatch(amountStr)
+
+	if(matches == nil || len(matches) != 4) {
+		return Int{}, false, nil
+	}
+	// Parse scientific notation such as 1.23e+12stake
+	var f float64
+	var dec int
+	
+	if f, err = strconv.ParseFloat(matches[1], 64); err != nil {
+		return Int{}, false, err
+	}
+	
+	if dec, err = strconv.Atoi(matches[3]); err != nil {
+		return Int{}, false, err
+	}
+
+	// adjust dec by the length of the decimal part in the number
+	d := reDecPart.FindStringSubmatch(matches[1])
+	if len(d) > 1 {
+		l := len(d[1])
+		if l > dec {
+			return Int{}, false, fmt.Errorf("amount %s has too many digits after the decimal point resulting in precision loss",amountStr)
+		}			
+		f, dec = f * math.Pow10(l), dec - l
+	}
+
+	return NewIntWithDecimal(int64(f), dec), true, nil
 }
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.
@@ -508,13 +546,20 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 
 	denomStr, amountStr := matches[2], matches[1]
 
-	amount, ok := NewIntFromString(amountStr)
-	if !ok {
-		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
-	}
-
 	if denomStr != strings.ToLower(denomStr) {
 		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	}
+
+	amount, ok, err := ParseScientificNotation(amountStr);
+	if err != nil {
+		return Coin{}, err
+	}
+
+	if !ok {
+		amount, ok = NewIntFromString(amountStr)
+		if !ok {
+			return Coin{}, fmt.Errorf("failed to parse integer in %s",amountStr)
+		}
 	}
 
 	return NewCoin(denomStr, amount), nil

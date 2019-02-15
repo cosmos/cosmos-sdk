@@ -6,18 +6,35 @@ import (
 	"os"
 	"strings"
 
+	"errors"
+
 	"github.com/bgentry/speakeasy"
 	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
 )
 
 // MinPassLength is the minimum acceptable password length
 const MinPassLength = 8
 
+var currentStdin *bufio.Reader
+
+func init() {
+	currentStdin = bufio.NewReader(os.Stdin)
+}
+
 // BufferStdin is used to allow reading prompts for stdin
 // multiple times, when we read from non-tty
 func BufferStdin() *bufio.Reader {
-	return bufio.NewReader(os.Stdin)
+	return currentStdin
+}
+
+// OverrideStdin allows to temporarily override stdin
+func OverrideStdin(newStdin *bufio.Reader) (cleanUp func()) {
+	prevStdin := currentStdin
+	currentStdin = newStdin
+	cleanUp = func() {
+		currentStdin = prevStdin
+	}
+	return cleanUp
 }
 
 // GetPassword will prompt for a password one-time (to sign a tx)
@@ -36,16 +53,10 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if len(pass) < MinPassLength {
 		// Return the given password to the upstream client so it can handle a
 		// non-STDIN failure gracefully.
-		return pass, errors.Errorf("password must be at least %d characters", MinPassLength)
+		return pass, fmt.Errorf("password must be at least %d characters", MinPassLength)
 	}
 
 	return pass, nil
-}
-
-// GetSeed will request a seed phrase from stdin and trims off
-// leading/trailing spaces
-func GetSeed(prompt string, buf *bufio.Reader) (string, error) {
-	return GetString(prompt, buf)
 }
 
 // GetCheckPassword will prompt for a password twice to verify they

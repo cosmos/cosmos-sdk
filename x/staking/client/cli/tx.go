@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -19,6 +19,7 @@ import (
 )
 
 // GetCmdCreateValidator implements the create validator command handler.
+// TODO: Add full description
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -34,12 +35,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			if viper.GetBool(FlagGenesisFormat) || cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, true)
-			}
-
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, true)
 		},
 	}
 
@@ -47,9 +43,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsCommissionCreate)
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(fsDelegator)
-	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
-	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
+	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", client.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 
 	cmd.MarkFlagRequired(client.FlagFrom)
@@ -61,6 +57,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdEditValidator implements the create edit validator command.
+// TODO: add full description
 func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -71,11 +68,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			valAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			valAddr := cliCtx.GetFromAddress()
 			description := staking.Description{
 				Moniker:  viper.GetString(FlagMoniker),
 				Identity: viper.GetString(FlagIdentity),
@@ -95,14 +88,21 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
+			var newMinSelfDelegation *sdk.Int
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
+			minSelfDelegationString := viper.GetString(FlagMinSelfDelegation)
+			if minSelfDelegationString != "" {
+				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
+				if !ok {
+					return fmt.Errorf(staking.ErrMinSelfDelegationInvalid(staking.DefaultCodespace).Error())
+				}
+				newMinSelfDelegation = &msb
 			}
 
+			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 
@@ -114,147 +114,110 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 
 // GetCmdDelegate implements the delegate command.
 func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "delegate",
+	return &cobra.Command{
+		Use:   "delegate [validator-addr] [amount]",
+		Args:  cobra.ExactArgs(2),
 		Short: "delegate liquid tokens to a validator",
+		Long: strings.TrimSpace(`Delegate an amount of liquid coins to a validator from your wallet:
+
+$ gaiacli tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
 				return err
 			}
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
+			delAddr := cliCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
 			msg := staking.NewMsgDelegate(delAddr, valAddr, amount)
-
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	cmd.Flags().AddFlagSet(FsAmount)
-	cmd.Flags().AddFlagSet(fsValidator)
-
-	return cmd
 }
 
 // GetCmdRedelegate the begin redelegation command.
 func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "redelegate",
+	return &cobra.Command{
+		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "redelegate illiquid tokens from one validator to another",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(`Redelegate an amount of illiquid staking tokens from one validator to another:
+
+$ gaiacli tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100 --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			var err error
+			// var err error
 
-			delAddr, err := cliCtx.GetFromAddress()
+			delAddr := cliCtx.GetFromAddress()
+			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
-			if err != nil {
-				return err
-			}
-
-			valDstAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
+			valDstAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
 			// get the shares amount
-			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesFractionStr := viper.GetString(FlagSharesFraction)
-			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesFractionStr,
-				delAddr, valSrcAddr,
-			)
+			sharesAmount, err := getShares(args[2], delAddr, valSrcAddr)
 			if err != nil {
 				return err
 			}
 
 			msg := staking.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, sharesAmount)
-
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	cmd.Flags().AddFlagSet(fsShares)
-	cmd.Flags().AddFlagSet(fsRedelegation)
-
-	return cmd
 }
 
 // GetCmdUnbond implements the unbond validator command.
 func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "unbond",
+	return &cobra.Command{
+		Use:   "unbond [validator-addr] [amount]",
 		Short: "unbond shares from a validator",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`Unbond an amount of bonded shares from a validator:
+
+$ gaiacli tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100 --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
+			delAddr := cliCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
 			// get the shares amount
-			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesFractionStr := viper.GetString(FlagSharesFraction)
-			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesFractionStr,
-				delAddr, valAddr,
-			)
+			sharesAmount, err := getShares(args[1], delAddr, valAddr)
 			if err != nil {
 				return err
 			}
 
 			msg := staking.NewMsgUndelegate(delAddr, valAddr, sharesAmount)
-
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	cmd.Flags().AddFlagSet(fsShares)
-	cmd.Flags().AddFlagSet(fsValidator)
-
-	return cmd
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
@@ -265,12 +228,9 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
-	valAddr, err := cliCtx.GetFromAddress()
-	if err != nil {
-		return txBldr, nil, err
-	}
-
+	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
+
 	pk, err := sdk.GetConsPubKeyBech32(pkStr)
 	if err != nil {
 		return txBldr, nil, err
@@ -292,6 +252,13 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
+	// get the initial validator min self delegation
+	msbStr := viper.GetString(FlagMinSelfDelegation)
+	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
+	if !ok {
+		return txBldr, nil, fmt.Errorf(staking.ErrMinSelfDelegationInvalid(staking.DefaultCodespace).Error())
+	}
+
 	delAddr := viper.GetString(FlagAddressDelegator)
 
 	var msg sdk.Msg
@@ -302,15 +269,15 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		}
 
 		msg = staking.NewMsgCreateValidatorOnBehalfOf(
-			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
 		)
 	} else {
 		msg = staking.NewMsgCreateValidator(
-			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
 		)
 	}
 
-	if viper.GetBool(FlagGenesisFormat) {
+	if viper.GetBool(client.FlagGenerateOnly) {
 		ip := viper.GetString(FlagIP)
 		nodeID := viper.GetString(FlagNodeID)
 		if nodeID != "" && ip != "" {

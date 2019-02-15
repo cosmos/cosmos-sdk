@@ -7,9 +7,11 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+
+	"errors"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -92,7 +94,12 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	isShowAddr := viper.GetBool(FlagAddress)
 	isShowPubKey := viper.GetBool(FlagPublicKey)
-	isOutputSet := cmd.Flag(cli.OutputFlag).Changed
+
+	isOutputSet := false
+	tmp := cmd.Flag(cli.OutputFlag)
+	if tmp != nil {
+		isOutputSet = tmp.Changed
+	}
 
 	if isShowAddr && isShowPubKey {
 		return errors.New("cannot use both --address and --pubkey at once")
@@ -160,28 +167,28 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 		bechKeyOut, err := getBechKeyOut(bechPrefix)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 
 		info, err := GetKeyInfo(name)
 		if keyerror.IsErrKeyNotFound(err) {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		} else if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 
 		keyOutput, err := bechKeyOut(info)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 
-		PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }

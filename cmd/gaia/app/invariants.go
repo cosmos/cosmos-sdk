@@ -9,16 +9,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 
-func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
-	return []simulation.Invariant{
+func (app *GaiaApp) runtimeInvariants() []sdk.Invariant {
+	return []sdk.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
-		stakingsim.SupplyInvariants(app.bankKeeper, app.stakingKeeper,
-			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		stakingsim.SupplyInvariants(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		stakingsim.NonNegativePowerInvariant(app.stakingKeeper),
 	}
 }
@@ -38,5 +36,5 @@ func (app *GaiaApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
 	}
 	end := time.Now()
 	diff := end.Sub(start)
-	app.BaseApp.Logger.With("module", "invariants").Info("Asserted all invariants", "duration", diff)
+	app.BaseApp.Logger().With("module", "invariants").Info("Asserted all invariants", "duration", diff)
 }

@@ -1,13 +1,14 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(subst v,,$(shell git describe --tags --long))
+VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 BUILD_TAGS = netgo
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
-	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
+BUILD_FLAGS = -tags "$(BUILD_TAGS)" -ldflags \
+    '-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+    -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+    -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps) \
+    -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(BUILD_TAGS)"'
 LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
@@ -15,7 +16,7 @@ GOTOOLS = \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
 
-all: devtools install test_lint test
+all: devtools vendor-deps install test_lint test
 
 # The below include contains the tools target.
 include scripts/Makefile
@@ -99,6 +100,7 @@ update_dev_tools:
 	go get -u github.com/tendermint/lint/golint
 
 devtools: devtools-stamp
+devtools-clean: tools-clean
 devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
@@ -122,7 +124,10 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp vendor-deps
+	rm -f devtools-stamp vendor-deps snapcraft-local.yaml
+
+distclean: clean
+	rm -rf vendor/
 
 ########################################
 ### Documentation
@@ -140,8 +145,14 @@ test: test_unit
 test_cli:
 	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
+test_ledger:
+    # First test with mock
+	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+    # Now test with a real device
+	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
+
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
@@ -150,9 +161,15 @@ test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
+test_sim_gaia_custom_genesis_fast:
+	@echo "Running custom genesis simulation..."
+	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
@@ -161,6 +178,11 @@ test_sim_gaia_import_export:
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
 	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
+
+test_sim_gaia_custom_genesis_multi_seed:
+	@echo "Running multi-seed custom genesis simulation..."
+	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
+	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
@@ -171,14 +193,16 @@ SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 test_sim_gaia_benchmark:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$  -SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
+	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$  \
+		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
 
 test_sim_gaia_profile:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ -SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ \
+		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@export VERSION=$(VERSION); bash tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
@@ -235,12 +259,21 @@ localnet-start: localnet-stop
 localnet-stop:
 	docker-compose down
 
+
+########################################
+### Packaging
+
+snapcraft-local.yaml: snapcraft-local.yaml.in
+	sed "s/@VERSION@/${VERSION}/g" < $< > $@
+
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build install install_debug dist \
+.PHONY: build install install_debug dist clean distclean \
 check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
-test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools
+test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
+test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
+devtools-clean

@@ -5,6 +5,7 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
@@ -22,7 +23,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
-		Use:   "gov",
+		Use:   gov.ModuleName,
 		Short: "Querying commands for the governance module",
 	}
 
@@ -44,7 +45,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:   "gov",
+		Use:   gov.ModuleName,
 		Short: "Governance transactions subcommands",
 	}
 

@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -20,20 +23,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = int64(100)
-	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = stakingTypes.DefaultBondDenom
+	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
+	defaultBondDenom = sdk.DefaultBondDenom
 )
 
 // State to Unmarshal
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
+	BankData     bank.GenesisState     `json:"bank"`
 	StakingData  staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
@@ -43,6 +45,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
+	bankData bank.GenesisState,
 	stakingData staking.GenesisState, mintData mint.GenesisState,
 	distrData distr.GenesisState, govData gov.GenesisState,
 	slashingData slashing.GenesisState) GenesisState {
@@ -50,6 +53,7 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
+		BankData:     bankData,
 		StakingData:  stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
@@ -80,8 +84,8 @@ type GenesisAccount struct {
 	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
 	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
-	StartTime        int64     `json:"start_time"`        // vesting start time
-	EndTime          int64     `json:"end_time"`          // vesting end time
+	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
+	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -183,7 +187,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 	for _, acc := range genesisState.Accounts {
 		for _, coin := range acc.Coins {
-			if coin.Denom == bondDenom {
+			if coin.Denom == genesisState.StakingData.Params.BondDenom {
 				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
 					Add(coin.Amount) // increase the supply
 			}
@@ -201,6 +205,7 @@ func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		AuthData:     auth.DefaultGenesisState(),
+		BankData:     bank.DefaultGenesisState(),
 		StakingData:  staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
@@ -227,6 +232,9 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
 		return err
 	}
+	if err := bank.ValidateGenesis(genesisState.BankData); err != nil {
+		return err
+	}
 	if err := staking.ValidateGenesis(genesisState.StakingData); err != nil {
 		return err
 	}
@@ -243,17 +251,38 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	return slashing.ValidateGenesis(genesisState.SlashingData)
 }
 
-// Ensures that there are no duplicate accounts in the genesis state,
+// validateGenesisStateAccounts performs validation of genesis accounts. It
+// ensures that there are no duplicate accounts in the genesis state and any
+// provided vesting accounts are valid.
 func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
-	for i := 0; i < len(accs); i++ {
-		acc := accs[i]
-		strAddr := string(acc.Address)
-		if _, ok := addrMap[strAddr]; ok {
-			return fmt.Errorf("Duplicate account in genesis state: Address %v", acc.Address)
+	for _, acc := range accs {
+		addrStr := acc.Address.String()
+
+		// disallow any duplicate accounts
+		if _, ok := addrMap[addrStr]; ok {
+			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
 		}
-		addrMap[strAddr] = true
+
+		// validate any vesting fields
+		if !acc.OriginalVesting.IsZero() {
+			if acc.EndTime == 0 {
+				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
+			}
+
+			if acc.StartTime >= acc.EndTime {
+				return fmt.Errorf(
+					"vesting start time must before end time; address: %s, start: %s, end: %s",
+					addrStr,
+					time.Unix(acc.StartTime, 0).UTC().Format(time.RFC3339),
+					time.Unix(acc.EndTime, 0).UTC().Format(time.RFC3339),
+				)
+			}
+		}
+
+		addrMap[addrStr] = true
 	}
+
 	return nil
 }
 
@@ -372,7 +401,7 @@ func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
 		sdk.NewCoin("footoken", sdk.NewInt(1000)),
-		sdk.NewCoin(bondDenom, freeFermionsAcc),
+		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
 	}
 
 	coins.Sort()

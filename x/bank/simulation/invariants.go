@@ -6,17 +6,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 )
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
-func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant {
+func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		accts := mock.GetAllAccounts(mapper, ctx)
+		accts := ak.GetAllAccounts(ctx)
 		for _, acc := range accts {
 			coins := acc.GetCoins()
-			if !coins.IsNotNegative() {
+			if coins.IsAnyNegative() {
 				return fmt.Errorf("%s has a negative denomination of %s",
 					acc.GetAddress().String(),
 					coins.String())
@@ -28,7 +26,7 @@ func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant
 
 // TotalCoinsInvariant checks that the sum of the coins across all accounts
 // is what is expected
-func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coins) simulation.Invariant {
+func TotalCoinsInvariant(ak auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.Coins{}
 
@@ -38,7 +36,7 @@ func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coi
 			return false
 		}
 
-		mapper.IterateAccounts(ctx, chkAccount)
+		ak.IterateAccounts(ctx, chkAccount)
 		if !totalSupplyFn().IsEqual(totalCoins) {
 			return errors.New("total calculated coins doesn't equal expected coins")
 		}

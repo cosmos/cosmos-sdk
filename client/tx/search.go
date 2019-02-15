@@ -10,9 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -105,7 +105,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]Info, error) {
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]sdk.TxResponse, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -152,9 +152,9 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 }
 
 // parse the indexed txs into an array of Info
-func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
+func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]sdk.TxResponse, error) {
 	var err error
-	out := make([]Info, len(res))
+	out := make([]sdk.TxResponse, len(res))
 	for i := range res {
 		out[i], err = formatTxResult(cdc, res[i])
 		if err != nil {
@@ -172,31 +172,32 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		var tags []string
 		var page, limit int
-		var txs []Info
+		var txs []sdk.TxResponse
 		err := r.ParseForm()
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			rest.WriteErrorResponse(w, http.StatusBadRequest,
+				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
 			return
 		}
 		if len(r.Form) == 0 {
-			utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+			rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 			return
 		}
 
 		tags, page, limit, err = parseHTTPArgs(r)
 
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
 }
 

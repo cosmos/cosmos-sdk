@@ -18,13 +18,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AppStateFn returns the app state json bytes
-type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) json.RawMessage
+// AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
+type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn AppStateFn, ops WeightedOperations,
-	invariants Invariants, numBlocks int, blockSize int, commit bool) (bool, error) {
+	invariants sdk.Invariants, numBlocks int, blockSize int, commit bool) (bool, error) {
 
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops,
@@ -35,15 +35,18 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 func initChain(
 	r *rand.Rand, params Params, accounts []Account,
 	app *baseapp.BaseApp, appStateFn AppStateFn, genesisTimestamp time.Time,
-) mockValidators {
+) (mockValidators, []Account) {
+
+	appState, accounts, chainID := appStateFn(r, accounts, genesisTimestamp)
 
 	req := abci.RequestInitChain{
-		AppStateBytes: appStateFn(r, accounts, genesisTimestamp),
+		AppStateBytes: appState,
+		ChainId:       chainID,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators
+	return validators, accounts
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -51,7 +54,7 @@ func initChain(
 // TODO split this monster function up
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
-	invariants Invariants,
+	invariants sdk.Invariants,
 	numBlocks int, blockSize int, commit bool) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -73,7 +76,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
+	validators, accs := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
+	if len(accs) == 0 {
+		return true, fmt.Errorf("must have greater than zero genesis accounts")
+	}
+
 	nextValidators := validators
 
 	header := abci.Header{
@@ -146,7 +153,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		app.BeginBlock(request)
 
 		if testingMode {
-			invariants.assertAll(t, app, "BeginBlock", displayLogs)
+			assertAllInvariants(t, app, invariants, "BeginBlock", displayLogs)
 		}
 
 		ctx := app.NewContext(false, header)
@@ -164,14 +171,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			logWriter, displayLogs, eventStats.tally)
 
 		if testingMode && onOperation {
-			invariants.assertAll(t, app, "QueuedOperations", displayLogs)
+			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
 		}
 
 		logWriter("Standard operations")
 		operations := blockSimulator(r, app, ctx, accs, header, logWriter)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 		if testingMode {
-			invariants.assertAll(t, app, "StandardOperations", displayLogs)
+			assertAllInvariants(t, app, invariants, "StandardOperations", displayLogs)
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
@@ -184,7 +191,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		logWriter("EndBlock")
 
 		if testingMode {
-			invariants.assertAll(t, app, "EndBlock", displayLogs)
+			assertAllInvariants(t, app, invariants, "EndBlock", displayLogs)
 		}
 		if commit {
 			app.Commit()
@@ -229,7 +236,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
-	event func(string), invariants Invariants, ops WeightedOperations,
+	event func(string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
 
@@ -274,7 +281,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			if testingMode {
 				if onOperation {
 					eventStr := fmt.Sprintf("operation: %v", logUpdate)
-					invariants.assertAll(t, app, eventStr, displayLogs)
+					assertAllInvariants(t, app, invariants, eventStr, displayLogs)
 				}
 				if opCount%50 == 0 {
 					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",

@@ -6,13 +6,13 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-
 	"github.com/spf13/viper"
+
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 // StatusCommand returns the status of the network
@@ -77,7 +77,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		utils.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
 	}
 }
 

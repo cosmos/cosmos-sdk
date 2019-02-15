@@ -1,0 +1,45 @@
+name: gaia
+version: git
+summary: Gaia Daemon # 79 char long summary
+description: |
+  This snap provides the Gaia daemon gaiad and the command line
+  tool gaiacli.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+apps:
+    gaiad:
+        command: bin/gaiad
+        plugs: [home,network,network-bind]
+    gaiacli:
+        command: bin/gaiacli
+        plugs: [home,network,network-bind]
+
+parts:
+  gaia:
+    plugin: dump
+    source: ./
+    override-pull: |
+        rootdir=$(pwd)
+        gitroot=$(git rev-parse --show-toplevel)
+        cd ${gitroot} && git archive \
+            -o ${rootdir}/gaia-git.tar.gz \
+            --format tar.gz -9 --prefix gaia-git/ HEAD
+        cd ${rootdir}
+        tar xf gaia-git.tar.gz ; rm -f gaia-git.tar.gz
+        mkdir -p go/src/github.com/cosmos bin
+        mv gaia-git/ go/src/github.com/cosmos/cosmos-sdk/
+
+    build-snaps: [go]
+    override-build: |
+        base=`pwd`
+        export GOPATH=`pwd`/go
+        export GOBIN=$GOPATH/bin
+        export PATH=$GOBIN:$PATH
+        cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+        make tools
+        make vendor-deps
+        make install
+        mkdir $SNAPCRAFT_PART_INSTALL/bin
+        cp $GOPATH/bin/gaiad $SNAPCRAFT_PART_INSTALL/bin
+        cp $GOPATH/bin/gaiacli $SNAPCRAFT_PART_INSTALL/bin

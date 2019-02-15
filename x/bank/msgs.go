@@ -35,6 +35,9 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if msg.ToAddress.Empty() {
 		return sdk.ErrInvalidAddress("missing recipient address")
 	}
+	if !msg.Amount.IsValid() {
+		return sdk.ErrInsufficientCoins("invalid send amount")
+	}
 	if !msg.Amount.IsPositive() {
 		return sdk.ErrInsufficientCoins("send amount must be positive")
 	}

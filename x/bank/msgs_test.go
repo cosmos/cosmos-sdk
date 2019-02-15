@@ -26,6 +26,7 @@ func TestMsgSendValidation(t *testing.T) {
 	atom0 := sdk.Coins{sdk.NewInt64Coin("atom", 0)}
 	atom123eth123 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123)}
 	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
+	invalidDenom := sdk.Coins{sdk.Coin{Denom: "a", Amount: sdk.NewInt(123)}}
 
 	var emptyAddr sdk.AccAddress
 
@@ -35,6 +36,7 @@ func TestMsgSendValidation(t *testing.T) {
 	}{
 		{true, NewMsgSend(addr1, addr2, atom123)},       // valid send
 		{true, NewMsgSend(addr1, addr2, atom123eth123)}, // valid send with multiple coins
+		{false, NewMsgSend(addr1, addr2, invalidDenom)}, // invalid denom
 		{false, NewMsgSend(addr1, addr2, atom0)},        // non positive coin
 		{false, NewMsgSend(addr1, addr2, atom123eth0)},  // non positive coin in multicoins
 		{false, NewMsgSend(emptyAddr, addr2, atom123)},  // empty from addr

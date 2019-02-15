@@ -16,6 +16,8 @@ TODO: Explain how to install/build the app, etc. [ISSUE#]()
 
 In this section, we will configure a KMS to use a Ledger device running the Tendermint Validator App. 
 
+#### Config file
+
 You can find other configuration examples [here](https://github.com/tendermint/kms/blob/master/tmkms.toml.example)
 
 - Create a `~/.tmkms/tmkms.toml` file with the following content:
@@ -26,7 +28,7 @@ You can find other configuration examples [here](https://github.com/tendermint/k
 addr = "tcp://localhost:26658"    # or "unix:///path/to/socket"
 chain_id = "gaia-11001"
 reconnect = true # true is the default
-#secret_key = "path/to/secret_connection.key"
+secret_key = "~/.tmkms/secret_connection.key"
 
 [[providers.ledgertm]]
 ```
@@ -37,7 +39,19 @@ reconnect = true # true is the default
 
 *Plug your Ledger device and open the Tendermint validator app.*
 
-Now start KMS by running:
+#### Generate secret key
+
+Now you need to generate secret_key:
+
+```bash
+tmkms keygen ~/.tmkms/secret_connection.key
+```
+
+#### Retrieve validator key
+
+The last step is to retrieve the validator key that you will use in `gaiad`.
+
+Start the KMS:
 
 ```bash
 tmkms start -c ~/.tmkms/tmkms.toml

@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewDecCoin(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewDecCoin("atom", 5)
 	})
@@ -22,6 +23,7 @@ func TestNewDecCoin(t *testing.T) {
 }
 
 func TestNewPositiveDecCoin(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewPositiveDecCoin("atom", 5)
 	})
@@ -37,6 +39,7 @@ func TestNewPositiveDecCoin(t *testing.T) {
 }
 
 func TestNewDecCoinFromDec(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewDecCoinFromDec("atom", NewDec(5))
 	})
@@ -52,6 +55,7 @@ func TestNewDecCoinFromDec(t *testing.T) {
 }
 
 func TestNewPositiveDecCoinFromDec(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewPositiveDecCoinFromDec("atom", NewDec(5))
 	})
@@ -67,6 +71,7 @@ func TestNewPositiveDecCoinFromDec(t *testing.T) {
 }
 
 func TestNewDecCoinFromCoin(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewDecCoinFromCoin(Coin{"atom", NewInt(5)})
 	})
@@ -82,6 +87,7 @@ func TestNewDecCoinFromCoin(t *testing.T) {
 }
 
 func TestNewPositiveDecCoinFromCoin(t *testing.T) {
+	t.Parallel()
 	require.NotPanics(t, func() {
 		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(5)})
 	})
@@ -97,6 +103,7 @@ func TestNewPositiveDecCoinFromCoin(t *testing.T) {
 }
 
 func TestDecCoinIsPositive(t *testing.T) {
+	t.Parallel()
 	dc := NewDecCoin("atom", 5)
 	require.True(t, dc.IsPositive())
 
@@ -105,6 +112,7 @@ func TestDecCoinIsPositive(t *testing.T) {
 }
 
 func TestPlusDecCoin(t *testing.T) {
+	t.Parallel()
 	decCoinA1 := NewDecCoinFromDec("atom", NewDecWithPrec(11, 1))
 	decCoinA2 := NewDecCoinFromDec("atom", NewDecWithPrec(22, 1))
 	decCoinB1 := NewDecCoinFromDec("btc", NewDecWithPrec(11, 1))
@@ -120,6 +128,7 @@ func TestPlusDecCoin(t *testing.T) {
 }
 
 func TestPlusDecCoins(t *testing.T) {
+	t.Parallel()
 	one := NewDec(1)
 	zero := NewDec(0)
 	two := NewDec(2)
@@ -141,6 +150,7 @@ func TestPlusDecCoins(t *testing.T) {
 }
 
 func TestSortDecCoins(t *testing.T) {
+	t.Parallel()
 	good := DecCoins{
 		NewDecCoin("gas", 1),
 		NewDecCoin("mineral", 1),
@@ -190,6 +200,7 @@ func TestSortDecCoins(t *testing.T) {
 }
 
 func TestDecCoinsIsValid(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		input    DecCoins
 		expected bool
@@ -212,6 +223,7 @@ func TestDecCoinsIsValid(t *testing.T) {
 }
 
 func TestParseDecCoins(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		input          string
 		expectedResult DecCoins
@@ -261,6 +273,7 @@ func TestParseDecCoins(t *testing.T) {
 }
 
 func TestDecCoinsString(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		input    DecCoins
 		expected string
@@ -282,6 +295,7 @@ func TestDecCoinsString(t *testing.T) {
 }
 
 func TestDecCoinTruncateDecimal(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		Denom  string
 		Amount Dec

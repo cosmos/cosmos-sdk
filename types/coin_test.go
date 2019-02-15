@@ -11,6 +11,7 @@ import (
 // Coin tests
 
 func TestCoin(t *testing.T) {
+	t.Parallel()
 	require.Panics(t, func() { NewInt64Coin("b", 0) })
 
 	require.NotPanics(t, func() { NewInt64Coin("btc", 0) })
@@ -46,6 +47,7 @@ func TestCoin(t *testing.T) {
 }
 
 func TestSameDenomAsCoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -63,6 +65,7 @@ func TestSameDenomAsCoin(t *testing.T) {
 }
 
 func TestIsEqualCoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -80,6 +83,7 @@ func TestIsEqualCoin(t *testing.T) {
 }
 
 func TestPlusCoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne    Coin
 		inputTwo    Coin
@@ -102,6 +106,7 @@ func TestPlusCoin(t *testing.T) {
 }
 
 func TestMinusCoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne    Coin
 		inputTwo    Coin
@@ -134,6 +139,7 @@ func TestMinusCoin(t *testing.T) {
 }
 
 func TestIsGTECoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -151,6 +157,7 @@ func TestIsGTECoin(t *testing.T) {
 }
 
 func TestIsLTCoin(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -171,6 +178,7 @@ func TestIsLTCoin(t *testing.T) {
 }
 
 func TestCoinIsZero(t *testing.T) {
+	t.Parallel()
 	coin := NewInt64Coin("atom", 0)
 	res := coin.IsZero()
 	require.True(t, res)
@@ -184,6 +192,7 @@ func TestCoinIsZero(t *testing.T) {
 // Coins tests
 
 func TestIsZeroCoins(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coins
 		expected bool
@@ -202,6 +211,7 @@ func TestIsZeroCoins(t *testing.T) {
 }
 
 func TestEqualCoins(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		inputOne Coins
 		inputTwo Coins
@@ -223,6 +233,7 @@ func TestEqualCoins(t *testing.T) {
 }
 
 func TestPlusCoins(t *testing.T) {
+	t.Parallel()
 	zero := NewInt(0)
 	one := NewInt(1)
 	two := NewInt(2)
@@ -247,6 +258,7 @@ func TestPlusCoins(t *testing.T) {
 }
 
 func TestMinusCoins(t *testing.T) {
+	t.Parallel()
 	zero := NewInt(0)
 	one := NewInt(1)
 	two := NewInt(2)
@@ -276,6 +288,7 @@ func TestMinusCoins(t *testing.T) {
 }
 
 func TestCoins(t *testing.T) {
+	t.Parallel()
 	good := Coins{
 		{"gas", NewInt(1)},
 		{"mineral", NewInt(1)},
@@ -341,6 +354,7 @@ func TestCoins(t *testing.T) {
 }
 
 func TestCoinsGT(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 	two := NewInt(2)
 
@@ -353,6 +367,7 @@ func TestCoinsGT(t *testing.T) {
 }
 
 func TestCoinsGTE(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 	two := NewInt(2)
 
@@ -365,6 +380,7 @@ func TestCoinsGTE(t *testing.T) {
 }
 
 func TestCoinsLT(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 	two := NewInt(2)
 
@@ -380,6 +396,7 @@ func TestCoinsLT(t *testing.T) {
 }
 
 func TestCoinsLTE(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 	two := NewInt(2)
 
@@ -395,6 +412,7 @@ func TestCoinsLTE(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 
 	cases := []struct {
@@ -433,6 +451,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestSortCoins(t *testing.T) {
+	t.Parallel()
 	good := Coins{
 		NewInt64Coin("gas", 1),
 		NewInt64Coin("mineral", 1),
@@ -482,6 +501,7 @@ func TestSortCoins(t *testing.T) {
 }
 
 func TestAmountOf(t *testing.T) {
+	t.Parallel()
 	case0 := Coins{}
 	case1 := Coins{
 		NewInt64Coin("gold", 0),
@@ -522,6 +542,7 @@ func TestAmountOf(t *testing.T) {
 }
 
 func TestCoinsIsAnyGTE(t *testing.T) {
+	t.Parallel()
 	one := NewInt(1)
 	two := NewInt(2)
 

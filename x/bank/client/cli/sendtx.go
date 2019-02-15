@@ -41,7 +41,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// parse coins trying to be sent
-			coins, err := sdk.ParseCoins(args[1])
+			coins, err := sdk.ParsePositiveCoins(args[1])
 			if err != nil {
 				return err
 			}

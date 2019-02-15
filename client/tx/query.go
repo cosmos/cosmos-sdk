@@ -65,8 +65,10 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (ou
 		return out, err
 	}
 
-	if err = ValidateTxResult(cliCtx, res); !cliCtx.TrustNode && err != nil {
-		return out, err
+	if !cliCtx.TrustNode {
+		if err = ValidateTxResult(cliCtx, res); err != nil {
+			return out, err
+		}
 	}
 
 	if out, err = formatTxResult(cdc, res); err != nil {

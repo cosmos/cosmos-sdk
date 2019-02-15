@@ -63,5 +63,6 @@ BUG FIXES
 * Gaia
 
 * SDK
+  * \#3646 `x/mint` now uses total token supply instead of total bonded tokens to calculate inflation
 
 * Tendermint

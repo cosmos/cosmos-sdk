@@ -416,7 +416,7 @@ func (v Validator) BondedTokens() sdk.Int {
 }
 
 // get the Tendermint Power
-// a reduction of 10^9 from validator tokens is applied
+// a reduction of 10^6 from validator tokens is applied
 func (v Validator) TendermintPower() int64 {
 	if v.Status == sdk.Bonded {
 		return v.PotentialTendermintPower()

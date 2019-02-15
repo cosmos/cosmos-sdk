@@ -613,3 +613,31 @@ func TestCoinsString(t *testing.T) {
 		})
 	}
 }
+
+func TestCoinsValidate(t *testing.T) {
+	type args struct {
+		failEmpty bool
+		failZero  bool
+	}
+	tests := []struct {
+		name    string
+		coins   Coins
+		args    args
+		wantErr bool
+	}{
+		{"valid", Coins{NewInt64Coin("abc", 10), NewInt64Coin("def", 9)}, args{false, false}, false},
+		{"bad sort", Coins{NewInt64Coin("zzz", 10), NewInt64Coin("abc", 9)}, args{false, false}, true},
+		{"don't fail on zero", Coins{NewInt64Coin("abc", 0), NewInt64Coin("def", 9)}, args{false, false}, false},
+		{"fail on zero", Coins{NewInt64Coin("abc", 0), NewInt64Coin("def", 9)}, args{false, true}, true},
+		{"don't fail if empty", Coins{}, args{false, false}, false},
+		{"fail if empty", Coins{}, args{true, false}, true},
+		{"fail if empty, don't fail on zero", Coins{NewInt64Coin("abc", 0), NewInt64Coin("def", 9)}, args{true, false}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.coins.Validate(tt.args.failEmpty, tt.args.failZero); (err != nil) != tt.wantErr {
+				t.Errorf("Coins.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

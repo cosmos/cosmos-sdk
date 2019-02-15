@@ -20,7 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -130,7 +131,7 @@ func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.Acc
 		password := "1234567890"
 		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 		require.NoError(t, err)
-		addrSeeds = append(addrSeeds, rest.AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
 	}
 
 	sort.Sort(addrSeeds)
@@ -145,8 +146,16 @@ func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.Acc
 	return addrs, seeds, names, passwords
 }
 
+// AddrSeed combines an Address with the mnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
 // AddrSeedSlice implements `Interface` in sort package.
-type AddrSeedSlice []rest.AddrSeed
+type AddrSeedSlice []AddrSeed
 
 func (b AddrSeedSlice) Len() int {
 	return len(b)
@@ -230,12 +239,12 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 			pubKey = ed25519.GenPrivKey().PubKey()
 			power = 1
 		}
-		startTokens := staking.TokensFromTendermintPower(power)
+		startTokens := sdk.TokensFromTendermintPower(power)
 
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin(staking.DefaultBondDenom, startTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
 			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 			sdk.OneInt(),
@@ -255,8 +264,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accTokens := staking.TokensFromTendermintPower(150)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
+		accTokens := sdk.TokensFromTendermintPower(150)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
@@ -270,8 +279,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accTokens := staking.TokensFromTendermintPower(100)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
+		accTokens := sdk.TokensFromTendermintPower(100)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
 		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
@@ -653,7 +662,7 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, msg auth.StdTx) sdk.TxResponse {
-	tx := rest.BroadcastReq{Tx: msg, Return: "block"}
+	tx := authrest.BroadcastReq{Tx: msg, Return: "block"}
 	req, err := cdc.MarshalJSON(tx)
 	require.Nil(t, err)
 	res, body := Request(t, port, "POST", "/tx/broadcast", req)
@@ -682,7 +691,7 @@ func doTransferWithGas(
 ) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
-	kb := client.MockKeyBase()
+	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
 		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
@@ -706,8 +715,8 @@ func doTransferWithGas(
 		generateOnly, simulate,
 	)
 
-	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+	sr := bankrest.SendReq{
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -724,7 +733,7 @@ func doTransferWithGasAccAuto(
 ) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
-	kb := client.MockKeyBase()
+	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
 		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
@@ -739,8 +748,8 @@ func doTransferWithGasAccAuto(
 		fmt.Sprintf("%f", gasAdjustment), 0, 0, fees, nil, generateOnly, simulate,
 	)
 
-	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
+	sr := bankrest.SendReq{
+		Amount:  sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -749,11 +758,6 @@ func doTransferWithGasAccAuto(
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
 	return
-}
-
-type sendReq struct {
-	Amount  sdk.Coins    `json:"amount"`
-	BaseReq rest.BaseReq `json:"base_req"`
 }
 
 // ----------------------------------------------------------------------
@@ -773,7 +777,7 @@ func doDelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin(staking.DefaultBondDenom, amount),
+		Delegation:    sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -841,7 +845,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	msg := rest.MsgBeginRedelegateInput{
+	msg := stakingrest.MsgBeginRedelegateInput{
 		BaseReq:          baseReq,
 		DelegatorAddr:    delAddr,
 		ValidatorSrcAddr: valSrcAddr,
@@ -1074,12 +1078,12 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	pr := rest.PostProposalReq{
+	pr := govrest.PostProposalReq{
 		Title:          "Test",
 		Description:    "test",
 		ProposalType:   "Text",
 		Proposer:       proposerAddr,
-		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
+		InitialDeposit: sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
 		BaseReq:        baseReq,
 	}
 
@@ -1095,15 +1099,6 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	require.Nil(t, err)
 
 	return results
-}
-
-type postProposalReq struct {
-	BaseReq        rest.BaseReq   `json:"base_req"`
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals Query proposals
@@ -1171,9 +1166,9 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	dr := rest.DepositReq{
+	dr := govrest.DepositReq{
 		Depositor: proposerAddr,
-		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
+		Amount:    sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
 		BaseReq:   baseReq,
 	}
 
@@ -1188,12 +1183,6 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	require.Nil(t, err)
 
 	return results
-}
-
-type depositReq struct {
-	BaseReq   rest.BaseReq   `json:"base_req"`
-	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
-	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals/{proposalId}/deposits Query deposits
@@ -1225,7 +1214,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
-	vr := rest.VoteReq{
+	vr := govrest.VoteReq{
 		Voter:   proposerAddr,
 		Option:  option,
 		BaseReq: baseReq,
@@ -1242,12 +1231,6 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	require.Nil(t, err)
 
 	return results
-}
-
-type voteReq struct {
-	BaseReq rest.BaseReq   `json:"base_req"`
-	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
-	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 // GET /gov/proposals/{proposalId}/votes Query voters
@@ -1357,7 +1340,7 @@ func doUnjail(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
 
-	ur := rest.UnjailReq{
+	ur := slashingrest.UnjailReq{
 		BaseReq: baseReq,
 	}
 	req, err := cdc.MarshalJSON(ur)

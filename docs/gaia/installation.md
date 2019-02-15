@@ -36,9 +36,28 @@ make tools install
 That will install the `gaiad` and `gaiacli` binaries. Verify that everything is OK:
 
 ```bash
-$ gaiad version
-$ gaiacli version
+$ gaiad version --long
+$ gaiacli version --long
 ```
+
+`gaiacli` for instance should output something similar to:
+
+```
+cosmos-sdk: 0.31.2-10-g1fba7308
+git commit: 1fba7308fa226e971964cd6baad9527d4b51d9fc
+vendor hash: 1aec7edfad9888a967b3e9063e42f66b28f447e6
+build tags: netgo ledger
+go version go1.11.5 linux/amd64
+```
+
+##### Build Tags
+
+Build tags indicate special features that have been enabled in the binary.
+
+| Build Tag | Description                                     |
+| --------- | ----------------------------------------------- |
+| netgo     | Name resolution will use pure Go code           |
+| ledger    | Ledger devices are supported (hardware wallets) |
 
 ### Install binary distribution via snap (Linux only)
 
@@ -70,6 +89,7 @@ Note that the binaries provided by the snap package save their data into **$HOME
 :::
 
 Please refer to [Snap documentation](https://docs.snapcraft.io/installing-snapd/6735) for specific information on how to install `snap` on your distribution.
+
 
 ### Next
 

@@ -313,17 +313,6 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 	app.GenesisAccounts = accts
 }
 
-// GetAllAccounts returns all accounts in the accountKeeper.
-func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
-	accounts := []auth.Account{}
-	appendAccount := func(acc auth.Account) (stop bool) {
-		accounts = append(accounts, acc)
-		return false
-	}
-	mapper.IterateAccounts(ctx, appendAccount)
-	return accounts
-}
-
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.

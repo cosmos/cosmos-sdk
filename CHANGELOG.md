@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.31.2
+
+BREAKING CHANGES
+
+* SDK
+ * [\#3592](https://github.com/cosmos/cosmos-sdk/issues/3592) Drop deprecated keybase implementation's
+   New constructor in favor of a new
+   crypto/keys.New(string, string) implementation that
+   returns a lazy keybase instance. Remove client.MockKeyBase,
+   superseded by crypto/keys.NewInMemory()
+
+IMPROVEMENTS
+
+* SDK
+  * [\#3604](https://github.com/cosmos/cosmos-sdk/pulls/3604) Improve SDK funds related error messages and allow for unicode in
+  JSON ABCI log.
+
+* Tendermint
+  * [\#3563](https://github.com/cosmos/cosmos-sdk/3563) Update to Tendermint version `0.30.0-rc0`
+
+
+BUG FIXES
+
+* Gaia
+  * [\#3585] Fix setting the tx hash in `NewResponseFormatBroadcastTxCommit`.
+  * [\#3585] Return an empty `TxResponse` when Tendermint returns an empty
+  `ResultBroadcastTx`.
+
+* SDK
+  * [\#3582](https://github.com/cosmos/cosmos-sdk/pull/3582) Running `make test_unit` was failing due to a missing tag
+  * [\#3617](https://github.com/cosmos/cosmos-sdk/pull/3582) Fix fee comparison when the required fees does not contain any denom
+  present in the tx fees.
+
 ## 0.31.0
 
 BREAKING CHANGES
@@ -494,7 +527,7 @@ BREAKING CHANGES
   * [gaiad init] [\#2602](https://github.com/cosmos/cosmos-sdk/issues/2602) New genesis workflow
 
 * SDK
-  * [simulation] [\#2665](https://github.com/cosmos/cosmos-sdk/issues/2665) only argument to simulation.Invariant is now app
+  * [simulation] [\#2665](https://github.com/cosmos/cosmos-sdk/issues/2665) only argument to sdk.Invariant is now app
 
 * Tendermint
   * Upgrade to version 0.26.0

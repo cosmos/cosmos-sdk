@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"errors"
 
@@ -188,6 +189,6 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }

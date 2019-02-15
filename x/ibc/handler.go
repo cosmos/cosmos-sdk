@@ -2,10 +2,9 @@ package ibc
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
+func NewHandler(ibcm Mapper, ck BankKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case IBCTransferMsg:
@@ -20,7 +19,7 @@ func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
 }
 
 // IBCTransferMsg deducts coins from the account and creates an egress IBC packet.
-func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck bank.Keeper, msg IBCTransferMsg) sdk.Result {
+func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCTransferMsg) sdk.Result {
 	packet := msg.IBCPacket
 
 	_, _, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
@@ -37,7 +36,7 @@ func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck bank.Keeper, msg IBCT
 }
 
 // IBCReceiveMsg adds coins to the destination address and creates an ingress IBC packet.
-func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck bank.Keeper, msg IBCReceiveMsg) sdk.Result {
+func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCReceiveMsg) sdk.Result {
 	packet := msg.IBCPacket
 
 	seq := ibcm.GetIngressSequence(ctx, packet.SrcChain)

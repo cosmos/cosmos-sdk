@@ -23,10 +23,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 
-	// Missing input (enter password)
-	err := runAddCmd(cmd, []string{"keyname"})
-	assert.EqualError(t, err, "EOF")
-
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
@@ -38,7 +34,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
-	err = runAddCmd(cmd, []string{"keyname1"})
+	err := runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
 
 	/// Test Text - Replace? >> FAIL

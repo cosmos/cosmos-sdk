@@ -4,10 +4,11 @@ This document contains all the necessary information for delegators to interact 
 
 It also contains instructions on how to manage accounts, restore accounts from the fundraiser and use a ledger nano device.
 
-__Very Important__: Please assure that you follow the steps described hereinafter
+::: danger
+**Very Important**: Please assure that you follow the steps described hereinafter
 carefully, as negligence in this significant process could lead to an indefinite
 loss of your Atoms. Therefore, read through the following instructions in their 
-entirety prior to proceeding and reach out to us in case you need support. 
+entirety prior to proceeding and reach out to us in case you need support.
 
 Please also note that you are about to interact with the Cosmos Hub, a
 blockchain technology containing highly experimental software. While the
@@ -21,7 +22,8 @@ associated with cryptographic software (see also risk section of the
 the Tendermint Team may not be held liable for potential damages arising out of the use of the
 software. Any use of this open source software released under the Apache 2.0 license is
 done at your own risk and on a "AS IS" basis, without warranties or conditions
-of any kind. 
+of any kind.
+:::
 
 Please exercise extreme caution!
 
@@ -36,9 +38,11 @@ Please exercise extreme caution!
     + [Connecting to a remote full-node](#connecting-to-a-remote-full-node)
 - [Setting up `gaiacli`](#setting-up-gaiacli)
 - [Querying the state](#querying-the-state)
-- [Bonding Atoms and Withdrawing rewards](#bonding-atoms-and-withdrawing-rewards)
-- [Participating in Governance](#participating-in-governance)
-- [Signing transactions from an offline computer](#signing-transactions-from-an-offline-computer)
+- [Sending Transactions](#sending-transactions)
+    + [A note on gas and fees](#a-note-on-gas-and-fees)
+    + [Bonding Atoms and Withdrawing rewards](#bonding-atoms-and-withdrawing-rewards)
+    + [Participating in Governance](#participating-in-governance)
+    + [Signing transactions from an offline computer](#signing-transactions-from-an-offline-computer)
 
 ## Installing `gaiacli` 
 
@@ -49,8 +53,16 @@ Please exercise extreme caution!
 :::
 
 [**Download the binaries**]
+Not available yet.
 
 [**Install from source**](https://cosmos.network/docs/gaia/installation.html)
+
+::: tip
+`gaiacli` is used from a terminal. To open the terminal, follow these steps:
+- **Windows**: `Start` > `All Programs` > `Accessories` > `Command Prompt`
+- **MacOS**: `Finder` > `Applications` > `Utilities` > `Terminal`
+- **Linux**: `Ctrl` + `Alt` + `T`
+:::
 
 ## Cosmos Accounts
 
@@ -155,9 +167,9 @@ To create an account, you just need to have `gaiacli` installed. Before creating
 
 When you initialize your ledger, a 24-word mnemonic is generated and stored in the device. This mnemonic is compatible with Cosmos and Cosmos accounts can be derived from it. Therefore, all you have to do is make your ledger compatible with `gaiacli`. To do so, you need to go through the following steps:
 
-1. Download the Ledger Live app [here](https://www.ledger.com/pages/ledger-live)
+1. Download the Ledger Live app [here](https://www.ledger.com/pages/ledger-live). 
 2. Connect your ledger via USB and update to the latest firmware
-3. Go to the ledger live app store, and download the "Cosmos" application (this can take a while)
+3. Go to the ledger live app store, and download the "Cosmos" application (this can take a while). **Note: You may have to enable `Dev Mode` in the `Settings` of Ledger Live to be able to download the "Cosmos" application**. 
 4. Navigate to the Cosmos app on your ledger device
 
 Then, to create an account, use the following command:
@@ -165,6 +177,10 @@ Then, to create an account, use the following command:
 ```bash
 gaiacli keys add <yourAccountName> --ledger 
 ```
+
+::: warning
+**This command will only work while the Ledger is plugged in and unlocked**
+:::
 
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
@@ -231,11 +247,15 @@ In order to connect to the full-node, you will need an address of the following 
 
 ## Setting up `gaiacli`
 
+::: tip
+**Before setting up `gaiacli`, make sure you have set up a way to [access the Cosmos Hub network](#accessing-the-cosmos-hub-network)**
+:::
+
 ::: warning
 **Please check that you are always using the latest stable release of `gaiacli`**
 :::
 
-`gaiacli` is the tool that enables you to interact with the node that runs on the Cosmos Hub network, whether you run it yourself or not (see [accessing the cosmos hub network](#accession-the-cosmos-hub-network)). Let us set it up properly.
+`gaiacli` is the tool that enables you to interact with the node that runs on the Cosmos Hub network, whether you run it yourself or not. Let us set it up properly.
 
 In order to set up `gaiacli`, use the following command:
 
@@ -266,40 +286,44 @@ gaiacli config trust-node false
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
 
 ```bash
-gaiacli config chain-id gos-3
+gaiacli config chain-id gos-6
 ```
 
 ## Querying the state
 
-[`gaiacli`](https://cosmos.network/docs/gaia/gaiacli.html) lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outstanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
+::: tip
+**Before you can bond atoms and withdraw rewards, you need to [set up `gaiacli`](#setting-up-gaiacli)**
+:::
+
+`gaiacli` lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outstanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. 
 
 ```bash
 // query account balances and other account-related information
 gaiacli query account
 
 // query the list of validators
-gaiacli query validators
+gaiacli query staking validators
 
-// query the information of a validator given their address (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg)
-gaiacli query validator <validatorAddress>
+// query the information of a validator given their address (e.g. cosmosvaloper1n5pepvmgsfd3p2tqqgvt505jvymmstf6s9gw27)
+gaiacli query staking validator <validatorAddress>
 
 // query all delegations made from a delegator given their address (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg)
-gaiacli query delegations <delegatorAddress>
+gaiacli query staking delegations <delegatorAddress>
 
-// query a specific delegation made from a delegator to a validator given their addresses
-gaiacli query delegations <delegatorAddress> <validatorAddress>
+// query a specific delegation made from a delegator (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg) to a validator (e.g. cosmosvaloper1n5pepvmgsfd3p2tqqgvt505jvymmstf6s9gw27) given their addresses
+gaiacli query staking delegation <delegatorAddress> <validatorAddress>
 
 // query the rewards of a delegator given a delegator address (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg)
 gaiacli query distr rewards <delegatorAddress> 
 
 // query all proposals currently open for depositing
-gaiacli query proposals --status deposit_period
+gaiacli query gov proposals --status deposit_period
 
 // query all proposals currently open for voting
-gaiacli query proposals --status voting_period
+gaiacli query gov proposals --status voting_period
 
 // query a proposal given its proposalID
-gaiacli query proposal <proposalID>
+gaiacli query gov proposal <proposalID>
 ```
 
 For more commands, just type:
@@ -310,47 +334,7 @@ gaiacli query
 
 For each command, you can use the `-h` or `--help` flag to get more information.
 
-## Bonding Atoms and Withdrawing rewards
-
-::: warning
-**Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
-:::
-
-::: warning
-**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
-::: 
-
-```bash
-// Bond Atoms 
-// ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
-
-gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
-
-// Withdraw rewards
-
-gaiacli tx distr withdraw-rewards --from <delegatorKeyName>
-```
-
-::: tip
-If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network
-::: 
-
-To confirm that your transaction went through, you can use the following queries:
-
-```bash
-// your balance should change after you bond Atoms or withdraw rewards
-gaiacli query account
-
-// you should have delegations after you bond Atom
-gaiacli query delegations <delegatorAddress>
-
-// this returns your tx if it has been included
-// use the tx hash that was displayed when you created the tx
-gaiacli query tx <txHash>
-
-```
-
-Double check with a block explorer if you interact with the network through a trusted full-node. 
+## Sending Transactions
 
 ### A note on gas and fees
 
@@ -364,11 +348,66 @@ The `gas` is dependent on the transaction. Different transaction require differe
 
 The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transactions that have a `gasPrice` greater than their `min-gas-price`. 
 
-The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`, the higher the chance that your transaction will get included in a block. 
+The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`/`fees`, the higher the chance that your transaction will get included in a block. 
+
+### Bonding Atoms and Withdrawing rewards
+
+::: tip
+**Before you can bond atoms and withdraw rewards, you need to [set up `gaiacli`](#setting-up-gaiacli) and [create an account](#creating-an-account)**
+:::
+
+::: warning
+**Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
+:::
+
+::: warning
+**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+::: 
+
+```bash
+// Bond a certain amount of Atoms to a given validator
+// ex value for flags: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToBound>=10000stake, <gasPrice>=0.001stake
+
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+
+
+// Withdraw all rewards
+// ex value for flag: <gasPrice>=0.001stake 
+
+gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+
+
+// Unbond a certain amount of Atoms from a given validator 
+// You will have to wait 3 weeks before your Atoms are fully unbonded and transferrable 
+// ex value for flags: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToUnbound>=10000stake, <gasPrice>=0.001stake
+
+gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+```
+
+::: warning
+**If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network. Note that the command will only work while the Ledger is plugged in and unlocked.**
+::: 
+
+To confirm that your transaction went through, you can use the following queries:
+
+```bash
+// your balance should change after you bond Atoms or withdraw rewards
+gaiacli query account
+
+// you should have delegations after you bond Atom
+gaiacli query staking delegations <delegatorAddress>
+
+// this returns your tx if it has been included
+// use the tx hash that was displayed when you created the tx
+gaiacli query tx <txHash>
+
+```
+
+Double check with a block explorer if you interact with the network through a trusted full-node. 
 
 ## Participating in governance
 
-### Primer on governance
+#### Primer on governance
 
 The Cosmos Hub has a built-in governance system that lets bonded Atom holders vote on proposals. There are three types of proposal:
 
@@ -382,7 +421,11 @@ Once the `deposit` reaches `minDeposit`, the proposal enters the `voting_period`
 
 At the end of the voting period, the proposal is accepted if there are more than 50% `Yes` votes (excluding `Abstain ` votes) and less than 33.33% of `NoWithVeto` votes (excluding `Abstain` votes).
 
-### In practice
+#### In practice
+
+::: tip
+**Before you can bond atoms and withdraw rewards, you need to [bond Atoms](#bonding-atoms-and-withdrawing-rewards)**
+:::
 
 ::: warning
 **Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
@@ -408,7 +451,7 @@ gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-prices <gasPrice>
 gaiacli tx gov vote <proposalID> <option> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 ```
 
-## Signing transactions from an offline computer
+### Signing transactions from an offline computer
 
 If you do not have a ledger device and want to interact with your private key on an offline computer, you can use the following procedure. First, generate an unsigned transaction on an **online computer** with the following command (example with a bonding transaction):
 
@@ -416,7 +459,7 @@ If you do not have a ledger device and want to interact with your private key on
 // Bond Atoms 
 // ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
 
-gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:

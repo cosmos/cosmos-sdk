@@ -4,10 +4,11 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 BUILD_TAGS = netgo
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
-	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
+BUILD_FLAGS = -tags "$(BUILD_TAGS)" -ldflags \
+    '-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+    -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+    -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps) \
+    -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(BUILD_TAGS)"'
 LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
@@ -151,7 +152,7 @@ test_ledger:
 	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='test_ledger_mock'
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)

@@ -55,6 +55,10 @@ type TxResponse struct {
 }
 
 func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
 	return TxResponse{
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
@@ -70,9 +74,18 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 }
 
 func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
 	return TxResponse{
 		Height:    res.Height,
-		TxHash:    res.Hash.String(),
+		TxHash:    txHash,
 		Code:      res.DeliverTx.Code,
 		Data:      res.DeliverTx.Data,
 		Log:       res.DeliverTx.Log,
@@ -85,6 +98,10 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxR
 }
 
 func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
 	return TxResponse{
 		Code:   res.Code,
 		Data:   res.Data.Bytes(),

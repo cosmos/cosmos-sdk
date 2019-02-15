@@ -3,6 +3,7 @@ package keys
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +50,7 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 		}
 		// an empty list will be JSONized as null, but we want to keep the empty list
 		if len(infos) == 0 {
-			PostProcessResponse(w, cdc, []string{}, indent)
+			rest.PostProcessResponse(w, cdc, []string{}, indent)
 			return
 		}
 		keysOutput, err := Bech32KeysOutput(infos)
@@ -58,6 +59,6 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
-		PostProcessResponse(w, cdc, keysOutput, indent)
+		rest.PostProcessResponse(w, cdc, keysOutput, indent)
 	}
 }

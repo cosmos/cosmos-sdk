@@ -8,61 +8,106 @@ import (
 
 func TestNewDecCoin(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoin("a", 5)
+		NewDecCoin("atom", 5)
 	})
 	require.NotPanics(t, func() {
-		NewDecCoin("a", 0)
+		NewDecCoin("atom", 0)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("A", 5)
+		NewDecCoin("Atom", 5)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("a", -5)
+		NewDecCoin("atom", -5)
+	})
+}
+
+func TestNewPositiveDecCoin(t *testing.T) {
+	require.NotPanics(t, func() {
+		NewPositiveDecCoin("atom", 5)
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoin("atom", 0)
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoin("Atom", 5)
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoin("atom", -5)
 	})
 }
 
 func TestNewDecCoinFromDec(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("a", NewDec(5))
+		NewDecCoinFromDec("atom", NewDec(5))
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("a", ZeroDec())
+		NewDecCoinFromDec("atom", ZeroDec())
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("A", NewDec(5))
+		NewDecCoinFromDec("Atom", NewDec(5))
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("a", NewDec(-5))
+		NewDecCoinFromDec("atom", NewDec(-5))
+	})
+}
+
+func TestNewPositiveDecCoinFromDec(t *testing.T) {
+	require.NotPanics(t, func() {
+		NewPositiveDecCoinFromDec("atom", NewDec(5))
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromDec("atom", ZeroDec())
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromDec("Atom", NewDec(5))
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromDec("atom", NewDec(-5))
 	})
 }
 
 func TestNewDecCoinFromCoin(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(5)})
+		NewDecCoinFromCoin(Coin{"atom", NewInt(5)})
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(0)})
+		NewDecCoinFromCoin(Coin{"atom", NewInt(0)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"A", NewInt(5)})
+		NewDecCoinFromCoin(Coin{"Atom", NewInt(5)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(-5)})
+		NewDecCoinFromCoin(Coin{"atom", NewInt(-5)})
+	})
+}
+
+func TestNewPositiveDecCoinFromCoin(t *testing.T) {
+	require.NotPanics(t, func() {
+		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(5)})
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(0)})
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromCoin(Coin{"Atom", NewInt(5)})
+	})
+	require.Panics(t, func() {
+		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(-5)})
 	})
 }
 
 func TestDecCoinIsPositive(t *testing.T) {
-	dc := NewDecCoin("a", 5)
+	dc := NewDecCoin("atom", 5)
 	require.True(t, dc.IsPositive())
 
-	dc = NewDecCoin("a", 0)
+	dc = NewDecCoin("atom", 0)
 	require.False(t, dc.IsPositive())
 }
 
 func TestPlusDecCoin(t *testing.T) {
-	decCoinA1 := NewDecCoinFromDec("a", NewDecWithPrec(11, 1))
-	decCoinA2 := NewDecCoinFromDec("a", NewDecWithPrec(22, 1))
-	decCoinB1 := NewDecCoinFromDec("b", NewDecWithPrec(11, 1))
+	decCoinA1 := NewDecCoinFromDec("atom", NewDecWithPrec(11, 1))
+	decCoinA2 := NewDecCoinFromDec("atom", NewDecWithPrec(22, 1))
+	decCoinB1 := NewDecCoinFromDec("btc", NewDecWithPrec(11, 1))
 
 	// regular add
 	res := decCoinA1.Plus(decCoinA1)
@@ -84,9 +129,9 @@ func TestPlusDecCoins(t *testing.T) {
 		inputTwo DecCoins
 		expected DecCoins
 	}{
-		{DecCoins{{"a", one}, {"b", one}}, DecCoins{{"a", one}, {"b", one}}, DecCoins{{"a", two}, {"b", two}}},
-		{DecCoins{{"a", zero}, {"b", one}}, DecCoins{{"a", zero}, {"b", zero}}, DecCoins{{"b", one}}},
-		{DecCoins{{"a", zero}, {"b", zero}}, DecCoins{{"a", zero}, {"b", zero}}, DecCoins(nil)},
+		{DecCoins{{"atom", one}, {"btc", one}}, DecCoins{{"atom", one}, {"btc", one}}, DecCoins{{"atom", two}, {"btc", two}}},
+		{DecCoins{{"atom", zero}, {"btc", one}}, DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins{{"btc", one}}},
+		{DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -150,14 +195,14 @@ func TestDecCoinsIsValid(t *testing.T) {
 		expected bool
 	}{
 		{DecCoins{}, true},
-		{DecCoins{DecCoin{"a", NewDec(5)}}, true},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, true},
-		{DecCoins{DecCoin{"a", NewDec(-5)}}, false},
-		{DecCoins{DecCoin{"A", NewDec(5)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"b", NewDec(-100000)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(-5)}, DecCoin{"b", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"A", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"atom", NewDec(5)}}, true},
+		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"btc", NewDec(100000)}}, true},
+		{DecCoins{DecCoin{"atom", NewDec(-5)}}, false},
+		{DecCoins{DecCoin{"Atom", NewDec(5)}}, false},
+		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"Btc", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"btc", NewDec(-100000)}}, false},
+		{DecCoins{DecCoin{"atom", NewDec(-5)}, DecCoin{"btc", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"Atom", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {

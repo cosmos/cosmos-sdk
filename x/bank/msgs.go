@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,8 +37,8 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if msg.ToAddress.Empty() {
 		return sdk.ErrInvalidAddress("missing recipient address")
 	}
-	if !msg.Amount.IsValid() {
-		return sdk.ErrInsufficientCoins("invalid send amount")
+	if err := msg.Amount.Validate(false, true); err != nil {
+		return sdk.ErrInsufficientCoins(fmt.Sprintf("invalid send amount: %s", err))
 	}
 	if !msg.Amount.IsPositive() {
 		return sdk.ErrInsufficientCoins("send amount must be positive")
@@ -112,8 +114,8 @@ func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return sdk.ErrInvalidAddress(in.Address.String())
 	}
-	if !in.Coins.IsValid() {
-		return sdk.ErrInvalidCoins(in.Coins.String())
+	if err := in.Coins.Validate(false, true); err != nil {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("invalid input amount: %s", err))
 	}
 	if !in.Coins.IsPositive() {
 		return sdk.ErrInvalidCoins(in.Coins.String())
@@ -140,8 +142,8 @@ func (out Output) ValidateBasic() sdk.Error {
 	if len(out.Address) == 0 {
 		return sdk.ErrInvalidAddress(out.Address.String())
 	}
-	if !out.Coins.IsValid() {
-		return sdk.ErrInvalidCoins(out.Coins.String())
+	if err := out.Coins.Validate(false, true); err != nil {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("invalid output amount: %s", err))
 	}
 	if !out.Coins.IsPositive() {
 		return sdk.ErrInvalidCoins(out.Coins.String())

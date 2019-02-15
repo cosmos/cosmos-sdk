@@ -299,8 +299,8 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
-	if !feeAmount.IsValid() {
-		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
+	if err := feeAmount.Validate(false, true); err != nil {
+		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", err)).Result()
 	}
 
 	// get the resulting coins deducting the fees

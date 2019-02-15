@@ -61,8 +61,9 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if msg.Proposer.Empty() {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
 	}
-	if !msg.InitialDeposit.IsValid() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+	if err := msg.InitialDeposit.Validate(false, true); err != nil {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("InitialDeposit must be a valid sdk.Coins amount: %s",
+			err))
 	}
 	if msg.InitialDeposit.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
@@ -110,8 +111,8 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 	if msg.Depositor.Empty() {
 		return sdk.ErrInvalidAddress(msg.Depositor.String())
 	}
-	if !msg.Amount.IsValid() {
-		return sdk.ErrInvalidCoins(msg.Amount.String())
+	if err := msg.Amount.Validate(false, true); err != nil {
+		return sdk.ErrInvalidCoins(err.Error())
 	}
 	if msg.Amount.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())

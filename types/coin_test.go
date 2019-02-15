@@ -252,7 +252,7 @@ func TestPlusCoins(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.True(t, res.IsValid())
+		assert.NoError(t, res.Validate(false, true))
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
@@ -281,7 +281,7 @@ func TestMinusCoins(t *testing.T) {
 			require.Panics(t, func() { tc.inputOne.Minus(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.Minus(tc.inputTwo)
-			assert.True(t, res.IsValid())
+			assert.NoError(t, res.Validate(false, true))
 			require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
 	}
@@ -337,20 +337,20 @@ func TestCoins(t *testing.T) {
 		{"mineral", NewInt(1)},
 	}
 
-	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
-	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
-	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
+	assert.NoError(t, good.Validate(false, true), "Coins are valid")
+	assert.Error(t, mixedCase1.Validate(false, true), "Coins denoms contain upper case characters")
+	assert.Error(t, mixedCase2.Validate(false, true), "First Coins denoms contain upper case characters")
+	assert.Error(t, mixedCase3.Validate(false, true), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
 	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
 	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
-	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
-	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
-	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
-	assert.False(t, dup.IsValid(), "Duplicate coin")
-	assert.False(t, neg.IsValid(), "Negative first-denom coin")
+	assert.Error(t, badSort1.Validate(false, true), "Coins are not sorted")
+	assert.Error(t, badSort2.Validate(false, true), "Coins are not sorted")
+	assert.Error(t, badAmt.Validate(false, true), "Coins cannot include 0 amounts")
+	assert.Error(t, dup.Validate(false, true), "Duplicate coin")
+	assert.Error(t, neg.Validate(false, true), "Negative first-denom coin")
 }
 
 func TestCoinsGT(t *testing.T) {
@@ -504,9 +504,11 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.before, tc.coins.Validate(false, true) == nil,
+			"coin validity is incorrect before sorting, tc #%d", tcIndex)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.after, tc.coins.Validate(false, true) == nil,
+			"coin validity is incorrect after sorting, tc #%d", tcIndex)
 	}
 }
 

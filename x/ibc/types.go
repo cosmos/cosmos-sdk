@@ -55,8 +55,8 @@ func (p IBCPacket) ValidateBasic() sdk.Error {
 	if p.SrcChain == p.DestChain {
 		return ErrIdenticalChains(DefaultCodespace).TraceSDK("")
 	}
-	if !p.Coins.IsValid() {
-		return sdk.ErrInvalidCoins("")
+	if err := p.Coins.Validate(false, true); err != nil {
+		return sdk.ErrInvalidCoins(err.Error())
 	}
 	return nil
 }

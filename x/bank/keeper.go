@@ -263,8 +263,8 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// supply invariant.
-	if !amt.IsValid() {
-		return nil, sdk.ErrInvalidCoins(amt.String())
+	if err := amt.Validate(false, true); err != nil {
+		return nil, sdk.ErrInvalidCoins(err.Error())
 	}
 
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)

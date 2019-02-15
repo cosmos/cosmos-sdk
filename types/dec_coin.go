@@ -329,7 +329,7 @@ func (coins DecCoins) IsZero() bool {
 	return true
 }
 
-// IsValid asserts the DecCoins are sorted, have positive amount, and Denom
+// Validate asserts the DecCoins are sorted, have positive amount, and Denom
 // does not contain upper case characters.
 func (coins DecCoins) IsValid() bool {
 	switch len(coins) {

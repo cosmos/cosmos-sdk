@@ -175,37 +175,40 @@ func (coins Coins) String() string {
 	return strings.Join(out, ",")
 }
 
-// IsValid asserts the Coins are sorted, have positive amount,
+// Validate asserts the Coins are sorted, have positive amount,
 // and Denom does not contain upper case characters.
-func (coins Coins) IsValid() bool {
+func (coins Coins) Validate(failEmpty bool, failZero bool) error {
 	switch len(coins) {
 	case 0:
-		return true
-	case 1:
-		if err := coins[0].Validate(true); err != nil {
-			return false
+		if failEmpty {
+			return errors.New("coin set cannot be empty")
 		}
-		return true
+		return nil
+	case 1:
+		if err := coins[0].Validate(failZero); err != nil {
+			return fmt.Errorf("coin set validation failed: %s", err)
+		}
+		return nil
 	default:
 		// check single coin case
-		if !(Coins{coins[0]}).IsValid() {
-			return false
+		if err := (Coins{coins[0]}).Validate(failEmpty, failZero); err != nil {
+			return err
 		}
 
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
 			if err := coin.Validate(true); err != nil {
-				return false
+				return fmt.Errorf("coin set validation failed: %s", err)
 			}
 			if coin.Denom <= lowDenom {
-				return false
+				return errors.New("coin set is not sorted")
 			}
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
 		}
 
-		return true
+		return nil
 	}
 }
 
@@ -219,7 +222,7 @@ func (coins Coins) IsValid() bool {
 // denominations.
 //
 // CONTRACT: Plus will never return Coins where one Coin has a non-positive
-// amount. In otherwords, IsValid will always return true.
+// amount. In otherwords, Validate will always return true.
 func (coins Coins) Plus(coinsB Coins) Coins {
 	return coins.safePlus(coinsB)
 }
@@ -285,7 +288,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 // {A, B} - {A} = {B}
 //
 // CONTRACT: Minus will never return Coins where one Coin has a non-positive
-// amount. In otherwords, IsValid will always return true.
+// amount. In otherwords, Validate will always return true.
 func (coins Coins) Minus(coinsB Coins) Coins {
 	diff, hasNeg := coins.SafeMinus(coinsB)
 	if hasNeg {
@@ -592,8 +595,8 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	coins.Sort()
 
 	// Validate coins before returning.
-	if !coins.IsValid() {
-		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
+	if err := coins.Validate(false, true); err != nil {
+		return nil, fmt.Errorf("parseCoins invalid: %s", err)
 	}
 
 	return coins, nil
@@ -621,8 +624,8 @@ func ParsePositiveCoins(coinsStr string) (coins Coins, err error) {
 	coins.Sort()
 
 	// Validate coins before returning.
-	if !coins.IsValid() {
-		return nil, fmt.Errorf("parsePositiveCoins invalid: %#v", coins)
+	if err := coins.Validate(false, true); err != nil {
+		return nil, fmt.Errorf("parsePositiveCoins invalid: %s", err)
 	}
 
 	return coins, nil

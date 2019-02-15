@@ -104,9 +104,9 @@ func ValidateGenesis(data GenesisState) error {
 			data.VotingParams.VotingPeriod, data.DepositParams.MaxDepositPeriod)
 	}
 
-	if !data.DepositParams.MinDeposit.IsValid() {
-		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
-			data.DepositParams.MinDeposit.String())
+	if err := data.DepositParams.MinDeposit.Validate(false, true); err != nil {
+		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount: %s",
+			err)
 	}
 
 	return nil

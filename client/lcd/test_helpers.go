@@ -513,12 +513,16 @@ func getValidatorSets(t *testing.T, port string, height int, expectFail bool) rp
 // GET /txs/{hash} get tx by hash
 func getTransaction(t *testing.T, port string, hash string) sdk.TxResponse {
 	var tx sdk.TxResponse
-	res, body := Request(t, port, "GET", fmt.Sprintf("/txs/%s", hash), nil)
+	res, body := getTransactionRequest(t, port, hash)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &tx)
 	require.NoError(t, err)
 	return tx
+}
+
+func getTransactionRequest(t *testing.T, port, hash string) (*http.Response, string) {
+	return Request(t, port, "GET", fmt.Sprintf("/txs/%s", hash), nil)
 }
 
 // POST /txs broadcast txs

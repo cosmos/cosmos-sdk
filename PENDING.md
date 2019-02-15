@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API
+  * [\#3642](https://github.com/cosmos/cosmos-sdk/pull/3642) `GET /tx/{hash}` now returns `404` instead of `500` if the transaction is not found
 
 * Gaia CLI
 

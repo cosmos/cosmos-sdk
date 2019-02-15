@@ -115,12 +115,14 @@ func TestInputValidation(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		err := tc.txIn.ValidateBasic()
-		if tc.valid {
-			require.Nil(t, err, "%d: %+v", i, err)
-		} else {
-			require.NotNil(t, err, "%d", i)
-		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			err := tc.txIn.ValidateBasic()
+			if tc.valid {
+				require.Nil(t, err, "%d: %+v", i, err)
+			} else {
+				require.NotNil(t, err, "%d", i)
+			}
+		})
 	}
 }
 

@@ -37,11 +37,8 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if msg.ToAddress.Empty() {
 		return sdk.ErrInvalidAddress("missing recipient address")
 	}
-	if err := msg.Amount.Validate(false, true); err != nil {
+	if err := msg.Amount.Validate(true, true); err != nil {
 		return sdk.ErrInsufficientCoins(fmt.Sprintf("invalid send amount: %s", err))
-	}
-	if !msg.Amount.IsPositive() {
-		return sdk.ErrInsufficientCoins("send amount must be positive")
 	}
 	return nil
 }
@@ -114,11 +111,8 @@ func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return sdk.ErrInvalidAddress(in.Address.String())
 	}
-	if err := in.Coins.Validate(false, true); err != nil {
+	if err := in.Coins.Validate(true, true); err != nil {
 		return sdk.ErrInvalidCoins(fmt.Sprintf("invalid input amount: %s", err))
-	}
-	if !in.Coins.IsPositive() {
-		return sdk.ErrInvalidCoins(in.Coins.String())
 	}
 	return nil
 }
@@ -142,11 +136,8 @@ func (out Output) ValidateBasic() sdk.Error {
 	if len(out.Address) == 0 {
 		return sdk.ErrInvalidAddress(out.Address.String())
 	}
-	if err := out.Coins.Validate(false, true); err != nil {
+	if err := out.Coins.Validate(true, true); err != nil {
 		return sdk.ErrInvalidCoins(fmt.Sprintf("invalid output amount: %s", err))
-	}
-	if !out.Coins.IsPositive() {
-		return sdk.ErrInvalidCoins(out.Coins.String())
 	}
 	return nil
 }

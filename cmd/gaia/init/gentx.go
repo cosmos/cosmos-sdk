@@ -111,7 +111,7 @@ following delegation and commission default parameters:
 
 			// Fetch the amount of coins staked
 			amount := viper.GetString(cli.FlagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			coins, err := sdk.ParsePositiveCoins(amount)
 			if err != nil {
 				return err
 			}

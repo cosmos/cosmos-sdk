@@ -41,14 +41,14 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				addr = info.GetAddress()
 			}
 
-			coins, err := sdk.ParseCoins(args[1])
+			coins, err := sdk.ParsePositiveCoins(args[1])
 			if err != nil {
 				return err
 			}
 
 			vestingStart := viper.GetInt64(flagVestingStart)
 			vestingEnd := viper.GetInt64(flagVestingEnd)
-			vestingAmt, err := sdk.ParseCoins(viper.GetString(flagVestingAmt))
+			vestingAmt, err := sdk.ParsePositiveCoins(viper.GetString(flagVestingAmt))
 			if err != nil {
 				return err
 			}

@@ -89,7 +89,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			// Find deposit amount
-			amount, err := sdk.ParseCoins(proposal.Deposit)
+			amount, err := sdk.ParsePositiveCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}

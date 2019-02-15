@@ -111,7 +111,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 	if msg.Depositor.Empty() {
 		return sdk.ErrInvalidAddress(msg.Depositor.String())
 	}
-	if err := msg.Amount.Validate(false, true); err != nil {
+	if err := msg.Amount.Validate(true, true); err != nil {
 		return sdk.ErrInvalidCoins(err.Error())
 	}
 	if msg.Amount.IsAnyNegative() {

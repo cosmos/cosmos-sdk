@@ -279,6 +279,7 @@ func TestDecCoinsString(t *testing.T) {
 		expected string
 	}{
 		{DecCoins{}, ""},
+		{DecCoins{{"atom", MustNewDecFromStr("0")}}, ""},
 		{
 			DecCoins{
 				NewDecCoinFromDec("atom", NewDecWithPrec(5040000000000000000, Precision)),

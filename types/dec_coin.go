@@ -129,8 +129,12 @@ func (coin DecCoin) IsPositive() bool {
 }
 
 // String implements the Stringer interface for DecCoin. It returns a
-// human-readable representation of a decimal coin.
+// human-readable representation of a decimal coin or an empty string
+// if the amount is 0.
 func (coin DecCoin) String() string {
+	if !coin.IsPositive() {
+		return ""
+	}
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
@@ -155,12 +159,14 @@ func (coins DecCoins) String() string {
 		return ""
 	}
 
-	out := ""
+	out := []string{}
 	for _, coin := range coins {
-		out += fmt.Sprintf("%v,", coin.String())
+		if coin.IsPositive() {
+			out = append(out, coin.String())
+		}
 	}
 
-	return out[:len(out)-1]
+	return strings.Join(out, ",")
 }
 
 // return the coins with trunctated decimals, and return the change

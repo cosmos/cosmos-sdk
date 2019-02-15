@@ -40,6 +40,8 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * [\#3311] Reconcile the `DecCoin/s` API with the `Coin/s` API.
+  * [\#3614] Add coin denom length checks to the coins constructors.
   * \#3621 remove many inter-module dependancies
   * [\#3601] JSON-stringify the ABCI log response which includes the log and message
   index.

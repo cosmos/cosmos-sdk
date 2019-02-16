@@ -477,20 +477,18 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt     = `[[:digit:]]+`
-	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
-	reSpc     = `[[:space:]]*`
-	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reDnmString = `[[:lower:]][[:alnum:]]{2,15}`
+	reAmt       = `[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc       = `[[:space:]]*`
+	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
+	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
+	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
 func validateDenom(denom string) {
-	if len(denom) < 3 || len(denom) > 16 {
-		panic(fmt.Sprintf("invalid denom length: %s", denom))
-	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s", denom))
+	if !reDnm.MatchString(denom) {
+		panic("illegal characters")
 	}
 }
 

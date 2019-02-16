@@ -32,7 +32,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 }
 
 func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
-	validateDenom(denom)
+	mustValidateDenom(denom)
 
 	if amount.LT(ZeroDec()) {
 		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))

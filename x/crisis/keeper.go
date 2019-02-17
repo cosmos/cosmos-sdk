@@ -1,4 +1,4 @@
-package keeper
+package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -6,8 +6,8 @@ import (
 
 // invariant route
 type InvarRoute struct {
-	Invariant
 	route string
+	Invariant
 }
 
 // Register routes
@@ -15,9 +15,7 @@ type Keeper struct {
 	routes []InvarRoute
 }
 
-// Set the last total validator power.
-func (k Keeper) RegisterRoute(ctx sdk.Context, power sdk.Int) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
-	store.Set(LastTotalPowerKey, b)
+// register routes for the
+func (k *Keeper) RegisterRoute(ctx sdk.Context, invarRoute InvarRoute) {
+	k.routes = append(k.routes, invarRoute)
 }

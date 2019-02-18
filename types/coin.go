@@ -161,15 +161,16 @@ func findDup(coins Coins) int {
 }
 
 func (coins Coins) String() string {
-	if len(coins) == 0 {
+	if coins.IsZero() {
 		return ""
 	}
+	coins.Sort()
 
-	out := ""
-	for _, coin := range coins {
-		out += fmt.Sprintf("%v,", coin.String())
+	out := make([]string, len(coins))
+	for i, coin := range coins {
+		out[i] = coin.String()
 	}
-	return out[:len(out)-1]
+	return strings.Join(out, ",")
 }
 
 // IsValid asserts the Coins are sorted, have positive amount,
@@ -367,30 +368,6 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 	}
 
 	return true
-}
-
-// IsAnyGT returns true if coins and coinsB have
-// in common one denom whose value in coins is
-// greater than the value of the denom in coinsB.
-func (coins Coins) IsAnyGT(coinsB Coins) bool {
-	// if both are zero, nothing is greater than nothing
-	if coinsB.IsZero() && coins.IsZero() {
-		return false
-	}
-
-	// if only coinsB is zero, then return true
-	if coinsB.IsZero() {
-		return true
-	}
-
-	// Alternatively compare
-	for _, coin := range coins {
-		if coin.Amount.GT(coins.AmountOf(coin.Denom)) {
-			return true
-		}
-	}
-
-	return false
 }
 
 // IsAllGT returns false if for any denom in coins,

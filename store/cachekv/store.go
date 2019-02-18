@@ -1,7 +1,6 @@
 package cachekv
 
 import (
-	"bytes"
 	"io"
 	"sort"
 	"sync"
@@ -22,10 +21,16 @@ type cValue struct {
 	dirty   bool
 }
 
-// Store wraps an in-memory cache around an underlying types.KVStore.
+type items struct {
+	heap   *heap
+	inited bool
+}
+
+// Store wraps an in-mem/ory cache around an underlying types.KVStore.
 type Store struct {
 	mtx    sync.Mutex
 	cache  map[string]cValue
+	items  items
 	parent types.KVStore
 }
 
@@ -117,6 +122,7 @@ func (store *Store) Write() {
 
 	// Clear the cache
 	store.cache = make(map[string]cValue)
+	store.items = items{}
 }
 
 //----------------------------------------
@@ -155,32 +161,34 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	}
 
 	items := store.dirtyItems(start, end, ascending)
+
+	//	fmt.Printf("s: %+v\n", store.items.heap.pairs)
 	cache = newMemIterator(start, end, items)
+	//	fmt.Printf("c: %+v\n", items.pairs)
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
-func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
-	items := make([]cmn.KVPair, 0)
+func (store *Store) dirtyItems(start, end []byte, ascending bool) (res *heap) {
+	if len(store.cache) == 0 {
+		return nil
+	}
 
-	for key, cacheValue := range store.cache {
-		if !cacheValue.dirty {
-			continue
-		}
-		if dbm.IsKeyInDomain([]byte(key), start, end) {
-			items = append(items, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
+	if !store.items.inited {
+		store.items = items{
+			heap:   newHeapFromCache(store.cache, ascending),
+			inited: true,
 		}
 	}
 
-	sort.Slice(items, func(i, j int) bool {
-		if ascending {
-			return bytes.Compare(items[i].Key, items[j].Key) < 0
-		}
-		return bytes.Compare(items[i].Key, items[j].Key) > 0
-	})
+	res = store.items.heap.cache()
+	// golang does short circuit evaluation, we check isEmpty() before peek()
+	for !res.isEmpty() && !dbm.IsKeyInDomain(res.peek().Key, start, end) {
+		res.pop()
+	}
 
-	return items
+	return
 }
 
 //----------------------------------------
@@ -192,5 +200,8 @@ func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,
+	}
+	if store.items.inited {
+		store.items.heap.push(cmn.KVPair{Key: key, Value: value})
 	}
 }

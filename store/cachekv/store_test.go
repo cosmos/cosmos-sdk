@@ -100,6 +100,8 @@ func TestCacheKVStoreNested(t *testing.T) {
 }
 
 func TestCacheKVIteratorBounds(t *testing.T) {
+	fmt.Println("666666666")
+
 	st := newCacheKVStore()
 
 	// set some items
@@ -169,6 +171,7 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 
 	// remove it in cache and assert its not
 	st.Delete(k)
+	fmt.Println("///")
 	assertIterateDomain(t, st, 0)
 
 	// write the delete and assert its not there
@@ -377,6 +380,7 @@ func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
 	var i = 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()
+		fmt.Printf("aid %X %X\n", k, v)
 		require.Equal(t, keyFmt(i), k)
 		require.Equal(t, valFmt(i), v)
 		i++

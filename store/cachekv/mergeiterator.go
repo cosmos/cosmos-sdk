@@ -55,7 +55,6 @@ func (iter *cacheMergeIterator) Valid() bool {
 
 // Next implements Iterator
 func (iter *cacheMergeIterator) Next() {
-	iter.skipUntilExistsOrInvalid()
 	iter.assertValid()
 
 	// If parent is invalid, get the next cache item.
@@ -85,7 +84,6 @@ func (iter *cacheMergeIterator) Next() {
 
 // Key implements Iterator
 func (iter *cacheMergeIterator) Key() []byte {
-	iter.skipUntilExistsOrInvalid()
 	iter.assertValid()
 
 	// If parent is invalid, get the cache key.
@@ -115,7 +113,6 @@ func (iter *cacheMergeIterator) Key() []byte {
 
 // Value implements Iterator
 func (iter *cacheMergeIterator) Value() []byte {
-	iter.skipUntilExistsOrInvalid()
 	iter.assertValid()
 
 	// If parent is invalid, get the cache value.
@@ -207,7 +204,6 @@ func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() bool {
 				continue
 			}
 			// Cache is not a delete.
-
 			return true // cache exists.
 
 		case 1: // cache < parent
@@ -219,7 +215,6 @@ func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() bool {
 				continue
 			}
 			// Cache is not a delete.
-
 			return true // cache exists.
 		}
 	}

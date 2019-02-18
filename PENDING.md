@@ -1,52 +1,57 @@
-## PENDING
+# PENDING CHANGELOG
 
-BREAKING CHANGES
+<!----------------------------- BREAKING CHANGES ----------------------------->
 
-* Gaia REST API
+## BREAKING CHANGES
 
-* Gaia CLI
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
+### Gaia
 
-* Tendermint
+### SDK
 
+### Tendermint
 
-FEATURES
+<!--------------------------------- FEATURES --------------------------------->
 
-* Gaia REST API
+## FEATURES
 
-* Gaia CLI
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
+### Gaia
 
-* Tendermint
+### SDK
 
+### Tendermint
 
-IMPROVEMENTS
+<!------------------------------- IMPROVEMENTS ------------------------------->
 
-* Gaia REST API
+## IMPROVEMENTS
 
-* Gaia CLI
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
+### Gaia
 
-* Tendermint
+### SDK
 
+### Tendermint
 
-BUG FIXES
+<!--------------------------------- BUG FIXES -------------------------------->
 
-* Gaia REST API
+## BUG FIXES
 
-* Gaia CLI
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
+### Gaia
 
-* Tendermint
+### SDK
+
+### Tendermint

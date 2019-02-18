@@ -202,27 +202,35 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
+	fmt.Println("a")
 	st := newCacheKVStore()
 
+	fmt.Println("b")
 	// set some items and write them
 	nItems := 5
 	for i := 0; i < nItems; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 	}
+	fmt.Println("c")
 	st.Write()
 
+	fmt.Println("d")
 	// set some more items and leave dirty
 	for i := nItems; i < nItems*2; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 	}
 
+	fmt.Println("e")
 	// iterate over all of them
 	assertIterateDomain(t, st, nItems*2)
 
+	fmt.Println("f")
 	// delete them all
 	for i := 0; i < nItems*2; i++ {
 		last := nItems*2 - 1 - i
+		fmt.Println("del1")
 		st.Delete(keyFmt(last))
+		fmt.Println("del2")
 		assertIterateDomain(t, st, last)
 	}
 }

@@ -88,7 +88,9 @@ func (store *Store) Delete(key []byte) {
 	defer store.mtx.Unlock()
 	types.AssertValidKey(key)
 
+	store.items.heap.visualize()
 	store.setCacheValue(key, nil, true, true)
+	store.items.heap.visualize()
 }
 
 // Implements Cachetypes.KVStore.

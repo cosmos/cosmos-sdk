@@ -3,10 +3,12 @@
 package crypto
 
 import (
+	"fmt"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
@@ -76,4 +78,10 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 	// Need to return DER as the ledger does
 	sig2 := btcec.Signature{R: sig.R, S: sig.S}
 	return sig2.Serialize(), nil
+}
+
+// ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path
+func (mock *LedgerCosmos) ShowAddressSECP256K1(bip32Path []uint32, hrp string) error {
+	fmt.Printf("Request to show address for %v at %v", hrp, bip32Path)
+	return nil
 }

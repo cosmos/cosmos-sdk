@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"errors"
 
@@ -53,7 +54,7 @@ func showKeysCmd() *cobra.Command {
 		RunE:  runShowCmd,
 	}
 
-	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
+	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
@@ -138,11 +139,11 @@ func validateMultisigThreshold(k, nKeys int) error {
 
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
-	case "acc":
+	case sdk.PrefixAccount:
 		return Bech32KeyOutput, nil
-	case "val":
+	case sdk.PrefixValidator:
 		return Bech32ValKeyOutput, nil
-	case "cons":
+	case sdk.PrefixConsensus:
 		return Bech32ConsKeyOutput, nil
 	}
 
@@ -160,7 +161,7 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
 
 		if bechPrefix == "" {
-			bechPrefix = "acc"
+			bechPrefix = sdk.PrefixAccount
 		}
 
 		bechKeyOut, err := getBechKeyOut(bechPrefix)
@@ -188,6 +189,6 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }

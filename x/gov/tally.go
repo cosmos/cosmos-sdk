@@ -103,11 +103,11 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	if keeper.vs.TotalPower(ctx).IsZero() {
+	if keeper.vs.TotalBondedTokens(ctx).IsZero() {
 		return false, tallyResults
 	}
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalPower(ctx)))
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalBondedTokens(ctx)))
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, tallyResults
 	}

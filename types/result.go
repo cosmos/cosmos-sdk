@@ -54,6 +54,7 @@ type TxResponse struct {
 	Tx        Tx         `json:"tx,omitempty"`
 }
 
+// NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
 func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 	if res == nil {
 		return TxResponse{}
@@ -73,6 +74,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 	}
 }
 
+// NewResponseFormatBroadcastTxCommit returns a TxResponse given a ResultBroadcastTxCommit from tendermint
 func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	if res == nil {
 		return TxResponse{}
@@ -95,8 +97,10 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxR
 		Tags:      TagsToStringTags(res.DeliverTx.Tags),
 		Codespace: res.DeliverTx.Codespace,
 	}
+
 }
 
+// NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
 func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	if res == nil {
 		return TxResponse{}
@@ -155,4 +159,9 @@ func (r TxResponse) String() string {
 	}
 
 	return strings.TrimSpace(sb.String())
+}
+
+// Empty returns true if the response is empty
+func (r TxResponse) Empty() bool {
+	return r.TxHash == "" && r.Log == ""
 }

@@ -1,59 +1,57 @@
-## PENDING
+# PENDING CHANGELOG
 
-BREAKING CHANGES
+<!----------------------------- BREAKING CHANGES ----------------------------->
 
-* Gaia REST API
+## BREAKING CHANGES
 
-* Gaia CLI
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
- * \#3621 staking.GenesisState.Bonds -> Delegations
+### Gaia
 
-* Tendermint
+### SDK
 
-FEATURES
+### Tendermint
 
-* Gaia REST API
+<!--------------------------------- FEATURES --------------------------------->
 
-* Gaia CLI
+## FEATURES
 
-* Gaia
+### Gaia REST API
 
-* SDK
+### Gaia CLI
 
-* Tendermint
+### Gaia
 
+### SDK
 
-IMPROVEMENTS
+### Tendermint
 
-* Gaia REST API
+<!------------------------------- IMPROVEMENTS ------------------------------->
 
-* Gaia CLI
+## IMPROVEMENTS
 
-* Gaia
+### Gaia REST API
 
-* SDK
-  * \#3621 remove many inter-module dependancies
-  * [\#3601] JSON-stringify the ABCI log response which includes the log and message
-  index.
-  * [\#3604] Improve SDK funds related error messages and allow for unicode in
-  JSON ABCI log.
-  * [\#3620](https://github.com/cosmos/cosmos-sdk/pull/3620) Version command shows build tags
-  * [\#3638] Add Bcrypt benchmarks & justification of security parameter choice
+### Gaia CLI
 
-* Tendermint
-  * [\#3618] Upgrade to Tendermint 0.30.03
+### Gaia
 
-BUG FIXES
+### SDK
 
-* Gaia REST API
+### Tendermint
 
-* Gaia CLI
+<!--------------------------------- BUG FIXES -------------------------------->
 
-* Gaia
+## BUG FIXES
 
-* SDK
+### Gaia REST API
 
-* Tendermint
+### Gaia CLI
+
+### Gaia
+
+### SDK
+
+### Tendermint

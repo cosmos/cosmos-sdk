@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,11 +16,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -503,6 +504,17 @@ func TestTxs(t *testing.T) {
 	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
+
+	// query transaction that doesn't exist
+	validTxHash := "9ADBECAAD8DACBEC3F4F535704E7CF715C765BDCEDBEF086AFEAD31BA664FB0B"
+	res, body := getTransactionRequest(t, port, validTxHash)
+	require.True(t, strings.Contains(body, validTxHash))
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	// bad query string
+	res, body = getTransactionRequest(t, port, "badtxhash")
+	require.True(t, strings.Contains(body, "encoding/hex"))
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 }
 
 func TestPoolParamsQuery(t *testing.T) {

@@ -3,15 +3,16 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -19,7 +20,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
-type sendReq struct {
+// SendReq defines the properties of a send request's body.
+type SendReq struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Amount  sdk.Coins    `json:"amount"`
 }
@@ -42,7 +44,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		var req sendReq
+		var req SendReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
@@ -62,7 +64,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			}
 
 			msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -76,6 +78,6 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 		msg := bank.NewMsgSend(cliCtx.GetFromAddress(), toAddr, req.Amount)
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

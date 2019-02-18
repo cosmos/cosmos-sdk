@@ -144,7 +144,7 @@ func NewCoinsFromDenomAmountPairs(denoms []string, amounts []Uint) Coins {
 	return NewCoins(coins...)
 }
 
-// this work on the assumption that coins is sorted
+// this work on the assumption that coins are sorted
 func findDup(coins Coins) int {
 	if len(coins) <= 1 {
 		return -1
@@ -261,6 +261,14 @@ func ZeroCoins() Coins { return ([]Coin)(nil) }
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 func (coins Coins) unsafeSum(coinsB Coins, subOp bool) Coins {
+	// no-ops
+	if coinsB.IsZero() {
+		return copyCoins(coins)
+	}
+	if coins.IsZero() && !subOp {
+		return copyCoins(coinsB)
+	}
+
 	sum := ZeroCoins()
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
@@ -493,7 +501,7 @@ func (coins Coins) IsZero() bool {
 			panic("sanity check failed: Coins cannot contain zero-Coin")
 		}
 	}
-	return true
+	return false
 }
 
 // IsEqual returns true if the two sets of Coins have the same value

@@ -161,19 +161,26 @@ func TestCoinIsZero(t *testing.T) {
 
 func TestIsZeroCoins(t *testing.T) {
 	cases := []struct {
+		name     string
 		inputOne Coins
-		expected bool
+		want     bool
+		panics   bool
 	}{
-		{Coins{}, true},
-		{Coins{NewUint64Coin(testDenom1, 0)}, true},
-		{Coins{NewUint64Coin(testDenom1, 0), NewUint64Coin(testDenom2, 0)}, true},
-		{Coins{NewUint64Coin(testDenom1, 1)}, false},
-		{Coins{NewUint64Coin(testDenom1, 0), NewUint64Coin(testDenom2, 1)}, false},
+		{"empty coins", Coins{}, true, false},
+		{"coins with zero", Coins{NewUint64Coin(testDenom1, 0)}, true, true},
+		{"all zeroes", Coins{NewUint64Coin(testDenom1, 0), NewUint64Coin(testDenom2, 0)}, true, true},
+		{"nonzero", Coins{NewUint64Coin(testDenom1, 1)}, false, false},
+		{"one zero, one nonzero", Coins{NewUint64Coin(testDenom1, 0), NewUint64Coin(testDenom2, 1)}, false, true},
 	}
 
 	for _, tc := range cases {
-		res := tc.inputOne.IsZero()
-		require.Equal(t, tc.expected, res)
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.panics {
+				require.Panics(t, func() { tc.inputOne.IsZero() })
+			} else {
+				require.Equal(t, tc.want, tc.inputOne.IsZero())
+			}
+		})
 	}
 }
 
@@ -204,7 +211,6 @@ func TestEqualCoins(t *testing.T) {
 }
 
 func TestPlusCoins(t *testing.T) {
-	zero := ZeroUint()
 	one := OneUint()
 	two := NewUint(2)
 
@@ -213,17 +219,17 @@ func TestPlusCoins(t *testing.T) {
 		inputTwo Coins
 		expected Coins
 	}{
-		{Coins{{testDenom1, one}, {testDenom2, one}}, Coins{{testDenom1, one}, {testDenom2, one}}, Coins{{testDenom1, two}, {testDenom2, two}}},
-		{Coins{{testDenom1, zero}, {testDenom2, one}}, Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins{{testDenom2, one}}},
-		{Coins{{testDenom1, two}}, Coins{{testDenom2, zero}}, Coins{{testDenom1, two}}},
-		{Coins{{testDenom1, one}}, Coins{{testDenom1, one}, {testDenom2, two}}, Coins{{testDenom1, two}, {testDenom2, two}}},
-		{Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins(nil)},
+		{NewCoins(NewCoin(testDenom1, one), NewCoin(testDenom2, one)), NewCoins(NewCoin(testDenom1, one), NewCoin(testDenom2, one)), NewCoins(NewCoin(testDenom1, two), NewCoin(testDenom2, two))},
+		{NewCoins(NewCoin(testDenom2, one)), ZeroCoins(), NewCoins(NewCoin(testDenom2, one))},
+		{ZeroCoins(), NewCoins(NewCoin(testDenom2, one)), NewCoins(NewCoin(testDenom2, one))},
+		{NewCoins(NewCoin(testDenom1, one)), NewCoins(NewCoin(testDenom1, one), NewCoin(testDenom2, two)), NewCoins(NewCoin(testDenom1, two), NewCoin(testDenom2, two))},
+		{ZeroCoins(), ZeroCoins(), ZeroCoins()},
 	}
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
 		assert.True(t, res.IsValid())
-		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+		require.True(t, tc.expected.IsEqual(res), "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -239,22 +245,23 @@ func TestMinusCoins(t *testing.T) {
 		expected    Coins
 		shouldPanic bool
 	}{
-		{"ok", NewCoins(NewCoin(testDenom1, two)), NewCoinsFromDenomAmountPairs([]string{testDenom1, testDenom2}, []Uint{one, two}), nil, true},
+		{"ok", NewCoinsFromDenomAmountPairs([]string{testDenom1, testDenom2}, []Uint{one, two}), NewCoins(NewCoin(testDenom2, one)),
+			NewCoinsFromDenomAmountPairs([]string{testDenom1, testDenom2}, []Uint{one, one}), false},
+		{"negative result", NewCoins(NewCoin(testDenom1, two)), NewCoinsFromDenomAmountPairs([]string{testDenom1, testDenom2}, []Uint{one, two}), nil, true},
 		{"inputTwoDenoms sanitised", NewCoins(NewCoin(testDenom1, two)), NewCoinsFromDenomAmountPairs([]string{testDenom2, testDenom1}, []Uint{zero, two}), ZeroCoins(), false},
 		{"inputTwoDenoms not sanitised", NewCoins(NewCoin(testDenom1, two)), Coins{{testDenom2, zero}, {testDenom1, two}}, nil, true},
-		{"different coins", Coins{{testDenom1, one}}, Coins{{testDenom2, zero}}, Coins{{testDenom1, one}}, false},
-		// {Coins{{testDenom1, one}, {testDenom2, one}}, Coins{{testDenom1, one}}, Coins{{testDenom2, one}}, false},
-		// {Coins{{testDenom1, one}, {testDenom2, one}}, Coins{{testDenom1, two}}, Coins{}, true},
+		{"different coins", Coins{{testDenom1, one}}, Coins{{testDenom2, zero}}, NewCoins(NewCoin(testDenom1, one)), true},
+		{"different coins", Coins{{testDenom1, one}}, ZeroCoins(), NewCoins(NewCoin(testDenom1, one)), false},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.shouldPanic {
 				require.Panics(t, func() { tc.inputOne.Minus(tc.inputTwo) })
 			} else {
 				res := tc.inputOne.Minus(tc.inputTwo)
 				assert.True(t, res.IsValid())
-				require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", i)
+				require.True(t, tc.expected.IsEqual(res))
 			}
 		})
 	}
@@ -277,9 +284,6 @@ func TestCoins(t *testing.T) {
 	}
 	mixedCase3 := Coins{
 		{"gAs", NewUint(1)},
-	}
-	empty := Coins{
-		{"gold", NewUint(0)},
 	}
 	null := Coins{}
 	badSort1 := Coins{
@@ -311,9 +315,9 @@ func TestCoins(t *testing.T) {
 	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsAllPositive(), "Expected coins to not be positive: %v", null)
-	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
-	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
-	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
+	assert.True(t, good.IsAllGTE(null), "Expected %v to be >= %v", good, null)
+	assert.False(t, good.IsAllLT(null), "Expected %v to be < %v", good, null)
+	assert.True(t, null.IsAllLT(good), "Expected %v to be < %v", null, good)
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")

@@ -5,10 +5,18 @@ import (
 	"fmt"
 	"os"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
-var bech32Prefixes = []string{"cosmos", "cosmospub", "cosmosvaloper", "cosmosvaloperpub", "cosmosvalcons", "cosmosvalconspub"}
+var bech32Prefixes = []string{
+	sdk.Bech32PrefixAccAddr,
+	sdk.Bech32PrefixAccPub,
+	sdk.Bech32PrefixValAddr,
+	sdk.Bech32PrefixValPub,
+	sdk.Bech32PrefixConsAddr,
+	sdk.Bech32PrefixConsPub,
+}
 
 func main() {
 	if len(os.Args) < 2 {

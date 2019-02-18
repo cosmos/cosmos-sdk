@@ -561,3 +561,21 @@ func TestCoinsDifference(t *testing.T) {
 		})
 	}
 }
+
+func TestCoinsString(t *testing.T) {
+	tests := []struct {
+		name  string
+		coins Coins
+		want  string
+	}{
+		{"empty", ZeroCoins(), ""},
+		{"sort", Coins{{"bar", NewUint(2)}, {"foo", NewUint(1)}, {"baz", NewUint(3)}}, "2bar,3baz,1foo"},
+		{"sorted", MustParseCoins("2bar,3baz,1foo"), "2bar,3baz,1foo"},
+		{"onecoin", MustParseCoins("1foo"), "1foo"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.coins.String())
+		})
+	}
+}

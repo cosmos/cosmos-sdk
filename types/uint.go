@@ -61,17 +61,13 @@ func (u Uint) IsZero() bool { return u.Equal(ZeroUint()) }
 func (u Uint) Equal(u2 Uint) bool { return equal(u.i, u2.i) }
 
 // GT returns true if first Uint is greater than second
-func (u Uint) GT(u2 Uint) bool {
-	return gt(u.i, u2.i)
-}
+func (u Uint) GT(u2 Uint) bool { return gt(u.i, u2.i) }
 
 // GTE returns true if first Uint is greater than second
 func (u Uint) GTE(u2 Uint) bool { return u.GT(u2) || u.Equal(u2) }
 
 // LT returns true if first Uint is lesser than second
-func (u Uint) LT(u2 Uint) bool {
-	return lt(u.i, u2.i)
-}
+func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 
 // LTE returns true if first Uint is lesser than or equal to the second
 func (u Uint) LTE(u2 Uint) bool { return !u.GTE(u2) }

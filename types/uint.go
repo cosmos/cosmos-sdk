@@ -1,13 +1,12 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
-
-	"github.com/pkg/errors"
 )
 
-// Unt wraps integer with 256 bit range bound
+// Uint wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from 0 to 2^256-1
 type Uint struct {
@@ -40,10 +39,10 @@ func NewUintFromString(s string) Uint {
 }
 
 // ZeroUint returns unsigned zero.
-func ZeroUint() Uint { return NewUint(0) }
+func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 
-// OneUint returns Uint value with one
-func OneUint() Uint { return NewUint(1) }
+// OneUint returns Uint value with one.
+func OneUint() Uint { return Uint{big.NewInt(1)} }
 
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
@@ -81,15 +80,15 @@ func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 // Add adds Uint from another
 func (u Uint) Sub(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i)) }
 
-// Add adds Uint from another
+// SubUint64 adds Uint from another
 func (u Uint) SubUint64(u2 uint64) Uint { return u.Sub(NewUint(u2)) }
 
-// Mul multiples two Uints
+// Mul multiplies two Uints
 func (u Uint) Mul(u2 Uint) (res Uint) {
 	return NewUintFromBigInt(new(big.Int).Mul(u.i, u2.i))
 }
 
-// Mul multiples two Uints
+// Mul multiplies two Uints
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
 // Div divides Uint with Uint

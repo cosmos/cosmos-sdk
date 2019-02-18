@@ -31,7 +31,7 @@ func TestIBCPacketValidation(t *testing.T) {
 }
 
 // -------------------------------
-// IBCTransferMsg Tests
+// MsgIBCTransfer Tests
 
 func TestIBCTransferMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
@@ -63,7 +63,7 @@ func TestIBCTransferMsgValidation(t *testing.T) {
 }
 
 // -------------------------------
-// IBCReceiveMsg Tests
+// MsgIBCReceive Tests
 
 func TestIBCReceiveMsg(t *testing.T) {
 	packet := constructIBCPacket(true)

@@ -62,10 +62,10 @@ func (p IBCPacket) ValidateBasic() sdk.Error {
 }
 
 // ----------------------------------
-// IBCTransferMsg
+// MsgIBCTransfer
 
 // nolint - TODO rename to TransferMsg as folks will reference with ibc.TransferMsg
-// IBCTransferMsg defines how another module can send an IBCPacket.
+// MsgIBCTransfer defines how another module can send an IBCPacket.
 type MsgIBCTransfer struct {
 	IBCPacket
 }
@@ -88,10 +88,10 @@ func (msg MsgIBCTransfer) ValidateBasic() sdk.Error {
 }
 
 // ----------------------------------
-// IBCReceiveMsg
+// MsgIBCReceive
 
 // nolint - TODO rename to ReceiveMsg as folks will reference with ibc.ReceiveMsg
-// IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
+// MsgIBCReceive defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
 type MsgIBCReceive struct {
 	IBCPacket

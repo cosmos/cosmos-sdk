@@ -74,9 +74,9 @@ func TestCreateLedger(t *testing.T) {
 	pk, err = sdk.Bech32ifyAccPub(pubKey)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
-	linfo := restoredKey.(ledgerInfo)
-	assert.Equal(t, "44'/118'/3'/0/1", linfo.GetPath().String())
-
+	path, err := restoredKey.GetPath()
+	assert.NoError(t, err)
+	assert.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

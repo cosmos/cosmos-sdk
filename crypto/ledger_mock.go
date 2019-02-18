@@ -81,7 +81,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path
-func (mock *LedgerCosmos) ShowAddressSECP256K1(bip32Path []uint32, hrp string) error {
+func (mock LedgerSECP256K1Mock) ShowAddressSECP256K1(bip32Path []uint32, hrp string) error {
 	fmt.Printf("Request to show address for %v at %v", hrp, bip32Path)
 	return nil
 }

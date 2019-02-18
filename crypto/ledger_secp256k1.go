@@ -64,7 +64,7 @@ func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	return PrivKeyLedgerSecp256k1{pubKey, path}, nil
 }
 
-// LedgerShowAddress triggers a ledger device to show the corresponding address
+// LedgerShowAddress triggers a ledger device to show the corresponding address.
 func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) error {
 	device, err := getLedgerDevice()
 	if err != nil {

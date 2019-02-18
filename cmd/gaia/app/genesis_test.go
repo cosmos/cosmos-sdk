@@ -151,7 +151,7 @@ func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
 	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
-	require.Equal(t, staking.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
+	require.Equal(t, sdk.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
 }
 
 func TestGenesisStateSanitize(t *testing.T) {

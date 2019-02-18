@@ -3,13 +3,14 @@ package rest
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // register REST routes

@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -18,7 +17,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
-	bankKeeper         bank.Keeper
+	bankKeeper         types.BankKeeper
 	hooks              sdk.StakingHooks
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
@@ -28,14 +27,14 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper,
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,
 		cdc:                cdc,
-		bankKeeper:         ck,
+		bankKeeper:         bk,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),

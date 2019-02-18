@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -8,11 +10,21 @@ import (
 // status of a validator
 type BondStatus byte
 
-// nolint
+// staking constants
 const (
 	Unbonded  BondStatus = 0x00
 	Unbonding BondStatus = 0x01
 	Bonded    BondStatus = 0x02
+
+	// default bond denomination
+	DefaultBondDenom = "stake"
+
+	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied.
+	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
+	// if this is 1, the validator set at the end of a block will sign the block after the next.
+	// Constant as this should not change without a hard fork.
+	// TODO: Link to some Tendermint docs, this is very unobvious.
+	ValidatorUpdateDelay int64 = 1
 )
 
 //BondStatusToString for pretty prints of Bond Status
@@ -27,6 +39,19 @@ func BondStatusToString(b BondStatus) string {
 	default:
 		panic("improper use of BondStatusToString")
 	}
+}
+
+// PowerReduction is the amount of staking tokens required for 1 unit of Tendermint power
+var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+
+// TokensToTendermintPower - convert input tokens to potential tendermint power
+func TokensToTendermintPower(tokens Int) int64 {
+	return (tokens.Div(PowerReduction)).Int64()
+}
+
+// TokensFromTendermintPower - convert input power to tokens
+func TokensFromTendermintPower(power int64) Int {
+	return NewInt(power).Mul(PowerReduction)
 }
 
 // nolint
@@ -75,7 +100,8 @@ type ValidatorSet interface {
 
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalPower(Context) Int                             // total power of the validator set
+	TotalBondedTokens(Context) Int                      // total bonded tokens within the validator set
+	TotalTokens(Context) Int                            // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)

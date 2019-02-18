@@ -87,13 +87,19 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 	return val
 }
 
-// total power from the bond (not last, but current)
-func (k Keeper) TotalPower(ctx sdk.Context) sdk.Int {
+// total staking tokens supply which is bonded
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 	pool := k.GetPool(ctx)
 	return pool.BondedTokens
 }
 
-// total power from the bond
+// total staking tokens supply bonded and unbonded
+func (k Keeper) TotalTokens(ctx sdk.Context) sdk.Int {
+	pool := k.GetPool(ctx)
+	return pool.TokenSupply()
+}
+
+// the fraction of the staking tokens which are currently bonded
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 	pool := k.GetPool(ctx)
 	return pool.BondedRatio()
@@ -141,4 +147,18 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 		}
 		i++
 	}
+}
+
+// return all delegations used during genesis dump
+// TODO: remove this func, change all usage for iterate functionality
+func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []sdk.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		delegations = append(delegations, delegation)
+	}
+	return delegations
 }

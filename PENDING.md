@@ -12,6 +12,7 @@ BREAKING CHANGES
 
 * Tendermint
 
+
 FEATURES
 
 * Gaia REST API

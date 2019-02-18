@@ -50,7 +50,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithLogger(logger)
 	c = c.WithVoteInfos(nil)
 	c = c.WithGasMeter(stypes.NewInfiniteGasMeter())
-	c = c.WithMinGasPrices(DecCoins{})
+	//c = c.WithMinGasPrices(DecCoins{})
 	c = c.WithConsensusParams(nil)
 	return c
 }
@@ -172,7 +172,7 @@ func (c Context) BlockGasMeter() GasMeter { return c.Value(contextKeyBlockGasMet
 
 func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 
-func (c Context) MinGasPrices() DecCoins { return c.Value(contextKeyMinGasPrices).(DecCoins) }
+//func (c Context) MinGasPrices() DecCoins { return c.Value(contextKeyMinGasPrices).(DecCoins) }
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
 	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
@@ -225,9 +225,9 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 
-func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
-	return c.withValue(contextKeyMinGasPrices, gasPrices)
-}
+// func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
+// 	return c.withValue(contextKeyMinGasPrices, gasPrices)
+// }
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	return c.withValue(contextKeyConsensusParams, params)

@@ -132,7 +132,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	if isShowDevice {
 		if isShowPubKey {
-			return fmt.Errorf("the device flag (-d) can only be used for addresses")
+			return fmt.Errorf("the device flag (-d) can only be used for addresses not pubkeys")
 		}
 		if viper.GetString(FlagBechPrefix) != "acc" {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts")

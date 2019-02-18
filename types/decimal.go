@@ -60,7 +60,7 @@ func calcPrecisionMultiplier(prec int64) *big.Int {
 }
 
 // get the precision multiplier, do not mutate result
-func precisionMultiplier(prec int64) *big.Int {
+func precisionMultiplier(prec uint64) *big.Int {
 	if prec > Precision {
 		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", Precision, prec))
 	}
@@ -70,16 +70,14 @@ func precisionMultiplier(prec int64) *big.Int {
 //______________________________________________________________________________________________
 
 // create a new Dec from integer assuming whole number
-func NewDec(i int64) Dec {
+func NewDec(i uint64) Dec {
 	return NewDecWithPrec(i, 0)
 }
 
 // create a new Dec from integer with decimal place at prec
 // CONTRACT: prec <= Precision
-func NewDecWithPrec(i, prec int64) Dec {
-	return Dec{
-		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
-	}
+func NewDecWithPrec(i, prec uint64) Dec {
+	return Dec{new(big.Int).Mul(NewUint(i).i, precisionMultiplier(prec))}
 }
 
 // create a new Dec from big integer assuming whole numbers
@@ -90,23 +88,23 @@ func NewDecFromBigInt(i *big.Int) Dec {
 
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromBigIntWithPrec(i *big.Int, prec int64) Dec {
+func NewDecFromBigIntWithPrec(i *big.Int, prec uint64) Dec {
 	return Dec{
-		new(big.Int).Mul(i, precisionMultiplier(prec)),
+		new(big.Int).Mul(NewUintFromBigInt(i).i, precisionMultiplier(prec)),
 	}
 }
 
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromInt(i Int) Dec {
-	return NewDecFromIntWithPrec(i, 0)
+func NewDecFromUint(u Uint) Dec {
+	return NewDecFromUintWithPrec(u, 0)
 }
 
 // create a new Dec from big integer with decimal place at prec
 // CONTRACT: prec <= Precision
-func NewDecFromIntWithPrec(i Int, prec int64) Dec {
+func NewDecFromUintWithPrec(u Uint, prec uint64) Dec {
 	return Dec{
-		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
+		new(big.Int).Mul(u.i, precisionMultiplier(prec)),
 	}
 }
 
@@ -453,8 +451,8 @@ func (d Dec) TruncateInt64() int64 {
 }
 
 // TruncateInt truncates the decimals from the number and returns an Int
-func (d Dec) TruncateInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+func (d Dec) TruncateUint() Uint {
+	return NewUintFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec

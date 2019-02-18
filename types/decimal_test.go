@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -70,8 +69,6 @@ func TestNewDecFromStr(t *testing.T) {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			exp := tc.exp.Mul(NewDec(-1))
-			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}
 }
@@ -103,25 +100,17 @@ func TestEqualities(t *testing.T) {
 		{NewDec(0), NewDec(0), false, false, true},
 		{NewDecWithPrec(0, 2), NewDecWithPrec(0, 4), false, false, true},
 		{NewDecWithPrec(100, 0), NewDecWithPrec(100, 0), false, false, true},
-		{NewDecWithPrec(-100, 0), NewDecWithPrec(-100, 0), false, false, true},
-		{NewDecWithPrec(-1, 1), NewDecWithPrec(-1, 1), false, false, true},
 		{NewDecWithPrec(3333, 3), NewDecWithPrec(3333, 3), false, false, true},
 
 		{NewDecWithPrec(0, 0), NewDecWithPrec(3333, 3), false, true, false},
 		{NewDecWithPrec(0, 0), NewDecWithPrec(100, 0), false, true, false},
-		{NewDecWithPrec(-1, 0), NewDecWithPrec(3333, 3), false, true, false},
-		{NewDecWithPrec(-1, 0), NewDecWithPrec(100, 0), false, true, false},
 		{NewDecWithPrec(1111, 3), NewDecWithPrec(100, 0), false, true, false},
 		{NewDecWithPrec(1111, 3), NewDecWithPrec(3333, 3), false, true, false},
-		{NewDecWithPrec(-3333, 3), NewDecWithPrec(-1111, 3), false, true, false},
 
 		{NewDecWithPrec(3333, 3), NewDecWithPrec(0, 0), true, false, false},
 		{NewDecWithPrec(100, 0), NewDecWithPrec(0, 0), true, false, false},
-		{NewDecWithPrec(3333, 3), NewDecWithPrec(-1, 0), true, false, false},
-		{NewDecWithPrec(100, 0), NewDecWithPrec(-1, 0), true, false, false},
 		{NewDecWithPrec(100, 0), NewDecWithPrec(1111, 3), true, false, false},
 		{NewDecWithPrec(3333, 3), NewDecWithPrec(1111, 3), true, false, false},
-		{NewDecWithPrec(-1111, 3), NewDecWithPrec(-3333, 3), true, false, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -162,17 +151,9 @@ func TestArithmetic(t *testing.T) {
 		// d1       d2         MUL        DIV        ADD        SUB
 		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
 		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
 
 		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
-		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
-		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
-		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
 
-		{NewDec(3), NewDec(7), NewDec(21), NewDecWithPrec(428571428571428571, 18), NewDec(10), NewDec(-4)},
-		{NewDec(2), NewDec(4), NewDec(8), NewDecWithPrec(5, 1), NewDec(6), NewDec(-2)},
 		{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
 
 		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2),
@@ -390,14 +371,11 @@ func TestDecCeil(t *testing.T) {
 		input    Dec
 		expected Dec
 	}{
-		{NewDecWithPrec(1000000000000000, Precision), NewDec(1)},  // 0.001 => 1.0
-		{NewDecWithPrec(-1000000000000000, Precision), ZeroDec()}, // -0.001 => 0.0
+		{NewDecWithPrec(1000000000000000, Precision), NewDec(1)}, // 0.001 => 1.0
 		{ZeroDec(), ZeroDec()}, // 0.0 => 0.0
-		{NewDecWithPrec(900000000000000000, Precision), NewDec(1)},    // 0.9 => 1.0
-		{NewDecWithPrec(4001000000000000000, Precision), NewDec(5)},   // 4.001 => 5.0
-		{NewDecWithPrec(-4001000000000000000, Precision), NewDec(-4)}, // -4.001 => -4.0
-		{NewDecWithPrec(4700000000000000000, Precision), NewDec(5)},   // 4.7 => 5.0
-		{NewDecWithPrec(-4700000000000000000, Precision), NewDec(-4)}, // -4.7 => -4.0
+		{NewDecWithPrec(900000000000000000, Precision), NewDec(1)},  // 0.9 => 1.0
+		{NewDecWithPrec(4001000000000000000, Precision), NewDec(5)}, // 4.001 => 5.0
+		{NewDecWithPrec(4700000000000000000, Precision), NewDec(5)}, // 4.7 => 5.0
 	}
 
 	for i, tc := range testCases {

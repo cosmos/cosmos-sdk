@@ -41,6 +41,8 @@
 
 ### Gaia CLI
 
+* [\#3670] CLI support for showing bech32 addresses in Ledger devices
+
 ### Gaia
 
 ### SDK

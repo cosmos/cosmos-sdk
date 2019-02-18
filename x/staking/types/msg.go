@@ -209,8 +209,8 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	Value         sdk.Coin       `json:"value"`
 }
 
@@ -253,9 +253,9 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgBeginRedelegate struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"`
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_address"`
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_address"`
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_address"`
 	SharesAmount     sdk.Dec        `json:"shares_amount"`
 }
 
@@ -302,8 +302,8 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 
 // MsgUndelegate - struct for unbonding transactions
 type MsgUndelegate struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	SharesAmount  sdk.Dec        `json:"shares_amount"`
 }
 

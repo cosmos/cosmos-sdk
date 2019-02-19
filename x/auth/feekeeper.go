@@ -49,7 +49,7 @@ func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins
 
 // AddCollectedFees - add to the fee pool
 func (fck FeeCollectionKeeper) AddCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
-	newCoins := fck.GetCollectedFees(ctx).Plus(coins)
+	newCoins := fck.GetCollectedFees(ctx).Add(coins)
 	fck.setCollectedFees(ctx, newCoins)
 
 	return newCoins

@@ -86,7 +86,7 @@ func (coin Coin) IsEqual(other Coin) bool {
 
 // Adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
-func (coin Coin) Plus(coinB Coin) Coin {
+func (coin Coin) Add(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -96,7 +96,7 @@ func (coin Coin) Plus(coinB Coin) Coin {
 
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
-func (coin Coin) Minus(coinB Coin) Coin {
+func (coin Coin) Sub(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -178,27 +178,27 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// Plus adds two sets of coins.
+// Add adds two sets of coins.
 //
 // e.g.
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
-// NOTE: Plus operates under the invariant that coins are sorted by
+// NOTE: Add operates under the invariant that coins are sorted by
 // denominations.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a non-positive
+// CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Plus(coinsB Coins) Coins {
-	return coins.safePlus(coinsB)
+func (coins Coins) Add(coinsB Coins) Coins {
+	return coins.safeAdd(coinsB)
 }
 
-// safePlus will perform addition of two coins sets. If both coin sets are
+// safeAdd will perform addition of two coins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
-func (coins Coins) safePlus(coinsB Coins) Coins {
+func (coins Coins) safeAdd(coinsB Coins) Coins {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
@@ -228,7 +228,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 			indexA++
 
 		case 0: // coin A denom == coin B denom
-			res := coinA.Plus(coinB)
+			res := coinA.Add(coinB)
 			if !res.IsZero() {
 				sum = append(sum, res)
 			}
@@ -246,17 +246,17 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 	}
 }
 
-// Minus subtracts a set of coins from another.
+// Sub subtracts a set of coins from another.
 //
 // e.g.
 // {2A, 3B} - {A} = {A, 3B}
 // {2A} - {0B} = {2A}
 // {A, B} - {A} = {B}
 //
-// CONTRACT: Minus will never return Coins where one Coin has a non-positive
+// CONTRACT: Sub will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Minus(coinsB Coins) Coins {
-	diff, hasNeg := coins.SafeMinus(coinsB)
+func (coins Coins) Sub(coinsB Coins) Coins {
+	diff, hasNeg := coins.SafeSub(coinsB)
 	if hasNeg {
 		panic("negative coin amount")
 	}
@@ -264,17 +264,17 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 	return diff
 }
 
-// SafeMinus performs the same arithmetic as Minus but returns a boolean if any
+// SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
-func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
-	diff := coins.safePlus(coinsB.negative())
+func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
+	diff := coins.safeAdd(coinsB.negative())
 	return diff, diff.IsAnyNegative()
 }
 
 // IsAllGT returns true if for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
+	diff, _ := coins.SafeSub(coinsB)
 	if len(diff) == 0 {
 		return false
 	}
@@ -285,7 +285,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
 // an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
+	diff, _ := coins.SafeSub(coinsB)
 	if len(diff) == 0 {
 		return true
 	}

@@ -70,7 +70,7 @@ func TestIntPanic(t *testing.T) {
 	require.Panics(t, func() { intmin.Sub(OneInt()) })
 
 	// Division-by-zero check
-	require.Panics(t, func() { i1.Div(NewInt(0)) })
+	require.Panics(t, func() { i1.Quo(NewInt(0)) })
 }
 
 func TestUintPanic(t *testing.T) {
@@ -109,7 +109,7 @@ func TestUintPanic(t *testing.T) {
 	require.Panics(t, func() { uintmin.Sub(OneUint()) })
 
 	// Division-by-zero check
-	require.Panics(t, func() { i1.Div(uintmin) })
+	require.Panics(t, func() { i1.Quo(uintmin) })
 }
 
 // Tests below uses randomness
@@ -166,11 +166,11 @@ func TestArithInt(t *testing.T) {
 			{i1.Add(i2), n1 + n2},
 			{i1.Sub(i2), n1 - n2},
 			{i1.Mul(i2), n1 * n2},
-			{i1.Div(i2), n1 / n2},
+			{i1.Quo(i2), n1 / n2},
 			{i1.AddRaw(n2), n1 + n2},
 			{i1.SubRaw(n2), n1 - n2},
 			{i1.MulRaw(n2), n1 * n2},
-			{i1.DivRaw(n2), n1 / n2},
+			{i1.QuoRaw(n2), n1 / n2},
 			{MinInt(i1, i2), minint(n1, n2)},
 			{MaxInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
@@ -254,10 +254,10 @@ func TestArithUint(t *testing.T) {
 		}{
 			{i1.Add(i2), n1 + n2},
 			{i1.Mul(i2), n1 * n2},
-			{i1.Div(i2), n1 / n2},
+			{i1.Quo(i2), n1 / n2},
 			{i1.AddRaw(n2), n1 + n2},
 			{i1.MulRaw(n2), n1 * n2},
-			{i1.DivRaw(n2), n1 / n2},
+			{i1.QuoRaw(n2), n1 / n2},
 			{MinUint(i1, i2), minuint(n1, n2)},
 			{MaxUint(i1, i2), maxuint(n1, n2)},
 		}
@@ -315,11 +315,11 @@ func TestImmutabilityAllInt(t *testing.T) {
 		func(i *Int) { _ = i.Add(randint()) },
 		func(i *Int) { _ = i.Sub(randint()) },
 		func(i *Int) { _ = i.Mul(randint()) },
-		func(i *Int) { _ = i.Div(randint()) },
+		func(i *Int) { _ = i.Quo(randint()) },
 		func(i *Int) { _ = i.AddRaw(rand.Int63()) },
 		func(i *Int) { _ = i.SubRaw(rand.Int63()) },
 		func(i *Int) { _ = i.MulRaw(rand.Int63()) },
-		func(i *Int) { _ = i.DivRaw(rand.Int63()) },
+		func(i *Int) { _ = i.QuoRaw(rand.Int63()) },
 		func(i *Int) { _ = i.Neg() },
 		func(i *Int) { _ = i.IsZero() },
 		func(i *Int) { _ = i.Sign() },
@@ -367,11 +367,11 @@ func TestImmutabilityArithInt(t *testing.T) {
 		intarith(Int.Add, (*big.Int).Add),
 		intarith(Int.Sub, (*big.Int).Sub),
 		intarith(Int.Mul, (*big.Int).Mul),
-		intarith(Int.Div, (*big.Int).Div),
+		intarith(Int.Quo, (*big.Int).Quo),
 		intarithraw(Int.AddRaw, (*big.Int).Add),
 		intarithraw(Int.SubRaw, (*big.Int).Sub),
 		intarithraw(Int.MulRaw, (*big.Int).Mul),
-		intarithraw(Int.DivRaw, (*big.Int).Div),
+		intarithraw(Int.QuoRaw, (*big.Int).Quo),
 	}
 
 	for i := 0; i < 100; i++ {
@@ -399,11 +399,11 @@ func TestImmutabilityAllUint(t *testing.T) {
 		func(i *Uint) { _ = i.Add(NewUint(rand.Uint64())) },
 		func(i *Uint) { _ = i.Sub(NewUint(rand.Uint64() % i.Uint64())) },
 		func(i *Uint) { _ = i.Mul(randuint()) },
-		func(i *Uint) { _ = i.Div(randuint()) },
+		func(i *Uint) { _ = i.Quo(randuint()) },
 		func(i *Uint) { _ = i.AddRaw(rand.Uint64()) },
 		func(i *Uint) { _ = i.SubRaw(rand.Uint64() % i.Uint64()) },
 		func(i *Uint) { _ = i.MulRaw(rand.Uint64()) },
-		func(i *Uint) { _ = i.DivRaw(rand.Uint64()) },
+		func(i *Uint) { _ = i.QuoRaw(rand.Uint64()) },
 		func(i *Uint) { _ = i.IsZero() },
 		func(i *Uint) { _ = i.Sign() },
 		func(i *Uint) { _ = i.Equal(randuint()) },
@@ -465,11 +465,11 @@ func TestImmutabilityArithUint(t *testing.T) {
 		uintarith(Uint.Add, (*big.Int).Add, false),
 		uintarith(Uint.Sub, (*big.Int).Sub, true),
 		uintarith(Uint.Mul, (*big.Int).Mul, false),
-		uintarith(Uint.Div, (*big.Int).Div, false),
+		uintarith(Uint.Quo, (*big.Int).Quo, false),
 		uintarithraw(Uint.AddRaw, (*big.Int).Add, false),
 		uintarithraw(Uint.SubRaw, (*big.Int).Sub, true),
 		uintarithraw(Uint.MulRaw, (*big.Int).Mul, false),
-		uintarithraw(Uint.DivRaw, (*big.Int).Div, false),
+		uintarithraw(Uint.QuoRaw, (*big.Int).Quo, false),
 	}
 
 	for i := 0; i < 100; i++ {

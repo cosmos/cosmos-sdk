@@ -31,7 +31,7 @@ func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
 
 func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
 
-func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Div(i, i2) }
+func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 
 func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
@@ -271,8 +271,8 @@ func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
 
-// Div divides Int with Int
-func (i Int) Div(i2 Int) (res Int) {
+// Quo divides Int with Int
+func (i Int) Quo(i2 Int) (res Int) {
 	// Check division-by-zero
 	if i2.i.Sign() == 0 {
 		panic("Division by zero")
@@ -280,9 +280,9 @@ func (i Int) Div(i2 Int) (res Int) {
 	return Int{div(i.i, i2.i)}
 }
 
-// DivRaw divides Int with int64
-func (i Int) DivRaw(i2 int64) Int {
-	return i.Div(NewInt(i2))
+// QuoRaw divides Int with int64
+func (i Int) QuoRaw(i2 int64) Int {
+	return i.Quo(NewInt(i2))
 }
 
 // Mod returns remainder after dividing with Int
@@ -518,8 +518,8 @@ func (i Uint) MulRaw(i2 uint64) Uint {
 	return i.Mul(NewUint(i2))
 }
 
-// Div divides Uint with Uint
-func (i Uint) Div(i2 Uint) (res Uint) {
+// Quo divides Uint with Uint
+func (i Uint) Quo(i2 Uint) (res Uint) {
 	// Check division-by-zero
 	if i2.Sign() == 0 {
 		panic("division-by-zero")
@@ -527,9 +527,9 @@ func (i Uint) Div(i2 Uint) (res Uint) {
 	return Uint{div(i.i, i2.i)}
 }
 
-// Div divides Uint with uint64
-func (i Uint) DivRaw(i2 uint64) Uint {
-	return i.Div(NewUint(i2))
+// Quo divides Uint with uint64
+func (i Uint) QuoRaw(i2 uint64) Uint {
+	return i.Quo(NewUint(i2))
 }
 
 // Mod returns remainder after dividing with Uint

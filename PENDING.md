@@ -45,6 +45,8 @@
 
 ### SDK
 
+* [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
+
 ### Tendermint
 
 <!--------------------------------- BUG FIXES -------------------------------->

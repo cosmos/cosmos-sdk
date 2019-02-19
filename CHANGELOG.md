@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.32.1
+
+## BREAKING CHANGES
+
+### Gaia REST API
+
+* [\#3641](https://github.com/cosmos/cosmos-sdk/issues/3641) Remove the ability to use a Keybase from the REST API client:
+  * `password` and `generate_only` have been removed from the `base_req` object
+  * All txs that used to sign or use the Keybase now only generate the tx
+  * `keys` routes completely removed
+
 ## 0.32.0
 
 BREAKING CHANGES

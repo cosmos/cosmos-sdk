@@ -77,7 +77,7 @@ func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i,
 // Add convert uint64 and add it to Uint
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
-// Add adds Uint from another
+// Sub adds Uint from another
 func (u Uint) Sub(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i)) }
 
 // SubUint64 adds Uint from another

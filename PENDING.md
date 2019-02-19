@@ -39,6 +39,7 @@
 ### Gaia
 
 ### SDK
+ - \#3300 spec-spec update, spec file reorg, TOC updates
 
 ### Tendermint
 

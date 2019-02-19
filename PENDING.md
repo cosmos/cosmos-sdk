@@ -44,6 +44,7 @@
 ### Gaia
 
 ### SDK
+
  - \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
 

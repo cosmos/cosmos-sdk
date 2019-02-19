@@ -14,35 +14,27 @@ import (
 
 type mockResponseWriter struct{}
 
-func TestBaseReq_ValidateBasic(t *testing.T) {
+func TestBaseReqValidateBasic(t *testing.T) {
+	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")
 	require.NoError(t, err)
 	onestake, err := types.ParseDecCoins("1.0stake")
 	require.NoError(t, err)
 
 	req1 := NewBaseReq(
-		"nonempty", "nonempty", "", "nonempty", "", "",
-		0, 0, tenstakes, nil, false, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req2 := NewBaseReq(
-		"", "nonempty", "", "nonempty", "", "",
-		0, 0, tenstakes, nil, false, false,
+		"", "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req3 := NewBaseReq(
-		"nonempty", "", "", "nonempty", "", "",
-		0, 0, tenstakes, nil, false, false,
+		fromAddr, "", "", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req4 := NewBaseReq(
-		"nonempty", "nonempty", "", "", "", "",
-		0, 0, tenstakes, nil, false, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, onestake, false,
 	)
 	req5 := NewBaseReq(
-		"nonempty", "nonempty", "", "nonempty", "", "",
-		0, 0, tenstakes, onestake, false, false,
-	)
-	req6 := NewBaseReq(
-		"nonempty", "nonempty", "", "nonempty", "", "",
-		0, 0, types.Coins{}, types.DecCoins{}, false, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, types.Coins{}, types.DecCoins{}, false,
 	)
 
 	tests := []struct {
@@ -52,11 +44,10 @@ func TestBaseReq_ValidateBasic(t *testing.T) {
 		want bool
 	}{
 		{"ok", req1, httptest.NewRecorder(), true},
-		{"neither fees nor gasprices provided", req6, httptest.NewRecorder(), true},
+		{"neither fees nor gasprices provided", req5, httptest.NewRecorder(), true},
 		{"empty from", req2, httptest.NewRecorder(), false},
-		{"empty password", req3, httptest.NewRecorder(), false},
-		{"empty chain-id", req4, httptest.NewRecorder(), false},
-		{"fees and gasprices provided", req5, httptest.NewRecorder(), false},
+		{"empty chain-id", req3, httptest.NewRecorder(), false},
+		{"fees and gasprices provided", req4, httptest.NewRecorder(), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

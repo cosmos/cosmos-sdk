@@ -7,6 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
+// register all bank invariants
+func RegisterInvariants(ak auth.AccountKeeper, invarRoutes sdk.InvarRoutes) InvarRoutes {
+	(&invarRoutes).Register("bank/nonnegative-balance",
+		NonnegativeBalanceInvariant(ak))
+	return invarRoutes
+}
+
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
 func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {

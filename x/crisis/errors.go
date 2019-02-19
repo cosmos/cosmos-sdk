@@ -1,4 +1,3 @@
-// nolint
 package types
 
 import (
@@ -8,10 +7,14 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = "CRISIS"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 	CodeInvalidInput CodeType          = 103
 )
 
 func ErrNilSender(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "sender address is nil")
+}
+
+func ErrUnknownInvariant(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unknown invariant")
 }

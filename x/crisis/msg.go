@@ -4,18 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ensure Msg interface compliance at compile time
-var (
-	_ sdk.Msg = &MsgTestInvariance{}
-
-	RouterKey = "crisis"
-)
-
 // MsgUndelegate - struct for unbonding transactions
 type MsgVerifyInvariance struct {
 	Sender          sdk.AccAddress `json:"sender"`
 	InvarianceRoute string         `json:"invariance_route"`
 }
+
+// ensure Msg interface compliance at compile time
+var _ sdk.Msg = &MsgTestInvariance{}
 
 // MsgVerifyInvariance - create a new MsgVerifyInvariance object
 func NewMsgVerifyInvariance(sender sdk.AccAddress, invarianceRoute string) MsgVerifyInvariance {
@@ -26,7 +22,7 @@ func NewMsgVerifyInvariance(sender sdk.AccAddress, invarianceRoute string) MsgVe
 }
 
 //nolint
-func (msg MsgVerifyInvariance) Route() string { return RouterKey }
+func (msg MsgVerifyInvariance) Route() string { return ModuleName }
 func (msg MsgVerifyInvariance) Type() string  { return "verify_invariance" }
 
 // get the bytes for the message signer to sign on

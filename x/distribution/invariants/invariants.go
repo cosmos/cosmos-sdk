@@ -8,6 +8,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// register all distribution invariants
+func RegisterInvariants(k distr.Keeper, stk types.StakingKeeper,
+	invarRoutes sdk.InvarRoutes) InvarRoutes {
+
+	(&invarRoutes).Register(ModuleName+"/nonnegative-outstanding",
+		NonNegativeOutstandingInvariant(k))
+	(&invarRoutes).Register(ModuleName+"/can-withdraw",
+		CanWithdrawInvariant(k, stk))
+	(&invarRoutes).Register(ModuleName+"/reference-count",
+		ReferenceCountInvariant(k, stk))
+	return invarRoutes
+}
+
 // AllInvariants runs all invariants of the distribution module
 func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {

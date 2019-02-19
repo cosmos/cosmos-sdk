@@ -10,11 +10,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
+// register all staking invariants
+func RegisterInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
+	d staking.DistributionKeeper, am auth.AccountKeeper,
+	invarRoutes sdk.InvarRoutes) InvarRoutes {
+
+	(&invarRoutes).Register(ModuleName+"/supply",
+		SupplyInvariants(k, f, d, am))
+	(&invarRoutes).Register(ModuleName+"/nonnegative-power",
+		NonNegativePowerInvariant(k))
+	(&invarRoutes).Register(ModuleName+"/positive-delegation",
+		PositiveDelegationInvariant(k))
+	(&invarRoutes).Register(ModuleName+"/delegator-shares",
+		DelegatorSharesInvariant(k))
+	return invarRoutes
+}
+
 // AllInvariants runs all invariants of the staking module.
-// Currently: total supply, positive power
-func AllInvariants(k staking.Keeper,
-	f staking.FeeCollectionKeeper, d staking.DistributionKeeper,
-	am auth.AccountKeeper) sdk.Invariant {
+func AllInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
+	d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		err := SupplyInvariants(k, f, d, am)(ctx)
@@ -43,8 +57,9 @@ func AllInvariants(k staking.Keeper,
 
 // SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
-func SupplyInvariants(k staking.Keeper,
-	f staking.FeeCollectionKeeper, d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+func SupplyInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
+	d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)
 

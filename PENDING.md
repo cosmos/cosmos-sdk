@@ -39,6 +39,7 @@
 ### Gaia
 
 ### SDK
+
  - \#3456 Integrate in the Int.ToDec() convenience function
 
 ### Tendermint

@@ -355,8 +355,7 @@ paths:
           description: Server internal error
   /bank/accounts/{address}/transfers:
     post:
-      summary: Send coins (build -> sign -> send)
-      description: Send coins (build -> sign -> send)
+      summary: Send coins from one account to another
       tags:
         - ICS20
       consumes:
@@ -371,7 +370,7 @@ paths:
           type: string
         - in: body
           name: account
-          description: The password of the account to remove from the KMS
+          description: The sender and tx information
           required: true
           schema:
             type: object
@@ -384,13 +383,11 @@ paths:
                   $ref: "#/definitions/Coin"
       responses:
         202:
-          description: Tx was send and will probably be added to the next block
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid request
-        401:
-          description: Key password is wrong
         500:
           description: Server internal error
   /auth/accounts/{address}:
@@ -650,7 +647,7 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: The sender and tx information
           schema:
             type: object
             properties:
@@ -673,13 +670,11 @@ paths:
         - application/json
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or redelegation request body
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
   /staking/delegators/{delegatorAddr}/validators:
@@ -959,16 +954,14 @@ paths:
             type: object
             properties:
               base_req:
-                $ref: "#/definitions/BaseReq"
+                $ref: "#/definitions/StdTx"
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: Invalid validator address or base_req
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
   /slashing/parameters:
@@ -1035,13 +1028,11 @@ paths:
                   $ref: "#/definitions/Coin"
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal body
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
     get:
@@ -1978,9 +1969,6 @@ definitions:
         type: string
         example: "cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
         description: Sender address or Keybase name to generate a transaction
-      password:
-        type: string
-        example: "12345678"
       memo:
         type: string
         example: "Sent via Cosmos Voyager 🚀"
@@ -2003,10 +1991,6 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
-      generate_only:
-        type: boolean
-        example: false
-        description: Create a JSON transaction that can be signed client side instead of actually signing and broadcasting
       simulate:
         type: boolean
         example: false

@@ -351,7 +351,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	// Ensure that validator state is as expected
 	validator := f.QueryStakingValidator(barVal)
-	require.Equal(t, validator.OperatorAddr, barVal)
+	require.Equal(t, validator.OperatorAddress, barVal)
 	require.True(sdk.IntEq(t, newValTokens, validator.Tokens))
 
 	// Query delegations to the validator

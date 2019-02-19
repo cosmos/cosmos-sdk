@@ -1,6 +1,5 @@
 package cachekv
 
-/*
 import (
 	"bytes"
 	"math/rand"
@@ -126,24 +125,3 @@ func TestHeapDuplicateElements(t *testing.T) {
 
 	require.Equal(t, size, heap.length())
 }
-
-func TestHeapDeleteElements(t *testing.T) {
-	size := 1000
-
-	pairs1 := make([]cmn.KVPair, 0, size)
-	pairs2 := make([]cmn.KVPair, 0, size)
-
-	for i := 0; i < size; i++ {
-		bz := randgen(i)
-		pairs1 = append(pairs1, cmn.KVPair{Key: bz, Value: bz})
-		pairs2 = append(pairs2, cmn.KVPair{Key: bz, Value: bz})
-	}
-
-	heap := newHeap(cmnpairs(pairs1), true)
-	for _, pair := range pairs2 {
-		heap.del(pair.Key)
-	}
-
-	require.Equal(t, 0, heap.length())
-}
-*/

@@ -246,32 +246,6 @@ func (it *hptr) siftDown() {
 		grandChild.set(bubble)
 		bubble = tmp
 	}
-
-	/*
-		target := it
-		left := it.leftChild()
-		right := it.rightChild()
-
-		if left.exists() {
-			if !target.isParent(left) {
-				target = left
-			}
-		}
-
-		if right.exists() {
-			if !target.isParent(right) {
-				target = right
-			}
-		}
-
-		if target == it {
-			return
-		}
-
-		fmt.Printf("swap %X %X\n", it.key(), target.key())
-		it.swap(target)
-		target.siftDown()
-	*/
 }
 
 type heap struct {
@@ -314,11 +288,6 @@ func newHeap(pairs cmnpairs, ascending bool) (res *heap) {
 	for i := len(pairs) / 2; i >= 0; i-- {
 		res.ptr(i).siftDown()
 	}
-	/*
-		for k, v := range res.indexByKey {
-			fmt.Printf("%X %d\n", []byte(k), v)
-		}
-	*/
 	return
 }
 

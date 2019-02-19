@@ -425,7 +425,6 @@ func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
 }
 
 func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
-	i := 0
 	for ; itr.Valid(); itr.Next() {
 		require.True(t, itr2.Valid())
 		k, v := itr.Key(), itr.Value()
@@ -433,7 +432,6 @@ func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
 		require.Equal(t, k, k2)
 		require.Equal(t, v, v2)
 		itr2.Next()
-		i++
 	}
 	require.False(t, itr.Valid())
 	require.False(t, itr2.Valid())

@@ -2,22 +2,18 @@ package keys
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"errors"
 
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -54,7 +50,7 @@ func showKeysCmd() *cobra.Command {
 		RunE:  runShowCmd,
 	}
 
-	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
+	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
@@ -139,56 +135,13 @@ func validateMultisigThreshold(k, nKeys int) error {
 
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
-	case "acc":
+	case sdk.PrefixAccount:
 		return Bech32KeyOutput, nil
-	case "val":
+	case sdk.PrefixValidator:
 		return Bech32ValKeyOutput, nil
-	case "cons":
+	case sdk.PrefixConsensus:
 		return Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
-}
-
-///////////////////////////
-// REST
-
-// get key REST handler
-func GetKeyRequestHandler(indent bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		name := vars["name"]
-		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
-
-		if bechPrefix == "" {
-			bechPrefix = "acc"
-		}
-
-		bechKeyOut, err := getBechKeyOut(bechPrefix)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		info, err := GetKeyInfo(name)
-		if keyerror.IsErrKeyNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		} else if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		keyOutput, err := bechKeyOut(info)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		rest.PostProcessResponse(w, cdc, keyOutput, indent)
-	}
 }

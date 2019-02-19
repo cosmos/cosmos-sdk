@@ -588,7 +588,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, 2, len(operAddrs))
 
 	amt := sdk.TokensFromTendermintPower(60)
-	amtDec := sdk.NewDecFromInt(amt)
+	amtDec := amt.ToDec()
 	validator := getValidator(t, port, operAddrs[0])
 
 	acc := getAccount(t, port, addr)
@@ -692,7 +692,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	// query delegations, unbondings and redelegations from validator and delegator
-	rdShares := sdk.NewDecFromInt(rdTokens)
+	rdShares := rdTokens.ToDec()
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, rdShares, delegatorDels[0].GetShares())

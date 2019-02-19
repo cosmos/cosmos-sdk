@@ -16,34 +16,29 @@ network.
 
 ## Contents
 
-The following specification uses *Atom* as the native staking token. The module
-can be adapted to any Proof-Of-Stake blockchain by replacing *Atom* with the
-native staking token of the chain.
-
- 1. **[State](state.md)**	
-   - Pool
-   - Params
-   - Validator
-   - Delegation
-   - UnbondingDelegation
-   - Redelegation
-   - Queues
- 2. **[State Transistions](state_transitions.md)**	
-   - Validator
-   - Delegation
-   - Slashing
- 3. **[Messages](messages.md)**	
-   - MsgCreateValidator
-   - MsgEditValidator
-   - MsgDelegate
-   - MsgBeginUnbonding
-   - MsgBeginRedelegate
- 4. **[End-Block](end_block.md)**	
-   - Validator Set Changes
-   - Queues 
-   - Unbonding Validators
-   - Unbonding Delegations
-   - Redelegations
- 5. **[Hooks](hooks.md)**	
- 6. **[Tags](tags.md)**	
-
+1. **[State](01_state.md)**
+    - [Pool](01_state.md#pool)
+    - [LastTotalPower](01_state.md#lasttotalpower)
+    - [Params](01_state.md#params)
+    - [Validator](01_state.md#validator)
+    - [Delegation](01_state.md#delegation)
+    - [UnbondingDelegation](01_state.md#unbondingdelegation)
+    - [Redelegation](01_state.md#redelegation)
+    - [Queues](01_state.md#queues)
+2. **[State Transitions](02_state_transitions.md)**
+    - [Validators](02_state_transitions.md#validators)
+    - [Delegations](02_state_transitions.md#delegations)
+    - [Slashing](02_state_transitions.md#slashing)
+3. **[Messages](03_messages.md)**
+    - [MsgCreateValidator](03_messages.md#msgcreatevalidator)
+    - [MsgEditValidator](03_messages.md#msgeditvalidator)
+    - [MsgDelegate](03_messages.md#msgdelegate)
+    - [MsgBeginUnbonding](03_messages.md#msgbeginunbonding)
+    - [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
+4. **[End-Block ](04_end_block.md)**
+    - [Validator Set Changes](04_end_block.md#validator-set-changes)
+    - [Queues ](04_end_block.md#queues-)
+5. **[Hooks](05_hooks.md)**
+6. **[Tags](06_tags.md)**
+    - [EndBlocker](06_tags.md#endblocker)
+    - [Handlers](06_tags.md#handlers)

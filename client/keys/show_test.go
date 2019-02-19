@@ -3,15 +3,15 @@ package keys
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
@@ -64,17 +64,17 @@ func Test_runShowCmd(t *testing.T) {
 	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	err = runShowCmd(cmd, []string{fakeKeyName1})
 	assert.NoError(t, err)
 
 	// Now try multisig key - set bech to acc
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
@@ -119,9 +119,9 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{"acc"}, Bech32KeyOutput, false},
-		{"val", args{"val"}, Bech32ValKeyOutput, false},
-		{"cons", args{"cons"}, Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, Bech32KeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, Bech32ValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

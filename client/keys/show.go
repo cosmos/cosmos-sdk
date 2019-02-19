@@ -50,7 +50,7 @@ func showKeysCmd() *cobra.Command {
 		RunE:  runShowCmd,
 	}
 
-	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
+	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
@@ -135,11 +135,11 @@ func validateMultisigThreshold(k, nKeys int) error {
 
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
-	case "acc":
+	case sdk.PrefixAccount:
 		return Bech32KeyOutput, nil
-	case "val":
+	case sdk.PrefixValidator:
 		return Bech32ValKeyOutput, nil
-	case "cons":
+	case sdk.PrefixConsensus:
 		return Bech32ConsKeyOutput, nil
 	}
 

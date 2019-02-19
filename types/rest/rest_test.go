@@ -15,25 +15,26 @@ import (
 type mockResponseWriter struct{}
 
 func TestBaseReqValidateBasic(t *testing.T) {
+	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")
 	require.NoError(t, err)
 	onestake, err := types.ParseDecCoins("1.0stake")
 	require.NoError(t, err)
 
 	req1 := NewBaseReq(
-		"nonempty", "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req2 := NewBaseReq(
 		"", "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req3 := NewBaseReq(
-		"nonempty", "", "", "", "", 0, 0, tenstakes, nil, false,
+		fromAddr, "", "", "", "", 0, 0, tenstakes, nil, false,
 	)
 	req4 := NewBaseReq(
-		"nonempty", "", "nonempty", "", "", 0, 0, tenstakes, onestake, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, onestake, false,
 	)
 	req5 := NewBaseReq(
-		"nonempty", "", "nonempty", "", "", 0, 0, types.Coins{}, types.DecCoins{}, false,
+		fromAddr, "", "nonempty", "", "", 0, 0, types.Coins{}, types.DecCoins{}, false,
 	)
 
 	tests := []struct {

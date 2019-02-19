@@ -36,7 +36,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
 	)
 
-	if simAndExec {
+	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
@@ -45,6 +45,11 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 		txBldr, err = utils.EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if br.Simulate {
+			rest.WriteSimulationResponse(w, cdc, txBldr.Gas())
 			return
 		}
 	}

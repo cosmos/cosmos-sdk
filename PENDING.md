@@ -39,6 +39,9 @@
 
 ### Gaia REST API
 
+* [\#3601] Implement a custom JSON encoder/decoder for the `TxResponse` type allowing
+for the `log` result to be JSON decoded automatically.
+
 ### Gaia CLI
 
 ### Gaia

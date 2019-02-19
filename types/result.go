@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -21,7 +22,7 @@ type Result struct {
 	// results from multiple msgs executions
 	Data []byte
 
-	// Log is just debug information. NOTE: nondeterministic.
+	// Log contains the txs log information. NOTE: nondeterministic.
 	Log string
 
 	// GasWanted is the maximum units of work we allow this tx to perform.
@@ -161,7 +162,48 @@ func (r TxResponse) String() string {
 	return strings.TrimSpace(sb.String())
 }
 
+// MarshalJSON implements a custom JSON encoder for the TxResponse type where
+// the log value is JSON-decoded.
+func (r TxResponse) MarshalJSON() ([]byte, error) {
+	parsedLog, _ := parseLog(r.Log)
+
+	type txRespAlias TxResponse
+	return json.Marshal(&struct {
+		Log []map[string]interface{} `json:"log,omitempty"`
+		txRespAlias
+	}{
+		Log:         parsedLog,
+		txRespAlias: (txRespAlias)(r),
+	})
+}
+
+// UnmarshalJSON implements a custom JSON decoder.
+func (r *TxResponse) UnmarshalJSON(data []byte) error {
+	type txRespAlias TxResponse
+
+	aux := &struct {
+		Log []map[string]interface{} `json:"log,omitempty"`
+		*txRespAlias
+	}{
+		txRespAlias: (*txRespAlias)(r),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	rawLog, _ := json.Marshal(aux.Log)
+	r.Log = string(rawLog)
+
+	return nil
+}
+
 // Empty returns true if the response is empty
 func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Log == ""
+}
+
+func parseLog(log string) (res []map[string]interface{}, err error) {
+	err = json.Unmarshal([]byte(log), &res)
+	return res, err
 }

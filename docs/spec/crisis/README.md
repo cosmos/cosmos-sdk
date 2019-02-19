@@ -48,19 +48,24 @@ the crisis module will also hold a param in the param store which is the
 `InvariancesFindersFee` which is the bonus fee which anyone who
 finds an invariance will receive. 
 
-General discussion on rewarding the invariance finder: For simplicity I propose
-that we start with a simply a global param (modifiable by governance) which is
-the bonus fee described above. This bonus should be large enough to compensate
-for the gas cost for running the transaction, and should be paid out of the
-`CommunityPool`.  The hope is that governance should update this fee once in a
-while to account for the change in transaction cost of the largest invariance
-check transaction. Future iterations of this finders fee could include a new a
-reward based on the calculated gas cost _in addition_ to the static reward.
-However for the time being this seems as though it may be more complexity than
-necessary? Thoughts?  I'm assuming we would use `CalculateGas` from the
-`client/utils/utils.go`, although I'm not totally positive as to how we would
-parameterize that function from the handler. 
+### general discussion on rewarding the invariance finder
 
+For simplicity I propose that we start with a simply a global param (modifiable
+by governance) which is the bonus fee described above. This bonus should be
+large enough to compensate for the gas cost for running the transaction, and
+should be paid out of the `CommunityPool`.  The hope is that governance should
+update this fee once in a while to account for the change in transaction cost
+of the largest invariance check transaction. 
+
+Future iterations of this finders fee could include a new a reward based on the
+calculated gas cost _in addition_ to the static reward.  However for the time
+being this seems as though it may be more complexity than necessary? Thoughts?
+I'm assuming we would use `CalculateGas` from the `client/utils/utils.go`,
+although I'm not totally positive as to how we would parameterize that function
+from the handler, without restructuring baseapp.
+
+
+### handler
 
 Here is the message struct:
 ```

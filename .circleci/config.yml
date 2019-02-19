@@ -326,11 +326,13 @@ jobs:
             GAIAD_VERSION="stable"
           elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
             GAIAD_VERSION="develop"
-          else
-            GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
           fi
           docker build -t tendermint/gaia:$GAIAD_VERSION .
           docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$GAIAD_VERSION
+
+          # Push the tag also for the version, so clients can build up on top of it
+          GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
           docker push tendermint/gaia:$GAIAD_VERSION
 
 workflows:

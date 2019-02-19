@@ -2,13 +2,12 @@ package cachekv
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // cacheMergeIterator merges a parent Iterator and a cache Iterator.
-// The cache iterator may return nil keys to signal that an item
+// The cache iterator may return nil values to signal that an item
 // had been deleted (but not deleted in the parent).
 // If the cache iterator has the same key as the parent, the
 // cache shadows (overrides) the parent.
@@ -89,13 +88,11 @@ func (iter *cacheMergeIterator) Key() []byte {
 
 	// If parent is invalid, get the cache key.
 	if !iter.parent.Valid() {
-		fmt.Println("cac")
 		return iter.cache.Key()
 	}
 
 	// If cache is invalid, get the parent key.
 	if !iter.cache.Valid() {
-		fmt.Println("par")
 		return iter.parent.Key()
 	}
 
@@ -104,13 +101,10 @@ func (iter *cacheMergeIterator) Key() []byte {
 	cmp := iter.compare(keyP, keyC)
 	switch cmp {
 	case -1: // parent < cache
-		fmt.Println("cpa")
 		return keyP
 	case 0: // parent == cache
-		fmt.Println("cpa")
 		return keyP
 	case 1: // parent > cache
-		fmt.Println("cca")
 		return keyC
 	default:
 		panic("invalid compare result")

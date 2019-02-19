@@ -88,9 +88,7 @@ func (store *Store) Delete(key []byte) {
 	defer store.mtx.Unlock()
 	types.AssertValidKey(key)
 
-	store.items.heap.visualize()
 	store.setCacheValue(key, nil, true, true)
-	store.items.heap.visualize()
 }
 
 // Implements Cachetypes.KVStore.
@@ -164,19 +162,13 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 	items := store.dirtyItems(start, end, ascending)
 
-	//	fmt.Printf("s: %+v\n", store.items.heap.pairs)
 	cache = newMemIterator(start, end, items)
-	//	fmt.Printf("c: %+v\n", items.pairs)
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte, ascending bool) (res *heap) {
-	if len(store.cache) == 0 {
-		return nil
-	}
-
 	if !store.items.inited {
 		store.items = items{
 			heap:   newHeapFromCache(store.cache, ascending),

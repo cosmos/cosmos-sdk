@@ -30,6 +30,7 @@ func (mi *memIterator) Valid() bool {
 	if mi.items == nil {
 		return false
 	}
+
 	return !mi.items.isEmpty()
 }
 

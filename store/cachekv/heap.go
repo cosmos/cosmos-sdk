@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"fmt"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
@@ -20,13 +19,11 @@ type cmnpairs []cmn.KVPair
 var _ pairs = (*cmnpairs)(nil)
 
 func (pairs *cmnpairs) get(i int) cmn.KVPair {
-	//fmt.Println("g", i, pairs.length())
 	return (*pairs)[i]
 }
 
 func (pairs *cmnpairs) set(i int, pair cmn.KVPair) {
 	(*pairs)[i] = pair
-	fmt.Println("s", i, pairs.length())
 }
 
 func (pairs *cmnpairs) swap(i, j int) {
@@ -98,10 +95,8 @@ func (ibk indexByKey) get(bz []byte) (int, bool) {
 
 func (ibk indexByKey) set(bz []byte, index int) {
 	if ibk == nil {
-		fmt.Println("ibk nil")
 		return
 	}
-	fmt.Printf("ibks %d %X\n", index, bz)
 	ibk[string(bz)] = index
 }
 
@@ -202,7 +197,6 @@ func (this *hptr) swap(that *hptr) {
 }
 
 func (parent *hptr) isParent(child *hptr) bool {
-	fmt.Printf("ip %d %d\n", parent.index, child.index)
 	comp := bytes.Compare(parent.key(), child.key())
 	if parent.heap.ascending {
 		return comp < 0 // parent should be smaller than child
@@ -280,22 +274,6 @@ func (it *hptr) siftDown() {
 	*/
 }
 
-// XXX: test purpose, delete before merge
-func (it *hptr) visualize(depth int) {
-	for i := 0; i < depth; i++ {
-		fmt.Printf("  ")
-	}
-	fmt.Printf("- %X\n", it.get().Key)
-	left := it.leftChild()
-	if left.exists() {
-		left.visualize(depth + 1)
-	}
-	right := it.rightChild()
-	if right.exists() {
-		it.rightChild().visualize(depth + 1)
-	}
-}
-
 type heap struct {
 	pairs
 	indexByKey indexByKey
@@ -309,6 +287,7 @@ func newHeapFromCache(cache map[string]cValue, ascending bool) (res *heap) {
 		if !cv.dirty {
 			continue
 		}
+
 		pairs = append(pairs, cmn.KVPair{
 			Key:   []byte(k),
 			Value: cv.value,
@@ -325,9 +304,10 @@ func newHeap(pairs cmnpairs, ascending bool) (res *heap) {
 		ascending:  ascending,
 	}
 
-	for i := 0; i < pairs.length(); i++ {
-		fmt.Printf("%X %X\n", pairs.get(i).Key, pairs.get(i).Value)
+	if pairs.length() == 0 {
+		return
 	}
+
 	for i := 0; i < pairs.length(); i++ {
 		res.indexByKey.set(pairs.get(i).Key, i)
 	}
@@ -339,11 +319,13 @@ func newHeap(pairs cmnpairs, ascending bool) (res *heap) {
 			fmt.Printf("%X %d\n", []byte(k), v)
 		}
 	*/
-	fmt.Println("done")
 	return
 }
 
 func (parent *heap) cache() (res *heap) {
+	if parent == nil {
+		return nil
+	}
 	return &heap{
 		pairs: newCachePairs(parent.pairs),
 		// indexByKey is for updating pairs efficiently,
@@ -351,20 +333,6 @@ func (parent *heap) cache() (res *heap) {
 		indexByKey: nil,
 		ascending:  parent.ascending,
 	}
-}
-
-func (heap *heap) visualize() {
-	if heap == nil {
-		return
-	}
-	fmt.Printf("len %d\n", heap.length())
-	for k, v := range heap.indexByKey {
-		fmt.Printf("%d -> %X\n", v, k)
-	}
-	if heap.length() == 0 {
-		return
-	}
-	heap.ptr(0).visualize(0)
 }
 
 func (heap *heap) ptr(i int) *hptr {
@@ -379,21 +347,12 @@ func (heap *heap) isEmpty() bool {
 }
 
 func (heap *heap) push(pair cmn.KVPair) {
-	fmt.Printf("push %X\n", pair.Key)
-	for k, v := range heap.indexByKey {
-		fmt.Printf("%X %d\n", k, v)
-	}
 	if index, ok := heap.indexByKey.get(pair.Key); ok {
-		ptr := heap.ptr(index)
-		if pair.Value == nil {
-			fmt.Printf("del %d %X %X\n", ptr.index, pair.Key, pair.Value)
-			ptr.del()
-		} else {
-			ptr.set(pair)
-		}
+		heap.ptr(index).set(pair)
 		return
 	}
 	heap.appendAssign(pair)
+	heap.indexByKey.set(pair.Key, heap.length()-1)
 	heap.ptr(heap.length() - 1).siftUp()
 }
 

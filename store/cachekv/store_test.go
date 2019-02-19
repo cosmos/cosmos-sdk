@@ -100,8 +100,6 @@ func TestCacheKVStoreNested(t *testing.T) {
 }
 
 func TestCacheKVIteratorBounds(t *testing.T) {
-	fmt.Println("666666666")
-
 	st := newCacheKVStore()
 
 	// set some items
@@ -171,7 +169,6 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 
 	// remove it in cache and assert its not
 	st.Delete(k)
-	fmt.Println("///")
 	assertIterateDomain(t, st, 0)
 
 	// write the delete and assert its not there
@@ -202,35 +199,27 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
-	fmt.Println("a")
 	st := newCacheKVStore()
 
-	fmt.Println("b")
 	// set some items and write them
 	nItems := 5
 	for i := 0; i < nItems; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 	}
-	fmt.Println("c")
 	st.Write()
 
-	fmt.Println("d")
 	// set some more items and leave dirty
 	for i := nItems; i < nItems*2; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 	}
 
-	fmt.Println("e")
 	// iterate over all of them
 	assertIterateDomain(t, st, nItems*2)
 
-	fmt.Println("f")
 	// delete them all
 	for i := 0; i < nItems*2; i++ {
 		last := nItems*2 - 1 - i
-		fmt.Println("del1")
 		st.Delete(keyFmt(last))
-		fmt.Println("del2")
 		assertIterateDomain(t, st, last)
 	}
 }
@@ -244,12 +233,14 @@ func TestCacheKVMergeIteratorDeletes(t *testing.T) {
 	for i := 0; i < nItems; i++ {
 		doOp(st, truth, opSet, i)
 	}
+
 	st.Write()
 
 	// delete every other item, starting from 0
 	for i := 0; i < nItems; i += 2 {
 		doOp(st, truth, opDel, i)
 		assertIterateDomainCompare(t, st, truth)
+
 	}
 
 	// reset
@@ -309,7 +300,7 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	setRange(st, truth, start, end)
 
 	// do an op, test the iterator
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 10000; i++ {
 		doRandomOp(st, truth, max)
 		assertIterateDomainCompare(t, st, truth)
 	}
@@ -388,7 +379,6 @@ func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
 	var i = 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()
-		fmt.Printf("aid %X %X\n", k, v)
 		require.Equal(t, keyFmt(i), k)
 		require.Equal(t, valFmt(i), v)
 		i++
@@ -435,6 +425,7 @@ func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
 }
 
 func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
+	i := 0
 	for ; itr.Valid(); itr.Next() {
 		require.True(t, itr2.Valid())
 		k, v := itr.Key(), itr.Value()
@@ -442,6 +433,7 @@ func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
 		require.Equal(t, k, k2)
 		require.Equal(t, v, v2)
 		itr2.Next()
+		i++
 	}
 	require.False(t, itr.Valid())
 	require.False(t, itr2.Valid())

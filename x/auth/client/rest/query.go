@@ -31,10 +31,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 		"/tx/encode",
 		EncodeTxRequestHandlerFn(cdc, cliCtx),
 	).Methods("POST")
-	r.HandleFunc(
-		"/tx/sign",
-		SignTxRequestHandlerFn(cdc, cliCtx),
-	).Methods("POST")
 }
 
 // query accountREST Handler

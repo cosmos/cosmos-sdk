@@ -4,13 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// invariant route
-type InvarRoute struct {
-	route string
-	Invariant
-}
-
-// Register routes
+// Crisis keeper
 type Keeper struct {
 	routes     []InvarRoute
 	bankKeeper BankKeeper

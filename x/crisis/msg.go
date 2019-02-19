@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgUndelegate - struct for unbonding transactions
+// MsgVerifyInvariance - TODO
 type MsgVerifyInvariance struct {
 	Sender          sdk.AccAddress `json:"sender"`
 	InvarianceRoute string         `json:"invariance_route"`

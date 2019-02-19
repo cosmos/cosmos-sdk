@@ -1,12 +1,12 @@
-## Keepers
+# Keepers
 
 The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.
 
 Note that you should always review the `bank` module code to ensure that permissions are limited in the way that you expect.
 
-### Common Types
+## Common Types
 
-#### Input
+### Input
 
 An input of a multiparty transfer
 
@@ -17,7 +17,7 @@ type Input struct {
 }
 ```
 
-#### Output
+### Output
 
 An output of a multiparty transfer.
 
@@ -28,7 +28,7 @@ type Output struct {
 }
 ```
 
-### BaseKeeper
+## BaseKeeper
 
 The base keeper provides full-permission access: the ability to arbitrary modify any account's balance and mint or burn coins.
 
@@ -82,7 +82,7 @@ inputOutputCoins(inputs []Input, outputs []Output)
     addCoins(output.Address, output.Coins)
 ```
 
-### SendKeeper
+## SendKeeper
 
 The send keeper provides access to account balances and the ability to transfer coins between accounts, but not to alter the total supply (mint or burn coins).
 
@@ -100,7 +100,7 @@ sendCoins(from AccAddress, to AccAddress, amt Coins)
   addCoins(to, amt)
 ```
 
-### ViewKeeper
+## ViewKeeper
 
 The view keeper provides read-only access to account balances but no balance alteration functionality. All balance lookups are `O(1)`.
 

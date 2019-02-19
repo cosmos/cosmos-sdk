@@ -170,7 +170,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// allocate some rewards
 	initial := sdk.TokensFromTendermintPower(10)
-	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, sinitial.ToDec()}}
+	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, initial.ToDec()}}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50% again

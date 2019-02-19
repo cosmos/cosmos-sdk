@@ -562,7 +562,7 @@ func TestValidatorsQuery(t *testing.T) {
 		foundVal = true
 	}
 
-	require.True(t, foundVal, "pk %v, operator %v", operAddrs[0], validators[0].OperatorAddr)
+	require.True(t, foundVal, "pk %v, operator %v", operAddrs[0], validators[0].OperatorAddress)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -572,7 +572,7 @@ func TestValidatorQuery(t *testing.T) {
 	require.Equal(t, 1, len(operAddrs))
 
 	validator := getValidator(t, port, operAddrs[0])
-	require.Equal(t, validator.OperatorAddr, operAddrs[0], "The returned validator does not hold the correct data")
+	require.Equal(t, validator.OperatorAddress, operAddrs[0], "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -630,11 +630,11 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, operAddrs[0], bondedValidators[0].OperatorAddr)
+	require.Equal(t, operAddrs[0], bondedValidators[0].OperatorAddress)
 	require.Equal(t, validator.DelegatorShares.Add(amtDec).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, operAddrs[0])
-	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
+	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddress)
 
 	// testing unbonding
 	unbondingTokens := sdk.TokensFromTendermintPower(30)

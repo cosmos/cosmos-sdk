@@ -195,7 +195,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
@@ -222,7 +222,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased

@@ -778,10 +778,10 @@ func doDelegate(t *testing.T, port, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 	msg := msgDelegationsInput{
-		BaseReq:       baseReq,
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin(sdk.DefaultBondDenom, amount),
+		BaseReq:          baseReq,
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
+		Delegation:       sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -796,10 +796,10 @@ func doDelegate(t *testing.T, port, name, password string,
 }
 
 type msgDelegationsInput struct {
-	BaseReq       rest.BaseReq   `json:"base_req"`
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
-	Delegation    sdk.Coin       `json:"delegation"`
+	BaseReq          rest.BaseReq   `json:"base_req"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
+	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
+	Delegation       sdk.Coin       `json:"delegation"`
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
@@ -812,10 +812,10 @@ func doUndelegate(t *testing.T, port, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 	msg := msgUndelegateInput{
-		BaseReq:       baseReq,
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		SharesAmount:  sdk.NewDecFromInt(amount),
+		BaseReq:          baseReq,
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
+		SharesAmount:     sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -831,10 +831,10 @@ func doUndelegate(t *testing.T, port, name, password string,
 }
 
 type msgUndelegateInput struct {
-	BaseReq       rest.BaseReq   `json:"base_req"`
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
-	SharesAmount  sdk.Dec        `json:"shares"`
+	BaseReq          rest.BaseReq   `json:"base_req"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
+	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
+	SharesAmount     sdk.Dec        `json:"shares"`
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
@@ -850,11 +850,11 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	msg := stakingrest.MsgBeginRedelegateInput{
-		BaseReq:          baseReq,
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-		SharesAmount:     sdk.NewDecFromInt(amount),
+		BaseReq:             baseReq,
+		DelegatorAddress:    delAddr,
+		ValidatorSrcAddress: valSrcAddr,
+		ValidatorDstAddress: valDstAddr,
+		SharesAmount:        sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -870,11 +870,11 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 }
 
 type msgBeginRedelegateInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
-	SharesAmount     sdk.Dec        `json:"shares"`
+	BaseReq             rest.BaseReq   `json:"base_req"`
+	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
+	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
+	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
+	SharesAmount        sdk.Dec        `json:"shares"`
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator

@@ -45,7 +45,7 @@ func TestIsEqualCoin(t *testing.T) {
 	}
 }
 
-func TestPlusCoin(t *testing.T) {
+func TestAddCoin(t *testing.T) {
 	cases := []struct {
 		inputOne    Coin
 		inputTwo    Coin
@@ -59,15 +59,15 @@ func TestPlusCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		if tc.shouldPanic {
-			require.Panics(t, func() { tc.inputOne.Plus(tc.inputTwo) })
+			require.Panics(t, func() { tc.inputOne.Add(tc.inputTwo) })
 		} else {
-			res := tc.inputOne.Plus(tc.inputTwo)
+			res := tc.inputOne.Add(tc.inputTwo)
 			require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestMinusCoin(t *testing.T) {
+func TestSubCoin(t *testing.T) {
 	cases := []struct {
 		inputOne    Coin
 		inputTwo    Coin
@@ -83,9 +83,9 @@ func TestMinusCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		if tc.shouldPanic {
-			require.Panics(t, func() { tc.inputOne.Minus(tc.inputTwo) })
+			require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
-			res := tc.inputOne.Minus(tc.inputTwo)
+			res := tc.inputOne.Sub(tc.inputTwo)
 			require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
 		}
 	}
@@ -95,7 +95,7 @@ func TestMinusCoin(t *testing.T) {
 		inputTwo Coin
 		expected uint64
 	}{NewUint64Coin(testDenom1, 1), NewUint64Coin(testDenom1, 1), 0}
-	res := tc.inputOne.Minus(tc.inputTwo)
+	res := tc.inputOne.Sub(tc.inputTwo)
 	require.Equal(t, tc.expected, res.Amount.Uint64())
 }
 
@@ -210,7 +210,7 @@ func TestEqualCoins(t *testing.T) {
 	}
 }
 
-func TestPlusCoins(t *testing.T) {
+func TestAddCoins(t *testing.T) {
 	one := OneUint()
 	two := NewUint(2)
 
@@ -227,13 +227,13 @@ func TestPlusCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Plus(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo)
 		assert.True(t, res.IsValid())
 		require.True(t, tc.expected.IsEqual(res), "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
-func TestMinusCoins(t *testing.T) {
+func TestSubCoins(t *testing.T) {
 	zero := ZeroUint()
 	one := OneUint()
 	two := NewUint(2)
@@ -257,9 +257,9 @@ func TestMinusCoins(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.shouldPanic {
-				require.Panics(t, func() { tc.inputOne.Minus(tc.inputTwo) })
+				require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
 			} else {
-				res := tc.inputOne.Minus(tc.inputTwo)
+				res := tc.inputOne.Sub(tc.inputTwo)
 				assert.True(t, res.IsValid())
 				require.True(t, tc.expected.IsEqual(res))
 			}

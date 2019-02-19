@@ -233,7 +233,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
+			spendableCoins = spendableCoins.Add(sdk.Coins{spendableCoin})
 		}
 	}
 
@@ -270,15 +270,15 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Add(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Minus(sdk.Coins{coin})
+		bva.Coins = bva.Coins.Sub(sdk.Coins{coin})
 	}
 }
 
@@ -304,15 +304,15 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Minus(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Sub(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Minus(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Plus(sdk.Coins{coin})
+		bva.Coins = bva.Coins.Add(sdk.Coins{coin})
 	}
 }
 
@@ -417,7 +417,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return cva.OriginalVesting.Minus(cva.GetVestedCoins(blockTime))
+	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins per denom for a
@@ -480,7 +480,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 // GetVestingCoins returns the total number of vesting coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.OriginalVesting.Minus(dva.GetVestedCoins(blockTime))
+	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins for a delayed

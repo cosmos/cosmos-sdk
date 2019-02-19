@@ -79,7 +79,7 @@ func (coin Coin) IsEqual(other Coin) bool {
 
 // Adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
-func (coin Coin) Plus(coinB Coin) Coin {
+func (coin Coin) Add(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -89,7 +89,7 @@ func (coin Coin) Plus(coinB Coin) Coin {
 
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
-func (coin Coin) Minus(coinB Coin) Coin {
+func (coin Coin) Sub(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -210,43 +210,43 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// Plus adds two sets of coins.
+// Add adds two sets of coins.
 //
 // e.g.
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
-// NOTE: Plus operates under the invariant that coins are sorted by
+// NOTE: Add operates under the invariant that coins are sorted by
 // denominations.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a non-positive
+// CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Plus(coinsB Coins) Coins { return coins.unsafeSum(coinsB, false) }
+func (coins Coins) Add(coinsB Coins) Coins { return coins.unsafeSum(coinsB, false) }
 
-// Minus subtracts a set of coins from another.
+// Sub subtracts a set of coins from another.
 //
 // e.g.
 // {2A, 3B} - {A} = {A, 3B}
 // {2A} - {0B} = {2A}
 // {A, B} - {A} = {B}
 //
-// CONTRACT: Minus will never return Coins where one Coin has a non-positive
+// CONTRACT: Sub will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Minus(coinsB Coins) Coins {
-	res, err := coins.SafeMinus(coinsB)
+func (coins Coins) Sub(coinsB Coins) Coins {
+	res, err := coins.SafeSub(coinsB)
 	if err != nil {
 		panic(err)
 	}
 	return res
 }
 
-// SafeMinus carries out preemptive checks for negative results before attempting
+// SafeSub carries out preemptive checks for negative results before attempting
 // to subtract coinsB from coinsA: it checks whether coinsB's denoms are included
 // in coinsA and their amount are less than or equal to their respective denoms
-// in coinsA. Both conditions would cause Minus to panic. Returns coinA - coinsB
+// in coinsA. Both conditions would cause Sub to panic. Returns coinA - coinsB
 // result set and true if it the aforementioned conditions are met; returns nil
 // Coins and false otherwise.
-func (coins Coins) SafeMinus(coinsB Coins) (Coins, error) {
+func (coins Coins) SafeSub(coinsB Coins) (Coins, error) {
 	if !coinsB.IsAllLTE(coins) {
 		return ZeroCoins(), errors.New("result contains negative amounts")
 	}
@@ -256,7 +256,7 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, error) {
 // ZeroCoins returns an empty Coins.
 func ZeroCoins() Coins { return ([]Coin)(nil) }
 
-// safePlus will perform addition of two coins sets. If both coin sets are
+// safeAdd will perform addition of two coins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
@@ -301,9 +301,9 @@ func (coins Coins) unsafeSum(coinsB Coins, subOp bool) Coins {
 		case 0: // coin A denom == coin B denom
 			var res Coin
 			if subOp {
-				res = coinA.Minus(coinB)
+				res = coinA.Sub(coinB)
 			} else {
-				res = coinA.Plus(coinB)
+				res = coinA.Add(coinB)
 			}
 			if !res.IsZero() {
 				sum = append(sum, res)

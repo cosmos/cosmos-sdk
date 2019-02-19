@@ -229,7 +229,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
 			rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
-			totalRewards = totalRewards.Plus(rewards)
+			totalRewards = totalRewards.Add(rewards)
 			return false
 		},
 	)

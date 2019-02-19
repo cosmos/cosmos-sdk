@@ -60,22 +60,22 @@ package types
 // 	require.False(t, dc.IsPositive())
 // }
 
-// func TestPlusDecCoin(t *testing.T) {
+// func TestAddDecCoin(t *testing.T) {
 // 	decCoinA1 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(11, 1))
 // 	decCoinA2 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(22, 1))
 // 	decCoinB1 := NewDecCoinFromDec(testDenom2, NewDecWithPrec(11, 1))
 
 // 	// regular add
-// 	res := decCoinA1.Plus(decCoinA1)
+// 	res := decCoinA1.Add(decCoinA1)
 // 	require.Equal(t, decCoinA2, res, "sum of coins is incorrect")
 
 // 	// bad denom add
 // 	require.Panics(t, func() {
-// 		decCoinA1.Plus(decCoinB1)
+// 		decCoinA1.Add(decCoinB1)
 // 	}, "expected panic on sum of different denoms")
 // }
 
-// func TestPlusDecCoins(t *testing.T) {
+// func TestAddDecCoins(t *testing.T) {
 // 	one := NewDec(1)
 // 	zero := NewDec(0)
 // 	two := NewDec(2)
@@ -91,7 +91,7 @@ package types
 // 	}
 
 // 	for tcIndex, tc := range cases {
-// 		res := tc.inputOne.Plus(tc.inputTwo)
+// 		res := tc.inputOne.Add(tc.inputTwo)
 // 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 // 	}
 // }

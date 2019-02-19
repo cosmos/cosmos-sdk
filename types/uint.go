@@ -96,11 +96,11 @@ func (u Uint) Mul(u2 Uint) (res Uint) {
 // Mul multiples two Uints
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
-// Div divides Uint with Uint
-func (u Uint) Div(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
+// Quo divides Uint with Uint
+func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
 
-// Div divides Uint with uint64
-func (u Uint) DivUint64(u2 uint64) Uint { return u.Div(NewUint(u2)) }
+// Quo divides Uint with uint64
+func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
 // Return the minimum of the Uints
 func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(min(u1.i, u2.i)) }

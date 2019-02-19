@@ -228,14 +228,14 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 
 	// For non-vesting accounts, spendable coins will simply be the original coins.
 	// So the check here is sufficient instead of subtracting from oldCoins.
-	_, hasNeg := spendableCoins.SafeMinus(amt)
+	_, hasNeg := spendableCoins.SafeSub(amt)
 	if hasNeg {
 		return amt, nil, sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", spendableCoins, amt),
 		)
 	}
 
-	newCoins := oldCoins.Minus(amt) // should not panic as spendable coins was already checked
+	newCoins := oldCoins.Sub(amt) // should not panic as spendable coins was already checked
 	err := setCoins(ctx, ak, addr, newCoins)
 	tags := sdk.NewTags(TagKeySender, addr.String())
 
@@ -245,7 +245,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 // AddCoins adds amt to the coins at the addr.
 func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	oldCoins := getCoins(ctx, am, addr)
-	newCoins := oldCoins.Plus(amt)
+	newCoins := oldCoins.Add(amt)
 
 	if newCoins.IsAnyNegative() {
 		return amt, nil, sdk.ErrInsufficientCoins(
@@ -321,7 +321,7 @@ func delegateCoins(
 
 	oldCoins := acc.GetCoins()
 
-	_, hasNeg := oldCoins.SafeMinus(amt)
+	_, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {
 		return nil, sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
@@ -368,7 +368,7 @@ func trackDelegation(acc auth.Account, blockTime time.Time, amount sdk.Coins) er
 		return nil
 	}
 
-	return acc.SetCoins(acc.GetCoins().Minus(amount))
+	return acc.SetCoins(acc.GetCoins().Sub(amount))
 }
 
 func trackUndelegation(acc auth.Account, amount sdk.Coins) error {
@@ -378,5 +378,5 @@ func trackUndelegation(acc auth.Account, amount sdk.Coins) error {
 		return nil
 	}
 
-	return acc.SetCoins(acc.GetCoins().Plus(amount))
+	return acc.SetCoins(acc.GetCoins().Add(amount))
 }

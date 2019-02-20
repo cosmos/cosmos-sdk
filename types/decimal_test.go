@@ -352,16 +352,16 @@ func TestStringOverflow(t *testing.T) {
 func TestDecMulInt(t *testing.T) {
 	tests := []struct {
 		sdkDec Dec
-		sdkInt Int
+		sdkInt Uint
 		want   Dec
 	}{
-		{NewDec(10), NewInt(2), NewDec(20)},
-		{NewDec(1000000), NewInt(100), NewDec(100000000)},
-		{NewDecWithPrec(1, 1), NewInt(10), NewDec(1)},
-		{NewDecWithPrec(1, 5), NewInt(20), NewDecWithPrec(2, 4)},
+		{NewDec(10), NewUint(2), NewDec(20)},
+		{NewDec(1000000), NewUint(100), NewDec(100000000)},
+		{NewDecWithPrec(1, 1), NewUint(10), NewDec(1)},
+		{NewDecWithPrec(1, 5), NewUint(20), NewDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
-		got := tc.sdkDec.MulInt(tc.sdkInt)
+		got := tc.sdkDec.MulUint(tc.sdkInt)
 		require.Equal(t, tc.want, got, "Incorrect result on test case %d", i)
 	}
 }

@@ -96,6 +96,18 @@ func TestIdentUint(t *testing.T) {
 }
 
 func TestArithUint(t *testing.T) {
+	minuint := func(a, b uint64) uint64 {
+		if a < b {
+			return a
+		}
+		return b
+	}
+	maxuint := func(a, b uint64) uint64 {
+		if a > b {
+			return a
+		}
+		return b
+	}
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
 		u1 := NewUint(n1)

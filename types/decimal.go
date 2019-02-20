@@ -244,7 +244,7 @@ func (d Dec) MulUint(u Uint) Dec {
 	if mul.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return NewDecFromBigInt(mul)
+	return Dec{mul}
 }
 
 // MulInt64 - multiplication with int64

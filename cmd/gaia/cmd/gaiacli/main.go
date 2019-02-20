@@ -119,6 +119,8 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		rpc.BlockCommand(),
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
+		tx.GetBroadcastCommand(cdc),
+		tx.GetEncodeCommand(cdc),
 		client.LineBreak,
 		authcmd.GetAccountCmd(at.StoreKey, cdc),
 	)
@@ -141,8 +143,6 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		client.LineBreak,
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
-		authcmd.GetBroadcastCommand(cdc),
-		authcmd.GetEncodeCommand(cdc),
 		client.LineBreak,
 	)
 

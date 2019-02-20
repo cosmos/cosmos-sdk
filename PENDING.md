@@ -45,7 +45,8 @@
 
 ### SDK
 
-* [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
+* [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.
+* Cleanup error messages
 
 ### Tendermint
 

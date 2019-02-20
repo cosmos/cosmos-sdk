@@ -84,7 +84,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 	}
 }
 
-// GetSignCommand returns the sign command
+// GetBroadcastCommand returns the tx broadcast command.
 func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broadcast [file_path]",

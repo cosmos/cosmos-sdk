@@ -1,8 +1,6 @@
-# Implementation (1/2)
+# State
 
-## State
-
-### Parameters and base types
+## Parameters and base types
 
 `Parameters` define the rules according to which votes are run. There can only
 be one active parameter set at any given time. If governance wants to change a
@@ -65,7 +63,7 @@ const (
 )
 ```
 
-### Deposit
+## Deposit
 
 ```go
   type Deposit struct {
@@ -74,7 +72,7 @@ const (
   }
 ```
 
-### ValidatorGovInfo
+## ValidatorGovInfo
 
 This type is used in a temp map when tallying
 
@@ -85,7 +83,7 @@ This type is used in a temp map when tallying
   }
 ```
 
-### Proposals
+## Proposals
 
 `Proposals` are an item to be voted on.
 
@@ -117,7 +115,7 @@ We also mention a method to update the tally for a given proposal:
   func (proposal Proposal) updateTally(vote byte, amount sdk.Dec)
 ```
 
-### Stores
+## Stores
 
 *Stores are KVStores in the multistore. The key to find the store is the first parameter in the list*`
 
@@ -132,7 +130,7 @@ For pseudocode purposes, here are the two function we will use to read or write 
 * `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
 * `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
-### Proposal Processing Queue
+## Proposal Processing Queue
 
 **Store:**
 * `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the

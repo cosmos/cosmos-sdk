@@ -1,12 +1,12 @@
-## Conceptual overview
+# Concepts
 
-### States
+## States
 
 At any given time, there are any number of validators registered in the state machine.
 Each block, the top `n = MaximumBondedValidators` validators who are not jailed become *bonded*, meaning that they may propose and vote on blocks.
 Validators who are *bonded* are *at stake*, meaning that part or all of their stake and their delegators' stake is at risk if they commit a protocol fault.
 
-### Tombstone Caps
+## Tombstone Caps
 
 In order to mitigate the impact of initially likely categories of non-malicious protocol faults, the Cosmos Hub implements for each validator
 a *tombstone* cap, which only allows a validator to be slashed once for a double sign fault. For example, if you misconfigure your HSM and double-sign
@@ -15,7 +15,7 @@ to avoid, but tombstone caps somewhat blunt the economic impact of unintentional
 
 Liveness faults do not have caps, as they can't stack upon each other.  Liveness bugs are "detected" as soon as the infraction occurs, and the validators are immediately put in jail, so it is not possible for them to commit multiple liveness faults without unjailing in between.
 
-#### ASCII timelines
+## ASCII timelines
 
 *Code*
 

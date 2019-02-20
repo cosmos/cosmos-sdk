@@ -1,8 +1,6 @@
-# Implementation (2/2)
+# Messages
 
-## Messages
-
-### Proposal Submission
+## Proposal Submission
 
 Proposals can be submitted by any Atom holder via a `TxGovSubmitProposal`
 transaction.
@@ -69,7 +67,7 @@ upon receiving txGovSubmitProposal from sender do
   return proposalID
 ```
 
-### Deposit
+## Deposit
 
 Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
@@ -138,7 +136,7 @@ upon receiving txGovDeposit from sender do
   store(Proposals, <txGovVote.ProposalID|'proposal'>, proposal)
 ```
 
-### Vote
+## Vote
 
 Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `TxGovVote` transactions to cast their

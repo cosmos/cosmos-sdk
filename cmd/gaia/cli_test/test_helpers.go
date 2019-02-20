@@ -293,7 +293,7 @@ func (f *Fixtures) txSendWithConfirm(
 ) (bool, string, string) {
 
 	cmd := fmt.Sprintf("gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass, confirm)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, app.DefaultKeyPass)
 }
 
 // TxSign is gaiacli tx sign

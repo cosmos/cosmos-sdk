@@ -146,7 +146,7 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Accou
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, sdk.Result{}
 	}
-	return nil, sdk.ErrUnknownAddress(addr.String()).Result()
+	return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr)).Result()
 }
 
 // ValidateMemo validates the memo size.

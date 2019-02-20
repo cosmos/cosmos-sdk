@@ -1,6 +1,6 @@
-## Messages
+# Messages
 
-### MsgSend
+## MsgSend
 
 ```golang
 type MsgSend struct {

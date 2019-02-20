@@ -1,8 +1,8 @@
-## Keepers
+# Keepers
 
 The auth module only exposes one keeper, the account keeper, which can be used to read and write accounts.
 
-### Account Keeper
+## Account Keeper
 
 Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write
 all fields of all accounts, and to iterate over all stored accounts.

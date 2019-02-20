@@ -1,6 +1,6 @@
-## State
+# State
 
-### Accounts
+## Accounts
 
 Accounts contain authentication information for a uniquely identified external user of an SDK blockchain,
 including public key, address, and account number / sequence number for replay protection. For efficiency,
@@ -13,7 +13,7 @@ account types may do so.
 
 - `0x01 | Address -> amino(account)`
 
-#### Account Interface
+### Account Interface
 
 The account interface exposes methods to read and write standard account information.
 Note that all of these methods operate on an account struct confirming to the interface
@@ -53,6 +53,6 @@ type BaseAccount struct {
 }
 ```
 
-#### Vesting Account
+### Vesting Account
 
 See [Vesting](vesting.md).

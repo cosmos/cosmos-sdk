@@ -1,4 +1,6 @@
-# Gas & Fees
+# Concepts
+
+## Gas & Fees
 
 Fees serve two purposes for an operator of the network.
 

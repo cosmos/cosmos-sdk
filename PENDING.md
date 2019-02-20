@@ -45,6 +45,7 @@
 
 ### SDK
 
+* [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
 
 ### Tendermint

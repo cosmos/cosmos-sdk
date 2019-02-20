@@ -16,15 +16,20 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
 
 ## Contents
 
-1. **[Overview](overview.md)**
-1. **[State](state.md)**
-    1. [SigningInfo](state.md#signing-info)
-2. **[Transactions](transactions.md)**
-    1. [Unjail](transactions.md#unjail)
-3. **[Hooks](hooks.md)**
-    1. [Validator Bonded](hooks.md#validator-bonded)
-4. **[Begin Block](begin-block.md)**
-    1. [Evidence handling](begin-block.md#evidence-handling)
-    2. [Uptime tracking](begin-block.md#uptime-tracking)
-5. **[Future Improvements](future-improvements.md)**
-    1. [State cleanup](future-improvements.md#state-cleanup)
+1. **[Concepts](01_concepts.md)**
+    - [States](01_concepts.md#states)
+    - [Tombstone Caps](01_concepts.md#tombstone-caps)
+    - [ASCII timelines](01_concepts.md#ascii-timelines)
+2. **[State](02_state.md)**
+    - [Signing Info](02_state.md#signing-info)
+3. **[Messages](03_messages.md)**
+    - [Unjail](03_messages.md#unjail)
+4. **[Begin-Block](04_begin_block.md)**
+    - [Evidence handling](04_begin_block.md#evidence-handling)
+    - [Uptime tracking](04_begin_block.md#uptime-tracking)
+5. **[05_hooks.md](05_hooks.md)**
+    - [Hooks](05_hooks.md#hooks)
+6. **[Tags](06_tags.md)**
+    - [Handlers](06_tags.md#handlers)
+7. **[Staking Tombstone](07_tombstone.md)**
+    - [Abstract](07_tombstone.md#abstract)

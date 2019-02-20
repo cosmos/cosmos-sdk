@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -292,12 +293,9 @@ func TestEncodeTx(t *testing.T) {
 	var tx auth.StdTx
 	cdc.UnmarshalJSON([]byte(body), &tx)
 
-	// build the request
-	encodeReq := struct {
-		Tx auth.StdTx `json:"tx"`
-	}{Tx: tx}
-	encodedJSON, _ := cdc.MarshalJSON(encodeReq)
-	res, body = Request(t, port, "POST", "/tx/encode", encodedJSON)
+	req := clienttx.EncodeReq{Tx: tx}
+	encodedJSON, _ := cdc.MarshalJSON(req)
+	res, body = Request(t, port, "POST", "/txs/encode", encodedJSON)
 
 	// Make sure it came back ok, and that we can decode it back to the transaction
 	// 200 response.

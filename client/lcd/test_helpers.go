@@ -655,7 +655,7 @@ func doBroadcast(t *testing.T, port string, tx auth.StdTx) (*http.Response, stri
 	req, err := cdc.MarshalJSON(txReq)
 	require.Nil(t, err)
 
-	return Request(t, port, "POST", "/tx/broadcast", req)
+	return Request(t, port, "POST", "/txs", req)
 }
 
 // doTransfer performs a balance transfer with auto gas calculation. It also signs

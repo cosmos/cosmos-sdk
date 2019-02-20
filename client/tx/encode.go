@@ -17,11 +17,13 @@ import (
 )
 
 type (
-	txEncodeReq struct {
+	// EncodeReq defines a tx encoding request.
+	EncodeReq struct {
 		Tx auth.StdTx `json:"tx"`
 	}
 
-	txEncodeResp struct {
+	// EncodeResp defines a tx encoding response.
+	EncodeResp struct {
 		Tx string `json:"tx"`
 	}
 )
@@ -31,7 +33,7 @@ type (
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req txEncodeReq
+		var req EncodeReq
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -55,7 +57,7 @@ func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 		// base64 encode the encoded tx bytes
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
-		response := txEncodeResp{Tx: txBytesBase64}
+		response := EncodeResp{Tx: txBytesBase64}
 		rest.PostProcessResponse(w, cdc, response, cliCtx.Indent)
 	}
 }

@@ -628,15 +628,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 	return
 }
 
-type indexedABCILog struct {
-	MsgIndex int    `json:"msg_index"`
-	Success  bool   `json:"success"`
-	Log      string `json:"log"`
-}
-
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxlogs := make([]indexedABCILog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxlogs := make([]sdk.IndexedABCILog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -665,7 +659,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
-		idxLog := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
+		idxLog := sdk.IndexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {

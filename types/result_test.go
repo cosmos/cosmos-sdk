@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func TestResult(t *testing.T) {
@@ -19,18 +17,13 @@ func TestResult(t *testing.T) {
 	require.False(t, res.IsOK())
 }
 
-func TestTxResponseJSON(t *testing.T) {
-	cdc := codec.New()
-	txr := TxResponse{
-		Log: `[{"log":"","msg_index":"0","success":true}]`,
-	}
+func TestParseABCILog(t *testing.T) {
+	logs := `[{"log":"","msg_index":1,"success":true}]`
 
-	bz, err := cdc.MarshalJSON(txr)
+	res, err := ParseABCILogs(logs)
 	require.NoError(t, err)
-
-	var txr2 TxResponse
-	err = cdc.UnmarshalJSON(bz, &txr2)
-	require.NoError(t, err)
-
-	require.Equal(t, txr, txr2)
+	require.Len(t, res, 1)
+	require.Equal(t, res[0].Log, "")
+	require.Equal(t, res[0].MsgIndex, 1)
+	require.True(t, res[0].Success)
 }

@@ -10,7 +10,6 @@ import (
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
-
 	// Code is the response code, is stored back on the chain.
 	Code CodeType
 
@@ -40,19 +39,27 @@ func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
 
-// Is a version of TxResponse where the tags are StringTags rather than []byte tags
+// IndexedABCILog defines a structure containing an indexed tx ABCI message log.
+type IndexedABCILog struct {
+	MsgIndex int    `json:"msg_index"`
+	Success  bool   `json:"success"`
+	Log      string `json:"log"`
+}
+
+// TxResponse defines a structure containing relevant tx data and metadata. The
+// tags are stringified and the log is JSON decoded.
 type TxResponse struct {
-	Height    int64      `json:"height"`
-	TxHash    string     `json:"txhash"`
-	Code      uint32     `json:"code,omitempty"`
-	Data      []byte     `json:"data,omitempty"`
-	Log       string     `json:"log,omitempty"`
-	Info      string     `json:"info,omitempty"`
-	GasWanted int64      `json:"gas_wanted,omitempty"`
-	GasUsed   int64      `json:"gas_used,omitempty"`
-	Tags      StringTags `json:"tags,omitempty"`
-	Codespace string     `json:"codespace,omitempty"`
-	Tx        Tx         `json:"tx,omitempty"`
+	Height    int64            `json:"height"`
+	TxHash    string           `json:"txhash"`
+	Code      uint32           `json:"code,omitempty"`
+	Data      []byte           `json:"data,omitempty"`
+	Logs      []IndexedABCILog `json:"logs,omitempty"`
+	Info      string           `json:"info,omitempty"`
+	GasWanted int64            `json:"gas_wanted,omitempty"`
+	GasUsed   int64            `json:"gas_used,omitempty"`
+	Tags      StringTags       `json:"tags,omitempty"`
+	Codespace string           `json:"codespace,omitempty"`
+	Tx        Tx               `json:"tx,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
@@ -61,12 +68,14 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		return TxResponse{}
 	}
 
+	parsedLogs, _ := ParseABCILogs(res.TxResult.Log)
+
 	return TxResponse{
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
 		Code:      res.TxResult.Code,
 		Data:      res.TxResult.Data,
-		Log:       res.TxResult.Log,
+		Logs:      parsedLogs,
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
@@ -86,12 +95,14 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxR
 		txHash = res.Hash.String()
 	}
 
+	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
+
 	return TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
 		Code:      res.DeliverTx.Code,
 		Data:      res.DeliverTx.Data,
-		Log:       res.DeliverTx.Log,
+		Logs:      parsedLogs,
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
@@ -107,10 +118,12 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 		return TxResponse{}
 	}
 
+	parsedLogs, _ := ParseABCILogs(res.Log)
+
 	return TxResponse{
 		Code:   res.Code,
 		Data:   res.Data.Bytes(),
-		Log:    res.Log,
+		Logs:   parsedLogs,
 		TxHash: res.Hash.String(),
 	}
 }
@@ -135,8 +148,11 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Data: %s\n", string(r.Data)))
 	}
 
-	if r.Log != "" {
-		sb.WriteString(fmt.Sprintf("  Log: %s\n", r.Log))
+	if r.Logs != nil {
+		logStr, err := json.Marshal(r.Logs)
+		if err == nil {
+			sb.WriteString(fmt.Sprintf("  Logs: %s\n", logStr))
+		}
 	}
 
 	if r.Info != "" {
@@ -162,48 +178,14 @@ func (r TxResponse) String() string {
 	return strings.TrimSpace(sb.String())
 }
 
-// MarshalJSON implements a custom JSON encoder for the TxResponse type where
-// the log value is JSON-decoded.
-func (r TxResponse) MarshalJSON() ([]byte, error) {
-	parsedLog, _ := parseLog(r.Log)
-
-	type txRespAlias TxResponse
-	return json.Marshal(&struct {
-		Log []map[string]interface{} `json:"log,omitempty"`
-		txRespAlias
-	}{
-		Log:         parsedLog,
-		txRespAlias: (txRespAlias)(r),
-	})
-}
-
-// UnmarshalJSON implements a custom JSON decoder.
-func (r *TxResponse) UnmarshalJSON(data []byte) error {
-	type txRespAlias TxResponse
-
-	aux := &struct {
-		Log []map[string]interface{} `json:"log,omitempty"`
-		*txRespAlias
-	}{
-		txRespAlias: (*txRespAlias)(r),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	rawLog, _ := json.Marshal(aux.Log)
-	r.Log = string(rawLog)
-
-	return nil
-}
-
 // Empty returns true if the response is empty
 func (r TxResponse) Empty() bool {
-	return r.TxHash == "" && r.Log == ""
+	return r.TxHash == "" && r.Logs == nil
 }
 
-func parseLog(log string) (res []map[string]interface{}, err error) {
-	err = json.Unmarshal([]byte(log), &res)
+// ParseABCILogs attempts to parse a stringified ABCI tx log into a slice of
+// IndexedABCILog types. It returns an error upon JSON decoding failure.
+func ParseABCILogs(logs string) (res []IndexedABCILog, err error) {
+	err = json.Unmarshal([]byte(logs), &res)
 	return res, err
 }

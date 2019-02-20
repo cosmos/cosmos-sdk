@@ -318,11 +318,6 @@ func (i Int) String() string {
 	return i.i.String()
 }
 
-// Testing purpose random Int generator
-func randomInt(i Int) Int {
-	return NewIntFromBigInt(random(i.BigInt()))
-}
-
 // MarshalAmino defines custom encoding scheme
 func (i Int) MarshalAmino() (string, error) {
 	if i.i == nil { // Necessary since default Uint initialization has i.i as nil

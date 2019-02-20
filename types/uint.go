@@ -1,13 +1,12 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
-
-	"github.com/pkg/errors"
 )
 
-// Unt wraps integer with 256 bit range bound
+// Uint wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from 0 to 2^256-1
 type Uint struct {
@@ -40,10 +39,10 @@ func NewUintFromString(s string) Uint {
 }
 
 // ZeroUint returns unsigned zero.
-func ZeroUint() Uint { return NewUint(0) }
+func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 
-// OneUint returns Uint value with one
-func OneUint() Uint { return NewUint(1) }
+// OneUint returns Uint value with one.
+func OneUint() Uint { return Uint{big.NewInt(1)} }
 
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
@@ -61,17 +60,13 @@ func (u Uint) IsZero() bool { return u.Equal(ZeroUint()) }
 func (u Uint) Equal(u2 Uint) bool { return equal(u.i, u2.i) }
 
 // GT returns true if first Uint is greater than second
-func (u Uint) GT(u2 Uint) bool {
-	return gt(u.i, u2.i)
-}
+func (u Uint) GT(u2 Uint) bool { return gt(u.i, u2.i) }
 
 // GTE returns true if first Uint is greater than second
 func (u Uint) GTE(u2 Uint) bool { return u.GT(u2) || u.Equal(u2) }
 
 // LT returns true if first Uint is lesser than second
-func (u Uint) LT(u2 Uint) bool {
-	return lt(u.i, u2.i)
-}
+func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 
 // LTE returns true if first Uint is lesser than or equal to the second
 func (u Uint) LTE(u2 Uint) bool { return !u.GTE(u2) }
@@ -82,18 +77,18 @@ func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i,
 // Add convert uint64 and add it to Uint
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
-// Add adds Uint from another
+// Sub adds Uint from another
 func (u Uint) Sub(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i)) }
 
-// Add adds Uint from another
+// SubUint64 adds Uint from another
 func (u Uint) SubUint64(u2 uint64) Uint { return u.Sub(NewUint(u2)) }
 
-// Mul multiples two Uints
+// Mul multiplies two Uints
 func (u Uint) Mul(u2 Uint) (res Uint) {
 	return NewUintFromBigInt(new(big.Int).Mul(u.i, u2.i))
 }
 
-// Mul multiples two Uints
+// Mul multiplies two Uints
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
 // Quo divides Uint with Uint

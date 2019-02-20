@@ -40,13 +40,17 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.29.0"
+  revision = "v0.30.0"
 
 [[constraint]]
   name = "github.com/zondax/ledger-cosmos-go"
   version = "=v0.9.7"
 
 ## deps without releases:
+
+[[constraint]]
+  name = "github.com/btcsuite/btcd"
+  revision = "ed77733ec07dfc8a513741138419b8d9d3de9d2d"
 
 [[override]]
   name = "golang.org/x/crypto"

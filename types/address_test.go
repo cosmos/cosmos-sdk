@@ -198,28 +198,53 @@ func TestConfiguredPrefix(t *testing.T) {
 			rand.Read(pub[:])
 			// Test if randomly generated prefix of a given length works
 			prefix := RandString(length)
+
 			// Assuming that GetConfig is not sealed.
 			config := types.GetConfig()
-			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
+			config.SetBech32PrefixForAccount(
+				prefix+types.PrefixAccount,
+				prefix+types.PrefixPublic)
+
 			acc := types.AccAddress(pub.Address())
-			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"), acc.String())
+			require.True(t, strings.HasPrefix(
+				acc.String(),
+				prefix+types.PrefixAccount), acc.String())
+
 			accPub := types.AccPubKeyFromCryptoPubKey(pub)
 			bech32Pub := accPub.String()
-			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
+			require.True(t, strings.HasPrefix(
+				bech32Pub,
+				prefix+types.PrefixPublic))
 
-			config.SetBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
+			config.SetBech32PrefixForValidator(
+				prefix+types.PrefixValidator+types.PrefixAddress,
+				prefix+types.PrefixValidator+types.PrefixPublic)
+
 			val := types.ValAddress(pub.Address())
-			require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
+			require.True(t, strings.HasPrefix(
+				val.String(),
+				prefix+types.PrefixValidator+types.PrefixAddress))
+
 			valPub := types.ValPubKeyFromCryptoPubKey(pub)
 			bech32ValPub := valPub.String()
-			require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
+			require.True(t, strings.HasPrefix(
+				bech32ValPub,
+				prefix+types.PrefixValidator+types.PrefixPublic))
 
-			config.SetBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
+			config.SetBech32PrefixForConsensusNode(
+				prefix+types.PrefixConsensus+types.PrefixAddress,
+				prefix+types.PrefixConsensus+types.PrefixPublic)
+
 			cons := types.ConsAddress(pub.Address())
-			require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+			require.True(t, strings.HasPrefix(
+				cons.String(),
+				prefix+types.PrefixConsensus+types.PrefixAddress))
+
 			consPub := types.ConsPubKeyFromCryptoPubKey(pub)
 			bech32ConsPub := consPub.String()
-			require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
+			require.True(t, strings.HasPrefix(
+				bech32ConsPub,
+				prefix+types.PrefixConsensus+types.PrefixPublic))
 		}
 
 	}

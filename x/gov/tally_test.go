@@ -28,9 +28,9 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := staking.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
-			addrs[i], pubkeys[i], sdk.NewCoin(staking.DefaultBondDenom, valTokens),
+			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			testDescription, testCommissionMsg, sdk.OneInt(),
 		)
 
@@ -321,8 +321,8 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	delTokens := staking.TokensFromTendermintPower(30)
-	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delTokens := sdk.TokensFromTendermintPower(30)
+	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -359,8 +359,8 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	delTokens := staking.TokensFromTendermintPower(30)
-	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delTokens := sdk.TokensFromTendermintPower(30)
+	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -395,10 +395,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	delTokens := staking.TokensFromTendermintPower(10)
-	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delTokens := sdk.TokensFromTendermintPower(10)
+	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
-	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -427,29 +427,29 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
-	valTokens1 := staking.TokensFromTendermintPower(25)
+	valTokens1 := sdk.TokensFromTendermintPower(25)
 	val1CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), pubkeys[0], sdk.NewCoin(staking.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[0]), pubkeys[0], sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val1CreateMsg)
 
-	valTokens2 := staking.TokensFromTendermintPower(6)
+	valTokens2 := sdk.TokensFromTendermintPower(6)
 	val2CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[1]), pubkeys[1], sdk.NewCoin(staking.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[1]), pubkeys[1], sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val2CreateMsg)
 
-	valTokens3 := staking.TokensFromTendermintPower(7)
+	valTokens3 := sdk.TokensFromTendermintPower(7)
 	val3CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[2]), pubkeys[2], sdk.NewCoin(staking.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[2]), pubkeys[2], sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val3CreateMsg)
 
-	delTokens := staking.TokensFromTendermintPower(10)
-	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delTokens := sdk.TokensFromTendermintPower(10)
+	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
 	staking.EndBlocker(ctx, sk)
@@ -486,11 +486,11 @@ func TestTallyJailedValidator(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{25, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	delTokens := staking.TokensFromTendermintPower(10)
-	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delTokens := sdk.TokensFromTendermintPower(10)
+	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(staking.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
 	val2, found := sk.GetValidator(ctx, sdk.ValAddress(addrs[1]))

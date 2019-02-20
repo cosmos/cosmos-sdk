@@ -457,11 +457,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 	// Get or create the delegation object
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {
-		delegation = types.Delegation{
-			DelegatorAddr: delAddr,
-			ValidatorAddr: validator.OperatorAddr,
-			Shares:        sdk.ZeroDec(),
-		}
+		delegation = types.NewDelegation(delAddr, validator.OperatorAddr, sdk.ZeroDec())
 	}
 
 	// call the appropriate hook if present
@@ -535,7 +531,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	// remove the coins from the validator
+	// remove the shares and coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
 	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {

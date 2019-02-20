@@ -22,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {
@@ -169,7 +168,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	require.Equal(t, fooAmt.Int64(), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// insufficient funds (coins + fees) tx fails
-	largeCoins := staking.TokensFromTendermintPower(10000000)
+	largeCoins := sdk.TokensFromTendermintPower(10000000)
 	success, _, _ = f.TxSend(
 		keyFoo, barAddr, sdk.NewCoin(fooDenom, largeCoins),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
@@ -204,11 +203,11 @@ func TestGaiaCLISend(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	startTokens := staking.TokensFromTendermintPower(50)
+	startTokens := sdk.TokensFromTendermintPower(50)
 	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(denom))
 
 	// Send some tokens from one account to the other
-	sendTokens := staking.TokensFromTendermintPower(10)
+	sendTokens := sdk.TokensFromTendermintPower(10)
 	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
@@ -261,11 +260,11 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	startTokens := staking.TokensFromTendermintPower(50)
+	startTokens := sdk.TokensFromTendermintPower(50)
 	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(denom))
 
 	// Test failure with auto gas disabled and very little gas set by hand
-	sendTokens := staking.TokensFromTendermintPower(10)
+	sendTokens := sdk.TokensFromTendermintPower(10)
 	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--gas=10")
 	require.False(t, success)
 
@@ -320,7 +319,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	consPubKey := sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey()).String()
 
-	sendTokens := staking.TokensFromTendermintPower(10)
+	sendTokens := sdk.TokensFromTendermintPower(10)
 	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
@@ -338,7 +337,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	newValTokens := staking.TokensFromTendermintPower(2)
+	newValTokens := sdk.TokensFromTendermintPower(2)
 	success, _, _ = f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewCoin(denom, newValTokens), "--dry-run")
 	require.True(t, success)
 
@@ -361,7 +360,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	unbondTokens := staking.TokensFromTendermintPower(1)
+	unbondTokens := sdk.TokensFromTendermintPower(1)
 	success = f.TxStakingUnbond(keyBar, unbondTokens.String(), barVal)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
@@ -395,14 +394,14 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	startTokens := staking.TokensFromTendermintPower(50)
-	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(staking.DefaultBondDenom))
+	startTokens := sdk.TokensFromTendermintPower(50)
+	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(sdk.DefaultBondDenom))
 
 	proposalsQuery := f.QueryGovProposals()
 	require.Empty(t, proposalsQuery)
 
 	// Test submit generate only for submit proposal
-	proposalTokens := staking.TokensFromTendermintPower(5)
+	proposalTokens := sdk.TokensFromTendermintPower(5)
 	success, stdout, stderr := f.TxGovSubmitProposal(
 		keyFoo, "Text", "Test", "test", sdk.NewCoin(denom, proposalTokens), "--generate-only")
 	require.True(t, success)
@@ -442,7 +441,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(denom))
 
 	// Test deposit generate only
-	depositTokens := staking.TokensFromTendermintPower(10)
+	depositTokens := sdk.TokensFromTendermintPower(10)
 	success, stdout, stderr = f.TxGovDeposit(1, keyFoo, sdk.NewCoin(denom, depositTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
@@ -635,7 +634,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	// Test generate sendTx with default gas
-	sendTokens := staking.TokensFromTendermintPower(10)
+	sendTokens := sdk.TokensFromTendermintPower(10)
 	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
@@ -690,7 +689,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Ensure foo has right amount of funds
 	fooAcc := f.QueryAccount(fooAddr)
-	startTokens := staking.TokensFromTendermintPower(50)
+	startTokens := sdk.TokensFromTendermintPower(50)
 	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(denom))
 
 	// Test broadcast
@@ -775,7 +774,7 @@ func TestGaiaCLIEncode(t *testing.T) {
 
 	// Build a testing transaction and write it to disk
 	barAddr := f.KeyAddress(keyBar)
-	sendTokens := staking.TokensFromTendermintPower(10)
+	sendTokens := sdk.TokensFromTendermintPower(10)
 	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only", "--memo", "deadbeef")
 	require.True(t, success)
 	require.Empty(t, stderr)

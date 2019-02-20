@@ -35,7 +35,7 @@ var (
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
 	}
-	initCoins = staking.TokensFromTendermintPower(200)
+	initCoins = sdk.TokensFromTendermintPower(200)
 )
 
 func createTestCodec() *codec.Codec {
@@ -90,7 +90,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil}, genesis)
+		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil}, genesis.Validators.ToSDKValidators())
 	})
 
 	return ctx, ck, sk, paramstore, keeper
@@ -114,12 +114,12 @@ func testAddr(addr string) sdk.AccAddress {
 func NewTestMsgCreateValidator(address sdk.ValAddress, consPubKey sdk.ConsPubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
-		address, consPubKey, sdk.NewCoin(staking.DefaultBondDenom, amt),
+		address, consPubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
 		staking.Description{}, commission, sdk.OneInt(),
 	)
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
-	amount := sdk.NewCoin(staking.DefaultBondDenom, delAmount)
+	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

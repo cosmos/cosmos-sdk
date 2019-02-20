@@ -27,8 +27,8 @@ import (
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionsAcc = staking.TokensFromTendermintPower(150)
-	bondDenom       = staking.DefaultBondDenom
+	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
+	defaultBondDenom = sdk.DefaultBondDenom
 )
 
 // State to Unmarshal
@@ -187,7 +187,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 	for _, acc := range genesisState.Accounts {
 		for _, coin := range acc.Coins {
-			if coin.Denom == bondDenom {
+			if coin.Denom == genesisState.StakingData.Params.BondDenom {
 				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
 					Add(coin.Amount) // increase the supply
 			}
@@ -401,7 +401,7 @@ func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
 		sdk.NewCoin("footoken", sdk.NewInt(1000)),
-		sdk.NewCoin(bondDenom, freeFermionsAcc),
+		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
 	}
 
 	coins.Sort()

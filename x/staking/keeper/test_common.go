@@ -78,7 +78,7 @@ func MakeTestCodec() *codec.Codec {
 // init power is converted to an amount of tokens
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	initCoins := types.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromTendermintPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)

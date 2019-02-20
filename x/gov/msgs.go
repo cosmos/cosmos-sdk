@@ -18,7 +18,6 @@ const (
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
-//-----------------------------------------------------------
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
 	Title          string         `json:"title"`           //  Title of the proposal
@@ -28,7 +27,7 @@ type MsgSubmitProposal struct {
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -76,11 +75,6 @@ func (msg MsgSubmitProposal) String() string {
 }
 
 // Implements Msg.
-func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
-	return nil
-}
-
-// Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	bz := msgCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
@@ -91,7 +85,6 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Proposer}
 }
 
-//-----------------------------------------------------------
 // MsgDeposit
 type MsgDeposit struct {
 	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
@@ -114,7 +107,7 @@ func (msg MsgDeposit) Type() string  { return TypeMsgDeposit }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
-	if len(msg.Depositor) == 0 {
+	if msg.Depositor.Empty() {
 		return sdk.ErrInvalidAddress(msg.Depositor.String())
 	}
 	if !msg.Amount.IsValid() {
@@ -134,11 +127,6 @@ func (msg MsgDeposit) String() string {
 }
 
 // Implements Msg.
-func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
-	return nil
-}
-
-// Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
 	bz := msgCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
@@ -149,7 +137,6 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Depositor}
 }
 
-//-----------------------------------------------------------
 // MsgVote
 type MsgVote struct {
 	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
@@ -186,11 +173,6 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 
 func (msg MsgVote) String() string {
 	return fmt.Sprintf("MsgVote{%v - %s}", msg.ProposalID, msg.Option)
-}
-
-// Implements Msg.
-func (msg MsgVote) Get(key interface{}) (value interface{}) {
-	return nil
 }
 
 // Implements Msg.

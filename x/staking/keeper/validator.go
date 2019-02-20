@@ -188,9 +188,11 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	}
 
 	if validator.Status != sdk.Unbonded {
-		panic("Cannot call RemoveValidator on bonded or unbonding validators")
+		panic("cannot call RemoveValidator on bonded or unbonding validators")
 	}
-
+	if validator.Tokens.IsPositive() {
+		panic("attempting to remove a validator which still contains tokens")
+	}
 	if validator.Tokens.GT(sdk.ZeroInt()) {
 		panic("validator being removed should never have positive tokens")
 	}
@@ -201,11 +203,8 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator))
 
-	// call hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
-
+	// call hooks
+	k.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
 }
 
 // get groups of validators
@@ -240,40 +239,6 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 	return validators[:i] // trim if the array length < maxRetrieve
 }
 
-// get the group of the bonded validators
-func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator) {
-	store := ctx.KVStore(k.storeKey)
-
-	// add the actual validator power sorted store
-	maxValidators := k.MaxValidators(ctx)
-	validators = make([]types.Validator, maxValidators)
-
-	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
-	defer iterator.Close()
-
-	i := 0
-	for ; iterator.Valid(); iterator.Next() {
-
-		// sanity check
-		if i >= int(maxValidators) {
-			panic("more validators than maxValidators found")
-		}
-		address := AddressFromLastValidatorPowerKey(iterator.Key())
-		validator := k.mustGetValidator(ctx, address)
-
-		validators[i] = validator
-		i++
-	}
-	return validators[:i] // trim
-}
-
-// returns an iterator for the consensus validators in the last block
-func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) {
-	store := ctx.KVStore(k.storeKey)
-	iterator = sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
-	return iterator
-}
-
 // get the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
@@ -302,6 +267,86 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) (iterator sdk.Iter
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	return iterator
 }
+
+//_______________________________________________________________________
+// Last Validator Index
+
+// Load the last validator power.
+// Returns zero if the operator was not a validator last block.
+func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(GetLastValidatorPowerKey(operator))
+	if bz == nil {
+		return 0
+	}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &power)
+	return
+}
+
+// Set the last validator power.
+func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(power)
+	store.Set(GetLastValidatorPowerKey(operator), bz)
+}
+
+// Delete the last validator power.
+func (k Keeper) DeleteLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetLastValidatorPowerKey(operator))
+}
+
+// returns an iterator for the consensus validators in the last block
+func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) {
+	store := ctx.KVStore(k.storeKey)
+	iterator = sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	return iterator
+}
+
+// Iterate over last validator powers.
+func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		addr := sdk.ValAddress(iter.Key()[len(LastValidatorPowerKey):])
+		var power int64
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &power)
+		if handler(addr, power) {
+			break
+		}
+	}
+}
+
+// get the group of the bonded validators
+func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+
+	// add the actual validator power sorted store
+	maxValidators := k.MaxValidators(ctx)
+	validators = make([]types.Validator, maxValidators)
+
+	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	defer iterator.Close()
+
+	i := 0
+	for ; iterator.Valid(); iterator.Next() {
+
+		// sanity check
+		if i >= int(maxValidators) {
+			panic("more validators than maxValidators found")
+		}
+		address := AddressFromLastValidatorPowerKey(iterator.Key())
+		validator := k.mustGetValidator(ctx, address)
+
+		validators[i] = validator
+		i++
+	}
+	return validators[:i] // trim
+}
+
+//_______________________________________________________________________
+// Validator Queue
 
 // gets a specific validator queue timeslice. A timeslice is a slice of ValAddresses corresponding to unbonding validators
 // that expire at a certain time.

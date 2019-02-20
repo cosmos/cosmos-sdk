@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,7 +83,7 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", stakingtypes.DefaultBondDenom),
+		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
 		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)",
 	)
 
@@ -191,21 +190,21 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 			return err
 		}
 
-		accTokens := staking.TokensFromTendermintPower(1000)
-		accStakingTokens := staking.TokensFromTendermintPower(500)
+		accTokens := sdk.TokensFromTendermintPower(1000)
+		accStakingTokens := sdk.TokensFromTendermintPower(500)
 		accs = append(accs, app.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
-				sdk.NewCoin(stakingtypes.DefaultBondDenom, accStakingTokens),
+				sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 			},
 		})
 
-		valTokens := staking.TokensFromTendermintPower(100)
+		valTokens := sdk.TokensFromTendermintPower(100)
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			consPubKeys[i],
-			sdk.NewCoin(stakingtypes.DefaultBondDenom, valTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			staking.NewDescription(nodeDirName, "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 			sdk.OneInt(),

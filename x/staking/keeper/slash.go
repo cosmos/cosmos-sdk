@@ -29,7 +29,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := types.TokensFromTendermintPower(power)
+	amount := sdk.TokensFromTendermintPower(power)
 	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 

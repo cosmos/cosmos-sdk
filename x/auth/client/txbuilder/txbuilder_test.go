@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -49,7 +48,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello from Voyager 1!",
-				Fees:          sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))},
+				Fees:          sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
 			StdSignMsg{
@@ -58,7 +57,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
@@ -72,7 +71,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello from Voyager 2!",
-				GasPrices:     sdk.DecCoins{sdk.NewDecCoinFromDec(stakingtypes.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
+				GasPrices:     sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 			},
 			defaultMsg,
 			StdSignMsg{
@@ -81,7 +80,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 2!",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},

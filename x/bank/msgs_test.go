@@ -172,7 +172,6 @@ func TestMsgMultiSendValidation(t *testing.T) {
 	input2 := NewInput(addr1, eth123)
 	output1 := NewOutput(addr2, atom123)
 	output2 := NewOutput(addr2, atom124)
-	output3 := NewOutput(addr2, eth123)
 	outputMulti := NewOutput(addr2, atom123eth123)
 
 	var emptyAddr sdk.AccAddress
@@ -195,19 +194,6 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			Inputs:  []Input{input1},
 			Outputs: []Output{output2}}, // amounts dont match
 		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{output3}}, // amounts dont match
-		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{outputMulti}}, // amounts dont match
-		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input2},
-			Outputs: []Output{output1}}, // amounts dont match
-		},
-
 		{true, MsgMultiSend{
 			Inputs:  []Input{input1},
 			Outputs: []Output{output1}},

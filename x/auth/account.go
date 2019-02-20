@@ -175,11 +175,11 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 type BaseVestingAccount struct {
 	*BaseAccount
 
-	OriginalVesting  sdk.Coins // coins in account upon initialization
-	DelegatedFree    sdk.Coins // coins that are vested and delegated
-	DelegatedVesting sdk.Coins // coins that vesting and delegated
+	OriginalVesting  sdk.Coins `json:"original_vesting"`  // coins in account upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free"`    // coins that are vested and delegated
+	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // coins that vesting and delegated
 
-	EndTime int64 // when the coins become unlocked
+	EndTime int64 `json:"end_time"` // when the coins become unlocked
 }
 
 // String implements fmt.Stringer
@@ -329,7 +329,7 @@ var _ VestingAccount = (*ContinuousVestingAccount)(nil)
 type ContinuousVestingAccount struct {
 	*BaseVestingAccount
 
-	StartTime int64 // when the coins start to vest
+	StartTime int64 `json:"start_time"` // when the coins start to vest
 }
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount

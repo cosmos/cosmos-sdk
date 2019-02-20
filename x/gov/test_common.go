@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize the mock application for this module
@@ -46,10 +45,10 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
 
-	valTokens := staking.TokensFromTendermintPower(42)
+	valTokens := sdk.TokensFromTendermintPower(42)
 	if genAccs == nil || len(genAccs) == 0 {
 		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
-			sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, valTokens)})
+			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
 	}
 
 	mock.SetGenesis(mapp, genAccs)
@@ -73,7 +72,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := types.TokensFromTendermintPower(100000)
+		tokens := sdk.TokensFromTendermintPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)

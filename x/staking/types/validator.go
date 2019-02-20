@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
@@ -52,6 +51,14 @@ func (v Validators) String() (out string) {
 		out += val.String() + "\n"
 	}
 	return strings.TrimSpace(out)
+}
+
+// ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
+func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+	for _, val := range v {
+		validators = append(validators, val)
+	}
+	return validators
 }
 
 // NewValidator - initialize a new validator
@@ -341,7 +348,7 @@ func (v Validator) BondedTokens() sdk.Int {
 }
 
 // get the Tendermint Power
-// a reduction of 10^9 from validator tokens is applied
+// a reduction of 10^6 from validator tokens is applied
 func (v Validator) TendermintPower() int64 {
 	if v.Status == sdk.Bonded {
 		return v.PotentialTendermintPower()
@@ -349,23 +356,9 @@ func (v Validator) TendermintPower() int64 {
 	return 0
 }
 
-var powerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
-
 // potential Tendermint power
 func (v Validator) PotentialTendermintPower() int64 {
-	return (v.Tokens.Div(powerReduction)).Int64()
-}
-
-// utility functions
-
-// TokensToTendermintPower - convert input tokens to potential tendermint power
-func TokensToTendermintPower(tokens sdk.Int) int64 {
-	return (tokens.Div(powerReduction)).Int64()
-}
-
-// TokensFromTendermintPower - convert input power to tokens
-func TokensFromTendermintPower(power int64) sdk.Int {
-	return sdk.NewInt(power).Mul(powerReduction)
+	return sdk.TokensToTendermintPower(v.Tokens)
 }
 
 // ensure fulfills the sdk validator types

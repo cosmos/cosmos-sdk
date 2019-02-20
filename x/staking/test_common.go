@@ -27,7 +27,7 @@ var (
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, consPubKey sdk.ConsPubKey, amt sdk.Int) MsgCreateValidator {
 	return types.NewMsgCreateValidator(
-		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, sdk.OneInt(),
+		address, consPubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), Description{}, commissionMsg, sdk.OneInt(),
 	)
 }
 
@@ -37,7 +37,7 @@ func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, consPubKey 
 	commission := NewCommissionMsg(commissionRate, sdk.OneDec(), sdk.ZeroDec())
 
 	return types.NewMsgCreateValidator(
-		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
+		address, consPubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
 	)
 }
 
@@ -45,18 +45,18 @@ func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, cons
 	amt sdk.Int, minSelfDelegation sdk.Int) MsgCreateValidator {
 
 	return types.NewMsgCreateValidator(
-		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
+		address, consPubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
 	)
 }
 
 func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) MsgDelegate {
-	amount := sdk.NewCoin(types.DefaultBondDenom, amt)
+	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return NewMsgDelegate(delAddr, valAddr, amount)
 }
 
 func NewTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	consPubKey sdk.ConsPubKey, amt sdk.Int) MsgCreateValidator {
 
-	amount := sdk.NewCoin(types.DefaultBondDenom, amt)
+	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, consPubKey, amount, Description{}, commissionMsg, sdk.OneInt())
 }

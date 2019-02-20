@@ -188,10 +188,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// delete from queue if present
 	k.DeleteValidatorQueue(ctx, validator)
 
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
+	// trigger hook
+	k.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
 
 	return validator
 }
@@ -225,10 +223,8 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// Adds to unbonding validator queue
 	k.InsertValidatorQueue(ctx, validator)
 
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
+	// trigger hook
+	k.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
 
 	return validator
 }

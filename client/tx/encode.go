@@ -5,26 +5,33 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-type encodeReq struct {
-	Tx auth.StdTx `json:"tx"`
-}
+type (
+	txEncodeReq struct {
+		Tx auth.StdTx `json:"tx"`
+	}
 
-type encodeResp struct {
-	Tx string `json:"tx"`
-}
+	txEncodeResp struct {
+		Tx string `json:"tx"`
+	}
+)
 
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,
 // it takes a json-formatted transaction, encodes it to the Amino wire protocol,
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req encodeReq
+		var req txEncodeReq
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -48,7 +55,51 @@ func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 		// base64 encode the encoded tx bytes
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
-		response := encodeResp{Tx: txBytesBase64}
+		response := txEncodeResp{Tx: txBytesBase64}
 		rest.PostProcessResponse(w, cdc, response, cliCtx.Indent)
 	}
+}
+
+// txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
+type txEncodeRespStr string
+
+func (txr txEncodeRespStr) String() string {
+	return string(txr)
+}
+
+// GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
+// Amino-serialized bytes
+func GetEncodeCommand(codec *amino.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "encode [file]",
+		Short: "encode transactions generated offline",
+		Long: `Encode transactions created with the --generate-only flag and signed with the sign command.
+Read a transaction from <file>, serialize it to the Amino wire protocol, and output it as base64.
+If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			cliCtx := context.NewCLIContext().WithCodec(codec)
+
+			stdTx, err := utils.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			if err != nil {
+				return
+			}
+
+			// re-encode it via the Amino wire protocol
+			txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(stdTx)
+			if err != nil {
+				return err
+			}
+
+			// base64 encode the encoded tx bytes
+			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
+
+			response := txEncodeRespStr(txBytesBase64)
+			cliCtx.PrintOutput(response)
+
+			return nil
+		},
+	}
+
+	return client.PostCommands(cmd)[0]
 }

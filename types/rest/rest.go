@@ -111,13 +111,13 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 
 // ErrorResponse defines the attributes of a JSON error response.
 type ErrorResponse struct {
-	Code    int    `json:"code,omitempty"`
-	Message string `json:"message"`
+	Code  int    `json:"code,omitempty"`
+	Error string `json:"error"`
 }
 
 // NewErrorResponse creates a new ErrorResponse instance.
-func NewErrorResponse(code int, msg string) ErrorResponse {
-	return ErrorResponse{Code: code, Message: msg}
+func NewErrorResponse(code int, err string) ErrorResponse {
+	return ErrorResponse{Code: code, Error: err}
 }
 
 // WriteErrorResponse prepares and writes a HTTP error

@@ -72,7 +72,7 @@ func (txr txEncodeRespStr) String() string {
 func GetEncodeCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
-		Short: "encode transactions generated offline",
+		Short: "Encode transactions generated offline",
 		Long: `Encode transactions created with the --generate-only flag and signed with the sign command.
 Read a transaction from <file>, serialize it to the Amino wire protocol, and output it as base64.
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -71,45 +70,6 @@ func TestIntPanic(t *testing.T) {
 
 	// Division-by-zero check
 	require.Panics(t, func() { i1.Quo(NewInt(0)) })
-}
-
-func TestUintPanic(t *testing.T) {
-	// Max Uint = 1.15e+77
-	// Min Uint = 0
-	require.NotPanics(t, func() { NewUintWithDecimal(5, 76) })
-	i1 := NewUintWithDecimal(5, 76)
-	require.NotPanics(t, func() { NewUintWithDecimal(10, 76) })
-	i2 := NewUintWithDecimal(10, 76)
-	require.NotPanics(t, func() { NewUintWithDecimal(11, 76) })
-	i3 := NewUintWithDecimal(11, 76)
-
-	require.Panics(t, func() { NewUintWithDecimal(12, 76) })
-	require.Panics(t, func() { NewUintWithDecimal(1, 80) })
-
-	// Overflow check
-	require.NotPanics(t, func() { i1.Add(i1) })
-	require.Panics(t, func() { i2.Add(i2) })
-	require.Panics(t, func() { i3.Add(i3) })
-
-	require.Panics(t, func() { i1.Mul(i1) })
-	require.Panics(t, func() { i2.Mul(i2) })
-	require.Panics(t, func() { i3.Mul(i3) })
-
-	// Underflow check
-	require.NotPanics(t, func() { i2.Sub(i1) })
-	require.NotPanics(t, func() { i2.Sub(i2) })
-	require.Panics(t, func() { i2.Sub(i3) })
-
-	// Bound check
-	uintmax := NewUintFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
-	uintmin := NewUint(0)
-	require.NotPanics(t, func() { uintmax.Add(ZeroUint()) })
-	require.NotPanics(t, func() { uintmin.Sub(ZeroUint()) })
-	require.Panics(t, func() { uintmax.Add(OneUint()) })
-	require.Panics(t, func() { uintmin.Sub(OneUint()) })
-
-	// Division-by-zero check
-	require.Panics(t, func() { i1.Quo(uintmin) })
 }
 
 // Tests below uses randomness
@@ -205,28 +165,6 @@ func TestCompInt(t *testing.T) {
 	}
 }
 
-func TestIdentUint(t *testing.T) {
-	for d := 0; d < 1000; d++ {
-		n := rand.Uint64()
-		i := NewUint(n)
-
-		ifromstr, ok := NewUintFromString(strconv.FormatUint(n, 10))
-		require.True(t, ok)
-
-		cases := []uint64{
-			i.Uint64(),
-			i.BigInt().Uint64(),
-			ifromstr.Uint64(),
-			NewUintFromBigInt(new(big.Int).SetUint64(n)).Uint64(),
-			NewUintWithDecimal(n, 0).Uint64(),
-		}
-
-		for tcnum, tc := range cases {
-			require.Equal(t, n, tc, "Uint is modified during conversion. tc #%d", tcnum)
-		}
-	}
-}
-
 func minuint(i1, i2 uint64) uint64 {
 	if i1 < i2 {
 		return i1
@@ -241,6 +179,7 @@ func maxuint(i1, i2 uint64) uint64 {
 	return i2
 }
 
+<<<<<<< HEAD
 func TestArithUint(t *testing.T) {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
@@ -306,6 +245,8 @@ func TestCompUint(t *testing.T) {
 	}
 }
 
+=======
+>>>>>>> origin/develop
 func randint() Int {
 	return NewInt(rand.Int63())
 }
@@ -394,6 +335,7 @@ func TestImmutabilityArithInt(t *testing.T) {
 		}
 	}
 }
+<<<<<<< HEAD
 func TestImmutabilityAllUint(t *testing.T) {
 	ops := []func(*Uint){
 		func(i *Uint) { _ = i.Add(NewUint(rand.Uint64())) },
@@ -496,6 +438,8 @@ func TestImmutabilityArithUint(t *testing.T) {
 func randuint() Uint {
 	return NewUint(rand.Uint64())
 }
+=======
+>>>>>>> origin/develop
 
 func TestEncodingRandom(t *testing.T) {
 	for i := 0; i < 1000; i++ {
@@ -604,31 +548,6 @@ func TestEncodingTableUint(t *testing.T) {
 		err = (&i).UnmarshalAmino(str)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from expected. tc #%d", tcnum)
-	}
-}
-
-func TestSafeSub(t *testing.T) {
-	testCases := []struct {
-		x, y     Uint
-		expected uint64
-		overflow bool
-	}{
-		{NewUint(0), NewUint(0), 0, false},
-		{NewUint(10), NewUint(5), 5, false},
-		{NewUint(5), NewUint(10), 5, true},
-		{NewUint(math.MaxUint64), NewUint(0), math.MaxUint64, false},
-	}
-
-	for i, tc := range testCases {
-		res, overflow := tc.x.SafeSub(tc.y)
-		require.Equal(
-			t, tc.overflow, overflow,
-			"invalid overflow result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
-		)
-		require.Equal(
-			t, tc.expected, res.BigInt().Uint64(),
-			"invalid subtraction result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
-		)
 	}
 }
 

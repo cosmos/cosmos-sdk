@@ -45,8 +45,9 @@
 
 ### SDK
 
- - \#3679 Consistent operators across Coins, DecCoins, Int, Dec
+* \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
+* [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
 
 ### Tendermint
 

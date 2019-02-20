@@ -238,13 +238,13 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 }
 
 // multiplication
-func (d Dec) MulInt(i Int) Dec {
-	mul := new(big.Int).Mul(d.Int, i.i)
+func (d Dec) MulUint(u Uint) Dec {
+	mul := new(big.Int).Mul(d.Int, u.i)
 
 	if mul.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return Dec{mul}
+	return NewDecFromBigInt(mul)
 }
 
 // MulInt64 - multiplication with int64
@@ -286,19 +286,19 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return Dec{chopped}
+	return NewDecFromBigInt(chopped)
 }
 
 // quotient
-func (d Dec) QuoInt(i Int) Dec {
-	mul := new(big.Int).Quo(d.Int, i.i)
-	return Dec{mul}
+func (d Dec) QuoUint(u Uint) Dec {
+	mul := new(big.Int).Quo(d.Int, u.i)
+	return NewDecFromBigInt(mul)
 }
 
 // QuoInt64 - quotient with int64
-func (d Dec) QuoInt64(i int64) Dec {
-	mul := new(big.Int).Quo(d.Int, big.NewInt(i))
-	return Dec{mul}
+func (d Dec) QuoUint64(i uint64) Dec {
+	mul := new(big.Int).Quo(d.Int, big.NewInt(int64(i)))
+	return NewDecFromBigInt(mul)
 }
 
 // is integer, e.g. decimals are zero
@@ -425,8 +425,8 @@ func (d Dec) RoundInt64() int64 {
 }
 
 // RoundInt round the decimal using bankers rounding
-func (d Dec) RoundInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.Int))
+func (d Dec) RoundUint() Uint {
+	return NewUintFromBigInt(chopPrecisionAndRoundNonMutative(d.Int))
 }
 
 //___________________________________________________________________________________

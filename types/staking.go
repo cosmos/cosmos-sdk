@@ -42,16 +42,16 @@ func BondStatusToString(b BondStatus) string {
 }
 
 // PowerReduction is the amount of staking tokens required for 1 unit of Tendermint power
-var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+var PowerReduction = NewUintFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
-func TokensToTendermintPower(tokens Int) int64 {
-	return (tokens.Div(PowerReduction)).Int64()
+func TokensToTendermintPower(tokens Uint) uint64 {
+	return (tokens.Div(PowerReduction)).Uint64()
 }
 
 // TokensFromTendermintPower - convert input power to tokens
-func TokensFromTendermintPower(power int64) Int {
-	return NewInt(power).Mul(PowerReduction)
+func TokensFromTendermintPower(power uint64) Uint {
+	return NewUint(power).Mul(PowerReduction)
 }
 
 // nolint
@@ -67,11 +67,11 @@ type Validator interface {
 	GetOperator() ValAddress      // operator address to receive/return validators coins
 	GetConsPubKey() crypto.PubKey // validation consensus pubkey
 	GetConsAddr() ConsAddress     // validation consensus address
-	GetTokens() Int               // validation tokens
-	GetBondedTokens() Int         // validator bonded tokens
+	GetTokens() Uint              // validation tokens
+	GetBondedTokens() Uint        // validator bonded tokens
 	GetTendermintPower() int64    // validation power in tendermint
 	GetCommission() Dec           // validator commission rate
-	GetMinSelfDelegation() Int    // validator minimum self delegation
+	GetMinSelfDelegation() Uint   // validator minimum self delegation
 	GetDelegatorShares() Dec      // total outstanding delegator shares
 	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
 }
@@ -100,8 +100,8 @@ type ValidatorSet interface {
 
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalBondedTokens(Context) Int                      // total bonded tokens within the validator set
-	TotalTokens(Context) Int                            // total token supply
+	TotalBondedTokens(Context) Uint                     // total bonded tokens within the validator set
+	TotalTokens(Context) Uint                           // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)

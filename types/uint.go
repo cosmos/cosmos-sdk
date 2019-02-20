@@ -1,10 +1,15 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
+	"testing"
 )
+
+const maxBitLen = 256
 
 // Uint wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
@@ -149,7 +154,7 @@ func UintOverflow(i *big.Int) error {
 	if i.Sign() < 0 {
 		return errors.New("non-positive integer")
 	}
-	if i.BitLen() > 256 {
+	if i.BitLen() > maxBitLen {
 		return fmt.Errorf("bit length %d greater than 256", i.BitLen())
 	}
 	return nil
@@ -164,9 +169,99 @@ func ParseUint(s string) (Uint, error) {
 	return checkNewUint(i)
 }
 
+// intended to be used with require/assert:  require.True(IntEq(...))
+func IntEq(t *testing.T, exp, got Uint) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
 func checkNewUint(i *big.Int) (Uint, error) {
 	if err := UintOverflow(i); err != nil {
 		return Uint{}, err
 	}
 	return Uint{i}, nil
+}
+
+func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
+
+func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
+
+func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
+
+func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
+
+func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
+
+func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
+
+func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
+
+func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
+
+func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Div(i, i2) }
+
+func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
+
+func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
+
+func random(i *big.Int) *big.Int { return new(big.Int).Rand(rand.New(rand.NewSource(rand.Int63())), i) }
+
+func min(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == 1 {
+		return new(big.Int).Set(i2)
+	}
+
+	return new(big.Int).Set(i)
+}
+
+func max(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == -1 {
+		return new(big.Int).Set(i2)
+	}
+
+	return new(big.Int).Set(i)
+}
+
+// MarshalAmino for custom encoding scheme
+func marshalAmino(i *big.Int) (string, error) {
+	bz, err := i.MarshalText()
+	return string(bz), err
+}
+
+func unmarshalText(i *big.Int, text string) error {
+	if err := i.UnmarshalText([]byte(text)); err != nil {
+		return err
+	}
+
+	if i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range: %s", text)
+	}
+
+	return nil
+}
+
+// UnmarshalAmino for custom decoding scheme
+func unmarshalAmino(i *big.Int, text string) (err error) {
+	return unmarshalText(i, text)
+}
+
+// MarshalJSON for custom encoding scheme
+// Must be encoded as a string for JSON precision
+func marshalJSON(i *big.Int) ([]byte, error) {
+	text, err := i.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(string(text))
+}
+
+// UnmarshalJSON for custom decoding scheme
+// Must be encoded as a string for JSON precision
+func unmarshalJSON(i *big.Int, bz []byte) error {
+	var text string
+	err := json.Unmarshal(bz, &text)
+	if err != nil {
+		return err
+	}
+
+	return unmarshalText(i, text)
 }

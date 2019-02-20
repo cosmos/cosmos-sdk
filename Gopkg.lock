@@ -59,8 +59,8 @@
   name = "github.com/ethereum/go-ethereum"
   packages = ["crypto/secp256k1"]
   pruneopts = "UT"
-  revision = "7fa3509e2eaf1a4ebc12344590e5699406690f15"
-  version = "v1.8.22"
+  revision = "c942700427557e3ff6de3aaf6b916e2f056c1ec2"
+  version = "v1.8.23"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -132,12 +132,12 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4a0c6bb4805508a6287675fac876be2ac1182539ca8a32468d8128882e9d5009"
+  digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
   name = "github.com/golang/snappy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+  revision = "2a8bb927dd31d8daada140a5d09578521ce5c36a"
+  version = "v0.0.1"
 
 [[projects]]
   digest = "1:ca59b1175189b3f0e9f1793d2c350114be36eaabbe5b9f554b35edee1de50aea"
@@ -295,16 +295,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c65f369bae3dff3a0382e38f3fe4f62cdfecba59cb6429ee323b75afdd4f3ba3"
+  digest = "1:ca30ee2c96d195cef49b546d10825d3e13b50c63da4df23c80e77c51e07bad0d"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/util",
+    "iostats",
     "nfs",
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "de1b801bf34b80cd00f14087dc5a994bfe0296bc"
+  revision = "e4d4a2206da023361ed100d85c5f2cf9c8364e9f"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -428,15 +429,15 @@
   version = "v0.14.1"
 
 [[projects]]
-  digest = "1:e1cc8dd891e64aab63b0c09f2f12456cbe2cd9cbd9d96dfae3281245f05c2428"
+  digest = "1:1bb088f6291e5426e3874a60bca0e481a91a5633395d7e0c427ec3e49b626e7b"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "de0740903a67b624d887f9055d4c60175dcfa758"
-  version = "v0.12.0"
+  revision = "ac7c35c12e8633a1e9fd0b52a00b900b40f32cd3"
+  version = "v0.12.1"
 
 [[projects]]
-  digest = "1:89f6fe8d02b427996828fbf43720ed1297a2e92c930b98dd302767b5ad796579"
+  digest = "1:4a372b718ee1433fa421e1c9e450a8b14bc24f2b5d7b5f9329d4d49e360f5f9e"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -502,7 +503,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.30.0"
+  revision = "v0.30.1"
 
 [[projects]]
   digest = "1:b73f5e117bc7c6e8fc47128f20db48a873324ad5cfeeebfc505e85c58682b5e4"

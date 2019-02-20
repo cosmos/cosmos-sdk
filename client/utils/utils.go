@@ -71,7 +71,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
 
 		buf := client.BufferStdin()
-		ok, err := client.GetConfirmation("confirm transaction before broadcasting", buf)
+		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
 		if err != nil || !ok {
 			fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err

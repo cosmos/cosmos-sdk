@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -108,20 +109,27 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool,
+) (err error) {
+
 	var stdTx auth.StdTx
+
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
 	} else {
 		stdTx, err = buildUnsignedStdTx(txBldr, cliCtx, msgs)
 	}
+
 	if err != nil {
 		return
 	}
+
 	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err == nil {
 		fmt.Fprintf(cliCtx.Output, "%s\n", json)
 	}
+
 	return
 }
 
@@ -186,6 +194,23 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, false)
+}
+
+// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+func ReadStdTxFromFile(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
+	var bytes []byte
+	if filename == "-" {
+		bytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		bytes, err = ioutil.ReadFile(filename)
+	}
+	if err != nil {
+		return
+	}
+	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
+		return
+	}
+	return
 }
 
 func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,

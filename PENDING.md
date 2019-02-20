@@ -6,6 +6,11 @@
 
 ### Gaia REST API
 
+* [\#3641] Remove the ability to use a Keybase from the REST API client:
+  * `password` and `generate_only` have been removed from the `base_req` object
+  * All txs that used to sign or use the Keybase now only generate the tx
+  * `keys` routes completely removed
+
 ### Gaia CLI
 
 ### Gaia
@@ -40,7 +45,8 @@
 
 ### SDK
 
- - \#3456 Integrate in the Int.ToDec() convenience function
+* \#3456 Integrate in the Int.ToDec() convenience function
+* [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
 
 ### Tendermint
 

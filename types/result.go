@@ -39,6 +39,9 @@ func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
 
+// IndexedABCILogs represents a slice of IndexedABCILog.
+type IndexedABCILogs []IndexedABCILog
+
 // IndexedABCILog defines a structure containing an indexed tx ABCI message log.
 type IndexedABCILog struct {
 	MsgIndex int    `json:"msg_index"`
@@ -46,20 +49,32 @@ type IndexedABCILog struct {
 	Log      string `json:"log"`
 }
 
+// String implements the fmt.Stringer interface for the IndexedABCILogs type.
+func (logs IndexedABCILogs) String() (str string) {
+	if logs != nil {
+		raw, err := json.Marshal(logs)
+		if err == nil {
+			str = string(raw)
+		}
+	}
+
+	return str
+}
+
 // TxResponse defines a structure containing relevant tx data and metadata. The
 // tags are stringified and the log is JSON decoded.
 type TxResponse struct {
-	Height    int64            `json:"height"`
-	TxHash    string           `json:"txhash"`
-	Code      uint32           `json:"code,omitempty"`
-	Data      []byte           `json:"data,omitempty"`
-	Logs      []IndexedABCILog `json:"logs,omitempty"`
-	Info      string           `json:"info,omitempty"`
-	GasWanted int64            `json:"gas_wanted,omitempty"`
-	GasUsed   int64            `json:"gas_used,omitempty"`
-	Tags      StringTags       `json:"tags,omitempty"`
-	Codespace string           `json:"codespace,omitempty"`
-	Tx        Tx               `json:"tx,omitempty"`
+	Height    int64           `json:"height"`
+	TxHash    string          `json:"txhash"`
+	Code      uint32          `json:"code,omitempty"`
+	Data      []byte          `json:"data,omitempty"`
+	Logs      IndexedABCILogs `json:"logs,omitempty"`
+	Info      string          `json:"info,omitempty"`
+	GasWanted int64           `json:"gas_wanted,omitempty"`
+	GasUsed   int64           `json:"gas_used,omitempty"`
+	Tags      StringTags      `json:"tags,omitempty"`
+	Codespace string          `json:"codespace,omitempty"`
+	Tx        Tx              `json:"tx,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
@@ -149,10 +164,7 @@ func (r TxResponse) String() string {
 	}
 
 	if r.Logs != nil {
-		logStr, err := json.Marshal(r.Logs)
-		if err == nil {
-			sb.WriteString(fmt.Sprintf("  Logs: %s\n", logStr))
-		}
+		sb.WriteString(fmt.Sprintf("  Logs: %s\n", r.Logs))
 	}
 
 	if r.Info != "" {
@@ -185,7 +197,7 @@ func (r TxResponse) Empty() bool {
 
 // ParseABCILogs attempts to parse a stringified ABCI tx log into a slice of
 // IndexedABCILog types. It returns an error upon JSON decoding failure.
-func ParseABCILogs(logs string) (res []IndexedABCILog, err error) {
+func ParseABCILogs(logs string) (res IndexedABCILogs, err error) {
 	err = json.Unmarshal([]byte(logs), &res)
 	return res, err
 }

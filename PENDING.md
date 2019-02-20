@@ -41,6 +41,8 @@
 
 ### Gaia CLI
 
+* [\#3653] Prompt user confirmation prior to signing and broadcasting a transaction.
+
 ### Gaia
 
 ### SDK

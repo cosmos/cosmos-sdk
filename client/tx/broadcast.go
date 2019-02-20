@@ -26,8 +26,9 @@ type BroadcastBody struct {
 	Return  string `json:"return"`
 }
 
-// BroadcastTxRequest REST Handler
-// nolint: gocyclo
+// BroadcastTxRequest implements a tx broadcasting handler that is responsible
+// for broadcasting a valid and signed tx to a full node. The tx can be
+// broadcasted via a sync|async|block mechanism.
 func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m BroadcastBody
@@ -36,28 +37,35 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		var res interface{}
 		switch m.Return {
 		case flagBlock:
 			res, err = cliCtx.BroadcastTx(m.TxBytes)
+
 		case flagSync:
 			res, err = cliCtx.BroadcastTxSync(m.TxBytes)
+
 		case flagAsync:
 			res, err = cliCtx.BroadcastTxAsync(m.TxBytes)
+
 		default:
 			rest.WriteErrorResponse(w, http.StatusInternalServerError,
 				"unsupported return type. supported types: block, sync, async")
 			return
 		}
+
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

@@ -1,4 +1,4 @@
-## Types
+# Types
 
 Besides accounts (specified in [State](state.md)), the types exposed by the auth module
 are `StdFee`, the combination of an amount and gas limit, `StdSignature`, the combination
@@ -6,7 +6,7 @@ of an optional public key and a cryptographic signature as a byte array, `StdTx`
 a struct which implements the `sdk.Tx` interface using `StdFee` and `StdSignature`, and
 `StdSignDoc`, a replay-prevention structure for `StdTx` which transaction senders must sign over.
 
-### StdFee
+## StdFee
 
 A `StdFee` is simply the combination of a fee amount, in any number of denominations,
 and a gas limit (where dividing the amount by the gas limit gives a "gas price").
@@ -18,7 +18,7 @@ type StdFee struct {
 }
 ```
 
-### StdSignature
+## StdSignature
 
 A `StdSignature` is the combination of an optional public key and a cryptographic signature
 as a byte array. The SDK is agnostic to particular key or signature formats and supports any
@@ -31,7 +31,7 @@ type StdSignature struct {
 }
 ```
 
-### StdTx
+## StdTx
 
 A `StdTx` is a struct which implements the `sdk.Tx` interface, and is likely to be generic
 enough to serve the purposes of many Cosmos SDK blockchains.
@@ -45,7 +45,7 @@ type StdTx struct {
 }
 ```
 
-### StdSignDoc
+## StdSignDoc
 
 A `StdSignDoc` is a replay-prevention structure to be signed over, which ensures that
 any submitted transaction (which is simply a signature over a particular bytestring)

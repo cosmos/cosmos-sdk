@@ -6,8 +6,16 @@ import (
 
 // Crisis keeper
 type Keeper struct {
-	routes     []InvarRoute
-	bankKeeper BankKeeper
+	routes      []InvarRoute
+	distrKeeper DistrKeeper
+}
+
+// Keeper - create a new crisis keeper
+func NewKeeper(routes []InvarRoute, distrKeeper DistrKeeper) Keeper {
+	return Keeper{
+		routes:      routes,
+		distrKeeper: distrKeeper,
+	}
 }
 
 // register routes for the
@@ -16,6 +24,6 @@ func (k *Keeper) RegisterRoute(ctx sdk.Context, invarRoute InvarRoute) {
 }
 
 // expected bank keeper
-type BankKeeper interface {
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+type DistrKeeper interface {
+	DistributeFeePool(ctx sdk.Context, amount sdk.Coin, receiveAddr sdk.AccAddress) error
 }

@@ -150,6 +150,11 @@ func (fee StdFee) Bytes() []byte {
 	return bz
 }
 
+// Bytes for signing later
+func (fee StdFee) GasPrices() sdk.DecCoins {
+	return NewDecCoins(fee.Amount).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
 //__________________________________________________________
 
 // StdSignDoc is replay-prevention structure.

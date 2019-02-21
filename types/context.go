@@ -145,6 +145,7 @@ const (
 	contextKeyGasMeter
 	contextKeyBlockGasMeter
 	contextKeyMinGasPrices
+	contextKeyTxGasPrices
 	contextKeyConsensusParams
 )
 
@@ -173,6 +174,8 @@ func (c Context) BlockGasMeter() GasMeter { return c.Value(contextKeyBlockGasMet
 func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 
 func (c Context) MinGasPrices() DecCoins { return c.Value(contextKeyMinGasPrices).(DecCoins) }
+
+func (c Context) TxGasPrices() DecCoins { return c.Value(contextKeyTxGasPrices).(DecCoins) }
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
 	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
@@ -227,6 +230,10 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 	return c.withValue(contextKeyMinGasPrices, gasPrices)
+}
+
+func (c Context) WithTxGasPrices(gasPrices DecCoins) Context {
+	return c.withValue(contextKeyTxGasPrices, gasPrices)
 }
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {

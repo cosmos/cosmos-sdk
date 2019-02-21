@@ -39,8 +39,7 @@ func (p Pool) TokenSupply() sdk.Int {
 func (p Pool) BondedRatio() sdk.Dec {
 	supply := p.TokenSupply()
 	if supply.IsPositive() {
-		return sdk.NewDecFromInt(p.BondedTokens).
-			QuoInt(supply)
+		return p.BondedTokens.ToDec().QuoInt(supply)
 	}
 	return sdk.ZeroDec()
 }

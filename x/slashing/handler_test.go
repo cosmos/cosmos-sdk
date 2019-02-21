@@ -92,7 +92,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-	unbondShares := sdk.NewDecFromInt(bondAmount)
+	unbondShares := bondAmount.ToDec()
 
 	// unbond validator total self-delegations (which should jail the validator)
 	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondShares)

@@ -46,7 +46,8 @@
 ### SDK
 
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.
-* Cleanup error messages
+* \#3691 Cleanup error messages
+* \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 
 ### Tendermint

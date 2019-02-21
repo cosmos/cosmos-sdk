@@ -229,7 +229,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// compute min((BC + DV) - V, BC) per the specification
-		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
+		min := sdk.MinUint(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
@@ -265,20 +265,20 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
 		// Y := D - X
-		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
+		x := sdk.MinUint(sdk.MaxUint(vestingAmt.Sub(delVestingAmt), sdk.ZeroUint()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.NewCoins(xCoin))
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.NewCoins(yCoin))
 		}
 
-		bva.Coins = bva.Coins.Minus(sdk.Coins{coin})
+		bva.Coins = bva.Coins.Minus(sdk.NewCoins(coin))
 	}
 }
 
@@ -299,7 +299,7 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
 		// Y := D - X
-		x := sdk.MinInt(delegatedFree, coin.Amount)
+		x := sdk.MinUint(delegatedFree, coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
@@ -404,10 +404,10 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// calculate the vesting scalar
 	x := blockTime.Unix() - cva.StartTime
 	y := cva.EndTime - cva.StartTime
-	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
+	s := sdk.NewDec(uint64(x)).Quo(sdk.NewDec(uint64(y)))
 
 	for _, ovc := range cva.OriginalVesting {
-		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
+		vestedAmt := sdk.NewDecFromUint(ovc.Amount).Mul(s).RoundUint()
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 

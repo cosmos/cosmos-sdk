@@ -304,8 +304,8 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	}
 
 	// get the resulting coins deducting the fees
-	newCoins, ok := coins.SafeMinus(feeAmount)
-	if ok {
+	newCoins, error := coins.SafeMinus(feeAmount)
+	if error != nil {
 		return nil, sdk.ErrInsufficientFunds(
 			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, feeAmount),
 		).Result()
@@ -314,7 +314,7 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
 	spendableCoins := acc.SpendableCoins(blockTime)
-	if _, hasNeg := spendableCoins.SafeMinus(feeAmount); hasNeg {
+	if _, error := spendableCoins.SafeMinus(feeAmount); error != nil {
 		return nil, sdk.ErrInsufficientFunds(
 			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, feeAmount),
 		).Result()
@@ -340,10 +340,10 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		glDec := sdk.NewDec(int64(stdFee.Gas))
+		glDec := sdk.NewDec(stdFee.Gas)
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundUint())
 		}
 
 		if !stdFee.Amount.IsAnyGTE(requiredFees) {

@@ -10,8 +10,8 @@ import (
 
 var (
 	emptyCoins = sdk.Coins{}
-	oneCoin    = sdk.Coins{sdk.NewInt64Coin("foocoin", 1)}
-	twoCoins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 2)}
+	oneCoin    = sdk.Coins{sdk.NewUint64Coin("foocoin", 1)}
+	twoCoins   = sdk.Coins{sdk.NewUint64Coin("foocoin", 2)}
 )
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {

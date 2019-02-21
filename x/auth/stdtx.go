@@ -46,7 +46,7 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	if tx.Fee.Gas > maxGasWanted {
 		return sdk.ErrGasOverflow(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted))
 	}
-	if tx.Fee.Amount.IsAnyNegative() {
+	if !tx.Fee.Amount.IsValid() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
 	if len(stdSigs) == 0 {

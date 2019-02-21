@@ -27,12 +27,12 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 	input := setupTestInput()
 	coins := sdk.Coins{
-		sdk.NewCoin("LTC", sdk.NewInt(1000)),
-		sdk.NewCoin("BTC", sdk.NewInt(1000)),
-		sdk.NewCoin("ETH", sdk.NewInt(1000)),
-		sdk.NewCoin("XRP", sdk.NewInt(1000)),
-		sdk.NewCoin("BCH", sdk.NewInt(1000)),
-		sdk.NewCoin("EOS", sdk.NewInt(1000)),
+		sdk.NewCoin("LTC", sdk.NewUint(1000)),
+		sdk.NewCoin("BTC", sdk.NewUint(1000)),
+		sdk.NewCoin("ETH", sdk.NewUint(1000)),
+		sdk.NewCoin("XRP", sdk.NewUint(1000)),
+		sdk.NewCoin("BCH", sdk.NewUint(1000)),
+		sdk.NewCoin("EOS", sdk.NewUint(1000)),
 	}
 
 	// assumes b.N < 2**24
@@ -68,12 +68,12 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
 	input := setupTestInput()
 	coins := sdk.Coins{
-		sdk.NewCoin("LTC", sdk.NewInt(1000)),
-		sdk.NewCoin("BTC", sdk.NewInt(1000)),
-		sdk.NewCoin("ETH", sdk.NewInt(1000)),
-		sdk.NewCoin("XRP", sdk.NewInt(1000)),
-		sdk.NewCoin("BCH", sdk.NewInt(1000)),
-		sdk.NewCoin("EOS", sdk.NewInt(1000)),
+		sdk.NewCoin("LTC", sdk.NewUint(1000)),
+		sdk.NewCoin("BTC", sdk.NewUint(1000)),
+		sdk.NewCoin("ETH", sdk.NewUint(1000)),
+		sdk.NewCoin("XRP", sdk.NewUint(1000)),
+		sdk.NewCoin("BCH", sdk.NewUint(1000)),
+		sdk.NewCoin("EOS", sdk.NewUint(1000)),
 	}
 
 	b.ResetTimer()

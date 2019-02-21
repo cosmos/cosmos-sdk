@@ -118,10 +118,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDecFromInt(initial.DivRaw(2))}}, rewards)
+	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDecFromInt(initial.QuoRaw(2))}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDecFromInt(initial.DivRaw(2))}},
+	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDecFromInt(initial.QuoRaw(2))}},
 		k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 
@@ -307,7 +307,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// assert correct balance
-	exp := balanceTokens.Sub(valTokens).Add(initial.DivRaw(2))
+	exp := balanceTokens.Sub(valTokens).Add(initial.QuoRaw(2))
 	require.Equal(t,
 		sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, exp)},
 		ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins(),
@@ -540,7 +540,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// commission should be zero
 	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
 
-	totalRewards = k.GetOutstandingRewards(ctx).Plus(tokens)
+	totalRewards = k.GetOutstandingRewards(ctx).Add(tokens)
 	k.SetOutstandingRewards(ctx, totalRewards)
 
 	// allocate some more rewards
@@ -567,7 +567,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// commission should be half initial
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 
-	totalRewards = k.GetOutstandingRewards(ctx).Plus(tokens)
+	totalRewards = k.GetOutstandingRewards(ctx).Add(tokens)
 	k.SetOutstandingRewards(ctx, totalRewards)
 
 	// allocate some more rewards

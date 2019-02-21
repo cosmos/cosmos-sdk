@@ -304,7 +304,7 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	}
 
 	// get the resulting coins deducting the fees
-	newCoins, error := coins.SafeMinus(feeAmount)
+	newCoins, error := coins.SafeSub(feeAmount)
 	if error != nil {
 		return nil, sdk.ErrInsufficientFunds(
 			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, feeAmount),
@@ -314,7 +314,7 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
 	spendableCoins := acc.SpendableCoins(blockTime)
-	if _, error := spendableCoins.SafeMinus(feeAmount); error != nil {
+	if _, error := spendableCoins.SafeSub(feeAmount); error != nil {
 		return nil, sdk.ErrInsufficientFunds(
 			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, feeAmount),
 		).Result()

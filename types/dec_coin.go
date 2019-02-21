@@ -99,7 +99,7 @@ func (coin DecCoin) IsEqual(other DecCoin) bool {
 }
 
 // Adds amounts of two coins with same denom
-func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
+func (coin DecCoin) Add(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v", coin.Denom, coinB.Denom))
 	}
@@ -107,7 +107,7 @@ func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
 }
 
 // Subtracts amounts of two coins with same denom
-func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
+func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v", coin.Denom, coinB.Denom))
 	}
@@ -179,29 +179,29 @@ func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
 	for i, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		out[i] = truncated
-		changeSum = changeSum.Plus(DecCoins{change})
+		changeSum = changeSum.Add(DecCoins{change})
 	}
 
 	return out, changeSum
 }
 
-// Plus adds two sets of DecCoins.
+// Add adds two sets of DecCoins.
 //
-// NOTE: Plus operates under the invariant that coins are sorted by
+// NOTE: Add operates under the invariant that coins are sorted by
 // denominations.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a non-positive
+// CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins DecCoins) Plus(coinsB DecCoins) DecCoins {
-	return coins.safePlus(coinsB)
+func (coins DecCoins) Add(coinsB DecCoins) DecCoins {
+	return coins.safeAdd(coinsB)
 }
 
-// safePlus will perform addition of two DecCoins sets. If both coin sets are
+// safeAdd will perform addition of two DecCoins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
-func (coins DecCoins) safePlus(coinsB DecCoins) DecCoins {
+func (coins DecCoins) safeAdd(coinsB DecCoins) DecCoins {
 	sum := ([]DecCoin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
@@ -231,7 +231,7 @@ func (coins DecCoins) safePlus(coinsB DecCoins) DecCoins {
 			indexA++
 
 		case 0: // coin A denom == coin B denom
-			res := coinA.Plus(coinB)
+			res := coinA.Add(coinB)
 			if !res.IsZero() {
 				sum = append(sum, res)
 			}
@@ -261,9 +261,9 @@ func (coins DecCoins) negative() DecCoins {
 	return res
 }
 
-// Minus subtracts a set of DecCoins from another (adds the inverse).
-func (coins DecCoins) Minus(coinsB DecCoins) DecCoins {
-	diff, hasNeg := coins.SafeMinus(coinsB)
+// Sub subtracts a set of DecCoins from another (adds the inverse).
+func (coins DecCoins) Sub(coinsB DecCoins) DecCoins {
+	diff, hasNeg := coins.SafeSub(coinsB)
 	if hasNeg {
 		panic("negative coin amount")
 	}
@@ -271,10 +271,10 @@ func (coins DecCoins) Minus(coinsB DecCoins) DecCoins {
 	return diff
 }
 
-// SafeMinus performs the same arithmetic as Minus but returns a boolean if any
+// SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
-func (coins DecCoins) SafeMinus(coinsB DecCoins) (DecCoins, bool) {
-	diff := coins.safePlus(coinsB.negative())
+func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
+	diff := coins.safeAdd(coinsB.negative())
 	return diff, diff.IsAnyNegative()
 }
 

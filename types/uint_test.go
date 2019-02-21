@@ -35,8 +35,8 @@ func TestUintPanics(t *testing.T) {
 	require.True(t, u1.SubUint64(0).Equal(ZeroUint()))
 	require.True(t, u2.Add(OneUint()).Sub(OneUint()).Equal(OneUint()))    // i2 == 1
 	require.True(t, u2.Add(OneUint()).Mul(NewUint(5)).Equal(NewUint(10))) // i2 == 10
-	require.True(t, NewUint(7).Div(NewUint(2)).Equal(NewUint(3)))
-	require.True(t, NewUint(0).Div(NewUint(2)).Equal(ZeroUint()))
+	require.True(t, NewUint(7).Quo(NewUint(2)).Equal(NewUint(3)))
+	require.True(t, NewUint(0).Quo(NewUint(2)).Equal(ZeroUint()))
 	require.True(t, NewUint(5).MulUint64(4).Equal(NewUint(20)))
 	require.True(t, NewUint(5).MulUint64(0).Equal(ZeroUint()))
 
@@ -45,10 +45,10 @@ func TestUintPanics(t *testing.T) {
 
 	// divs by zero
 	require.Panics(t, func() { OneUint().Mul(ZeroUint().SubUint64(uint64(1))) })
-	require.Panics(t, func() { OneUint().DivUint64(0) })
-	require.Panics(t, func() { OneUint().Div(ZeroUint()) })
-	require.Panics(t, func() { ZeroUint().DivUint64(0) })
-	require.Panics(t, func() { OneUint().Div(ZeroUint().Sub(OneUint())) })
+	require.Panics(t, func() { OneUint().QuoUint64(0) })
+	require.Panics(t, func() { OneUint().Quo(ZeroUint()) })
+	require.Panics(t, func() { ZeroUint().QuoUint64(0) })
+	require.Panics(t, func() { OneUint().Quo(ZeroUint().Sub(OneUint())) })
 	require.Panics(t, func() { uintmax.Add(OneUint()) })
 	require.Panics(t, func() { uintmin.Sub(OneUint()) })
 
@@ -120,10 +120,10 @@ func TestArithUint(t *testing.T) {
 		}{
 			{u1.Add(u2), n1 + n2},
 			{u1.Mul(u2), n1 * n2},
-			{u1.Div(u2), n1 / n2},
+			{u1.Quo(u2), n1 / n2},
 			{u1.AddUint64(n2), n1 + n2},
 			{u1.MulUint64(n2), n1 * n2},
-			{u1.DivUint64(n2), n1 / n2},
+			{u1.QuoUint64(n2), n1 / n2},
 			{MinUint(u1, u2), minuint(n1, n2)},
 			{MaxUint(u1, u2), maxuint(n1, n2)},
 		}
@@ -180,11 +180,11 @@ func TestImmutabilityAllUint(t *testing.T) {
 		func(i *Uint) { _ = i.Add(NewUint(rand.Uint64())) },
 		func(i *Uint) { _ = i.Sub(NewUint(rand.Uint64() % i.Uint64())) },
 		func(i *Uint) { _ = i.Mul(randuint()) },
-		func(i *Uint) { _ = i.Div(randuint()) },
+		func(i *Uint) { _ = i.Quo(randuint()) },
 		func(i *Uint) { _ = i.AddUint64(rand.Uint64()) },
 		func(i *Uint) { _ = i.SubUint64(rand.Uint64() % i.Uint64()) },
 		func(i *Uint) { _ = i.MulUint64(rand.Uint64()) },
-		func(i *Uint) { _ = i.DivUint64(rand.Uint64()) },
+		func(i *Uint) { _ = i.QuoUint64(rand.Uint64()) },
 		func(i *Uint) { _ = i.IsZero() },
 		func(i *Uint) { _ = i.Equal(randuint()) },
 		func(i *Uint) { _ = i.GT(randuint()) },

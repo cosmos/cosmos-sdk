@@ -146,7 +146,7 @@ func TestDecsEqual(t *testing.T) {
 func TestArithmetic(t *testing.T) {
 	tests := []struct {
 		d1, d2                         Dec
-		expMul, expDiv, expAdd, expSub Dec
+		expMul, expQuo, expAdd, expSub Dec
 	}{
 		// d1       d2         MUL        DIV        ADD        SUB
 		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
@@ -173,8 +173,8 @@ func TestArithmetic(t *testing.T) {
 		if tc.d2.IsZero() { // panic for divide by zero
 			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
 		} else {
-			resDiv := tc.d1.Quo(tc.d2)
-			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
+			resQuo := tc.d1.Quo(tc.d2)
+			require.True(t, tc.expQuo.Equal(resQuo), "exp %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
 		}
 	}
 }

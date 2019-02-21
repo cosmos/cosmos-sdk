@@ -66,4 +66,7 @@
 
 ### SDK
 
+* [\#3411] Include the `RequestInitChain.Time` in the block header init during
+`InitChain`.
+
 ### Tendermint

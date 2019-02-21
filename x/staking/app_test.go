@@ -146,7 +146,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.True(sdk.IntEq(t, bondTokens, validator.Tokens))
 
 	// check the bond that should have been created as well
-	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
+	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
@@ -162,10 +162,10 @@ func TestStakingMsgs(t *testing.T) {
 
 	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{delegateMsg}, []uint64{0}, []uint64{1}, true, true, priv2)
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
-	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
+	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// begin unbonding
-	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), sdk.NewDecFromInt(bondTokens))
+	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondTokens.ToDec())
 	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []uint64{0}, []uint64{2}, true, true, priv2)
 
 	// delegation should exist anymore

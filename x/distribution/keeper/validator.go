@@ -39,7 +39,7 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 		current = sdk.DecCoins{}
 	} else {
 		// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-		current = rewards.Rewards.QuoDecTruncate(sdk.NewDecFromInt(val.GetTokens()))
+		current = rewards.Rewards.QuoDecTruncate(val.GetTokens().ToDec())
 	}
 
 	// fetch historical rewards for last period

@@ -30,7 +30,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := sdk.TokensFromTendermintPower(power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
+	slashAmountDec := amount.ToDec().Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
@@ -59,7 +59,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.GT(sdk.ZeroInt()) {
-		effectiveFraction := slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens))
+		effectiveFraction := slashAmountDec.Quo(validator.Tokens.ToDec())
 		// possible if power has changed
 		if effectiveFraction.GT(sdk.OneDec()) {
 			effectiveFraction = sdk.OneDec()

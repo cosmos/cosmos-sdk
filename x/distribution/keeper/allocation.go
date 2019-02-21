@@ -20,7 +20,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
 	if totalPower == 0 {
-		feePool.CommunityPool = feePool.CommunityPool.Plus(feesCollected)
+		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected)
 		k.SetFeePool(ctx, feePool)
 		return
 	}
@@ -37,7 +37,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// pay proposer
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-	remaining := feesCollected.Minus(proposerReward)
+	remaining := feesCollected.Sub(proposerReward)
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
@@ -53,16 +53,16 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
 		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
 		k.AllocateTokensToValidator(ctx, validator, reward)
-		remaining = remaining.Minus(reward)
+		remaining = remaining.Sub(reward)
 	}
 
 	// allocate community funding
-	feePool.CommunityPool = feePool.CommunityPool.Plus(remaining)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
 	k.SetFeePool(ctx, feePool)
 
 	// update outstanding rewards
 	outstanding := k.GetOutstandingRewards(ctx)
-	outstanding = outstanding.Plus(feesCollected.Minus(remaining))
+	outstanding = outstanding.Add(feesCollected.Sub(remaining))
 	k.SetOutstandingRewards(ctx, outstanding)
 
 }
@@ -71,15 +71,15 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
-	shared := tokens.Minus(commission)
+	shared := tokens.Sub(commission)
 
 	// update current commission
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	currentCommission = currentCommission.Plus(commission)
+	currentCommission = currentCommission.Add(commission)
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	currentRewards.Rewards = currentRewards.Rewards.Plus(shared)
+	currentRewards.Rewards = currentRewards.Rewards.Add(shared)
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 }

@@ -163,14 +163,14 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) sdk.Error {
 		if err := in.ValidateBasic(); err != nil {
 			return err.TraceSDK("")
 		}
-		totalIn = totalIn.Plus(in.Coins)
+		totalIn = totalIn.Add(in.Coins)
 	}
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
 			return err.TraceSDK("")
 		}
-		totalOut = totalOut.Plus(out.Coins)
+		totalOut = totalOut.Add(out.Coins)
 	}
 
 	// make sure inputs and outputs match

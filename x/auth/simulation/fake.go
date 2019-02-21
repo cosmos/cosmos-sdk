@@ -40,13 +40,13 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		// balance.
 		fees := sdk.Coins{sdk.NewCoin(randCoin.Denom, amt)}
 		spendableCoins := stored.SpendableCoins(ctx.BlockHeader().Time)
-		if _, hasNeg := spendableCoins.SafeMinus(fees); hasNeg {
+		if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
 			return action, nil, nil
 		}
 
 		// get the new account balance
-		newCoins, hasNeg := initCoins.SafeMinus(fees)
+		newCoins, hasNeg := initCoins.SafeSub(fees)
 		if hasNeg {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
 			return action, nil, nil

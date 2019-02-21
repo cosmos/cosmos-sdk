@@ -118,10 +118,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, initial.QoRaw(2).ToDec()}}, rewards)
+	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, initial.QuoRaw(2).ToDec()}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, initial.QoRaw(2).ToDec()}},
+	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, initial.QuoRaw(2).ToDec()}},
 		k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 

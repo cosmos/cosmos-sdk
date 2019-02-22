@@ -117,7 +117,7 @@ with the `ValidatorAddr` Delegators are indexed in the store as follows:
 
 - Delegation: ` 0x31 | DelegatorAddr | ValidatorAddr -> amino(delegation)`
 
-Atom holders may delegate coins to validators; under this circumstance their
+Stake holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.

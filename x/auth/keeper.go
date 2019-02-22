@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -143,7 +145,7 @@ func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (
 func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdk.ErrUnknownAddress(addr.String())
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 	return acc.GetPubKey(), nil
 }
@@ -152,7 +154,7 @@ func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return 0, sdk.ErrUnknownAddress(addr.String())
+		return 0, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 	return acc.GetSequence(), nil
 }
@@ -160,7 +162,7 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 func (ak AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence uint64) sdk.Error {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdk.ErrUnknownAddress(addr.String())
+		return sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
 	if err := acc.SetSequence(newSequence); err != nil {

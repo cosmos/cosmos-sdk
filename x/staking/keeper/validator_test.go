@@ -146,7 +146,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// validator and next in line cliff validator
 	keeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
 	shares := sdk.TokensFromTendermintPower(21)
-	nextCliffVal, pool, _ = nextCliffVal.RemoveDelShares(pool, sdk.NewDecFromInt(shares))
+	nextCliffVal, pool, _ = nextCliffVal.RemoveDelShares(pool, shares.ToDec())
 	keeper.SetPool(ctx, pool)
 	nextCliffVal = TestingUpdateValidator(keeper, ctx, nextCliffVal, true)
 
@@ -253,7 +253,7 @@ func TestValidatorBasics(t *testing.T) {
 	// modify a records, save, and retrieve
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = sdk.TokensFromTendermintPower(10)
-	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
+	validators[0].DelegatorShares = validators[0].Tokens.ToDec()
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resVal, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -857,8 +857,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	delTokens1 := sdk.TokensFromTendermintPower(20)
 	delTokens2 := sdk.TokensFromTendermintPower(30)
-	validators[0], pool, _ = validators[0].RemoveDelShares(pool, sdk.NewDecFromInt(delTokens1))
-	validators[1], pool, _ = validators[1].RemoveDelShares(pool, sdk.NewDecFromInt(delTokens2))
+	validators[0], pool, _ = validators[0].RemoveDelShares(pool, delTokens1.ToDec())
+	validators[1], pool, _ = validators[1].RemoveDelShares(pool, delTokens2.ToDec())
 	keeper.SetPool(ctx, pool)
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], false)
 	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], false)
@@ -934,7 +934,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidator(ctx, validator)
 
-	validator, pool, _ = validator.RemoveDelShares(pool, sdk.NewDecFromInt(amt))
+	validator, pool, _ = validator.RemoveDelShares(pool, amt.ToDec())
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 

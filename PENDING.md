@@ -39,13 +39,24 @@
 
 ### Gaia REST API
 
+* Update the `TxResponse` type allowing for the `Logs` result to be JSON
+decoded automatically.
+
 ### Gaia CLI
+
+* [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
+CLI flag.
 
 ### Gaia
 
 ### SDK
 
-* [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
+* \#3679 Consistent operators across Coins, DecCoins, Int, Dec
+          replaced: Minus->Sub Plus->Add Div->Quo
+* [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.
+* \#3691 Cleanup error messages
+* \#3456 Integrate in the Int.ToDec() convenience function
+* [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
 
 ### Tendermint
@@ -61,5 +72,10 @@
 ### Gaia
 
 ### SDK
+
+* \#3559 fix occasional failing due to non-determinism in lcd test TestBonding
+  where validator is unexpectedly slashed throwing off test calculations
+* [\#3411] Include the `RequestInitChain.Time` in the block header init during
+`InitChain`.
 
 ### Tendermint

@@ -254,7 +254,7 @@ For a vesting account attempting to undelegate `D` coins, the following is perfo
 
 1. Verify `(DV + DF) >= D > 0` (this is simply a sanity check)
 2. Compute `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
-3. Compute `Y := D - X` (portion of `D` that should remain vesting)
+3. Compute `Y := min(D - X, DV)` (portion of `D` that should remain vesting)
 4. Set `DF -= X`
 5. Set `DV -= Y`
 6. Set `BC += D`
@@ -272,7 +272,11 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 
 **Note**: If a delegation is slashed, the continuous vesting account will end up
 with an excess `DV` amount, even after all its coins have vested. This is because
-undelegating free coins are prioritized.
+undelegating free coins are prioritized. In addition, the undelegation amount may
+exceed the delegated vesting amount due to the ability of undelegating a fractional
+amount of shares in which case the tokens are truncated and as a result the
+validator's exchange rate exceeding one causing a delegator to receive slightly
+more tokens.
 
 #### Keepers/Handlers
 

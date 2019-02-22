@@ -192,6 +192,9 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	var output []byte
 
 	switch response.(type) {
+	case []byte:
+		output = response.([]byte)
+
 	default:
 		var err error
 		if indent {
@@ -203,8 +206,6 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-	case []byte:
-		output = response.([]byte)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

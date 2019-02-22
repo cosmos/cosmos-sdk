@@ -12,7 +12,7 @@ const (
 	maxTimePerBlock int64 = 10000
 
 	// TODO Remove in favor of binary search for invariant violation
-	onOperation bool = true
+	onOperation bool = false
 )
 
 // TODO explain transitional matrix usage

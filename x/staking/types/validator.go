@@ -405,16 +405,7 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 		return sdk.OneDec()
 	}
 
-	exRate := v.Tokens.ToDec().Quo(v.DelegatorShares)
-	if exRate.GT(sdk.OneDec()) {
-		fmt.Printf(
-			"\nvalidator: %s, totalTokens: %s, delegatorShares: %s, exRate: %s\n",
-			v.OperatorAddr, v.Tokens, v.DelegatorShares, exRate,
-		)
-		panic("delegator exchange rate exceeds 1")
-	}
-
-	return exRate
+	return v.Tokens.ToDec().Quo(v.DelegatorShares)
 }
 
 // get the bonded tokens which the validator holds

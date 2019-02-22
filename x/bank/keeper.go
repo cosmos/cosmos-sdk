@@ -247,12 +247,6 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Add(amt)
 
-	if newCoins.IsAnyNegative() {
-		return amt, nil, sdk.ErrInsufficientCoins(
-			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
-		)
-	}
-
 	err := setCoins(ctx, am, addr, newCoins)
 	tags := sdk.NewTags(TagKeyRecipient, addr.String())
 
@@ -263,7 +257,7 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// supply invariant.
-	if !amt.IsValid() {
+	if !amt.IsValid() || amt.IsZero() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 

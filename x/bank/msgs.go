@@ -35,7 +35,7 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if msg.ToAddress.Empty() {
 		return sdk.ErrInvalidAddress("missing recipient address")
 	}
-	if !msg.Amount.IsAllPositive() {
+	if msg.Amount.IsZero() {
 		return sdk.ErrInsufficientCoins("send amount must be positive")
 	}
 	return nil
@@ -109,7 +109,7 @@ func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return sdk.ErrInvalidAddress(in.Address.String())
 	}
-	if !in.Coins.IsValid() {
+	if !in.Coins.IsValid() || in.Coins.IsZero() {
 		return sdk.ErrInvalidCoins(in.Coins.String())
 	}
 	if !in.Coins.IsAllPositive() {
@@ -137,7 +137,7 @@ func (out Output) ValidateBasic() sdk.Error {
 	if len(out.Address) == 0 {
 		return sdk.ErrInvalidAddress(out.Address.String())
 	}
-	if !out.Coins.IsValid() {
+	if !out.Coins.IsValid() || out.Coins.IsZero() {
 		return sdk.ErrInvalidCoins(out.Coins.String())
 	}
 	if !out.Coins.IsAllPositive() {

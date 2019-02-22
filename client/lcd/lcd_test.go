@@ -547,7 +547,7 @@ func TestBonding(t *testing.T) {
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
-	require.Equal(t, operAddrs[1], delegatorDels[0].ValidatorAddr)
+	require.Equal(t, operAddrs[1], delegatorDels[0].ValidatorAddress)
 
 	// because the second validator never signs during these tests, if this
 	// this test takes a long time to run,  eventually this second validator

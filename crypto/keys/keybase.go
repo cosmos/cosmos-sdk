@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -17,7 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
@@ -276,6 +276,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		cdc.MustUnmarshalBinaryLengthPrefixed([]byte(signed), sig)
 		return sig, linfo.GetPubKey(), nil
 	}
+
 	sig, err = priv.Sign(msg)
 	if err != nil {
 		return nil, nil, err

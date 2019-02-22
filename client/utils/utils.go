@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 )
 
@@ -233,7 +233,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	if err != nil {
 		return
 	}
-	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo, stdSignMsg.Cert), nil
+	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo, nil), nil // stdSignMsg.Cert), nil
 }
 
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {

@@ -103,7 +103,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, txBldr authtxb.TxBuilder,
 		return
 	}
 
-	output, err := txBldr.Codec.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo, stdMsg.Cert))
+	output, err := txBldr.Codec.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo, nil))
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

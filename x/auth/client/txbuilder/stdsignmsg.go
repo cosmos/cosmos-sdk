@@ -15,7 +15,7 @@ type StdSignMsg struct {
 	Fee           auth.StdFee `json:"fee"`
 	Msgs          []sdk.Msg   `json:"msgs"`
 	Memo          string      `json:"memo"`
-	Cert          []byte      `json:"cert"`
+	//Cert          []byte      `json:"cert"`
 }
 
 // get message bytes

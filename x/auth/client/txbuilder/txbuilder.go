@@ -116,19 +116,21 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 		Memo:          bldr.Memo,
 		Msgs:          msgs,
 		Fee:           auth.NewStdFee(bldr.Gas, fee),
-		Cert:          bldr.Cert,
+		//Cert:          bldr.Cert,
 	}, nil
 }
 
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
 func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, error) {
+	msg.Fee.Amount = sdk.Coins{}
 	sig, err := MakeSignature(name, passphrase, msg)
 	if err != nil {
 		return nil, err
 	}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo, msg.Cert))
+	ret := auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo, nil)
+	return bldr.Codec.MarshalBinaryLengthPrefixed(ret) // msg.Cert))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -139,7 +141,6 @@ func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]b
 	if err != nil {
 		return nil, err
 	}
-
 	return bldr.Sign(name, passphrase, msg)
 }
 
@@ -169,7 +170,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		PubKey:        info.GetPubKey(),
 	}}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo, msg.Cert))
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo, nil)) // msg.Cert))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
@@ -193,7 +194,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
-	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo(), stdTx.Cert)
+	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo(), nil) // stdTx.Cert)
 	return
 }
 
@@ -203,10 +204,12 @@ func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignatu
 	if err != nil {
 		return
 	}
+
 	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
 	if err != nil {
 		return
 	}
+
 	return auth.StdSignature{
 		AccountNumber: msg.AccountNumber,
 		Sequence:      msg.Sequence,

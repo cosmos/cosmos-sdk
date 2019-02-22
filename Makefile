@@ -152,7 +152,7 @@ test_ledger:
 	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) GOCACHE=off go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)

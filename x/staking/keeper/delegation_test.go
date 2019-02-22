@@ -130,7 +130,7 @@ func TestDelegation(t *testing.T) {
 
 // tests Get/Set/Remove UnbondingDelegation
 func TestUnbondingDelegation(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
 		time.Unix(0, 0), sdk.NewInt(5))
@@ -169,7 +169,7 @@ func TestUnbondingDelegation(t *testing.T) {
 }
 
 func TestUnbondDelegation(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(10)
 	pool.NotBondedTokens = startTokens
@@ -207,7 +207,7 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(10)
 	pool.NotBondedTokens = startTokens
@@ -254,7 +254,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 // shift it from the bonded to unbonding state and jailed
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
@@ -300,7 +300,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 }
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
@@ -372,7 +372,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 }
 
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
@@ -447,7 +447,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 }
 
 func TestUnbondingAllDelegationFromValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
@@ -507,7 +507,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 
 // Make sure that that the retrieving the delegations doesn't affect the state
 func TestGetRedelegationsFromValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt(5),
@@ -531,7 +531,7 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 
 // tests Get/Set/Remove/Has UnbondingDelegation
 func TestRedelegation(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt(5),
@@ -591,7 +591,7 @@ func TestRedelegation(t *testing.T) {
 }
 
 func TestRedelegateToSameValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(30)
 	pool.NotBondedTokens = startTokens
@@ -614,7 +614,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 }
 
 func TestRedelegationMaxEntries(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
@@ -665,7 +665,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 }
 
 func TestRedelegateSelfDelegation(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(30)
 	pool.NotBondedTokens = startTokens
@@ -716,7 +716,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 }
 
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(30)
 	pool.NotBondedTokens = startTokens
@@ -795,7 +795,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 }
 
 func TestRedelegateFromUnbondedValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(30)
 	pool.NotBondedTokens = startTokens

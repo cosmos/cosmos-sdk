@@ -10,7 +10,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	expParams := types.DefaultParams()
 
 	//check that the empty keeper loads the default
@@ -25,7 +25,7 @@ func TestParams(t *testing.T) {
 }
 
 func TestPool(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	expPool := types.InitialPool()
 
 	//check that the empty keeper loads the default

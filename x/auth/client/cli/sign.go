@@ -1,13 +1,12 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -55,7 +54,7 @@ be generated via the 'multisign' command.
 		RunE: makeSignCmd(codec),
 		Args: cobra.ExactArgs(1),
 	}
-	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
+
 	cmd.Flags().String(flagMultisig, "",
 		"Address of the multisig account on behalf of which the "+
 			"transaction shall be signed")
@@ -69,7 +68,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flagOutfile, "",
 		"The document will be written to the given file instead of STDOUT")
 
-	// Add the flags here and return the command
+	// add the flags here and return the command
 	return client.PostCommands(cmd)[0]
 }
 
@@ -92,9 +91,9 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return nil
 		}
 
-		name := viper.GetString(client.FlagName)
+		name := viper.GetString(client.FlagFrom)
 		if name == "" {
-			return errors.New("required flag \"name\" has not been set")
+			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
 		// if --signature-only is on, then override --append

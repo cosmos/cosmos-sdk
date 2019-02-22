@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
@@ -37,14 +38,37 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // Generate a random amount
+// Note: The range of RandomAmount includes max, and is, in fact, biased to return max.
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
+	// return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
+	max2 := big.NewInt(0).Mul(max.BigInt(), big.NewInt(2))
+	randInt := big.NewInt(0).Rand(r, max2)
+	if randInt.Cmp(max.BigInt()) > 0 {
+		randInt = max.BigInt()
+	}
+	result := sdk.NewIntFromBigInt(randInt)
+	// Sanity
+	if result.GT(max) {
+		panic(fmt.Sprintf("%v > %v", result, max))
+	}
+	return result
 }
 
 // RandomDecAmount generates a random decimal amount
+// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max.
 func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
-	randInt := big.NewInt(0).Rand(r, max.Int)
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	// randInt := big.NewInt(0).Rand(r, max.Int)
+	max2 := big.NewInt(0).Mul(max.Int, big.NewInt(2))
+	randInt := big.NewInt(0).Rand(r, max2)
+	if randInt.Cmp(max.Int) > 0 {
+		randInt = max.Int
+	}
+	result := sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	// Sanity
+	if result.GT(max) {
+		panic(fmt.Sprintf("%v > %v", result, max))
+	}
+	return result
 }
 
 // RandomSetGenesis wraps mock.RandomSetGenesis, but using simulation accounts

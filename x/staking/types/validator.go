@@ -404,7 +404,17 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 		// the first delegation to a validator sets the exchange rate to one
 		return sdk.OneDec()
 	}
-	return v.Tokens.ToDec().Quo(v.DelegatorShares)
+
+	exRate := v.Tokens.ToDec().Quo(v.DelegatorShares)
+	if exRate.GT(sdk.OneDec()) {
+		fmt.Printf(
+			"\nvalidator: %s, totalTokens: %s, delegatorShares: %s, exRate: %s\n",
+			v.OperatorAddr, v.Tokens, v.DelegatorShares, exRate,
+		)
+		panic("delegator exchange rate exceeds 1")
+	}
+
+	return exRate
 }
 
 // get the bonded tokens which the validator holds

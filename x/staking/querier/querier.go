@@ -1,6 +1,8 @@
 package querier
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -142,7 +144,7 @@ func queryValidator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k 
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
@@ -162,7 +164,7 @@ func queryValidatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
@@ -179,7 +181,7 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	unbonds := k.GetUnbondingDelegationsFromValidator(ctx, params.ValidatorAddr)
@@ -196,7 +198,7 @@ func queryDelegatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
@@ -213,7 +215,7 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	unbondingDelegations := k.GetAllUnbondingDelegations(ctx, params.DelegatorAddr)
@@ -232,7 +234,7 @@ func queryDelegatorValidators(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakingParams.MaxValidators)
@@ -249,7 +251,7 @@ func queryDelegatorValidator(ctx sdk.Context, cdc *codec.Codec, req abci.Request
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	validator, err := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
@@ -269,7 +271,7 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	delegation, found := k.GetDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
@@ -289,7 +291,7 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
+		return []byte{}, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
 	unbond, found := k.GetUnbondingDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)

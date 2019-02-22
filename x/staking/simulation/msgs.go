@@ -204,7 +204,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			DelegatorAddress:    delegatorAddress,
 			ValidatorSrcAddress: srcValidatorAddress,
 			ValidatorDstAddress: destValidatorAddress,
-			SharesAmount:        sdk.NewDecFromInt(amount),
+			SharesAmount:        amount.ToDec(),
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())

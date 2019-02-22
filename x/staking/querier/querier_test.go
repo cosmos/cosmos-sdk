@@ -298,7 +298,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonging delegation
 	unbondingTokens := sdk.TokensFromTendermintPower(10)
-	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, sdk.NewDecFromInt(unbondingTokens))
+	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.Nil(t, err)
 
 	queryBondParams = NewQueryBondsParams(addrAcc2, addrVal1)
@@ -352,7 +352,7 @@ func TestQueryDelegation(t *testing.T) {
 	// Query redelegation
 	redelegationTokens := sdk.TokensFromTendermintPower(10)
 	_, err = keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
-		val2.OperatorAddress, sdk.NewDecFromInt(redelegationTokens))
+		val2.OperatorAddress, redelegationTokens.ToDec())
 	require.Nil(t, err)
 	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
@@ -390,7 +390,7 @@ func TestQueryRedelegations(t *testing.T) {
 	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	rdAmount := sdk.TokensFromTendermintPower(20)
-	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
+	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)

@@ -318,16 +318,17 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-
 	// stash the consensus params in the cms main store and memoize
 	if req.ConsensusParams != nil {
 		app.setConsensusParams(req.ConsensusParams)
 		app.storeConsensusParams(req.ConsensusParams)
 	}
 
-	// initialize the deliver state and check state with ChainID and run initChain
-	app.setDeliverState(abci.Header{ChainID: req.ChainId})
-	app.setCheckState(abci.Header{ChainID: req.ChainId})
+	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
+
+	// initialize the deliver state and check state with a correct header
+	app.setDeliverState(initHeader)
+	app.setCheckState(initHeader)
 
 	if app.initChainer == nil {
 		return
@@ -628,15 +629,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 	return
 }
 
-type indexedABCILog struct {
-	MsgIndex int    `json:"msg_index"`
-	Success  bool   `json:"success"`
-	Log      string `json:"log"`
-}
-
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxlogs := make([]indexedABCILog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxlogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -665,7 +660,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
-		idxLog := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
+		idxLog := sdk.ABCIMessageLog{MsgIndex: msgIdx, Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {

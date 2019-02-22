@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"math/big"
 	"math/rand"
 	"testing"
 
@@ -18,15 +17,15 @@ import (
 // BigInterval is a representation of the interval [lo, hi), where
 // lo and hi are both of type sdk.Int
 type BigInterval struct {
-	lo sdk.Int
-	hi sdk.Int
+	lo sdk.Uint
+	hi sdk.Uint
 }
 
 // RandFromBigInterval chooses an interval uniformly from the provided list of
 // BigIntervals, and then chooses an element from an interval uniformly at random.
-func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
+func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Uint {
 	if len(intervals) == 0 {
-		return sdk.ZeroInt()
+		return sdk.ZeroUint()
 	}
 
 	interval := intervals[r.Intn(len(intervals))]
@@ -35,7 +34,7 @@ func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
 	hi := interval.hi
 
 	diff := hi.Sub(lo)
-	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
+	result := sdk.NewUint(uint64(r.Intn(int(diff.Uint64()))))
 	result = result.Add(lo)
 
 	return result

@@ -213,7 +213,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
+		Amount: sdk.NewCoins(),
 		Gas:    100000,
 	}
 
@@ -289,9 +289,9 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
 	accts := make([]auth.Account, len(addrs))
 	randCoinIntervals := []BigInterval{
-		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
-		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},
-		{sdk.NewIntWithDecimal(1, 40), sdk.NewIntWithDecimal(1, 50)},
+		{sdk.NewUintWithDecimal(1, 0), sdk.NewUintWithDecimal(1, 1)},
+		{sdk.NewUintWithDecimal(1, 2), sdk.NewUintWithDecimal(1, 3)},
+		{sdk.NewUintWithDecimal(1, 40), sdk.NewUintWithDecimal(1, 50)},
 	}
 
 	for i := 0; i < len(accts); i++ {

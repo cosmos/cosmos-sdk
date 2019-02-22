@@ -72,7 +72,7 @@ func TestSetValidator(t *testing.T) {
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 1)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	// create a random pool
@@ -115,7 +115,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	maxVals := 5
 
 	// create context, keeper, and pool for tests
-	ctx, _, keeper := CreateTestInput(t, false, 1)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	// create keeper parameters

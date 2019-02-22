@@ -43,6 +43,15 @@ func NewUintFromString(s string) Uint {
 	return u
 }
 
+// NewUintWithDecimal constructs Uint with decimal
+// Result value is n*10^dec
+func NewUintWithDecimal(n uint64, dec uint64) Uint {
+	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(dec)), nil)
+	i := new(big.Int)
+	i.Mul(big.NewInt(int64(n)), exp)
+	return NewUintFromBigInt(i)
+}
+
 // ZeroUint returns unsigned zero.
 func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 

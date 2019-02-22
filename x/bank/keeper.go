@@ -228,8 +228,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 
 	// For non-vesting accounts, spendable coins will simply be the original coins.
 	// So the check here is sufficient instead of subtracting from oldCoins.
-	_, hasNeg := spendableCoins.SafeSub(amt)
-	if hasNeg {
+	if _, err := spendableCoins.SafeSub(amt); err != nil {
 		return amt, nil, sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", spendableCoins, amt),
 		)
@@ -315,8 +314,7 @@ func delegateCoins(
 
 	oldCoins := acc.GetCoins()
 
-	_, hasNeg := oldCoins.SafeSub(amt)
-	if hasNeg {
+	if _, err := oldCoins.SafeSub(amt); err != nil {
 		return nil, sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
 		)

@@ -40,10 +40,10 @@ var (
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 
-	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
-	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
-	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
+	coins     = sdk.NewCoins(sdk.NewUint64Coin("foocoin", 10))
+	halfCoins = sdk.NewCoins(sdk.NewUint64Coin("foocoin", 5))
+	manyCoins = sdk.NewCoins(sdk.NewUint64Coin("foocoin", 1), sdk.NewUint64Coin("barcoin", 1))
+	freeFee   = auth.NewStdFee(100000, sdk.NewCoins())
 
 	sendMsg1 = NewMsgSend(addr1, addr2, coins)
 
@@ -108,7 +108,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 67)},
 	}
 
 	mock.SetGenesis(mapp, []auth.Account{acc})
@@ -128,8 +128,8 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			expPass:    true,
 			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 57)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewUint64Coin("foocoin", 57)}},
+				{addr2, sdk.Coins{sdk.NewUint64Coin("foocoin", 10)}},
 			},
 		},
 		{
@@ -156,11 +156,11 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 	acc2 := &auth.BaseAccount{
 		Address: addr2,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 
 	mock.SetGenesis(mapp, []auth.Account{acc1, acc2})
@@ -174,9 +174,9 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 			expPass:    true,
 			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
-				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
+				{addr1, sdk.Coins{sdk.NewUint64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewUint64Coin("foocoin", 47)}},
+				{addr3, sdk.Coins{sdk.NewUint64Coin("foocoin", 5)}},
 			},
 		},
 	}
@@ -195,15 +195,15 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 	acc2 := &auth.BaseAccount{
 		Address: addr2,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 	acc4 := &auth.BaseAccount{
 		Address: addr4,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 
 	mock.SetGenesis(mapp, []auth.Account{acc1, acc2, acc4})
@@ -217,10 +217,10 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 			expPass:    true,
 			privKeys:   []crypto.PrivKey{priv1, priv4},
 			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 52)}},
-				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewUint64Coin("foocoin", 32)}},
+				{addr4, sdk.Coins{sdk.NewUint64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewUint64Coin("foocoin", 52)}},
+				{addr3, sdk.Coins{sdk.NewUint64Coin("foocoin", 10)}},
 			},
 		},
 	}
@@ -239,7 +239,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
+		Coins:   sdk.Coins{sdk.NewUint64Coin("foocoin", 42)},
 	}
 
 	mock.SetGenesis(mapp, []auth.Account{acc1})
@@ -253,8 +253,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 			expPass:    true,
 			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewUint64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewUint64Coin("foocoin", 10)}},
 			},
 		},
 		{
@@ -265,7 +265,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 			expPass:    true,
 			privKeys:   []crypto.PrivKey{priv2},
 			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+				{addr1, sdk.Coins{sdk.NewUint64Coin("foocoin", 42)}},
 			},
 		},
 	}

@@ -340,11 +340,9 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
-          docker build -t tendermint/gaiad:$CIRCLE_TAG --file ./Dockerfile.gaiad .
-          docker build -t tendermint/gaiacli:$CIRCLE_TAG --file ./Dockerfile.gaiacli .
+          docker build -t tendermint/gaia:$CIRCLE_TAG .
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaiad:$CIRCLE_TAG
-          docker push tendermint/gaiacli:$CIRCLE_TAG
+          docker push tendermint/gaia:$CIRCLE_TAG
 
 workflows:
   version: 2

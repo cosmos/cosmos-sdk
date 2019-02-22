@@ -74,8 +74,9 @@ func MakeTestCodec() *codec.Codec {
 	return cdc
 }
 
-// hogpodge of all sorts of input required for testing
-// init power is converted to an amount of tokens
+// Hogpodge of all sorts of input required for testing.
+// `initPower` is converted to an amount of tokens.
+// If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
 	initCoins := sdk.TokensFromTendermintPower(initPower)

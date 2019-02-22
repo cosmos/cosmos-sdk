@@ -71,7 +71,7 @@ func createSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := randPositiveUint(r, initFromCoins[denomIndex].Amount)
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, true
 	}
@@ -188,7 +188,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := randPositiveUint(r, initFromCoins[denomIndex].Amount)
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, true
 	}
@@ -262,10 +262,10 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, 
 	return nil
 }
 
-func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GT(sdk.OneInt()) {
-		return sdk.Int{}, errors.New("max too small")
+func randPositiveUint(r *rand.Rand, max sdk.Uint) (sdk.Uint, error) {
+	if !max.GT(sdk.OneUint()) {
+		return sdk.Uint{}, errors.New("max too small")
 	}
-	max = max.Sub(sdk.OneInt())
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
+	max = max.Sub(sdk.OneUint())
+	return sdk.NewUintFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneUint()), nil
 }

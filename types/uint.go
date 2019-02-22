@@ -67,6 +67,9 @@ func (u Uint) Uint64() uint64 {
 	return u.i.Uint64()
 }
 
+// BigInt returns the internal big.Int.
+func (u Uint) BigInt() *big.Int { return u.i }
+
 // IsZero returns 1 if the uint equals to 0.
 func (u Uint) IsZero() bool { return u.Equal(ZeroUint()) }
 

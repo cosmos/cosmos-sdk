@@ -14,8 +14,8 @@ func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 		accts := ak.GetAllAccounts(ctx)
 		for _, acc := range accts {
 			coins := acc.GetCoins()
-			if coins.IsAnyNegative() {
-				return fmt.Errorf("%s has a negative denomination of %s",
+			if !coins.IsValid() {
+				return fmt.Errorf("%s has invalid coins: %s",
 					acc.GetAddress().String(),
 					coins.String())
 			}

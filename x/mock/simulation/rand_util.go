@@ -37,8 +37,8 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // Generate a random amount
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
+func RandomAmount(r *rand.Rand, max sdk.Uint) sdk.Uint {
+	return sdk.NewUint(uint64(r.Intn(int(max.Uint64()))))
 }
 
 // RandomDecAmount generates a random decimal amount

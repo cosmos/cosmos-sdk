@@ -27,6 +27,11 @@ func AllInvariants(k staking.Keeper,
 			return err
 		}
 
+		err = LessThanOrEqualToOneExchangeRateInvariant(k)(ctx)
+		if err != nil {
+			return err
+		}
+
 		err = PositiveDelegationInvariant(k)(ctx)
 		if err != nil {
 			return err
@@ -103,6 +108,7 @@ func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 
+		defer iterator.Close()
 		for ; iterator.Valid(); iterator.Next() {
 			validator, found := k.GetValidator(ctx, iterator.Value())
 			if !found {
@@ -121,7 +127,25 @@ func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
 				return fmt.Errorf("negative tokens for validator: %v", validator)
 			}
 		}
-		iterator.Close()
+		return nil
+	}
+}
+
+// LessThanOrEqualToOneExchangeRateInvariant checks that all stored validators have <= 1 tokens/share rate
+func LessThanOrEqualToOneExchangeRateInvariant(k staking.Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+		iterator := k.ValidatorsPowerStoreIterator(ctx)
+
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			validator, found := k.GetValidator(ctx, iterator.Value())
+			if !found {
+				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
+			}
+			if validator.DelegatorShareExRate().GT(sdk.OneDec()) {
+				return fmt.Errorf("exchange rate for validator greater than one: %v", validator)
+			}
+		}
 		return nil
 	}
 }

@@ -39,6 +39,9 @@
 
 ### Gaia REST API
 
+* Update the `TxResponse` type allowing for the `Logs` result to be JSON
+decoded automatically.
+
 ### Gaia CLI
 
 ### Gaia

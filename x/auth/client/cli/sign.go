@@ -91,8 +91,8 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return nil
 		}
 
-		name := viper.GetString(client.FlagFrom)
-		if name == "" {
+		from := viper.GetString(client.FlagFrom)
+		if from == "" {
 			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
@@ -103,19 +103,21 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
+
 			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
 			if err != nil {
 				return err
 			}
 
 			newTx, err = utils.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, name, stdTx, offline)
+				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, offline,
+			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = utils.SignStdTx(
-				txBldr, cliCtx, name, stdTx, appendSig, offline)
+			newTx, err = utils.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
 		}
+
 		if err != nil {
 			return err
 		}
@@ -127,13 +129,16 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx.Signatures[0])
 			}
+
 		default:
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx)
 			}

@@ -176,7 +176,6 @@ func (coins Coins) String() string {
 // IsValid asserts the Coins are sorted, have positive amount,
 // and Denom does not contain upper case characters.
 func (coins Coins) IsValid() bool {
-	coins = removeZeroCoins(coins)
 	switch len(coins) {
 	case 0:
 		return true
@@ -471,7 +470,6 @@ func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 
 // IsZero returns true if there are no coins or all coins are zero.
 func (coins Coins) IsZero() bool {
-	coins = removeZeroCoins(coins)
 	if len(coins) == 0 {
 		return true
 	}

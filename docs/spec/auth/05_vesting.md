@@ -251,10 +251,12 @@ func DelegateCoins(t Time, from Account, amount Coins) {
 ### Undelegating
 
 For a vesting account attempting to undelegate `D` coins, the following is performed:
+NOTE: `DV < D` and `(DV + DF) < D` may be possible due to quirks in the rounding of
+delegation/undelegation logic.
 
-1. Verify `(DV + DF) >= D > 0` (this is simply a sanity check)
+1. Verify `D > 0`
 2. Compute `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
-3. Compute `Y := D - X` (portion of `D` that should remain vesting)
+3. Compute `Y := min(DV, D - X)` (portion of `D` that should remain vesting)
 4. Set `DF -= X`
 5. Set `DV -= Y`
 6. Set `BC += D`

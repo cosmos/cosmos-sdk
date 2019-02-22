@@ -59,7 +59,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	inflationRateChangePerYear := sdk.OneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(params.BlocksPerYear))
 
 	// increase the new annual inflation for this next cycle
 	inflation = m.Inflation.Add(inflationRateChange)
@@ -74,14 +74,14 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 }
 
 // calculate the annual provisions based on current total supply and inflation rate
-func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Int) (
+func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Uint) (
 	provisions sdk.Dec) {
 
-	return m.Inflation.MulInt(totalSupply)
+	return m.Inflation.MulUint(totalSupply)
 }
 
 // get the provisions for a block based on the annual provisions rate
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
-	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+	provisionAmt := m.AnnualProvisions.QuoUint(sdk.NewUint(params.BlocksPerYear))
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateUint())
 }

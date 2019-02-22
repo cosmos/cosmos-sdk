@@ -6,9 +6,9 @@ import (
 
 // expected staking keeper
 type StakingKeeper interface {
-	TotalTokens(ctx sdk.Context) sdk.Int
+	TotalTokens(ctx sdk.Context) sdk.Uint
 	BondedRatio(ctx sdk.Context) sdk.Dec
-	InflateSupply(ctx sdk.Context, newTokens sdk.Int)
+	InflateSupply(ctx sdk.Context, newTokens sdk.Uint)
 }
 
 // expected fee collection keeper interface

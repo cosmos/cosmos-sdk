@@ -12,7 +12,7 @@ import (
 func TestNextInflation(t *testing.T) {
 	minter := DefaultInitialMinter()
 	params := DefaultParams()
-	blocksPerYr := sdk.NewDec(int64(params.BlocksPerYear))
+	blocksPerYr := sdk.NewDec(params.BlocksPerYear)
 
 	// Governing Mechanism:
 	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
@@ -34,7 +34,6 @@ func TestNextInflation(t *testing.T) {
 
 		// test 7% minimum stop (testing with 100% bonded)
 		{sdk.OneDec(), sdk.NewDecWithPrec(7, 2), sdk.ZeroDec()},
-		{sdk.OneDec(), sdk.NewDecWithPrec(700000001, 10), sdk.NewDecWithPrec(-1, 10)},
 
 		// test 20% maximum stop (testing with 0% bonded)
 		{sdk.ZeroDec(), sdk.NewDecWithPrec(20, 2), sdk.ZeroDec()},
@@ -58,11 +57,11 @@ func TestBlockProvision(t *testing.T) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 
-	secondsPerYear := int64(60 * 60 * 8766)
+	secondsPerYear := uint64(60 * 60 * 8766)
 
 	tests := []struct {
-		annualProvisions int64
-		expProvisions    int64
+		annualProvisions uint64
+		expProvisions    uint64
 	}{
 		{secondsPerYear / 5, 1},
 		{secondsPerYear/5 + 1, 1},
@@ -74,7 +73,7 @@ func TestBlockProvision(t *testing.T) {
 		provisions := minter.BlockProvision(params)
 
 		expProvisions := sdk.NewCoin(params.MintDenom,
-			sdk.NewInt(tc.expProvisions))
+			sdk.NewUint(tc.expProvisions))
 
 		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
@@ -94,7 +93,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
-	minter.AnnualProvisions = sdk.NewDec(r1.Int63n(1000000))
+	minter.AnnualProvisions = sdk.NewDec(uint64(r1.Int63n(1000000)))
 
 	// run the BlockProvision function b.N times
 	for n := 0; n < b.N; n++ {
@@ -121,7 +120,7 @@ func BenchmarkNextInflation(b *testing.B) {
 func BenchmarkNextAnnualProvisions(b *testing.B) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
-	totalSupply := sdk.NewInt(100000000000000)
+	totalSupply := sdk.NewUint(100000000000000)
 
 	// run the NextAnnualProvisions function b.N times
 	for n := 0; n < b.N; n++ {

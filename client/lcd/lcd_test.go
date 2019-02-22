@@ -548,7 +548,7 @@ func TestBonding(t *testing.T) {
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	// due to occasional/unexpected slashing within this test, the exchange rate may fluctuate
-	validator = getValidator(t, port, operAddrs[0])
+	validator = getValidator(t, port, delegatorDels[0].ValidatorAddr)
 	delTokensAfterRedelegation := delegatorDels[0].GetShares().Mul(validator.DelegatorShareExRate())
 	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 

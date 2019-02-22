@@ -46,6 +46,7 @@
 ### SDK
 
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins's Int -> Uint migration.
+* [\#3694] Push tagged docker images on docker hub when tag is created.
 
 ### Tendermint
 

@@ -44,6 +44,9 @@ decoded automatically.
 
 ### Gaia CLI
 
+* [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
+CLI flag.
+
 ### Gaia
 
 ### SDK

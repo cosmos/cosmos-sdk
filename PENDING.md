@@ -72,4 +72,9 @@ decoded automatically.
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
 
+* Update the vesting specification and implementation to cap deduction from
+`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
+the undelegation amount may exceed the original delegation amount due to
+truncation of undelegation tokens.
+
 ### Tendermint

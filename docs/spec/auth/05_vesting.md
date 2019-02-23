@@ -276,6 +276,10 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 with an excess `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized.
 
+**Note**: The undelegation (bond refund) amount may exceed the delegated
+vesting (bond) amount due to the way undelegation truncates the bond refund,
+which increases the validator's exchange rate (tokens/shares) slightly.
+
 #### Keepers/Handlers
 
 ```go

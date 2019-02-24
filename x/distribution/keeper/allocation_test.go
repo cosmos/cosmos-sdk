@@ -41,31 +41,42 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 }
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
-	ctx, _, k, sk, fck := CreateTestInputDefault(t, false, 1000)
+	communityTax := sdk.NewDec(0)
+	ctx, _, k, sk, fck := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// initialize state
 	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
+	require.True(t, sh(ctx, msg).IsOK())
+
+	// create second validator with 0% commission
+	commission = staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// create second validator with 0% commission
-	commission = staking.NewCommissionMsg(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
+	commission = staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg = staking.NewMsgCreateValidator(valOpAddr3, valConsPk3,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
-		Power:   100,
+		Power:   11,
 	}
 	abciValB := abci.Validator{
 		Address: valConsPk2.Address(),
-		Power:   100,
+		Power:   10,
+	}
+	abciValС := abci.Validator{
+		Address: valConsPk3.Address(),
+		Power:   10,
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
@@ -78,7 +89,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.Coins{
-		{sdk.DefaultBondDenom, sdk.NewInt(100)},
+		{sdk.DefaultBondDenom, sdk.NewInt(634195840)},
 	}
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{
@@ -90,8 +101,12 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 			Validator:       abciValB,
 			SignedLastBlock: true,
 		},
+		{
+			Validator:       abciValС,
+			SignedLastBlock: true,
+		},
 	}
-	k.AllocateTokens(ctx, 200, 200, valConsAddr2, votes)
+	k.AllocateTokens(ctx, 31, 31, valConsAddr2, votes)
 
 	// 98 outstanding rewards (100 less 2 to community pool)
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(98)}}, k.GetOutstandingRewards(ctx))

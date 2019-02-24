@@ -35,9 +35,17 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	proposerReward := feesCollected.MulDec(proposerMultiplier)
 
 	// pay proposer
+	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-	remaining := feesCollected.Sub(proposerReward)
+	if proposerValidator != nil {
+		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
+		remaining = feesCollected.Sub(proposerReward)
+	} else {
+		// proposer can be unknown if say, the unbonding period is 1 block, so
+		// e.g. a validator undelegates at block X, it's removed entirely by
+		// block X+1's endblock, then X+2 we need to refer to the previous
+		// proposer for X+1, but we've forgotten about them.
+	}
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)

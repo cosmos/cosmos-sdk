@@ -415,7 +415,7 @@ func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
 	return chopPrecisionAndRound(tmp)
 }
 
-// RoundInt64 rounds the decimal using bankers rounding
+// RoundUint64 rounds the decimal using bankers rounding
 func (d Dec) RoundUint64() uint64 {
 	chopped := chopPrecisionAndRoundNonMutative(d.Int)
 	if !chopped.IsUint64() {
@@ -424,7 +424,7 @@ func (d Dec) RoundUint64() uint64 {
 	return chopped.Uint64()
 }
 
-// RoundInt round the decimal using bankers rounding
+// RoundUint round the decimal using bankers rounding
 func (d Dec) RoundUint() Uint {
 	return NewUintFromBigInt(chopPrecisionAndRoundNonMutative(d.Int))
 }

@@ -48,7 +48,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
+	gotBond := bond.Shares.RoundUint()
 	require.Equal(t, initBond, gotBond)
 
 	// verify that the by power index exists
@@ -232,7 +232,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundUint())
 	require.Equal(t, bondAmount, validator.BondedTokens())
 
 	// delegate tokens to the validator
@@ -243,7 +243,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundUint())
 	require.Equal(t, bondAmount.MulRaw(2), validator.BondedTokens())
 
 	// unbond validator total self-delegations (which should jail the validator)
@@ -267,8 +267,8 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify delegation still exists
 	bond, found := keeper.GetDelegation(ctx, delAddr, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount, bond.Shares.RoundInt())
-	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount, bond.Shares.RoundUint())
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundUint())
 
 	// verify the validator can still self-delegate
 	msgSelfDelegate := NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
@@ -278,7 +278,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundUint())
 	require.Equal(t, bondAmount.MulRaw(2), validator.Tokens)
 
 	// unjail the validator now that is has non-zero self-delegated shares
@@ -292,14 +292,14 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundUint())
 	require.Equal(t, bondAmount.MulRaw(3), validator.Tokens)
 
 	// verify new delegation
 	bond, found = keeper.GetDelegation(ctx, delAddr, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), bond.Shares.RoundInt())
-	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount.MulRaw(2), bond.Shares.RoundUint())
+	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundUint())
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
@@ -322,7 +322,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundUint())
 	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -330,7 +330,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount, bond.Shares.RoundInt())
+	require.Equal(t, bondAmount, bond.Shares.RoundUint())
 
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate()
@@ -359,8 +359,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		expDelegatorShares := bondAmount.MulRaw(i + 2) // (1 self delegation)
 		expDelegatorAcc := initBond.Sub(expBond)
 
-		gotBond := bond.Shares.RoundInt()
-		gotDelegatorShares := validator.DelegatorShares.RoundInt()
+		gotBond := bond.Shares.RoundUint()
+		gotDelegatorShares := validator.DelegatorShares.RoundUint()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -396,7 +396,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
+	gotBond := bond.Shares.RoundUint()
 	require.Equal(t, initBond, gotBond,
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
@@ -428,7 +428,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
+	gotBond := bond.Shares.RoundUint()
 	require.Equal(t, initBond, gotBond,
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
@@ -469,7 +469,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, initBond.MulRaw(2), validator.DelegatorShares.RoundInt())
+	require.Equal(t, initBond.MulRaw(2), validator.DelegatorShares.RoundUint())
 	require.Equal(t, initBond.MulRaw(2), validator.BondedTokens())
 
 	// just send the same msgUnbond multiple times
@@ -492,12 +492,12 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
 
-		expBond := initBond.Sub(unbondShares.MulInt64(i + 1).RoundInt())
-		expDelegatorShares := (initBond.MulRaw(2)).Sub(unbondShares.MulInt64(i + 1).RoundInt())
+		expBond := initBond.Sub(unbondShares.MulInt64(i + 1).RoundUint())
+		expDelegatorShares := (initBond.MulRaw(2)).Sub(unbondShares.MulInt64(i + 1).RoundUint())
 		expDelegatorAcc := initBond.Sub(expBond)
 
-		gotBond := bond.Shares.RoundInt()
-		gotDelegatorShares := validator.DelegatorShares.RoundInt()
+		gotBond := bond.Shares.RoundUint()
+		gotDelegatorShares := validator.DelegatorShares.RoundUint()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -526,7 +526,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.False(t, got.IsOK(), "expected unbond msg to fail, index: %v", i)
 	}
 
-	leftBonded := initBond.Sub(unbondShares.MulInt64(numUnbonds).RoundInt())
+	leftBonded := initBond.Sub(unbondShares.MulInt64(numUnbonds).RoundUint())
 
 	// should be unable to unbond one more than we have
 	unbondShares = sdk.NewDecFromInt(leftBonded.AddRaw(1))
@@ -575,7 +575,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		balanceExpd := initTokens.Sub(valTokens)
 		balanceGot := accMapper.GetAccount(ctx, delegatorAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
-		require.Equal(t, valTokens, val.DelegatorShares.RoundInt(), "expected %d shares, got %d", 10, val.DelegatorShares)
+		require.Equal(t, valTokens, val.DelegatorShares.RoundUint(), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 

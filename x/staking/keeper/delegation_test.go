@@ -177,7 +177,7 @@ func TestUnbondDelegation(t *testing.T) {
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, startTokens)
-	require.Equal(t, startTokens, issuedShares.RoundInt())
+	require.Equal(t, startTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 
@@ -200,7 +200,7 @@ func TestUnbondDelegation(t *testing.T) {
 	pool = keeper.GetPool(ctx)
 
 	remainingTokens := startTokens.Sub(bondTokens)
-	require.Equal(t, remainingTokens, delegation.Shares.RoundInt())
+	require.Equal(t, remainingTokens, delegation.Shares.RoundUint())
 	require.Equal(t, remainingTokens, validator.BondedTokens())
 	require.Equal(t, bondTokens, pool.NotBondedTokens, "%v", pool)
 	require.Equal(t, remainingTokens, pool.BondedTokens)
@@ -215,7 +215,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	// create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, startTokens)
-	require.Equal(t, startTokens, issuedShares.RoundInt())
+	require.Equal(t, startTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 
@@ -265,7 +265,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator.MinSelfDelegation = valTokens
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
@@ -277,7 +277,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -310,7 +310,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -321,7 +321,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -382,7 +382,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -394,7 +394,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -457,7 +457,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -469,7 +469,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -600,7 +600,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -623,7 +623,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -634,7 +634,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	// create a second validator
 	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	pool.BondedTokens = pool.BondedTokens.Add(valTokens)
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
@@ -674,7 +674,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -685,7 +685,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	// create a second validator
 	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	pool.BondedTokens = pool.BondedTokens.Add(valTokens)
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
@@ -694,7 +694,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	// create a second delegation to validator 1
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -726,7 +726,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -738,7 +738,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -748,7 +748,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	// create a second validator
 	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
 
@@ -805,7 +805,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	valTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -817,7 +817,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	delTokens := sdk.TokensFromTendermintPower(10)
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
+	require.Equal(t, delTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -827,7 +827,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	// create a second validator
 	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
+	require.Equal(t, valTokens, issuedShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
 	require.Equal(t, sdk.Bonded, validator2.Status)

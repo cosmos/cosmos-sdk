@@ -29,7 +29,7 @@ func TestSetValidator(t *testing.T) {
 	validator, pool, _ = validator.AddTokensFromDel(pool, valTokens)
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
-	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
+	assert.Equal(t, valTokens, validator.DelegatorShares.RoundUint())
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator)
@@ -44,7 +44,7 @@ func TestSetValidator(t *testing.T) {
 	// after the save the validator should be bonded
 	require.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
-	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
+	assert.Equal(t, valTokens, validator.DelegatorShares.RoundUint())
 
 	// Check each store for being saved
 	resVal, found := keeper.GetValidator(ctx, valAddr)

@@ -55,7 +55,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		packet := ibc.NewIBCPacket(from, to, req.Amount, req.BaseReq.ChainID, destChainID)
-		msg := ibc.IBCTransferMsg{IBCPacket: packet}
+		msg := ibc.MsgIBCTransfer{IBCPacket: packet}
 
 		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}

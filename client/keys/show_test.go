@@ -79,6 +79,21 @@ func Test_runShowCmd(t *testing.T) {
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
 
+	// Now try multisig key - set bech to acc + threshold=2
+	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagDevice, true)
+	viper.Set(flagMultiSigThreshold, 2)
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
+
+	viper.Set(FlagBechPrefix, "val")
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
+
+	viper.Set(FlagPublicKey, true)
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
+
 	// TODO: Capture stdout and compare
 }
 

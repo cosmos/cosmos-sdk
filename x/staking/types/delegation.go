@@ -14,26 +14,26 @@ import (
 // It is intended to be used as a marshalable pointer. For example, a DVPair can be used to construct the
 // key to getting an UnbondingDelegation from state.
 type DVPair struct {
-	DelegatorAddr sdk.AccAddress
-	ValidatorAddr sdk.ValAddress
+	DelegatorAddress sdk.AccAddress
+	ValidatorAddress sdk.ValAddress
 }
 
 // DVVTriplet is struct that just has a delegator-validator-validator triplet with no other data.
 // It is intended to be used as a marshalable pointer. For example, a DVVTriplet can be used to construct the
 // key to getting a Redelegation from state.
 type DVVTriplet struct {
-	DelegatorAddr    sdk.AccAddress
-	ValidatorSrcAddr sdk.ValAddress
-	ValidatorDstAddr sdk.ValAddress
+	DelegatorAddress    sdk.AccAddress
+	ValidatorSrcAddress sdk.ValAddress
+	ValidatorDstAddress sdk.ValAddress
 }
 
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one
 // validator.
 type Delegation struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-	Shares        sdk.Dec        `json:"shares"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	Shares           sdk.Dec        `json:"shares"`
 }
 
 // NewDelegation creates a new delegation object
@@ -41,9 +41,9 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	shares sdk.Dec) Delegation {
 
 	return Delegation{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		Shares:        shares,
+		DelegatorAddress: delegatorAddr,
+		ValidatorAddress: validatorAddr,
+		Shares:           shares,
 	}
 }
 
@@ -69,8 +69,8 @@ func UnmarshalDelegation(cdc *codec.Codec, value []byte) (delegation Delegation,
 
 // nolint
 func (d Delegation) Equal(d2 Delegation) bool {
-	return bytes.Equal(d.DelegatorAddr, d2.DelegatorAddr) &&
-		bytes.Equal(d.ValidatorAddr, d2.ValidatorAddr) &&
+	return bytes.Equal(d.DelegatorAddress, d2.DelegatorAddress) &&
+		bytes.Equal(d.ValidatorAddress, d2.ValidatorAddress) &&
 		d.Shares.Equal(d2.Shares)
 }
 
@@ -78,8 +78,8 @@ func (d Delegation) Equal(d2 Delegation) bool {
 var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
-func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddr }
-func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddr }
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
+func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
 func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
 
 // String returns a human readable string representation of a Delegation.
@@ -87,8 +87,8 @@ func (d Delegation) String() string {
 	return fmt.Sprintf(`Delegation:
   Delegator: %s
   Validator: %s
-  Shares:    %s`, d.DelegatorAddr,
-		d.ValidatorAddr, d.Shares)
+  Shares:    %s`, d.DelegatorAddress,
+		d.ValidatorAddress, d.Shares)
 }
 
 // Delegations is a collection of delegations
@@ -104,9 +104,9 @@ func (d Delegations) String() (out string) {
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
 // for a single validator in an time-ordered list
 type UnbondingDelegation struct {
-	DelegatorAddr sdk.AccAddress             `json:"delegator_addr"` // delegator
-	ValidatorAddr sdk.ValAddress             `json:"validator_addr"` // validator unbonding from operator addr
-	Entries       []UnbondingDelegationEntry `json:"entries"`        // unbonding delegation entries
+	DelegatorAddress sdk.AccAddress             `json:"delegator_address"` // delegator
+	ValidatorAddress sdk.ValAddress             `json:"validator_address"` // validator unbonding from operator addr
+	Entries          []UnbondingDelegationEntry `json:"entries"`           // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry - entry to an UnbondingDelegation
@@ -129,9 +129,9 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
 	return UnbondingDelegation{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		Entries:       []UnbondingDelegationEntry{entry},
+		DelegatorAddress: delegatorAddr,
+		ValidatorAddress: validatorAddr,
+		Entries:          []UnbondingDelegationEntry{entry},
 	}
 }
 
@@ -193,7 +193,7 @@ func (d UnbondingDelegation) String() string {
 	out := fmt.Sprintf(`Unbonding Delegations between:
   Delegator:                 %s
   Validator:                 %s
-	Entries:`, d.DelegatorAddr, d.ValidatorAddr)
+	Entries:`, d.DelegatorAddress, d.ValidatorAddress)
 	for i, entry := range d.Entries {
 		out += fmt.Sprintf(`    Unbonding Delegation %d:
       Creation Height:           %v
@@ -218,10 +218,10 @@ func (ubds UnbondingDelegations) String() (out string) {
 // redelegating bonds from a particular source validator to a
 // particular destination validator
 type Redelegation struct {
-	DelegatorAddr    sdk.AccAddress      `json:"delegator_addr"`     // delegator
-	ValidatorSrcAddr sdk.ValAddress      `json:"validator_src_addr"` // validator redelegation source operator addr
-	ValidatorDstAddr sdk.ValAddress      `json:"validator_dst_addr"` // validator redelegation destination operator addr
-	Entries          []RedelegationEntry `json:"entries"`            // redelegation entries
+	DelegatorAddress    sdk.AccAddress      `json:"delegator_address"`     // delegator
+	ValidatorSrcAddress sdk.ValAddress      `json:"validator_src_address"` // validator redelegation source operator addr
+	ValidatorDstAddress sdk.ValAddress      `json:"validator_dst_address"` // validator redelegation destination operator addr
+	Entries             []RedelegationEntry `json:"entries"`               // redelegation entries
 }
 
 // RedelegationEntry - entry to a Redelegation
@@ -242,10 +242,10 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 		minTime, balance, sharesDst)
 
 	return Redelegation{
-		DelegatorAddr:    delegatorAddr,
-		ValidatorSrcAddr: validatorSrcAddr,
-		ValidatorDstAddr: validatorDstAddr,
-		Entries:          []RedelegationEntry{entry},
+		DelegatorAddress:    delegatorAddr,
+		ValidatorSrcAddress: validatorSrcAddr,
+		ValidatorDstAddress: validatorDstAddr,
+		Entries:             []RedelegationEntry{entry},
 	}
 }
 
@@ -315,7 +315,7 @@ func (d Redelegation) String() string {
   Delegator:                 %s
   Source Validator:          %s
   Destination Validator:     %s
-  Entries:`, d.DelegatorAddr, d.ValidatorSrcAddr, d.ValidatorDstAddr)
+  Entries:`, d.DelegatorAddress, d.ValidatorSrcAddress, d.ValidatorDstAddress)
 	for i, entry := range d.Entries {
 		out += fmt.Sprintf(`    Redelegation %d:
       Creation height:           %v

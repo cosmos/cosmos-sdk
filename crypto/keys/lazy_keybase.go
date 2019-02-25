@@ -208,7 +208,7 @@ func (lkb lazyKeybase) newGoLevelDB() (*dbm.GoLevelDB, error) {
 // path and all of its contents. An error is returned if walking the directory
 // path fails or any chmod call fails.
 func chmodR(path string, mode os.FileMode) error {
-	return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
+	return filepath.Walk(path, func(name string, _ os.FileInfo, err error) error {
 		if err == nil {
 			err = os.Chmod(name, mode)
 		}

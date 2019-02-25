@@ -1,10 +1,12 @@
 package keys
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -20,6 +22,10 @@ type lazyKeybase struct {
 
 // New creates a new instance of a lazy keybase.
 func New(name, dir string) Keybase {
+	if err := cmn.EnsureDir(dir, 0700); err != nil {
+		panic(fmt.Sprintf("failed to create Keybase directory: %s", err))
+	}
+
 	return lazyKeybase{name: name, dir: dir}
 }
 
@@ -196,10 +202,10 @@ func (lkb lazyKeybase) newGoLevelDB() (*dbm.GoLevelDB, error) {
 		return nil, err
 	}
 
-	if err := chmodR(lkb.dir, 0700); err != nil {
-		db.Close()
-		return nil, err
-	}
+	// if err := chmodR(lkb.dir, 0700); err != nil {
+	// 	db.Close()
+	// 	return nil, err
+	// }
 
 	return db, nil
 }

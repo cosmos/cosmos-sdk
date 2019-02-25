@@ -24,7 +24,7 @@ var (
 type MsgCreateValidator struct {
 	Description       Description    `json:"description"`
 	Commission        CommissionMsg  `json:"commission"`
-	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
+	MinSelfDelegation sdk.Uint       `json:"min_self_delegation"`
 	DelegatorAddr     sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr     sdk.ValAddress `json:"validator_address"`
 	PubKey            crypto.PubKey  `json:"pubkey"`
@@ -34,7 +34,7 @@ type MsgCreateValidator struct {
 type msgCreateValidatorJSON struct {
 	Description       Description    `json:"description"`
 	Commission        CommissionMsg  `json:"commission"`
-	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
+	MinSelfDelegation sdk.Uint       `json:"min_self_delegation"`
 	DelegatorAddr     sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr     sdk.ValAddress `json:"validator_address"`
 	PubKey            string         `json:"pubkey"`
@@ -43,7 +43,8 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description, commission CommissionMsg,
+	minSelfDelegation sdk.Uint) MsgCreateValidator {
 
 	return NewMsgCreateValidatorOnBehalfOf(
 		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission, minSelfDelegation,
@@ -52,7 +53,9 @@ func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
 
 // Creates validator msg by delegator address on behalf of validator address
 func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
+	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg,
+	minSelfDelegation sdk.Uint) MsgCreateValidator {
+
 	return MsgCreateValidator{
 		Description:       description,
 		DelegatorAddr:     delAddr,
@@ -129,7 +132,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Value.Amount.LTE(sdk.ZeroUint()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
@@ -138,7 +141,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Commission == (CommissionMsg{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
 	}
-	if !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if !msg.MinSelfDelegation.GT(sdk.ZeroUint()) {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
@@ -158,11 +161,13 @@ type MsgEditValidator struct {
 	// distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate    *sdk.Dec `json:"commission_rate"`
-	MinSelfDelegation *sdk.Int `json:"min_self_delegation"`
+	CommissionRate    *sdk.Dec  `json:"commission_rate"`
+	MinSelfDelegation *sdk.Uint `json:"min_self_delegation"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec,
+	newMinSelfDelegation *sdk.Uint) MsgEditValidator {
+
 	return MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
@@ -194,7 +199,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 
-	if msg.MinSelfDelegation != nil && !(*msg.MinSelfDelegation).GT(sdk.ZeroInt()) {
+	if msg.MinSelfDelegation != nil && !(*msg.MinSelfDelegation).GT(sdk.ZeroUint()) {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 
@@ -243,7 +248,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Value.Amount.LTE(sdk.ZeroUint()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

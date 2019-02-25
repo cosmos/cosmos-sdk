@@ -21,7 +21,7 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power uint64, slashFactor sdk.Dec) {
 	logger := ctx.Logger().With("module", "x/staking")
 
 	if slashFactor.LT(sdk.ZeroDec()) {
@@ -30,8 +30,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := sdk.TokensFromTendermintPower(power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
-	slashAmount := slashAmountDec.TruncateInt()
+	slashAmountDec := sdk.NewDecFromUint(amount).Mul(slashFactor)
+	slashAmount := slashAmountDec.TruncateUint()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 
@@ -58,8 +58,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	k.BeforeValidatorModified(ctx, operatorAddress)
 
 	// we need to calculate the *effective* slash fraction for distribution
-	if validator.Tokens.GT(sdk.ZeroInt()) {
-		effectiveFraction := slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens))
+	if validator.Tokens.GT(sdk.ZeroUint()) {
+		effectiveFraction := slashAmountDec.Quo(sdk.NewDecFromUint(validator.Tokens))
 		// possible if power has changed
 		if effectiveFraction.GT(sdk.OneDec()) {
 			effectiveFraction = sdk.OneDec()
@@ -93,7 +93,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
-			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
+			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, uint64(infractionHeight), slashFactor)
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -103,7 +103,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		// Iterate through redelegations from slashed validator
 		redelegations := k.GetRedelegationsFromValidator(ctx, operatorAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
+			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, uint64(infractionHeight), slashFactor)
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -112,8 +112,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
-	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
+	tokensToBurn := sdk.MinUint(remainingSlashAmount, validator.Tokens)
+	tokensToBurn = sdk.MaxUint(tokensToBurn, sdk.ZeroUint()) // defensive.
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// The deducted tokens are returned to pool.NotBondedTokens.
@@ -159,16 +159,16 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
+	infractionHeight uint64, slashFactor sdk.Dec) (totalSlashAmount sdk.Uint) {
 
 	now := ctx.BlockHeader().Time
-	totalSlashAmount = sdk.ZeroInt()
+	totalSlashAmount = sdk.ZeroUint()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
 
 		// If unbonding started before this height, stake didn't contribute to infraction
-		if entry.CreationHeight < infractionHeight {
+		if entry.CreationHeight < int64(infractionHeight) {
 			continue
 		}
 
@@ -178,15 +178,15 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		}
 
 		// Calculate slash amount proportional to stake contributing to infraction
-		slashAmountDec := slashFactor.MulInt(entry.InitialBalance)
-		slashAmount := slashAmountDec.TruncateInt()
+		slashAmountDec := slashFactor.MulUint(entry.InitialBalance)
+		slashAmount := slashAmountDec.TruncateUint()
 		totalSlashAmount = totalSlashAmount.Add(slashAmount)
 
 		// Don't slash more tokens than held
 		// Possible since the unbonding delegation may already
 		// have been slashed, and slash amounts are calculated
 		// according to stake held at time of infraction
-		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance)
+		unbondingSlashAmount := sdk.MinUint(slashAmount, entry.Balance)
 
 		// Update unbonding delegation if necessary
 		if unbondingSlashAmount.IsZero() {
@@ -213,10 +213,10 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // insufficient stake remaining)
 // nolint: unparam
 func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
+	infractionHeight uint64, slashFactor sdk.Dec) (totalSlashAmount sdk.Uint) {
 
 	now := ctx.BlockHeader().Time
-	totalSlashAmount = sdk.ZeroInt()
+	totalSlashAmount = sdk.ZeroUint()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
@@ -232,8 +232,8 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		}
 
 		// Calculate slash amount proportional to stake contributing to infraction
-		slashAmountDec := slashFactor.MulInt(entry.InitialBalance)
-		slashAmount := slashAmountDec.TruncateInt()
+		slashAmountDec := slashFactor.MulUint(entry.InitialBalance)
+		slashAmount := slashAmountDec.TruncateUint()
 		totalSlashAmount = totalSlashAmount.Add(slashAmount)
 
 		// Unbond from target validator

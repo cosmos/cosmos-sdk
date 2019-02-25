@@ -69,7 +69,7 @@ type Validator interface {
 	GetConsAddr() ConsAddress     // validation consensus address
 	GetTokens() Uint              // validation tokens
 	GetBondedTokens() Uint        // validator bonded tokens
-	GetTendermintPower() int64    // validation power in tendermint
+	GetTendermintPower() uint64   // validation power in tendermint
 	GetCommission() Dec           // validator commission rate
 	GetMinSelfDelegation() Uint   // validator minimum self delegation
 	GetDelegatorShares() Dec      // total outstanding delegator shares
@@ -80,7 +80,7 @@ type Validator interface {
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
 		Address: v.GetConsPubKey().Address(),
-		Power:   v.GetTendermintPower(),
+		Power:   int64(v.GetTendermintPower()),
 	}
 }
 

@@ -88,13 +88,13 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 }
 
 // total staking tokens supply which is bonded
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Uint {
 	pool := k.GetPool(ctx)
 	return pool.BondedTokens
 }
 
 // total staking tokens supply bonded and unbonded
-func (k Keeper) TotalTokens(ctx sdk.Context) sdk.Int {
+func (k Keeper) TotalTokens(ctx sdk.Context) sdk.Uint {
 	pool := k.GetPool(ctx)
 	return pool.TokenSupply()
 }
@@ -106,7 +106,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 }
 
 // when minting new tokens
-func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
+func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Uint) {
 	pool := k.GetPool(ctx)
 	pool.NotBondedTokens = pool.NotBondedTokens.Add(newTokens)
 	k.SetPool(ctx, pool)

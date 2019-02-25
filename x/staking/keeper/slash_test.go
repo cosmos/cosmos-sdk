@@ -159,11 +159,11 @@ func TestSlashRedelegation(t *testing.T) {
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
-	require.Equal(t, int64(5), del.Shares.RoundInt64())
+	require.Equal(t, uint64(5), del.Shares.RoundInt64())
 
 	// pool bonded tokens decreased
 	newPool := keeper.GetPool(ctx)
-	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, uint64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Uint64())
 }
 
 // tests Slash at a future height (must panic)
@@ -279,7 +279,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	// balance decreased again
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdk.NewUint(0), ubd.Entries[0].Balance)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
@@ -300,7 +300,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	// balance unchanged
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdk.NewUint(0), ubd.Entries[0].Balance)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
@@ -321,7 +321,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	// balance unchanged
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdk.NewUint(0), ubd.Entries[0].Balance)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
@@ -344,11 +344,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// set a redelegation
 	rdTokens := sdk.TokensFromTendermintPower(6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
+		time.Unix(0, 0), rdTokens, sdk.NewDecFromUint(rdTokens))
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromUint(rdTokens))
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -453,11 +453,11 @@ func TestSlashBoth(t *testing.T) {
 	rdATokens := sdk.TokensFromTendermintPower(6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		sdk.NewDecFromInt(rdATokens))
+		sdk.NewDecFromUint(rdATokens))
 	keeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromUint(rdATokens))
 	keeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the

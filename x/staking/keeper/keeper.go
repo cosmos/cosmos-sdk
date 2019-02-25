@@ -77,18 +77,18 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 }
 
 // Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Uint) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(LastTotalPowerKey)
 	if b == nil {
-		return sdk.ZeroInt()
+		return sdk.ZeroUint()
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &power)
 	return
 }
 
 // Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
+func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Uint) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(LastTotalPowerKey, b)

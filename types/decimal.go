@@ -416,12 +416,12 @@ func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
 }
 
 // RoundInt64 rounds the decimal using bankers rounding
-func (d Dec) RoundInt64() int64 {
+func (d Dec) RoundUint64() uint64 {
 	chopped := chopPrecisionAndRoundNonMutative(d.Int)
-	if !chopped.IsInt64() {
-		panic("Int64() out of bound")
+	if !chopped.IsUint64() {
+		panic("Uint64() out of bound")
 	}
-	return chopped.Int64()
+	return chopped.Uint64()
 }
 
 // RoundInt round the decimal using bankers rounding
@@ -442,12 +442,12 @@ func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
 }
 
 // TruncateInt64 truncates the decimals from the number and returns an int64
-func (d Dec) TruncateInt64() int64 {
+func (d Dec) TruncateUint64() uint64 {
 	chopped := chopPrecisionAndTruncateNonMutative(d.Int)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
-	return chopped.Int64()
+	return chopped.Uint64()
 }
 
 // TruncateInt truncates the decimals from the number and returns an Int

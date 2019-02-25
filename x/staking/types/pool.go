@@ -10,8 +10,8 @@ import (
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination
 type Pool struct {
-	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
-	BondedTokens    sdk.Int `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
+	NotBondedTokens sdk.Uint `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
+	BondedTokens    sdk.Uint `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
 }
 
 // nolint
@@ -25,41 +25,40 @@ func (p Pool) Equal(p2 Pool) bool {
 // initial pool for testing
 func InitialPool() Pool {
 	return Pool{
-		NotBondedTokens: sdk.ZeroInt(),
-		BondedTokens:    sdk.ZeroInt(),
+		NotBondedTokens: sdk.ZeroUint(),
+		BondedTokens:    sdk.ZeroUint(),
 	}
 }
 
 // Sum total of all staking tokens in the pool
-func (p Pool) TokenSupply() sdk.Int {
+func (p Pool) TokenSupply() sdk.Uint {
 	return p.NotBondedTokens.Add(p.BondedTokens)
 }
 
 // Get the fraction of the staking token which is currently bonded
 func (p Pool) BondedRatio() sdk.Dec {
 	supply := p.TokenSupply()
-	if supply.IsPositive() {
-		return sdk.NewDecFromInt(p.BondedTokens).
-			QuoInt(supply)
+	if !supply.IsZero() {
+		return sdk.NewDecFromUint(p.BondedTokens).QuoUint(supply)
 	}
 	return sdk.ZeroDec()
 }
 
-func (p Pool) notBondedTokensToBonded(bondedTokens sdk.Int) Pool {
+func (p Pool) notBondedTokensToBonded(bondedTokens sdk.Uint) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)
-	p.NotBondedTokens = p.NotBondedTokens.Sub(bondedTokens)
-	if p.NotBondedTokens.IsNegative() {
+	if bondedTokens.GT(p.NotBondedTokens) {
 		panic(fmt.Sprintf("sanity check: not-bonded tokens negative, pool: %v", p))
 	}
+	p.NotBondedTokens = p.NotBondedTokens.Sub(bondedTokens)
 	return p
 }
 
-func (p Pool) bondedTokensToNotBonded(bondedTokens sdk.Int) Pool {
-	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
-	p.NotBondedTokens = p.NotBondedTokens.Add(bondedTokens)
-	if p.BondedTokens.IsNegative() {
+func (p Pool) bondedTokensToNotBonded(bondedTokens sdk.Uint) Pool {
+	if bondedTokens.GT(p.BondedTokens) {
 		panic(fmt.Sprintf("sanity check: bonded tokens negative, pool: %v", p))
 	}
+	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
+	p.NotBondedTokens = p.NotBondedTokens.Add(bondedTokens)
 	return p
 }
 

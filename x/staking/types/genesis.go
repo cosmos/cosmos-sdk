@@ -8,7 +8,7 @@ import (
 type GenesisState struct {
 	Pool                 Pool                  `json:"pool"`
 	Params               Params                `json:"params"`
-	LastTotalPower       sdk.Int               `json:"last_total_power"`
+	LastTotalPower       sdk.Uint              `json:"last_total_power"`
 	LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers"`
 	Validators           Validators            `json:"validators"`
 	Delegations          Delegations           `json:"delegations"`

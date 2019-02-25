@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
+	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -129,11 +130,26 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			info, err := txBldr.Keybase().Get(name)
+			if err != nil {
+				return err
+			}
+
+			if info.GetType() == kbkeys.TypeOffline {
+				fmt.Println("Offline key passed in.  Use `gaiacli tx sign` command to sign:")
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
+			}
+
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
+
 			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
 				return err
+			}
+
+			if info.GetType() == kbkeys.TypeOffline {
+				return nil
 			}
 
 			// read the transaction
@@ -163,6 +179,7 @@ following delegation and commission default parameters:
 
 			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
 			return nil
+
 		},
 	}
 

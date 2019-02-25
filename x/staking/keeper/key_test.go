@@ -27,10 +27,10 @@ func TestGetValidatorPowerRank(t *testing.T) {
 	val1 := types.NewValidator(valAddr1, pk1, emptyDesc)
 	val1.Tokens = sdk.ZeroInt()
 	val2, val3, val4 := val1, val1, val1
-	val2.Tokens = sdk.NewInt(1)
-	val3.Tokens = sdk.NewInt(10)
-	x := new(big.Int).Exp(big.NewInt(2), big.NewInt(40), big.NewInt(0))
-	val4.Tokens = sdk.NewIntFromBigInt(x)
+	val2.Tokens = sdk.NewUint(1)
+	val3.Tokens = sdk.NewUint(10)
+	x := new(big.Int).Exp(big.NewUint(2), big.NewUint(40), big.NewUint(0))
+	val4.Tokens = sdk.NewUintFromBigInt(x)
 
 	tests := []struct {
 		validator types.Validator

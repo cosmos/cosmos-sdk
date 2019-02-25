@@ -74,7 +74,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10))
+		time.Unix(5, 0), sdk.NewUint(10))
 
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -99,10 +99,10 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Len(t, ubd.Entries, 1)
 
 	// initial balance unchanged
-	require.Equal(t, sdk.NewInt(10), ubd.Entries[0].InitialBalance)
+	require.Equal(t, sdk.NewUint(10), ubd.Entries[0].InitialBalance)
 
 	// balance decreased
-	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
+	require.Equal(t, sdk.NewUint(5), ubd.Entries[0].Balance)
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens).Int64())
 }
@@ -115,7 +115,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10))
+		time.Unix(5, 0), sdk.NewUint(10), sdk.NewDec(10))
 
 	keeper.SetRedelegation(ctx, rd)
 
@@ -154,7 +154,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, 1, len(updates))
 
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
+	require.Equal(t, sdk.NewUint(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])

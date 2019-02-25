@@ -76,13 +76,13 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	// create a random pool
-	pool.NotBondedTokens = sdk.NewInt(10000)
-	pool.BondedTokens = sdk.NewInt(1234)
+	pool.NotBondedTokens = sdk.NewUint(10000)
+	pool.BondedTokens = sdk.NewUint(1234)
 	keeper.SetPool(ctx, pool)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.NewInt(100))
+	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.NewUint(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
 	keeper.SetPool(ctx, pool)
@@ -311,7 +311,7 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
 		validators[i].Status = sdk.Bonded
-		validators[i].Tokens = sdk.NewInt(amt)
+		validators[i].Tokens = sdk.NewUint(amt)
 		validators[i].DelegatorShares = sdk.NewDec(amt)
 		TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
@@ -319,11 +319,11 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	// first make sure everything made it in to the gotValidator group
 	resValidators := keeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, n, len(resValidators))
-	assert.Equal(t, sdk.NewInt(400), resValidators[0].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(200), resValidators[1].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(100), resValidators[2].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(1), resValidators[3].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(0), resValidators[4].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(400), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(200), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(100), resValidators[2].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(1), resValidators[3].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(0), resValidators[4].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, validators[3].OperatorAddr, resValidators[0].OperatorAddr, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddr, resValidators[1].OperatorAddr, "%v", resValidators)
 	assert.Equal(t, validators[1].OperatorAddr, resValidators[2].OperatorAddr, "%v", resValidators)
@@ -331,14 +331,14 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	assert.Equal(t, validators[0].OperatorAddr, resValidators[4].OperatorAddr, "%v", resValidators)
 
 	// test a basic increase in voting power
-	validators[3].Tokens = sdk.NewInt(500)
+	validators[3].Tokens = sdk.NewUint(500)
 	TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 
 	// test a decrease in voting power
-	validators[3].Tokens = sdk.NewInt(300)
+	validators[3].Tokens = sdk.NewUint(300)
 	TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
@@ -346,7 +346,7 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// test equal voting power, different age
-	validators[3].Tokens = sdk.NewInt(200)
+	validators[3].Tokens = sdk.NewUint(200)
 	ctx = ctx.WithBlockHeight(10)
 	TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
@@ -363,8 +363,8 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// change in voting power of both validators, both still in v-set, no age change
-	validators[3].Tokens = sdk.NewInt(300)
-	validators[4].Tokens = sdk.NewInt(300)
+	validators[3].Tokens = sdk.NewUint(300)
+	validators[4].Tokens = sdk.NewUint(300)
 	TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
@@ -397,14 +397,14 @@ func GetValidatorSortingMixed(t *testing.T) {
 	validators[0].Status = sdk.Bonded
 	validators[1].Status = sdk.Bonded
 	validators[2].Status = sdk.Bonded
-	validators[0].Tokens = sdk.NewInt(amts[0])
-	validators[1].Tokens = sdk.NewInt(amts[1])
-	validators[2].Tokens = sdk.NewInt(amts[2])
+	validators[0].Tokens = sdk.NewUint(amts[0])
+	validators[1].Tokens = sdk.NewUint(amts[1])
+	validators[2].Tokens = sdk.NewUint(amts[2])
 
 	validators[3].Status = sdk.Bonded
 	validators[4].Status = sdk.Bonded
-	validators[3].Tokens = sdk.NewInt(amts[3])
-	validators[4].Tokens = sdk.NewInt(amts[4])
+	validators[3].Tokens = sdk.NewUint(amts[3])
+	validators[4].Tokens = sdk.NewUint(amts[4])
 
 	for i := range amts {
 		TestingUpdateValidator(keeper, ctx, validators[i], true)
@@ -428,11 +428,11 @@ func GetValidatorSortingMixed(t *testing.T) {
 	// first make sure everything made it in to the gotValidator group
 	resValidators := keeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, n, len(resValidators))
-	assert.Equal(t, sdk.NewInt(400), resValidators[0].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(200), resValidators[1].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(100), resValidators[2].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(1), resValidators[3].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(0), resValidators[4].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(400), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(200), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(100), resValidators[2].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(1), resValidators[3].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewUint(0), resValidators[4].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, validators[3].OperatorAddr, resValidators[0].OperatorAddr, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddr, resValidators[1].OperatorAddr, "%v", resValidators)
 	assert.Equal(t, validators[1].OperatorAddr, resValidators[2].OperatorAddr, "%v", resValidators)
@@ -494,7 +494,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], found = keeper.GetValidator(ctx, validators[3].OperatorAddr)
 	require.True(t, found)
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(1))
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewUint(1))
 	keeper.SetPool(ctx, pool)
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
@@ -514,7 +514,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 4 does not get spot back
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(200))
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewUint(200))
 	keeper.SetPool(ctx, pool)
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
@@ -926,7 +926,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	valPubKey := PKs[len(validators)+1]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	amt := sdk.NewInt(100)
+	amt := sdk.NewUint(100)
 
 	validator := types.NewValidator(valAddr, valPubKey, types.Description{})
 	validator, pool, _ = validator.AddTokensFromDel(pool, amt)

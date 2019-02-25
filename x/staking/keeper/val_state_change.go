@@ -87,7 +87,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// keep count
 		count++
-		totalPower = totalPower.Add(sdk.NewInt(newPower))
+		totalPower = totalPower.Add(sdk.NewUint(newPower))
 	}
 
 	// sort the no-longer-bonded validators

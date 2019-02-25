@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
-	coinZero = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	coinPos  = sdk.NewUint64Coin(sdk.DefaultBondDenom, 1000)
+	coinZero = sdk.NewUint64Coin(sdk.DefaultBondDenom, 0)
 )
 
 // test ValidateBasic for MsgCreateValidator
@@ -36,7 +36,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), addr1, emptyPubkey, coinPos, true},
 		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), addr1, pk1, coinZero, false},
 		{"zero min self delegation", "a", "b", "c", "d", commission1, sdk.ZeroInt(), addr1, pk1, coinPos, false},
-		{"negative min self delegation", "a", "b", "c", "d", commission1, sdk.NewInt(-1), addr1, pk1, coinPos, false},
+		{"negative min self delegation", "a", "b", "c", "d", commission1, sdk.NewUint(-1), addr1, pk1, coinPos, false},
 		{"delegation less than min self delegation", "a", "b", "c", "d", commission1, coinPos.Amount.Add(sdk.OneInt()), addr1, pk1, coinPos, false},
 	}
 
@@ -101,7 +101,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
 		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
 		{"zero min self delegation", "a", "b", "c", "d", commission2, sdk.ZeroInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"negative min self delegation", "", "", "c", "", commission2, sdk.NewInt(-1), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
+		{"negative min self delegation", "", "", "c", "", commission2, sdk.NewUint(-1), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
 		{"delegation less than min self delegation", "a", "b", "c", "d", commission2, coinPos.Amount.Add(sdk.OneInt()), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
 	}
 

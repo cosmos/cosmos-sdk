@@ -17,7 +17,7 @@ func TestDelegation(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	//construct the validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	amts := []sdk.Int{sdk.NewUint(9), sdk.NewUint(8), sdk.NewUint(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
@@ -133,7 +133,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(0, 0), sdk.NewInt(5))
+		time.Unix(0, 0), sdk.NewUint(5))
 
 	// set and retrieve a record
 	keeper.SetUnbondingDelegation(ctx, ubd)
@@ -142,7 +142,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.True(t, ubd.Equal(resUnbond))
 
 	// modify a records, save, and retrieve
-	ubd.Entries[0].Balance = sdk.NewInt(21)
+	ubd.Entries[0].Balance = sdk.NewUint(21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
@@ -366,7 +366,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.True(t, ubd.Entries[0].Balance.Equal(sdk.NewInt(6)))
+	require.True(t, ubd.Entries[0].Balance.Equal(sdk.NewUint(6)))
 	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
 	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
@@ -510,7 +510,7 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt(5),
+		time.Unix(0, 0), sdk.NewUint(5),
 		sdk.NewDec(5))
 
 	// set and retrieve a record
@@ -534,7 +534,7 @@ func TestRedelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt(5),
+		time.Unix(0, 0), sdk.NewUint(5),
 		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations

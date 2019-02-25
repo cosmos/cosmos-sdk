@@ -17,10 +17,10 @@ var (
 	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
-	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
+	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewUint(10))}
 	fee   = auth.NewStdFee(
 		100000,
-		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))},
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewUint(0))},
 	)
 
 	commissionMsg = NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())

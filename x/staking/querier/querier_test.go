@@ -23,7 +23,7 @@ func TestNewQuerier(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	pool := keeper.GetPool(ctx)
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	amts := []sdk.Int{sdk.NewUint(9), sdk.NewUint(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
@@ -121,7 +121,7 @@ func TestQueryValidators(t *testing.T) {
 	params := keeper.GetParams(ctx)
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	amts := []sdk.Int{sdk.NewUint(9), sdk.NewUint(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})

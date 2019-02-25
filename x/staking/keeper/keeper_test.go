@@ -33,7 +33,7 @@ func TestPool(t *testing.T) {
 	require.True(t, expPool.Equal(resPool))
 
 	//modify a params, save, and retrieve
-	expPool.BondedTokens = sdk.NewInt(777)
+	expPool.BondedTokens = sdk.NewUint(777)
 	keeper.SetPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	require.True(t, expPool.Equal(resPool))

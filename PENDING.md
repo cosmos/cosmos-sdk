@@ -72,6 +72,8 @@ CLI flag.
 
 ### Gaia CLI
 
+* [\#3731](https://github.com/cosmos/cosmos-sdk/pull/3731) `keys add --interactive` bip32 passphrase regression fix
+
 ### Gaia
 
 ### SDK

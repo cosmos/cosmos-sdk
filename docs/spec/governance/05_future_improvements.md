@@ -1,4 +1,4 @@
-# Future improvements (not in scope for MVP)
+# Future Improvements
 
 The current documentation only describes the minimum viable product for the 
 governance module. Future improvements may include:

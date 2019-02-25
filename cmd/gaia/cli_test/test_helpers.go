@@ -298,7 +298,7 @@ func (f *Fixtures) txSendWithConfirm(
 
 // TxSign is gaiacli tx sign
 func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx sign %v --name=%s %v", f.Flags(), signer, fileName)
+	cmd := fmt.Sprintf("gaiacli tx sign %v --from=%s %v", f.Flags(), signer, fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

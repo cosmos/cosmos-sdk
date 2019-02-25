@@ -331,9 +331,18 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push tendermint/gaia:$GAIAD_VERSION
 
-          # Push the tag also for the version, so clients can build up on top of it
-          GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
-          docker push tendermint/gaia:$GAIAD_VERSION
+  docker_tagged:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          docker build -t tendermint/gaia:$CIRCLE_TAG .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$CIRCLE_TAG
 
 workflows:
   version: 2
@@ -345,6 +354,16 @@ workflows:
               only:
                 - master
                 - develop
+          requires:
+            - setup_dependencies
+      - docker_tagged:
+          filters:
+            tags:
+              only:
+                - /^v.*/
+            branches:
+              ignore:
+                - /.*/
           requires:
             - setup_dependencies
       - macos_ci:

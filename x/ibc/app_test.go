@@ -62,11 +62,11 @@ func TestIBCMsgs(t *testing.T) {
 		DestChain: destChain,
 	}
 
-	transferMsg := IBCTransferMsg{
+	transferMsg := MsgIBCTransfer{
 		IBCPacket: packet,
 	}
 
-	receiveMsg := IBCReceiveMsg{
+	receiveMsg := MsgIBCReceive{
 		IBCPacket: packet,
 		Relayer:   addr1,
 		Sequence:  0,

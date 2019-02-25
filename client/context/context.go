@@ -256,6 +256,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 	switch ctx.OutputFormat {
 	case "text":
 		out = []byte(toPrint.String())
+
 	case "json":
 		if ctx.Indent {
 			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")

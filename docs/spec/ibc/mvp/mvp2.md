@@ -29,12 +29,12 @@ type TransferPayload struct {
 }
 
 // Implements sdk.Msg
-type IBCTransferMsg struct {
+type MsgIBCTransfer struct {
     Packet
 }
 
 // Implements sdk.Msg
-type IBCReceiveMsg struct {
+type MsgIBCReceive struct {
     Packet
     Relayer  sdk.Address
     Sequence int64

@@ -242,7 +242,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, keys.DefaultBIP39Passphrase, encryptPassword, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, encryptPassword, account, index)
 	if err != nil {
 		return err
 	}

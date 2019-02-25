@@ -23,31 +23,32 @@ func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
 		commissionMsg                             CommissionMsg
-		minSelfDelegation                         sdk.Int
+		minSelfDelegation                         sdk.Uint
 		validatorAddr                             sdk.ValAddress
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", commission1, sdk.OneInt(), addr1, pk1, coinPos, true},
-		{"partial description", "", "", "c", "", commission1, sdk.OneInt(), addr1, pk1, coinPos, true},
-		{"empty description", "", "", "", "", commission2, sdk.OneInt(), addr1, pk1, coinPos, false},
-		{"empty address", "a", "b", "c", "d", commission2, sdk.OneInt(), emptyAddr, pk1, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), addr1, emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), addr1, pk1, coinZero, false},
-		{"zero min self delegation", "a", "b", "c", "d", commission1, sdk.ZeroInt(), addr1, pk1, coinPos, false},
-		{"negative min self delegation", "a", "b", "c", "d", commission1, sdk.NewUint(-1), addr1, pk1, coinPos, false},
-		{"delegation less than min self delegation", "a", "b", "c", "d", commission1, coinPos.Amount.Add(sdk.OneInt()), addr1, pk1, coinPos, false},
+		{"basic good", "a", "b", "c", "d", commission1, sdk.OneUint(), addr1, pk1, coinPos, true},
+		{"partial description", "", "", "c", "", commission1, sdk.OneUint(), addr1, pk1, coinPos, true},
+		{"empty description", "", "", "", "", commission2, sdk.OneUint(), addr1, pk1, coinPos, false},
+		{"empty address", "a", "b", "c", "d", commission2, sdk.OneUint(), emptyAddr, pk1, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneUint(), addr1, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneUint(), addr1, pk1, coinZero, false},
+		{"zero min self delegation", "a", "b", "c", "d", commission1, sdk.ZeroUint(), addr1, pk1, coinPos, false},
+		{"delegation less than min self delegation", "a", "b", "c", "d", commission1, coinPos.Amount.Add(sdk.OneUint()), addr1, pk1, coinPos, false},
 	}
 
 	for _, tc := range tests {
-		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
+			msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation)
+			if tc.expectPass {
+				require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			} else {
+				require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			}
+		})
 	}
 }
 
@@ -67,7 +68,7 @@ func TestMsgEditValidator(t *testing.T) {
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		newRate := sdk.ZeroDec()
-		newMinSelfDelegation := sdk.OneInt()
+		newMinSelfDelegation := sdk.OneUint()
 
 		msg := NewMsgEditValidator(tc.validatorAddr, description, &newRate, &newMinSelfDelegation)
 		if tc.expectPass {
@@ -86,23 +87,23 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
 		commissionMsg                             CommissionMsg
-		minSelfDelegation                         sdk.Int
+		minSelfDelegation                         sdk.Uint
 		delegatorAddr                             sdk.AccAddress
 		validatorAddr                             sdk.ValAddress
 		validatorPubKey                           crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
-		{"partial description", "", "", "c", "", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
-		{"empty description", "", "", "", "", commission1, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"empty delegator address", "a", "b", "c", "d", commission1, sdk.OneInt(), sdk.AccAddress(emptyAddr), addr2, pk2, coinPos, false},
-		{"empty validator address", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), emptyAddr, pk2, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
-		{"zero min self delegation", "a", "b", "c", "d", commission2, sdk.ZeroInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"negative min self delegation", "", "", "c", "", commission2, sdk.NewUint(-1), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"delegation less than min self delegation", "a", "b", "c", "d", commission2, coinPos.Amount.Add(sdk.OneInt()), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
+		{"basic good", "a", "b", "c", "d", commission2, sdk.OneUint(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
+		{"partial description", "", "", "c", "", commission2, sdk.OneUint(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
+		{"empty description", "", "", "", "", commission1, sdk.OneUint(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
+		{"empty delegator address", "a", "b", "c", "d", commission1, sdk.OneUint(), sdk.AccAddress(emptyAddr), addr2, pk2, coinPos, false},
+		{"empty validator address", "a", "b", "c", "d", commission2, sdk.OneUint(), sdk.AccAddress(addr1), emptyAddr, pk2, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneUint(), sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneUint(), sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
+		{"zero min self delegation", "a", "b", "c", "d", commission2, sdk.ZeroUint(),
+			sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
+		{"delegation less than min self delegation", "a", "b", "c", "d", commission2, coinPos.Amount.Add(sdk.OneUint()), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
 	}
 
 	for _, tc := range tests {
@@ -118,11 +119,11 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 		}
 	}
 
-	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneInt())
+	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneUint())
 	addrs := msg.GetSigners()
 	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr1)}, addrs, "Signers on default msg is wrong")
 
-	msg = NewMsgCreateValidatorOnBehalfOf(sdk.AccAddress(addr2), addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneInt())
+	msg = NewMsgCreateValidatorOnBehalfOf(sdk.AccAddress(addr2), addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneUint())
 	addrs = msg.GetSigners()
 	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr2), sdk.AccAddress(addr1)}, addrs, "Signers for onbehalfof msg is wrong")
 }
@@ -144,12 +145,14 @@ func TestMsgDelegate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgDelegate(tc.delegatorAddr, tc.validatorAddr, tc.bond)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgDelegate(tc.delegatorAddr, tc.validatorAddr, tc.bond)
+			if tc.expectPass {
+				require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			} else {
+				require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			}
+		})
 	}
 }
 
@@ -164,7 +167,6 @@ func TestMsgBeginRedelegate(t *testing.T) {
 		expectPass       bool
 	}{
 		{"regular", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(1, 1), true},
-		{"negative decimal", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(-1, 1), false},
 		{"zero amount", sdk.AccAddress(addr1), addr2, addr3, sdk.ZeroDec(), false},
 		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, addr3, sdk.NewDecWithPrec(1, 1), false},
 		{"empty source validator", sdk.AccAddress(addr1), emptyAddr, addr3, sdk.NewDecWithPrec(1, 1), false},
@@ -191,7 +193,6 @@ func TestMsgUndelegate(t *testing.T) {
 		expectPass    bool
 	}{
 		{"regular", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(1, 1), true},
-		{"negative decimal", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(-1, 1), false},
 		{"zero amount", sdk.AccAddress(addr1), addr2, sdk.ZeroDec(), false},
 		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, sdk.NewDecWithPrec(1, 1), false},
 		{"empty validator", sdk.AccAddress(addr1), emptyAddr, sdk.NewDecWithPrec(1, 1), false},

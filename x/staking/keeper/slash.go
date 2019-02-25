@@ -21,7 +21,9 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power uint64, slashFactor sdk.Dec) {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight uint64,
+	power uint64, slashFactor sdk.Dec) {
+
 	logger := ctx.Logger().With("module", "x/staking")
 
 	if slashFactor.LT(sdk.ZeroDec()) {

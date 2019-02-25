@@ -184,7 +184,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 // the given addresses. It creates the unbonding delegation if it does not exist
 func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Uint) types.UnbondingDelegation {
+	creationHeight uint64, minTime time.Time, balance sdk.Uint) types.UnbondingDelegation {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if found {
@@ -623,7 +623,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			ubd.RemoveEntry(int64(i))
+			ubd.RemoveEntry(uint64(i))
 			i--
 
 			// track undelegation only when remaining or truncated shares are non-zero
@@ -711,7 +711,7 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	for i := 0; i < len(red.Entries); i++ {
 		entry := red.Entries[i]
 		if entry.IsMature(ctxTime) {
-			red.RemoveEntry(int64(i))
+			red.RemoveEntry(uint64(i))
 			i--
 		}
 	}

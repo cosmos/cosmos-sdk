@@ -111,7 +111,7 @@ type UnbondingDelegation struct {
 
 // UnbondingDelegationEntry - entry to an UnbondingDelegation
 type UnbondingDelegationEntry struct {
-	CreationHeight int64     `json:"creation_height"` // height which the unbonding took place
+	CreationHeight uint64    `json:"creation_height"` // height which the unbonding took place
 	CompletionTime time.Time `json:"completion_time"` // time at which the unbonding delegation will complete
 	InitialBalance sdk.Uint  `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Uint  `json:"balance"`         // atoms to receive at completion
@@ -124,7 +124,7 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 
 // NewUnbondingDelegation - create a new unbonding delegation object
 func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time,
+	validatorAddr sdk.ValAddress, creationHeight uint64, minTime time.Time,
 	balance sdk.Uint) UnbondingDelegation {
 
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
@@ -136,7 +136,7 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 }
 
 // NewUnbondingDelegation - create a new unbonding delegation object
-func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
+func NewUnbondingDelegationEntry(creationHeight uint64, completionTime time.Time,
 	balance sdk.Uint) UnbondingDelegationEntry {
 
 	return UnbondingDelegationEntry{
@@ -148,7 +148,7 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (d *UnbondingDelegation) AddEntry(creationHeight int64,
+func (d *UnbondingDelegation) AddEntry(creationHeight uint64,
 	minTime time.Time, balance sdk.Uint) {
 
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
@@ -156,7 +156,7 @@ func (d *UnbondingDelegation) AddEntry(creationHeight int64,
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
-func (d *UnbondingDelegation) RemoveEntry(i int64) {
+func (d *UnbondingDelegation) RemoveEntry(i uint64) {
 	d.Entries = append(d.Entries[:i], d.Entries[i+1:]...)
 }
 

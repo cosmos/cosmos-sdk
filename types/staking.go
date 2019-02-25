@@ -104,7 +104,7 @@ type ValidatorSet interface {
 	TotalTokens(Context) Uint                           // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(Context, ConsAddress, int64, int64, Dec)
+	Slash(Context, ConsAddress, uint64, uint64, Dec)
 	Jail(Context, ConsAddress)   // jail a validator
 	Unjail(Context, ConsAddress) // unjail a validator
 

@@ -132,7 +132,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroUint()) {
+	if msg.Value.Amount.IsZero() {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
@@ -141,7 +141,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Commission == (CommissionMsg{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
 	}
-	if !msg.MinSelfDelegation.GT(sdk.ZeroUint()) {
+	if msg.MinSelfDelegation.IsZero() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
@@ -248,7 +248,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroUint()) {
+	if msg.Value.Amount.IsZero() {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

@@ -45,7 +45,7 @@ var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewIn
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
 func TokensToTendermintPower(tokens Int) int64 {
-	return (tokens.Div(PowerReduction)).Int64()
+	return (tokens.Quo(PowerReduction)).Int64()
 }
 
 // TokensFromTendermintPower - convert input power to tokens

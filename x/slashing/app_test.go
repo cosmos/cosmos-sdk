@@ -112,7 +112,7 @@ func TestSlashingMsgs(t *testing.T) {
 		sdk.ValAddress(addr1), sdk.ConsPubKeyFromCryptoPubKey(priv1.PubKey()), bondCoin, description, commission, sdk.OneInt(),
 	)
 	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakingKeeper, addr1, true)

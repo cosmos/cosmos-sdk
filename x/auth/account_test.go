@@ -181,14 +181,14 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 
 	// receive some coins
 	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	cva.SetCoins(cva.GetCoins().Plus(recvAmt))
+	cva.SetCoins(cva.GetCoins().Add(recvAmt))
 
 	// require that all vested coins (50%) are spendable plus any received
 	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 100)}, spendableCoins)
 
 	// spend all spendable coins
-	cva.SetCoins(cva.GetCoins().Minus(spendableCoins))
+	cva.SetCoins(cva.GetCoins().Sub(spendableCoins))
 
 	// require that no more coins are spendable
 	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
@@ -362,7 +362,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 
 	// receive some coins
 	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	dva.SetCoins(dva.GetCoins().Plus(recvAmt))
+	dva.SetCoins(dva.GetCoins().Add(recvAmt))
 
 	// require that only received coins are spendable since the account is still
 	// vesting
@@ -370,7 +370,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	require.Equal(t, recvAmt, spendableCoins)
 
 	// spend all spendable coins
-	dva.SetCoins(dva.GetCoins().Minus(spendableCoins))
+	dva.SetCoins(dva.GetCoins().Sub(spendableCoins))
 
 	// require that no more coins are spendable
 	spendableCoins = dva.SpendableCoins(now.Add(12 * time.Hour))

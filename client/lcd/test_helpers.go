@@ -860,7 +860,7 @@ func doUndelegate(
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		SharesAmount:  sdk.NewDecFromInt(amount),
+		SharesAmount:  amount.ToDec(),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -904,7 +904,7 @@ func doBeginRedelegation(
 		DelegatorAddr:    delAddr,
 		ValidatorSrcAddr: valSrcAddr,
 		ValidatorDstAddr: valDstAddr,
-		SharesAmount:     sdk.NewDecFromInt(amount),
+		SharesAmount:     amount.ToDec(),
 	}
 
 	req, err := cdc.MarshalJSON(msg)

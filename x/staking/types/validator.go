@@ -291,7 +291,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 	}
 
 	v.Tokens = v.Tokens.Add(amount)
-	issuedShares := sdk.NewDecFromInt(amount).Quo(exRate)
+	issuedShares := amount.ToDec().Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
@@ -336,7 +336,7 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 		// the first delegation to a validator sets the exchange rate to one
 		return sdk.OneDec()
 	}
-	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)
+	return v.Tokens.ToDec().Quo(v.DelegatorShares)
 }
 
 // get the bonded tokens which the validator holds

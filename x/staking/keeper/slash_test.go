@@ -344,11 +344,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// set a redelegation
 	rdTokens := sdk.TokensFromTendermintPower(6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
+		time.Unix(0, 0), rdTokens, rdTokens.ToDec())
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec())
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -453,11 +453,11 @@ func TestSlashBoth(t *testing.T) {
 	rdATokens := sdk.TokensFromTendermintPower(6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		sdk.NewDecFromInt(rdATokens))
+		rdATokens.ToDec())
 	keeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec())
 	keeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the

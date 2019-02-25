@@ -74,7 +74,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonding, validator.Status)      // ensure is unbonding
-	require.Equal(t, initBond.DivRaw(2), validator.Tokens) // ensure tokens slashed
+	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
 	keeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
@@ -951,7 +951,7 @@ func TestMultipleRedelegationAtSameTime(t *testing.T) {
 	// begin a redelegate
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
 	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr,
-		valAddr, valAddr2, valTokens.DivRaw(2).ToDec())
+		valAddr, valAddr2, valTokens.QuoRaw(2).ToDec())
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1003,7 +1003,7 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 	// begin a redelegate
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
 	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr,
-		valAddr, valAddr2, valTokens.DivRaw(2).ToDec())
+		valAddr, valAddr2, valTokens.QuoRaw(2).ToDec())
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1051,7 +1051,7 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 
 	// begin an unbonding delegation
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, valTokens.DivRaw(2).ToDec())
+	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2).ToDec())
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1097,7 +1097,7 @@ func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
 
 	// begin an unbonding delegation
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, valTokens.DivRaw(2).ToDec())
+	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, valTokens.QuoRaw(2).ToDec())
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1239,7 +1239,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
+	require.Equal(t, ubdTokens.QuoRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should have been slashed by half
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
@@ -1249,12 +1249,12 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// destination delegation should have been slashed by half
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
-	require.Equal(t, rdTokens.DivRaw(2).ToDec(), delegation.Shares)
+	require.Equal(t, rdTokens.QuoRaw(2).ToDec(), delegation.Shares)
 
 	// validator power should have been reduced by half
 	validator, found := keeper.GetValidator(ctx, valA)
 	require.True(t, found)
-	require.Equal(t, valTokens.DivRaw(2), validator.GetBondedTokens())
+	require.Equal(t, valTokens.QuoRaw(2), validator.GetBondedTokens())
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)
@@ -1264,7 +1264,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
+	require.Equal(t, ubdTokens.QuoRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should be unchanged
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
@@ -1274,7 +1274,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// destination delegation should be unchanged
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
-	require.Equal(t, rdTokens.DivRaw(2).ToDec(), delegation.Shares)
+	require.Equal(t, rdTokens.QuoRaw(2).ToDec(), delegation.Shares)
 
 	// end blocker
 	EndBlocker(ctx, keeper)

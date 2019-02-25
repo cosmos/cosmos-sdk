@@ -65,6 +65,8 @@ CLI flag.
 
 ### Tendermint
 
+* [\#3699] Upgrade to Tendermint 0.30.1
+
 <!--------------------------------- BUG FIXES -------------------------------->
 
 ## BUG FIXES

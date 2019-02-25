@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
@@ -38,37 +37,33 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // Generate a random amount
-// Note: The range of RandomAmount includes max, and is, in fact, biased to return max.
+// Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	// return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
-	max2 := big.NewInt(0).Mul(max.BigInt(), big.NewInt(2))
-	randInt := big.NewInt(0).Rand(r, max2)
-	if randInt.Cmp(max.BigInt()) > 0 {
+	var randInt = big.NewInt(0)
+	switch r.Intn(10) {
+	case 0:
+		// randInt = big.NewInt(0)
+	case 1:
 		randInt = max.BigInt()
+	default: // NOTE: there are 10 total cases.
+		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
-	result := sdk.NewIntFromBigInt(randInt)
-	// Sanity
-	if result.GT(max) {
-		panic(fmt.Sprintf("%v > %v", result, max))
-	}
-	return result
+	return sdk.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
-// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max.
+// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
-	// randInt := big.NewInt(0).Rand(r, max.Int)
-	max2 := big.NewInt(0).Mul(max.Int, big.NewInt(2))
-	randInt := big.NewInt(0).Rand(r, max2)
-	if randInt.Cmp(max.Int) > 0 {
-		randInt = max.Int
+	var randInt = big.NewInt(0)
+	switch r.Intn(10) {
+	case 0:
+		// randInt = big.NewInt(0)
+	case 1:
+		randInt = max.Int // the underlying big int with all precision bits.
+	default: // NOTE: there are 10 total cases.
+		randInt = big.NewInt(0).Rand(r, max.Int)
 	}
-	result := sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
-	// Sanity
-	if result.GT(max) {
-		panic(fmt.Sprintf("%v > %v", result, max))
-	}
-	return result
+	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
 // RandomSetGenesis wraps mock.RandomSetGenesis, but using simulation accounts

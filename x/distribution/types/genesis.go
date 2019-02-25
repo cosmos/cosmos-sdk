@@ -9,41 +9,41 @@ import (
 // the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses
 type DelegatorWithdrawInfo struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	WithdrawAddress  sdk.AccAddress `json:"withdraw_address"`
 }
 
 // used for import / export via genesis json
 type ValidatorAccumulatedCommissionRecord struct {
-	ValidatorAddr sdk.ValAddress                 `json:"validator_addr"`
-	Accumulated   ValidatorAccumulatedCommission `json:"accumulated"`
+	ValidatorAddress sdk.ValAddress                 `json:"validator_address"`
+	Accumulated      ValidatorAccumulatedCommission `json:"accumulated"`
 }
 
 // used for import / export via genesis json
 type ValidatorHistoricalRewardsRecord struct {
-	ValidatorAddr sdk.ValAddress             `json:"validator_addr"`
-	Period        uint64                     `json:"period"`
-	Rewards       ValidatorHistoricalRewards `json:"rewards"`
+	ValidatorAddress sdk.ValAddress             `json:"validator_address"`
+	Period           uint64                     `json:"period"`
+	Rewards          ValidatorHistoricalRewards `json:"rewards"`
 }
 
 // used for import / export via genesis json
 type ValidatorCurrentRewardsRecord struct {
-	ValidatorAddr sdk.ValAddress          `json:"validator_addr"`
-	Rewards       ValidatorCurrentRewards `json:"rewards"`
+	ValidatorAddress sdk.ValAddress          `json:"validator_address"`
+	Rewards          ValidatorCurrentRewards `json:"rewards"`
 }
 
 // used for import / export via genesis json
 type DelegatorStartingInfoRecord struct {
-	DelegatorAddr sdk.AccAddress        `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress        `json:"validator_addr"`
-	StartingInfo  DelegatorStartingInfo `json:"starting_info"`
+	DelegatorAddress sdk.AccAddress        `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress        `json:"validator_address"`
+	StartingInfo     DelegatorStartingInfo `json:"starting_info"`
 }
 
 // used for import / export via genesis json
 type ValidatorSlashEventRecord struct {
-	ValidatorAddr sdk.ValAddress      `json:"validator_addr"`
-	Height        uint64              `json:"height"`
-	Event         ValidatorSlashEvent `json:"validator_slash_event"`
+	ValidatorAddress sdk.ValAddress      `json:"validator_address"`
+	Height           uint64              `json:"height"`
+	Event            ValidatorSlashEvent `json:"validator_slash_event"`
 }
 
 // GenesisState - all distribution state that must be provided at genesis

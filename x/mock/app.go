@@ -304,7 +304,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 			}
 		}
 
-		app.TotalCoinsSupply = app.TotalCoinsSupply.Plus(coins)
+		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
 		(&baseAcc).SetCoins(coins)

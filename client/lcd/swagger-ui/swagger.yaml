@@ -436,9 +436,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               delegation:
                 $ref: "#/definitions/Coin"
@@ -521,9 +521,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -624,11 +624,11 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_src_addr:
+              validator_src_addressess:
                 $ref: "#/definitions/ValidatorAddress"
-              validator_dst_addr:
+              validator_dst_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -2102,9 +2102,9 @@ definitions:
   Delegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       shares:
         type: string
@@ -2113,9 +2113,9 @@ definitions:
   UnbondingDelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       initial_balance:
         type: string
@@ -2128,11 +2128,11 @@ definitions:
   Redelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_src_addr:
+      validator_src_address:
         type: string
-      validator_dst_addr:
+      validator_dst_address:
         type: string
       creation_height:
         type: integer
@@ -2149,7 +2149,7 @@ definitions:
   ValidatorDistInfo:
     type: object
     properties:
-      operator_addr:
+      operator_address:
         $ref: "#/definitions/ValidatorAddress"
       self_bond_rewards:
         type: array

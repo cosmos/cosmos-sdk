@@ -122,11 +122,11 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg b
 	fromAcc = mapper.GetAccount(ctx, msg.FromAddress)
 	toAcc = mapper.GetAccount(ctx, msg.ToAddress)
 
-	if !initialFromAddrCoins.Minus(msg.Amount).IsEqual(fromAcc.GetCoins()) {
+	if !initialFromAddrCoins.Sub(msg.Amount).IsEqual(fromAcc.GetCoins()) {
 		return fmt.Errorf("fromAddress %s had an incorrect amount of coins", fromAcc.GetAddress())
 	}
 
-	if !initialToAddrCoins.Plus(msg.Amount).IsEqual(toAcc.GetCoins()) {
+	if !initialToAddrCoins.Add(msg.Amount).IsEqual(toAcc.GetCoins()) {
 		return fmt.Errorf("toAddress %s had an incorrect amount of coins", toAcc.GetAddress())
 	}
 
@@ -249,13 +249,13 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, 
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		terminalInputCoins := mapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
-		if !initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins).IsEqual(terminalInputCoins) {
+		if !initialInputAddrCoins[i].Sub(msg.Inputs[i].Coins).IsEqual(terminalInputCoins) {
 			return fmt.Errorf("input #%d had an incorrect amount of coins", i)
 		}
 	}
 	for i := 0; i < len(msg.Outputs); i++ {
 		terminalOutputCoins := mapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
-		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins)) {
+		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Add(msg.Outputs[i].Coins)) {
 			return fmt.Errorf("output #%d had an incorrect amount of coins", i)
 		}
 	}

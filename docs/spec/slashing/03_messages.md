@@ -1,8 +1,8 @@
-## Messages
+# Messages
 
 In this section we describe the processing of messages for the `slashing` module.
 
-### Unjail
+## Unjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
 possibly rejoin the bonded set, it must send `TxUnjail`:

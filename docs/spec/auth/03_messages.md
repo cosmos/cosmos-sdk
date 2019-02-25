@@ -1,3 +1,7 @@
+# Messages
+
+TODO make this file conform to typical messages spec
+
 ## Handlers
 
 The auth module presently has no transaction handlers of its own, but does expose

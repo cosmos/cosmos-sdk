@@ -31,11 +31,11 @@ func TestIBCPacketValidation(t *testing.T) {
 }
 
 // -------------------------------
-// IBCTransferMsg Tests
+// MsgIBCTransfer Tests
 
 func TestIBCTransferMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
-	msg := IBCTransferMsg{packet}
+	msg := MsgIBCTransfer{packet}
 
 	require.Equal(t, msg.Route(), "ibc")
 }
@@ -46,10 +46,10 @@ func TestIBCTransferMsgValidation(t *testing.T) {
 
 	cases := []struct {
 		valid bool
-		msg   IBCTransferMsg
+		msg   MsgIBCTransfer
 	}{
-		{true, IBCTransferMsg{validPacket}},
-		{false, IBCTransferMsg{invalidPacket}},
+		{true, MsgIBCTransfer{validPacket}},
+		{false, MsgIBCTransfer{invalidPacket}},
 	}
 
 	for i, tc := range cases {
@@ -63,11 +63,11 @@ func TestIBCTransferMsgValidation(t *testing.T) {
 }
 
 // -------------------------------
-// IBCReceiveMsg Tests
+// MsgIBCReceive Tests
 
 func TestIBCReceiveMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
-	msg := IBCReceiveMsg{packet, sdk.AccAddress([]byte("relayer")), 0}
+	msg := MsgIBCReceive{packet, sdk.AccAddress([]byte("relayer")), 0}
 
 	require.Equal(t, msg.Route(), "ibc")
 }
@@ -78,10 +78,10 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 
 	cases := []struct {
 		valid bool
-		msg   IBCReceiveMsg
+		msg   MsgIBCReceive
 	}{
-		{true, IBCReceiveMsg{validPacket, sdk.AccAddress([]byte("relayer")), 0}},
-		{false, IBCReceiveMsg{invalidPacket, sdk.AccAddress([]byte("relayer")), 0}},
+		{true, MsgIBCReceive{validPacket, sdk.AccAddress([]byte("relayer")), 0}},
+		{false, MsgIBCReceive{invalidPacket, sdk.AccAddress([]byte("relayer")), 0}},
 	}
 
 	for i, tc := range cases {

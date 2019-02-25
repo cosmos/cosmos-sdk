@@ -1,10 +1,12 @@
 package keys
 
 import (
-	"github.com/tendermint/tendermint/crypto"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Keybase exposes operations on a generic keystore
@@ -82,6 +84,8 @@ type Info interface {
 	GetPubKey() crypto.PubKey
 	// Address
 	GetAddress() types.AccAddress
+	// Bip44 Path
+	GetPath() (*hd.BIP44Params, error)
 }
 
 var _ Info = &localInfo{}
@@ -119,6 +123,10 @@ func (i localInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+func (i localInfo) GetPath() (*hd.BIP44Params, error) {
+	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+}
+
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
 	Name   string         `json:"name"`
@@ -150,8 +158,9 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-func (i ledgerInfo) GetPath() hd.BIP44Params {
-	return i.Path
+func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
+	tmp := i.Path
+	return &tmp, nil
 }
 
 // offlineInfo is the public information about an offline key
@@ -181,6 +190,10 @@ func (i offlineInfo) GetPubKey() crypto.PubKey {
 
 func (i offlineInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
+}
+
+func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
+	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
 // encoding info

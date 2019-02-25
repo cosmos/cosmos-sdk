@@ -31,7 +31,7 @@ func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
 
 func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
 
-func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Div(i, i2) }
+func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 
 func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
@@ -162,6 +162,11 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
 
+// ToDec converts Int to Dec
+func (i Int) ToDec() Dec {
+	return NewDecFromInt(i)
+}
+
 // Int64 converts Int to int64
 // Panics if the value is out of range
 func (i Int) Int64() int64 {
@@ -271,8 +276,8 @@ func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
 
-// Div divides Int with Int
-func (i Int) Div(i2 Int) (res Int) {
+// Quo divides Int with Int
+func (i Int) Quo(i2 Int) (res Int) {
 	// Check division-by-zero
 	if i2.i.Sign() == 0 {
 		panic("Division by zero")
@@ -280,9 +285,9 @@ func (i Int) Div(i2 Int) (res Int) {
 	return Int{div(i.i, i2.i)}
 }
 
-// DivRaw divides Int with int64
-func (i Int) DivRaw(i2 int64) Int {
-	return i.Div(NewInt(i2))
+// QuoRaw divides Int with int64
+func (i Int) QuoRaw(i2 int64) Int {
+	return i.Quo(NewInt(i2))
 }
 
 // Mod returns remainder after dividing with Int

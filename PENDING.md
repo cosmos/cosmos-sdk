@@ -17,6 +17,9 @@
 
 ### SDK
 
+* [\#3669] Ensure consistency in message naming, codec registration, and JSON
+tags.
+
 ### Tendermint
 
 <!--------------------------------- FEATURES --------------------------------->

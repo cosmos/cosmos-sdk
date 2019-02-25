@@ -241,7 +241,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		if sharesToUnbond.IsZero() {
 			continue
 		}
-		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
+		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue
@@ -250,7 +250,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			sharesToUnbond = delegation.Shares
 		}
 
-		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}

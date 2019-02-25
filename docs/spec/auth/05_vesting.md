@@ -273,10 +273,9 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 **Note**: If a delegation is slashed, the continuous vesting account will end up
 with an excess `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized. In addition, the undelegation amount may
-exceed the delegated vesting amount due to the ability of undelegating a fractional
-amount of shares in which case the tokens are truncated and as a result the
-validator's exchange rate exceeding one causing a delegator to receive slightly
-more tokens.
+exceed the original delegated vesting amount due to the fact that undelegation
+may truncate the bond refund, which in turn slightly increases the validator's
+exchange rate (tokens/shares).
 
 #### Keepers/Handlers
 

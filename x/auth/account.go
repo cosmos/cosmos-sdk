@@ -287,10 +287,9 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 // by which amount the base coins need to increase. The resulting base coins are
 // returned.
 //
-// NOTE: The undelegation amount may exceed the delegated vesting amount due to
-// the ability of undelegating a fractional amount of shares in which case the
-// tokens are truncated and as a result the validator's exchange rate exceeding
-// one causing a delegator to receive slightly more tokens.
+// NOTE: In addition, the undelegation amount may exceed the original delegated
+// vesting amount due to the fact that undelegation may truncate the bond refund,
+// which in turn slightly increases the validator's exchange rate (tokens/shares).
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {

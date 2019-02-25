@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = "GOV"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeUnknownProposal         sdk.CodeType = 1
 	CodeInactiveProposal        sdk.CodeType = 2
@@ -23,7 +23,6 @@ const (
 	CodeInvalidProposalStatus   sdk.CodeType = 11
 )
 
-//----------------------------------------
 // Error constructors
 
 func ErrUnknownProposal(codespace sdk.CodespaceType, proposalID uint64) sdk.Error {
@@ -46,12 +45,12 @@ func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.AccAddress) sd
 	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", address))
 }
 
-func ErrInvalidTitle(codespace sdk.CodespaceType, title string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidTitle, fmt.Sprintf("Proposal Title '%s' is not valid", title))
+func ErrInvalidTitle(codespace sdk.CodespaceType, errorMsg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidTitle, errorMsg)
 }
 
-func ErrInvalidDescription(codespace sdk.CodespaceType, description string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDescription, fmt.Sprintf("Proposal Desciption '%s' is not valid", description))
+func ErrInvalidDescription(codespace sdk.CodespaceType, errorMsg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDescription, errorMsg)
 }
 
 func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType ProposalKind) sdk.Error {

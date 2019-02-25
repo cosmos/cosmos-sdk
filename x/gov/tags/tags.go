@@ -1,17 +1,14 @@
-// nolint
 package tags
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Governance tags
 var (
-	ActionSubmitProposal   = []byte("submit-proposal")
-	ActionDeposit          = []byte("deposit")
-	ActionVote             = []byte("vote")
-	ActionProposalDropped  = []byte("proposal-dropped")
-	ActionProposalPassed   = []byte("proposal-passed")
-	ActionProposalRejected = []byte("proposal-rejected")
+	ActionProposalDropped  = "proposal-dropped"
+	ActionProposalPassed   = "proposal-passed"
+	ActionProposalRejected = "proposal-rejected"
 
 	Action            = sdk.TagAction
 	Proposer          = "proposer"
@@ -19,4 +16,5 @@ var (
 	VotingPeriodStart = "voting-period-start"
 	Depositor         = "depositor"
 	Voter             = "voter"
+	ProposalResult    = "proposal-result"
 )

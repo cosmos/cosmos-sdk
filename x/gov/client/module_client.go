@@ -1,10 +1,12 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 // ModuleClient exports all client functionality from this module
@@ -21,7 +23,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
-		Use:   "gov",
+		Use:   gov.ModuleName,
 		Short: "Querying commands for the governance module",
 	}
 
@@ -30,7 +32,9 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		govCli.GetCmdQueryProposals(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryVote(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryVotes(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryParam(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryParams(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryProposer(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryDeposit(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryDeposits(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryTally(mc.storeKey, mc.cdc))...)
@@ -41,13 +45,13 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:   "gov",
+		Use:   gov.ModuleName,
 		Short: "Governance transactions subcommands",
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(
-		govCli.GetCmdDeposit(mc.cdc),
-		govCli.GetCmdVote(mc.cdc),
+		govCli.GetCmdDeposit(mc.storeKey, mc.cdc),
+		govCli.GetCmdVote(mc.storeKey, mc.cdc),
 		govCli.GetCmdSubmitProposal(mc.cdc),
 	)...)
 

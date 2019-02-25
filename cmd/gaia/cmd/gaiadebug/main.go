@@ -10,12 +10,13 @@ import (
 	"strconv"
 	"strings"
 
-	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func init() {
@@ -111,12 +112,17 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 				pubKeyI, err4 = sdk.GetValPubKeyBech32(pubkeyString)
 
 				if err4 != nil {
-					return fmt.Errorf(`Expected hex, base64, or bech32. Got errors:
-			hex: %v,
-			base64: %v
-			bech32 acc: %v
-			bech32 val: %v
-			`, err, err2, err3, err4)
+					var err5 error
+					pubKeyI, err5 = sdk.GetConsPubKeyBech32(pubkeyString)
+					if err5 != nil {
+						return fmt.Errorf(`Expected hex, base64, or bech32. Got errors:
+								hex: %v,
+								base64: %v
+								bech32 Acc: %v
+								bech32 Val: %v
+								bech32 Cons: %v`,
+							err, err2, err3, err4, err5)
+					}
 
 				}
 			}
@@ -192,8 +198,9 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 	valAddr := sdk.ValAddress(addr)
 
 	fmt.Println("Address:", addr)
-	fmt.Println("Bech32 Acc:", accAddr)
-	fmt.Println("Bech32 Val:", valAddr)
+	fmt.Printf("Address (hex): %X\n", addr)
+	fmt.Printf("Bech32 Acc: %s\n", accAddr)
+	fmt.Printf("Bech32 Val: %s\n", valAddr)
 	return nil
 }
 

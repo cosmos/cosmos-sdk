@@ -1,14 +1,13 @@
 package simulation
 
 import (
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO Any invariants to check here?
 // AllInvariants tests all slashing invariants
-func AllInvariants() simulation.Invariant {
-	return func(_ *baseapp.BaseApp) error {
+func AllInvariants() sdk.Invariant {
+	return func(_ sdk.Context) error {
 		return nil
 	}
 }

@@ -13,28 +13,31 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 ##### main base config options #####
 
-# Validators reject any tx from the mempool with less than the minimum fee per gas.
-minimum_fees = "{{ .BaseConfig.MinFees }}"
+# The minimum gas prices a validator is willing to accept for processing a
+# transaction. A transaction's fees must meet the minimum of any denomination
+# specified in this config (e.g. 0.01photino;0.0001stake).
+minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 `
 
 var configTemplate *template.Template
 
 func init() {
 	var err error
-	tmpl := template.New("cosmosConfigFileTemplate")
+	tmpl := template.New("gaiaConfigFileTemplate")
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for Cosmos.
+// ParseConfig retrieves the default environment configuration for Gaia.
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)
 	return conf, err
 }
 
-// WriteConfigFile renders config using the template and writes it to configFilePath.
+// WriteConfigFile renders config using the template and writes it to
+// configFilePath.
 func WriteConfigFile(configFilePath string, config *Config) {
 	var buffer bytes.Buffer
 

@@ -2,18 +2,19 @@ package keys
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/tendermint/tendermint/crypto"
-	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+
+	"errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -49,9 +50,9 @@ func showKeysCmd() *cobra.Command {
 		RunE:  runShowCmd,
 	}
 
-	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
-	cmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
-	cmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
+	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
+	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
+	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd
@@ -89,7 +90,12 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	isShowAddr := viper.GetBool(FlagAddress)
 	isShowPubKey := viper.GetBool(FlagPublicKey)
-	isOutputSet := cmd.Flag(cli.OutputFlag).Changed
+
+	isOutputSet := false
+	tmp := cmd.Flag(cli.OutputFlag)
+	if tmp != nil {
+		isOutputSet = tmp.Changed
+	}
 
 	if isShowAddr && isShowPubKey {
 		return errors.New("cannot use both --address and --pubkey at once")
@@ -129,56 +135,13 @@ func validateMultisigThreshold(k, nKeys int) error {
 
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
-	case "acc":
+	case sdk.PrefixAccount:
 		return Bech32KeyOutput, nil
-	case "val":
+	case sdk.PrefixValidator:
 		return Bech32ValKeyOutput, nil
-	case "cons":
+	case sdk.PrefixConsensus:
 		return Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
-}
-
-///////////////////////////
-// REST
-
-// get key REST handler
-func GetKeyRequestHandler(indent bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		name := vars["name"]
-		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
-
-		if bechPrefix == "" {
-			bechPrefix = "acc"
-		}
-
-		bechKeyOut, err := getBechKeyOut(bechPrefix)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		info, err := GetKeyInfo(name)
-		if keyerror.IsErrKeyNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(err.Error()))
-			return
-		} else if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		keyOutput, err := bechKeyOut(info)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		PostProcessResponse(w, cdc, keyOutput, indent)
-	}
 }

@@ -5,17 +5,14 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var invalidStrs = []string{
-	"",
 	"hello, world!",
 	"0xAA",
 	"AAA",
@@ -33,6 +30,24 @@ func testMarshal(t *testing.T, original interface{}, res interface{}, marshal fu
 	err = unmarshal(bz)
 	require.Nil(t, err)
 	require.Equal(t, original, res)
+}
+
+func TestEmptyAddresses(t *testing.T) {
+	require.Equal(t, (types.AccAddress{}).String(), "")
+	require.Equal(t, (types.ValAddress{}).String(), "")
+	require.Equal(t, (types.ConsAddress{}).String(), "")
+
+	accAddr, err := types.AccAddressFromBech32("")
+	require.True(t, accAddr.Empty())
+	require.Nil(t, err)
+
+	valAddr, err := types.ValAddressFromBech32("")
+	require.True(t, valAddr.Empty())
+	require.Nil(t, err)
+
+	consAddr, err := types.ConsAddressFromBech32("")
+	require.True(t, consAddr.Empty())
+	require.Nil(t, err)
 }
 
 func TestRandBech32PubkeyConsistency(t *testing.T) {
@@ -198,26 +213,79 @@ func TestConfiguredPrefix(t *testing.T) {
 			rand.Read(pub[:])
 			// Test if randomly generated prefix of a given length works
 			prefix := RandString(length)
+
 			// Assuming that GetConfig is not sealed.
 			config := types.GetConfig()
-			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
+			config.SetBech32PrefixForAccount(
+				prefix+types.PrefixAccount,
+				prefix+types.PrefixPublic)
+
 			acc := types.AccAddress(pub.Address())
-			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+			require.True(t, strings.HasPrefix(
+				acc.String(),
+				prefix+types.PrefixAccount), acc.String())
+
 			bech32Pub := types.MustBech32ifyAccPub(pub)
-			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
+			require.True(t, strings.HasPrefix(
+				bech32Pub,
+				prefix+types.PrefixPublic))
 
-			config.SetBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
+			config.SetBech32PrefixForValidator(
+				prefix+types.PrefixValidator+types.PrefixAddress,
+				prefix+types.PrefixValidator+types.PrefixPublic)
+
 			val := types.ValAddress(pub.Address())
-			require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
-			bech32ValPub := types.MustBech32ifyValPub(pub)
-			require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
+			require.True(t, strings.HasPrefix(
+				val.String(),
+				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			config.SetBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
+			bech32ValPub := types.MustBech32ifyValPub(pub)
+			require.True(t, strings.HasPrefix(
+				bech32ValPub,
+				prefix+types.PrefixValidator+types.PrefixPublic))
+
+			config.SetBech32PrefixForConsensusNode(
+				prefix+types.PrefixConsensus+types.PrefixAddress,
+				prefix+types.PrefixConsensus+types.PrefixPublic)
+
 			cons := types.ConsAddress(pub.Address())
-			require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+			require.True(t, strings.HasPrefix(
+				cons.String(),
+				prefix+types.PrefixConsensus+types.PrefixAddress))
+
 			bech32ConsPub := types.MustBech32ifyConsPub(pub)
-			require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
+			require.True(t, strings.HasPrefix(
+				bech32ConsPub,
+				prefix+types.PrefixConsensus+types.PrefixPublic))
 		}
 
 	}
+}
+
+func TestAddressInterface(t *testing.T) {
+	var pub ed25519.PubKeyEd25519
+	rand.Read(pub[:])
+
+	addrs := []types.Address{
+		types.ConsAddress(pub.Address()),
+		types.ValAddress(pub.Address()),
+		types.AccAddress(pub.Address()),
+	}
+
+	for _, addr := range addrs {
+		switch addr := addr.(type) {
+		case types.AccAddress:
+			_, err := types.AccAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		case types.ValAddress:
+			_, err := types.ValAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		case types.ConsAddress:
+			_, err := types.ConsAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		default:
+			t.Fail()
+		}
+	}
+
 }

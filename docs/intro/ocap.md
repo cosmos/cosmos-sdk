@@ -77,26 +77,14 @@ var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
-[basecoin examples folder](../examples/basecoin).
+[gaia app](../gaia/app/app.go).
 
 ```go
-// File: cosmos-sdk/docs/examples/basecoin/app/init_handlers.go
-package app
-
-import (
-    "github.com/cosmos/cosmos-sdk/x/bank"
-    "github.com/cosmos/cosmos-sdk/x/sketchy"
-)
-
-func (app *BasecoinApp) initRouterHandlers() {
-
-    // All handlers must be added here.
-    // The order matters.
-    app.router.AddRoute("bank", bank.NewHandler(app.accountKeeper))
-    app.router.AddRoute("sketchy", sketchy.NewHandler())
-}
+// register message routes
+app.Router().
+  AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
+  AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
+  AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
+  AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+  AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 ```
-
-In the Basecoin example, the sketchy handler isn't provided an account
-mapper, which does provide the bank handler with the capability (in
-conjunction with the context of a transaction run).

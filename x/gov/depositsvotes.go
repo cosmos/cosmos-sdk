@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/pkg/errors"
 )
 
 // Vote
@@ -15,15 +14,29 @@ type Vote struct {
 	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
+func (v Vote) String() string {
+	return fmt.Sprintf("Voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
+}
+
+// Votes is a collection of Vote
+type Votes []Vote
+
+func (v Votes) String() string {
+	out := fmt.Sprintf("Votes for Proposal %d:", v[0].ProposalID)
+	for _, vot := range v {
+		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Option)
+	}
+	return out
+}
+
 // Returns whether 2 votes are equal
-func (voteA Vote) Equals(voteB Vote) bool {
-	return voteA.Voter.Equals(voteB.Voter) && voteA.ProposalID == voteB.ProposalID && voteA.Option == voteB.Option
+func (v Vote) Equals(comp Vote) bool {
+	return v.Voter.Equals(comp.Voter) && v.ProposalID == comp.ProposalID && v.Option == comp.Option
 }
 
 // Returns whether a vote is empty
-func (voteA Vote) Empty() bool {
-	voteB := Vote{}
-	return voteA.Equals(voteB)
+func (v Vote) Empty() bool {
+	return v.Equals(Vote{})
 }
 
 // Deposit
@@ -33,15 +46,33 @@ type Deposit struct {
 	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
 }
 
+func (d Deposit) String() string {
+	return fmt.Sprintf("Deposit by %s on Proposal %d is for the amount %s",
+		d.Depositor, d.ProposalID, d.Amount)
+}
+
+// Deposits is a collection of depoist
+type Deposits []Deposit
+
+func (d Deposits) String() string {
+	if len(d) == 0 {
+		return "[]"
+	}
+	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
+	for _, dep := range d {
+		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
+	}
+	return out
+}
+
 // Returns whether 2 deposits are equal
-func (depositA Deposit) Equals(depositB Deposit) bool {
-	return depositA.Depositor.Equals(depositB.Depositor) && depositA.ProposalID == depositB.ProposalID && depositA.Amount.IsEqual(depositB.Amount)
+func (d Deposit) Equals(comp Deposit) bool {
+	return d.Depositor.Equals(comp.Depositor) && d.ProposalID == comp.ProposalID && d.Amount.IsEqual(comp.Amount)
 }
 
 // Returns whether a deposit is empty
-func (depositA Deposit) Empty() bool {
-	depositB := Deposit{}
-	return depositA.Equals(depositB)
+func (d Deposit) Empty() bool {
+	return d.Equals(Deposit{})
 }
 
 // Type that represents VoteOption as a byte
@@ -68,7 +99,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	case "NoWithVeto":
 		return OptionNoWithVeto, nil
 	default:
-		return VoteOption(0xff), errors.Errorf("'%s' is not a valid vote option", str)
+		return VoteOption(0xff), fmt.Errorf("'%s' is not a valid vote option", str)
 	}
 }
 
@@ -136,7 +167,7 @@ func (vo VoteOption) String() string {
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", vo.String())))
+		s.Write([]byte(vo.String()))
 	default:
 		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
 	}

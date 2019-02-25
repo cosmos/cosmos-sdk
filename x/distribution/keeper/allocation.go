@@ -1,48 +1,85 @@
 package keeper
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// Allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
+// allocate fees handles distribution of the collected fees
+func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
 
-	// get the proposer of this block
-	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+	// fetch collected fees & fee pool
+	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
+	feesCollected := sdk.NewDecCoins(feesCollectedInt)
+	feePool := k.GetFeePool(ctx)
 
-	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
+	// clear collected fees, which will now be distributed
+	k.feeCollectionKeeper.ClearCollectedFees(ctx)
 
-	// get the fees which have been getting collected through all the
-	// transactions in the block
-	feesCollected := k.feeCollectionKeeper.GetCollectedFees(ctx)
-	feesCollectedDec := types.NewDecCoins(feesCollected)
+	// temporary workaround to keep CanWithdrawInvariant happy
+	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
+	if totalPower == 0 {
+		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected)
+		k.SetFeePool(ctx, feePool)
+		return
+	}
 
-	// allocated rewards to proposer
+	// calculate fraction votes
+	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
+
+	// calculate proposer reward
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
-	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(percentVotes))
-	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
+	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(fractionVotes))
+	proposerReward := feesCollected.MulDec(proposerMultiplier)
 
-	// apply commission
-	commission := proposerReward.MulDec(proposerValidator.GetCommission())
-	remaining := proposerReward.Minus(commission)
-	proposerDist.ValCommission = proposerDist.ValCommission.Plus(commission)
-	proposerDist.DelPool = proposerDist.DelPool.Plus(remaining)
+	// pay proposer
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
+	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
+	remaining := feesCollected.Sub(proposerReward)
+
+	// calculate fraction allocated to validators
+	communityTax := k.GetCommunityTax(ctx)
+	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
+
+	// allocate tokens proportionally to voting power
+	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	for _, vote := range votes {
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+
+		// TODO likely we should only reward validators who actually signed the block.
+		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
+		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
+		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
+		k.AllocateTokensToValidator(ctx, validator, reward)
+		remaining = remaining.Sub(reward)
+	}
 
 	// allocate community funding
-	communityTax := k.GetCommunityTax(ctx)
-	communityFunding := feesCollectedDec.MulDec(communityTax)
-	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Plus(communityFunding)
-
-	// set the global pool within the distribution module
-	poolReceived := feesCollectedDec.Minus(proposerReward).Minus(communityFunding)
-	feePool.ValPool = feePool.ValPool.Plus(poolReceived)
-
-	k.SetValidatorDistInfo(ctx, proposerDist)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
 	k.SetFeePool(ctx, feePool)
 
-	// clear the now distributed fees
-	k.feeCollectionKeeper.ClearCollectedFees(ctx)
+	// update outstanding rewards
+	outstanding := k.GetOutstandingRewards(ctx)
+	outstanding = outstanding.Add(feesCollected.Sub(remaining))
+	k.SetOutstandingRewards(ctx, outstanding)
+
+}
+
+// allocate tokens to a particular validator, splitting according to commission
+func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
+	// split tokens between validator and delegators according to commission
+	commission := tokens.MulDec(val.GetCommission())
+	shared := tokens.Sub(commission)
+
+	// update current commission
+	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+	currentCommission = currentCommission.Add(commission)
+	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+
+	// update current rewards
+	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	currentRewards.Rewards = currentRewards.Rewards.Add(shared)
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 }

@@ -1,15 +1,10 @@
 package keys
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +22,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := client.BufferStdin()
-	kb, err := GetKeyBaseWithWritePerm()
+	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
@@ -49,56 +44,4 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Password successfully updated!")
 	return nil
-}
-
-///////////////////////
-// REST
-
-// update key request REST body
-type UpdateKeyBody struct {
-	NewPassword string `json:"new_password"`
-	OldPassword string `json:"old_password"`
-}
-
-// update key REST handler
-func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	var kb keys.Keybase
-	var m UpdateKeyBody
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	kb, err = GetKeyBaseWithWritePerm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	getNewpass := func() (string, error) { return m.NewPassword, nil }
-
-	err = kb.Update(name, m.OldPassword, getNewpass)
-	if keyerror.IsErrKeyNotFound(err) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(err.Error()))
-		return
-	} else if keyerror.IsErrWrongPassword(err) {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
-		return
-	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }

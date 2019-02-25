@@ -9,11 +9,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func TestGetSetProposal(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -26,7 +25,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -41,7 +40,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -62,7 +61,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 }
 
 func TestDeposits(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -70,15 +69,14 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 4)}
-	fiveSteak := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 5)}
+	fourSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4))}
+	fiveSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)}))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)}, addr0Initial)
-
+	expTokens := sdk.TokensFromTendermintPower(42)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)}, addr0Initial)
 	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
 	// Check no deposits at beginning
@@ -95,7 +93,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, fourSteak, deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
 	require.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check a second deposit from same address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
@@ -103,10 +101,10 @@ func TestDeposits(t *testing.T) {
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	require.True(t, found)
-	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
+	require.Equal(t, fourSteak.Add(fiveSteak), deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
+	require.Equal(t, fourSteak.Add(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
+	require.Equal(t, addr0Initial.Sub(fourSteak).Sub(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check third deposit from a new address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
@@ -116,8 +114,8 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, addrs[1], deposit.Depositor)
 	require.Equal(t, fourSteak, deposit.Amount)
-	require.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
+	require.Equal(t, fourSteak.Add(fiveSteak).Add(fourSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
+	require.Equal(t, addr1Initial.Sub(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	// Check that proposal moved to voting period
 	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(ctx.BlockHeader().Time))
@@ -127,7 +125,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, depositsIterator.Valid())
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
+	require.Equal(t, fourSteak.Add(fiveSteak), deposit.Amount)
 	depositsIterator.Next()
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[1], deposit.Depositor)
@@ -149,7 +147,7 @@ func TestDeposits(t *testing.T) {
 }
 
 func TestVotes(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -205,7 +203,7 @@ func TestVotes(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})

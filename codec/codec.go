@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	amino "github.com/tendermint/go-amino"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
 )
 
 // amino codec to marshal/unmarshal

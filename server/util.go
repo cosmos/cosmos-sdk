@@ -9,19 +9,22 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/version"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
+	pvm "github.com/tendermint/tendermint/privval"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // server context
@@ -59,7 +62,6 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
-
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
@@ -103,25 +105,22 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 	}
 
-	cosmosConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
-	viper.SetConfigName("cosmos")
-	_ = viper.MergeInConfig()
-	var cosmosConf *config.Config
-	if _, err := os.Stat(cosmosConfigFilePath); os.IsNotExist(err) {
-		cosmosConf, _ := config.ParseConfig()
-		config.WriteConfigFile(cosmosConfigFilePath, cosmosConf)
+	// create a default gaia config file if it does not exist
+	gaiaConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
+	if _, err := os.Stat(gaiaConfigFilePath); os.IsNotExist(err) {
+		gaiaConf, _ := config.ParseConfig()
+		config.WriteConfigFile(gaiaConfigFilePath, gaiaConf)
 	}
 
-	if cosmosConf == nil {
-		_, err = config.ParseConfig()
-	}
+	viper.SetConfigName("gaiad")
+	err = viper.MergeInConfig()
 
 	return
 }
 
 // validate the config with the sdk's requirements.
 func validateConfig(conf *cfg.Config) error {
-	if conf.Consensus.CreateEmptyBlocks == false {
+	if !conf.Consensus.CreateEmptyBlocks {
 		return errors.New("config option CreateEmptyBlocks = false is currently unsupported")
 	}
 	return nil
@@ -144,6 +143,7 @@ func AddCommands(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
 		ShowAddressCmd(ctx),
+		VersionCmd(ctx),
 	)
 
 	rootCmd.AddCommand(
@@ -222,6 +222,16 @@ func TrapSignal(cleanupFunc func()) {
 			os.Exit(128 + int(syscall.SIGINT))
 		}
 	}()
+}
+
+// UpgradeOldPrivValFile converts old priv_validator.json file (prior to Tendermint 0.28)
+// to the new priv_validator_key.json and priv_validator_state.json files.
+func UpgradeOldPrivValFile(config *cfg.Config) {
+	if _, err := os.Stat(config.OldPrivValidatorFile()); !os.IsNotExist(err) {
+		if oldFilePV, err := pvm.LoadOldFilePV(config.OldPrivValidatorFile()); err == nil {
+			oldFilePV.Upgrade(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
+		}
+	}
 }
 
 func skipInterface(iface net.Interface) bool {

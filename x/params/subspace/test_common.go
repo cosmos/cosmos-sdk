@@ -21,20 +21,20 @@ const (
 )
 
 // Returns components for testing
-func DefaultTestComponents(t *testing.T, table TypeTable) (sdk.Context, Subspace, func() sdk.CommitID) {
+func DefaultTestComponents(t *testing.T) (sdk.Context, Subspace, func() sdk.CommitID) {
 	cdc := codec.New()
-	key := sdk.NewKVStoreKey("params")
-	tkey := sdk.NewTransientStoreKey("tparams")
+	key := sdk.NewKVStoreKey(StoreKey)
+	tkey := sdk.NewTransientStoreKey(TStoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.WithTracer(os.Stdout)
-	ms.WithTracingContext(sdk.TraceContext{})
+	ms.SetTracer(os.Stdout)
+	ms.SetTracingContext(sdk.TraceContext{})
 	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
-	subspace := NewSubspace(cdc, key, tkey, TestParamStore).WithTypeTable(table)
+	subspace := NewSubspace(cdc, key, tkey, TestParamStore)
 
 	return ctx, subspace, ms.Commit
 }

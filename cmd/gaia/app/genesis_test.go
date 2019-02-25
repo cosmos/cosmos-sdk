@@ -3,17 +3,18 @@ package app
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
@@ -31,18 +32,18 @@ var (
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
 	appState := NewDefaultGenesisState()
-	stakeData := appState.StakeData
+	stakingData := appState.StakingData
 	genAccs := make([]GenesisAccount, len(genTxs))
 
 	for i, genTx := range genTxs {
 		msgs := genTx.GetMsgs()
 		require.Equal(t, 1, len(msgs))
-		msg := msgs[0].(stake.MsgCreateValidator)
+		msg := msgs[0].(staking.MsgCreateValidator)
 
 		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
-		acc.Coins = sdk.Coins{sdk.NewInt64Coin(bondDenom, 150)}
+		acc.Coins = sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)}
 		genAccs[i] = NewGenesisAccount(&acc)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(150)) // increase the supply
+		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply
 	}
 
 	// create the final app state
@@ -54,8 +55,19 @@ func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc.SetCoins(sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)})
 	genAcc := NewGenesisAccount(&authAcc)
-	require.Equal(t, authAcc, *genAcc.ToAccount())
+	acc := genAcc.ToAccount()
+	require.IsType(t, &auth.BaseAccount{}, acc)
+	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
+
+	vacc := auth.NewContinuousVestingAccount(
+		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
+	)
+	genAcc = NewGenesisAccountI(vacc)
+	acc = genAcc.ToAccount()
+	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
+	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
 }
 
 func TestGaiaAppGenTx(t *testing.T) {
@@ -90,42 +102,87 @@ func TestGaiaAppGenState(t *testing.T) {
 }
 
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
-	desc := stake.NewDescription(name, "", "", "")
-	comm := stakeTypes.CommissionMsg{}
-	msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(bondDenom,
-		50), desc, comm)
+	desc := staking.NewDescription(name, "", "", "")
+	comm := staking.CommissionMsg{}
+	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(defaultBondDenom,
+		50), desc, comm, sdk.OneInt())
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "", nil)
 }
 
 func TestGaiaGenesisValidation(t *testing.T) {
-	genTxs := make([]auth.StdTx, 2)
-	// Test duplicate accounts fails
-	genTxs[0] = makeMsg("test-0", pk1)
-	genTxs[1] = makeMsg("test-1", pk1)
-	genesisState := makeGenesisState(t, genTxs)
+	genTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk2)}
+	dupGenTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk1)}
+
+	// require duplicate accounts fails validation
+	genesisState := makeGenesisState(t, dupGenTxs)
 	err := GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
-	// Test bonded + jailed validator fails
+	require.Error(t, err)
+
+	// require invalid vesting account fails validation (invalid end time)
 	genesisState = makeGenesisState(t, genTxs)
-	val1 := stakeTypes.NewValidator(addr1, pk1, stakeTypes.Description{Moniker: "test #2"})
+	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins
+	err = GaiaValidateGenesisState(genesisState)
+	require.Error(t, err)
+	genesisState.Accounts[0].StartTime = 1548888000
+	genesisState.Accounts[0].EndTime = 1548775410
+	err = GaiaValidateGenesisState(genesisState)
+	require.Error(t, err)
+
+	// require bonded + jailed validator fails validation
+	genesisState = makeGenesisState(t, genTxs)
+	val1 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #2", "", "", ""))
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val1)
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	err = GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
-	// Test duplicate validator fails
+	require.Error(t, err)
+
+	// require duplicate validator fails validation
 	val1.Jailed = false
 	genesisState = makeGenesisState(t, genTxs)
-	val2 := stakeTypes.NewValidator(addr1, pk1, stakeTypes.Description{Moniker: "test #3"})
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val1)
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val2)
+	val2 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #3", "", "", ""))
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
-	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("fooToken"))
-	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
+	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
+	require.Equal(t, sdk.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
+}
+
+func TestGenesisStateSanitize(t *testing.T) {
+	genesisState := makeGenesisState(t, nil)
+	require.Nil(t, GaiaValidateGenesisState(genesisState))
+
+	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	authAcc1 := auth.NewBaseAccountWithAddress(addr1)
+	authAcc1.SetCoins(sdk.Coins{
+		sdk.NewInt64Coin("bcoin", 150),
+		sdk.NewInt64Coin("acoin", 150),
+	})
+	authAcc1.SetAccountNumber(1)
+	genAcc1 := NewGenesisAccount(&authAcc1)
+
+	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	authAcc2 := auth.NewBaseAccountWithAddress(addr2)
+	authAcc2.SetCoins(sdk.Coins{
+		sdk.NewInt64Coin("acoin", 150),
+		sdk.NewInt64Coin("bcoin", 150),
+	})
+	genAcc2 := NewGenesisAccount(&authAcc2)
+
+	genesisState.Accounts = []GenesisAccount{genAcc1, genAcc2}
+	require.True(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
+	require.Equal(t, genesisState.Accounts[0].Coins[0].Denom, "bcoin")
+	require.Equal(t, genesisState.Accounts[0].Coins[1].Denom, "acoin")
+	require.Equal(t, genesisState.Accounts[1].Address, addr2)
+	genesisState.Sanitize()
+	require.False(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
+	require.Equal(t, genesisState.Accounts[1].Address, addr1)
+	require.Equal(t, genesisState.Accounts[1].Coins[0].Denom, "acoin")
+	require.Equal(t, genesisState.Accounts[1].Coins[1].Denom, "bcoin")
 }

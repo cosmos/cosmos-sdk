@@ -13,42 +13,26 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgSetWithdrawAddress:
 			return handleMsgModifyWithdrawAddress(ctx, msg, k)
-		case types.MsgWithdrawDelegatorRewardsAll:
-			return handleMsgWithdrawDelegatorRewardsAll(ctx, msg, k)
 		case types.MsgWithdrawDelegatorReward:
 			return handleMsgWithdrawDelegatorReward(ctx, msg, k)
-		case types.MsgWithdrawValidatorRewardsAll:
-			return handleMsgWithdrawValidatorRewardsAll(ctx, msg, k)
+		case types.MsgWithdrawValidatorCommission:
+			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in distribution module").Result()
 		}
 	}
 }
 
-//_____________________________________________________________________
-
-// These functions assume everything has been authenticated,
-// now we just perform action and save
+// These functions assume everything has been authenticated (ValidateBasic passed, and signatures checked)
 
 func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAddress, k keeper.Keeper) sdk.Result {
 
-	k.SetDelegatorWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
-
-	tags := sdk.NewTags(
-		tags.Action, tags.ActionModifyWithdrawAddress,
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-	)
-	return sdk.Result{
-		Tags: tags,
+	err := k.SetWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
+	if err != nil {
+		return err.Result()
 	}
-}
-
-func handleMsgWithdrawDelegatorRewardsAll(ctx sdk.Context, msg types.MsgWithdrawDelegatorRewardsAll, k keeper.Keeper) sdk.Result {
-
-	k.WithdrawDelegationRewardsAll(ctx, msg.DelegatorAddr)
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionWithdrawDelegatorRewardsAll,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 	)
 	return sdk.Result{
@@ -58,13 +42,12 @@ func handleMsgWithdrawDelegatorRewardsAll(ctx sdk.Context, msg types.MsgWithdraw
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) sdk.Result {
 
-	err := k.WithdrawDelegationReward(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
+	err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	if err != nil {
 		return err.Result()
 	}
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionWithdrawDelegatorReward,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.Validator, []byte(msg.ValidatorAddr.String()),
 	)
@@ -73,15 +56,14 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDele
 	}
 }
 
-func handleMsgWithdrawValidatorRewardsAll(ctx sdk.Context, msg types.MsgWithdrawValidatorRewardsAll, k keeper.Keeper) sdk.Result {
+func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdrawValidatorCommission, k keeper.Keeper) sdk.Result {
 
-	err := k.WithdrawValidatorRewardsAll(ctx, msg.ValidatorAddr)
+	err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddr)
 	if err != nil {
 		return err.Result()
 	}
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionWithdrawValidatorRewardsAll,
 		tags.Validator, []byte(msg.ValidatorAddr.String()),
 	)
 	return sdk.Result{

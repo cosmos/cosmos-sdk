@@ -2,7 +2,7 @@
 
 In the previous app we built a simple bank with one message type `send` for sending
 coins and one store for storing accounts.
-Here we build `App2`, which expands on `App1` by introducing 
+Here we build `App2`, which expands on `App1` by introducing
 
 - a new message type for issuing new coins
 - a new store for coin metadata (like who can issue coins)
@@ -38,7 +38,7 @@ methods for `MsgIssue` are similar to `MsgSend`.
 ## Handler
 
 We'll need a new handler to support the new message type. It just checks if the
-sender of the `MsgIssue` is the correct issuer for the given coin type, as per the information 
+sender of the `MsgIssue` is the correct issuer for the given coin type, as per the information
 in the issuer store:
 
 ```go
@@ -107,11 +107,11 @@ but that's left as an excercise for the reader :).
 
 ## Amino
 
-Now that we have two implementations of `Msg`, we won't know before hand 
+Now that we have two implementations of `Msg`, we won't know before hand
 which type is contained in a serialized `Tx`. Ideally, we would use the
 `Msg` interface inside our `Tx` implementation, but the JSON decoder can't
-decode into interface types. In fact, there's no standard way to unmarshal 
-into interfaces in Go. This is one of the primary reasons we built 
+decode into interface types. In fact, there's no standard way to unmarshal
+into interfaces in Go. This is one of the primary reasons we built
 [Amino](https://github.com/tendermint/go-amino) :).
 
 While SDK developers can encode transactions and state objects however they
@@ -121,7 +121,7 @@ excludes the `oneof` keyword.
 
 While `oneof` provides union types, Amino aims to provide interfaces.
 The main difference being that with union types, you have to know all the types
-up front. But anyone can implement an interface type whenever and however 
+up front. But anyone can implement an interface type whenever and however
 they like.
 
 To implement interface types, Amino allows any concrete implementation of an
@@ -164,7 +164,7 @@ Now that we're using Amino, we can embed the `Msg` interface directly in our
 // Simple tx to wrap the Msg.
 type app2Tx struct {
     sdk.Msg
-    
+
     PubKey    crypto.PubKey
     Signature []byte
 }
@@ -189,7 +189,7 @@ func tx2Decoder(cdc *codec.Codec) sdk.TxDecoder {
 
 ## AnteHandler
 
-Now that we have an implementation of `Tx` that includes more than just the Msg, 
+Now that we have an implementation of `Tx` that includes more than just the Msg,
 we need to specify how that extra information is validated and processed. This
 is the role of the `AnteHandler`. The word `ante` here denotes "before", as the
 `AnteHandler` is run before a `Handler`. While an app can have many Handlers,
@@ -209,7 +209,7 @@ according to whatever capability keys it was granted. Instead of a `Msg`,
 however, it takes a `Tx`.
 
 Like Handler, AnteHandler returns a `Result` type, but it also returns a new
-`Context` and an `abort bool`. 
+`Context` and an `abort bool`.
 
 For `App2`, we simply check if the PubKey matches the Address, and the Signature validates with the PubKey:
 
@@ -259,7 +259,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app2Name, logger, db, txDecoder(cdc))
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 	// Create a key for accessing the issue store.
 	keyIssue := sdk.NewKVStoreKey("issue")
 

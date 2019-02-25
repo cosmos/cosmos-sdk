@@ -1,10 +1,12 @@
 package types
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/pkg/errors"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,10 +20,7 @@ type CodespaceType string
 
 // IsOK - is everything okay?
 func (code CodeType) IsOK() bool {
-	if code == CodeOK {
-		return true
-	}
-	return false
+	return code == CodeOK
 }
 
 // SDK error codes
@@ -43,6 +42,8 @@ const (
 	CodeMemoTooLarge      CodeType = 13
 	CodeInsufficientFee   CodeType = 14
 	CodeTooManySignatures CodeType = 15
+	CodeGasOverflow       CodeType = 16
+	CodeNoSignatures      CodeType = 17
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -88,6 +89,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "insufficient fee"
 	case CodeTooManySignatures:
 		return "maximum numer of signatures exceeded"
+	case CodeNoSignatures:
+		return "no signatures supplied"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -142,6 +145,12 @@ func ErrInsufficientFee(msg string) Error {
 }
 func ErrTooManySignatures(msg string) Error {
 	return newErrorWithRootCodespace(CodeTooManySignatures, msg)
+}
+func ErrNoSignatures(msg string) Error {
+	return newErrorWithRootCodespace(CodeNoSignatures, msg)
+}
+func ErrGasOverflow(msg string) Error {
+	return newErrorWithRootCodespace(CodeGasOverflow, msg)
 }
 
 //----------------------------------------
@@ -238,19 +247,22 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	cdc := codec.New()
 	errMsg := err.cmnError.Error()
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		Message:   errMsg,
 	}
-	bz, er := cdc.MarshalJSON(jsonErr)
-	if er != nil {
-		panic(er)
+
+	var buff bytes.Buffer
+	enc := json.NewEncoder(&buff)
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(jsonErr); err != nil {
+		panic(errors.Wrap(err, "failed to encode ABCI error log"))
 	}
-	stringifiedJSON := string(bz)
-	return stringifiedJSON
+
+	return strings.TrimSpace(buff.String())
 }
 
 func (err *sdkError) Result() Result {

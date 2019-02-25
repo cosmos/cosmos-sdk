@@ -1,4 +1,4 @@
-# Join the Testnet
+# Join the public testnet
 
 ::: tip Current Testnet
 See the [testnet repo](https://github.com/cosmos/testnets) for
@@ -6,22 +6,24 @@ information on the latest testnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::
 
-**Please ensure you have the [gaia binaries](./installation.md) installed.**
-
-If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
+::: warning
+**You need to [install gaia](./installation.md) before you go further**
+:::
 
 ## Setting Up a New Node
+
+> NOTE: If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 These instructions are for setting up a brand new full node from scratch.
 
 First, initialize the node and create the necessary config files:
 
 ```bash
-gaiad init --moniker <your_custom_moniker>
+gaiad init <your_custom_moniker>
 ```
 
 ::: warning Note
-Only ASCII characters are supported for the `--moniker`. Using Unicode characters will render your node unreachable.
+Monikers can contain only ASCII characters. Using Unicode characters will render your node unreachable.
 :::
 
 You can edit this `moniker` later, in the `~/.gaiad/config/config.toml` file:
@@ -74,7 +76,7 @@ Now it is time to upgrade the software:
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all && git checkout master
-make update_tools && make get_vendor_deps && make install
+make update_tools install
 ```
 
 ::: tip
@@ -117,7 +119,7 @@ If those seeds aren't working, you can find more seeds and persistent peers on t
 
 You can also ask for peers on the [Validators Riot Room](https://riot.im/app/#/room/#cosmos-validators:matrix.org)
 
-For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
+For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/tendermint-core/using-tendermint.md#peers).
 
 ## Run a Full Node
 

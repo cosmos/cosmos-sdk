@@ -9,6 +9,7 @@ import (
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -22,7 +23,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 
 	// Register message routes.
 	// Note the handler gets access to the account store.
@@ -150,10 +151,10 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	}
 
 	// Deduct msg amount from sender account.
-	senderCoins := acc.Coins.Minus(amt)
+	senderCoins := acc.Coins.Sub(amt)
 
 	// If any coin has negative amount, return insufficient coins error.
-	if !senderCoins.IsNotNegative() {
+	if senderCoins.IsAnyNegative() {
 		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
 	}
 
@@ -187,7 +188,7 @@ func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	}
 
 	// Add amount to receiver's old coins
-	receiverCoins := acc.Coins.Plus(amt)
+	receiverCoins := acc.Coins.Add(amt)
 
 	// Update receiver account
 	acc.Coins = receiverCoins

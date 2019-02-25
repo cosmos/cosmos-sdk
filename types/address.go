@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -16,20 +17,52 @@ import (
 const (
 	// AddrLen defines a valid address length
 	AddrLen = 20
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32MainPrefix = "cosmos"
+
+	// PrefixAccount is the prefix for account keys
+	PrefixAccount = "acc"
+	// PrefixValidator is the prefix for validator keys
+	PrefixValidator = "val"
+	// PrefixConsensus is the prefix for consensus keys
+	PrefixConsensus = "cons"
+	// PrefixPublic is the prefix for public keys
+	PrefixPublic = "pub"
+	// PrefixOperator is the prefix for operator keys
+	PrefixOperator = "oper"
+
+	// PrefixAddress is the prefix for addresses
+	PrefixAddress = "addr"
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "cosmos"
+	Bech32PrefixAccAddr = Bech32MainPrefix
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = "cosmospub"
+	Bech32PrefixAccPub = Bech32MainPrefix + PrefixPublic
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = "cosmosvaloper"
+	Bech32PrefixValAddr = Bech32MainPrefix + PrefixValidator + PrefixOperator
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = "cosmosvaloperpub"
+	Bech32PrefixValPub = Bech32MainPrefix + PrefixValidator + PrefixOperator + PrefixPublic
 	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = "cosmosvalcons"
+	Bech32PrefixConsAddr = Bech32MainPrefix + PrefixValidator + PrefixConsensus
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = "cosmosvalconspub"
+	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
+
+// Address is a common interface for different types of addresses used by the SDK
+type Address interface {
+	Equals(Address) bool
+	Empty() bool
+	Marshal() ([]byte, error)
+	MarshalJSON() ([]byte, error)
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
+// Ensure that different address types implement the interface
+var _ Address = AccAddress{}
+var _ Address = ValAddress{}
+var _ Address = ConsAddress{}
 
 // ----------------------------------------------------------------------------
 // account
@@ -55,22 +88,31 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return AccAddress{}, nil
+	}
+
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return AccAddress(bz), nil
 }
 
 // Returns boolean for whether two AccAddresses are Equal
-func (aa AccAddress) Equals(aa2 AccAddress) bool {
+func (aa AccAddress) Equals(aa2 Address) bool {
 	if aa.Empty() && aa2.Empty() {
 		return true
 	}
 
-	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
+	return bytes.Equal(aa.Bytes(), aa2.Bytes())
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -80,7 +122,7 @@ func (aa AccAddress) Empty() bool {
 	}
 
 	aa2 := AccAddress{}
-	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
+	return bytes.Equal(aa.Bytes(), aa2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -125,7 +167,12 @@ func (aa AccAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
+	if aa.Empty() {
+		return ""
+	}
+
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
 		panic(err)
@@ -139,7 +186,7 @@ func (aa AccAddress) String() string {
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", aa.String())))
+		s.Write([]byte(aa.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", aa)))
 	default:
@@ -171,22 +218,31 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ValAddress{}, nil
+	}
+
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ValAddress(bz), nil
 }
 
 // Returns boolean for whether two ValAddresses are Equal
-func (va ValAddress) Equals(va2 ValAddress) bool {
+func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
 		return true
 	}
 
-	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -196,7 +252,7 @@ func (va ValAddress) Empty() bool {
 	}
 
 	va2 := ValAddress{}
-	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -242,7 +298,12 @@ func (va ValAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (va ValAddress) String() string {
+	if va.Empty() {
+		return ""
+	}
+
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)
@@ -256,7 +317,7 @@ func (va ValAddress) String() string {
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", va.String())))
+		s.Write([]byte(va.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", va)))
 	default:
@@ -288,10 +349,19 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ConsAddress{}, nil
+	}
+
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ConsAddress(bz), nil
@@ -303,12 +373,12 @@ func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
 }
 
 // Returns boolean for whether two ConsAddress are Equal
-func (ca ConsAddress) Equals(ca2 ConsAddress) bool {
+func (ca ConsAddress) Equals(ca2 Address) bool {
 	if ca.Empty() && ca2.Empty() {
 		return true
 	}
 
-	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
+	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
 // Returns boolean for whether an ConsAddress is empty
@@ -318,7 +388,7 @@ func (ca ConsAddress) Empty() bool {
 	}
 
 	ca2 := ConsAddress{}
-	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
+	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -364,7 +434,12 @@ func (ca ConsAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (ca ConsAddress) String() string {
+	if ca.Empty() {
+		return ""
+	}
+
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {
 		panic(err)
@@ -378,7 +453,7 @@ func (ca ConsAddress) String() string {
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", ca.String())))
+		s.Write([]byte(ca.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", ca)))
 	default:

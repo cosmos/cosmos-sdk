@@ -4,21 +4,20 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-
-	"github.com/tendermint/tendermint/libs/common"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/spf13/viper"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -28,98 +27,79 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Matches this txhash over all committed blocks",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// find the key to look up the account
-			hashHexStr := args[0]
-
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr)
+			output, err := queryTx(cdc, cliCtx, args[0])
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(output))
-			return nil
+			if output.Empty() {
+				return fmt.Errorf("No transaction found with hash %s", args[0])
+			}
+
+			return cliCtx.PrintOutput(output)
 		},
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
-	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	return cmd
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
+func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (out sdk.TxResponse, err error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	node, err := cliCtx.GetNode()
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	res, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 
 	if !cliCtx.TrustNode {
-		err := ValidateTxResult(cliCtx, res)
-		if err != nil {
-			return nil, err
+		if err = ValidateTxResult(cliCtx, res); err != nil {
+			return out, err
 		}
 	}
 
-	info, err := formatTxResult(cdc, res)
-	if err != nil {
-		return nil, err
+	if out, err = formatTxResult(cdc, res); err != nil {
+		return out, err
 	}
 
-	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(info, "", "  ")
-	}
-	return cdc.MarshalJSON(info)
+	return out, nil
 }
 
 // ValidateTxResult performs transaction verification
 func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
-	check, err := cliCtx.Verify(res.Height)
-	if err != nil {
-		return err
-	}
-
-	err = res.Proof.Validate(check.Header.DataHash)
-	if err != nil {
-		return err
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Verify(res.Height)
+		if err != nil {
+			return err
+		}
+		err = res.Proof.Validate(check.Header.DataHash)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (Info, error) {
+func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.TxResponse, error) {
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
-		return Info{}, err
+		return sdk.TxResponse{}, err
 	}
 
-	return Info{
-		Hash:   res.Hash,
-		Height: res.Height,
-		Tx:     tx,
-		Result: res.TxResult,
-	}, nil
-}
-
-// Info is used to prepare info to display
-type Info struct {
-	Hash   common.HexBytes        `json:"hash"`
-	Height int64                  `json:"height"`
-	Tx     sdk.Tx                 `json:"tx"`
-	Result abci.ResponseDeliverTx `json:"result"`
+	return sdk.NewResponseResultTx(res, tx), nil
 }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
@@ -135,7 +115,7 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 
 // REST
 
-// transaction query REST handler
+// QueryTxRequestHandlerFn transaction query REST handler
 func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -143,9 +123,18 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 
 		output, err := queryTx(cdc, cliCtx, hashHexStr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			if strings.Contains(err.Error(), hashHexStr) {
+				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+
+		if output.Empty() {
+			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
+		}
+
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

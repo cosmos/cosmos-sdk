@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"strings"
 
 	amino "github.com/tendermint/go-amino"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
-	"strings"
 )
 
 // Wait for the next tendermint block from the Tendermint RPC
@@ -109,8 +114,6 @@ func waitForHeight(height int64, url string) {
 		var resultBlock ctypes.ResultBlock
 		err = cdc.UnmarshalJSON(body, &resultBlock)
 		if err != nil {
-			fmt.Println("RES", res)
-			fmt.Println("BODY", string(body))
 			panic(err)
 		}
 
@@ -135,7 +138,7 @@ func WaitForTMStart(port string) {
 }
 
 // WaitForStart waits for the node to start by pinging the url
-// every 100ms for 5s until it returns 200. If it takes longer than 5s,
+// every 100ms for 10s until it returns 200. If it takes longer than 5s,
 // it panics.
 func WaitForStart(url string) {
 	var err error
@@ -143,7 +146,7 @@ func WaitForStart(url string) {
 	// ping the status endpoint a few times a second
 	// for a few seconds until we get a good response.
 	// otherwise something probably went wrong
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 100; i++ {
 		time.Sleep(time.Millisecond * 100)
 
 		var res *http.Response
@@ -195,6 +198,15 @@ func ExtractPortFromAddress(listenAddress string) string {
 		panic(fmt.Errorf("expected listen address: tcp://0.0.0.0:12345, got %s", listenAddress))
 	}
 	return stringList[2]
+}
+
+// NewTestCaseDir creates a new temporary directory for a test case.
+// Returns the directory path and a cleanup function.
+// nolint: errcheck
+func NewTestCaseDir(t *testing.T) (string, func()) {
+	dir, err := ioutil.TempDir("", t.Name()+"_")
+	require.NoError(t, err)
+	return dir, func() { os.RemoveAll(dir) }
 }
 
 var cdc = amino.NewCodec()

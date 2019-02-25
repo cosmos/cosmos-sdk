@@ -287,6 +287,10 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 // by which amount the base coins need to increase. The resulting base coins are
 // returned.
 //
+// NOTE: The undelegation (bond refund) amount may exceed the delegated vesting
+// (bond) amount due to the way undelegation truncates the bond refund, which
+// increases the validator's exchange rate (tokens/shares) slightly.
+//
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	for _, coin := range amount {
@@ -295,12 +299,13 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			panic("undelegation attempt with zero coins")
 		}
 		delegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
+		delegatedVesting := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
-		// Y := D - X
+		// Y := min(DV, D - X)
 		x := sdk.MinInt(delegatedFree, coin.Amount)
-		y := coin.Amount.Sub(x)
+		y := sdk.MinInt(delegatedVesting, coin.Amount.Sub(x))
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)

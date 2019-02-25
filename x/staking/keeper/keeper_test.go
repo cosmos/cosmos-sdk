@@ -30,11 +30,11 @@ func TestPool(t *testing.T) {
 
 	//check that the empty keeper loads the default
 	resPool := keeper.GetPool(ctx)
-	require.True(t, expPool.Equal(resPool))
+	require.Equal(t, expPool, resPool)
 
 	//modify a params, save, and retrieve
 	expPool.BondedTokens = sdk.NewInt(777)
 	keeper.SetPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
-	require.True(t, expPool.Equal(resPool))
+	require.Equal(t, expPool, resPool)
 }

@@ -46,9 +46,6 @@ tags.
 
 ### Gaia REST API
 
-* [\#3692] Update tx encoding and broadcasting endpoints:
-  * Remove duplicate broadcasting endpoints in favor of POST @ `/txs`
-  * Move encoding endpoint to `/txs/encode`
 * Update the `TxResponse` type allowing for the `Logs` result to be JSON
 decoded automatically.
 

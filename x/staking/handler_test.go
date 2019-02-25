@@ -123,7 +123,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, addr1)
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.OperatorAddr)
+	assert.Equal(t, addr1, validator.OperatorAddress)
 	assert.Equal(t, pk1, validator.ConsPubKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
@@ -152,7 +152,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.OperatorAddr)
+	assert.Equal(t, addr2, validator.OperatorAddress)
 	assert.Equal(t, pk2, validator.ConsPubKey)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
@@ -197,14 +197,14 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, validatorAddr, validator.OperatorAddr)
+	assert.Equal(t, validatorAddr, validator.OperatorAddress)
 	assert.Equal(t, pk, validator.ConsPubKey)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 
 	// one validator cannot be created twice even from different delegator
-	msgCreateValidatorOnBehalfOf.DelegatorAddr = keep.Addrs[2]
+	msgCreateValidatorOnBehalfOf.DelegatorAddress = keep.Addrs[2]
 	msgCreateValidatorOnBehalfOf.PubKey = keep.PKs[1]
 	got = handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
 	require.False(t, got.IsOK(), "%v", got)

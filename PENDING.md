@@ -17,6 +17,9 @@
 
 ### SDK
 
+* [\#3669] Ensure consistency in message naming, codec registration, and JSON
+tags.
+
 ### Tendermint
 
 <!--------------------------------- FEATURES --------------------------------->
@@ -58,6 +61,7 @@ CLI flag.
 * \#3691 Cleanup error messages
 * \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
+* [\#3694] Push tagged docker images on docker hub when tag is created.
 
 ### Tendermint
 

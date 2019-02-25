@@ -291,7 +291,7 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 
 // quotient
 func (d Dec) QuoUint(u Uint) Dec {
-	mul := new(big.Int).Quo(d.Int, u.i)
+	mul := new(big.Int).Quo(d.Int, NewDecFromUint(u).Int)
 	return NewDecFromBigInt(mul)
 }
 

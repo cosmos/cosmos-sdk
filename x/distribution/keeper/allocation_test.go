@@ -115,19 +115,19 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	// initialize state
 	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// create validator with 50% commission
+	// create validator with 10% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
-	// create second validator with 0% commission
+	// create second validator with 10% commission
 	commission = staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
-	// create second validator with 0% commission
+	// create third validator with 10% commission
 	commission = staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr3, valConsPk3,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
@@ -156,7 +156,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.Coins{
-		{sdk.DefaultBondDenom, sdk.NewInt(634195840)},
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)),
 	}
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{

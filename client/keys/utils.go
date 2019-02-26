@@ -162,7 +162,7 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
 		out, err := MarshalJSON(ko)
@@ -181,7 +181,7 @@ func printInfos(infos []keys.Info) {
 	}
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}

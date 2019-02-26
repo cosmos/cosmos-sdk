@@ -48,11 +48,13 @@ func (m multiSigKey) GetPath() (*hd.BIP44Params, error) {
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name]",
+		Use:   "show [name...]",
 		Short: "Show key info for the given name",
-		Long:  `Return public details of one local key.`,
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  runShowCmd,
+		Long: `Return public details of a single local key. If multiple names are
+provided, then an ephemeral multisig key will be created under the name "multi"
+consisting of all the keys provided by name and multisig threshold.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: runShowCmd,
 	}
 
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
@@ -79,6 +81,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			if err != nil {
 				return err
 			}
+
 			pks[i] = info.GetPubKey()
 		}
 
@@ -87,6 +90,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if err != nil {
 			return err
 		}
+
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
 		info = multiSigKey{
 			name: defaultMultiSigKeyName,

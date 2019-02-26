@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -101,6 +102,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	coins, remainder := rewards.TruncateDecimal()
 	outstanding := k.GetOutstandingRewards(ctx)
 
+	fmt.Printf("outstanding: %v, rewards: %v\n", outstanding, rewards)
 	k.SetOutstandingRewards(ctx, outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)

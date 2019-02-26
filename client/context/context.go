@@ -53,6 +53,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	FromName      string
 	Indent        bool
+	SkipConfirm   bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -96,6 +97,7 @@ func NewCLIContext() CLIContext {
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
+		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
 	}
 }
 

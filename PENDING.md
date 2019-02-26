@@ -10,6 +10,10 @@
   * `password` and `generate_only` have been removed from the `base_req` object
   * All txs that used to sign or use the Keybase now only generate the tx
   * `keys` routes completely removed
+* [\#3692] Update tx encoding and broadcasting endpoints:
+  * Remove duplicate broadcasting endpoints in favor of POST @ `/txs`
+    * The `Tx` field now accepts a `StdTx` and not raw tx bytes
+  * Move encoding endpoint to `/txs/encode`
 
 ### Gaia CLI
 
@@ -47,6 +51,7 @@ decoded automatically.
 
 ### Gaia CLI
 
+* [\#3653] Prompt user confirmation prior to signing and broadcasting a transaction.
 * [\#3670] CLI support for showing bech32 addresses in Ledger devices
 * [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
 CLI flag.
@@ -81,6 +86,9 @@ CLI flag.
 
 ### SDK
 
+* \#3728 Truncate decimal multiplication & division in distribution to ensure
+         no more than the collected fees / inflation are distributed
+* \#3727 Return on zero-length (including []byte{}) PrefixEndBytes() calls
 * \#3559 fix occasional failing due to non-determinism in lcd test TestBonding
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during

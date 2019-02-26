@@ -15,10 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
@@ -152,10 +152,16 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, 
 	return kb.writeLedgerKey(name, pub, *hdPath), nil
 }
 
-// CreateOffline creates a new reference to an offline keypair
-// It returns the created key info
+// CreateOffline creates a new reference to an offline keypair. It returns the
+// created key info.
 func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
 	return kb.writeOfflineKey(name, pub), nil
+}
+
+// CreateMulti creates a new reference to a multisig (offline) keypair. It
+// returns the created key info.
+func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
+	return kb.writeMultisigKey(name, pub), nil
 }
 
 func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
@@ -422,6 +428,12 @@ func (kb dbKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP
 
 func (kb dbKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
 	info := newOfflineInfo(name, pub)
+	kb.writeInfo(name, info)
+	return info
+}
+
+func (kb dbKeybase) writeMultisigKey(name string, pub tmcrypto.PubKey) Info {
+	info := NewMultiInfo(name, pub)
 	kb.writeInfo(name, info)
 	return info
 }

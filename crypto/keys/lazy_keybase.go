@@ -110,6 +110,16 @@ func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info In
 	return newDbKeybase(db).CreateOffline(name, pubkey)
 }
 
+func (lkb lazyKeybase) CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error) {
+	db, err := dbm.NewGoLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	return newDbKeybase(db).CreateMulti(name, pubkey)
+}
+
 func (lkb lazyKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
 	db, err := dbm.NewGoLevelDB(lkb.name, lkb.dir)
 	if err != nil {

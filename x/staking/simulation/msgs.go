@@ -30,16 +30,16 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 
 		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
 		commission := staking.NewCommissionMsg(
-			simulation.RandomDecAmount(r, maxCommission),
+			simulation.BiasedRandomDecAmount(r, maxCommission),
 			maxCommission,
-			simulation.RandomDecAmount(r, maxCommission),
+			simulation.BiasedRandomDecAmount(r, maxCommission),
 		)
 
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		amount := m.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simulation.BiasedRandomAmount(r, amount)
 		}
 
 		if amount.Equal(sdk.ZeroInt()) {
@@ -84,7 +84,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
-		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
+		newCommissionRate := simulation.BiasedRandomDecAmount(r, val.Commission.MaxRate)
 
 		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
@@ -116,7 +116,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		delegatorAddress := delegatorAcc.Address
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simulation.BiasedRandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
 			return "no-operation", nil, nil
@@ -154,8 +154,8 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
-		//numShares := simulation.UnbiasedRandomDecAmount(r, delegation.Shares)
-		numShares := simulation.RandomDecAmount2(r, delegation.Shares)
+		//numShares := simulation.UnbiasedBiasedRandomDecAmount(r, delegation.Shares)
+		numShares := simulation.BiasedRandomDecAmount2(r, delegation.Shares)
 		if numShares.IsZero() {
 			return noOperation, nil, nil
 		}
@@ -196,7 +196,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		// TODO
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simulation.BiasedRandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
 			return noOperation, nil, nil

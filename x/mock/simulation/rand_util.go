@@ -37,20 +37,20 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // Generate a random amount
-func UnbiasedRandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
+func UnbiasedBiasedRandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	randInt := big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	return sdk.NewIntFromBigInt(randInt)
 }
 
 // Generate a random amount
-func UnbiasedRandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+func UnbiasedBiasedRandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	randInt := big.NewInt(0).Rand(r, max.Int)
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
 // Generate a random amount
-// Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
+// Note: The range of BiasedRandomAmount includes max, and is, in fact, biased to return max as well as 0.
+func BiasedRandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	var randInt = big.NewInt(0)
 	switch r.Intn(10) {
 	case 0:
@@ -63,9 +63,9 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	return sdk.NewIntFromBigInt(randInt)
 }
 
-// RandomDecAmount generates a random decimal amount
-// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+// BiasedRandomDecAmount generates a random decimal amount
+// Note: The range of BiasedRandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
+func BiasedRandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	var randInt = big.NewInt(0)
 	switch r.Intn(10) {
 	case 0:
@@ -78,16 +78,15 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
-// RandomDecAmount generates a random decimal amount
-// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount2(r *rand.Rand, max sdk.Dec) sdk.Dec {
+// BiasedRandomDecAmount generates a random decimal amount
+// Note: The range of BiasedRandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
+func BiasedRandomDecAmount2(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	var randInt = big.NewInt(0)
 	switch r.Intn(10) {
 	case 0:
-		return sdk.ZeroDec()
-	// randInt = big.NewInt(0)
-	case 1:
-		randInt = max.Int // the underlying big int with all precision bits.
+		// randInt = big.NewInt(0)
+	//case 1:
+	//randInt = max.Int // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
 		randInt = big.NewInt(0).Rand(r, max.Int)
 	}

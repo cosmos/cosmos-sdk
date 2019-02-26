@@ -21,7 +21,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		description := staking.Description{
@@ -43,7 +43,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		if amount.Equal(sdk.ZeroInt()) {
-			return noOperation, nil, nil
+			return noOperation, false, nil, nil
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
@@ -51,7 +51,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 			selfDelegation, description, commission, sdk.OneInt())
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -64,7 +64,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		return action, result.IsOK(), nil, nil
 	}
 }
 
@@ -73,7 +73,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		description := staking.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
@@ -89,7 +89,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
@@ -98,7 +98,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		}
 		event(fmt.Sprintf("staking/MsgEditValidator/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgEditValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		return action, result.IsOK(), nil, nil
 	}
 }
 
@@ -107,7 +107,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		val := keeper.RandomValidator(r, k, ctx)
@@ -119,14 +119,14 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "no-operation", nil, nil
+			return "no-operation", false, nil, nil
 		}
 
 		msg := staking.NewMsgDelegate(
 			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
@@ -135,7 +135,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		}
 		event(fmt.Sprintf("staking/MsgDelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgDelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		return action, result.IsOK(), nil, nil
 	}
 }
 
@@ -144,19 +144,19 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
 		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAddress)
 		if len(delegations) == 0 {
-			return noOperation, nil, nil
+			return noOperation, false, nil, nil
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
 		numShares := simulation.RandomDecAmount(r, delegation.Shares)
 		if numShares.Equal(sdk.ZeroDec()) {
-			return noOperation, nil, nil
+			return noOperation, false, nil, nil
 		}
 		msg := staking.MsgUndelegate{
 			DelegatorAddress: delegatorAddress,
@@ -164,7 +164,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 			SharesAmount:     numShares,
 		}
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
 				msg.GetSignBytes(), msg.ValidateBasic())
 		}
 		ctx, write := ctx.CacheContext()
@@ -174,7 +174,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 		event(fmt.Sprintf("staking/MsgUndelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgUndelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		return action, result.IsOK(), nil, nil
 	}
 }
 
@@ -183,7 +183,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		srcVal := keeper.RandomValidator(r, k, ctx)
@@ -198,7 +198,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return noOperation, nil, nil
+			return noOperation, false, nil, nil
 		}
 		msg := staking.MsgBeginRedelegate{
 			DelegatorAddress:    delegatorAddress,
@@ -207,7 +207,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			SharesAmount:        amount.ToDec(),
 		}
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
@@ -216,6 +216,6 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
-		return action, nil, nil
+		return action, result.IsOK(), nil, nil
 	}
 }

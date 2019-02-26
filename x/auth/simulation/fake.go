@@ -16,7 +16,7 @@ import (
 func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
 		stored := m.GetAccount(ctx, account.Address)
@@ -24,7 +24,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 
 		if len(initCoins) == 0 {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
+			return action, false, nil, nil
 		}
 
 		denomIndex := r.Intn(len(initCoins))
@@ -33,7 +33,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		amt, err := randPositiveInt(r, randCoin.Amount)
 		if err != nil {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
+			return action, false, nil, nil
 		}
 
 		// Create a random fee and verify the fees are within the account's spendable
@@ -42,14 +42,14 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		spendableCoins := stored.SpendableCoins(ctx.BlockHeader().Time)
 		if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
+			return action, false, nil, nil
 		}
 
 		// get the new account balance
 		newCoins, hasNeg := initCoins.SafeSub(fees)
 		if hasNeg {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
+			return action, false, nil, nil
 		}
 
 		if err := stored.SetCoins(newCoins); err != nil {
@@ -61,7 +61,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		event(fmt.Sprintf("auth/SimulateDeductFee/true"))
 
 		action = "TestDeductFee"
-		return action, nil, nil
+		return action, false, nil, nil
 	}
 }
 

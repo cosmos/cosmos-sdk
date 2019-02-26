@@ -16,14 +16,14 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
 		msg := distribution.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -32,10 +32,11 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgSetWithdrawAddress/%v", result.IsOK()))
+		ok = result.IsOK()
+		event(fmt.Sprintf("distribution/MsgSetWithdrawAddress/%v", ok))
 
-		action = fmt.Sprintf("TestMsgSetWithdrawAddress: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		action = fmt.Sprintf("TestMsgSetWithdrawAddress: ok %v, msg %s", ok, msg.GetSignBytes())
+		return action, ok, nil, nil
 	}
 }
 
@@ -44,14 +45,14 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
 		validatorAccount := simulation.RandomAcc(r, accs)
 		msg := distribution.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -60,10 +61,11 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorReward/%v", result.IsOK()))
+		ok = result.IsOK()
+		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorReward/%v", ok))
 
-		action = fmt.Sprintf("TestMsgWithdrawDelegatorReward: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		action = fmt.Sprintf("TestMsgWithdrawDelegatorReward: ok %v, msg %s", ok, msg.GetSignBytes())
+		return action, ok, nil, nil
 	}
 }
 
@@ -72,13 +74,13 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
-		action string, fOp []simulation.FutureOperation, err error) {
+		action string, ok bool, fOp []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
 		msg := distribution.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -87,9 +89,10 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawValidatorCommission/%v", result.IsOK()))
+		ok = result.IsOK()
+		event(fmt.Sprintf("distribution/MsgWithdrawValidatorCommission/%v", ok))
 
-		action = fmt.Sprintf("TestMsgWithdrawValidatorCommission: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
+		action = fmt.Sprintf("TestMsgWithdrawValidatorCommission: ok %v, msg %s", ok, msg.GetSignBytes())
+		return action, ok, nil, nil
 	}
 }

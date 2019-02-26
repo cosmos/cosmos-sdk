@@ -92,7 +92,7 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 }
 
 func queryOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	bz, err := codec.MarshalJSONIndent(k.cdc, k.GetOutstandingRewards(ctx, sdk.ValAddress([]byte{}))) // TODO
+	bz, err := codec.MarshalJSONIndent(k.cdc, k.GetValidatorOutstandingRewards(ctx, sdk.ValAddress([]byte{}))) // TODO
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

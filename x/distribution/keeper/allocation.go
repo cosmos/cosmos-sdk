@@ -79,7 +79,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
-	outstanding := k.GetOutstandingRewards(ctx, val.GetOperator())
+	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding = outstanding.Add(tokens)
-	k.SetOutstandingRewards(ctx, val.GetOperator(), outstanding)
+	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

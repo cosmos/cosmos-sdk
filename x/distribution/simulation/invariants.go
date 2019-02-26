@@ -33,14 +33,14 @@ func NonNegativeOutstandingInvariant(k distr.Keeper, sk types.StakingKeeper) sdk
 
 		var outstanding sdk.DecCoins
 
-		// iterate over all validators
-		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
-			outstanding = k.GetOutstandingRewards(ctx, val.GetOperator())
+		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			outstanding = rewards
 			if outstanding.IsAnyNegative() {
 				return true
 			}
 			return false
 		})
+
 		if outstanding.IsAnyNegative() {
 			return fmt.Errorf("negative outstanding coins: %v", outstanding)
 		}
@@ -70,8 +70,9 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 					_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 				}
 			}
-			remaining = k.GetOutstandingRewards(ctx, val.GetOperator())
+			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 			if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
+				panic("OH NO")
 				return true
 			}
 			return false

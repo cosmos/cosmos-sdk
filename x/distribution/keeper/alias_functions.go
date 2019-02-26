@@ -6,7 +6,7 @@ import (
 
 // get outstanding rewards
 func (k Keeper) GetOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins {
-	return k.GetOutstandingRewards(ctx, val)
+	return k.GetValidatorOutstandingRewards(ctx, val)
 }
 
 // get the community coins

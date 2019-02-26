@@ -18,7 +18,7 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val sdk.Validator) {
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
 
 	// set outstanding rewards
-	k.SetOutstandingRewards(ctx, val.GetOperator(), sdk.DecCoins{})
+	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), sdk.DecCoins{})
 }
 
 // increment validator period, returning the period just ended
@@ -33,11 +33,11 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 		// can't calculate ratio for zero-token validators
 		// ergo we instead add to the community pool
 		feePool := k.GetFeePool(ctx)
-		outstanding := k.GetOutstandingRewards(ctx, val.GetOperator())
+		outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 		feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards)
 		outstanding = outstanding.Sub(rewards.Rewards)
 		k.SetFeePool(ctx, feePool)
-		k.SetOutstandingRewards(ctx, val.GetOperator(), outstanding)
+		k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 
 		current = sdk.DecCoins{}
 	} else {

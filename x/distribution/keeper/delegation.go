@@ -84,6 +84,10 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// calculate rewards for final period
 	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 
+	if del.GetDelegatorAddr().String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" {
+		fmt.Printf("rewards for final period (startingPeriod %v, endingPeriod %v) with stake %v: %v\n", startingPeriod, endingPeriod, stake, k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+	}
+
 	return
 }
 
@@ -111,6 +115,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 		fmt.Printf("startingPeriod: %v\n", startingPeriod)
 		fmt.Printf("endingPeriod: %v\n", endingPeriod)
 		fmt.Printf("withdraw from %v to %v\n", val, del)
+		fmt.Printf("rewards: %v, outstanding: %v\n", rewards, outstanding)
 	}
 	k.SetOutstandingRewards(ctx, outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)

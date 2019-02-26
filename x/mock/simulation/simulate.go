@@ -269,9 +269,9 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-			logUpdate, ok, futureOps, err := op(r2, app, ctx, accounts, event)
-			if !lean || (ok && lean) {
-				logWriter(logUpdate)
+			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
+			if !lean || (opMsg.OK && lean) {
+				logWriter(opMsg.String())
 			}
 			if err != nil {
 				displayLogs()
@@ -282,7 +282,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 			if testingMode {
 				if onOperation {
-					eventStr := fmt.Sprintf("operation: %v", logUpdate)
+					eventStr := fmt.Sprintf("operation: %v", opMsg.String())
 					assertAllInvariants(t, app, invariants, eventStr, displayLogs)
 				}
 				if opCount%50 == 0 {
@@ -313,9 +313,9 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, ok, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
-		if !lean || (ok && lean) {
-			logWriter(logUpdate)
+		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
+		if !lean || (opMsg.OK && lean) {
+			logWriter(opMsg.String())
 		}
 		if err != nil {
 			displayLogs()
@@ -337,9 +337,9 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, ok, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
-		if !lean || (ok && lean) {
-			logWriter(logUpdate)
+		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
+		if !lean || (opMsg.OK && lean) {
+			logWriter(opMsg.String())
 		}
 		if err != nil {
 			displayLogs()

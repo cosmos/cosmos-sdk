@@ -39,18 +39,19 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOps []simulation.FutureOperation, err error) {
+		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
 		sender := simulation.RandomAcc(r, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, sender)
 		if err != nil {
-			return "", false, nil, err
+			return simulation.NoOpMsg(), nil, err
 		}
-		action, ok = simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
+		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		// don't schedule votes if proposal failed
 		if !ok {
-			return action, ok, nil, nil
+			return opMsg, nil, nil
 		}
 		proposalID := k.GetLastProposalID(ctx)
 		// 2) Schedule operations for votes
@@ -71,7 +72,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
 		// before and after.
 
-		return action, ok, fops, nil
+		return opMsg, fops, nil
 	}
 }
 
@@ -80,19 +81,20 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOps []simulation.FutureOperation, err error) {
+		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		sender := simulation.RandomAcc(r, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, sender)
 		if err != nil {
-			return "", false, nil, err
+			return simulation.NoOpMsg(), nil, err
 		}
-		action, ok = simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
-		return action, ok, nil, nil
+		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		return opMsg, nil, nil
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string, ok bool) {
+func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (ok bool) {
 	ctx, write := ctx.CacheContext()
 	result := handler(ctx, msg)
 	ok = result.IsOK()
@@ -100,8 +102,7 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 		write()
 	}
 	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
-	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", ok, msg.GetSignBytes())
-	return
+	return ok
 }
 
 func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) (msg gov.MsgSubmitProposal, err error) {
@@ -122,26 +123,28 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOp []simulation.FutureOperation, err error) {
+		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
-			return "no-operation", false, nil, nil
+			return simulation.NoOpMsg(), nil, nil
 		}
 		deposit := randomDeposit(r)
 		msg := gov.NewMsgDeposit(acc.Address, proposalID, deposit)
 		if msg.ValidateBasic() != nil {
-			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("gov/MsgDeposit/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgDeposit: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, result.IsOK(), nil, nil
+		ok = gov.NewHandler(k)(ctx, msg).IsOK()
+
+		event(fmt.Sprintf("gov/MsgDeposit/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		return opMsg, nil, nil
 	}
 }
 
@@ -154,7 +157,7 @@ func SimulateMsgVote(k gov.Keeper) simulation.Operation {
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID uint64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOp []simulation.FutureOperation, err error) {
+		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		if acc.Equals(simulation.Account{}) {
 			acc = simulation.RandomAcc(r, accs)
@@ -164,25 +167,25 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {
-				return "no-operation", false, nil, nil
+				return simulation.NoOpMsg(), nil, nil
 			}
 		}
 		option := randomVotingOption(r)
 
 		msg := gov.NewMsgVote(acc.Address, proposalID, option)
 		if msg.ValidateBasic() != nil {
-			return "", false, nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
-		result := gov.NewHandler(k)(ctx, msg)
-		if result.IsOK() {
+		ok := gov.NewHandler(k)(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
 
-		event(fmt.Sprintf("gov/MsgVote/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgVote: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, result.IsOK(), nil, nil
+		event(fmt.Sprintf("gov/MsgVote/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		return opMsg, nil, nil
 	}
 }
 

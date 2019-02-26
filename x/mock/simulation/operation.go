@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"math/rand"
 	"sort"
 	"time"
@@ -20,7 +21,59 @@ import (
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, event func(string)) (
-	action string, ok bool, futureOps []FutureOperation, err error)
+	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
+
+// OperationMsg - structure for operation output
+type OperationMsg struct {
+	Route   string          `json:"route"`
+	Name    string          `json:"name"`
+	Comment string          `json:"comment"`
+	OK      bool            `json:"ok"`
+	Msg     json.RawMessage `json:"msg"`
+}
+
+// OperationMsg - create a new operation message from sdk.Msg
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
+
+	return OperationMsg{
+		Route:   msg.Route(),
+		Name:    msg.Type(),
+		Comment: comment,
+		OK:      ok,
+		Msg:     msg.GetSignBytes(),
+	}
+}
+
+// OperationMsg - create a new operation message from raw input
+func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
+	return OperationMsg{
+		Route:   route,
+		Name:    name,
+		Comment: comment,
+		OK:      ok,
+		Msg:     msg,
+	}
+}
+
+// OperationMsg - create a new operation message from sdk.Msg
+func NoOpMsg() OperationMsg {
+	return OperationMsg{
+		Route:   "",
+		Name:    "no-operation",
+		Comment: "",
+		OK:      false,
+		Msg:     nil,
+	}
+}
+
+// LogEntry - log entry text for this operation msg
+func (om OperationMsg) String() string {
+	out, err := json.Marshal(om)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
 
 // queue of operations
 type OperationQueue map[int][]Operation

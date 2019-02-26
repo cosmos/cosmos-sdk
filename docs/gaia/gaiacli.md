@@ -712,6 +712,15 @@ used as signer of multisig transactions:
 gaiacli keys show --address p1p2p3
 ```
 
+You may also view multisig threshold, pubkey constituents and respective weights
+by viewing the JSON output of the key or passing the `--show-multisig` flag:
+
+```bash
+gaiacli keys show p1p2p3 -o json
+
+gaiacli keys show p1p2p3 --show-multisig
+```
+
 The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 

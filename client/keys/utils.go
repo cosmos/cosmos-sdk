@@ -89,6 +89,24 @@ func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
+func printKeyTextHeader() {
+	fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+}
+
+func printMultiSigKeyTextHeader() {
+	fmt.Printf("WEIGHT:\tTHRESHOLD:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+}
+
+func printMultiSigKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(keyInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	printMultiSigKeyTextHeader()
+	printMultiSigKeyOutput(ko)
+}
+
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
@@ -97,8 +115,9 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		printKeyTextHeader()
 		printKeyOutput(ko)
+
 	case "json":
 		out, err := MarshalJSON(ko)
 		if err != nil {
@@ -117,7 +136,7 @@ func printInfos(infos []keys.Info) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		printKeyTextHeader()
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}
@@ -134,6 +153,12 @@ func printInfos(infos []keys.Info) {
 
 func printKeyOutput(ko keys.KeyOutput) {
 	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
+}
+
+func printMultiSigKeyOutput(ko keys.KeyOutput) {
+	for _, pk := range ko.PubKeys {
+		fmt.Printf("%d\t%d\t\t%s\t%s\n", pk.Weight, ko.Threshold, pk.Address, pk.PubKey)
+	}
 }
 
 func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {

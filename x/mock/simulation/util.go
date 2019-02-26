@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -72,11 +73,14 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 
 		var f *os.File
 		if numLoggers > 10 {
-			fileName := fmt.Sprintf("simulation_log_%s.txt",
-				time.Now().Format("2006-01-02 15:04:05"))
-			fmt.Printf("Too many logs to display, instead writing to %s\n",
-				fileName)
-			f, _ = os.Create(fileName)
+			fileName := fmt.Sprintf("%s.txt", time.Now().Format("2006-01-02_15:04:05"))
+
+			folderPath := os.ExpandEnv("$HOME/.gaiad/simulations")
+			filePath := path.Join(folderPath, fileName)
+			fmt.Printf("Too many logs to display, instead writing to %s\n", filePath)
+
+			os.MkdirAll(folderPath, os.ModePerm)
+			f, _ = os.Create(filePath)
 		}
 
 		for i := 0; i < numLoggers; i++ {

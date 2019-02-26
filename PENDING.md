@@ -47,6 +47,7 @@ decoded automatically.
 
 ### Gaia CLI
 
+* [\#3653] Prompt user confirmation prior to signing and broadcasting a transaction.
 * [\#3670] CLI support for showing bech32 addresses in Ledger devices
 * [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
 CLI flag.

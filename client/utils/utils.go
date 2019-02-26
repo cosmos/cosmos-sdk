@@ -62,6 +62,22 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return nil
 	}
 
+	if !cliCtx.SkipConfirm {
+		stdSignMsg, err := txBldr.BuildSignMsg(msgs)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
+
+		buf := client.BufferStdin()
+		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		if err != nil || !ok {
+			fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+			return err
+		}
+	}
+
 	passphrase, err := keys.GetPassphrase(fromName)
 	if err != nil {
 		return err

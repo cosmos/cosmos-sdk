@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,9 +36,17 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
 
 	// pay proposer
+	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-	remaining := feesCollected.Sub(proposerReward)
+	if proposerValidator != nil {
+		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
+		remaining = remaining.Sub(proposerReward)
+	} else {
+		// proposer can be unknown if say, the unbonding period is 1 block, so
+		// e.g. a validator undelegates at block X, it's removed entirely by
+		// block X+1's endblock, then X+2 we need to refer to the previous
+		// proposer for X+1, but we've forgotten about them.
+	}
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
@@ -56,6 +65,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 		remaining = remaining.Sub(reward)
 	}
 
+	fmt.Printf("remaining after: %v\n", remaining)
+
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
 	k.SetFeePool(ctx, feePool)
@@ -64,6 +75,11 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
+
+	if val.GetOperator().String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+		fmt.Printf("allocate to validator: val %+v, tokens %v\n", val, tokens)
+	}
+
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)

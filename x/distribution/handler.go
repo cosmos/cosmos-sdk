@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
@@ -42,7 +43,14 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAdd
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) sdk.Result {
 
+	if msg.ValidatorAddress.String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+		fmt.Printf("handleMsgWithdrawDelegatorReward at height %v - delegator %v: %v\n", ctx.BlockHeight(), msg.DelegatorAddress.String())
+	}
+
 	err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
+	if msg.ValidatorAddress.String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+		fmt.Printf("error: %v\n", err)
+	}
 	if err != nil {
 		return err.Result()
 	}

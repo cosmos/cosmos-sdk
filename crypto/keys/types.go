@@ -3,11 +3,11 @@ package keys
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // Keybase exposes operations on a generic keystore
@@ -205,24 +205,24 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
-type multisigPubKey struct {
+type multisigPubKeyInfo struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 	Weight uint          `json:"weight"`
 }
 type multiInfo struct {
-	Name      string           `json:"name"`
-	PubKey    crypto.PubKey    `json:"pubkey"`
-	Threshold uint             `json:"threshold"`
-	PubKeys   []multisigPubKey `json:"pubkeys"`
+	Name      string               `json:"name"`
+	PubKey    crypto.PubKey        `json:"pubkey"`
+	Threshold uint                 `json:"threshold"`
+	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	multiPK := pub.(multisig.PubKeyMultisigThreshold)
 
-	pubKeys := make([]multisigPubKey, len(multiPK.PubKeys))
+	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
 	for i, pk := range multiPK.PubKeys {
 		// TODO: Recursively check pk for total weight?
-		pubKeys[i] = multisigPubKey{pk, 1}
+		pubKeys[i] = multisigPubKeyInfo{pk, 1}
 	}
 
 	return &multiInfo{

@@ -79,7 +79,10 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 			filePath := path.Join(folderPath, fileName)
 			fmt.Printf("Too many logs to display, instead writing to %s\n", filePath)
 
-			os.MkdirAll(folderPath, os.ModePerm)
+			err := os.MkdirAll(folderPath, os.ModePerm)
+			if err != nil {
+				panic(err)
+			}
 			f, _ = os.Create(filePath)
 		}
 

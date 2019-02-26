@@ -15,9 +15,9 @@ const (
 // DenomUnits contains a mapping of denomination mapped to their respective unit
 // multipliers.
 var DenomUnits = map[string]Int{
-	"Atom":  OneInt(),
-	"Uatom": NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)),
-	"Matom": NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(5), nil)),
+	Atom:  OneInt(),
+	Uatom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)),
+	Matom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(5), nil)),
 	// further units to be supported...
 }
 

@@ -67,6 +67,11 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
+				if del.GetDelegatorAddr().String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" {
+					fmt.Printf("at block height %v found slash event: height %v, endingPeriod %v, rewards before: %v\n",
+						ctx.BlockHeight(),
+						height, endingPeriod, k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+				}
 				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
@@ -102,7 +107,11 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	coins, remainder := rewards.TruncateDecimal()
 	outstanding := k.GetOutstandingRewards(ctx)
 
-	fmt.Printf("outstanding: %v, rewards: %v\n", outstanding, rewards)
+	if len(rewards) > 0 && len(outstanding) > 0 && rewards[0].IsGTE(outstanding[0]) {
+		fmt.Printf("startingPeriod: %v\n", startingPeriod)
+		fmt.Printf("endingPeriod: %v\n", endingPeriod)
+		fmt.Printf("withdraw from %v to %v\n", val, del)
+	}
 	k.SetOutstandingRewards(ctx, outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)

@@ -86,6 +86,7 @@ CLI flag.
 
 ### SDK
 
+* \#3727 Return on zero-length (including []byte{}) PrefixEndBytes() calls
 * \#3559 fix occasional failing due to non-determinism in lcd test TestBonding
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during

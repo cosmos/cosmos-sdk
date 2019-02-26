@@ -142,7 +142,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			}
 
 			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-			if _, err := kb.CreateOffline(name, pk); err != nil {
+			if _, err := kb.CreateMulti(name, pk); err != nil {
 				return err
 			}
 

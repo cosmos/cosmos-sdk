@@ -65,6 +65,8 @@ CLI flag.
 
 ### Tendermint
 
+* [\#3699] Upgrade to Tendermint 0.30.1
+
 <!--------------------------------- BUG FIXES -------------------------------->
 
 ## BUG FIXES
@@ -72,6 +74,8 @@ CLI flag.
 ### Gaia REST API
 
 ### Gaia CLI
+
+* [\#3731](https://github.com/cosmos/cosmos-sdk/pull/3731) `keys add --interactive` bip32 passphrase regression fix
 
 ### Gaia
 

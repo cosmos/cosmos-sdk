@@ -36,11 +36,11 @@
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "v0.12.0"
+  version = "~v0.12.0"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.30.0"
+  revision = "v0.30.1"
 
 [[constraint]]
   name = "github.com/zondax/ledger-cosmos-go"

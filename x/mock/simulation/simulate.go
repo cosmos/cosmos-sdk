@@ -24,11 +24,11 @@ type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn AppStateFn, ops WeightedOperations,
-	invariants sdk.Invariants, numBlocks int, blockSize int, commit bool) (bool, error) {
+	invariants sdk.Invariants, numBlocks int, blockSize int, commit, lean bool) (bool, error) {
 
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops,
-		invariants, numBlocks, blockSize, commit)
+		invariants, numBlocks, blockSize, commit, lean)
 }
 
 // initialize the chain for the simulation
@@ -55,7 +55,7 @@ func initChain(
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks int, blockSize int, commit bool) (stopEarly bool, simError error) {
+	numBlocks, blockSize int, commit, lean bool) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
@@ -119,7 +119,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	blockSimulator := createBlockSimulator(
 		testingMode, tb, t, params, eventStats.tally, invariants,
 		ops, operationQueue, timeOperationQueue,
-		numBlocks, blockSize, displayLogs)
+		numBlocks, blockSize, displayLogs, lean)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -163,12 +163,12 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		numQueuedOpsRan := runQueuedOperations(
 			operationQueue, int(header.Height),
 			tb, r, app, ctx, accs, logWriter,
-			displayLogs, eventStats.tally)
+			displayLogs, eventStats.tally, lean)
 
 		numQueuedTimeOpsRan := runQueuedTimeOperations(
 			timeOperationQueue, header.Time,
 			tb, r, app, ctx, accs,
-			logWriter, displayLogs, eventStats.tally)
+			logWriter, displayLogs, eventStats.tally, lean)
 
 		if testingMode && onOperation {
 			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
@@ -238,7 +238,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
 	event func(string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
-	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
+	totalNumBlocks int, avgBlockSize int, displayLogs func(), lean bool) blockSimFn {
 
 	var lastBlocksizeState = 0 // state for [4 * uniform distribution]
 	var blocksize int
@@ -269,8 +269,10 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-			logUpdate, futureOps, err := op(r2, app, ctx, accounts, event)
-			logWriter(logUpdate)
+			logUpdate, ok, futureOps, err := op(r2, app, ctx, accounts, event)
+			if !lean || (ok && lean) {
+				logWriter(logUpdate)
+			}
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v",
@@ -298,7 +300,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 func runQueuedOperations(queueOps map[int][]Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, logWriter func(string),
-	displayLogs func(), tallyEvent func(string)) (numOpsRan int) {
+	displayLogs func(), tallyEvent func(string), lean bool) (numOpsRan int) {
 
 	queuedOp, ok := queueOps[height]
 	if !ok {
@@ -311,8 +313,10 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
-		logWriter(logUpdate)
+		logUpdate, ok, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
+		if !lean || (ok && lean) {
+			logWriter(logUpdate)
+		}
 		if err != nil {
 			displayLogs()
 			tb.FailNow()
@@ -325,7 +329,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 func runQueuedTimeOperations(queueOps []FutureOperation,
 	currentTime time.Time, tb testing.TB, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []Account,
-	logWriter func(string), displayLogs func(), tallyEvent func(string)) (numOpsRan int) {
+	logWriter func(string), displayLogs func(), tallyEvent func(string), lean bool) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
@@ -333,8 +337,10 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
-		logWriter(logUpdate)
+		logUpdate, ok, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
+		if !lean || (ok && lean) {
+			logWriter(logUpdate)
+		}
 		if err != nil {
 			displayLogs()
 			tb.FailNow()

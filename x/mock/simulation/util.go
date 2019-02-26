@@ -37,7 +37,7 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 	} else {
 		b = tb.(*testing.B)
 	}
-	return
+	return testingMode, t, b
 }
 
 // Builds a function to add logs for this particular block

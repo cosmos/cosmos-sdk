@@ -20,7 +20,7 @@ import (
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, event func(string)) (
-	action string, futureOps []FutureOperation, err error)
+	action string, ok bool, futureOps []FutureOperation, err error)
 
 // queue of operations
 type OperationQueue map[int][]Operation

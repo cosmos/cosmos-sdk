@@ -155,7 +155,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		delegation := delegations[r.Intn(len(delegations))]
 
 		//numShares := simulation.UnbiasedBiasedRandomDecAmount(r, delegation.Shares)
-		numShares := simulation.BiasedRandomDecAmount2(r, delegation.Shares)
+		numShares := simulation.BiasedRandomDecAmount(r, delegation.Shares)
 		if numShares.IsZero() {
 			return noOperation, nil, nil
 		}

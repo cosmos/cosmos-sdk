@@ -78,6 +78,7 @@ func BiasedRandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
+// TODO remove before merge
 // BiasedRandomDecAmount generates a random decimal amount
 // Note: The range of BiasedRandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
 func BiasedRandomDecAmount2(r *rand.Rand, max sdk.Dec) sdk.Dec {

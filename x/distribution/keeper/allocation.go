@@ -40,7 +40,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 	if proposerValidator != nil {
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-		remaining = feesCollected.Sub(proposerReward)
+		remaining = remaining.Sub(proposerReward)
 	} else {
 		// proposer can be unknown if say, the unbonding period is 1 block, so
 		// e.g. a validator undelegates at block X, it's removed entirely by
@@ -73,7 +73,9 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 	// update outstanding rewards
 	outstanding := k.GetOutstandingRewards(ctx)
+	fmt.Printf("add %v to outstanding %v\n", feesCollected.Sub(remaining), outstanding)
 	outstanding = outstanding.Add(feesCollected.Sub(remaining))
+	fmt.Printf("new outstanding %v\n", outstanding)
 	k.SetOutstandingRewards(ctx, outstanding)
 
 }

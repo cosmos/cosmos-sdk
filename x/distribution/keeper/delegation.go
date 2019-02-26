@@ -12,6 +12,10 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// period has already been incremented - we want to store the period ended by this delegation action
 	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
 
+	if del.String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" {
+		fmt.Printf("initialize delegation for period: %v\n", previousPeriod)
+	}
+
 	// increment reference count for the period we're going to track
 	k.incrementReferenceCount(ctx, val, previousPeriod)
 

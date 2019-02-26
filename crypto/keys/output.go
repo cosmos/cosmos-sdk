@@ -17,8 +17,9 @@ type KeyOutput struct {
 }
 
 type multisigPubKeyOutput struct {
-	PubKey string `json:"pubkey"`
-	Weight uint   `json:"weight"`
+	Address string `json:"address"`
+	PubKey  string `json:"pubkey"`
+	Weight  uint   `json:"weight"`
 }
 
 // Bech32KeysOutput returns a slice of KeyOutput objects, each with the "acc"
@@ -92,12 +93,14 @@ func Bech32KeyOutput(info Info) (KeyOutput, error) {
 		pubKeys := make([]multisigPubKeyOutput, len(mInfo.PubKeys))
 
 		for i, pk := range mInfo.PubKeys {
-			bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
+			accAddr := sdk.AccAddress(pk.PubKey.Address().Bytes())
+
+			bechPubKey, err := sdk.Bech32ifyAccPub(pk.PubKey)
 			if err != nil {
 				return KeyOutput{}, err
 			}
 
-			pubKeys[i] = multisigPubKeyOutput{bechPubKey, pk.Weight}
+			pubKeys[i] = multisigPubKeyOutput{accAddr.String(), bechPubKey, pk.Weight}
 		}
 
 		ko.Threshold = mInfo.Threshold

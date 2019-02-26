@@ -122,7 +122,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
+	tokensToAdd sdk.Uint) (valOut types.Validator, addedShares sdk.Dec) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
@@ -135,7 +135,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
+	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Uint) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
@@ -148,7 +148,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
+	validator types.Validator, tokensToRemove sdk.Uint) types.Validator {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
@@ -190,11 +190,8 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	if validator.Status != sdk.Unbonded {
 		panic("cannot call RemoveValidator on bonded or unbonding validators")
 	}
-	if validator.Tokens.IsPositive() {
+	if !validator.Tokens.IsZero() {
 		panic("attempting to remove a validator which still contains tokens")
-	}
-	if validator.Tokens.GT(sdk.ZeroInt()) {
-		panic("validator being removed should never have positive tokens")
 	}
 
 	// delete the old validator record
@@ -284,7 +281,7 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 }
 
 // Set the last validator power.
-func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
+func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)

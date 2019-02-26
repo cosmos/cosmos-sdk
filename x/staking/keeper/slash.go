@@ -76,21 +76,21 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	remainingSlashAmount := slashAmount
 
 	switch {
-	case infractionHeight > ctx.BlockHeight():
+	case int64(infractionHeight) > ctx.BlockHeight():
 
 		// Can't slash infractions in the future
 		panic(fmt.Sprintf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
 			infractionHeight, ctx.BlockHeight()))
 
-	case infractionHeight == ctx.BlockHeight():
+	case int64(infractionHeight) == ctx.BlockHeight():
 
 		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
 		logger.Info(fmt.Sprintf(
 			"slashing at current height %d, not scanning unbonding delegations & redelegations",
 			infractionHeight))
 
-	case infractionHeight < ctx.BlockHeight():
+	case int64(infractionHeight) < ctx.BlockHeight():
 
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
@@ -170,7 +170,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	for i, entry := range unbondingDelegation.Entries {
 
 		// If unbonding started before this height, stake didn't contribute to infraction
-		if entry.CreationHeight < int64(infractionHeight) {
+		if entry.CreationHeight < infractionHeight {
 			continue
 		}
 

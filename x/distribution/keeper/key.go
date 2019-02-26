@@ -13,9 +13,9 @@ const (
 
 // keys
 var (
-	FeePoolKey            = []byte{0x00} // key for global distribution state
-	ProposerKey           = []byte{0x01} // key for the proposer operator address
-	OutstandingRewardsKey = []byte{0x02} // key for outstanding rewards
+	FeePoolKey               = []byte{0x00} // key for global distribution state
+	ProposerKey              = []byte{0x01} // key for the proposer operator address
+	OutstandingRewardsPrefix = []byte{0x02} // key for outstanding rewards
 
 	DelegatorWithdrawAddrPrefix          = []byte{0x03} // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = []byte{0x04} // key for delegator starting info
@@ -29,6 +29,11 @@ var (
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
+
+// gets the outstanding rewards key for a validator
+func GetOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
+	return append(OutstandingRewardsPrefix, valAddr.Bytes()...)
+}
 
 // gets an address from a delegator's withdraw info key
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {

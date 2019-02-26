@@ -33,8 +33,8 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		h.k.SetFeePool(ctx, feePool)
 
 		// update outstanding
-		outstanding := h.k.GetOutstandingRewards(ctx)
-		h.k.SetOutstandingRewards(ctx, outstanding.Sub(commission))
+		outstanding := h.k.GetOutstandingRewards(ctx, valAddr)
+		h.k.SetOutstandingRewards(ctx, valAddr, outstanding.Sub(commission))
 
 		// add to validator account
 		accAddr := sdk.AccAddress(valAddr)

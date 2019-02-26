@@ -264,18 +264,18 @@ func (k Keeper) IterateValidatorAccumulatedCommissions(ctx sdk.Context, handler 
 }
 
 // get outstanding rewards
-func (k Keeper) GetOutstandingRewards(ctx sdk.Context) (rewards types.OutstandingRewards) {
+func (k Keeper) GetOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.OutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(OutstandingRewardsKey)
+	b := store.Get(GetOutstandingRewardsKey(val))
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &rewards)
 	return
 }
 
 // set outstanding rewards
-func (k Keeper) SetOutstandingRewards(ctx sdk.Context, rewards types.OutstandingRewards) {
+func (k Keeper) SetOutstandingRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.OutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
-	store.Set(OutstandingRewardsKey, b)
+	store.Set(GetOutstandingRewardsKey(val), b)
 }
 
 // get slash event for height

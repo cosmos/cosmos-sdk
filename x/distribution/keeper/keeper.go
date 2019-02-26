@@ -84,8 +84,8 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder)
 
 	// update outstanding
-	outstanding := k.GetOutstandingRewards(ctx)
-	k.SetOutstandingRewards(ctx, outstanding.Sub(sdk.NewDecCoins(coins)))
+	outstanding := k.GetOutstandingRewards(ctx, valAddr)
+	k.SetOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(coins)))
 
 	accAddr := sdk.AccAddress(valAddr)
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)

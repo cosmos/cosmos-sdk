@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -30,21 +29,6 @@ const (
 	flagMultiSigThreshold  = "multisig-threshold"
 	defaultMultiSigKeyName = "multi"
 )
-
-var _ keys.Info = (*multiSigKey)(nil)
-
-type multiSigKey struct {
-	name string
-	key  tmcrypto.PubKey
-}
-
-func (m multiSigKey) GetName() string            { return m.name }
-func (m multiSigKey) GetType() keys.KeyType      { return keys.TypeLocal }
-func (m multiSigKey) GetPubKey() tmcrypto.PubKey { return m.key }
-func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address()) }
-func (m multiSigKey) GetPath() (*hd.BIP44Params, error) {
-	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
-}
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -92,10 +76,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = multiSigKey{
-			name: defaultMultiSigKeyName,
-			key:  multikey,
-		}
+		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)

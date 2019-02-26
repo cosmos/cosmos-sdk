@@ -18,12 +18,12 @@ import (
 
 // SendTx tests and runs a single msg send where both
 // accounts already exist.
-func SendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
+func SimulateMsgSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
 		action string, ok bool, fOps []simulation.FutureOperation, err error) {
 
-		fromAcc, action, msg, ok := createSendMsg(r, ctx, accs, mapper)
+		fromAcc, action, msg, ok := createMsgSend(r, ctx, accs, mapper)
 		if !ok {
 			return action, ok, nil, nil
 		}
@@ -37,27 +37,7 @@ func SendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	}
 }
 
-// SendTx tests and runs a single tx send, with auth where both
-// accounts already exist.
-func SendTx(mapper auth.AccountKeeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOps []simulation.FutureOperation, err error) {
-
-		fromAcc, action, msg, ok := createSendMsg(r, ctx, accs, mapper)
-		if !ok {
-			return action, ok, nil, nil
-		}
-		err = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, nil)
-		if err != nil {
-			return "", false, nil, err
-		}
-		event("bank/sendAndVerifyTxSend/ok")
-
-		return action, ok, nil, nil
-	}
-}
-
-func createSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (
+func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (
 	fromAcc simulation.Account, action string, msg bank.MsgSend, ok bool) {
 
 	fromAcc = simulation.RandomAcc(r, accs)
@@ -69,7 +49,6 @@ func createSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 		}
 		toAcc = simulation.RandomAcc(r, accs)
 	}
-	toAddr := toAcc.Address
 	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
@@ -82,15 +61,9 @@ func createSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
-	action = fmt.Sprintf("%s is sending %s %s to %s",
-		fromAcc.Address.String(),
-		amt.String(),
-		initFromCoins[denomIndex].Denom,
-		toAddr.String(),
-	)
-
 	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
 	msg = bank.NewMsgSend(fromAcc.Address, toAcc.Address, coins)
+	action = fmt.Sprintf("TestMsgSend: ok %v, msg %s", true, msg.GetSignBytes())
 
 	return fromAcc, action, msg, true
 }
@@ -140,29 +113,9 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg b
 	return nil
 }
 
-// SingleInputSendTx tests and runs a single msg multisend w/ auth, with one input and one output, where both
-// accounts already exist.
-func SingleInputMultiSendTx(mapper auth.AccountKeeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
-		action string, ok bool, fOps []simulation.FutureOperation, err error) {
-
-		fromAcc, action, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, mapper)
-		if !ok {
-			return action, ok, nil, nil
-		}
-		err = sendAndVerifyMsgMultiSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, nil)
-		if err != nil {
-			return "", false, nil, err
-		}
-		event("bank/sendAndVerifyTxMultiSend/ok")
-
-		return action, ok, nil, nil
-	}
-}
-
 // SingleInputSendMsg tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
-func SingleInputMsgMultiSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
+func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
 		action string, ok bool, fOps []simulation.FutureOperation, err error) {
@@ -206,18 +159,12 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
-	action = fmt.Sprintf("%s is sending %s %s to %s",
-		fromAcc.Address.String(),
-		amt.String(),
-		initFromCoins[denomIndex].Denom,
-		toAddr.String(),
-	)
-
 	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
 	msg = bank.MsgMultiSend{
 		Inputs:  []bank.Input{bank.NewInput(fromAcc.Address, coins)},
 		Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
 	}
+	action = fmt.Sprintf("TestMsgMultiSend: ok %v, msg %s", true, msg.GetSignBytes())
 	return fromAcc, action, msg, true
 }
 

@@ -24,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -649,12 +650,12 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, tx auth.StdTx) (*http.Response, string) {
-	txReq := authrest.BroadcastReq{Tx: tx, Return: "block"}
+	txReq := clienttx.BroadcastReq{Tx: tx, Return: "block"}
 
 	req, err := cdc.MarshalJSON(txReq)
 	require.Nil(t, err)
 
-	return Request(t, port, "POST", "/tx/broadcast", req)
+	return Request(t, port, "POST", "/txs", req)
 }
 
 // doTransfer performs a balance transfer with auto gas calculation. It also signs

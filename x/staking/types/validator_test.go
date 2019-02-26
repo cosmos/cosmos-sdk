@@ -73,7 +73,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
-		OperatorAddr:    addr1,
+		OperatorAddress: addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -149,7 +149,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		OperatorAddr:    addr1,
+		OperatorAddress: addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -177,7 +177,7 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewInt(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		OperatorAddr:    addr1,
+		OperatorAddress: addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
@@ -225,7 +225,7 @@ func TestPossibleOverflow(t *testing.T) {
 	poolTokens := sdk.NewInt(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		OperatorAddr:    addr1,
+		OperatorAddress: addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,

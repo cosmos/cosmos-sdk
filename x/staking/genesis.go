@@ -22,7 +22,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
+	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
@@ -37,7 +37,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			keeper.AfterValidatorCreated(ctx, validator.OperatorAddr)
+			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
 		}
 
 		// Set timeslice if necessary
@@ -46,15 +46,15 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		}
 	}
 
-	for _, delegation := range data.Bonds {
+	for _, delegation := range data.Delegations {
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 	}
 
@@ -99,7 +99,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	params := keeper.GetParams(ctx)
 	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
-	bonds := keeper.GetAllDelegations(ctx)
+	delegations := keeper.GetAllDelegations(ctx)
 	var unbondingDelegations []types.UnbondingDelegation
 	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
 		unbondingDelegations = append(unbondingDelegations, ubd)
@@ -122,7 +122,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		LastTotalPower:       lastTotalPower,
 		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           validators,
-		Bonds:                bonds,
+		Delegations:          delegations,
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
 		Exported:             true,

@@ -29,8 +29,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := types.TokensFromTendermintPower(power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
+	amount := sdk.TokensFromTendermintPower(power)
+	slashAmountDec := amount.ToDec().Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
@@ -59,7 +59,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.GT(sdk.ZeroInt()) {
-		effectiveFraction := slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens))
+		effectiveFraction := slashAmountDec.Quo(validator.Tokens.ToDec())
 		// possible if power has changed
 		if effectiveFraction.GT(sdk.OneDec()) {
 			effectiveFraction = sdk.OneDec()
@@ -241,7 +241,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		if sharesToUnbond.IsZero() {
 			continue
 		}
-		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
+		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue
@@ -250,7 +250,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			sharesToUnbond = delegation.Shares
 		}
 
-		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}

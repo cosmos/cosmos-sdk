@@ -40,7 +40,7 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		require.Equal(t, 1, len(msgs))
 		msg := msgs[0].(staking.MsgCreateValidator)
 
-		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddress))
 		acc.Coins = sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)}
 		genAccs[i] = NewGenesisAccount(&acc)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply
@@ -151,7 +151,7 @@ func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
 	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
-	require.Equal(t, staking.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
+	require.Equal(t, sdk.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
 }
 
 func TestGenesisStateSanitize(t *testing.T) {

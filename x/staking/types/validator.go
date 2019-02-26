@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
@@ -32,7 +31,7 @@ const (
 // divided by the current exchange rate. Voting power can be calculated as total
 // bonded shares multiplied by exchange rate.
 type Validator struct {
-	OperatorAddr            sdk.ValAddress `json:"operator_address"`    // address of the validator's operator; bech encoded in JSON
+	OperatorAddress         sdk.ValAddress `json:"operator_address"`    // address of the validator's operator; bech encoded in JSON
 	ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`    // the consensus public key of the validator; bech encoded in JSON
 	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
@@ -55,10 +54,18 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
+// ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
+func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+	for _, val := range v {
+		validators = append(validators, val)
+	}
+	return validators
+}
+
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:            operator,
+		OperatorAddress:         operator,
 		ConsPubKey:              pubKey,
 		Jailed:                  false,
 		Status:                  sdk.Unbonded,
@@ -109,7 +116,7 @@ func (v Validator) String() string {
   Unbonding Height:           %d
   Unbonding Completion Time:  %v
   Minimum Self Delegation:    %v
-  Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
+  Commission:                 %s`, v.OperatorAddress, bechConsPubKey,
 		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
 		v.DelegatorShares, v.Description,
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfDelegation, v.Commission)
@@ -117,7 +124,7 @@ func (v Validator) String() string {
 
 // this is a helper struct used for JSON de- and encoding only
 type bechValidator struct {
-	OperatorAddr            sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
+	OperatorAddress         sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
 	ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator
 	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
@@ -138,7 +145,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:            v.OperatorAddr,
+		OperatorAddress:         v.OperatorAddress,
 		ConsPubKey:              bechConsPubKey,
 		Jailed:                  v.Jailed,
 		Status:                  v.Status,
@@ -163,7 +170,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddr:            bv.OperatorAddr,
+		OperatorAddress:         bv.OperatorAddress,
 		ConsPubKey:              consPubKey,
 		Jailed:                  bv.Jailed,
 		Tokens:                  bv.Tokens,
@@ -181,7 +188,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 // only the vitals
 func (v Validator) TestEquivalent(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
-		bytes.Equal(v.OperatorAddr, v2.OperatorAddr) &&
+		bytes.Equal(v.OperatorAddress, v2.OperatorAddress) &&
 		v.Status.Equal(v2.Status) &&
 		v.Tokens.Equal(v2.Tokens) &&
 		v.DelegatorShares.Equal(v2.DelegatorShares) &&
@@ -352,7 +359,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 	}
 
 	v.Tokens = v.Tokens.Add(amount)
-	issuedShares := sdk.NewDecFromInt(amount).Quo(exRate)
+	issuedShares := amount.ToDec().Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
@@ -397,7 +404,7 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 		// the first delegation to a validator sets the exchange rate to one
 		return sdk.OneDec()
 	}
-	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)
+	return v.Tokens.ToDec().Quo(v.DelegatorShares)
 }
 
 // get the bonded tokens which the validator holds
@@ -409,7 +416,7 @@ func (v Validator) BondedTokens() sdk.Int {
 }
 
 // get the Tendermint Power
-// a reduction of 10^9 from validator tokens is applied
+// a reduction of 10^6 from validator tokens is applied
 func (v Validator) TendermintPower() int64 {
 	if v.Status == sdk.Bonded {
 		return v.PotentialTendermintPower()
@@ -417,23 +424,9 @@ func (v Validator) TendermintPower() int64 {
 	return 0
 }
 
-var powerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
-
 // potential Tendermint power
 func (v Validator) PotentialTendermintPower() int64 {
-	return (v.Tokens.Div(powerReduction)).Int64()
-}
-
-// utility functions
-
-// TokensToTendermintPower - convert input tokens to potential tendermint power
-func TokensToTendermintPower(tokens sdk.Int) int64 {
-	return (tokens.Div(powerReduction)).Int64()
-}
-
-// TokensFromTendermintPower - convert input power to tokens
-func TokensFromTendermintPower(power int64) sdk.Int {
-	return sdk.NewInt(power).Mul(powerReduction)
+	return sdk.TokensToTendermintPower(v.Tokens)
 }
 
 // ensure fulfills the sdk validator types
@@ -443,7 +436,7 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetJailed() bool                  { return v.Jailed }
 func (v Validator) GetMoniker() string               { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus        { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddr }
+func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddress }
 func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }

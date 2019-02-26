@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
@@ -118,7 +118,7 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Code
 // ValidatorDistInfo defines the properties of
 // validator distribution information response.
 type ValidatorDistInfo struct {
-	OperatorAddress     sdk.AccAddress                       `json:"operator_addr"`
+	OperatorAddress     sdk.AccAddress                       `json:"operator_address"`
 	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards"`
 	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission"`
 }

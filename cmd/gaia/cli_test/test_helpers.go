@@ -41,14 +41,14 @@ const (
 
 var (
 	startCoins = sdk.Coins{
-		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
-		sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
-		sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
-		sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
+		sdk.NewCoin(feeDenom, sdk.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fee2Denom, sdk.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fooDenom, sdk.TokensFromTendermintPower(1000)),
+		sdk.NewCoin(denom, sdk.TokensFromTendermintPower(150)),
 	}
 
 	vestingCoins = sdk.Coins{
-		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(500000)),
+		sdk.NewCoin(feeDenom, sdk.TokensFromTendermintPower(500000)),
 	}
 )
 
@@ -70,10 +70,13 @@ type Fixtures struct {
 func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir, err := ioutil.TempDir("", "gaia_integration_"+t.Name()+"_")
 	require.NoError(t, err)
+
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	return &Fixtures{
 		T:        t,
 		GDHome:   filepath.Join(tmpDir, ".gaiad"),
@@ -288,9 +291,17 @@ func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
+func (f *Fixtures) txSendWithConfirm(
+	from string, to sdk.AccAddress, amount sdk.Coin, confirm string, flags ...string,
+) (bool, string, string) {
+
+	cmd := fmt.Sprintf("gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, app.DefaultKeyPass)
+}
+
 // TxSign is gaiacli tx sign
 func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx sign %v --name=%s %v", f.Flags(), signer, fileName)
+	cmd := fmt.Sprintf("gaiacli tx sign %v --from=%s %v", f.Flags(), signer, fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

@@ -21,7 +21,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	params := keeper.GetParams(ctx)
 	pool := keeper.GetPool(ctx)
 	numVals := int64(3)
-	amt := types.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	pool.NotBondedTokens = amt.MulRaw(numVals)
 
 	// add numVals validators
@@ -195,11 +195,11 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 }
 
 // tests Slash at the current height
@@ -222,11 +222,11 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 }
 
 // tests Slash at a previous height with an unbonding delegation
@@ -237,7 +237,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
-	ubdTokens := types.TokensFromTendermintPower(4)
+	ubdTokens := sdk.TokensFromTendermintPower(4)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
 		time.Unix(0, 0), ubdTokens)
 	keeper.SetUnbondingDelegation(ctx, ubd)
@@ -258,11 +258,11 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	// balance decreased
-	require.Equal(t, types.TokensFromTendermintPower(2), ubd.Entries[0].Balance)
+	require.Equal(t, sdk.TokensFromTendermintPower(2), ubd.Entries[0].Balance)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -283,7 +283,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
-	require.Equal(t, types.TokensFromTendermintPower(6), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(6), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -304,7 +304,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
-	require.Equal(t, types.TokensFromTendermintPower(9), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(9), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -325,7 +325,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
-	require.Equal(t, types.TokensFromTendermintPower(10), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(10), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -342,13 +342,13 @@ func TestSlashWithRedelegation(t *testing.T) {
 	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set a redelegation
-	rdTokens := types.TokensFromTendermintPower(6)
+	rdTokens := sdk.TokensFromTendermintPower(6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
+		time.Unix(0, 0), rdTokens, rdTokens.ToDec())
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec())
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -370,7 +370,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -393,7 +393,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// seven bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(12), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(12), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -413,7 +413,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// four more bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -436,7 +436,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// no more bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	// power still zero, still in unbonding period
 	validator, _ = keeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -450,19 +450,19 @@ func TestSlashBoth(t *testing.T) {
 
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
-	rdATokens := types.TokensFromTendermintPower(6)
+	rdATokens := sdk.TokensFromTendermintPower(6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		sdk.NewDecFromInt(rdATokens))
+		rdATokens.ToDec())
 	keeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec())
 	keeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
-	ubdATokens := types.TokensFromTendermintPower(4)
+	ubdATokens := sdk.TokensFromTendermintPower(4)
 	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
 		time.Unix(0, 0), ubdATokens)
 	keeper.SetUnbondingDelegation(ctx, ubdA)
@@ -482,9 +482,9 @@ func TestSlashBoth(t *testing.T) {
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// not-bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens))
 	// bonded tokens burned
-	require.Equal(t, types.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)

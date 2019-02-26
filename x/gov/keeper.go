@@ -5,7 +5,6 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -57,7 +56,7 @@ type Keeper struct {
 	paramSpace params.Subspace
 
 	// The reference to the CoinKeeper to modify balances
-	ck bank.Keeper
+	ck BankKeeper
 
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
@@ -80,7 +79,9 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
+	paramSpace params.Subspace, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
@@ -386,7 +387,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Update proposal
-	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Plus(depositAmount))
+	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Add(depositAmount))
 	keeper.SetProposal(ctx, proposal)
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
@@ -402,7 +403,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		newDeposit := Deposit{depositorAddr, proposalID, depositAmount}
 		keeper.setDeposit(ctx, proposalID, depositorAddr, newDeposit)
 	} else {
-		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)
+		currDeposit.Amount = currDeposit.Amount.Add(depositAmount)
 		keeper.setDeposit(ctx, proposalID, depositorAddr, currDeposit)
 	}
 

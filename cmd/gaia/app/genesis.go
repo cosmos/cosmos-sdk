@@ -27,8 +27,8 @@ import (
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionsAcc  = staking.TokensFromTendermintPower(150)
-	defaultBondDenom = staking.DefaultBondDenom
+	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
+	defaultBondDenom = sdk.DefaultBondDenom
 )
 
 // State to Unmarshal
@@ -360,8 +360,8 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 		msg := msgs[0].(staking.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
-		delAddr := msg.DelegatorAddr.String()
-		valAddr := sdk.AccAddress(msg.ValidatorAddr).String()
+		delAddr := msg.DelegatorAddress.String()
+		valAddr := sdk.AccAddress(msg.ValidatorAddress).String()
 
 		delAcc, delOk := addrMap[delAddr]
 		_, valOk := addrMap[valAddr]
@@ -401,7 +401,7 @@ func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
 		sdk.NewCoin("footoken", sdk.NewInt(1000)),
-		sdk.NewCoin(defaultBondDenom, freeFermionsAcc),
+		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
 	}
 
 	coins.Sort()

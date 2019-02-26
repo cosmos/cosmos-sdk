@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/mock"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -78,7 +76,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, keeper.GetProposal(ctx, proposalID1).GetStatus() == StatusDepositPeriod)
 	require.True(t, keeper.GetProposal(ctx, proposalID2).GetStatus() == StatusVotingPeriod)
 
-	genAccs := mock.GetAllAccounts(mapp.AccountKeeper, ctx)
+	genAccs := mapp.AccountKeeper.GetAllAccounts(ctx)
 
 	// Export the state and import it into a new Mock App
 	genState := ExportGenesis(ctx, keeper)

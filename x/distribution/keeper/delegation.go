@@ -40,8 +40,8 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
-	difference := ending.CumulativeRewardRatio.Minus(starting.CumulativeRewardRatio)
-	if difference.HasNegative() {
+	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
+	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
@@ -66,7 +66,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
-				rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
 				startingPeriod = endingPeriod
@@ -76,7 +76,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	}
 
 	// calculate rewards for final period
-	rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 
 	return
 }
@@ -100,9 +100,10 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// truncate coins, return remainder to community pool
 	coins, remainder := rewards.TruncateDecimal()
 	outstanding := k.GetOutstandingRewards(ctx)
-	k.SetOutstandingRewards(ctx, outstanding.Minus(rewards))
+
+	k.SetOutstandingRewards(ctx, outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Plus(remainder)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
 	k.SetFeePool(ctx, feePool)
 
 	// add coins to user account

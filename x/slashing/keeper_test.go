@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Have to change these parameters for tests
@@ -32,7 +31,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
-	amt := staking.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	operatorAddr, val := addrs[0], pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
@@ -90,7 +89,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
-	amt := staking.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	operatorAddr, val := addrs[0], pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
@@ -125,7 +124,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	power := int64(100)
-	amt := staking.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	addr, val := addrs[0], pks[0]
 	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
@@ -190,7 +189,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
-	slashAmt := sdk.NewDecFromInt(amt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
+	slashAmt := amt.ToDec().Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
 
 	// validator should have been slashed
 	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
@@ -276,7 +275,7 @@ func TestHandleNewValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	addr, val := addrs[0], pks[0]
-	amt := staking.TokensFromTendermintPower(100)
+	amt := sdk.TokensFromTendermintPower(100)
 	sh := staking.NewHandler(sk)
 
 	// 1000 first blocks not a validator
@@ -309,7 +308,7 @@ func TestHandleNewValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	expTokens := staking.TokensFromTendermintPower(100)
+	expTokens := sdk.TokensFromTendermintPower(100)
 	require.Equal(t, expTokens, pool.BondedTokens)
 }
 
@@ -320,7 +319,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// initial setup
 	ctx, _, sk, _, keeper := createTestInput(t, DefaultParams())
 	power := int64(100)
-	amt := staking.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	addr, val := addrs[0], pks[0]
 	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
@@ -348,7 +347,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
-	resultingTokens := amt.Sub(staking.TokensFromTendermintPower(1))
+	resultingTokens := amt.Sub(sdk.TokensFromTendermintPower(1))
 	require.Equal(t, resultingTokens, validator.GetTokens())
 
 	// another block missed
@@ -373,7 +372,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	params.MaxValidators = 1
 	sk.SetParams(ctx, params)
 	power := int64(100)
-	amt := staking.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	addr, val := addrs[0], pks[0]
 	consAddr := sdk.ConsAddress(addr)
 	sh := staking.NewHandler(sk)
@@ -389,7 +388,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	}
 
 	// validator kicked out of validator set
-	newAmt := staking.TokensFromTendermintPower(101)
+	newAmt := sdk.TokensFromTendermintPower(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
 	require.True(t, got.IsOK())
 	validatorUpdates, _ := staking.EndBlocker(ctx, sk)
@@ -402,7 +401,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
-	delTokens := types.TokensFromTendermintPower(3)
+	delTokens := sdk.TokensFromTendermintPower(3)
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
 	require.True(t, got.IsOK())
 	validatorUpdates, _ = staking.EndBlocker(ctx, sk)

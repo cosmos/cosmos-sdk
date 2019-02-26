@@ -21,15 +21,22 @@ This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 
 The following specification uses *Atom* as the native staking token. The module can be adapted to any Proof-Of-Stake blockchain by replacing *Atom* with the native staking token of the chain.
 
-1.  **[Design overview](overview.md)**
-2.  **Implementation**
-    1. **[State](state.md)**
-        1.  Parameters
-        2.  Proposals
-        3.  Proposal Processing Queue
-    2. **[Transactions](transactions.md)**
-        1.  Proposal Submission
-        2.  Deposit
-        3.  Claim Deposit
-        4.  Vote
-3.  **[Future improvements](future_improvements.md)**
+1. **[Concepts](01_concepts.md)**
+    - [Proposal submission](01_concepts.md#proposal-submission)
+    - [Vote](01_concepts.md#vote)
+    - [Software Upgrade](01_concepts.md#software-upgrade)
+2. **[State](02_state.md)**
+    - [Parameters and base types](02_state.md#parameters-and-base-types)
+    - [Deposit](02_state.md#deposit)
+    - [ValidatorGovInfo](02_state.md#validatorgovinfo)
+    - [Proposals](02_state.md#proposals)
+    - [Stores](02_state.md#stores)
+    - [Proposal Processing Queue](02_state.md#proposal-processing-queue)
+3. **[Messages](03_messages.md)**
+    - [Proposal Submission](03_messages.md#proposal-submission)
+    - [Deposit](03_messages.md#deposit)
+    - [Vote](03_messages.md#vote)
+4. **[Tags](04_tags.md)**
+    - [EndBlocker](04_tags.md#endblocker)
+    - [Handlers](04_tags.md#handlers)
+5. **[Future Improvements](05_future_improvements.md)**

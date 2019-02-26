@@ -58,7 +58,7 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	var msg = NewMsgSend(addr1, addr2, coins)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/Send","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"cosmos1d9h8qat57ljhcm","to_address":"cosmos1da6hgur4wsmpnjyg"}}`
+	expected := `{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"cosmos1d9h8qat57ljhcm","to_address":"cosmos1da6hgur4wsmpnjyg"}}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -172,7 +172,6 @@ func TestMsgMultiSendValidation(t *testing.T) {
 	input2 := NewInput(addr1, eth123)
 	output1 := NewOutput(addr2, atom123)
 	output2 := NewOutput(addr2, atom124)
-	output3 := NewOutput(addr2, eth123)
 	outputMulti := NewOutput(addr2, atom123eth123)
 
 	var emptyAddr sdk.AccAddress
@@ -195,19 +194,6 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			Inputs:  []Input{input1},
 			Outputs: []Output{output2}}, // amounts dont match
 		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{output3}}, // amounts dont match
-		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{outputMulti}}, // amounts dont match
-		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input2},
-			Outputs: []Output{output1}}, // amounts dont match
-		},
-
 		{true, MsgMultiSend{
 			Inputs:  []Input{input1},
 			Outputs: []Output{output1}},
@@ -238,7 +224,7 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MultiSend","value":{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
+	expected := `{"type":"cosmos-sdk/MsgMultiSend","value":{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
 	require.Equal(t, expected, string(res))
 }
 

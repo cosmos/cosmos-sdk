@@ -178,6 +178,10 @@ Then, to create an account, use the following command:
 gaiacli keys add <yourAccountName> --ledger 
 ```
 
+::: warning
+**This command will only work while the Ledger is plugged in and unlocked**
+:::
+
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
 
@@ -380,8 +384,8 @@ gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas
 gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 ```
 
-::: tip
-If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network
+::: warning
+**If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network. Note that the command will only work while the Ledger is plugged in and unlocked.**
 ::: 
 
 To confirm that your transaction went through, you can use the following queries:
@@ -453,9 +457,9 @@ If you do not have a ledger device and want to interact with your private key on
 
 ```bash
 // Bond Atoms 
-// ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
+// ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake, <delegatorAddress>=cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg
 
-gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:

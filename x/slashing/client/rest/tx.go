@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-
-	"github.com/gorilla/mux"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
@@ -49,6 +49,17 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 			return
 		}
 
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if !bytes.Equal(fromAddr, valAddr) {
+			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
+			return
+		}
+
 		msg := slashing.NewMsgUnjail(valAddr)
 		err = msg.ValidateBasic()
 		if err != nil {
@@ -56,25 +67,6 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 			return
 		}
 
-		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
-			return
-		}
-
-		// derive the from account address and name from the Keybase
-		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
-
-		if !bytes.Equal(cliCtx.GetFromAddress(), valAddr) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
-			return
-		}
-
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

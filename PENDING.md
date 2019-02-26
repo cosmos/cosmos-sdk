@@ -67,6 +67,7 @@ CLI flag.
 * \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
+* [\#3716] Update file permissions the client keys directory and contents to `0700`.
 
 ### Tendermint
 

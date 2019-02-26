@@ -32,7 +32,7 @@ const (
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name, ...]",
+		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",
 		Long: `Return public details of a single local key. If multiple names are
 provided, then an ephemeral multisig key will be created under the name "multi"

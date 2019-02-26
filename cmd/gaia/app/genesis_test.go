@@ -40,7 +40,7 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		require.Equal(t, 1, len(msgs))
 		msg := msgs[0].(staking.MsgCreateValidator)
 
-		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddress))
 		acc.Coins = sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)}
 		genAccs[i] = NewGenesisAccount(&acc)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply

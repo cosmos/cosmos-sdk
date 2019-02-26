@@ -31,8 +31,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// calculate proposer reward
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
-	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(fractionVotes))
-	proposerReward := feesCollected.MulDec(proposerMultiplier)
+	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(fractionVotes))
+	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
 
 	// pay proposer
 	remaining := feesCollected
@@ -58,8 +58,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 		// TODO likely we should only reward validators who actually signed the block.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
-		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPower))
+		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}

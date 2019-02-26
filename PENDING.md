@@ -17,6 +17,9 @@
 
 ### SDK
 
+* [\#3669] Ensure consistency in message naming, codec registration, and JSON
+tags.
+
 ### Tendermint
 
 <!--------------------------------- FEATURES --------------------------------->
@@ -44,6 +47,10 @@ decoded automatically.
 
 ### Gaia CLI
 
+* [\#3670] CLI support for showing bech32 addresses in Ledger devices
+* [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
+CLI flag.
+
 ### Gaia
 
 ### SDK
@@ -54,6 +61,7 @@ decoded automatically.
 * \#3691 Cleanup error messages
 * \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
+* [\#3694] Push tagged docker images on docker hub when tag is created.
 
 ### Tendermint
 
@@ -69,6 +77,10 @@ decoded automatically.
 
 ### SDK
 
+* \#3728 Truncate decimal multiplication & division in distribution to ensure
+         no more than the collected fees / inflation are distributed
+* \#3559 fix occasional failing due to non-determinism in lcd test TestBonding
+  where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
 

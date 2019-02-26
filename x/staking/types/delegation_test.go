@@ -16,7 +16,7 @@ func TestDelegationEqual(t *testing.T) {
 	ok := d1.Equal(d2)
 	require.True(t, ok)
 
-	d2.ValidatorAddr = addr3
+	d2.ValidatorAddress = addr3
 	d2.Shares = sdk.NewDec(200)
 
 	ok = d1.Equal(d2)
@@ -36,7 +36,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 	ok := ubd1.Equal(ubd2)
 	require.True(t, ok)
 
-	ubd2.ValidatorAddr = addr3
+	ubd2.ValidatorAddress = addr3
 
 	ubd2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 	ok = ubd1.Equal(ubd2)

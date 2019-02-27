@@ -79,6 +79,14 @@ func (coin DecCoin) IsGTE(other DecCoin) bool {
 	return !coin.Amount.LT(other.Amount)
 }
 
+func (coin DecCoin) IsGT(other DecCoin) bool {
+	if coin.Denom != other.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
+	}
+
+	return coin.Amount.GT(other.Amount)
+}
+
 // IsLT returns true if they are the same type and the receiver is
 // a smaller value.
 func (coin DecCoin) IsLT(other DecCoin) bool {

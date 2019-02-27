@@ -50,6 +50,25 @@ func NonNegativeOutstandingInvariant(k distr.Keeper, sk types.StakingKeeper) sdk
 	}
 }
 
+func CanWithdrawForValidatorInvariant(k distr.Keeper, sk types.StakingKeeper, val sdk.Validator) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+		_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
+		// ugh so slow TODO FIXME
+		// iterate over all current delegations, withdraw rewards
+		dels := sk.GetAllSDKDelegations(ctx)
+		for _, delegation := range dels {
+			if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
+				_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
+			}
+		}
+		remaining := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
+			return fmt.Errorf("negative remaining coins: %v", remaining)
+		}
+		return nil
+	}
+}
+
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
 func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
@@ -57,28 +76,19 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
-		var remaining sdk.DecCoins
+		var err error
 
 		// iterate over all validators
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
-			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-			// ugh so slow TODO FIXME
-			// iterate over all current delegations, withdraw rewards
-			dels := sk.GetAllSDKDelegations(ctx)
-			for _, delegation := range dels {
-				if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-					_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
-				}
-			}
-			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-			if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
+			err = CanWithdrawForValidatorInvariant(k, sk, val)(ctx)
+			if err != nil {
 				return true
 			}
 			return false
 		})
 
-		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("negative remaining coins: %v", remaining)
+		if err != nil {
+			return err
 		}
 
 		return nil

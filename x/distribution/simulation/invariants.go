@@ -15,7 +15,7 @@ func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 		if err != nil {
 			return err
 		}
-		err = NonNegativeOutstandingInvariant(d, stk)(ctx)
+		err = NonNegativeOutstandingInvariant(d)(ctx)
 		if err != nil {
 			return err
 		}
@@ -28,7 +28,7 @@ func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 }
 
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
-func NonNegativeOutstandingInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
+func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		var outstanding sdk.DecCoins

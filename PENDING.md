@@ -55,6 +55,10 @@ decoded automatically.
 * [\#3670] CLI support for showing bech32 addresses in Ledger devices
 * [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
 CLI flag.
+* [\#3738] Improve multisig UX:
+  * `gaiacli keys show -o json` now includes constituent pubkeys, respective weights and threshold
+  * `gaiacli keys show --show-multisig` now displays constituent pubkeys, respective weights and threshold
+  * `gaiacli tx sign --validate-signatures` now displays multisig signers with their respective weights
 
 ### Gaia
 

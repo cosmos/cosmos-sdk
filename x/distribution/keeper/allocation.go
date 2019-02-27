@@ -76,7 +76,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
 
-	if val.GetOperator().String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+	if val.GetOperator().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
 		fmt.Printf("allocate to validator: val %+v, tokens %v\n", val, tokens)
 	}
 

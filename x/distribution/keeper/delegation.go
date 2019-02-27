@@ -67,14 +67,14 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingHeight := startingInfo.Height + 1
 	// ... or slashes which happened in *this* block, since they would have happened after reward allocation
 	endingHeight := uint64(ctx.BlockHeight()) - 1
-	if del.GetDelegatorAddr().String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" && del.GetValidatorAddr().String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+	if del.GetValidatorAddr().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
 		fmt.Printf("iterating over slashes from height %v to height %v\n", startingHeight, endingHeight)
 	}
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
-				if del.GetDelegatorAddr().String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" && del.GetValidatorAddr().String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+				if del.GetValidatorAddr().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
 					fmt.Printf("at block height %v found slash event: height %v, endingPeriod %v, rewards before: %v\n",
 						ctx.BlockHeight(),
 						height, endingPeriod, k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
@@ -91,7 +91,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// calculate rewards for final period
 	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 
-	if del.GetDelegatorAddr().String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" && del.GetValidatorAddr().String() == "cosmosvaloper1l67uvpuauv6wd90rvuln8ywp3trwfcc6csx0hn" {
+	if del.GetValidatorAddr().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
 		starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 		ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
 		fmt.Printf("rewards for final period (startingPeriod %v, endingPeriod %v) with stake %v: %v\n", startingPeriod, endingPeriod, stake, k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))

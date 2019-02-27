@@ -19,7 +19,7 @@ func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoin
 		}
 	}
 	remaining := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	return remaining.Sub(outstanding)
+	return outstanding.Sub(remaining)
 }
 
 // allocate fees handles distribution of the collected fees
@@ -120,6 +120,8 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 
 	withdrawablePost := k.CalcWithdrawable(ctx, val)
 	if withdrawablePost.Sub(withdrawablePrior)[0].IsGT(tokens[0]) {
-		panic("this should not happen")
+		msg := fmt.Sprintf("greater withdraw allowed than allocated: validator %s, allowed: %v, allocated %v\n",
+			val.GetOperator(), withdrawablePost.Sub(withdrawablePrior), tokens)
+		panic(msg)
 	}
 }

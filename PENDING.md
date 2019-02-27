@@ -55,11 +55,13 @@ decoded automatically.
 * [\#3670] CLI support for showing bech32 addresses in Ledger devices
 * [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
 CLI flag.
+* [\#3730](https://github.com/cosmos/cosmos-sdk/issues/3730) Improve workflow for `gaiad gentx` with offline public keys, by outputting stdtx file that needs to be signed.
 
 ### Gaia
 
 ### SDK
 
+* \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.
@@ -94,6 +96,13 @@ CLI flag.
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
+* [\#3717] Update the vesting specification and implementation to cap deduction from
+`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
+the undelegation amount may exceed the original delegation amount due to
+truncation of undelegation tokens.
+* [\#3717] Ignore unknown proposers in allocating rewards for proposers, in case
+  unbonding period was just 1 block and proposer was already deleted.
+* [\#3726] Cap(clip) reward to remaining coins in AllocateTokens.
 
 * Update the vesting specification and implementation to cap deduction from
 `DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where

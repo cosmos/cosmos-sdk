@@ -9,6 +9,7 @@ import (
 
 // allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
+	logger := ctx.Logger().With("module", "x/distribution")
 
 	// fetch collected fees & fee pool
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
@@ -46,6 +47,9 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 		// e.g. a validator undelegates at block X, it's removed entirely by
 		// block X+1's endblock, then X+2 we need to refer to the previous
 		// proposer for X+1, but we've forgotten about them.
+		logger.Error(fmt.Sprintf(
+			"WARNING: Attempt to allocate proposer rewards to unknown proposer %s. This should happen only if the proposer unbonded completely within a single block, which generally should not happen except in exceptional circumstances (or fuzz testing). We recommend you investigate immediately.",
+			proposer.String()))
 	}
 
 	// calculate fraction allocated to validators
@@ -57,15 +61,14 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	for _, vote := range votes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
-		// TODO likely we should only reward validators who actually signed the block.
+		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		reward = reward.Cap(remaining)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
-
-	fmt.Printf("remaining after: %v\n", remaining)
 
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
@@ -75,10 +78,6 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
-
-	if val.GetOperator().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
-		fmt.Printf("allocate to validator: val %+v, tokens %v\n", val, tokens)
-	}
 
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())

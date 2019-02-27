@@ -239,6 +239,16 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+func (d Dec) MulRoundUp(d2 Dec) Dec {
+	mul := new(big.Int).Mul(d.Int, d2.Int)
+	chopped := chopPrecisionAndRoundUp(mul)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
 // multiplication
 func (d Dec) MulInt(i Int) Dec {
 	mul := new(big.Int).Mul(d.Int, i.i)
@@ -284,6 +294,26 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := chopPrecisionAndTruncate(quo)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
+func (d Dec) RoundDown() Dec {
+	down := new(big.Int).Sub(d.Int, oneInt)
+	return Dec{down}
+}
+
+func (d Dec) QuoRoundUp(d2 Dec) Dec {
+
+	// multiply precision twice
+	mul := new(big.Int).Mul(d.Int, precisionReuse)
+	mul.Mul(mul, precisionReuse)
+
+	quo := new(big.Int).Quo(mul, d2.Int)
+	chopped := chopPrecisionAndRoundUp(quo)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
@@ -436,6 +466,28 @@ func (d Dec) RoundInt() Int {
 // similar to chopPrecisionAndRound, but always rounds down
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
 	return d.Quo(d, precisionReuse)
+}
+
+func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		d = chopPrecisionAndRound(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	return quo.Add(quo, oneInt)
+
 }
 
 func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {

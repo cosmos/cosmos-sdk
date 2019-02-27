@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -42,12 +40,14 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
-	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
+	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio).RoundDown()
 	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
+	//fmt.Printf("startingPeriod %v, endingPeriod %v, difference: %v, stake %v, rewards: %v\n",
+	//startingPeriod, endingPeriod, difference, stake, rewards)
 	return
 }
 
@@ -83,11 +83,11 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	return
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) sdk.Error {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) (sdk.DecCoins, sdk.Error) {
 
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return types.ErrNoDelegationDistInfo(k.codespace)
+		return nil, types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
 	// end current period and calculate rewards
@@ -103,12 +103,6 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	coins, remainder := rewards.TruncateDecimal()
 
 	outstanding := k.GetValidatorOutstandingRewards(ctx, del.GetValidatorAddr())
-	if len(rewards) > 0 && len(outstanding) > 0 && rewards[0].IsGTE(outstanding[0]) {
-		fmt.Printf("startingPeriod: %v\n", startingPeriod)
-		fmt.Printf("endingPeriod: %v\n", endingPeriod)
-		fmt.Printf("withdraw from %v to %v\n", val, del)
-		fmt.Printf("rewards: %v, outstanding: %v\n", rewards, outstanding)
-	}
 	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
@@ -118,12 +112,12 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
 		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// remove delegator starting info
 	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
-	return nil
+	return rewards, nil
 }

@@ -60,7 +60,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
 
-		effectiveFraction := slashAmountDec.Quo(validator.Tokens.ToDec())
+		effectiveFraction := slashAmountDec.QuoRoundUp(validator.Tokens.ToDec())
 		// possible if power has changed
 		if effectiveFraction.GT(sdk.OneDec()) {
 			effectiveFraction = sdk.OneDec()

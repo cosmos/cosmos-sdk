@@ -8,6 +8,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO this is a hack
+func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoins {
+	ctx, _ = ctx.CacheContext()
+	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+	_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
+	dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
+	for _, delegation := range dels {
+		if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
+			//fmt.Printf("withdraw for delegator: %s\n", delegation.GetDelegatorAddr())
+			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
+		}
+	}
+	remaining := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+	return outstanding.Sub(remaining)
+}
+
 // allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
@@ -82,6 +98,14 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
 
+	withdrawablePrior := k.CalcWithdrawable(ctx, val)
+	//fmt.Printf("allocating %v tokens to validator %s, prior withdrawable: %v\n",
+	//tokens, val.GetOperator(), withdrawablePrior)
+
+	//if val.GetOperator().String() == "cosmosvaloper1qu379fd7lzvl9pfwclw2984n99dfqdgxjypypy" {
+	//fmt.Printf("allocate to validator: val %+v, tokens %v\n", val, tokens)
+	//}
+
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
@@ -100,4 +124,11 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+
+	withdrawablePost := k.CalcWithdrawable(ctx, val)
+	if withdrawablePost.Sub(withdrawablePrior)[0].IsGT(tokens[0]) {
+		msg := fmt.Sprintf("greater withdraw allowed than allocated: validator %s, allowed: %v, allocated %v\n",
+			val.GetOperator(), withdrawablePost.Sub(withdrawablePrior), tokens)
+		panic(msg)
+	}
 }

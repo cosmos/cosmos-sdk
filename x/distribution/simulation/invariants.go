@@ -61,7 +61,6 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 
 		// iterate over all validators
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
-			fmt.Printf("withdrawing all from validator %s\n", val.GetOperator())
 			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 			// ugh so slow TODO FIXME
 			// iterate over all current delegations, withdraw rewards
@@ -73,7 +72,6 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 			}
 			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 			if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
-				panic("OH NO")
 				return true
 			}
 			return false

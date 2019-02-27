@@ -224,3 +224,35 @@ func TestDecCoinsString(t *testing.T) {
 		require.Equal(t, tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
 	}
 }
+
+func TestDecCoinsCap(t *testing.T) {
+	testCases := []struct {
+		input1         string
+		input2         string
+		expectedResult string
+	}{
+		{"", "", ""},
+		{"1.0stake", "", ""},
+		{"1.0stake", "1.0stake", "1.0stake"},
+		{"", "1.0stake", ""},
+		{"1.0stake", "", ""},
+		{"2.0stake,1.0trope", "1.9stake", "1.9stake"},
+		{"2.0stake,1.0trope", "2.1stake", "2.0stake"},
+		{"2.0stake,1.0trope", "0.9trope", "0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope,20.0other", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.0other", ""},
+	}
+
+	for i, tc := range testCases {
+		in1, err := ParseDecCoins(tc.input1)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		in2, err := ParseDecCoins(tc.input2)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		exr, err := ParseDecCoins(tc.expectedResult)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+
+		require.True(t, in1.Cap(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		// require.Equal(t, tc.expectedResult, in1.Cap(in2).String(), "in1.cap(in2) != exr in %v", i)
+	}
+}

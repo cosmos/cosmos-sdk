@@ -96,6 +96,12 @@ CLI flag.
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
+* [\#3717] Update the vesting specification and implementation to cap deduction from
+`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
+the undelegation amount may exceed the original delegation amount due to
+truncation of undelegation tokens.
+* [\#3717] Ignore unknown proposers in allocating rewards for proposers, in case
+  unbonding period was just 1 block and proposer was already deleted.
 * [\#3726] Cap(clip) reward to remaining coins in AllocateTokens.
 
 ### Tendermint

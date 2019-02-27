@@ -228,7 +228,9 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 	if err != nil {
 		return
 	}
+
 	var priv tmcrypto.PrivKey
+
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
@@ -236,35 +238,42 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			err = fmt.Errorf("private key not available")
 			return
 		}
+
 		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, nil, err
 		}
+
 	case ledgerInfo:
 		linfo := info.(ledgerInfo)
 		priv, err = crypto.NewPrivKeyLedgerSecp256k1(linfo.Path)
 		if err != nil {
 			return
 		}
+
 	case offlineInfo:
 		linfo := info.(offlineInfo)
 		_, err := fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
 		if err != nil {
 			return nil, nil, err
 		}
+
 		buf := bufio.NewReader(os.Stdin)
 		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
 		if err != nil {
 			return nil, nil, err
 		}
+
 		// Will block until user inputs the signature
 		signed, err := buf.ReadString('\n')
 		if err != nil {
 			return nil, nil, err
 		}
+
 		cdc.MustUnmarshalBinaryLengthPrefixed([]byte(signed), sig)
 		return sig, linfo.GetPubKey(), nil
 	}
+
 	sig, err = priv.Sign(msg)
 	if err != nil {
 		return nil, nil, err

@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -197,6 +199,11 @@ func printAndValidateSigs(
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
 
+		var (
+			multiSigHeader string
+			multiSigMsg    string
+		)
+
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
@@ -222,7 +229,26 @@ func printAndValidateSigs(
 			}
 		}
 
-		fmt.Printf("  %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
+		multiPK, ok := sig.PubKey.(multisig.PubKeyMultisigThreshold)
+		if ok {
+			var multiSig multisig.Multisignature
+			cliCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
+
+			var b strings.Builder
+			b.WriteString("\n  MultiSig Signatures:\n")
+
+			for i := 0; i < multiSig.BitArray.Size(); i++ {
+				if multiSig.BitArray.GetIndex(i) {
+					addr := sdk.AccAddress(multiPK.PubKeys[i].Address().Bytes())
+					b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
+				}
+			}
+
+			multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.K, len(multiPK.PubKeys))
+			multiSigMsg = b.String()
+		}
+
+		fmt.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	fmt.Println("")

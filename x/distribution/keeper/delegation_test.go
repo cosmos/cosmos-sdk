@@ -13,9 +13,6 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
-
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
@@ -65,9 +62,6 @@ func TestCalculateRewardsBasic(t *testing.T) {
 func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
-
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
@@ -128,9 +122,6 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
-
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
 	power := int64(100)
@@ -203,9 +194,6 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
-
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
@@ -263,9 +251,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, balancePower)
 	sh := staking.NewHandler(sk)
 
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
-
 	// create validator with 50% commission
 	power := int64(100)
 	valTokens := sdk.TokensFromTendermintPower(power)
@@ -294,7 +279,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	initial := sdk.TokensFromTendermintPower(10)
 	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
 
-	k.SetOutstandingRewards(ctx, tokens)
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (initial + latest for delegation)
@@ -327,9 +311,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
-
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
 	power := int64(100)
@@ -394,9 +375,6 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
-
-	// initialize state
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
@@ -471,9 +449,6 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	totalRewards := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial*2))}
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
 
-	// initialize state
-	k.SetOutstandingRewards(ctx, totalRewards)
-
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
@@ -540,8 +515,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// commission should be zero
 	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
 
-	totalRewards = k.GetOutstandingRewards(ctx).Add(tokens)
-	k.SetOutstandingRewards(ctx, totalRewards)
+	totalRewards = totalRewards.Add(tokens)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)
@@ -567,8 +541,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// commission should be half initial
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 
-	totalRewards = k.GetOutstandingRewards(ctx).Add(tokens)
-	k.SetOutstandingRewards(ctx, totalRewards)
+	totalRewards = k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Add(tokens)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)

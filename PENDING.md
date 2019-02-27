@@ -59,11 +59,14 @@ CLI flag.
   * `gaiacli keys show -o json` now includes constituent pubkeys, respective weights and threshold
   * `gaiacli keys show --show-multisig` now displays constituent pubkeys, respective weights and threshold
   * `gaiacli tx sign --validate-signatures` now displays multisig signers with their respective weights
+* [\#3730](https://github.com/cosmos/cosmos-sdk/issues/3730) Improve workflow for
+`gaiad gentx` with offline public keys, by outputting stdtx file that needs to be signed.
 
 ### Gaia
 
 ### SDK
 
+* \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.
@@ -71,6 +74,7 @@ CLI flag.
 * \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
+* [\#3716] Update file permissions the client keys directory and contents to `0700`.
 
 ### Tendermint
 
@@ -90,6 +94,8 @@ CLI flag.
 
 ### SDK
 
+* \#3728 Truncate decimal multiplication & division in distribution to ensure
+         no more than the collected fees / inflation are distributed
 * \#3727 Return on zero-length (including []byte{}) PrefixEndBytes() calls
 * \#3559 fix occasional failing due to non-determinism in lcd test TestBonding
   where validator is unexpectedly slashed throwing off test calculations

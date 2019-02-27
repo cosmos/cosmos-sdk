@@ -71,10 +71,13 @@ type Fixtures struct {
 func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir, err := ioutil.TempDir("", "gaia_integration_"+t.Name()+"_")
 	require.NoError(t, err)
+
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	return &Fixtures{
 		T:        t,
 		GDHome:   filepath.Join(tmpDir, ".gaiad"),

@@ -12,14 +12,14 @@ import (
 
 // assertAll asserts the all invariants against application state
 func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
-	event string, displayLogs func()) {
+	event string, logWriter LogWriter) {
 
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 
 	for i := 0; i < len(invs); i++ {
 		if err := invs[i](ctx); err != nil {
 			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
-			displayLogs()
+			logWriter.PrintLogs()
 			t.Fatal()
 		}
 	}

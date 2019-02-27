@@ -23,6 +23,68 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, event func(string)) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
+// entry kinds for use within OperationEntry
+const (
+	BeginBlockEntryKind  = "begin_block"
+	EndBlockEntryKind    = "end_block"
+	MsgEntryKind         = "msg"
+	QueuedsgMsgEntryKind = "queued_msg"
+)
+
+// OperationEntry - an operation entry for logging (ex. BeginBlock, EndBlock, XxxMsg, etc)
+type OperationEntry struct {
+	EntryKind string
+	Height    int64
+	Operation json.RawMessage // typically OperationMsg
+}
+
+// BeginBlockEntry - operation entry for begin block
+func BeginBlockEntry(height int64) OperationEntry {
+	return OperationEntry{
+		EntryKind: BeginBlockEntryKind,
+		Height:    height,
+		Operation: nil,
+	}
+}
+
+// EndBlockEntry - operation entry for end block
+func EndBlockEntry(height int64) OperationEntry {
+	return OperationEntry{
+		EntryKind: EndBlockEntryKind,
+		Height:    height,
+		Operation: nil,
+	}
+}
+
+// MsgEntry - operation entry for standard msg
+func MsgEntry(height int64, opMsg OperationMsg) OperationEntry {
+	return OperationEntry{
+		EntryKind: MsgEntryKind,
+		Height:    height,
+		Operation: opMsg.MustMarshal(),
+	}
+}
+
+// MsgEntry - operation entry for queued msg
+func QueuedMsgEntry(height int64, opMsg OperationMsg) OperationEntry {
+	return OperationEntry{
+		EntryKind: QueuedsgMsgEntryKind,
+		Height:    height,
+		Operation: opMsg.MustMarshal(),
+	}
+}
+
+// OperationEntry - log entry text for this operation entry
+func (oe OperationEntry) MustMarshal() json.RawMessage {
+	out, err := json.Marshal(oe)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
+//_____________________________________________________________________
+
 // OperationMsg - structure for operation output
 type OperationMsg struct {
 	Route   string          `json:"route"`
@@ -73,6 +135,15 @@ func (om OperationMsg) String() string {
 		panic(err)
 	}
 	return string(out)
+}
+
+// LogEntry - log entry text for this operation msg
+func (om OperationMsg) MustMarshal() json.RawMessage {
+	out, err := json.Marshal(om)
+	if err != nil {
+		panic(err)
+	}
+	return out
 }
 
 // queue of operations

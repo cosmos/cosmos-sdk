@@ -60,6 +60,7 @@ CLI flag.
 
 ### SDK
 
+* \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
 * [\#3665] Overhaul sdk.Uint type in preparation for Coins Int -> Uint migration.

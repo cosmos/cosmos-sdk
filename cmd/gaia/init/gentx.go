@@ -136,7 +136,7 @@ following delegation and commission default parameters:
 			}
 
 			if info.GetType() == kbkeys.TypeOffline {
-				fmt.Println("Offline key passed in.  Use `gaiacli tx sign` command to sign:")
+				fmt.Println("Offline key passed in.  Use `gaiacli tx sign` command to	 sign:")
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
 			}
 
@@ -146,10 +146,6 @@ following delegation and commission default parameters:
 
 			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
 				return err
-			}
-
-			if info.GetType() == kbkeys.TypeOffline {
-				return nil
 			}
 
 			// read the transaction

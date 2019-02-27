@@ -62,7 +62,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 		// iterate over all validators
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
 			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-			// ugh so slow TODO FIXME
+			// TODO fetch delegations just for the validator, requires sdk.ValidatorSet change
 			// iterate over all current delegations, withdraw rewards
 			dels := sk.GetAllSDKDelegations(ctx)
 			for _, delegation := range dels {

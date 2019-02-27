@@ -61,6 +61,7 @@ CLI flag.
 
 ### SDK
 
+* \#3750 Track outstanding rewards per-validator instead of globally
 * \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo
@@ -103,10 +104,5 @@ truncation of undelegation tokens.
 * [\#3717] Ignore unknown proposers in allocating rewards for proposers, in case
   unbonding period was just 1 block and proposer was already deleted.
 * [\#3726] Cap(clip) reward to remaining coins in AllocateTokens.
-
-* Update the vesting specification and implementation to cap deduction from
-`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
-the undelegation amount may exceed the original delegation amount due to
-truncation of undelegation tokens.
 
 ### Tendermint

@@ -1,7 +1,6 @@
 package distribution
 
 import (
-	"fmt"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,10 +23,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
-		if ctx.BlockHeight() > 52 {
-			fmt.Printf("allocating tokens: sumPrecommitPower %v, totalPower %v, previousProposer %v, votes %v\n",
-				sumPrecommitPower, totalPower, previousProposer, req.LastCommitInfo.GetVotes())
-		}
 		k.AllocateTokens(ctx, sumPrecommitPower, totalPower, previousProposer, req.LastCommitInfo.GetVotes())
 	}
 

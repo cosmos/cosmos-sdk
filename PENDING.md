@@ -67,6 +67,7 @@ CLI flag.
 * \#3456 Integrate in the Int.ToDec() convenience function
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
+* [\#3716] Update file permissions the client keys directory and contents to `0700`.
 
 ### Tendermint
 
@@ -93,5 +94,10 @@ CLI flag.
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
+
+* Update the vesting specification and implementation to cap deduction from
+`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
+the undelegation amount may exceed the original delegation amount due to
+truncation of undelegation tokens.
 
 ### Tendermint

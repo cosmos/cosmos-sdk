@@ -76,6 +76,9 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 			Details:  simulation.RandStringOfLength(r, 10),
 		}
 
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simulation.NoOpMsg(), nil, nil
+		}
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
@@ -104,6 +107,9 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simulation.NoOpMsg(), nil, nil
+		}
 		val := keeper.RandomValidator(r, k, ctx)
 		validatorAddress := val.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
@@ -180,6 +186,9 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simulation.NoOpMsg(), nil, nil
+		}
 		srcVal := keeper.RandomValidator(r, k, ctx)
 		srcValidatorAddress := srcVal.GetOperator()
 		destVal := keeper.RandomValidator(r, k, ctx)

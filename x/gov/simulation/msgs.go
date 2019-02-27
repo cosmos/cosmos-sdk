@@ -192,7 +192,7 @@ func randomDeposit(r *rand.Rand) sdk.Coins {
 // Pick a random proposal ID
 func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
 	lastProposalID := k.GetLastProposalID(ctx)
-	if lastProposalID < 1 {
+	if lastProposalID < 1 || lastProposalID == (2<<63-1) {
 		return 0, false
 	}
 	proposalID = uint64(r.Intn(1+int(lastProposalID)) - 1)

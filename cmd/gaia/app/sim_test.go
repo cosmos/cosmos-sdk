@@ -183,7 +183,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Pool: staking.InitialPool(),
 		Params: staking.Params{
 			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
-			MaxValidators: uint16(r.Intn(250)),
+			MaxValidators: uint16(r.Intn(250) + 1),
 			BondDenom:     sdk.DefaultBondDenom,
 		},
 	}

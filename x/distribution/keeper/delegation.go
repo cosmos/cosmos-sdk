@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -99,17 +101,25 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 
 	// truncate coins, return remainder to community pool
 	coins, remainder := rewards.TruncateDecimal()
-	outstanding := k.GetOutstandingRewards(ctx)
 
-	k.SetOutstandingRewards(ctx, outstanding.Sub(rewards))
+	outstanding := k.GetValidatorOutstandingRewards(ctx, del.GetValidatorAddr())
+	if len(rewards) > 0 && len(outstanding) > 0 && rewards[0].IsGTE(outstanding[0]) {
+		fmt.Printf("startingPeriod: %v\n", startingPeriod)
+		fmt.Printf("endingPeriod: %v\n", endingPeriod)
+		fmt.Printf("withdraw from %v to %v\n", val, del)
+		fmt.Printf("rewards: %v, outstanding: %v\n", rewards, outstanding)
+	}
+	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
 	k.SetFeePool(ctx, feePool)
 
 	// add coins to user account
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-		return err
+	if !coins.IsZero() {
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+			return err
+		}
 	}
 
 	// remove delegator starting info

@@ -22,20 +22,21 @@ To summarize, if there are errors or vulnerabilities in the Cosmos Hub in the da
 
 Once transfers are enabled, state rollbacks will be much more difficult to justify. 
 
-**What this means for developers:** The Cosmos mainnet launch is the first phase in which fundraiser participants will be working together to operate the software. As a decentralized application developer, you are likely a user of either the [Cosmos-SDK framework][https://cosmos.network/docs/] or [Tendermint Core][https://tendermint.com/docs/]. The progress of your Cosmos-SDK or Tendermint-based application should be independent of the Cosmos Hub roadmap. However, if your project requires the use of [Inter-Blockchain Communication][blog post], you must wait until Phase III, or participate in the IBC testnets that will begin shortly.
+**What this means for developers:** The Cosmos mainnet launch is the first phase in which fundraiser participants will be working together to operate the software. As a decentralized application developer, you are likely a user of either the [Cosmos-SDK framework](https://cosmos.network/docs/) or [Tendermint Core](https://tendermint.com/docs/). The progress of your Cosmos-SDK or Tendermint-based application should be independent of the Cosmos Hub roadmap. However, if your project requires the use of [Inter-Blockchain Communication][blog post], you must wait until Phase III, or participate in the IBC testnets that will begin shortly.
 
 **What this means for users:** In this phase, we strongly recommend that you do not arrange to trade Atoms (eg. by legal contract as they will not be transferable yet) as there is the risk of state being reverted.
 
 You can, however, safely delegate Atoms to validators in this phase by following the CLI guideline and video tutorial linked below. Of course, in the event of a state reversion, any earned fees and inflation may be lost. Note that only `gaiacli` should be used for making transactions. Voyager, the GUI for interacting with the Cosmos Hub, is currently in alpha and undergoing development. A separate announcement will be made once Voyager is safer for use.
 
-CLI Guide 🔗:  [github.com/cosmos/cosmos-sdk/…/delegator-guide-cli.md][cli] 
-[**Watch CLI delegation tutorial:**][youtube]
+CLI Guide 🔗:  [github.com/cosmos/cosmos-sdk/…/delegator-guide-cli.md](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md) 
+
+**Watch CLI delegation tutorial:** [Cosmos YouTube](https://www.youtube.com/watch?v=ydZw6o6Mzy0)
 
 # Phase II: Transfers Enabled
 
 **Summary:** Once mainnet is deemed sufficiently stable, bonded Atom holders will vote to decide whether or not Atom transfers should be enabled. This procedure will happen through on-chain governance.
 
-The best way to check on the status of governance proposals is to view them through Cosmos explorers. A list of explorers can be found on the launch page: [cosmos.network/launch][https://cosmos.network/launch]. 
+The best way to check on the status of governance proposals is to view them through Cosmos explorers. A list of explorers can be found on the launch page: [cosmos.network/launch](https://cosmos.network/launch). 
 
 **What this means for users:** If the proposal is accepted and transfers are enabled, then it becomes possible to transfer Atoms.
 
@@ -63,6 +64,4 @@ To the Moon 🚀
 
 
 [blog post]: [https://blog.cosmos.network/developer-deep-dive-cosmos-ibc-5855aaf183fe]
-[cli]: [https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md]
-[youtube]: [https://www.youtube.com/watch?v=ydZw6o6Mzy0]
 [ibc]: [https://github.com/cosmos/cosmos-sdk/blob/develop/docs/spec/ibc/overview.md]

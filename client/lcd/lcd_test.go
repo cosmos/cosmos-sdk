@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -292,12 +293,9 @@ func TestEncodeTx(t *testing.T) {
 	var tx auth.StdTx
 	cdc.UnmarshalJSON([]byte(body), &tx)
 
-	// build the request
-	encodeReq := struct {
-		Tx auth.StdTx `json:"tx"`
-	}{Tx: tx}
-	encodedJSON, _ := cdc.MarshalJSON(encodeReq)
-	res, body = Request(t, port, "POST", "/tx/encode", encodedJSON)
+	req := clienttx.EncodeReq{Tx: tx}
+	encodedJSON, _ := cdc.MarshalJSON(req)
+	res, body = Request(t, port, "POST", "/txs/encode", encodedJSON)
 
 	// Make sure it came back ok, and that we can decode it back to the transaction
 	// 200 response.
@@ -415,7 +413,7 @@ func TestValidatorsQuery(t *testing.T) {
 		foundVal = true
 	}
 
-	require.True(t, foundVal, "pk %v, operator %v", operAddrs[0], validators[0].OperatorAddr)
+	require.True(t, foundVal, "pk %v, operator %v", operAddrs[0], validators[0].OperatorAddress)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -425,7 +423,7 @@ func TestValidatorQuery(t *testing.T) {
 	require.Equal(t, 1, len(operAddrs))
 
 	validator := getValidator(t, port, operAddrs[0])
-	require.Equal(t, validator.OperatorAddr, operAddrs[0], "The returned validator does not hold the correct data")
+	require.Equal(t, validator.OperatorAddress, operAddrs[0], "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -483,11 +481,11 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, operAddrs[0], bondedValidators[0].OperatorAddr)
+	require.Equal(t, operAddrs[0], bondedValidators[0].OperatorAddress)
 	require.Equal(t, validator.DelegatorShares.Add(amtDec).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, operAddrs[0])
-	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
+	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddress)
 
 	// testing unbonding
 	unbondingTokens := sdk.TokensFromTendermintPower(30)
@@ -545,10 +543,18 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	// query delegations, unbondings and redelegations from validator and delegator
-	rdShares := rdTokens.ToDec()
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
-	require.Equal(t, rdShares, delegatorDels[0].GetShares())
+	require.Equal(t, operAddrs[1], delegatorDels[0].ValidatorAddress)
+
+	// because the second validator never signs during these tests, if this
+	// this test takes a long time to run,  eventually this second validator
+	// will get slashed, meaning that it's exchange rate is no-longer 1-to-1,
+	// hence we utilize the exchange rate in the following test
+
+	validator2 := getValidator(t, port, operAddrs[1])
+	delTokensAfterRedelegation := delegatorDels[0].GetShares().Mul(validator2.DelegatorShareExRate())
+	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)

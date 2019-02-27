@@ -241,8 +241,8 @@ paths:
     post:
       tags:
         - ICS0
-      summary: broadcast Tx
-      description: broadcast tx with tendermint rpc
+      summary: Broadcast a signed tx
+      description: Broadcast a signed tx to a full node
       consumes:
         - application/json
       produces:
@@ -250,57 +250,28 @@ paths:
       parameters:
         - in: body
           name: txBroadcast
-          description: Build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
-          required: true
-          schema:
-            type: object
-            properties:
-              tx:
-                type: string
-              return:
-                type: string
-                example: block
-      responses:
-        200:
-          description: Broadcast tx result
-          schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
-        500:
-          description: Internal Server Error
-  /tx/broadcast:
-    post:
-      tags:
-        - ICS20
-      summary: Send a signed Tx
-      description: Send a signed Tx to a Gaiad full node
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: txBroadcast
-          description: broadcast tx
+          description: The tx must be a signed StdTx. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
           required: true
           schema:
             type: object
             properties:
               tx:
                 $ref: "#/definitions/StdTx"
+              return:
+                type: string
+                example: block
       responses:
-        202:
-          description: Tx was send and will probably be added to the next block
+        200:
+          description: Tx broadcasting result
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
-        400:
-          description: The Tx was malformated
         500:
-          description: Server internal error
-  /tx/encode:
+          description: Internal Server Error
+  /txs/encode:
     post:
       tags:
-        - ICS20
-      summary: Encode a transaction to wire format
+        - ICS0
+      summary: Encode a transaction to the Amino wire format
       description: Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
       consumes:
         - application/json
@@ -309,7 +280,7 @@ paths:
       parameters:
         - in: body
           name: tx
-          description: The transaction to encode
+          description: The tx to encode
           required: true
           schema:
             type: object
@@ -318,15 +289,15 @@ paths:
                 $ref: "#/definitions/StdTx"
       responses:
         200:
-          description: Transaction was successfully decoded and re-encoded
+          description: The tx was successfully decoded and re-encoded
           schema:
             type: object
             properties:
               tx:
                 type: string
-                example: The base64-encoded Amino-serialized bytes for the transaction
+                example: The base64-encoded Amino-serialized bytes for the tx
         400:
-          description: The Tx was malformated
+          description: The tx was malformated
         500:
           description: Server internal error
   /bank/balances/{address}:
@@ -465,9 +436,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               delegation:
                 $ref: "#/definitions/Coin"
@@ -550,9 +521,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -653,11 +624,11 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_src_addr:
+              validator_src_addressess:
                 $ref: "#/definitions/ValidatorAddress"
-              validator_dst_addr:
+              validator_dst_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -2131,9 +2102,9 @@ definitions:
   Delegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       shares:
         type: string
@@ -2142,9 +2113,9 @@ definitions:
   UnbondingDelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       initial_balance:
         type: string
@@ -2157,11 +2128,11 @@ definitions:
   Redelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_src_addr:
+      validator_src_address:
         type: string
-      validator_dst_addr:
+      validator_dst_address:
         type: string
       creation_height:
         type: integer
@@ -2178,7 +2149,7 @@ definitions:
   ValidatorDistInfo:
     type: object
     properties:
-      operator_addr:
+      operator_address:
         $ref: "#/definitions/ValidatorAddress"
       self_bond_rewards:
         type: array

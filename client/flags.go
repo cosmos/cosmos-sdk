@@ -45,6 +45,7 @@ const (
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
+	FlagSkipConfirmation   = "yes"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -89,9 +90,14 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
+		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
+
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
-			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
+			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
+			GasFlagAuto, DefaultGasLimit,
+		))
+
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))

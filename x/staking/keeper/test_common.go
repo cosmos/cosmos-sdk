@@ -230,7 +230,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		deleted := false
 		for ; iterator.Valid(); iterator.Next() {
 			valAddr := parseValidatorPowerRankKey(iterator.Key())
-			if bytes.Equal(valAddr, validator.OperatorAddr) {
+			if bytes.Equal(valAddr, validator.OperatorAddress) {
 				if deleted {
 					panic("found duplicate power index key")
 				} else {
@@ -243,7 +243,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 	if apply {
 		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-		validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+		validator, found := keeper.GetValidator(ctx, validator.OperatorAddress)
 		if !found {
 			panic("validator expected but not found")
 		}
@@ -251,7 +251,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	}
 	cachectx, _ := ctx.CacheContext()
 	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
-	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
+	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddress)
 	if !found {
 		panic("validator expected but not found")
 	}

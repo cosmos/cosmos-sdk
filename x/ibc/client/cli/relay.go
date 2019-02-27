@@ -191,7 +191,7 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 		panic(err)
 	}
 
-	msg := ibc.IBCReceiveMsg{
+	msg := ibc.MsgIBCReceive{
 		IBCPacket: packet,
 		Relayer:   c.address,
 		Sequence:  ibcSeq,

@@ -40,7 +40,10 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			}
 
 			if emptyState || appExporter == nil {
-				fmt.Fprintln(os.Stderr, "WARNING: State is not initialized. Returning genesis file.")
+				_, err := fmt.Fprintln(os.Stderr, "WARNING: State is not initialized. Returning genesis file.")
+				if err != nil {
+					return err
+				}
 				genesis, err := ioutil.ReadFile(config.GenesisFile())
 				if err != nil {
 					return err

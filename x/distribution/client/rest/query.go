@@ -118,7 +118,7 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Code
 // ValidatorDistInfo defines the properties of
 // validator distribution information response.
 type ValidatorDistInfo struct {
-	OperatorAddress     sdk.AccAddress                       `json:"operator_addr"`
+	OperatorAddress     sdk.AccAddress                       `json:"operator_address"`
 	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards"`
 	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission"`
 }

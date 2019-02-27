@@ -64,8 +64,8 @@ func makeCodec() *codec.Codec {
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/ibc/Send", nil)
-	cdc.RegisterConcrete(IBCTransferMsg{}, "test/ibc/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(MsgIBCTransfer{}, "test/ibc/MsgIBCTransfer", nil)
+	cdc.RegisterConcrete(MsgIBCReceive{}, "test/ibc/MsgIBCReceive", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
@@ -121,7 +121,7 @@ func TestIBC(t *testing.T) {
 	egl = ibcm.getEgressLength(store, chainid)
 	require.Equal(t, egl, uint64(0))
 
-	msg = IBCTransferMsg{
+	msg = MsgIBCTransfer{
 		IBCPacket: packet,
 	}
 	res = h(ctx, msg)
@@ -137,7 +137,7 @@ func TestIBC(t *testing.T) {
 	igs = ibcm.GetIngressSequence(ctx, chainid)
 	require.Equal(t, igs, uint64(0))
 
-	msg = IBCReceiveMsg{
+	msg = MsgIBCReceive{
 		IBCPacket: packet,
 		Relayer:   src,
 		Sequence:  0,

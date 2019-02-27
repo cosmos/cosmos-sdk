@@ -1,20 +1,18 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
@@ -55,7 +53,7 @@ be generated via the 'multisign' command.
 		RunE: makeSignCmd(codec),
 		Args: cobra.ExactArgs(1),
 	}
-	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
+
 	cmd.Flags().String(flagMultisig, "",
 		"Address of the multisig account on behalf of which the "+
 			"transaction shall be signed")
@@ -69,13 +67,13 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flagOutfile, "",
 		"The document will be written to the given file instead of STDOUT")
 
-	// Add the flags here and return the command
+	// add the flags here and return the command
 	return client.PostCommands(cmd)[0]
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := authclient.ReadStdTxFromFile(cdc, args[0])
+		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
@@ -92,9 +90,9 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return nil
 		}
 
-		name := viper.GetString(client.FlagName)
-		if name == "" {
-			return errors.New("required flag \"name\" has not been set")
+		from := viper.GetString(client.FlagFrom)
+		if from == "" {
+			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
 		// if --signature-only is on, then override --append
@@ -104,19 +102,21 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
+
 			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
 			if err != nil {
 				return err
 			}
 
 			newTx, err = utils.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, name, stdTx, offline)
+				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, offline,
+			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = utils.SignStdTx(
-				txBldr, cliCtx, name, stdTx, appendSig, offline)
+			newTx, err = utils.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
 		}
+
 		if err != nil {
 			return err
 		}
@@ -128,13 +128,16 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx.Signatures[0])
 			}
+
 		default:
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx)
 			}

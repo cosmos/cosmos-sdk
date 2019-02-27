@@ -58,7 +58,7 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvA cmn.KVPair
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
 func PrefixEndBytes(prefix []byte) []byte {
-	if prefix == nil {
+	if len(prefix) == 0 {
 		return nil
 	}
 

@@ -84,11 +84,17 @@ __Note__: This command automatically store your `gentx` in `~/.gaiad/config/gent
 Consult `gaiad gentx --help` for more information on the flags defaults.
 :::
 
-A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are collected by a `genesis coordinator` and validated against an initial `genesis.json`. Such initial `genesis.json` contains only a list of accounts and their coins. Once the transactions are processed, they are merged in the `genesis.json`'s `gentxs` field.
+A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are
+collected by a `genesis coordinator` and validated against an initial `genesis.json`.
+Such an initial `genesis.json` contains only a list of accounts and their coins.
+Once the transactions are processed, they are merged in the `genesis.json`'s
+`gentxs` field.
 
-### Case 2: The initial stake comes from a delegator's address
+### Case 2: The initial stake comes from (on behalf of) a delegator's address
 
-In this case, you need both the signature of the validator and the delegator. Start by creating an unsigned `create-validator` transaction, and save it in a file called `unsignedValTx`: 
+In this case, you need both the signature of the validator and the delegator.
+Start by creating an unsigned `create-validator` transaction, and save it in a
+file called `unsignedValTx`:
 
 ```bash
 gaiacli tx staking create-validator \
@@ -96,11 +102,11 @@ gaiacli tx staking create-validator \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --from=<key_name> \
+  --from=<validator_key> \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
-  --address-delegator="address of the delegator" \
+  --address-delegator=<delegator_address> \
   --generate-only \
   > unsignedValTx.json
 ```

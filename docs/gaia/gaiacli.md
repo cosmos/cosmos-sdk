@@ -735,10 +735,10 @@ The file `unsignedTx.json` contains the unsigned transaction encoded in JSON.
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p1 \
+  --from=p1 \
   --output-document=p1signature.json \
-  unsignedTx.json
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -747,10 +747,10 @@ respective signature:
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p2 \
+  --from=p2 \
   --output-document=p2signature.json \
-  unsignedTx.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

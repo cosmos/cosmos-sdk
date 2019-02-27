@@ -180,7 +180,7 @@ func printAndValidateSigs(
 
 	signers := stdTx.GetSigners()
 	for i, signer := range signers {
-		fmt.Printf(" %v: %v\n", i, signer.String())
+		fmt.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
@@ -222,7 +222,7 @@ func printAndValidateSigs(
 			}
 		}
 
-		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
+		fmt.Printf("  %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}
 
 	fmt.Println("")

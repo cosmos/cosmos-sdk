@@ -271,23 +271,12 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			//continue
 			//}
 
-			//if !((header.Height == 26 && i <= 131) ||
-			//(header.Height == 22) ||
-			//(header.Height == 21) ||
-			//(header.Height == 20) ||
-			//(header.Height == 17) ||
-			//(header.Height == 16) ||
-			//(header.Height == 14) ||
-			//(header.Height == 13) ||
-			//(header.Height == 11) ||
-			//(header.Height == 7) ||
-			//(header.Height == 5) ||
+			//if ! //(header.Height == 5) ||
 			//(header.Height == 4) ||
 			//(header.Height == 3) ||
 			//(header.Height == 2) ||
-			//(header.Height == 1)) {
-
-			//continue
+			//if header.Height > 1 {
+			continue
 			//}
 
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)

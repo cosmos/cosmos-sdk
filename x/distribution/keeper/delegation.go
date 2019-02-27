@@ -42,12 +42,13 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
 	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio).RoundDown()
-	fmt.Printf("difference: %v\n", difference)
 	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
+	fmt.Printf("startingPeriod %v, endingPeriod %v, difference: %v, stake %v, rewards: %v\n",
+		startingPeriod, endingPeriod, difference, stake, rewards)
 	return
 }
 
@@ -83,11 +84,11 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	return
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) sdk.Error {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) (sdk.DecCoins, sdk.Error) {
 
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return types.ErrNoDelegationDistInfo(k.codespace)
+		return nil, types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
 	// end current period and calculate rewards
@@ -112,12 +113,12 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
 		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// remove delegator starting info
 	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
-	return nil
+	return rewards, nil
 }

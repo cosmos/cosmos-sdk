@@ -59,7 +59,8 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 	}
 
 	// withdraw rewards
-	if err := k.withdrawDelegationRewards(ctx, val, del); err != nil {
+	_, err := k.withdrawDelegationRewards(ctx, val, del)
+	if err != nil {
 		return err
 	}
 

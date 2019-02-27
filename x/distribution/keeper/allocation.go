@@ -15,6 +15,7 @@ func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoin
 	dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
 	for _, delegation := range dels {
 		if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
+			fmt.Printf("withdraw for delegator: %s\n", delegation.GetDelegatorAddr())
 			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 		}
 	}

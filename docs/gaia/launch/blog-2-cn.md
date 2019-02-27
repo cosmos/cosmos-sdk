@@ -1,4 +1,4 @@
-Cosmos主网上线三部曲
+# **Cosmos主网上线三部曲**
 
 
 
@@ -7,14 +7,14 @@ Cosmos主网启动将分成3个阶段分布完成，下面我们将具体介绍�
 
 
 
-🚨第一阶段：网络逐步趋于稳定🚨
+## **🚨第一阶段：网络逐步趋于稳定🚨**
 
 
 
 在第一阶段，主网可能会不太稳定，也许会出现暂停或其他故障，可能需要Cosmos主网验证人和全节点运营者们一起来协助修复。在网络趋于稳定过程中，出现此类故障并不意外。
 
 
-状态修改和主网启动:
+**状态修改和主网启动:**
 
 区块链的核心价值之一是其不可篡改性，也就是说我们不会通过回滚来修改过去的状态记录。最终，这种不可篡改的理念在软件共识协议层面得到了支持，并最终在社区参与者之间形成了社会契约。
 
@@ -40,61 +40,31 @@ Cosmos主网启动将分成3个阶段分布完成，下面我们将具体介绍�
 
 
 
-对开发人员的建议：Cosmos主网启动是投资者参与主网的第一阶段。作为分布式应用的开发人员，您可能是Cosmos-SDK框架或Tendermint Core的用户。开发者基于Cosmos-SDK或Tendermint的应用开发进度现阶段应该不受Cosmos Hub的影响，但如果您的项目需要使用IBC（链间通信协议），则必须要等到第三阶段或参与即将开始的IBC测试网络。
+**对开发人员的建议**：Cosmos主网启动是投资者参与主网的第一阶段。作为分布式应用的开发人员，您可能是Cosmos-SDK框架或Tendermint Core的用户。开发者基于[Cosmos-SDK](https://cosmos.network/docs/)或[Tendermint](https://tendermint.com/docs/)的应用开发进度现阶段应该不受Cosmos Hub的影响，但如果您的项目需要使用[IBC](https://blog.cosmos.network/developer-deep-dive-cosmos-ibc-5855aaf183fe)（链间通信协议），则必须要等到第三阶段或参与即将开始的IBC测试网络。
 
 
 
-对于用户的建议：在此阶段，我们强烈建议您不要交易Atoms（其实法律合同也限定不能交易），因为在这个阶段仍然存在状态回滚的风险。
+**对于用户的建议**：在此阶段，我们强烈建议您不要交易Atoms（其实法律合同也限定不能交易），因为在这个阶段仍然存在状态回滚的风险。
 
 
 
-但是，您可以通过下面链接的CLI指南和视频教程的指导，在此阶段将Atoms通证委托给验证人。当然，如果发生状态修改，那么所有收益（包括手续费和通胀收益）都将丢失。Voyager是用于与Cosmos Hub交互的图形化客户端，目前处于alpha版，正在持续开发中。一旦Voager beta版上线，并可以安全使用，我们将另行公告。
+但是，您可以通过下面链接的[CLI指南](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md)和视频教程的指导，在此阶段将Atoms通证委托给验证人。当然，如果发生状态修改，那么所有收益（包括手续费和通胀收益）都将丢失。Voyager是用于与Cosmos Hub交互的图形化客户端，目前处于alpha版，正在持续开发中。一旦Voager beta版上线，并可以安全使用，我们将另行公告。
+
+
+CLI指南和视频教程：https://v.qq.com/x/page/q08425izfhi.html
 
 
 
-Cosmos-SDK框架：
+## 第二阶段：链上交易开启
 
-https://cosmos.network/docs/
-
-Tendermint Core:
-
-https://tendermint.com/docs/
-
-IBC:
-
-https://blog.cosmos.network/developer-deep-dive-cosmos-ibc-5855aaf183fe
-
-
-
-CLI指南：
-
-https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md
-
-
-
-CLI指南和视频教程：
-
-
-
-
-
-
-第二阶段：链上交易开启
-
-
-
-
-
-摘要：
+**摘要：**
 
 一旦我们认为主网足够稳定，在链上抵押了Atom的通证持有者将会通过链上治理过程投票决定是否开启链上交易。
 
 
 
 
-Cosmos浏览器是查看治理提案状态的最佳途径，可以在我们的主网启动页面上找到多款Cosmos浏览器。
-
-https://cosmos.network/launch
+Cosmos浏览器是查看治理提案状态的最佳途径，可以在我们的主网启动页面上找到多款[Cosmos浏览器](https://cosmos.network/launch)。
 
 
 
@@ -102,33 +72,27 @@ https://cosmos.network/launch
 
 
 
-第三阶段：启用IBC协议
+## 第三阶段：启用IBC协议
 
 
 
 
 
-摘要：
+**摘要：**
 
-第三阶段我们将会发布IBC协议，并且对是否将其纳入Cosmos-SDK的核心模块库进行链上治理投票。
-
-
-
-IBC协议：
-
-https://github.com/cosmos/cosmos-sdk/blob/develop/docs/spec/ibc/overview.md
+第三阶段我们将会发布[IBC协议](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/spec/ibc/overview.md)，并且对是否将其纳入Cosmos-SDK的核心模块库进行链上治理投票。
 
 
 
-对开发人员的建议：使用Cosmos-SDK或Tendermint BFT构建的应用专有链将能够连接到 Cosmos Hub，并与连接到Hubs上的其他任意区块链进行跨链交互。
+**对开发人员的建议**：使用Cosmos-SDK或Tendermint BFT构建的应用专有链将能够连接到 Cosmos Hub，并与连接到Hubs上的其他任意区块链进行跨链交互。
 
 
 
-对用户的建议：您可以将各种通证和NFT直接从采用IBC协议连接的一个链转移到另一个通过IBC协议连接的链，而无需通过一个第三方中心化平台。
+**对用户的建议**：您可以将各种通证和NFT直接从采用IBC协议连接的一个链转移到另一个通过IBC协议连接的链，而无需通过一个第三方中心化平台。
 
 
 
-验证人提示： 提交您的主网gentx文件
+## 验证人提示： 提交您的主网gentx文件
 
 1.  验证人应该已经生成并且安全的保存好用于主网验证的共识密钥。
 
@@ -138,7 +102,7 @@ https://github.com/cosmos/cosmos-sdk/blob/develop/docs/spec/ibc/overview.md
 
 
 
-总结
+## 总结
 
 Cosmos旨在建立所有区块链间的桥梁，最终建立一个区块链互联网。然而，路漫漫其修远兮，我们还有很长的路要走。主网上线之后，我们需要完成与整个通证经济世界的深度融合，很多的工作要做等着我们去完成。正如肯尼迪在逆境中曾经说过的那样：
 
@@ -149,3 +113,4 @@ Cosmos旨在建立所有区块链间的桥梁，最终建立一个区块链互�
 
 
 走更崎岖的路，才会看见更美的风景！
+****

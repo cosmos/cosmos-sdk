@@ -68,7 +68,7 @@ func SupplyInvariants(k staking.Keeper,
 				loose = loose.Add(validator.GetTokens().ToDec())
 			}
 			// add yet-to-be-withdrawn
-			loose = loose.Add(d.GetOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
+			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
 

@@ -1558,6 +1558,28 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
+  /distribution/validators/{validatorAddr}/outstanding_rewards:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+     summary: Fee distribution outstanding rewards of a single validator
+     tags:
+       - ICS24
+     produces:
+       - application/json
+     responses:
+       200:
+         description: OK
+         schema:
+           type: array
+           items:
+             $ref: "#/definitions/Coin"
+       500:
+         description: Internal Server Error
   /distribution/validators/{validatorAddr}/rewards:
     parameters:
       - in: path
@@ -1566,8 +1588,8 @@ paths:
         required: true
         type: string
     get:
-      summary: Commission and self-delegation rewards of a single a validator
-      description: Query the commission and self-delegation rewards of a validator.
+      summary: Commission and self-delegation rewards of a single validator
+      description: Query the commission and self-delegation rewards of validator.
       tags:
         - ICS24
       produces:
@@ -1628,22 +1650,6 @@ paths:
                 type: string
               community_tax:
                 type: string
-        500:
-          description: Internal Server Error
-  /distribution/outstanding_rewards:
-    get:
-      summary: Fee distribution outstanding rewards
-      tags:
-        - ICS24
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Coin"
         500:
           description: Internal Server Error
 definitions:

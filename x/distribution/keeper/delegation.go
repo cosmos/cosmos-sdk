@@ -12,10 +12,6 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// period has already been incremented - we want to store the period ended by this delegation action
 	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
 
-	if del.String() == "cosmos1l67uvpuauv6wd90rvuln8ywp3trwfcc6ayj6mq" {
-		fmt.Printf("initialize delegation for period: %v\n", previousPeriod)
-	}
-
 	// increment reference count for the period we're going to track
 	k.incrementReferenceCount(ctx, val, previousPeriod)
 
@@ -45,7 +41,8 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
-	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
+	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio).RoundDown()
+	fmt.Printf("difference: %v\n", difference)
 	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}

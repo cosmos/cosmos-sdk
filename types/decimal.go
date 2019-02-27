@@ -301,6 +301,11 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+func (d Dec) RoundDown() Dec {
+	down := new(big.Int).Sub(d.Int, oneInt)
+	return Dec{down}
+}
+
 func (d Dec) QuoRoundUp(d2 Dec) Dec {
 
 	// multiply precision twice

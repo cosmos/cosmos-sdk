@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -251,9 +251,8 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			return
 		}
 
-	case offlineInfo:
-		linfo := info.(offlineInfo)
-		_, err := fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
+	case offlineInfo, multiInfo:
+		_, err := fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -270,14 +269,18 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			return nil, nil, err
 		}
 
-		cdc.MustUnmarshalBinaryLengthPrefixed([]byte(signed), sig)
-		return sig, linfo.GetPubKey(), nil
+		if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to decode signature")
+		}
+
+		return sig, info.GetPubKey(), nil
 	}
 
 	sig, err = priv.Sign(msg)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	pub = priv.PubKey()
 	return sig, pub, nil
 }
@@ -287,7 +290,9 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 	if err != nil {
 		return nil, err
 	}
+
 	var priv tmcrypto.PrivKey
+
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
@@ -299,11 +304,11 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 		if err != nil {
 			return nil, err
 		}
-	case ledgerInfo:
-		return nil, errors.New("only works on local private keys")
-	case offlineInfo:
+
+	case ledgerInfo, offlineInfo, multiInfo:
 		return nil, errors.New("only works on local private keys")
 	}
+
 	return priv, nil
 }
 

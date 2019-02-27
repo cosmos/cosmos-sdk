@@ -21,14 +21,14 @@ import (
 type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
 // Simulate tests application by sending random messages.
-func Simulate(t *testing.T, app *baseapp.BaseApp,
-	appStateFn AppStateFn, ops WeightedOperations,
-	invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
+//func Simulate(t *testing.T, app *baseapp.BaseApp,
+//appStateFn AppStateFn, ops WeightedOperations,
+//invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
 
-	time := time.Now().UnixNano()
-	return SimulateFromSeed(t, app, appStateFn, time, ops,
-		invariants, numBlocks, blockSize, commit, lean)
-}
+//time := time.Now().UnixNano()
+//return SimulateFromSeed(t, app, appStateFn, time, ops,
+//invariants, numBlocks, blockSize, commit, lean)
+//}
 
 // initialize the chain for the simulation
 func initChain(
@@ -52,7 +52,7 @@ func initChain(
 // operations, testing the provided invariants, but using the provided seed.
 // TODO split this monster function up
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
-	appStateFn AppStateFn, seed int64, ops WeightedOperations,
+	appStateFn AppStateFn, seed int64, opsFile string, ops WeightedOperations,
 	invariants sdk.Invariants,
 	numBlocks, blockSize int, commit, lean bool) (stopEarly bool, simError error) {
 
@@ -246,6 +246,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			rand *rand.Rand
 		}
 		opAndRz := make([]opAndR, 0, blocksize)
+
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
 		for i := 0; i < blocksize; i++ {
@@ -259,9 +260,39 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
+
+			//if (header.Height >= 27 && header.Height <= 37) ||
+			//(header.Height == 26 && i > 131) ||
+			//(header.Height >= 23 && header.Height <= 25) ||
+			//(header.Height >= 18 && header.Height <= 19) ||
+			//(header.Height >= 12 && header.Height <= 15) ||
+			//(header.Height >= 8 && header.Height <= 10) ||
+			//(header.Height >= 6 && header.Height <= 6) {
+			//continue
+			//}
+
+			if !((header.Height == 26 && i <= 131) ||
+				(header.Height == 22) ||
+				(header.Height == 21) ||
+				(header.Height == 20) ||
+				(header.Height == 17) ||
+				(header.Height == 16) ||
+				(header.Height == 14) ||
+				(header.Height == 13) ||
+				(header.Height == 11) ||
+				(header.Height == 7) ||
+				(header.Height == 5) ||
+				(header.Height == 4) ||
+				(header.Height == 3) ||
+				(header.Height == 2) ||
+				(header.Height == 1)) {
+
+				continue
+			}
+
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
 			if !lean || (opMsg.OK && lean) {
-				logWriter.AddEntry(MsgEntry(header.Height, opMsg))
+				logWriter.AddEntry(MsgEntry(header.Height, opMsg, int64(i)))
 			}
 			if err != nil {
 				logWriter.PrintLogs()

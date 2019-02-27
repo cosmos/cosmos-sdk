@@ -33,9 +33,10 @@ const (
 
 // OperationEntry - an operation entry for logging (ex. BeginBlock, EndBlock, XxxMsg, etc)
 type OperationEntry struct {
-	EntryKind string
-	Height    int64
-	Operation json.RawMessage // typically OperationMsg
+	EntryKind string          `json:"entry_kind"`
+	Height    int64           `json:"height"`
+	Order     int64           `json:"order"`
+	Operation json.RawMessage `json:"operation"`
 }
 
 // BeginBlockEntry - operation entry for begin block
@@ -43,6 +44,7 @@ func BeginBlockEntry(height int64) OperationEntry {
 	return OperationEntry{
 		EntryKind: BeginBlockEntryKind,
 		Height:    height,
+		Order:     -1,
 		Operation: nil,
 	}
 }
@@ -52,15 +54,17 @@ func EndBlockEntry(height int64) OperationEntry {
 	return OperationEntry{
 		EntryKind: EndBlockEntryKind,
 		Height:    height,
+		Order:     -1,
 		Operation: nil,
 	}
 }
 
 // MsgEntry - operation entry for standard msg
-func MsgEntry(height int64, opMsg OperationMsg) OperationEntry {
+func MsgEntry(height int64, opMsg OperationMsg, order int64) OperationEntry {
 	return OperationEntry{
 		EntryKind: MsgEntryKind,
 		Height:    height,
+		Order:     order,
 		Operation: opMsg.MustMarshal(),
 	}
 }
@@ -70,6 +74,7 @@ func QueuedMsgEntry(height int64, opMsg OperationMsg) OperationEntry {
 	return OperationEntry{
 		EntryKind: QueuedsgMsgEntryKind,
 		Height:    height,
+		Order:     -1,
 		Operation: opMsg.MustMarshal(),
 	}
 }

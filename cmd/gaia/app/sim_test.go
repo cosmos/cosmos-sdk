@@ -37,19 +37,21 @@ import (
 )
 
 var (
-	genesisFile string
-	seed        int64
-	numBlocks   int
-	blockSize   int
-	enabled     bool
-	verbose     bool
-	lean        bool
-	commit      bool
-	period      int
+	genesisFile    string
+	operationsFile string
+	seed           int64
+	numBlocks      int
+	blockSize      int
+	enabled        bool
+	verbose        bool
+	lean           bool
+	commit         bool
+	period         int
 )
 
 func init() {
 	flag.StringVar(&genesisFile, "SimulationGenesis", "", "custom simulation genesis file")
+	flag.StringVar(&operationsFile, "SimulationOperations", "", "run operations from a custom simulations file")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "operations per block")
@@ -62,10 +64,10 @@ func init() {
 
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, app *GaiaApp) (
-	testing.TB, *baseapp.BaseApp, simulation.AppStateFn, int64,
+	testing.TB, *baseapp.BaseApp, simulation.AppStateFn, int64, string,
 	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool) {
 
-	return tb, app.BaseApp, appStateFn, seed,
+	return tb, app.BaseApp, appStateFn, seed, operationsFile,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
@@ -548,7 +550,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
-				t, app.BaseApp, appStateFn, seed,
+				t, app.BaseApp, appStateFn, seed, "",
 				testAndRunTxs(app),
 				[]sdk.Invariant{},
 				50,

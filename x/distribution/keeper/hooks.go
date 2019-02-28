@@ -70,8 +70,8 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
-	fmt.Printf("PRE WITHDRAW\n")
 	withdrawablePre := h.k.CalcWithdrawable(ctx, val)
+	fmt.Printf("PRE WITHDRAW: %v\n", withdrawablePre)
 
 	// withdraw delegation rewards (which also increments period)
 	rewards, err := h.k.withdrawDelegationRewards(ctx, val, del)
@@ -86,7 +86,7 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 
 	withdrawablePost := h.k.CalcWithdrawable(ctx, val)
 	fmt.Printf("POST WITHDRAW: %v\n", withdrawablePost)
-	diff := withdrawablePost.Sub(withdrawablePre)
+	diff := withdrawablePre.Sub(withdrawablePost)
 	if len(diff) > 0 && rewards[0].IsGT(diff[0]) {
 		panic("should not happen")
 	}

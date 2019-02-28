@@ -22,6 +22,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+
 	// force-withdraw commission
 	commission := h.k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if !commission.IsZero() {
@@ -31,10 +32,6 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		feePool := h.k.GetFeePool(ctx)
 		feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
 		h.k.SetFeePool(ctx, feePool)
-
-		// update outstanding
-		outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr)
-		h.k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(commission))
 
 		// add to validator account
 		if !coins.IsZero() {
@@ -46,6 +43,10 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 			}
 		}
 	}
+
+	// delete outstanding
+	h.k.DeleteValidatorOutstandingRewards(ctx, valAddr)
+
 	// remove commission record
 	h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
 

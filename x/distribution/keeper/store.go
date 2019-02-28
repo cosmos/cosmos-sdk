@@ -278,6 +278,11 @@ func (k Keeper) SetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddre
 	store.Set(GetValidatorOutstandingRewardsKey(val), b)
 }
 
+func (k Keeper) DeleteValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorOutstandingRewardsKey(val))
+}
+
 // iterate validator outstanding rewards
 func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func(val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)

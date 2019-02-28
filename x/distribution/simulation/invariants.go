@@ -67,7 +67,10 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 			dels := sk.GetAllSDKDelegations(ctx)
 			for _, delegation := range dels {
 				if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-					_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
+					err := k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())

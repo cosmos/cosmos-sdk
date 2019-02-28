@@ -61,7 +61,12 @@ CLI flag.
 
 ### SDK
 
-* \#3750 Track outstanding rewards per-validator instead of globally
+* \#3750 Track outstanding rewards per-validator instead of globally,
+         and fix the main simulation issue, which was that slashes of
+         re-delegations to a validator were not correctly accounted for
+         in fee distribution when the redelegation in question had itself
+          been slashed (from a fault committed by a different validator)
+         in the same BeginBlock
 * \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo

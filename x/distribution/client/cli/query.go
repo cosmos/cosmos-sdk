@@ -37,7 +37,7 @@ func GetCmdQueryValidatorOutstandingRewards(queryRoute string, cdc *codec.Codec)
 	return &cobra.Command{
 		Use:   "validator-outstanding-rewards",
 		Args:  cobra.NoArgs,
-		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator",
+		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

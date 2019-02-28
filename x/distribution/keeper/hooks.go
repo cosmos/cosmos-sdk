@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -70,25 +68,10 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
-	withdrawablePre := h.k.CalcWithdrawable(ctx, val)
-	fmt.Printf("PRE WITHDRAW: %v\n", withdrawablePre)
-
 	// withdraw delegation rewards (which also increments period)
-	rewards, err := h.k.withdrawDelegationRewards(ctx, val, del)
+	_, err := h.k.withdrawDelegationRewards(ctx, val, del)
 	if err != nil {
 		panic(err)
-	}
-
-	fmt.Printf("REWARDS: %v\n", rewards)
-
-	ctx, _ = ctx.CacheContext()
-	h.k.initializeDelegation(ctx, valAddr, delAddr)
-
-	withdrawablePost := h.k.CalcWithdrawable(ctx, val)
-	fmt.Printf("POST WITHDRAW: %v\n", withdrawablePost)
-	diff := withdrawablePre.Sub(withdrawablePost)
-	if len(diff) > 0 && rewards[0].IsGT(diff[0]) {
-		panic("should not happen")
 	}
 
 }

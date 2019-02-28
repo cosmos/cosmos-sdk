@@ -15,7 +15,6 @@ func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoin
 	dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
 	for _, delegation := range dels {
 		if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-			fmt.Printf("withdraw for delegator: %s\n", delegation.GetDelegatorAddr())
 			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 		}
 	}
@@ -95,10 +94,6 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
 
-	withdrawablePrior := k.CalcWithdrawable(ctx, val)
-	fmt.Printf("allocating %v tokens to validator %s, prior withdrawable: %v\n",
-		tokens, val.GetOperator(), withdrawablePrior)
-
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
@@ -118,10 +113,4 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 
-	withdrawablePost := k.CalcWithdrawable(ctx, val)
-	if withdrawablePost.Sub(withdrawablePrior)[0].IsGT(tokens[0]) {
-		msg := fmt.Sprintf("greater withdraw allowed than allocated: validator %s, allowed: %v, allocated %v\n",
-			val.GetOperator(), withdrawablePost.Sub(withdrawablePrior), tokens)
-		panic(msg)
-	}
 }

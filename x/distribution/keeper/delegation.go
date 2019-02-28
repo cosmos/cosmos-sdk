@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -47,8 +46,6 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
-	fmt.Printf("startingPeriod %v, endingPeriod %v, difference: %v, stake %v, rewards: %v\n",
-		startingPeriod, endingPeriod, difference, stake, rewards)
 	return
 }
 

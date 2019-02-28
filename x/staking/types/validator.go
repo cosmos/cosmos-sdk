@@ -407,6 +407,16 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 	return v.Tokens.ToDec().Quo(v.DelegatorShares)
 }
 
+// DelegatorShareExRateTruncated gets the exchange rate of tokens over delegator shares, truncated.
+// UNITS: tokens/delegator-shares
+func (v Validator) DelegatorShareExRateTruncated() sdk.Dec {
+	if v.DelegatorShares.IsZero() {
+		// the first delegation to a validator sets the exchange rate to one
+		return sdk.OneDec()
+	}
+	return v.Tokens.ToDec().QuoTruncate(v.DelegatorShares)
+}
+
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
 	if v.Status == sdk.Bonded {
@@ -446,3 +456,6 @@ func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate 
 func (v Validator) GetMinSelfDelegation() sdk.Int    { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }
 func (v Validator) GetDelegatorShareExRate() sdk.Dec { return v.DelegatorShareExRate() }
+func (v Validator) GetDelegatorShareExRateTruncated() sdk.Dec {
+	return v.DelegatorShareExRateTruncated()
+}

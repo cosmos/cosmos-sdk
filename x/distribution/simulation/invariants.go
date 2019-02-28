@@ -50,6 +50,7 @@ func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
 	}
 }
 
+// Checks that a particular validators' rewards can be withdrawn
 func CanWithdrawForValidatorInvariant(k distr.Keeper, sk types.StakingKeeper, val sdk.Validator) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())

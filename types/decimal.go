@@ -214,11 +214,7 @@ func (d Dec) Sub(d2 Dec) Dec {
 	if res.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	ret := Dec{res}
-	if !ret.Add(d2).Equal(d) {
-		panic("broken math")
-	}
-	return ret
+	return Dec{res}
 }
 
 // multiplication
@@ -241,11 +237,7 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	ret := Dec{chopped}
-	if ret.Quo(d2).GT(d) {
-		panic("broken math")
-	}
-	return ret
+	return Dec{chopped}
 }
 
 // multiplication
@@ -297,11 +289,7 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	ret := Dec{chopped}
-	if ret.Mul(d2).GT(d) {
-		panic("broken math")
-	}
-	return ret
+	return Dec{chopped}
 }
 
 // quotient

@@ -111,9 +111,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		if effectiveFraction.GT(sdk.OneDec()) {
 			effectiveFraction = sdk.OneDec()
 		}
-		if effectiveFraction.LT(slashFactor) {
-			effectiveFraction = slashFactor
-		}
 		// call the before-slashed hook
 		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
 	}

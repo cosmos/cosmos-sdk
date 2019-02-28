@@ -66,7 +66,6 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
-				fmt.Printf("hit slash event: %v\n", event)
 				endingPeriod := event.ValidatorPeriod
 				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
@@ -75,6 +74,10 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				return false
 			},
 		)
+	}
+
+	if stake.GT(del.GetShares().Mul(val.GetDelegatorShareExRate())) {
+		panic(fmt.Sprintf("calculated final stake greater than current stake: %s, %s", stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
 	}
 
 	// calculate rewards for final period

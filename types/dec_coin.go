@@ -79,6 +79,7 @@ func (coin DecCoin) IsGTE(other DecCoin) bool {
 	return !coin.Amount.LT(other.Amount)
 }
 
+// IsGT - TODO
 func (coin DecCoin) IsGT(other DecCoin) bool {
 	if coin.Denom != other.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
@@ -269,6 +270,7 @@ func (coins DecCoins) negative() DecCoins {
 	return res
 }
 
+// RoundDown - TODO
 func (coins DecCoins) RoundDown() DecCoins {
 	res := make([]DecCoin, 0, len(coins))
 	for _, coin := range coins {

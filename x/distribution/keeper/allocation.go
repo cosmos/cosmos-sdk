@@ -9,19 +9,20 @@ import (
 )
 
 // TODO this is a hack
-func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoins {
+func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) (withdrawable, startCommunityPool, finalCommunityPool sdk.DecCoins) {
 	ctx, _ = ctx.CacheContext()
+	startCommunityPool = k.GetFeePool(ctx).CommunityPool
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 	dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
 	for _, delegation := range dels {
 		if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-			//fmt.Printf("withdraw for delegator: %s\n", delegation.GetDelegatorAddr())
 			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 		}
 	}
+
 	remaining := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	return outstanding.Sub(remaining)
+	return outstanding.Sub(remaining), startCommunityPool, k.GetFeePool(ctx).CommunityPool
 }
 
 // allocate fees handles distribution of the collected fees
@@ -98,7 +99,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
 
-	withdrawablePrior := k.CalcWithdrawable(ctx, val)
+	withdrawablePrior, communityPoolStartPrior, communityPoolEndPrior := k.CalcWithdrawable(ctx, val)
+
 	//fmt.Printf("allocating %v tokens to validator %s, prior withdrawable: %v\n",
 	//tokens, val.GetOperator(), withdrawablePrior)
 
@@ -125,10 +127,38 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 
-	withdrawablePost := k.CalcWithdrawable(ctx, val)
-	if withdrawablePost.Sub(withdrawablePrior)[0].IsGT(tokens[0]) {
-		msg := fmt.Sprintf("greater withdraw allowed than allocated: validator %s, allowed: %v, allocated %v\n",
-			val.GetOperator(), withdrawablePost.Sub(withdrawablePrior), tokens)
+	withdrawablePost, communityPoolStartPost, communityPoolEndPost := k.CalcWithdrawable(ctx, val)
+
+	prior := withdrawablePrior.Add(communityPoolEndPrior)
+	post := withdrawablePost.Add(communityPoolEndPost).Sub(tokens)
+
+	allowable := (withdrawablePost.Sub(withdrawablePrior))
+
+	// allocation included the difference in the community pool donations
+	//withdrawableTokens, _ := tokens.TruncateDecimal()
+	//allocated := (sdk.NewDecCoins(withdrawableTokens).Add(communityPoolPrior)).Sub(communityPoolPost)
+	allocated := (tokens.Add(communityPoolEndPrior)).Sub(communityPoolEndPost)
+
+	// do not count the first begin block
+	//if len(withdrawablePrior) > 0 && (allowable[0]).IsGT(allocated[0]) {
+	if !post.IsEqual(prior) {
+
+		fmt.Printf("debug post: %v\n", post)
+		fmt.Printf("debug prior: %v\n", prior)
+		fmt.Printf("debug tokens: %v\n", tokens)
+
+		fmt.Printf("debug allowable: %v\n", allowable)
+		fmt.Printf("debug allocated: %v\n", allocated)
+		fmt.Printf("debug withdrawablePost: %v\n", withdrawablePost)
+		fmt.Printf("debug withdrawablePrior: %v\n", withdrawablePrior)
+
+		fmt.Printf("debug communityPoolStartPost: %v\n", communityPoolStartPost)
+		fmt.Printf("debug communityPoolEndPost: %v\n", communityPoolEndPost)
+		fmt.Printf("debug communityPoolStartPrior: %v\n", communityPoolStartPrior)
+		fmt.Printf("debug communityPoolEndPrior: %v\n", communityPoolEndPrior)
+
+		msg := fmt.Sprintf("greater withdraw allowed than allocated: validator %s, allowable: %v, allocated %v\n",
+			val.GetOperator(), allowable, allocated)
 		panic(msg)
 	}
 }

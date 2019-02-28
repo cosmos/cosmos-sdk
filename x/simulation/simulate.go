@@ -276,8 +276,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			//(header.Height == 3) ||
 			//(header.Height == 2) ||
 			//if header.Height > 1 {
-			continue
 			//}
+			continue
 
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
 			if !lean || (opMsg.OK && lean) {

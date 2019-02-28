@@ -104,6 +104,36 @@ func getInitChainer(mapp *mock.App, keeper BaseKeeper) sdk.InitChainer {
 	}
 }
 
+func TestSendNotEnoughBalance(t *testing.T) {
+	mapp := getMockApp(t)
+	acc := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
+	}
+
+	mock.SetGenesis(mapp, []auth.Account{acc})
+
+	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	require.NotNil(t, res1)
+	require.Equal(t, acc, res1.(*auth.BaseAccount))
+
+	origAccNum := res1.GetAccountNumber()
+	origSeq := res1.GetSequence()
+
+	sendMsg := NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
+
+	res2 := mapp.AccountKeeper.GetAccount(mapp.NewContext(true, abci.Header{}), addr1)
+	require.NotNil(t, res2)
+
+	require.True(t, res2.GetAccountNumber() == origAccNum)
+	require.True(t, res2.GetSequence() == origSeq+1)
+}
+
 func TestMsgMultiSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{

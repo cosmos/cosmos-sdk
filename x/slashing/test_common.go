@@ -90,10 +90,10 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
+	initCoins := sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins)
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
-			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
-		})
+		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{initCoins})
+		require.Nil(t, err)
 	}
 
 	mbk := mockBankKeeper{true}

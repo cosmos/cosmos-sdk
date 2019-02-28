@@ -278,6 +278,7 @@ func (k Keeper) SetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddre
 	store.Set(GetValidatorOutstandingRewardsKey(val), b)
 }
 
+// delete validator outstanding rewards
 func (k Keeper) DeleteValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetValidatorOutstandingRewardsKey(val))

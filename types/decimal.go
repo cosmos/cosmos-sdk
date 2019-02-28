@@ -432,7 +432,8 @@ func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
-		d = chopPrecisionAndRound(d)
+		// truncate since d is negative...
+		d = chopPrecisionAndTruncate(d)
 		d = d.Neg(d)
 		return d
 	}

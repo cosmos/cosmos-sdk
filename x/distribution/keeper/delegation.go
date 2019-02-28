@@ -65,19 +65,21 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
-	// slashes which happened in the first block would have been before this delegation existed
-	startingHeight := startingInfo.Height + 1
+	// slashes which happened in the first block would have been before this delegation existed,
+	// UNLESS they were slashes of a redelegation to this validator which was itself slashed earlier in the same BeginBlock
+	startingHeight := startingInfo.Height
 	// slashes this block happened after reward allocation, but we have to account for them for the stake sanity check
 	endingHeight := uint64(ctx.BlockHeight())
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
-				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
-				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
-				startingPeriod = endingPeriod
-				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-				fmt.Printf("recalculated stake for delegator %s after slash of %v\n", del.GetDelegatorAddr(), event.Fraction)
+				if endingPeriod > startingPeriod {
+					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
+					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+					startingPeriod = endingPeriod
+				}
 				return false
 			},
 		)

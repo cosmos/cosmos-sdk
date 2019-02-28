@@ -33,13 +33,13 @@ func TestInitGenesis(t *testing.T) {
 	validators[0].Description = NewDescription("hoop", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
-	validators[0].DelegatorShares = sdk.NewDecFromInt(valTokens)
+	validators[0].DelegatorShares = sdk.NewDecFromUint(valTokens)
 	validators[1].OperatorAddr = sdk.ValAddress(keep.Addrs[1])
 	validators[1].ConsPubKey = keep.PKs[1]
 	validators[1].Description = NewDescription("bloop", "", "", "")
 	validators[1].Status = sdk.Bonded
 	validators[1].Tokens = valTokens
-	validators[1].DelegatorShares = sdk.NewDecFromInt(valTokens)
+	validators[1].DelegatorShares = sdk.NewDecFromUint(valTokens)
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
 	vals, err := InitGenesis(ctx, keeper, genesisState)
@@ -76,7 +76,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
-	bondedTokens := sdk.TokensFromTendermintPower(int64(200 + (size - 100)))
+	bondedTokens := sdk.TokensFromTendermintPower(uint64(200 + (size - 100)))
 	pool.BondedTokens = bondedTokens
 
 	params := keeper.GetParams(ctx)
@@ -94,7 +94,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			tokens = sdk.TokensFromTendermintPower(2)
 		}
 		validators[i].Tokens = tokens
-		validators[i].DelegatorShares = sdk.NewDecFromInt(tokens)
+		validators[i].DelegatorShares = sdk.NewDecFromUint(tokens)
 	}
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
@@ -113,7 +113,7 @@ func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
 	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", ""))
-	genValidators1[0].Tokens = sdk.OneInt()
+	genValidators1[0].Tokens = sdk.OneUint()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 
 	tests := []struct {

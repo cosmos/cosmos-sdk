@@ -319,9 +319,6 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 
 // removes tokens from a validator
 func (v Validator) RemoveTokens(pool Pool, tokens sdk.Uint) (Validator, Pool) {
-	if tokens.IsZero() {
-		panic(fmt.Sprintf("should not happen: trying to remove zero tokens %v", tokens))
-	}
 	if v.Tokens.LT(tokens) {
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}

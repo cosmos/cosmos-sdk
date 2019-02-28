@@ -84,12 +84,13 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.NewUint(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.Uint64())
+	require.Equal(t, uint64(100), validator.Tokens.Uint64())
 	keeper.SetPool(ctx, pool)
 	TestingUpdateValidator(keeper, ctx, validator, true)
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, int64(100), validator.Tokens.Uint64(), "\nvalidator %v\npool %v", validator, pool)
+	require.Equal(t, uint64(100), validator.Tokens.Uint64(), "\nvalidator %v\npool %v",
+		validator, pool)
 
 	pool = keeper.GetPool(ctx)
 	power := GetValidatorsByPowerIndexKey(validator)
@@ -98,7 +99,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	// burn half the delegator shares
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewDec(2)))
-	require.Equal(t, int64(50), burned.Uint64())
+	require.Equal(t, uint64(50), burned.Uint64())
 	keeper.SetPool(ctx, pool)                            // update the pool
 	TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
@@ -849,8 +850,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	require.Equal(t, 2, len(keeper.ApplyAndReturnValidatorSetUpdates(ctx)))
 
 	// check initial power
-	require.Equal(t, int64(100), validators[0].GetTendermintPower())
-	require.Equal(t, int64(100), validators[1].GetTendermintPower())
+	require.Equal(t, uint64(100), validators[0].GetTendermintPower())
+	require.Equal(t, uint64(100), validators[1].GetTendermintPower())
 
 	// test multiple value change
 	//  tendermintUpdate set: {c1, c3} -> {c1', c3'}
@@ -864,8 +865,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], false)
 
 	// power has changed
-	require.Equal(t, int64(80), validators[0].GetTendermintPower())
-	require.Equal(t, int64(70), validators[1].GetTendermintPower())
+	require.Equal(t, uint64(80), validators[0].GetTendermintPower())
+	require.Equal(t, uint64(70), validators[1].GetTendermintPower())
 
 	// Tendermint updates should reflect power change
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)

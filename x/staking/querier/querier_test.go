@@ -23,7 +23,7 @@ func TestNewQuerier(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	pool := keeper.GetPool(ctx)
 	// Create Validators
-	amts := []sdk.Int{sdk.NewUint(9), sdk.NewUint(8)}
+	amts := []sdk.Uint{sdk.NewUint(9), sdk.NewUint(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
@@ -121,7 +121,7 @@ func TestQueryValidators(t *testing.T) {
 	params := keeper.GetParams(ctx)
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewUint(9), sdk.NewUint(8)}
+	amts := []sdk.Uint{sdk.NewUint(9), sdk.NewUint(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
@@ -298,7 +298,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonging delegation
 	unbondingTokens := sdk.TokensFromTendermintPower(10)
-	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDecFromInt(unbondingTokens))
+	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDecFromUint(unbondingTokens))
 	require.Nil(t, err)
 
 	queryBondParams = NewQueryBondsParams(addrAcc2, addrVal1)
@@ -352,7 +352,7 @@ func TestQueryDelegation(t *testing.T) {
 	// Query redelegation
 	redelegationTokens := sdk.TokensFromTendermintPower(10)
 	_, err = keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr,
-		val2.OperatorAddr, sdk.NewDecFromInt(redelegationTokens))
+		val2.OperatorAddr, sdk.NewDecFromUint(redelegationTokens))
 	require.Nil(t, err)
 	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
 	require.True(t, found)
@@ -390,7 +390,7 @@ func TestQueryRedelegations(t *testing.T) {
 	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	rdAmount := sdk.TokensFromTendermintPower(20)
-	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromInt(rdAmount))
+	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDecFromUint(rdAmount))
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)

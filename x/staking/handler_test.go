@@ -31,7 +31,7 @@ func setInstantUnbondPeriod(keeper keep.Keeper, ctx sdk.Context) types.Params {
 func TestValidatorByPowerIndex(t *testing.T) {
 	validatorAddr, validatorAddr3 := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1])
 
-	initPower := int64(1000000)
+	initPower := uint64(1000000)
 	initBond := sdk.TokensFromTendermintPower(initPower)
 	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
@@ -73,8 +73,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonding, validator.Status)      // ensure is unbonding
-	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
+	require.Equal(t, sdk.Unbonding, validator.Status)         // ensure is unbonding
+	require.Equal(t, initBond.QuoUint64(2), validator.Tokens) // ensure tokens slashed
 	keeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
@@ -91,7 +91,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.Equal(t, power2, power3)
 
 	// unbond self-delegation
-	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDecFromInt(initBond))
+	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDecFromUint(initBond))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	var finishTime time.Time
@@ -126,7 +126,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, addr1, validator.OperatorAddr)
 	assert.Equal(t, pk1, validator.ConsPubKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
-	assert.Equal(t, sdk.NewDecFromInt(valTokens), validator.DelegatorShares)
+	assert.Equal(t, sdk.NewDecFromUint(valTokens), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 
 	// two validators can't have the same operator address
@@ -155,7 +155,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, addr2, validator.OperatorAddr)
 	assert.Equal(t, pk2, validator.ConsPubKey)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
-	assert.True(sdk.DecEq(t, sdk.NewDecFromInt(valTokens), validator.DelegatorShares))
+	assert.True(sdk.DecEq(t, sdk.NewDecFromUint(valTokens), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 }
 
@@ -200,7 +200,7 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	assert.Equal(t, validatorAddr, validator.OperatorAddr)
 	assert.Equal(t, pk, validator.ConsPubKey)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
-	assert.True(sdk.DecEq(t, sdk.NewDecFromInt(valTokens), validator.DelegatorShares))
+	assert.True(sdk.DecEq(t, sdk.NewDecFromUint(valTokens), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 
 	// one validator cannot be created twice even from different delegator
@@ -211,7 +211,7 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, int64(1000))
+	ctx, _, keeper := keep.CreateTestInput(t, false, uint64(1000))
 	setInstantUnbondPeriod(keeper, ctx)
 
 	bondAmount := sdk.TokensFromTendermintPower(10)
@@ -243,12 +243,12 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundUint())
-	require.Equal(t, bondAmount.MulRaw(2), validator.BondedTokens())
+	require.Equal(t, bondAmount.MulUint64(2), validator.DelegatorShares.RoundUint())
+	require.Equal(t, bondAmount.MulUint64(2), validator.BondedTokens())
 
 	// unbond validator total self-delegations (which should jail the validator)
 	unbondShares := sdk.TokensFromTendermintPower(10)
-	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, sdk.NewDecFromInt(unbondShares))
+	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, sdk.NewDecFromUint(unbondShares))
 
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got %v", got)
@@ -278,8 +278,8 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundUint())
-	require.Equal(t, bondAmount.MulRaw(2), validator.Tokens)
+	require.Equal(t, bondAmount.MulUint64(2), validator.DelegatorShares.RoundUint())
+	require.Equal(t, bondAmount.MulUint64(2), validator.Tokens)
 
 	// unjail the validator now that is has non-zero self-delegated shares
 	keeper.Unjail(ctx, valConsAddr)
@@ -292,18 +292,18 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundUint())
-	require.Equal(t, bondAmount.MulRaw(3), validator.Tokens)
+	require.Equal(t, bondAmount.MulUint64(3), validator.DelegatorShares.RoundUint())
+	require.Equal(t, bondAmount.MulUint64(3), validator.Tokens)
 
 	// verify new delegation
 	bond, found = keeper.GetDelegation(ctx, delAddr, valAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount.MulRaw(2), bond.Shares.RoundUint())
-	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundUint())
+	require.Equal(t, bondAmount.MulUint64(2), bond.Shares.RoundUint())
+	require.Equal(t, bondAmount.MulUint64(3), validator.DelegatorShares.RoundUint())
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
-	initPower := int64(1000)
+	initPower := uint64(1000)
 	initBond := sdk.TokensFromTendermintPower(initPower)
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
 	params := keeper.GetParams(ctx)
@@ -340,7 +340,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	// just send the same msgbond multiple times
 	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
 
-	for i := int64(0); i < 5; i++ {
+	for i := uint64(0); i < 5; i++ {
 		ctx = ctx.WithBlockHeight(int64(i))
 
 		got := handleMsgDelegate(ctx, msgDelegate, keeper)
@@ -355,8 +355,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		exRate := validator.DelegatorShareExRate()
 		require.True(t, exRate.Equal(sdk.OneDec()), "expected exRate 1 got %v, i = %v", exRate, i)
 
-		expBond := bondAmount.MulRaw(i + 1)
-		expDelegatorShares := bondAmount.MulRaw(i + 2) // (1 self delegation)
+		expBond := bondAmount.MulUint64(i + 1)
+		expDelegatorShares := bondAmount.MulUint64(i + 2) // (1 self delegation)
 		expDelegatorAcc := initBond.Sub(expBond)
 
 		gotBond := bond.Shares.RoundUint()
@@ -377,8 +377,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
-
-	initPower := int64(100)
+	initPower := uint64(100)
 	initBond := sdk.TokensFromTendermintPower(100)
 	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
@@ -401,7 +400,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfDelegation := sdk.OneInt()
+	newMinSelfDelegation := sdk.OneUint()
 	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
 	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
 	require.False(t, got.IsOK(), "should not be able to decrease minSelfDelegation")
@@ -410,7 +409,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 
-	initPower := int64(100)
+	initPower := uint64(100)
 	initBond := sdk.TokensFromTendermintPower(100)
 	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
@@ -433,14 +432,14 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfDelegation := initBond.Add(sdk.OneInt())
+	newMinSelfDelegation := initBond.Add(sdk.OneUint())
 	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
 	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
 	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self delegation")
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {
-	initPower := int64(1000)
+	initPower := uint64(1000)
 	initBond := sdk.TokensFromTendermintPower(initPower)
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
 	params := setInstantUnbondPeriod(keeper, ctx)
@@ -469,8 +468,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, initBond.MulRaw(2), validator.DelegatorShares.RoundUint())
-	require.Equal(t, initBond.MulRaw(2), validator.BondedTokens())
+	require.Equal(t, initBond.MulUint64(2), validator.DelegatorShares.RoundUint())
+	require.Equal(t, initBond.MulUint64(2), validator.BondedTokens())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -493,7 +492,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.True(t, found)
 
 		expBond := initBond.Sub(unbondShares.MulInt64(i + 1).RoundUint())
-		expDelegatorShares := (initBond.MulRaw(2)).Sub(unbondShares.MulInt64(i + 1).RoundUint())
+		expDelegatorShares := (initBond.MulUint64(2)).Sub(unbondShares.MulInt64(i + 1).RoundUint())
 		expDelegatorAcc := initBond.Sub(expBond)
 
 		gotBond := bond.Shares.RoundUint()
@@ -512,7 +511,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	}
 
 	// these are more than we have bonded now
-	errorCases := []sdk.Int{
+	errorCases := []sdk.Uint{
 		//1<<64 - 1, // more than int64 power
 		//1<<63 + 1, // more than int64 power
 		sdk.TokensFromTendermintPower(1<<63 - 1),
@@ -520,7 +519,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		initBond,
 	}
 	for i, c := range errorCases {
-		unbondShares := sdk.NewDecFromInt(c)
+		unbondShares := sdk.NewDecFromUint(c)
 		msgUndelegate := NewMsgUndelegate(delegatorAddr, validatorAddr, unbondShares)
 		got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 		require.False(t, got.IsOK(), "expected unbond msg to fail, index: %v", i)
@@ -529,14 +528,14 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	leftBonded := initBond.Sub(unbondShares.MulInt64(numUnbonds).RoundUint())
 
 	// should be unable to unbond one more than we have
-	unbondShares = sdk.NewDecFromInt(leftBonded.AddRaw(1))
+	unbondShares = sdk.NewDecFromUint(leftBonded.AddUint64(1))
 	msgUndelegate = NewMsgUndelegate(delegatorAddr, validatorAddr, unbondShares)
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.False(t, got.IsOK(),
 		"got: %v\nmsgUnbond: %v\nshares: %v\nleftBonded: %v\n", got, msgUndelegate, unbondShares.String(), leftBonded)
 
 	// should be able to unbond just what we have
-	unbondShares = sdk.NewDecFromInt(leftBonded)
+	unbondShares = sdk.NewDecFromUint(leftBonded)
 	msgUndelegate = NewMsgUndelegate(delegatorAddr, validatorAddr, unbondShares)
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(),
@@ -544,7 +543,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 }
 
 func TestMultipleMsgCreateValidator(t *testing.T) {
-	initPower := int64(1000)
+	initPower := uint64(1000)
 	initTokens := sdk.TokensFromTendermintPower(initPower)
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
 	params := setInstantUnbondPeriod(keeper, ctx)
@@ -584,7 +583,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		_, found := keeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
 		unbondingTokens := sdk.TokensFromTendermintPower(10)
-		msgUndelegate := NewMsgUndelegate(delegatorAddrs[i], validatorAddr, sdk.NewDecFromInt(unbondingTokens)) // remove delegation
+		msgUndelegate := NewMsgUndelegate(delegatorAddrs[i], validatorAddr, sdk.NewDecFromUint(unbondingTokens)) // remove delegation
 		got := handleMsgUndelegate(ctx, msgUndelegate, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
@@ -710,7 +709,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	msgUndelegateValidator := NewMsgUndelegate(sdk.AccAddress(validatorAddr),
-		validatorAddr, sdk.NewDecFromInt(delTokens))
+		validatorAddr, sdk.NewDecFromUint(delTokens))
 	got = handleMsgUndelegate(ctx, msgUndelegateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error: %v", got)
 	var finishTime time.Time
@@ -758,7 +757,7 @@ func TestUnbondingPeriod(t *testing.T) {
 	// begin unbonding
 	unbondingTokens := sdk.TokensFromTendermintPower(10)
 	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr),
-		validatorAddr, sdk.NewDecFromInt(unbondingTokens))
+		validatorAddr, sdk.NewDecFromUint(unbondingTokens))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 	origHeader := ctx.BlockHeader()
@@ -846,7 +845,7 @@ func TestRedelegationPeriod(t *testing.T) {
 
 	// balance should have been subtracted after creation
 	amt2 := AccMapper.GetAccount(ctx, sdk.AccAddress(validatorAddr)).GetCoins().AmountOf(denom)
-	require.Equal(t, amt1.Sub(sdk.NewUint(10)).Int64(), amt2.Int64(), "expected coins to be subtracted")
+	require.Equal(t, amt1.Sub(sdk.NewUint(10)).Uint64(), amt2.Uint64(), "expected coins to be subtracted")
 
 	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr2, keep.PKs[1], sdk.NewUint(10))
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
@@ -951,7 +950,7 @@ func TestMultipleRedelegationAtSameTime(t *testing.T) {
 	// begin a redelegate
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
 	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr,
-		valAddr, valAddr2, sdk.NewDecFromInt(valTokens.QuoRaw(2)))
+		valAddr, valAddr2, sdk.NewDecFromUint(valTokens.QuoUint64(2)))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1003,7 +1002,7 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 	// begin a redelegate
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
 	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr,
-		valAddr, valAddr2, sdk.NewDecFromInt(valTokens.QuoRaw(2)))
+		valAddr, valAddr2, sdk.NewDecFromUint(valTokens.QuoUint64(2)))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1051,7 +1050,7 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 
 	// begin an unbonding delegation
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, sdk.NewDecFromInt(valTokens.QuoRaw(2)))
+	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, sdk.NewDecFromUint(valTokens.QuoUint64(2)))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1097,7 +1096,7 @@ func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
 
 	// begin an unbonding delegation
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, sdk.NewDecFromInt(valTokens.QuoRaw(2)))
+	msgUndelegate := NewMsgUndelegate(selfDelAddr, valAddr, sdk.NewDecFromUint(valTokens.QuoUint64(2)))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
@@ -1168,7 +1167,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.Equal(t, 2, len(keeper.GetLastValidators(ctx)))
 
 	// unbond the valdator-2
-	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr2), validatorAddr2, sdk.NewDecFromInt(valTokens2))
+	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr2), validatorAddr2, sdk.NewDecFromUint(valTokens2))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgUndelegate")
 
@@ -1213,20 +1212,20 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// begin unbonding 4 stake
 	ubdTokens := sdk.TokensFromTendermintPower(4)
-	msgUndelegate := NewMsgUndelegate(del, valA, sdk.NewDecFromInt(ubdTokens))
+	msgUndelegate := NewMsgUndelegate(del, valA, sdk.NewDecFromUint(ubdTokens))
 	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgUndelegate")
 
 	// begin redelegate 6 stake
 	rdTokens := sdk.TokensFromTendermintPower(6)
-	msgBeginRedelegate := NewMsgBeginRedelegate(del, valA, valB, sdk.NewDecFromInt(rdTokens))
+	msgBeginRedelegate := NewMsgBeginRedelegate(del, valA, valB, sdk.NewDecFromUint(rdTokens))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginRedelegate")
 
 	// destination delegation should have 6 shares
 	delegation, found := keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
-	require.Equal(t, sdk.NewDecFromInt(rdTokens), delegation.Shares)
+	require.Equal(t, sdk.NewDecFromUint(rdTokens), delegation.Shares)
 
 	// must apply validator updates
 	updates = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -1239,7 +1238,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.QuoRaw(2), ubd.Entries[0].Balance)
+	require.Equal(t, ubdTokens.QuoUint64(2), ubd.Entries[0].Balance)
 
 	// redelegation should have been slashed by half
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
@@ -1249,12 +1248,12 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// destination delegation should have been slashed by half
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
-	require.Equal(t, sdk.NewDecFromInt(rdTokens.QuoRaw(2)), delegation.Shares)
+	require.Equal(t, sdk.NewDecFromUint(rdTokens.QuoUint64(2)), delegation.Shares)
 
 	// validator power should have been reduced by half
 	validator, found := keeper.GetValidator(ctx, valA)
 	require.True(t, found)
-	require.Equal(t, valTokens.QuoRaw(2), validator.GetBondedTokens())
+	require.Equal(t, valTokens.QuoUint64(2), validator.GetBondedTokens())
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)
@@ -1264,7 +1263,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.QuoRaw(2), ubd.Entries[0].Balance)
+	require.Equal(t, ubdTokens.QuoUint64(2), ubd.Entries[0].Balance)
 
 	// redelegation should be unchanged
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
@@ -1274,7 +1273,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// destination delegation should be unchanged
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
-	require.Equal(t, sdk.NewDecFromInt(rdTokens.QuoRaw(2)), delegation.Shares)
+	require.Equal(t, sdk.NewDecFromUint(rdTokens.QuoUint64(2)), delegation.Shares)
 
 	// end blocker
 	EndBlocker(ctx, keeper)

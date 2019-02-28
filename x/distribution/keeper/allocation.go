@@ -7,21 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO this is a hack
-func (k Keeper) CalcWithdrawable(ctx sdk.Context, val sdk.Validator) sdk.DecCoins {
-	ctx, _ = ctx.CacheContext()
-	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-	dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
-	for _, delegation := range dels {
-		if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
-		}
-	}
-	remaining := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	return outstanding.Sub(remaining)
-}
-
 // allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
 	logger := ctx.Logger().With("module", "x/distribution")

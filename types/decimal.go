@@ -451,28 +451,6 @@ func chopPrecisionAndTruncate(d *big.Int) *big.Int {
 	return d.Quo(d, precisionReuse)
 }
 
-func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
-	// remove the negative and add it back when returning
-	if d.Sign() == -1 {
-		// make d positive, compute chopped value, and then un-mutate d
-		d = d.Neg(d)
-		d = chopPrecisionAndRoundUp(d)
-		d = d.Neg(d)
-		return d
-	}
-
-	// get the truncated quotient and remainder
-	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
-
-	if rem.Sign() == 0 { // remainder is zero
-		return quo
-	}
-
-	return quo.Add(quo, oneInt)
-
-}
-
 func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
 	tmp := new(big.Int).Set(d)
 	return chopPrecisionAndTruncate(tmp)

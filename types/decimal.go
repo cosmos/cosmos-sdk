@@ -291,6 +291,7 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// quotient, round up
 func (d Dec) QuoRoundUp(d2 Dec) Dec {
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.Int, precisionReuse)

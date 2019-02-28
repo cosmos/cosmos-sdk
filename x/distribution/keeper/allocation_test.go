@@ -108,34 +108,21 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	ctx, _, k, sk, fck := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
-	// create validator with 10% commission
-	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
-
 	// create second validator with 10% commission
-	commission = staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
-	abciValA := abci.Validator{
-		Address: valConsPk1.Address(),
-		Power:   11,
-	}
 	abciValB := abci.Validator{
 		Address: valConsPk2.Address(),
 		Power:   10,
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).IsZero())
 	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).IsZero())
 	require.True(t, k.GetFeePool(ctx).CommunityPool.IsZero())
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
 	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
-	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards.IsZero())
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 
 	// allocate tokens as if both had voted and second was proposer
@@ -145,16 +132,11 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{
 		{
-			Validator:       abciValA,
-			SignedLastBlock: true,
-		},
-		{
 			Validator:       abciValB,
 			SignedLastBlock: true,
 		},
 	}
 	k.AllocateTokens(ctx, 31, 31, valConsAddr2, votes)
 
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).IsValid())
 	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).IsValid())
 }

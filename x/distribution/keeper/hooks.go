@@ -44,6 +44,12 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		}
 	}
 
+	// add outstanding to community pool
+	outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr)
+	feePool := h.k.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Add(outstanding)
+	h.k.SetFeePool(ctx, feePool)
+
 	// delete outstanding
 	h.k.DeleteValidatorOutstandingRewards(ctx, valAddr)
 

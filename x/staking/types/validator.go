@@ -404,7 +404,7 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 		// the first delegation to a validator sets the exchange rate to one
 		return sdk.OneDec()
 	}
-	return v.Tokens.ToDec().QuoTruncate(v.DelegatorShares)
+	return v.Tokens.ToDec().Quo(v.DelegatorShares)
 }
 
 // get the bonded tokens which the validator holds

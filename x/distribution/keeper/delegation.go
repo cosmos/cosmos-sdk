@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -65,6 +66,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
+				fmt.Printf("hit slash event: %v\n", event)
 				endingPeriod := event.ValidatorPeriod
 				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				// note: necessary to truncate so we don't allow withdrawing more rewards than owed

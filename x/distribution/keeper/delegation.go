@@ -22,6 +22,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := delegation.GetShares().MulTruncate(validator.GetDelegatorShareExRate())
+	fmt.Printf("INIT %s with shares %v, tokens %v\n", del, delegation.GetShares(), stake)
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 

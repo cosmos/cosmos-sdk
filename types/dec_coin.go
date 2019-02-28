@@ -269,17 +269,6 @@ func (coins DecCoins) negative() DecCoins {
 	return res
 }
 
-func (coins DecCoins) RoundDown() DecCoins {
-	res := make([]DecCoin, 0, len(coins))
-	for _, coin := range coins {
-		res = append(res, DecCoin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.RoundDown(),
-		})
-	}
-	return res
-}
-
 // Sub subtracts a set of DecCoins from another (adds the inverse).
 func (coins DecCoins) Sub(coinsB DecCoins) DecCoins {
 	diff, hasNeg := coins.SafeSub(coinsB)

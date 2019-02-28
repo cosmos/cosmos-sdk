@@ -214,7 +214,11 @@ func (d Dec) Sub(d2 Dec) Dec {
 	if res.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return Dec{res}
+	ret := Dec{res}
+	if !ret.Add(d2).Equal(d) {
+		panic("broken math")
+	}
+	return ret
 }
 
 // multiplication
@@ -225,6 +229,7 @@ func (d Dec) Mul(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
+
 	return Dec{chopped}
 }
 
@@ -236,17 +241,11 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return Dec{chopped}
-}
-
-func (d Dec) MulRoundUp(d2 Dec) Dec {
-	mul := new(big.Int).Mul(d.Int, d2.Int)
-	chopped := chopPrecisionAndRoundUp(mul)
-
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
-		panic("Int overflow")
+	ret := Dec{chopped}
+	if ret.Quo(d2).GT(d) {
+		panic("broken math")
 	}
-	return Dec{chopped}
+	return ret
 }
 
 // multiplication
@@ -298,27 +297,11 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
-	return Dec{chopped}
-}
-
-func (d Dec) RoundDown() Dec {
-	down := new(big.Int).Sub(d.Int, oneInt)
-	return Dec{down}
-}
-
-func (d Dec) QuoRoundUp(d2 Dec) Dec {
-
-	// multiply precision twice
-	mul := new(big.Int).Mul(d.Int, precisionReuse)
-	mul.Mul(mul, precisionReuse)
-
-	quo := new(big.Int).Quo(mul, d2.Int)
-	chopped := chopPrecisionAndRoundUp(quo)
-
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
-		panic("Int overflow")
+	ret := Dec{chopped}
+	if ret.Mul(d2).GT(d) {
+		panic("broken math")
 	}
-	return Dec{chopped}
+	return ret
 }
 
 // quotient
@@ -473,7 +456,7 @@ func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
-		d = chopPrecisionAndRound(d)
+		d = chopPrecisionAndRoundUp(d)
 		d = d.Neg(d)
 		return d
 	}

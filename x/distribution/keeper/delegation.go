@@ -75,9 +75,9 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
+					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
-					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 					startingPeriod = endingPeriod
 				}
 				return false

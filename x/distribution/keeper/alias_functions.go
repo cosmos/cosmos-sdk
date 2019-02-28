@@ -5,7 +5,7 @@ import (
 )
 
 // get outstanding rewards
-func (k Keeper) GetOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins {
+func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins {
 	return k.GetValidatorOutstandingRewards(ctx, val)
 }
 

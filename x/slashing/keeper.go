@@ -47,8 +47,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		// ignore evidence that cannot be handled.
-		return
+		// Ignore evidence that cannot be handled.
 		// NOTE:
 		// We used to panic with:
 		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
@@ -57,6 +56,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		// allowable but none of the disallowed evidence types.  Instead of
 		// getting this coordination right, it is easier to relax the
 		// constraints and ignore evidence that cannot be handled.
+		return
 	}
 
 	// Reject evidence if the double-sign is too old

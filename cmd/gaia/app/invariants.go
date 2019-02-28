@@ -15,7 +15,7 @@ import (
 func (app *GaiaApp) runtimeInvariants() []sdk.Invariant {
 	return []sdk.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
-		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper, app.stakingKeeper),
+		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
 		stakingsim.SupplyInvariants(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		stakingsim.NonNegativePowerInvariant(app.stakingKeeper),
 	}

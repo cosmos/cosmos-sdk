@@ -278,7 +278,8 @@ undelegating free coins are prioritized.
 
 **Note**: The undelegation (bond refund) amount may exceed the delegated
 vesting (bond) amount due to the way undelegation truncates the bond refund,
-which increases the validator's exchange rate (tokens/shares) slightly.
+which can increase the validator's exchange rate (tokens/shares) slightly if the
+undelegated tokens are non-integral.
 
 #### Keepers/Handlers
 

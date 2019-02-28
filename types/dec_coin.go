@@ -297,6 +297,20 @@ func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
+// Trims any denom amount from coin which exceeds that of coinB,
+// such that (coin.Cap(coinB)).IsLTE(coinB).
+func (coins DecCoins) Cap(coinsB DecCoins) DecCoins {
+	res := make([]DecCoin, len(coins))
+	for i, coin := range coins {
+		minCoin := DecCoin{
+			Denom:  coin.Denom,
+			Amount: MinDec(coin.Amount, coinsB.AmountOf(coin.Denom)),
+		}
+		res[i] = minCoin
+	}
+	return removeZeroDecCoins(res)
+}
+
 // IsAnyNegative returns true if there is at least one coin whose amount
 // is negative; returns false otherwise. It returns false if the DecCoins set
 // is empty too.

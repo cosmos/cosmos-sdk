@@ -20,8 +20,8 @@ const (
 	Precision = 60
 
 	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
-	DecimalPrecisionBits = 139
+	// Ceiling[Log2[999 999 999 999 999 999 ]]
+	DecimalPrecisiaonBits = 200
 )
 
 var (

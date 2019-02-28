@@ -69,11 +69,9 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
 	// withdraw delegation rewards (which also increments period)
-	_, err := h.k.withdrawDelegationRewards(ctx, val, del)
-	if err != nil {
+	if err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		panic(err)
 	}
-
 }
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	// nothing needed here since BeforeDelegationSharesModified will always also be called

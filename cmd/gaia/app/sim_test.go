@@ -183,8 +183,8 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
 			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
 			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
-			SlashFractionDoubleSign: sdk.NewDec(0).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
-			SlashFractionDowntime:   sdk.NewDec(0).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
+			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
+			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)

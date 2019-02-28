@@ -61,19 +61,20 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetJailed() bool              // whether the validator is jailed
-	GetMoniker() string           // moniker of the validator
-	GetStatus() BondStatus        // status of the validator
-	GetOperator() ValAddress      // operator address to receive/return validators coins
-	GetConsPubKey() crypto.PubKey // validation consensus pubkey
-	GetConsAddr() ConsAddress     // validation consensus address
-	GetTokens() Int               // validation tokens
-	GetBondedTokens() Int         // validator bonded tokens
-	GetTendermintPower() int64    // validation power in tendermint
-	GetCommission() Dec           // validator commission rate
-	GetMinSelfDelegation() Int    // validator minimum self delegation
-	GetDelegatorShares() Dec      // total outstanding delegator shares
-	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
+	GetJailed() bool                       // whether the validator is jailed
+	GetMoniker() string                    // moniker of the validator
+	GetStatus() BondStatus                 // status of the validator
+	GetOperator() ValAddress               // operator address to receive/return validators coins
+	GetConsPubKey() crypto.PubKey          // validation consensus pubkey
+	GetConsAddr() ConsAddress              // validation consensus address
+	GetTokens() Int                        // validation tokens
+	GetBondedTokens() Int                  // validator bonded tokens
+	GetTendermintPower() int64             // validation power in tendermint
+	GetCommission() Dec                    // validator commission rate
+	GetMinSelfDelegation() Int             // validator minimum self delegation
+	GetDelegatorShares() Dec               // total outstanding delegator shares
+	GetDelegatorShareExRate() Dec          // tokens per delegator share exchange rate
+	GetDelegatorShareExRateTruncated() Dec // tokens per delegator share exchange rate
 }
 
 // validator which fulfills abci validator interface for use in Tendermint

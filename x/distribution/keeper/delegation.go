@@ -21,7 +21,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	stake := delegation.GetShares().MulTruncate(validator.GetDelegatorShareExRate())
+	stake := delegation.GetShares().MulTruncate(validator.GetDelegatorShareExRateTruncated())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
@@ -54,30 +54,37 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+
+	if startingInfo.Height == uint64(ctx.BlockHeight()) {
+		// started this height, no rewards yet
+		return
+	}
+
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
-	// ... so we don't reduce stake for slashes which happened in the *first* block, because the delegation wouldn't have existed
+	// slashes which happened in the first block would have been before this delegation existed
 	startingHeight := startingInfo.Height + 1
-	// ... or slashes which happened in *this* block, since they would have happened after reward allocation
-	endingHeight := uint64(ctx.BlockHeight()) - 1
+	// slashes this block happened after reward allocation, but we have to account for them for the stake sanity check
+	endingHeight := uint64(ctx.BlockHeight())
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
-				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
-				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
+				rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				startingPeriod = endingPeriod
+				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+				fmt.Printf("recalculated stake for delegator %s after slash of %v\n", del.GetDelegatorAddr(), event.Fraction)
 				return false
 			},
 		)
 	}
 
 	if stake.GT(del.GetShares().Mul(val.GetDelegatorShareExRate())) {
-		panic(fmt.Sprintf("calculated final stake greater than current stake: %s, %s", stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
+		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s", del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
 	}
 
 	// calculate rewards for final period

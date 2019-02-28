@@ -19,6 +19,9 @@
 
 ### Gaia
 
+* [\#3760] Allow unjailing when a validator has no self-delegation and during
+disabled transfers.
+
 ### SDK
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON

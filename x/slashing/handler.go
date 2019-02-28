@@ -37,7 +37,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	// created validators during a time when transfers are disabled to successfully
 	// unjail.
 	//
-	// TODO: Remove when transfers are enabled.
+	// TODO: Remove zero value case comparison when transfers are enabled.
 	valSelfBond := validator.GetDelegatorShareExRate().Mul(selfDel.GetShares()).TruncateInt()
 	if !valSelfBond.IsZero() && valSelfBond.LT(validator.GetMinSelfDelegation()) {
 		return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()

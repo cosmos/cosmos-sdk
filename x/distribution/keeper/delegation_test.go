@@ -22,6 +22,9 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
 
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
 	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
@@ -74,6 +77,9 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
@@ -133,6 +139,9 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
@@ -203,6 +212,9 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
 
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
 	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
@@ -222,6 +234,9 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// end block
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)
@@ -271,6 +286,9 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
@@ -322,6 +340,9 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
@@ -387,6 +408,9 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
 
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
 	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
@@ -410,6 +434,9 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// end block
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)
@@ -458,6 +485,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
 
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
 	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
@@ -481,6 +511,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// end block
 	staking.EndBlocker(ctx, sk)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)
@@ -517,6 +550,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	totalRewards = totalRewards.Add(tokens)
 
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -542,6 +578,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 
 	totalRewards = k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Add(tokens)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// allocate some more rewards
 	k.AllocateTokensToValidator(ctx, val, tokens)

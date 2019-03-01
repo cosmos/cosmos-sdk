@@ -155,5 +155,5 @@ type StakingHooks interface {
 	BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
 	BeforeDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
 	AfterDelegationModified(ctx Context, delAddr AccAddress, valAddr ValAddress)
-	BeforeValidatorSlashed(ctx Context, valAddr ValAddress, fraction Dec)
+	BeforeValidatorSlashed(ctx Context, valAddr ValAddress, tokensToBurn Int)
 }

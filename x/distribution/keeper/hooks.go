@@ -98,7 +98,7 @@ func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, 
 }
 func (h Hooks) AfterValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, tokensBurn sdk.Int) {
 	// record the slash event
-	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
+	h.k.updateValidatorSlashTokens(ctx, valAddr, tokensBurn)
 }

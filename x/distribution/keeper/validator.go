@@ -84,19 +84,16 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 	}
 }
 
-func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	if fraction.GT(sdk.OneDec()) {
-		panic("fraction greater than one")
-	}
+func (k Keeper) updateValidatorSlashTokens(ctx sdk.Context, valAddr sdk.ValAddress, tokensBurn sdk.Int) {
 	height := uint64(ctx.BlockHeight())
-	currentFraction := sdk.ZeroDec()
+	currentTokensBurn := sdk.ZeroInt()
 	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
 	current, found := k.GetValidatorSlashEvent(ctx, valAddr, height)
 	if found {
 		// there has already been a slash event this height,
 		// and we don't need to store more than one,
 		// so just update the current slash fraction
-		currentFraction = current.Fraction
+		currentTokensBurn = current.TokensBurn
 	} else {
 		val := k.stakingKeeper.Validator(ctx, valAddr)
 		// increment current period
@@ -104,11 +101,6 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 		// increment reference count on period we need to track
 		k.incrementReferenceCount(ctx, valAddr, endedPeriod)
 	}
-	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
-	newMultiplicand := sdk.OneDec().Sub(fraction)
-	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
-	if updatedFraction.LT(sdk.ZeroDec()) {
-		panic("negative slash fraction")
-	}
-	k.SetValidatorSlashEvent(ctx, valAddr, height, types.NewValidatorSlashEvent(endedPeriod, updatedFraction))
+	updatedTokensBurn := currentTokensBurn.Add(tokensBurn)
+	k.SetValidatorSlashEvent(ctx, valAddr, height, types.NewValidatorSlashEvent(endedPeriod, updatedTokensBurn))
 }

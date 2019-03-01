@@ -376,7 +376,7 @@ func (h StakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAd
 	h.dh.AfterDelegationModified(ctx, delAddr, valAddr)
 	h.sh.AfterDelegationModified(ctx, delAddr, valAddr)
 }
-func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	h.dh.BeforeValidatorSlashed(ctx, valAddr, fraction)
-	h.sh.BeforeValidatorSlashed(ctx, valAddr, fraction)
+func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, tokensBurn sdk.Int) {
+	h.dh.BeforeValidatorSlashed(ctx, valAddr, tokensBurn)
+	h.sh.BeforeValidatorSlashed(ctx, valAddr, tokensBurn)
 }

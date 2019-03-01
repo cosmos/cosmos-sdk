@@ -62,20 +62,20 @@ func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 // for delegations which withdraw after a slash has occurred
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64  `json:"validator_period"` // period when the slash occurred
-	Fraction        sdk.Dec `json:"fraction"`         // slash fraction
+	TokensBurn      sdk.Int `json:"tokens_burned"`    // tokens burned
 }
 
 // create a new ValidatorSlashEvent
-func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdk.Dec) ValidatorSlashEvent {
+func NewValidatorSlashEvent(validatorPeriod uint64, tokensBurn sdk.Int) ValidatorSlashEvent {
 	return ValidatorSlashEvent{
 		ValidatorPeriod: validatorPeriod,
-		Fraction:        fraction,
+		TokensBurn:      tokensBurn,
 	}
 }
 
 func (vs ValidatorSlashEvent) String() string {
 	return fmt.Sprintf(`Period:   %d
-Fraction: %s`, vs.ValidatorPeriod, vs.Fraction)
+Tokens Burn: %s`, vs.ValidatorPeriod, vs.TokensBurn)
 }
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent
@@ -86,8 +86,8 @@ func (vs ValidatorSlashEvents) String() string {
 	for i, sl := range vs {
 		out += fmt.Sprintf(`  Slash %d:
     Period:   %d
-    Fraction: %s
-`, i, sl.ValidatorPeriod, sl.Fraction)
+    Tokens Burn: %s
+`, i, sl.ValidatorPeriod, sl.TokensBurn)
 	}
 	return strings.TrimSpace(out)
 }

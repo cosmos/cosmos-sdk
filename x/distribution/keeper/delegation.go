@@ -36,7 +36,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 
 	// sanity check
 	if stake.LT(sdk.ZeroDec()) {
-		panic("stake should not be negative")
+		panic(fmt.Sprintf("stake should not be negative: %v", stake))
 	}
 
 	// return staking * (ending - starting)
@@ -64,6 +64,9 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
+	// round up to have a larger fraction to therefor slash more at slash events
+	delFraction := del.GetShares().QuoRoundUp(val.GetDelegatorShares())
+
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
 	// slashes which happened in the first block would have been before this delegation existed,
@@ -78,7 +81,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				if endingPeriod > startingPeriod {
 					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
+					stake = stake.Sub(event.TokensBurn.ToDec().Mul(delFraction))
 					startingPeriod = endingPeriod
 				}
 				return false

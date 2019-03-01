@@ -12,7 +12,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
 	cdc.RegisterConcrete(MsgVote{}, "cosmos-sdk/MsgVote", nil)
 
-	cdc.RegisterInterface((*Proposal)(nil), nil)
+	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(&TextProposal{}, "gov/TextProposal", nil)
 }
 

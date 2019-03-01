@@ -18,12 +18,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		var proposalID uint64
 
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
-		inactiveProposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+		inactiveProposal, ok := keeper.GetProposal(ctx, proposalID)
 		if !ok {
-			panic("Endblocker cannot fail to GetProposalProcess")
+			panic("Endblocker cannot fail to GetProposal")
 		}
 
-		keeper.DeleteProposalProcess(ctx, proposalID)
+		keeper.DeleteProposal(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
 		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposalID))
@@ -46,9 +46,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		var proposalID uint64
 
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-		activeProposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+		activeProposal, ok := keeper.GetProposal(ctx, proposalID)
 		if !ok {
-			panic("EndBlocker cannot fail to GetProposalProcess")
+			panic("EndBlocker cannot fail to GetProposal")
 		}
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
@@ -64,7 +64,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		}
 
 		activeProposal.FinalTallyResult = tallyResults
-		keeper.SetProposalProcess(ctx, activeProposal)
+		keeper.SetProposal(ctx, activeProposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.VotingEndTime, activeProposal.ProposalID)
 
 		logger.Info(

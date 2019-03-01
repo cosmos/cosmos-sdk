@@ -20,11 +20,11 @@ func TestGetSetProposal(t *testing.T) {
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	keeper.SetProposalProcess(ctx, proposal)
+	keeper.SetProposal(ctx, proposal)
 
-	gotProposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+	gotProposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	require.True(t, ProposalProcessEqual(proposal, gotProposal))
+	require.True(t, ProposalEqual(proposal, gotProposal))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
@@ -91,7 +91,7 @@ func TestDeposits(t *testing.T) {
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
-	proposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
@@ -103,7 +103,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourSteak, deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	proposal, ok = keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourSteak, proposal.TotalDeposit)
 	require.Equal(t, addr0Initial.Sub(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
@@ -116,7 +116,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourSteak.Add(fiveSteak), deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	proposal, ok = keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourSteak.Add(fiveSteak), proposal.TotalDeposit)
 	require.Equal(t, addr0Initial.Sub(fourSteak).Sub(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
@@ -129,13 +129,13 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, addrs[1], deposit.Depositor)
 	require.Equal(t, fourSteak, deposit.Amount)
-	proposal, ok = keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourSteak.Add(fiveSteak).Add(fourSteak), proposal.TotalDeposit)
 	require.Equal(t, addr1Initial.Sub(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	// Check that proposal moved to voting period
-	proposal, ok = keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
@@ -177,7 +177,7 @@ func TestVotes(t *testing.T) {
 	proposalID := proposal.ProposalID
 
 	proposal.Status = StatusVotingPeriod
-	keeper.SetProposalProcess(ctx, proposal)
+	keeper.SetProposal(ctx, proposal)
 
 	// Test first vote
 	keeper.AddVote(ctx, proposalID, addrs[0], OptionAbstain)

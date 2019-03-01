@@ -196,7 +196,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.True(t, activeQueue.Valid())
 	var activeProposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID)
-	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, activeProposalID).GetStatus())
+	proposal, ok := keeper.GetProposal(ctx, activeProposalID)
+	require.True(t, ok)
+	require.Equal(t, StatusVotingPeriod, proposal.Status)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	depositsIterator.Close()

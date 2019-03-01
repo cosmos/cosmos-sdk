@@ -99,7 +99,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposal, ok := keeper.GetProposalProcess(ctx, params.ProposalID)
+	proposal, ok := keeper.GetProposal(ctx, params.ProposalID)
 	if !ok {
 		return nil, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
@@ -205,7 +205,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	proposalID := params.ProposalID
 
-	proposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return nil, ErrUnknownProposal(DefaultCodespace, proposalID)
 	}
@@ -279,7 +279,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposals := keeper.GetProposalProcessesFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
+	proposals := keeper.GetProposalesFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err != nil {

@@ -18,7 +18,7 @@ type GenesisState struct {
 	StartingProposalID uint64                `json:"starting_proposal_id"`
 	Deposits           []DepositWithMetadata `json:"deposits"`
 	Votes              []VoteWithMetadata    `json:"votes"`
-	ProposalProcesses  []ProposalProcess     `json:"proposal_processes"`
+	Proposals          []Proposal            `json:"proposals"`
 	DepositParams      DepositParams         `json:"deposit_params"`
 	VotingParams       VotingParams          `json:"voting_params"`
 	TallyParams        TallyParams           `json:"tally_params"`
@@ -121,14 +121,14 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
-	for _, proposal := range data.ProposalProcesses {
+	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case StatusDepositPeriod:
 			k.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
 		case StatusVotingPeriod:
 			k.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
 		}
-		k.SetProposalProcess(ctx, proposal)
+		k.SetProposal(ctx, proposal)
 	}
 }
 
@@ -140,7 +140,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	tallyParams := k.GetTallyParams(ctx)
 	var deposits []DepositWithMetadata
 	var votes []VoteWithMetadata
-	proposals := k.GetProposalProcessesFiltered(ctx, nil, nil, StatusNil, 0)
+	proposals := k.GetProposalesFiltered(ctx, nil, nil, StatusNil, 0)
 	for _, proposal := range proposals {
 		proposalID := proposal.ProposalID
 		depositsIterator := k.GetDeposits(ctx, proposalID)
@@ -163,7 +163,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		StartingProposalID: startingProposalID,
 		Deposits:           deposits,
 		Votes:              votes,
-		ProposalProcesses:  proposals,
+		Proposals:          proposals,
 		DepositParams:      depositParams,
 		VotingParams:       votingParams,
 		TallyParams:        tallyParams,

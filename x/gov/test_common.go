@@ -148,7 +148,7 @@ func SortByteArrays(src [][]byte) [][]byte {
 }
 
 // checks if two proposals are equal
-func ProposalProcessEqual(proposalA ProposalProcess, proposalB ProposalProcess) bool {
+func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	if proposalA.ProposalID == proposalB.ProposalID &&
 		proposalA.GetTitle() == proposalB.GetTitle() &&
 		proposalA.GetDescription() == proposalB.GetDescription() &&

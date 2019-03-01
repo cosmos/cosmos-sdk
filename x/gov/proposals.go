@@ -3,14 +3,14 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+	//	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type ProposalProcess struct {
-	Proposal `json:"proposal"` // Proposal interface
+type Proposal struct {
+	ProposalContent `json:"proposal_content"` // Proposal interface
 
 	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
 
@@ -25,7 +25,7 @@ type ProposalProcess struct {
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
-type Proposal interface {
+type ProposalContent interface {
 	GetTitle() string
 	GetDescription() string
 	ProposalType() ProposalKind
@@ -56,7 +56,7 @@ type TextProposal struct {
 }
 
 // Implements Proposal Interface
-var _ Proposal = TextProposal{}
+var _ ProposalContent = TextProposal{}
 
 // nolint
 func (tp TextProposal) GetTitle() string           { return tp.Title }

@@ -11,7 +11,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 type (
@@ -32,12 +32,12 @@ type (
 )
 
 var (
-	priv1 = ed25519.GenPrivKey()
+	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = ed25519.GenPrivKey()
+	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	priv4 = ed25519.GenPrivKey()
+	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	priv4 = secp256k1.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}

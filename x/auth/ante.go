@@ -188,7 +188,10 @@ func processSig(
 		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
 
-	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
+	if res := consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
+		return nil, res
+	}
+
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -256,14 +259,20 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 // by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSigVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
+func consumeSigVerificationGas(
+	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
+) sdk.Result {
+
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
+
 	switch {
 	case strings.Contains(pubkeyType, "ed25519"):
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+		return sdk.ErrInvalidPubKey("ED25519 public keys are unsupported").Result()
 
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+		return sdk.Result{}
 
 	case strings.Contains(pubkeyType, "multisigthreshold"):
 		var multisignature multisig.Multisignature
@@ -271,9 +280,10 @@ func consumeSigVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.Pub
 
 		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
 		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
+		return sdk.Result{}
 
 	default:
-		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
+		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %s", pubkeyType)).Result()
 	}
 }
 

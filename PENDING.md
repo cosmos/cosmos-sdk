@@ -54,9 +54,9 @@ decoded automatically.
 
 * [\#3653] Prompt user confirmation prior to signing and broadcasting a transaction.
 * [\#3670] CLI support for showing bech32 addresses in Ledger devices
-* [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name`
-CLI flag.
+* [\#3711] Update `tx sign` to use `--from` instead of the deprecated `--name` CLI flag.
 * [\#3730](https://github.com/cosmos/cosmos-sdk/issues/3730) Improve workflow for `gaiad gentx` with offline public keys, by outputting stdtx file that needs to be signed.
+* [\#3761](https://github.com/cosmos/cosmos-sdk/issues/3761) Querying account related information using custom querier in auth module
 
 ### Gaia
 

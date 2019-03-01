@@ -64,7 +64,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if !msg.InitialDeposit.IsValid() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
-	if msg.InitialDeposit.IsAnyNegative() {
+	if msg.InitialDeposit.IsZero() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
 	return nil
@@ -113,7 +113,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
-	if msg.Amount.IsAnyNegative() {
+	if msg.Amount.IsZero() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
 	if msg.ProposalID < 0 {

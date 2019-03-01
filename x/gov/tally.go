@@ -7,13 +7,13 @@ import (
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
 	Address             sdk.ValAddress // address of the validator operator
-	BondedTokens        sdk.Int        // Power of a Validator
+	BondedTokens        sdk.Uint       // Power of a Validator
 	DelegatorShares     sdk.Dec        // Total outstanding delegator shares
 	DelegatorDeductions sdk.Dec        // Delegator deductions from validator's delegators voting independently
 	Vote                VoteOption     // Vote of the validator
 }
 
-func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
+func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Uint, delegatorShares,
 	delegatorDeductions sdk.Dec, vote VoteOption) validatorGovInfo {
 
 	return validatorGovInfo{
@@ -71,7 +71,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
-					votingPower := delegatorShare.MulInt(val.BondedTokens)
+					votingPower := delegatorShare.MulUint(val.BondedTokens)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)
 					totalVotingPower = totalVotingPower.Add(votingPower)
@@ -92,7 +92,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		sharesAfterDeductions := val.DelegatorShares.Sub(val.DelegatorDeductions)
 		fractionAfterDeductions := sharesAfterDeductions.Quo(val.DelegatorShares)
-		votingPower := fractionAfterDeductions.MulInt(val.BondedTokens)
+		votingPower := fractionAfterDeductions.MulUint(val.BondedTokens)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)
@@ -107,7 +107,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		return false, tallyResults
 	}
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalBondedTokens(ctx)))
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromUint(keeper.vs.TotalBondedTokens(ctx)))
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, tallyResults
 	}

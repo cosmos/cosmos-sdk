@@ -20,7 +20,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewUint(100)), staking.Description{}, commission, sdk.OneUint())
 	require.True(t, sh(ctx, msg).IsOK())
 	val := sk.Validator(ctx, valOpAddr1)
 
@@ -50,13 +50,13 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewUint(100)), staking.Description{}, commission, sdk.OneUint())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// create second validator with 0% commission
 	commission = staking.NewCommissionMsg(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewUint(100)), staking.Description{}, commission, sdk.OneUint())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	abciValA := abci.Validator{
@@ -78,7 +78,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.Coins{
-		{sdk.DefaultBondDenom, sdk.NewInt(100)},
+		{sdk.DefaultBondDenom, sdk.NewUint(100)},
 	}
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{

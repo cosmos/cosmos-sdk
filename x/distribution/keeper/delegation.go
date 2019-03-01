@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"os"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -40,11 +43,14 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
+	fmt.Fprintf(os.Stderr, "CumulativeRewardRatio %s\n", ending.CumulativeRewardRatio)
 	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
 	if difference.IsAnyNegative() {
 		panic("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	fmt.Fprintf(os.Stderr, "DENTRO diff %s\n", difference)
+	fmt.Fprintf(os.Stderr, "DENTRO stake %s\n", stake)
 	rewards = difference.MulDecTruncate(stake)
 	return
 }
@@ -76,7 +82,11 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	}
 
 	// calculate rewards for final period
+	fmt.Fprintf(os.Stderr, "x stake %s\n", stake)
+	fmt.Fprintf(os.Stderr, "x calc %s\n", k.calculateDelegationRewardsBetween(ctx, val,
+		startingPeriod, endingPeriod, stake))
 	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+	fmt.Fprintf(os.Stderr, "x rewards %s\n", rewards)
 
 	return
 }

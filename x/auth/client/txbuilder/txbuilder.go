@@ -188,7 +188,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 			return StdSignMsg{}, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := sdk.NewDec(int64(bldr.gas))
+		glDec := sdk.NewDec(bldr.gas)
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).

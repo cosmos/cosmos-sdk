@@ -7,7 +7,8 @@ import (
 )
 
 // allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
+func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower uint64,
+	proposer sdk.ConsAddress, votes []abci.VoteInfo) {
 
 	// fetch collected fees & fee pool
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
@@ -50,7 +51,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 		// TODO likely we should only reward validators who actually signed the block.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
+		powerFraction := sdk.NewDec(uint64(vote.Validator.Power)).Quo(sdk.NewDec(totalPower))
 		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

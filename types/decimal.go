@@ -215,27 +215,25 @@ func (d Dec) Sub(d2 Dec) Dec {
 	return Dec{res}
 }
 
-// multiplication
-func (d Dec) Mul(d2 Dec) Dec {
-	mul := new(big.Int).Mul(d.Int, d2.Int)
-	chopped := chopPrecisionAndRound(mul)
-
+func decMul(d1, d2 Dec, trunc bool) Dec {
+	mul := new(big.Int).Mul(d1.Int, d2.Int)
+	var chopped *big.Int
+	if trunc {
+		chopped = chopPrecisionAndTruncate(mul)
+	} else {
+		chopped = chopPrecisionAndRound(mul)
+	}
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
 }
+
+// multiplication
+func (d Dec) Mul(d2 Dec) Dec { return decMul(d, d2, false) }
 
 // multiplication truncate
-func (d Dec) MulTruncate(d2 Dec) Dec {
-	mul := new(big.Int).Mul(d.Int, d2.Int)
-	chopped := chopPrecisionAndTruncate(mul)
-
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
-		panic("Int overflow")
-	}
-	return Dec{chopped}
-}
+func (d Dec) MulTruncate(d2 Dec) Dec { return decMul(d, d2, true) }
 
 // multiplication
 func (d Dec) MulUint(u Uint) Dec {

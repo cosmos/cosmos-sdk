@@ -25,10 +25,10 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromTendermintPower(uint64(powerAmt[i]))
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			testDescription, testCommissionMsg, sdk.OneInt(),
+			testDescription, testCommissionMsg, sdk.OneUint(),
 		)
 
 		res := stakingHandler(ctx, valCreateMsg)
@@ -426,19 +426,20 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	valTokens1 := sdk.TokensFromTendermintPower(25)
 	val1CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(),
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneUint(),
 	)
 	stakingHandler(ctx, val1CreateMsg)
 
 	valTokens2 := sdk.TokensFromTendermintPower(6)
 	val2CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneUint(),
 	)
 	stakingHandler(ctx, val2CreateMsg)
 
 	valTokens3 := sdk.TokensFromTendermintPower(7)
 	val3CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneUint(),
 	)
 	stakingHandler(ctx, val3CreateMsg)
 

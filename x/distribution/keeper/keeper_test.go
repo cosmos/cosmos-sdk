@@ -49,8 +49,8 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// check balance increase
 	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
 	require.Equal(t, sdk.Coins{
-		sdk.NewCoin("mytoken", sdk.NewInt(1)),
-		sdk.NewCoin("stake", expTokens.AddRaw(1)),
+		sdk.NewCoin("mytoken", sdk.NewUint(1)),
+		sdk.NewCoin("stake", expTokens.AddUint64(1)),
 	}, balance)
 
 	// check remainder

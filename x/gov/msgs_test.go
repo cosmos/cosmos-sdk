@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)}
+	coinsPos         = sdk.Coins{sdk.NewUint64Coin(sdk.DefaultBondDenom, 1000)}
 	coinsZero        = sdk.Coins{}
-	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
+	coinsPosNotAtoms = sdk.Coins{sdk.NewUint64Coin("foo", 10000)}
+	coinsMulti       = sdk.Coins{sdk.NewUint64Coin(sdk.DefaultBondDenom, 1000), sdk.NewUint64Coin("foo", 10000)}
 )
 
 func init() {

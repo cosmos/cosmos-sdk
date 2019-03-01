@@ -180,7 +180,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper, app.paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	app.stakingKeeper = staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking, app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace, app.bankKeeper)
 
 	// register message routes
 	app.Router().

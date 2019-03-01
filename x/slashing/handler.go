@@ -25,14 +25,23 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
-	// cannot be unjailed if no self-delegation exists
 	selfDel := k.validatorSet.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
-	if selfDel == nil {
-		return ErrMissingSelfDelegation(k.codespace).Result()
-	}
 
-	if validator.GetDelegatorShareExRate().Mul(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-		return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()
+	// A validator attempting to unjail may only do so if its self-bond amount
+	// is at least their declared min self-delegation. However, during disabled
+	// transfers, we allow validators to unjail if they have no self-delegation.
+	// This is to allow newly created validators during a time when transfers are
+	// disabled to successfully unjail.
+	if k.bk.GetSendEnabled(ctx) {
+		if selfDel == nil {
+			// cannot be unjailed if no self-delegation exists
+			return ErrMissingSelfDelegation(k.codespace).Result()
+		}
+
+		valSelfBond := validator.GetDelegatorShareExRate().Mul(selfDel.GetShares()).TruncateInt()
+		if valSelfBond.LT(validator.GetMinSelfDelegation()) {
+			return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()
+		}
 	}
 
 	// cannot be unjailed if not jailed

@@ -17,16 +17,22 @@ type Keeper struct {
 	cdc          *codec.Codec
 	validatorSet sdk.ValidatorSet
 	paramspace   params.Subspace
+	bk           BankKeeper
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(
+	cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet,
+	paramspace params.Subspace, codespace sdk.CodespaceType, bk BankKeeper,
+) Keeper {
+
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,
+		bk:           bk,
 		validatorSet: vs,
 		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
 		codespace:    codespace,

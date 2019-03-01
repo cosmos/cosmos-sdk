@@ -23,6 +23,7 @@
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
 tags.
+* [\#3666] Improve coins denom validation.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint

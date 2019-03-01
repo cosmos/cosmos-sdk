@@ -83,12 +83,12 @@ func TestImportExportQueues(t *testing.T) {
 	_, votingStarted := keeper.AddDeposit(ctx, proposalID2, addrs[0], keeper.GetDepositParams(ctx).MinDeposit)
 	require.True(t, votingStarted)
 
-	proposal1_, ok := keeper.GetProposal(ctx, proposalID1)
+	proposal1, ok := keeper.GetProposal(ctx, proposalID1)
 	require.True(t, ok)
-	proposal2_, ok := keeper.GetProposal(ctx, proposalID2)
+	proposal2, ok = keeper.GetProposal(ctx, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1_.Status == StatusDepositPeriod)
-	require.True(t, proposal2_.Status == StatusVotingPeriod)
+	require.True(t, proposal1.Status == StatusDepositPeriod)
+	require.True(t, proposal2.Status == StatusVotingPeriod)
 
 	genAccs := mapp.AccountKeeper.GetAllAccounts(ctx)
 
@@ -103,19 +103,19 @@ func TestImportExportQueues(t *testing.T) {
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(keeper2.GetDepositParams(ctx2).MaxDepositPeriod).Add(keeper2.GetVotingParams(ctx2).VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
-	proposal1_, ok = keeper2.GetProposal(ctx2, proposalID1)
+	proposal1, ok = keeper2.GetProposal(ctx2, proposalID1)
 	require.True(t, ok)
-	proposal2_, ok = keeper2.GetProposal(ctx2, proposalID2)
+	proposal2, ok = keeper2.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1_.Status == StatusDepositPeriod)
-	require.True(t, proposal2_.Status == StatusVotingPeriod)
+	require.True(t, proposal1.Status == StatusDepositPeriod)
+	require.True(t, proposal2.Status == StatusVotingPeriod)
 
 	// Run the endblocker.  Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	EndBlocker(ctx2, keeper2)
 
-	proposal1_, ok = keeper2.GetProposal(ctx2, proposalID1)
+	proposal1, ok = keeper2.GetProposal(ctx2, proposalID1)
 	require.False(t, ok)
-	proposal2_, ok = keeper2.GetProposal(ctx2, proposalID2)
+	proposal2, ok = keeper2.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal2_.Status == StatusRejected)
+	require.True(t, proposal2.Status == StatusRejected)
 }

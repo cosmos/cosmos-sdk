@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Proposal is a struct used by gov module internally
+// embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
 	ProposalContent `json:"proposal_content"` // Proposal interface
 
@@ -25,6 +27,7 @@ type Proposal struct {
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
+// nolint
 func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:
 		  Title:              %s
@@ -39,6 +42,7 @@ func (p Proposal) String() string {
 		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime)
 }
 
+// ProposalContent is an interface that has title, description, and proposaltype for the Proposal
 type ProposalContent interface {
 	GetTitle() string
 	GetDescription() string
@@ -48,6 +52,7 @@ type ProposalContent interface {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
+// nolint
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {

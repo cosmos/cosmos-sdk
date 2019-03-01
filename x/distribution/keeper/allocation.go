@@ -40,7 +40,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// pay proposer
 	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	if proposerValidator != nil {
+	if proposerValidator != nil && !proposerValidator.GetJailed() {
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = feesCollected.Sub(proposerReward)
 	} else {

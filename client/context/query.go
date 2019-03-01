@@ -139,8 +139,6 @@ func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
 	res, err := ctx.QueryWithData(route, bz)
 	if err != nil {
 		return nil, err
-	} else if len(res) == 4 && string(res) == "null" {
-		return nil, ErrInvalidAccount(addr)
 	}
 
 	return res, nil

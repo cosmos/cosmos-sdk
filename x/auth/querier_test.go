@@ -21,19 +21,19 @@ func Test_queryAccount(t *testing.T) {
 
 	req.Data = input.cdc.MustMarshalJSON(NewQueryAccountParams([]byte("")))
 	res, err = queryAccount(input.ctx, req, input.ak)
-	require.Nil(t, err)
-	require.Equal(t, res, []byte("null"))
+	require.NotNil(t, err)
+	require.Nil(t, res)
 
 	_, _, addr := keyPubAddr()
 	req.Data = input.cdc.MustMarshalJSON(NewQueryAccountParams(addr))
 	res, err = queryAccount(input.ctx, req, input.ak)
-	require.Nil(t, err)
-	require.Equal(t, res, []byte("null"))
+	require.NotNil(t, err)
+	require.Nil(t, res)
 
 	input.ak.SetAccount(input.ctx, input.ak.NewAccountWithAddress(input.ctx, addr))
 	res, err = queryAccount(input.ctx, req, input.ak)
 	require.Nil(t, err)
-	require.NotEqual(t, res, []byte("null"))
+	require.NotNil(t, res)
 
 	var account Account
 	err2 := input.cdc.UnmarshalJSON(res, &account)

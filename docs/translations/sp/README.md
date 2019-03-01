@@ -1,5 +1,5 @@
 # Cosmos SDK
-![banner](docs/graphics/cosmos-sdk-image.png)
+![banner](docs/cosmos-sdk-image.png)
 
  [![version](https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/releases/latest)
 [![API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg

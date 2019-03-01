@@ -48,7 +48,7 @@ func GetValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
 }
 
 // stored by *Tendermint* address (not operator address)
-func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
+func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
 	return append(GetValidatorMissedBlockBitArrayPrefixKey(v), b...)
@@ -60,10 +60,10 @@ func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 }
 
 // stored by *Tendermint* address (not operator address) followed by start height
-func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
+func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight uint64) []byte {
 	b := make([]byte, 8)
 	// this needs to be height + ValidatorUpdateDelay because the slashing period for genesis validators starts at height -ValidatorUpdateDelay
-	binary.BigEndian.PutUint64(b, uint64(startHeight+sdk.ValidatorUpdateDelay))
+	binary.BigEndian.PutUint64(b, uint64(startHeight+uint64(sdk.ValidatorUpdateDelay)))
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 

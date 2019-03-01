@@ -28,7 +28,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 			Moniker: simulation.RandStringOfLength(r, 10),
 		}
 
-		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
+		maxCommission := sdk.NewDecWithPrec(uint64(r.Int63n(1000)), 3)
 		commission := staking.NewCommissionMsg(
 			simulation.RandomDecAmount(r, maxCommission),
 			maxCommission,
@@ -38,17 +38,17 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		amount := m.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
+		if amount.GT(sdk.ZeroUint()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
 
-		if amount.Equal(sdk.ZeroInt()) {
+		if amount.Equal(sdk.ZeroUint()) {
 			return noOperation, nil, nil
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
 		msg := staking.NewMsgCreateValidator(address, acc.PubKey,
-			selfDelegation, description, commission, sdk.OneInt())
+			selfDelegation, description, commission, sdk.OneUint())
 
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -115,10 +115,10 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
+		if amount.GT(sdk.ZeroUint()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
-		if amount.Equal(sdk.ZeroInt()) {
+		if amount.Equal(sdk.ZeroUint()) {
 			return "no-operation", nil, nil
 		}
 
@@ -194,17 +194,17 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		delegatorAddress := delegatorAcc.Address
 		// TODO
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
+		if amount.GT(sdk.ZeroUint()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
-		if amount.Equal(sdk.ZeroInt()) {
+		if amount.Equal(sdk.ZeroUint()) {
 			return noOperation, nil, nil
 		}
 		msg := staking.MsgBeginRedelegate{
 			DelegatorAddr:    delegatorAddress,
 			ValidatorSrcAddr: srcValidatorAddress,
 			ValidatorDstAddr: destValidatorAddress,
-			SharesAmount:     sdk.NewDecFromInt(amount),
+			SharesAmount:     sdk.NewDecFromUint(amount),
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())

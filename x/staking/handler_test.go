@@ -491,8 +491,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
 
-		expBond := initBond.Sub(unbondShares.MulInt64(i + 1).RoundUint())
-		expDelegatorShares := (initBond.MulUint64(2)).Sub(unbondShares.MulInt64(i + 1).RoundUint())
+		expBond := initBond.Sub(unbondShares.MulUint64(i + 1).RoundUint())
+		expDelegatorShares := (initBond.MulUint64(2)).Sub(unbondShares.MulUint64(i + 1).RoundUint())
 		expDelegatorAcc := initBond.Sub(expBond)
 
 		gotBond := bond.Shares.RoundUint()
@@ -525,7 +525,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.False(t, got.IsOK(), "expected unbond msg to fail, index: %v", i)
 	}
 
-	leftBonded := initBond.Sub(unbondShares.MulInt64(numUnbonds).RoundUint())
+	leftBonded := initBond.Sub(unbondShares.MulUint64(numUnbonds).RoundUint())
 
 	// should be unable to unbond one more than we have
 	unbondShares = sdk.NewDecFromUint(leftBonded.AddUint64(1))

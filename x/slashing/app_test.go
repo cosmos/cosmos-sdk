@@ -17,7 +17,7 @@ import (
 var (
 	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	coins = sdk.Coins{sdk.NewUint64Coin("foocoin", 10)}
 )
 
 // initialize the mock application for this module
@@ -109,7 +109,7 @@ func TestSlashingMsgs(t *testing.T) {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	createValidatorMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneUint(),
 	)
 	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Sub(bondCoin)})

@@ -51,27 +51,27 @@ func SupplyInvariants(k staking.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(k.BondDenom(ctx))))
+			loose = loose.Add(sdk.NewDecFromUint(acc.GetCoins().AmountOf(k.BondDenom(ctx))))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
 			for _, entry := range ubd.Entries {
-				loose = loose.Add(sdk.NewDecFromInt(entry.Balance))
+				loose = loose.Add(sdk.NewDecFromUint(entry.Balance))
 			}
 			return false
 		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(sdk.NewDecFromInt(validator.GetBondedTokens()))
+				bonded = bonded.Add(sdk.NewDecFromUint(validator.GetBondedTokens()))
 			case sdk.Unbonding, sdk.Unbonded:
-				loose = loose.Add(sdk.NewDecFromInt(validator.GetTokens()))
+				loose = loose.Add(sdk.NewDecFromUint(validator.GetTokens()))
 			}
 			return false
 		})
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx))))
+		loose = loose.Add(sdk.NewDecFromUint(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx))))
 
 		// add community pool
 		loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
@@ -81,14 +81,14 @@ func SupplyInvariants(k staking.Keeper,
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
-		if !sdk.NewDecFromInt(pool.NotBondedTokens).Equal(loose) {
+		if !sdk.NewDecFromUint(pool.NotBondedTokens).Equal(loose) {
 			return fmt.Errorf("loose token invariance:\n"+
 				"\tpool.NotBondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.NotBondedTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !sdk.NewDecFromInt(pool.BondedTokens).Equal(bonded) {
+		if !sdk.NewDecFromUint(pool.BondedTokens).Equal(bonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tpool.BondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.BondedTokens, bonded)
@@ -115,10 +115,6 @@ func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v",
 					validator.GetTendermintPower(), powerKey, iterator.Key())
-			}
-
-			if validator.Tokens.IsNegative() {
-				return fmt.Errorf("negative tokens for validator: %v", validator)
 			}
 		}
 		iterator.Close()

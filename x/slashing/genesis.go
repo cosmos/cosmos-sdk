@@ -16,8 +16,8 @@ type GenesisState struct {
 
 // MissedBlock
 type MissedBlock struct {
-	Index  int64 `json:"index"`
-	Missed bool  `json:"missed"`
+	Index  uint64 `json:"index"`
+	Missed bool   `json:"missed"`
 }
 
 // DefaultGenesisState - default GenesisState used by Cosmos Hub
@@ -106,7 +106,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 		signingInfos[bechAddr] = info
 		localMissedBlocks := []MissedBlock{}
 
-		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
+		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index uint64, missed bool) (stop bool) {
 			localMissedBlocks = append(localMissedBlocks, MissedBlock{index, missed})
 			return false
 		})

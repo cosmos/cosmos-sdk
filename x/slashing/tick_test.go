@@ -14,7 +14,7 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
-	power := int64(100)
+	power := uint64(100)
 	amt := sdk.TokensFromTendermintPower(power)
 	addr, pk := addrs[2], pks[2]
 
@@ -30,7 +30,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	val := abci.Validator{
 		Address: pk.Address(),
-		Power:   amt.Int64(),
+		Power:   int64(amt.Uint64()),
 	}
 
 	// mark the validator as having signed
@@ -46,15 +46,15 @@ func TestBeginBlocker(t *testing.T) {
 
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
-	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
-	require.Equal(t, int64(1), info.IndexOffset)
+	require.Equal(t, ctx.BlockHeight(), int64(info.StartHeight))
+	require.Equal(t, uint64(1), info.IndexOffset)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
-	require.Equal(t, int64(0), info.MissedBlocksCounter)
+	require.Equal(t, uint64(0), info.MissedBlocksCounter)
 
 	height := int64(0)
 
 	// for 1000 blocks, mark the validator as having signed
-	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
+	for ; uint64(height) < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			LastCommitInfo: abci.LastCommitInfo{
@@ -68,7 +68,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 
 	// for 500 blocks, mark the validator as having not signed
-	for ; height < ((keeper.SignedBlocksWindow(ctx) * 2) - keeper.MinSignedPerWindow(ctx) + 1); height++ {
+	for ; uint64(height) < ((keeper.SignedBlocksWindow(ctx) * 2) - keeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			LastCommitInfo: abci.LastCommitInfo{

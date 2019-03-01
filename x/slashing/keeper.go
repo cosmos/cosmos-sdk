@@ -36,7 +36,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 
 // handle a validator signing two blocks at the same height
 // power: power of the double-signing validator at the height of infraction
-func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
+func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight uint64,
+	timestamp time.Time, power uint64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 
 	// calculate the age of the evidence
@@ -85,7 +86,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
+	distributionHeight := infractionHeight - uint64(sdk.ValidatorUpdateDelay)
 
 	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
@@ -115,9 +116,9 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 // handle a validator signature, must be called once per validator per block
 // TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
-func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
+func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power uint64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
-	height := ctx.BlockHeight()
+	height := uint64(ctx.BlockHeight())
 	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
@@ -174,7 +175,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+			distributionHeight := height - uint64(sdk.ValidatorUpdateDelay) - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))

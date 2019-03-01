@@ -38,7 +38,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
-	amtInt := int64(100)
+	amtInt := uint64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.TokensFromTendermintPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
@@ -92,7 +92,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-	unbondShares := sdk.NewDecFromInt(bondAmount)
+	unbondShares := sdk.NewDecFromUint(bondAmount)
 
 	// unbond validator total self-delegations (which should jail the validator)
 	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondShares)

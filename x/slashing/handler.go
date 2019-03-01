@@ -31,7 +31,8 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrMissingSelfDelegation(k.codespace).Result()
 	}
 
-	if validator.GetDelegatorShareExRate().Mul(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
+	if validator.GetDelegatorShareExRate().Mul(selfDel.GetShares()).TruncateUint().LT(
+		validator.GetMinSelfDelegation()) {
 		return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()
 	}
 

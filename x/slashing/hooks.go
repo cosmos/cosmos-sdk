@@ -14,7 +14,7 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 	_, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
 		signingInfo := ValidatorSigningInfo{
-			StartHeight:         ctx.BlockHeight(),
+			StartHeight:         uint64(ctx.BlockHeight()),
 			IndexOffset:         0,
 			JailedUntil:         time.Unix(0, 0),
 			Tombstoned:          false,

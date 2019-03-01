@@ -75,7 +75,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
-	genesis.Pool.NotBondedTokens = initCoins.MulRaw(int64(len(addrs)))
+	genesis.Pool.NotBondedTokens = initCoins.MulUint64(uint64(len(addrs)))
 
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
@@ -112,15 +112,18 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey,
+	amt sdk.Uint) staking.MsgCreateValidator {
+
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		staking.Description{}, commission, sdk.OneInt(),
+		staking.Description{}, commission, sdk.OneUint(),
 	)
 }
 
-func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
+	delAmount sdk.Uint) staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

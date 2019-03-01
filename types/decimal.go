@@ -247,15 +247,8 @@ func (d Dec) MulUint(u Uint) Dec {
 	return Dec{mul}
 }
 
-// MulInt64 - multiplication with int64
-func (d Dec) MulInt64(i int64) Dec {
-	mul := new(big.Int).Mul(d.Int, big.NewInt(i))
-
-	if mul.BitLen() > 255+DecimalPrecisionBits {
-		panic("Int overflow")
-	}
-	return Dec{mul}
-}
+// MulUint64 - multiplication with uint64
+func (d Dec) MulUint64(i uint64) Dec { return d.MulUint(NewUint(i)) }
 
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {

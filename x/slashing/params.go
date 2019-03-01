@@ -93,20 +93,20 @@ func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
 }
 
 // SignedBlocksWindow - sliding window for downtime slashing
-func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
+func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res uint64) {
 	k.paramspace.Get(ctx, KeySignedBlocksWindow, &res)
 	return
 }
 
 // Downtime slashing threshold
-func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
+func (k Keeper) MinSignedPerWindow(ctx sdk.Context) uint64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 
 	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
 	//       less than 1.
-	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
+	return minSignedPerWindow.MulUint64(signedBlocksWindow).RoundUint64()
 }
 
 // Downtime unbond duration

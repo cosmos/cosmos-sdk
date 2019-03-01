@@ -66,11 +66,12 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
 	// slashes which happened in the first block would have been before this delegation existed,
-	// UNLESS they were slashes of a redelegation to this validator which was itself slashed earlier in the same BeginBlock
+	// UNLESS they were slashes of a redelegation to this validator which was itself slashed
+	// (from a fault committed by the redelegation source validator) earlier in the same BeginBlock
 	startingHeight := startingInfo.Height
-	// slashes this block happened after reward allocation, but we have to account for them for the stake sanity check
+	// slashes this block happened after reward allocation, but we have to account for them for the stake sanity check below
 	endingHeight := uint64(ctx.BlockHeight())
-	if endingHeight >= startingHeight {
+	if endingHeight > startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
@@ -85,6 +86,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		)
 	}
 
+	// a stake sanity check - recalculated final stake should be less than or equal to current stake
 	if stake.GT(del.GetShares().Mul(val.GetDelegatorShareExRate())) {
 		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s", del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
 	}

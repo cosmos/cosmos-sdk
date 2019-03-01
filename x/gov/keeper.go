@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"fmt"
 	"time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -279,7 +278,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	fmt.Printf("activateVotingPeriod %+v\n", proposal)
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
 	keeper.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
 }

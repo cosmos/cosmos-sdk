@@ -3,7 +3,7 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
-	//	"strings"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,20 +48,16 @@ type ProposalContent interface {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-// XXX: fix error before merge
-/*
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
 		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
-			prop.GetProposalID(), prop.GetStatus(),
-			prop.GetProposalType(), prop.GetTitle())
+			prop.ProposalID, prop.Status,
+			prop.ProposalType(), prop.GetTitle())
 	}
 	return strings.TrimSpace(out)
 }
 
-}
-*/
 // Text Proposals
 type TextProposal struct {
 	Title       string `json:"title"`       //  Title of the proposal

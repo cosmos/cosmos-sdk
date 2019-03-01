@@ -59,6 +59,9 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
+
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 	var proposalID uint64
@@ -242,6 +245,9 @@ func TestProposalQueues(t *testing.T) {
 	inactiveIterator.Close()
 
 	keeper.activateVotingPeriod(ctx, proposal)
+
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())

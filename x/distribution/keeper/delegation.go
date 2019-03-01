@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -87,8 +88,11 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	}
 
 	// a stake sanity check - recalculated final stake should be less than or equal to current stake
+	// here we cannot use Equals because stake is truncated when multiplied by slash fractions
+	// we could only use equals if we had arbitrary-precision rationals
 	if stake.GT(del.GetShares().Mul(val.GetDelegatorShareExRate())) {
-		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s", del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
+		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
+			del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
 	}
 
 	// calculate rewards for final period

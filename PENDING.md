@@ -88,6 +88,8 @@ CLI flag.
 
 ### Gaia
 
+* [\#3777](https://github.com/cosmso/cosmos-sdk/pull/3777) `gaiad export` no longer panics when the database is empty
+
 ### SDK
 
 * \#3728 Truncate decimal multiplication & division in distribution to ensure

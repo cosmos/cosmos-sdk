@@ -142,7 +142,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			}
 
 			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-			if _, err := kb.CreateOffline(name, pk); err != nil {
+			if _, err := kb.CreateMulti(name, pk); err != nil {
 				return err
 			}
 
@@ -263,7 +263,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	switch output {
 	case OutputFormatText:
 		fmt.Fprintln(os.Stderr)
-		printKeyInfo(info, Bech32KeyOutput)
+		printKeyInfo(info, keys.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -273,7 +273,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 			fmt.Fprintln(os.Stderr, mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := Bech32KeyOutput(info)
+		out, err := keys.Bech32KeyOutput(info)
 		if err != nil {
 			return err
 		}

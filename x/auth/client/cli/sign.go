@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -54,18 +56,21 @@ be generated via the 'multisign' command.
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(flagMultisig, "",
-		"Address of the multisig account on behalf of which the "+
-			"transaction shall be signed")
-	cmd.Flags().Bool(flagAppend, true,
-		"Append the signature to the existing ones. "+
-			"If disabled, old signatures would be overwritten. Ignored if --multisig is on")
+	cmd.Flags().String(
+		flagMultisig, "",
+		"Address of the multisig account on behalf of which the transaction shall be signed",
+	)
+	cmd.Flags().Bool(
+		flagAppend, true,
+		"Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on",
+	)
+	cmd.Flags().Bool(
+		flagValidateSigs, false,
+		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
+	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
-		"those who have already signed it, and make sure that signatures are in the correct order")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
-	cmd.Flags().String(flagOutfile, "",
-		"The document will be written to the given file instead of STDOUT")
+	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	// add the flags here and return the command
 	return client.PostCommands(cmd)[0]
@@ -177,7 +182,7 @@ func printAndValidateSigs(
 
 	signers := stdTx.GetSigners()
 	for i, signer := range signers {
-		fmt.Printf(" %v: %v\n", i, signer.String())
+		fmt.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
@@ -193,6 +198,11 @@ func printAndValidateSigs(
 	for i, sig := range sigs {
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
+
+		var (
+			multiSigHeader string
+			multiSigMsg    string
+		)
 
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
@@ -219,7 +229,26 @@ func printAndValidateSigs(
 			}
 		}
 
-		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
+		multiPK, ok := sig.PubKey.(multisig.PubKeyMultisigThreshold)
+		if ok {
+			var multiSig multisig.Multisignature
+			cliCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
+
+			var b strings.Builder
+			b.WriteString("\n  MultiSig Signatures:\n")
+
+			for i := 0; i < multiSig.BitArray.Size(); i++ {
+				if multiSig.BitArray.GetIndex(i) {
+					addr := sdk.AccAddress(multiPK.PubKeys[i].Address().Bytes())
+					b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
+				}
+			}
+
+			multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.K, len(multiPK.PubKeys))
+			multiSigMsg = b.String()
+		}
+
+		fmt.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	fmt.Println("")

@@ -279,7 +279,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposals := keeper.GetProposalesFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
+	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err != nil {

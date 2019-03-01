@@ -140,7 +140,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	tallyParams := k.GetTallyParams(ctx)
 	var deposits []DepositWithMetadata
 	var votes []VoteWithMetadata
-	proposals := k.GetProposalesFiltered(ctx, nil, nil, StatusNil, 0)
+	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
 	for _, proposal := range proposals {
 		proposalID := proposal.ProposalID
 		depositsIterator := k.GetDeposits(ctx, proposalID)

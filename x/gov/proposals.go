@@ -25,11 +25,24 @@ type Proposal struct {
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
+func (p Proposal) String() string {
+	return fmt.Sprintf(`Proposal %d:
+		  Title:              %s
+		  Type:               %s
+		  Status:             %s
+		  Submit Time:        %s
+		  Deposit End Time:   %s
+		  Total Deposit:      %s
+		  Voting Start Time:  %s
+		  Voting End Time:    %s`, p.ProposalID, p.GetTitle(), p.ProposalType(),
+		p.Status, p.SubmitTime, p.DepositEndTime,
+		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime)
+}
+
 type ProposalContent interface {
 	GetTitle() string
 	GetDescription() string
 	ProposalType() ProposalKind
-	String() string
 }
 
 // Proposals is an array of proposal
@@ -62,23 +75,6 @@ var _ ProposalContent = TextProposal{}
 func (tp TextProposal) GetTitle() string           { return tp.Title }
 func (tp TextProposal) GetDescription() string     { return tp.Description }
 func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
-func (tp TextProposal) String() string {
-	/*
-			return fmt.Sprintf(`Proposal %d:
-		  Title:              %s
-		  Type:               %s
-		  Status:             %s
-		  Submit Time:        %s
-		  Deposit End Time:   %s
-		  Total Deposit:      %s
-		  Voting Start Time:  %s
-		  Voting End Time:    %s`, tp.ProposalID, tp.Title, tp.ProposalType,
-				tp.Status, tp.SubmitTime, tp.DepositEndTime,
-				tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
-	*/
-	return ""
-	// XXX: fix before merge
-}
 
 // ProposalQueue
 type ProposalQueue []uint64

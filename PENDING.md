@@ -23,6 +23,8 @@
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
 tags.
+* [\#3666] Improve coins denom validation.
+* [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
 
@@ -61,6 +63,7 @@ CLI flag.
   * `gaiacli tx sign --validate-signatures` now displays multisig signers with their respective weights
 * [\#3730](https://github.com/cosmos/cosmos-sdk/issues/3730) Improve workflow for
 `gaiad gentx` with offline public keys, by outputting stdtx file that needs to be signed.
+* [\#3761](https://github.com/cosmos/cosmos-sdk/issues/3761) Querying account related information using custom querier in auth module
 
 ### Gaia
 
@@ -92,6 +95,8 @@ CLI flag.
 
 ### Gaia
 
+* [\#3777](https://github.com/cosmso/cosmos-sdk/pull/3777) `gaiad export` no longer panics when the database is empty
+
 ### SDK
 
 * \#3728 Truncate decimal multiplication & division in distribution to ensure
@@ -101,5 +106,12 @@ CLI flag.
   where validator is unexpectedly slashed throwing off test calculations
 * [\#3411] Include the `RequestInitChain.Time` in the block header init during
 `InitChain`.
+* [\#3717] Update the vesting specification and implementation to cap deduction from
+`DelegatedVesting` by at most `DelegatedVesting`. This accounts for the case where
+the undelegation amount may exceed the original delegation amount due to
+truncation of undelegation tokens.
+* [\#3717] Ignore unknown proposers in allocating rewards for proposers, in case
+  unbonding period was just 1 block and proposer was already deleted.
+* [\#3726] Cap(clip) reward to remaining coins in AllocateTokens.
 
 ### Tendermint

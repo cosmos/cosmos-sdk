@@ -17,6 +17,14 @@ type mockValidator struct {
 	livenessState int
 }
 
+func (mv mockValidator) String() string {
+	return fmt.Sprintf("mockValidator{%s:%X power:%v state:%v}",
+		mv.val.PubKey.Type,
+		mv.val.PubKey.Data,
+		mv.val.Power,
+		mv.livenessState)
+}
+
 type mockValidators map[string]mockValidator
 
 // get mockValidators from abci validators

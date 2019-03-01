@@ -50,9 +50,11 @@ func TestTallyNoOneVotes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
-	proposal.SetStatus(StatusVotingPeriod)
+	tp := TextProposal{"Test", "description"}
+	proposal, err := keeper.submitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -75,8 +77,8 @@ func TestTallyNoQuorum(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{2, 5})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -101,8 +103,8 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -131,8 +133,8 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 6})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -160,8 +162,8 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -192,8 +194,8 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -224,8 +226,8 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -256,8 +258,8 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -288,8 +290,8 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -322,8 +324,8 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -360,8 +362,8 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -398,8 +400,8 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -451,8 +453,8 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
@@ -496,8 +498,8 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	staking.EndBlocker(ctx, sk)
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	proposal := keeper.submitProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.ProposalID
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 

@@ -18,9 +18,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		var proposalID uint64
 
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
-		inactiveProposal := keeper.GetProposal(ctx, proposalID)
+		inactiveProposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+		if !ok {
+			panic("Endblocker cannot fail to GetProposalProcess")
+		}
 
-		keeper.DeleteProposal(ctx, proposalID)
+		keeper.DeleteProposalProcess(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
 		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposalID))
@@ -28,10 +31,10 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
-				inactiveProposal.GetProposalID(),
+				inactiveProposal.ProposalID,
 				inactiveProposal.GetTitle(),
 				keeper.GetDepositParams(ctx).MinDeposit,
-				inactiveProposal.GetTotalDeposit(),
+				inactiveProposal.TotalDeposit,
 			),
 		)
 	}
@@ -43,28 +46,31 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		var proposalID uint64
 
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-		activeProposal := keeper.GetProposal(ctx, proposalID)
+		activeProposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+		if !ok {
+			panic("EndBlocker cannot fail to GetProposalProcess")
+		}
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
 		var tagValue string
 		if passes {
-			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
-			activeProposal.SetStatus(StatusPassed)
+			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
+			activeProposal.Status = StatusPassed
 			tagValue = tags.ActionProposalPassed
 		} else {
-			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
-			activeProposal.SetStatus(StatusRejected)
+			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+			activeProposal.Status = StatusRejected
 			tagValue = tags.ActionProposalRejected
 		}
 
-		activeProposal.SetFinalTallyResult(tallyResults)
-		keeper.SetProposal(ctx, activeProposal)
-		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
+		activeProposal.FinalTallyResult = tallyResults
+		keeper.SetProposalProcess(ctx, activeProposal)
+		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.VotingEndTime, activeProposal.ProposalID)
 
 		logger.Info(
 			fmt.Sprintf(
 				"proposal %d (%s) tallied; passed: %v",
-				activeProposal.GetProposalID(), activeProposal.GetTitle(), passes,
+				activeProposal.ProposalID, activeProposal.GetTitle(), passes,
 			),
 		)
 

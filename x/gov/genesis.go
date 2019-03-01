@@ -18,7 +18,7 @@ type GenesisState struct {
 	StartingProposalID uint64                `json:"starting_proposal_id"`
 	Deposits           []DepositWithMetadata `json:"deposits"`
 	Votes              []VoteWithMetadata    `json:"votes"`
-	Proposals          []Proposal            `json:"proposals"`
+	ProposalProcesses  []ProposalProcess     `json:"proposal_processes"`
 	DepositParams      DepositParams         `json:"deposit_params"`
 	VotingParams       VotingParams          `json:"voting_params"`
 	TallyParams        TallyParams           `json:"tally_params"`
@@ -121,14 +121,14 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
-	for _, proposal := range data.Proposals {
-		switch proposal.GetStatus() {
+	for _, proposal := range data.ProposalProcesses {
+		switch proposal.Status {
 		case StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
+			k.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
 		case StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
+			k.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
 		}
-		k.SetProposal(ctx, proposal)
+		k.SetProposalProcess(ctx, proposal)
 	}
 }
 
@@ -140,9 +140,9 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	tallyParams := k.GetTallyParams(ctx)
 	var deposits []DepositWithMetadata
 	var votes []VoteWithMetadata
-	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
+	proposals := k.GetProposalProcessesFiltered(ctx, nil, nil, StatusNil, 0)
 	for _, proposal := range proposals {
-		proposalID := proposal.GetProposalID()
+		proposalID := proposal.ProposalID
 		depositsIterator := k.GetDeposits(ctx, proposalID)
 		defer depositsIterator.Close()
 		for ; depositsIterator.Valid(); depositsIterator.Next() {
@@ -163,7 +163,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		StartingProposalID: startingProposalID,
 		Deposits:           deposits,
 		Votes:              votes,
-		Proposals:          proposals,
+		ProposalProcesses:  proposals,
 		DepositParams:      depositParams,
 		VotingParams:       votingParams,
 		TallyParams:        tallyParams,

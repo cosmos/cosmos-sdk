@@ -99,8 +99,8 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposal := keeper.GetProposal(ctx, params.ProposalID)
-	if proposal == nil {
+	proposal, ok := keeper.GetProposalProcess(ctx, params.ProposalID)
+	if !ok {
 		return nil, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
 
@@ -205,17 +205,17 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	proposalID := params.ProposalID
 
-	proposal := keeper.GetProposal(ctx, proposalID)
-	if proposal == nil {
+	proposal, ok := keeper.GetProposalProcess(ctx, proposalID)
+	if !ok {
 		return nil, ErrUnknownProposal(DefaultCodespace, proposalID)
 	}
 
 	var tallyResult TallyResult
 
-	if proposal.GetStatus() == StatusDepositPeriod {
+	if proposal.Status == StatusDepositPeriod {
 		tallyResult = EmptyTallyResult()
-	} else if proposal.GetStatus() == StatusPassed || proposal.GetStatus() == StatusRejected {
-		tallyResult = proposal.GetFinalTallyResult()
+	} else if proposal.Status == StatusPassed || proposal.Status == StatusRejected {
+		tallyResult = proposal.FinalTallyResult
 	} else {
 		// proposal is in voting period
 		_, tallyResult = tally(ctx, keeper, proposal)
@@ -279,7 +279,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
+	proposals := keeper.GetProposalProcessesFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err != nil {

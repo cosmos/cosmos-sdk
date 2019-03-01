@@ -146,3 +146,21 @@ func SortByteArrays(src [][]byte) [][]byte {
 	sort.Sort(sorted)
 	return sorted
 }
+
+// checks if two proposals are equal
+func ProposalProcessEqual(proposalA ProposalProcess, proposalB ProposalProcess) bool {
+	if proposalA.ProposalID == proposalB.ProposalID &&
+		proposalA.GetTitle() == proposalB.GetTitle() &&
+		proposalA.GetDescription() == proposalB.GetDescription() &&
+		proposalA.ProposalType() == proposalB.ProposalType() &&
+		proposalA.Status == proposalB.Status &&
+		proposalA.FinalTallyResult.Equals(proposalB.FinalTallyResult) &&
+		proposalA.SubmitTime.Equal(proposalB.SubmitTime) &&
+		proposalA.DepositEndTime.Equal(proposalB.DepositEndTime) &&
+		proposalA.TotalDeposit.IsEqual(proposalB.TotalDeposit) &&
+		proposalA.VotingStartTime.Equal(proposalB.VotingStartTime) &&
+		proposalA.VotingEndTime.Equal(proposalB.VotingEndTime) {
+		return true
+	}
+	return false
+}

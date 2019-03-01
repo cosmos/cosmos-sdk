@@ -56,7 +56,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	return depositParams, votingParams, tallyParams
 }
 
-func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) Proposal {
+func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) ProposalProcess {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, QuerierRoute, QueryProposal}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
@@ -66,13 +66,13 @@ func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var proposal Proposal
+	var proposal ProposalProcess
 	err2 := cdc.UnmarshalJSON(bz, proposal)
 	require.Nil(t, err2)
 	return proposal
 }
 
-func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status ProposalStatus, limit uint64) []Proposal {
+func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status ProposalStatus, limit uint64) []ProposalProcess {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, QuerierRoute, QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalsParams(status, limit, voter, depositor)),
@@ -82,7 +82,7 @@ func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querie
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var proposals []Proposal
+	var proposals []ProposalProcess
 	err2 := cdc.UnmarshalJSON(bz, proposals)
 	require.Nil(t, err2)
 	return proposals
@@ -227,12 +227,12 @@ func testQueries(t *testing.T) {
 	// Only proposal #1 should be in Deposit Period
 	proposals := getQueriedProposals(t, ctx, cdc, querier, nil, nil, StatusDepositPeriod, 0)
 	require.Len(t, proposals, 1)
-	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+	require.Equal(t, proposalID1, proposals[0].ProposalID)
 	// Only proposals #2 and #3 should be in Voting Period
 	proposals = getQueriedProposals(t, ctx, cdc, querier, nil, nil, StatusVotingPeriod, 0)
 	require.Len(t, proposals, 2)
-	require.Equal(t, proposalID2, proposals[0].GetProposalID())
-	require.Equal(t, proposalID3, proposals[1].GetProposalID())
+	require.Equal(t, proposalID2, proposals[0].ProposalID)
+	require.Equal(t, proposalID3, proposals[1].ProposalID)
 
 	// Addrs[0] votes on proposals #2 & #3
 	handler(ctx, NewMsgVote(addrs[0], proposalID2, OptionYes))
@@ -243,8 +243,8 @@ func testQueries(t *testing.T) {
 
 	// Test query voted by addrs[0]
 	proposals = getQueriedProposals(t, ctx, cdc, querier, nil, addrs[0], StatusNil, 0)
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query votes on Proposal 2
 	votes := getQueriedVotes(t, ctx, cdc, querier, proposalID2)
@@ -263,26 +263,26 @@ func testQueries(t *testing.T) {
 
 	// Test query all proposals
 	proposals = getQueriedProposals(t, ctx, cdc, querier, nil, nil, StatusNil, 0)
-	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[2]).ProposalID)
 
 	// Test query voted by addrs[1]
 	proposals = getQueriedProposals(t, ctx, cdc, querier, nil, addrs[1], StatusNil, 0)
-	require.Equal(t, proposalID3, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID3, (proposals[0]).ProposalID)
 
 	// Test query deposited by addrs[0]
 	proposals = getQueriedProposals(t, ctx, cdc, querier, addrs[0], nil, StatusNil, 0)
-	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
 
 	// Test query deposited by addr2
 	proposals = getQueriedProposals(t, ctx, cdc, querier, addrs[1], nil, StatusNil, 0)
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query voted AND deposited by addr1
 	proposals = getQueriedProposals(t, ctx, cdc, querier, addrs[0], addrs[0], StatusNil, 0)
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
 
 	// Test Tally Query
 	tally := getQueriedTally(t, ctx, cdc, querier, proposalID2)

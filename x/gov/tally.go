@@ -26,7 +26,7 @@ func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 }
 
 // TODO: Break into several smaller functions for clarity
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
+func tally(ctx sdk.Context, keeper Keeper, proposal ProposalProcess) (passes bool, tallyResults TallyResult) {
 	results := make(map[VoteOption]sdk.Dec)
 	results[OptionYes] = sdk.ZeroDec()
 	results[OptionAbstain] = sdk.ZeroDec()
@@ -49,7 +49,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	})
 
 	// iterate over all the votes
-	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
+	votesIterator := keeper.GetVotes(ctx, proposal.ProposalID)
 	defer votesIterator.Close()
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}

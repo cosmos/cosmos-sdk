@@ -14,6 +14,8 @@ const (
 
 // ParamStoreKeySendEnabled is store's key for SendEnabled
 var ParamStoreKeySendEnabled = []byte("sendenabled")
+
+// ParamStoreKeySacrificalSendBurnPercent is store's key for SacrificalSendBurnPercent
 var ParamStoreKeySacrificalSendBurnPercent = []byte("sacrificialsendburnpercent")
 
 // ParamKeyTable type declaration for parameters

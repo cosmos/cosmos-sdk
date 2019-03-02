@@ -123,6 +123,9 @@ type SendKeeper interface {
 
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
+
+	GetSacrificialSendBurnPercent(ctx sdk.Context) sdk.Dec
+	SetSacrificialSendBurnPercent(ctx sdk.Context, burnPercent sdk.Dec)
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -169,6 +172,19 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 // SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
+}
+
+// GetSacrificialSendBurnPercent returns the current SacrificalSendBurnPercent
+// nolint: errcheck
+func (keeper BaseSendKeeper) GetSacrificialSendBurnPercent(ctx sdk.Context) sdk.Dec {
+	var burnPercent sdk.Dec
+	keeper.paramSpace.Get(ctx, ParamStoreKeySacrificalSendBurnPercent, &burnPercent)
+	return burnPercent
+}
+
+// SetSacrificialSendBurnPercent sets the SacrificalSendBurnPercent
+func (keeper BaseSendKeeper) SetSacrificialSendBurnPercent(ctx sdk.Context, burnPercent sdk.Dec) {
+	keeper.paramSpace.Set(ctx, ParamStoreKeySacrificalSendBurnPercent, &burnPercent)
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)

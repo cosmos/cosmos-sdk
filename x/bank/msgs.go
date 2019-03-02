@@ -54,6 +54,53 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
 }
 
+// MsgSacrificialSend - high level transaction of the coin module
+type MsgSacrificialSend struct {
+	FromAddress sdk.AccAddress `json:"from_address"`
+	ToAddress   sdk.AccAddress `json:"to_address"`
+	Amount      sdk.Coins      `json:"amount"`
+}
+
+var _ sdk.Msg = MsgSacrificialSend{}
+
+// NewMsgSacrificialSend - construct sacrificial send msg.
+func NewMsgSacrificialSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSacrificialSend {
+	return MsgSacrificialSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
+}
+
+// Route Implements Msg.
+func (msg MsgSacrificialSend) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (msg MsgSacrificialSend) Type() string { return "sacrificialsend" }
+
+// ValidateBasic Implements Msg.
+func (msg MsgSacrificialSend) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Empty() {
+		return sdk.ErrInvalidAddress("missing sender address")
+	}
+	if msg.ToAddress.Empty() {
+		return sdk.ErrInvalidAddress("missing recipient address")
+	}
+	if !msg.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("send amount is invalid: " + msg.Amount.String())
+	}
+	if !msg.Amount.IsAllPositive() {
+		return sdk.ErrInsufficientCoins("send amount must be positive")
+	}
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgSacrificialSend) GetSignBytes() []byte {
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgSacrificialSend) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}
+
 // MsgMultiSend - high level transaction of the coin module
 type MsgMultiSend struct {
 	Inputs  []Input  `json:"inputs"`

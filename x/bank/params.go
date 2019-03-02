@@ -1,6 +1,7 @@
 package bank
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -13,10 +14,12 @@ const (
 
 // ParamStoreKeySendEnabled is store's key for SendEnabled
 var ParamStoreKeySendEnabled = []byte("sendenabled")
+var ParamStoreKeySacrificalSendBurnPercent = []byte("sacrificialsendburnpercent")
 
 // ParamKeyTable type declaration for parameters
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(
 		ParamStoreKeySendEnabled, false,
+		ParamStoreKeySacrificalSendBurnPercent, sdk.ZeroDec(),
 	)
 }

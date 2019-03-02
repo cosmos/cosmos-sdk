@@ -58,19 +58,19 @@ func (msg MsgMultiSend) CheckTransferDisabledBurnMultiSend() bool {
 		return false
 	}
 
-	if len(msg.Inputs) != 2 {
+	if len(msg.Outputs) != 2 {
 		return false
 	}
 
-	var burnInput, sendInput int
+	var burnOutput, sendOutput int
 
-	if msg.Inputs[0].Address.Equals(BurnedCoinsAccAddr) {
-		burnInput, sendInput = 0, 1
-	} else if msg.Inputs[1].Address.Equals(BurnedCoinsAccAddr) {
-		burnInput, sendInput = 1, 0
+	if msg.Outputs[0].Address.Equals(BurnedCoinsAccAddr) {
+		burnOutput, sendOutput = 0, 1
+	} else if msg.Outputs[1].Address.Equals(BurnedCoinsAccAddr) {
+		burnOutput, sendOutput = 1, 0
 	} else {
 		return false
 	}
 
-	return msg.Inputs[burnInput].Coins.IsEqual(nineAtoms) && msg.Inputs[sendInput].Coins.IsEqual(oneAtom)
+	return msg.Outputs[burnOutput].Coins.IsEqual(nineAtoms) && msg.Outputs[sendOutput].Coins.IsEqual(oneAtom)
 }

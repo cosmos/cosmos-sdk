@@ -1,0 +1,60 @@
+debug stake: 3576863194.000000000000000000
+debug TokensBurn: 4059236842
+debug delFraction: 0.022663031399638442
+debug TokensBurn x DelFraction: 91994612.008815189245880164
+debug GetShares: 3576863194.000000000000000000
+debug GetDelegatorShareExRate: 0.974280645632986099
+Panic with err
+ calculated final stake for delegator greater than current stake:
+	delegator: 		cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d
+	validator: 		cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5
+	final stake: 	    	3484868581.991184810754119836
+	current stake stake:	3484868581.991184809826740206
+    difference                       0.000000000927379630
+
+
+_____________________________________
+
+cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d shares in cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5
+81062562.877833048097303748
+
+0.022663031399638441942384828039005255454 = 
+3576863194/(27001411449(createVal) + 127249825708(first Del) + 3576863194 (relavent Del in block 4)) 
+
+
+
+33
+TestMsgCreateValidator: ok true, msg {"type":"cosmos-sdk/MsgCreateValidator","value":{"commission":{"max_change_rate":"0.000218009891887129","max_rate":"0.002000000000000000","rate":"0.001735116783729411"},"delegator_address":"cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d","description":{"details":"","identity":"","moniker":"wIiQJeBxdL","website":""},"min_self_delegation":"1","pubkey":"cosmosvalconspub1addwnpepq22aslw48hz9wg2scya9y2uv0x2gutgqtsnuqcmvkgm9v4sft5tggxh3dzc","validator_address":"cosmosvaloper1t7jpjrmxx945vg62nkjldgy8l8up5jd29uxue7","value":{"amount":"103262027129","denom":"stake"}}}
+
+260
+TestMsgUndelegate: ok true, msg {"type":"cosmos-sdk/MsgUndelegate","value":{"delegator_address":"cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d","shares_amount":"33876287352.137942441082648887","validator_address":"cosmosvaloper1t7jpjrmxx945vg62nkjldgy8l8up5jd29uxue7"}}
+
+321
+TestMsgCreateValidator: ok true, msg {"type":"cosmos-sdk/MsgCreateValidator","value":{"commission":{"max_change_rate":"0.446086454409973772","max_rate":"0.627000000000000000","rate":"0.136412874228860797"},"delegator_address":"cosmos1n234vwpr3l0un98hx9adc9dhkr5jpt69fq4c48","description":{"details":"","identity":"","moniker":"YFfDXlCNWM","website":""},"min_self_delegation":"1","pubkey":"cosmosvalconspub1zcjduepqug2glqgm4v7tly8huc66nx0rfmku3zze5duxzd2s7ywmvqsetepqhthy50","validator_address":"cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5","value":{"amount":"27001411449","denom":"stake"}}}
+
+472
+TestMsgDelegate: ok true, msg {"type":"cosmos-sdk/MsgDelegate","value":{"delegator_address":"cosmos10ztr7u3z08fjx26e4llwles4m8502f0p5yxyu9","validator_address":"cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5","value":{"amount":"127249825708","denom":"stake"}}}
+
+603
+BeginBlock 4 
+
+1214
+TestMsgDelegate: ok true, msg {"type":"cosmos-sdk/MsgDelegate","value":{"delegator_address":"cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d","validator_address":"cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5","value":{"amount":"3576863194","denom":"stake"}}}
+
+1277
+TestMsgDeposit: ok false, msg {"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"4","denom":"stake"}],"depositor":"cosmos1t7jpjrmxx945vg62nkjldgy8l8up5jd2qgjf4d","proposal_id":"88"}}
+
+_________________________________________________________
+Slashes 
+
+
+I[2019-03-01|19:56:53.642] Confirmed double sign from 9AA35638238FDFC994F7317ADC15B7B0E920AF45 at height 5, age of 0 module=x/slashing
+I[2019-03-01|19:56:53.643] validator cosmosvaloper1n234vwpr3l0un98hx9adc9dhkr5jpt69v5pde5 slashed by slash factor of 0.026315789473684211; burned 4059236842 tokens module=x/staking
+I[2019-03-01|19:56:53.643] validator cosmosvalcons1n234vwpr3l0un98hx9adc9dhkr5jpt69c8j344 jailed module=x/staking
+I[2019-03-01|19:56:53.643] Confirmed double sign from EDA26F4F94395C7C1387593B8F4EE2E1E03278A6 at height 5, age of 0 module=x/slashing
+I[2019-03-01|19:56:53.643] validator cosmosvaloper1ak3x7nu589w8cyu8tyac7nhzu8sry79xqet55c slashed by slash factor of 0.026315789473684211; burned 6210578947 tokens module=x/staking
+I[2019-03-01|19:56:53.643] validator cosmosvalcons1ak3x7nu589w8cyu8tyac7nhzu8sry79x52cgce jailed module=x/staking
+I[2019-03-01|19:56:53.643] Confirmed double sign from D064E0FED701784DD0475C13B05B477FF08E2A19 at height 5, age of 0 module=x/slashing
+I[2019-03-01|19:56:53.644] validator cosmosvaloper16pjwplkhq9uym5z8tsfmqk680lcgu2semeenny slashed by slash factor of 0.026315789473684211; burned 6299017281 tokens module=x/staking
+I[2019-03-01|19:56:53.644] validator cosmosvalcons16pjwplkhq9uym5z8tsfmqk680lcgu2se0220l9 jailed module=x/staking
+

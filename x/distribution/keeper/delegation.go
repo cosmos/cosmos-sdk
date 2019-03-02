@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// initialize starting info for a new delegation
+// initialize starting info for a new delegation for the current period
 func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
 	// period has already been incremented - we want to store the period ended by this delegation action
 	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
@@ -52,7 +52,14 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator,
+	del sdk.Delegation, endingPeriod uint64) (rewards sdk.DecCoins) {
+
+	if !del.GetValidatorAddr().Equals(val.GetOperator()) {
+		panic(fmt.Sprintf("addresses do not match: %v, %v\n",
+			del.GetValidatorAddr(), val.GetOperator()))
+	}
+
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -64,7 +71,8 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
-	// round up to have a larger fraction to therefor slash more at slash events
+	// round up to have a larger fraction to therefor conservatively slash more
+	// at slashing events to prevent stake inequality
 	delFraction := del.GetShares().QuoRoundUp(val.GetDelegatorShares())
 
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
@@ -82,6 +90,12 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				if endingPeriod > startingPeriod {
 					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+					fmt.Printf("debug startingInfo: %v\n", startingInfo)
+					fmt.Printf("debug stake: %v\n", stake)
+					fmt.Printf("debug TokensBurn: %v\n", event.TokensBurn)
+					fmt.Printf("debug delFraction: %v\n", delFraction)
+					fmt.Printf("debug TokensBurn x DelFraction: %v\n", event.TokensBurn.ToDec().Mul(delFraction))
+					//stake = stake.Sub(event.TokensBurn.ToDec().Mul(delFraction))
 					stake = stake.Sub(event.TokensBurn.ToDec().Mul(delFraction))
 					startingPeriod = endingPeriod
 				}
@@ -93,9 +107,21 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// a stake sanity check - recalculated final stake should be less than or equal to current stake
 	// here we cannot use Equals because stake is truncated when multiplied by slash fractions
 	// we could only use equals if we had arbitrary-precision rationals
-	if stake.GT(del.GetShares().Mul(val.GetDelegatorShareExRate())) {
-		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
-			del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
+	currentStake := del.GetShares().MulTruncate(val.GetDelegatorShareExRate())
+	delFraction := del.GetShares().QuoRoundUp(val.GetDelegatorShares())
+	currentStake2 := val.GetTokens().ToDec().MulTruncate(delFraction)
+	if stake.GT(currentStake2) {
+		fmt.Printf("debug currentStake: %v\n", currentStake)
+		fmt.Printf("debug currentStake2: %v\n", currentStake2)
+		fmt.Printf("-------debug stake: %v\n", stake)
+		fmt.Printf("debug GetShares: %v\n", del.GetShares())
+		fmt.Printf("debug GetDelegatorShareExRate: %v\n", val.GetDelegatorShareExRate())
+		panic(fmt.Sprintf("calculated final stake for delegator greater than current stake:\n"+
+			"\tdelegator: \t\t%s\n"+
+			"\tvalidator: \t\t%s\n"+
+			"\tfinal stake: \t\t%s\n"+
+			"\tcurrent stake stake:\t%s\n",
+			del.GetDelegatorAddr(), val.GetOperator(), stake, currentStake))
 	}
 
 	// calculate rewards for final period

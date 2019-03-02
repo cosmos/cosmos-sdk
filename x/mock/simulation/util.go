@@ -71,13 +71,13 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 		}
 
 		var f *os.File
-		if numLoggers > 10 {
-			fileName := fmt.Sprintf("simulation_log_%s.txt",
-				time.Now().Format("2006-01-02 15:04:05"))
-			fmt.Printf("Too many logs to display, instead writing to %s\n",
-				fileName)
-			f, _ = os.Create(fileName)
-		}
+		//if numLoggers > 10 {
+		fileName := fmt.Sprintf("simulation_log_%s.txt",
+			time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Printf("Too many logs to display, instead writing to %s\n",
+			fileName)
+		f, _ = os.Create(fileName)
+		//}
 
 		for i := 0; i < numLoggers; i++ {
 			if f == nil {

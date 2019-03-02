@@ -16,7 +16,7 @@ func TestGetSetProposal(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -32,7 +32,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	keeper.submitProposal(ctx, tp)
 	keeper.submitProposal(ctx, tp)
 	keeper.submitProposal(ctx, tp)
@@ -49,7 +49,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 
@@ -76,7 +76,7 @@ func TestDeposits(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -174,7 +174,7 @@ func TestVotes(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -233,7 +233,7 @@ func TestProposalQueues(t *testing.T) {
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 
 	// create test proposals
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.submitProposal(ctx, tp)
 	require.NoError(t, err)
 

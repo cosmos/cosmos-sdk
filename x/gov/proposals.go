@@ -69,6 +69,13 @@ type TextProposal struct {
 	Description string `json:"description"` //  Description of the proposal
 }
 
+func NewTextProposal(title, description string) TextProposal {
+	return TextProposal{
+		Title:       title,
+		Description: description,
+	}
+}
+
 // Implements Proposal Interface
 var _ ProposalContent = TextProposal{}
 

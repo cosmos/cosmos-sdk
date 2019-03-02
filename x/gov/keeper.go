@@ -95,35 +95,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 }
 
 // Proposals
-
-// XXX: replaced with submitProposal, remove before merge
-/*
-// Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal {
-	proposalID, err := keeper.getNewProposalID(ctx)
-	if err != nil {
-		return nil
-	}
-	var proposal Proposal = &TextProposal{
-		ProposalID:       proposalID,
-		Title:            title,
-		Description:      description,
-		ProposalType:     proposalType,
-	}
-
-	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
-	proposal.SetDepositEndTime(proposal.GetSubmitTime().Add(depositPeriod))
-
-	keeper.SetProposal(ctx, proposal)
-	keeper.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposalID)
-	return proposal
-}
-*/
-
 func (keeper Keeper) submitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
-		// XXX: should we panic here?
 		return
 	}
 

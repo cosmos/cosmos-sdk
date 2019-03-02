@@ -147,6 +147,10 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
+func testProposal() TextProposal {
+	return NewTextProposal("Test", "description")
+}
+
 // checks if two proposals are equal
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	if proposalA.ProposalID == proposalB.ProposalID &&

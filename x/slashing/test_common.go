@@ -39,16 +39,6 @@ var (
 	initCoins = sdk.TokensFromTendermintPower(200)
 )
 
-var _ BankKeeper = (*mockBankKeeper)(nil)
-
-type mockBankKeeper struct {
-	sendEnabled bool
-}
-
-func (mbk mockBankKeeper) GetSendEnabled(_ sdk.Context) bool {
-	return mbk.sendEnabled
-}
-
 func createTestCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
@@ -90,15 +80,14 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
-	initCoins := sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins)
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{initCoins})
-		require.Nil(t, err)
+		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
+			{sk.GetParams(ctx).BondDenom, initCoins},
+		})
 	}
-
-	mbk := mockBankKeeper{true}
+	require.Nil(t, err)
 	paramstore := paramsKeeper.Subspace(DefaultParamspace)
-	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace, mbk)
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace)
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
@@ -128,17 +117,6 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	return staking.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
 		staking.Description{}, commission, sdk.OneInt(),
-	)
-}
-
-func NewTestMsgCreateValidatorOnBehalfOf(
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, pubKey crypto.PubKey, amt, msb sdk.Int,
-) staking.MsgCreateValidator {
-
-	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return staking.NewMsgCreateValidatorOnBehalfOf(
-		delAddr, valAddr, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		staking.Description{}, commission, msb,
 	)
 }
 

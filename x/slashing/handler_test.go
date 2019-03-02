@@ -53,56 +53,19 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 
 	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.OneDec())
 	got = staking.NewHandler(sk)(ctx, undelegateMsg)
-	require.True(t, got.IsOK())
+
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 
-	// assert jailed validator can't be unjailed due to min self-delegation
+	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK(), "allowed unjail of validator with less than MinSelfDelegation")
 	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
 	require.EqualValues(t, DefaultCodespace, got.Codespace)
 }
 
-func TestUnjailNoTransferValidator(t *testing.T) {
-	// initial setup
-	ctx, bk, sk, _, keeper := createTestInput(t, DefaultParams())
-	keeper.bk = mockBankKeeper{false}
-
-	slh := NewHandler(keeper)
-	amtInt := int64(100)
-	delAddr := sdk.AccAddress(addrs[0])
-	valAddr, pubKey, amt := addrs[1], pks[1], sdk.TokensFromTendermintPower(amtInt)
-
-	msg := NewTestMsgCreateValidatorOnBehalfOf(delAddr, valAddr, pubKey, amt, amt)
-	got := staking.NewHandler(sk)(ctx, msg)
-	require.True(t, got.IsOK())
-
-	staking.EndBlocker(ctx, sk)
-	require.Equal(
-		t, bk.GetCoins(ctx, delAddr),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
-	)
-	require.Equal(
-		t, bk.GetCoins(ctx, sdk.AccAddress(valAddr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins)},
-	)
-
-	sk.Jail(ctx, sdk.ConsAddress(valAddr))
-
-	val := sk.Validator(ctx, valAddr)
-	selfDel := keeper.validatorSet.Delegation(ctx, sdk.AccAddress(valAddr), valAddr)
-	require.Nil(t, selfDel)
-	require.True(t, val.GetJailed())
-
-	got = slh(ctx, NewMsgUnjail(valAddr))
-	require.True(t, got.IsOK(), "expected validator to be unjailed")
-
-	val = sk.Validator(ctx, valAddr)
-	require.False(t, val.GetJailed())
-}
-
 func TestJailedValidatorDelegations(t *testing.T) {
 	ctx, _, stakingKeeper, _, slashingKeeper := createTestInput(t, DefaultParams())
+
 	stakingParams := stakingKeeper.GetParams(ctx)
 	stakingParams.UnbondingTime = 0
 	stakingKeeper.SetParams(ctx, stakingParams)
@@ -144,7 +107,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.True(t, found)
 	require.True(t, validator.GetJailed())
 
-	// verify the validator cannot unjail itself (with transfers enabled)
+	// verify the validator cannot unjail itself
 	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
 	require.False(t, got.IsOK(), "expected jailed validator to not be able to unjail, got: %v", got)
 

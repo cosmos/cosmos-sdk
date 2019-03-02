@@ -188,8 +188,8 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	for _, acc := range genesisState.Accounts {
 		for _, coin := range acc.Coins {
 			if coin.Denom == genesisState.StakingData.Params.BondDenom {
-				// increase the supply
-				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(coin.Amount)
+				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
+					Add(coin.Amount) // increase the supply
 			}
 		}
 	}

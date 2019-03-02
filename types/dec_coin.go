@@ -478,8 +478,8 @@ func (coins DecCoins) IsAllPositive() bool {
 	return true
 }
 
-// MinSet will return a new set of coins which containts the minimum decCoin
-// for common denoms found in both `coins` and `coinsB`.  for denoms not common
+// MinSet will return a new set of coins which contains the minimum decCoin
+// for common denoms found in both `coins` and `coinsB`. For denoms not common
 // to both `coins` and `coinsB` the minimum is considered to be 0, thus they are
 // not added to the final set.
 func MinSet(coinsA, coinsB DecCoins) DecCoins {

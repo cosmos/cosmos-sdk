@@ -222,30 +222,41 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
+	var resp abci.ResponseBeginBlock
+	var err error
 	// mint new tokens for the previous block
-	mint.BeginBlocker(ctx, app.mintKeeper)
+	err = mint.BeginBlocker(ctx, app.mintKeeper)
+	if err != nil {
+		return resp, err
+	}
 
 	// distribute rewards for the previous block
-	distr.BeginBlocker(ctx, req, app.distrKeeper)
+	err = distr.BeginBlocker(ctx, req, app.distrKeeper)
+	if err != nil {
+		return resp, err
+	}
 
 	// slash anyone who double signed.
 	// NOTE: This should happen after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool,
 	// so as to keep the CanWithdrawInvariant invariant.
 	// TODO: This should really happen at EndBlocker.
-	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
-
-	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
-	}
+	resp.Tags, err = slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+	return resp, err
 }
 
 // application updates every end block
 // nolint: unparam
-func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates, endBlockerTags := staking.EndBlocker(ctx, app.stakingKeeper)
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
+	tags, err := gov.EndBlocker(ctx, app.govKeeper)
+	if err != nil {
+		return abci.ResponseEndBlock{}, err
+	}
+	validatorUpdates, endBlockerTags, err := staking.EndBlocker(ctx, app.stakingKeeper)
+	if err != nil {
+		return abci.ResponseEndBlock{}, err
+	}
 	tags = append(tags, endBlockerTags...)
 
 	if app.assertInvariantsBlockly {
@@ -255,7 +266,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
-	}
+	}, nil
 }
 
 // initialize store from a genesis state

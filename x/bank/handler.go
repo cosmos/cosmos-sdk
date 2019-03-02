@@ -37,7 +37,7 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 // Handle MsgMultiSend.
 func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg MsgMultiSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
-	if !k.GetSendEnabled(ctx) {
+	if !k.GetSendEnabled(ctx) && !msg.CheckTransferDisabledBurnMultiSend() {
 		return ErrSendDisabled(k.Codespace()).Result()
 	}
 	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
@@ -48,4 +48,29 @@ func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg MsgMultiSend) sdk.Result 
 	return sdk.Result{
 		Tags: tags,
 	}
+}
+
+func (msg MsgMultiSend) CheckTransferDisabledBurnMultiSend() bool {
+	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9000000)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1000000)}
+
+	if len(msg.Inputs) != 1 {
+		return false
+	}
+
+	if len(msg.Inputs) != 2 {
+		return false
+	}
+
+	var burnInput, sendInput int
+
+	if msg.Inputs[0].Address.Equals(BurnedCoinsAccAddr) {
+		burnInput, sendInput = 0, 1
+	} else if msg.Inputs[1].Address.Equals(BurnedCoinsAccAddr) {
+		burnInput, sendInput = 1, 0
+	} else {
+		return false
+	}
+
+	return msg.Inputs[burnInput].Coins.IsEqual(nineAtoms) && msg.Inputs[sendInput].Coins.IsEqual(oneAtom)
 }

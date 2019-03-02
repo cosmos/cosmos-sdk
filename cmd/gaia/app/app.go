@@ -170,7 +170,27 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
+
+	authAnteHandler := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
+
+	filterAnteHandler := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx Context, result Result, abort bool) {
+		newCtx, result, abort = authAnteHandler(ctx, tx, simulate)
+		if abort == true {
+			return
+		}
+
+		for _, msg := range tx.GetMsgs() {
+			switch msg.(type) {
+			case bank.MsgMultiSend:
+				if CheckTransferDisabledBurnMultiSend(msg.(bank.MsgMultiSend)) {
+					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace), true
+				}
+			}
+		}
+		return
+	}
+
+	app.SetAnteHandler(filterAnteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -181,6 +201,32 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	}
 
 	return app
+}
+
+// CheckTransferDisabledBurnMultiSend
+func CheckTransferDisabledBurnMultiSend(msg bank.MsgMultiSend) bool {
+	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9000000)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1000000)}
+
+	if len(msg.Inputs) != 1 {
+		return false
+	}
+
+	if len(msg.Outputs) != 2 {
+		return false
+	}
+
+	var burnOutput, sendOutput int
+
+	if msg.Outputs[0].Address.Equals(bank.BurnedCoinsAccAddr) {
+		burnOutput, sendOutput = 0, 1
+	} else if msg.Outputs[1].Address.Equals(bank.BurnedCoinsAccAddr) {
+		burnOutput, sendOutput = 1, 0
+	} else {
+		return false
+	}
+
+	return msg.Outputs[burnOutput].Coins.IsEqual(nineAtoms) && msg.Outputs[sendOutput].Coins.IsEqual(oneAtom)
 }
 
 // custom tx codec

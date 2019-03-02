@@ -7,9 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
+
+// Account to send burned coins to
+var BurnedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("bankBurnedCoins")))
 
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.

@@ -20,7 +20,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal, ok := keeper.GetProposal(ctx, proposalID)
 		if !ok {
-			panic("Endblocker cannot fail to GetProposal")
+			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
 
 		keeper.DeleteProposal(ctx, proposalID)
@@ -48,7 +48,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 		activeProposal, ok := keeper.GetProposal(ctx, proposalID)
 		if !ok {
-			panic("EndBlocker cannot fail to GetProposal")
+			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 

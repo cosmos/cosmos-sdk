@@ -173,7 +173,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	authAnteHandler := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
 
-	filterAnteHandler := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx Context, result Result, abort bool) {
+	filterAnteHandler := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, result sdk.Result, abort bool) {
 		newCtx, result, abort = authAnteHandler(ctx, tx, simulate)
 		if abort == true {
 			return
@@ -183,7 +183,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 			switch msg.(type) {
 			case bank.MsgMultiSend:
 				if CheckTransferDisabledBurnMultiSend(msg.(bank.MsgMultiSend)) {
-					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace), true
+					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 				}
 			}
 		}

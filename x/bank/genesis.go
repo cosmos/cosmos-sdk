@@ -6,25 +6,23 @@ import (
 
 // GenesisState is the bank state that must be provided at genesis.
 type GenesisState struct {
-	SendEnabled bool `json:"send_enabled"`
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(sendEnabled bool) GenesisState {
-	return GenesisState{SendEnabled: sendEnabled}
+func NewGenesisState() GenesisState {
+	return GenesisState{}
 }
 
 // DefaultGenesisState returns a default genesis state
-func DefaultGenesisState() GenesisState { return NewGenesisState(true) }
+func DefaultGenesisState() GenesisState { return NewGenesisState() }
 
 // InitGenesis sets distribution information for genesis.
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
-	keeper.SetSendEnabled(ctx, data.SendEnabled)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-	return NewGenesisState(keeper.GetSendEnabled(ctx))
+	return NewGenesisState()
 }
 
 // ValidateGenesis performs basic validation of bank genesis data returning an

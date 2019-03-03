@@ -57,7 +57,6 @@ func TestKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -139,7 +138,6 @@ func TestSendKeeper(t *testing.T) {
 	paramSpace := input.pk.Subspace(DefaultParamspace)
 	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
 	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -187,7 +185,6 @@ func TestViewKeeper(t *testing.T) {
 	ctx := input.ctx
 	paramSpace := input.pk.Subspace(DefaultParamspace)
 	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 	viewKeeper := NewBaseViewKeeper(input.ak, DefaultCodespace)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -216,7 +213,6 @@ func TestVestingAccountSend(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -250,7 +246,6 @@ func TestVestingAccountReceive(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -284,7 +279,6 @@ func TestDelegateCoins(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 	delCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -321,7 +315,6 @@ func TestUndelegateCoins(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 	delCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))

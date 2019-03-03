@@ -43,6 +43,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	if proposerValidator != nil && !proposerValidator.GetJailed() {
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = feesCollected.Sub(proposerReward)
+	} else if proposerValidator.GetJailed() {
+		logger.Info(fmt.Sprintf("Allocate no proposer reward to jailed validator %s", proposerValidator.GetOperator().String()))
 	} else {
 		// proposer can be unknown if say, the unbonding period is 1 block, so
 		// e.g. a validator undelegates at block X, it's removed entirely by
@@ -61,6 +63,10 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range votes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if validator.GetJailed() {
+			logger.Info(fmt.Sprintf("Allocate no delegation reward to jailed validator %s", validator.GetOperator().String()))
+			continue
+		}
 
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701

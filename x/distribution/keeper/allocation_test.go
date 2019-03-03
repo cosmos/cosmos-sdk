@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -176,4 +177,82 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	k.AllocateTokens(ctx, 31, 31, valConsAddr2, votes)
 
 	require.True(t, k.GetOutstandingRewards(ctx).IsValid())
+}
+
+// As validator update in tendermint is delayed one block, a jailed validator
+// can happen to be the proposer of the next block
+func TestAllocateTokensToJailedValidators(t *testing.T) {
+	ctx, _, k, sk, fck := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
+
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
+	ctx = ctx.WithBlockHeight(1)
+
+	// create validator with 10% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(10, 2), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	powerReduction := sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100).Mul(powerReduction)), staking.Description{Moniker: "node1"}, commission, sdk.OneInt())
+	require.True(t, sh(ctx, msg).IsOK())
+
+	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100).Mul(powerReduction)), staking.Description{Moniker: "node2"}, commission, sdk.OneInt())
+	require.True(t, sh(ctx, msg).IsOK())
+
+	staking.EndBlocker(ctx, sk)
+
+	abciValA := abci.Validator{
+		Address: valConsPk1.Address(),
+		Power:   100,
+	}
+	abciValB := abci.Validator{
+		Address: valConsPk2.Address(),
+		Power:   100,
+	}
+
+	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
+	require.True(t, k.GetOutstandingRewards(ctx).IsZero())
+	require.True(t, k.GetFeePool(ctx).CommunityPool.IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
+	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards.IsZero())
+	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
+
+	// allocate tokens as if both had voted and second was proposer
+	fees := sdk.Coins{
+		{sdk.DefaultBondDenom, sdk.NewInt(100)},
+	}
+	fck.SetCollectedFees(fees)
+	votes := []abci.VoteInfo{
+		{
+			Validator:       abciValA,
+			SignedLastBlock: true,
+		},
+		{
+			Validator:       abciValB,
+			SignedLastBlock: true,
+		},
+	}
+
+	ctx = ctx.WithBlockHeight(2)
+	k.AllocateTokens(ctx, 200, 200, valConsAddr1, votes)
+
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).AmountOf(sdk.DefaultBondDenom).Equal(sdk.NewDecWithPrec(465, 2))) // 4.65stake
+	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.AmountOf(sdk.DefaultBondDenom).Equal(sdk.NewDecWithPrec(4185, 2))) // 41.85stake
+
+	unbondMsg := staking.NewMsgUndelegate(valAccAddr2, valOpAddr2, sdk.NewDec(100).MulInt(powerReduction))
+	require.True(t, sh(ctx, unbondMsg).IsOK())
+
+	// Execute staking endblocker
+	staking.EndBlocker(ctx, sk)
+
+	fck.SetCollectedFees(fees)
+	ctx = ctx.WithBlockHeight(3)
+
+	k.AllocateTokens(ctx, 200, 200, valConsAddr2, votes)
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).AmountOf(sdk.DefaultBondDenom).Equal(sdk.NewDecWithPrec(465, 2)))
+	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 }

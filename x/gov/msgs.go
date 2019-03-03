@@ -22,12 +22,12 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 type MsgSubmitProposal struct {
 	Title          string         `json:"title"`           //  Title of the proposal
 	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   ProposalKind   `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title, description string, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -40,6 +40,10 @@ func NewMsgSubmitProposal(title, description string, proposalType ProposalKind, 
 //nolint
 func (msg MsgSubmitProposal) Route() string { return RouterKey }
 func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
+
+func validProposalType(proposalType string) bool {
+	return proposalType == ProposalTypeText || proposalType == ProposalTypeSoftwareUpgrade
+}
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {

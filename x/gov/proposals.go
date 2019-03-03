@@ -84,6 +84,23 @@ func (tp TextProposal) GetTitle() string           { return tp.Title }
 func (tp TextProposal) GetDescription() string     { return tp.Description }
 func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
 
+// Software Upgrade Proposals
+type SoftwareUpgradeProposal struct {
+	TextProposal
+}
+
+func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradeProposal {
+	return SoftwareUpgradeProposal{
+		TextProposal: NewTextProposal(title, description),
+	}
+}
+
+// Implements Proposal Interface
+var _ ProposalContent = SoftwareUpgradeProposal{}
+
+// nolint
+func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeSoftwareUpgrade }
+
 // ProposalQueue
 type ProposalQueue []uint64
 

@@ -53,7 +53,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -85,7 +85,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{2, 5})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -118,7 +118,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -155,7 +155,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 6})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -191,7 +191,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -230,7 +230,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -269,7 +269,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -308,7 +308,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -347,7 +347,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, valAddrs, []int64{6, 6, 7})
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -388,7 +388,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -433,7 +433,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	delegator1Msg := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -478,7 +478,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	delegator1Msg2 := staking.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -538,7 +538,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -590,7 +590,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	staking.EndBlocker(ctx, sk)
 
-	tp := TextProposal{"Test", "description"}
+	tp := testProposal()
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID

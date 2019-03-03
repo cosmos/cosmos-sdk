@@ -6,3 +6,6 @@ type Handler func(ctx Context, msg Msg) Result
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
+
+// ProposalHandler handles the proposals after is has passed the governance process
+type ProposalHandler func(ctx Context, proposal ProposalContent) Error

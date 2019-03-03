@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// type synonym for ProposalContent
+type ProposalContent = sdk.ProposalContent
+
 // Proposal is a struct used by gov module internally
 // embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
@@ -42,16 +45,6 @@ func (p Proposal) String() string {
 		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime)
 }
 
-// ProposalContent is an interface that has title, description, and proposaltype
-// that the governance module can use to identify them and generate human readable messages
-// ProposalContent can have additional fields, which will handled by ProposalHandlers
-// via type assertion, e.g. parameter change amount in ParameterChangeProposal
-type ProposalContent interface {
-	GetTitle() string
-	GetDescription() string
-	ProposalType() ProposalKind
-}
-
 // Proposals is an array of proposal
 type Proposals []Proposal
 
@@ -68,139 +61,42 @@ func (p Proposals) String() string {
 
 // Text Proposals
 type TextProposal struct {
-	Title       string `json:"title"`       //  Title of the proposal
-	Description string `json:"description"` //  Description of the proposal
+	sdk.ProposalAbstract `json:"proposal_abstract"`
 }
 
 func NewTextProposal(title, description string) TextProposal {
-	return TextProposal{
-		Title:       title,
-		Description: description,
-	}
+	return TextProposal{sdk.NewProposalAbstract(title, description)}
 }
 
 // Implements Proposal Interface
 var _ ProposalContent = TextProposal{}
 
 // nolint
-func (tp TextProposal) GetTitle() string           { return tp.Title }
-func (tp TextProposal) GetDescription() string     { return tp.Description }
-func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
+func (tp TextProposal) ProposalType() string { return ProposalTypeText }
 
 // Software Upgrade Proposals
 type SoftwareUpgradeProposal struct {
-	TextProposal
+	sdk.ProposalAbstract `json:"proposal_abstract"`
 }
 
 func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradeProposal {
-	return SoftwareUpgradeProposal{
-		TextProposal: NewTextProposal(title, description),
-	}
+	return SoftwareUpgradeProposal{sdk.NewProposalAbstract(title, description)}
 }
 
 // Implements Proposal Interface
 var _ ProposalContent = SoftwareUpgradeProposal{}
 
 // nolint
-func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeSoftwareUpgrade }
+func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
 
 // ProposalQueue
 type ProposalQueue []uint64
 
-// ProposalKind
-
-// Type that represents Proposal Type as a byte
-type ProposalKind byte
-
 //nolint
 const (
-	ProposalTypeNil             ProposalKind = 0x00
-	ProposalTypeText            ProposalKind = 0x01
-	ProposalTypeParameterChange ProposalKind = 0x02
-	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
+	ProposalTypeText            string = "Text"
+	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
 )
-
-// String to proposalType byte. Returns 0xff if invalid.
-func ProposalTypeFromString(str string) (ProposalKind, error) {
-	switch str {
-	case "Text":
-		return ProposalTypeText, nil
-	case "ParameterChange":
-		return ProposalTypeParameterChange, nil
-	case "SoftwareUpgrade":
-		return ProposalTypeSoftwareUpgrade, nil
-	default:
-		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
-	}
-}
-
-// is defined ProposalType?
-func validProposalType(pt ProposalKind) bool {
-	if pt == ProposalTypeText ||
-		pt == ProposalTypeParameterChange ||
-		pt == ProposalTypeSoftwareUpgrade {
-		return true
-	}
-	return false
-}
-
-// Marshal needed for protobuf compatibility
-func (pt ProposalKind) Marshal() ([]byte, error) {
-	return []byte{byte(pt)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility
-func (pt *ProposalKind) Unmarshal(data []byte) error {
-	*pt = ProposalKind(data[0])
-	return nil
-}
-
-// Marshals to JSON using string
-func (pt ProposalKind) MarshalJSON() ([]byte, error) {
-	return json.Marshal(pt.String())
-}
-
-// Unmarshals from JSON assuming Bech32 encoding
-func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-
-	bz2, err := ProposalTypeFromString(s)
-	if err != nil {
-		return err
-	}
-	*pt = bz2
-	return nil
-}
-
-// Turns VoteOption byte to String
-func (pt ProposalKind) String() string {
-	switch pt {
-	case ProposalTypeText:
-		return "Text"
-	case ProposalTypeParameterChange:
-		return "ParameterChange"
-	case ProposalTypeSoftwareUpgrade:
-		return "SoftwareUpgrade"
-	default:
-		return ""
-	}
-}
-
-// For Printf / Sprintf, returns bech32 when using %s
-// nolint: errcheck
-func (pt ProposalKind) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 's':
-		s.Write([]byte(pt.String()))
-	default:
-		// TODO: Do this conversion more directly
-		s.Write([]byte(fmt.Sprintf("%v", byte(pt))))
-	}
-}
 
 // ProposalStatus
 

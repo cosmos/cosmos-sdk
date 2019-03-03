@@ -53,7 +53,7 @@ func ErrInvalidDescription(codespace sdk.CodespaceType, errorMsg string) sdk.Err
 	return sdk.NewError(codespace, CodeInvalidDescription, errorMsg)
 }
 
-func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType ProposalKind) sdk.Error {
+func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", proposalType))
 }
 

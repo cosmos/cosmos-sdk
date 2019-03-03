@@ -27,9 +27,9 @@ func NewHandler(keeper Keeper) sdk.Handler {
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 	var content ProposalContent
 	switch msg.ProposalType {
-	case ProposalTypeText:
+	case "Text":
 		content = NewTextProposal(msg.Title, msg.Description)
-	case ProposalTypeSoftwareUpgrade:
+	case "SoftwareUpgrade":
 		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
 	default:
 		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()

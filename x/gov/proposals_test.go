@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// XXX: remove
+/*
 func TestProposalKind_Format(t *testing.T) {
 	typeText, _ := ProposalTypeFromString("Text")
 	tests := []struct {
@@ -22,7 +24,7 @@ func TestProposalKind_Format(t *testing.T) {
 		require.Equal(t, tt.expectedStringOutput, got)
 	}
 }
-
+*/
 func TestProposalStatus_Format(t *testing.T) {
 	statusDepositPeriod, _ := ProposalStatusFromString("DepositPeriod")
 	tests := []struct {

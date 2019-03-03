@@ -64,6 +64,9 @@ type Keeper struct {
 	// The reference to the DelegationSet to get information about delegators
 	ds sdk.DelegationSet
 
+	// Proposal handler
+	handler sdk.ProposalHandler
+
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
 

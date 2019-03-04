@@ -79,6 +79,8 @@ CLI flag.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
 * [\#3716] Update file permissions the client keys directory and contents to `0700`.
 * [\#3791] Ensure proper handling of invalid block maximum gas in the `BaseApp`.
+* [\#3790] Ensure a valid height is provided by `abci.RequestBeginBlock` in
+`BeginBlock`.
 
 ### Tendermint
 

@@ -42,23 +42,17 @@ type msgCreateValidatorJSON struct {
 }
 
 // Default way to create validator. Delegator address and validator address are the same
-func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
+func NewMsgCreateValidator(
+	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
+	description Description, commission CommissionMsg, minSelfDelegation sdk.Int,
+) MsgCreateValidator {
 
-	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission, minSelfDelegation,
-	)
-}
-
-// Creates validator msg by delegator address on behalf of validator address
-func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:       description,
-		DelegatorAddress:  delAddr,
+		DelegatorAddress:  sdk.AccAddress(valAddr),
 		ValidatorAddress:  valAddr,
-		PubKey:            pubkey,
-		Value:             value,
+		PubKey:            pubKey,
+		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
 	}

@@ -19,6 +19,11 @@
 
 ### Gaia
 
+* [\#3789] Update validator creation flow:
+  * Remove `NewMsgCreateValidatorOnBehalfOf` and corresponding business logic
+  * Ensure the validator address equals the delegator address during
+  `MsgCreateValidator#ValidateBasic`
+
 ### SDK
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON

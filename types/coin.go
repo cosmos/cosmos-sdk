@@ -34,7 +34,7 @@ func NewCoin(denom string, amount Int) Coin {
 		panic(fmt.Errorf("negative coin amount: %v", amount))
 	}
 
-	return c
+	return Coin{Denom: denom, Amount: amount}
 }
 
 // NewCoin returns a new coin with a denomination and amount.
@@ -194,7 +194,7 @@ func (coins Coins) Validate(failEmpty bool, failZero bool) error {
 		return nil
 	case 1:
 		if err := validateDenom(coins[0].Denom); err != nil {
-			return false
+			return err
 		}
 		return nil
 	default:
@@ -582,6 +582,7 @@ func parseCoinString(coinStr string) (Coin, error) {
 	amount, ok := NewIntFromString(amountStr)
 	if !ok {
 		return Coin{}, fmt.Errorf("failed to parse coin amount %q", amountStr)
+	}
 
 	if err := validateDenom(denomStr); err != nil {
 		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)

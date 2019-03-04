@@ -36,7 +36,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 // NewDecCoin returns a new coin with a denomination and amount.
 // It will panic if the amount is less than or equal to zero.
 func NewPositiveDecCoin(denom string, amount int64) DecCoin {
-	return NewDecCoin{denom, NewInt(amount))
+	return NewDecCoin(denom, NewInt(amount))
 }
 
 // NewDecCoinFromDec returns a new coin with a denomination and
@@ -448,7 +448,7 @@ func (coins DecCoins) IsValid() bool {
 
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
-			if err := coin.Validate(true); err != nil {
+			if !coin.IsValid() {
 				return false
 			}
 			if coin.Denom <= lowDenom {

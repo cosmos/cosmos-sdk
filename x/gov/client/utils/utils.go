@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/cosmos/cosmos-sdk/x/gov"
+
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {
 	switch option {
@@ -19,11 +21,9 @@ func NormalizeVoteOption(option string) string {
 func NormalizeProposalType(proposalType string) string {
 	switch proposalType {
 	case "Text", "text":
-		return "Text"
-	case "ParameterChange", "parameter_change":
-		return "ParameterChange"
+		return gov.ProposalTypeText
 	case "SoftwareUpgrade", "software_upgrade":
-		return "SoftwareUpgrade"
+		return gov.ProposalTypeSoftwareUpgrade
 	}
 	return ""
 }

@@ -28,6 +28,8 @@ const (
 	appName = "GaiaApp"
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
+
+	atomsToUatoms = 1000000
 )
 
 // default home directories for expected binaries
@@ -208,8 +210,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 // CheckTransferDisabledBurnMultiSend
 func CheckTransferDisabledBurnMultiSend(msg bank.MsgMultiSend) bool {
-	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9000000)}
-	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1000000)}
+	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9*atomsToUatoms)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 10*atomsToUatoms)}
 
 	if len(msg.Inputs) != 1 {
 		return false

@@ -4,7 +4,7 @@ summary: Gaia Daemon # 79 char long summary
 description: |
   This snap provides the Gaia daemon gaiad and the command line
   tool gaiacli.
-grade: devel # must be 'stable' to release into candidate/stable channels
+grade: stable
 confinement: strict
 
 apps:
@@ -13,7 +13,7 @@ apps:
         plugs: [home,network,network-bind]
     gaiacli:
         command: bin/gaiacli
-        plugs: [home,network,network-bind]
+        plugs: [home,network,network-bind,raw-usb]
 
 parts:
   gaia:

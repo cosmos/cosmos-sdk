@@ -9,6 +9,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
@@ -221,4 +223,47 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue = keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
+}
+
+func TestProposalPassedEndblocker(t *testing.T) {
+	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	SortAddresses(addrs)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	keeper.ck.SetSendEnabled(ctx, true)
+	stakingHandler := staking.NewHandler(sk)
+	govHandler := NewHandler(keeper)
+
+	valAddrs := make([]sdk.ValAddress, 2)
+	valAddrs[0], valAddrs[1] = sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
+
+	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
+	staking.EndBlocker(ctx, sk)
+
+	tp := testProposal()
+	proposal, err := keeper.submitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = StatusDepositPeriod
+	keeper.SetProposal(ctx, proposal)
+
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	newDepositMsg := NewMsgDeposit(addrs[0], proposalID, proposalCoins)
+	res := govHandler(ctx, newDepositMsg)
+	require.True(t, res.IsOK())
+	newDepositMsg = NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+	res = govHandler(ctx, newDepositMsg)
+	require.True(t, res.IsOK())
+
+	err = keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
+	require.NoError(t, err)
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
+	require.NoError(t, err)
+
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(keeper.GetVotingParams(ctx).VotingPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
+	restags := EndBlocker(ctx, keeper)
+	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), restags[1])
 }

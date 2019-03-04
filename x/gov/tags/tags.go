@@ -9,6 +9,7 @@ var (
 	ActionProposalDropped  = "proposal-dropped"
 	ActionProposalPassed   = "proposal-passed"
 	ActionProposalRejected = "proposal-rejected"
+	ActionProposalFailed   = "proposal-failed"
 
 	Action            = sdk.TagAction
 	Proposer          = "proposer"
@@ -17,4 +18,5 @@ var (
 	Depositor         = "depositor"
 	Voter             = "voter"
 	ProposalResult    = "proposal-result"
+	ProposalError     = "proposal-error"
 )

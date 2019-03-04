@@ -40,6 +40,9 @@ tags.
 
 ### SDK
 
+* [\#3719](https://github.com/cosmos/cosmos-sdk/issues/3719) DBBackend can now be set at compile time.
+  Defaults: goleveldb. Supported: cleveldb.
+
 ### Tendermint
 
 <!------------------------------- IMPROVEMENTS ------------------------------->

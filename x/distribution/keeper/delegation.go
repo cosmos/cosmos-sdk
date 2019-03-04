@@ -22,7 +22,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	stake := delegation.GetShares().MulTruncate(validator.GetDelegatorShareExRateTruncated())
+	stake := validator.ShareTokensTruncated(delegation.GetShares())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
@@ -64,13 +64,6 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
-	// due to rounding differences due to order of operations, stake calculated
-	// with the F1 distribution mechanism  may be slightly inflated thus we
-	// introduce a correction factor in order to adjust for this inflation.
-	currentStake := del.GetShares().Mul(val.GetDelegatorShareExRate())
-	currentStakeF1 := val.GetTokens().ToDec().MulTruncate(del.GetShares()).QuoTruncate(val.GetDelegatorShares())
-	roundingCorrectionFactor := currentStake.QuoTruncate(currentStakeF1)
-
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
 	// slashes which happened in the first block would have been before this delegation existed,
@@ -86,7 +79,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				if endingPeriod > startingPeriod {
 					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction)).MulTruncate(roundingCorrectionFactor)
+					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
 					startingPeriod = endingPeriod
 				}
 				return false
@@ -97,12 +90,10 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// a stake sanity check - recalculated final stake should be less than or equal to current stake
 	// here we cannot use Equals because stake is truncated when multiplied by slash fractions
 	// we could only use equals if we had arbitrary-precision rationals
+	currentStake := val.ShareTokens(del.GetShares())
 	if stake.GT(currentStake) {
-		fmt.Printf("debug currentStake:     %v\n", currentStake)
-		fmt.Printf("debug currentStakeF1:   %v\n", currentStakeF1)
-		fmt.Printf("debug stake:            %v\n", stake)
 		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
-			del.GetDelegatorAddr(), stake, del.GetShares().Mul(val.GetDelegatorShareExRate())))
+			del.GetDelegatorAddr(), stake, currentStake))
 	}
 
 	// calculate rewards for final period

@@ -70,6 +70,21 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 	require.Equal(t, int64(0), abciVal.Power)
 }
 
+func TestShareTokens(t *testing.T) {
+	validator := Validator{
+		OperatorAddress: addr1,
+		ConsPubKey:      pk1,
+		Status:          sdk.Bonded,
+		Tokens:          sdk.NewInt(100),
+		DelegatorShares: sdk.NewDec(100),
+	}
+	assert.True(sdk.DecEq(t, sdk.NewDec(50), validator.ShareTokens(sdk.NewDec(50))))
+
+	validator.Tokens = sdk.NewInt(50)
+	assert.True(sdk.DecEq(t, sdk.NewDec(25), validator.ShareTokens(sdk.NewDec(50))))
+	assert.True(sdk.DecEq(t, sdk.NewDec(5), validator.ShareTokens(sdk.NewDec(10))))
+}
+
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
@@ -112,10 +127,9 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
-
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
+	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
@@ -125,11 +139,10 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
-
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdk.Unbonding, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
+	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
@@ -139,11 +152,10 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
-
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdk.Unbonded, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
+	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
 // TODO refactor to make simpler like the AddToken tests above
@@ -158,7 +170,6 @@ func TestRemoveDelShares(t *testing.T) {
 	poolA := InitialPool()
 	poolA.NotBondedTokens = sdk.NewInt(10)
 	poolA.BondedTokens = valA.BondedTokens()
-	require.Equal(t, valA.DelegatorShareExRate(), sdk.OneDec())
 
 	// Remove delegator shares
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewDec(10))
@@ -240,9 +251,8 @@ func TestPossibleOverflow(t *testing.T) {
 	newValidator, _, _ := validator.AddTokensFromDel(pool, sdk.NewInt(tokens))
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	require.False(t, newValidator.DelegatorShareExRate().LT(sdk.ZeroDec()),
-		"Applying operation \"%s\" resulted in negative DelegatorShareExRate(): %v",
-		msg, newValidator.DelegatorShareExRate())
+	require.False(t, newValidator.DelegatorShares.IsNegative())
+	require.False(t, newValidator.Tokens.IsNegative())
 }
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {

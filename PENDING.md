@@ -70,6 +70,8 @@ CLI flag.
 * [\#3300] Update the spec-spec, spec file reorg, and TOC updates.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
 * [\#3716] Update file permissions the client keys directory and contents to `0700`.
+* [\#3779] Split `gov.Proposal` type into `Proposal` and `ProposalContent` 
+  where the latter is safe to be handled by external modules
 
 ### Tendermint
 

@@ -185,7 +185,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 				// LCD tests requires this to be commented out
 				// return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 			case bank.MsgMultiSend:
-				if CheckTransferDisabledBurnMultiSend(msg.(bank.MsgMultiSend)) {
+				if !CheckTransferDisabledBurnMultiSend(msg.(bank.MsgMultiSend)) {
 					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 				}
 			}
@@ -214,22 +214,20 @@ func CheckTransferDisabledBurnMultiSend(msg bank.MsgMultiSend) bool {
 	if len(msg.Inputs) != 1 {
 		return false
 	}
-
 	if len(msg.Outputs) != 2 {
 		return false
 	}
 
-	var burnOutput, sendOutput int
-
-	if msg.Outputs[0].Address.Equals(bank.BurnedCoinsAccAddr) {
-		burnOutput, sendOutput = 0, 1
-	} else if msg.Outputs[1].Address.Equals(bank.BurnedCoinsAccAddr) {
-		burnOutput, sendOutput = 1, 0
-	} else {
+	if !msg.Outputs[0].Address.Equals(bank.BurnedCoinsAccAddr) {
 		return false
 	}
-
-	return msg.Outputs[burnOutput].Coins.IsEqual(nineAtoms) && msg.Outputs[sendOutput].Coins.IsEqual(oneAtom)
+	if !msg.Outputs[0].Coins.IsEqual(nineAtoms) {
+		return false
+	}
+	if !msg.Outputs[1].Coins.IsEqual(oneAtom) {
+		return false
+	}
+	return true
 }
 
 // custom tx codec

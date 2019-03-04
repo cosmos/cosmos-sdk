@@ -25,7 +25,16 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	proposal, err := keeper.submitProposal(ctx, NewTextProposal(msg.Title, msg.Description))
+	var content ProposalContent
+	switch msg.ProposalType {
+	case ProposalTypeText:
+		content = NewTextProposal(msg.Title, msg.Description)
+	case ProposalTypeSoftwareUpgrade:
+		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
+	default:
+		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
+	}
+	proposal, err := keeper.submitProposal(ctx, content)
 	if err != nil {
 		return err.Result()
 	}

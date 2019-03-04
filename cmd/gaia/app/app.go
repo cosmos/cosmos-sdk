@@ -187,7 +187,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 				// LCD tests requires this to be commented out
 				// return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 			case bank.MsgMultiSend:
-				if !CheckTransferDisabledBurnMultiSend(msg.(bank.MsgMultiSend)) {
+				if !validateMultiSendTransfersDisabled(msg.(bank.MsgMultiSend)) {
 					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 				}
 			}

@@ -107,7 +107,11 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Commission = msgCreateValJSON.Commission
 	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
-	msg.PubKey = sdk.MustGetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	var err error
+	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	if err != nil {
+		return err
+	}
 	msg.Value = msgCreateValJSON.Value
 	msg.MinSelfDelegation = msgCreateValJSON.MinSelfDelegation
 

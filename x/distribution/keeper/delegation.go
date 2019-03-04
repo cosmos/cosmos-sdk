@@ -111,13 +111,19 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 
 	// end current period and calculate rewards
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
-	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+	rewardsRaw := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, del.GetValidatorAddr())
 
 	// defensive edge case may happen on the very final digits
 	// of the decCoins due to operation order of the distribution mechanism.
 	// TODO log if rewards is reduced in this step
-	rewards = sdk.MinSet(rewards, outstanding)
+	rewards = sdk.MinSet(rewardsRaw, outstanding)
+	if !rewards.Equals(rewardsRaw) {
+		logger := ctx.Logger().With("module", "x/distr")
+		logger.Info(fmt.Sprintf("missing rewards rounding error, delegator %v"+
+			"withdrawing rewards from validator %v, should have received %v, got %v",
+			val.GetOperator(), del.GetDelegatorAddr(), rewardsRaw, rewards))
+	}
 
 	// decrement reference count of starting period
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())

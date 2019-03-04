@@ -296,7 +296,7 @@ func (app *BaseApp) getMaximumBlockGas() uint64 {
 
 	maxGas := app.consensusParams.BlockSize.MaxGas
 	if maxGas < 0 {
-		panic(fmt.Sprintf("invalid block maximum gas: %d", maxGas))
+		return 0
 	}
 
 	return uint64(maxGas)

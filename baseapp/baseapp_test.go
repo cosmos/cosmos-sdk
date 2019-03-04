@@ -1216,3 +1216,16 @@ func TestP2PQuery(t *testing.T) {
 	res = app.Query(idQuery)
 	require.Equal(t, uint32(4), res.Code)
 }
+
+func TestGetMaximumBlockGas(t *testing.T) {
+	app := setupBaseApp(t)
+
+	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+
+	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
+
+	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: -5000000}})
+	require.Panics(t, func() {app.getMaximumBlockGas()})
+}

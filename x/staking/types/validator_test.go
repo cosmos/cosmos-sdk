@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -267,10 +266,8 @@ func TestPossibleOverflow(t *testing.T) {
 		BondedTokens:    poolTokens,
 	}
 	tokens := int64(71)
-	msg := fmt.Sprintf("validator %#v", validator)
 	newValidator, _, _ := validator.AddTokensFromDel(pool, sdk.NewInt(tokens))
 
-	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 	require.False(t, newValidator.DelegatorShares.IsNegative())
 	require.False(t, newValidator.Tokens.IsNegative())
 }

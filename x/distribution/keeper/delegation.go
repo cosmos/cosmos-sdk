@@ -117,8 +117,8 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// defensive edge case may happen on the very final digits
 	// of the decCoins due to operation order of the distribution mechanism.
 	// TODO log if rewards is reduced in this step
-	rewards = sdk.MinSet(rewardsRaw, outstanding)
-	if !rewards.Equals(rewardsRaw) {
+	rewards := sdk.MinSet(rewardsRaw, outstanding)
+	if !rewards.IsEqual(rewardsRaw) {
 		logger := ctx.Logger().With("module", "x/distr")
 		logger.Info(fmt.Sprintf("missing rewards rounding error, delegator %v"+
 			"withdrawing rewards from validator %v, should have received %v, got %v",

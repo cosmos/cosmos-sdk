@@ -349,7 +349,7 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
 
 	// calculate the shares to issue
-	issuedShares := sdk.Dec{}
+	var issuedShares sdk.Dec
 	if v.DelegatorShares.IsZero() {
 		// the first delegation to a validator sets the exchange rate to one
 		issuedShares = amount.ToDec()

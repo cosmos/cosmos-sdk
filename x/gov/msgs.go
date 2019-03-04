@@ -11,9 +11,6 @@ const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
 	TypeMsgSubmitProposal = "submit_proposal"
-
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
 )
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}

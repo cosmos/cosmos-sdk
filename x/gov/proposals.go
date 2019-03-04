@@ -72,7 +72,8 @@ func NewTextProposal(title, description string) TextProposal {
 var _ ProposalContent = TextProposal{}
 
 // nolint
-func (tp TextProposal) ProposalType() string { return ProposalTypeText }
+func (tp TextProposal) ProposalRoute() string { return RouterKey }
+func (tp TextProposal) ProposalType() string  { return ProposalTypeText }
 
 // Software Upgrade Proposals
 type SoftwareUpgradeProposal struct {
@@ -87,7 +88,9 @@ func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradePropos
 var _ ProposalContent = SoftwareUpgradeProposal{}
 
 // nolint
-func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
+
+func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
+func (sup SoftwareUpgradeProposal) ProposalType() string  { return ProposalTypeSoftwareUpgrade }
 
 // ProposalQueue
 type ProposalQueue []uint64

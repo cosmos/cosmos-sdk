@@ -27,9 +27,9 @@ func NewHandler(keeper Keeper) sdk.Handler {
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 	var content ProposalContent
 	switch msg.ProposalType {
-	case "Text":
+	case ProposalTypeText:
 		content = NewTextProposal(msg.Title, msg.Description)
-	case "SoftwareUpgrade":
+	case ProposalTypeSoftwareUpgrade:
 		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
 	default:
 		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
@@ -93,5 +93,16 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 			tags.Voter, msg.Voter.String(),
 			tags.ProposalID, fmt.Sprintf("%d", msg.ProposalID),
 		),
+	}
+}
+
+func ProposalHandler(ctx sdk.Context, p sdk.ProposalContent) sdk.Error {
+	switch p.(type) {
+	case TextProposal, SoftwareUpgradeProposal:
+		// Both proposal type does not effect on the state
+		return nil
+	default:
+		// XXX
+		return nil
 	}
 }

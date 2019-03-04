@@ -48,6 +48,7 @@ func ParamKeyTable() params.KeyTable {
 }
 
 // Governance Keeper
+// Not safe to be held by other keepers, exposes Router().
 type Keeper struct {
 	// The reference to the Param Keeper to get and set Global Params
 	paramsKeeper params.Keeper
@@ -64,8 +65,8 @@ type Keeper struct {
 	// The reference to the DelegationSet to get information about delegators
 	ds sdk.DelegationSet
 
-	// Proposal handler
-	handler sdk.ProposalHandler
+	// Proposal router
+	router Router
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -91,10 +92,15 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
 		ds:           ds,
+		router:       NewRouter(),
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
 		codespace:    codespace,
 	}
+}
+
+func (keeper Keeper) Router() Router {
+	return keeper.router
 }
 
 // Proposals
@@ -372,6 +378,7 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 // Adds or updates a deposit of a specific depositor on a specific proposal
 // Activates voting period when appropriate
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
+
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
@@ -396,7 +403,9 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
+
 	if proposal.Status == StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
+
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}

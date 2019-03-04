@@ -18,6 +18,8 @@ type ProposalChange struct {
 
 var _ sdk.ProposalContent = ProposalChange{}
 
-func (pc ProposalChange) ProposalType() string { return ProposalTypeParameterChange }
+func (pc ProposalChange) ProposalRoute() string { return RouterKey }
+func (pc ProposalChange) ProposalType() string  { return ProposalTypeParameterChange }
 
+const RouterKey = "params"
 const ProposalTypeParameterChange = "ParameterChange"

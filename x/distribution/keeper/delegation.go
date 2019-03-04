@@ -69,7 +69,12 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// introduce a correction factor in order to adjust for this inflation.
 	currentStake := del.GetShares().Mul(val.GetDelegatorShareExRate())
 	currentStakeF1 := val.GetTokens().ToDec().MulTruncate(del.GetShares()).QuoTruncate(val.GetDelegatorShares())
-	roundingCorrectionFactor := currentStake.QuoTruncate(currentStakeF1)
+	var roundingCorrectionFactor sdk.Dec
+	if currentStakeF1.IsZero() {
+		roundingCorrectionFactor = sdk.OneDec()
+	} else {
+		roundingCorrectionFactor = currentStake.QuoTruncate(currentStakeF1)
+	}
 
 	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...

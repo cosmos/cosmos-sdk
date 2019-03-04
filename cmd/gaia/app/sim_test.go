@@ -161,6 +161,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			VotingPeriod: vp,
 		},
 		TallyParams: gov.TallyParams{
+			Quorum:    sdk.NewDecWithPrec(334, 3),
 			Threshold: sdk.NewDecWithPrec(5, 1),
 			Veto:      sdk.NewDecWithPrec(334, 3),
 		},

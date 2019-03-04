@@ -99,12 +99,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
-			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
-			if err != nil {
-				return err
-			}
-
-			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
+			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposal.Type, from, amount)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

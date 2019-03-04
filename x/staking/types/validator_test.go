@@ -208,6 +208,26 @@ func TestRemoveDelShares(t *testing.T) {
 		pool.NotBondedTokens.Add(pool.BondedTokens)))
 }
 
+func TestAddTokensFromDel(t *testing.T) {
+	val := NewValidator(addr1, pk1, Description{})
+	pool := InitialPool()
+	pool.NotBondedTokens = sdk.NewInt(10)
+
+	val, pool, shares := val.AddTokensFromDel(pool, sdk.NewInt(6))
+	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
+	require.True(sdk.DecEq(t, sdk.NewDec(6), val.DelegatorShares))
+	require.True(sdk.IntEq(t, sdk.NewInt(6), val.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(0), pool.BondedTokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), pool.NotBondedTokens))
+
+	val, pool, shares = val.AddTokensFromDel(pool, sdk.NewInt(3))
+	require.True(sdk.DecEq(t, sdk.NewDec(3), shares))
+	require.True(sdk.DecEq(t, sdk.NewDec(9), val.DelegatorShares))
+	require.True(sdk.IntEq(t, sdk.NewInt(9), val.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(0), pool.BondedTokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), pool.NotBondedTokens))
+}
+
 func TestUpdateStatus(t *testing.T) {
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(100)

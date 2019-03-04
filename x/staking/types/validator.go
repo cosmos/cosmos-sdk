@@ -354,7 +354,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		// the first delegation to a validator sets the exchange rate to one
 		issuedShares = amount.ToDec()
 	} else {
-		issuedShares = v.DelegatorShares.MulInt(v.Tokens).QuoInt(amount)
+		issuedShares = v.DelegatorShares.MulInt(amount).QuoInt(v.Tokens)
 	}
 
 	if v.Status == sdk.Bonded {

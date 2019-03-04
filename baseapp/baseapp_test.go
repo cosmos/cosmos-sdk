@@ -296,6 +296,7 @@ func TestInitChainer(t *testing.T) {
 	// stores are mounted and private members are set - sealing baseapp
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
+	require.Equal(t, int64(0), app.LastBlockHeight())
 
 	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 
@@ -308,6 +309,7 @@ func TestInitChainer(t *testing.T) {
 
 	app.Commit()
 	res = app.Query(query)
+	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, res.Value)
 
 	// reload app
@@ -316,14 +318,17 @@ func TestInitChainer(t *testing.T) {
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
+	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
 
 	// commit and ensure we can still query
-	app.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
+
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
 }
@@ -514,7 +519,6 @@ func TestCheckTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	nTxs := int64(5)
-
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
@@ -567,16 +571,22 @@ func TestDeliverTx(t *testing.T) {
 
 	nBlocks := 3
 	txPerHeight := 5
+
 	for blockN := 0; blockN < nBlocks; blockN++ {
-		app.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
+
 			txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
 			require.NoError(t, err)
+
 			res := app.DeliverTx(txBytes)
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 		}
+
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
@@ -692,7 +702,8 @@ func TestSimulateTx(t *testing.T) {
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
-		app.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: count}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		tx := newTxCounter(count, count)
 		txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

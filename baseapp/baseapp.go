@@ -517,12 +517,29 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	}
 }
 
+func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
+	if req.Header.Height < 0 {
+		return fmt.Errorf("invalid height: %d", req.Header.Height)
+	}
+
+	prevHeight := app.LastBlockHeight()
+	if prevHeight != 0 && req.Header.Height != prevHeight+1 {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
+	}
+
+	return nil
+}
+
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
+	}
+
+	if err := app.validateHeight(req); err != nil {
+		panic(err)
 	}
 
 	// Initialize the DeliverTx state. If this is the first block, it should

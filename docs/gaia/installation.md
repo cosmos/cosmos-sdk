@@ -59,6 +59,38 @@ Build tags indicate special features that have been enabled in the binary.
 | netgo     | Name resolution will use pure Go code           |
 | ledger    | Ledger devices are supported (hardware wallets) |
 
+### Install binary distribution via snap (Linux only)
+
+Gaia can be installed on various GNU/Linux distributions from the [Snapcraft.io](https://snapcraft.io/gaia) store:
+
+```bash
+$ sudo snap install gaia
+```
+
+Development builds are available through the `edge` channel:
+
+```bash
+$ sudo snap install --edge gaia
+```
+
+::: tip
+At the time of writing, only the following [architectures are supported](https://build.snapcraft.io/user/cosmos/cosmos-sdk): `amd64` `i386` `arm64` `armhf` `ppc64el` `s390x`.
+:::
+
+`snap` installs Gaia binaries as `gaia.gaiad` and `gaia.gaiacli`. It is recommended to create commands aliases for the user's convenience once the package is installed:
+
+```
+$ sudo snap alias gaia.gaiad gaiad
+$ sudo snap alias gaia.gaiacli gaiacli
+```
+
+::: warning
+Note that the binaries provided by the snap package save their data into **$HOME/snap/gaia/** instead of **$HOME**.
+:::
+
+Please refer to [Snap documentation](https://docs.snapcraft.io/installing-snapd/6735) for specific information on how to install `snap` on your distribution.
+
+
 ### Next
 
 Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

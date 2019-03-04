@@ -29,19 +29,21 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 
 		// remainder to community pool
 		feePool := h.k.GetFeePool(ctx)
-		feePool.CommunityPool = feePool.CommunityPool.Plus(remainder)
+		feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
 		h.k.SetFeePool(ctx, feePool)
 
 		// update outstanding
 		outstanding := h.k.GetOutstandingRewards(ctx)
-		h.k.SetOutstandingRewards(ctx, outstanding.Minus(commission))
+		h.k.SetOutstandingRewards(ctx, outstanding.Sub(commission))
 
 		// add to validator account
-		accAddr := sdk.AccAddress(valAddr)
-		withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
+		if !coins.IsZero() {
+			accAddr := sdk.AccAddress(valAddr)
+			withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
-		if _, _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-			panic(err)
+			if _, _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+				panic(err)
+			}
 		}
 	}
 	// remove commission record

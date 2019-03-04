@@ -62,53 +62,53 @@ func (p IBCPacket) ValidateBasic() sdk.Error {
 }
 
 // ----------------------------------
-// IBCTransferMsg
+// MsgIBCTransfer
 
 // nolint - TODO rename to TransferMsg as folks will reference with ibc.TransferMsg
-// IBCTransferMsg defines how another module can send an IBCPacket.
-type IBCTransferMsg struct {
+// MsgIBCTransfer defines how another module can send an IBCPacket.
+type MsgIBCTransfer struct {
 	IBCPacket
 }
 
 // nolint
-func (msg IBCTransferMsg) Route() string { return "ibc" }
-func (msg IBCTransferMsg) Type() string  { return "transfer" }
+func (msg MsgIBCTransfer) Route() string { return "ibc" }
+func (msg MsgIBCTransfer) Type() string  { return "transfer" }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.SrcAddr} }
+func (msg MsgIBCTransfer) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.SrcAddr} }
 
 // get the sign bytes for ibc transfer message
-func (msg IBCTransferMsg) GetSignBytes() []byte {
+func (msg MsgIBCTransfer) GetSignBytes() []byte {
 	return msg.IBCPacket.GetSignBytes()
 }
 
 // validate ibc transfer message
-func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
+func (msg MsgIBCTransfer) ValidateBasic() sdk.Error {
 	return msg.IBCPacket.ValidateBasic()
 }
 
 // ----------------------------------
-// IBCReceiveMsg
+// MsgIBCReceive
 
 // nolint - TODO rename to ReceiveMsg as folks will reference with ibc.ReceiveMsg
-// IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
+// MsgIBCReceive defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
-type IBCReceiveMsg struct {
+type MsgIBCReceive struct {
 	IBCPacket
 	Relayer  sdk.AccAddress
 	Sequence uint64
 }
 
 // nolint
-func (msg IBCReceiveMsg) Route() string            { return "ibc" }
-func (msg IBCReceiveMsg) Type() string             { return "receive" }
-func (msg IBCReceiveMsg) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
+func (msg MsgIBCReceive) Route() string            { return "ibc" }
+func (msg MsgIBCReceive) Type() string             { return "receive" }
+func (msg MsgIBCReceive) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCReceiveMsg) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Relayer} }
+func (msg MsgIBCReceive) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Relayer} }
 
 // get the sign bytes for ibc receive message
-func (msg IBCReceiveMsg) GetSignBytes() []byte {
+func (msg MsgIBCReceive) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
 		IBCPacket json.RawMessage
 		Relayer   sdk.AccAddress

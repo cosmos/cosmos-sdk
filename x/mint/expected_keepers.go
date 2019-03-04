@@ -6,7 +6,7 @@ import (
 
 // expected staking keeper
 type StakingKeeper interface {
-	TotalPower(ctx sdk.Context) sdk.Int
+	TotalTokens(ctx sdk.Context) sdk.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
 	InflateSupply(ctx sdk.Context, newTokens sdk.Int)
 }

@@ -46,7 +46,7 @@ var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewIn
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
 func TokensToTendermintPower(tokens Int) int64 {
-	return (tokens.Div(PowerReduction)).Int64()
+	return (tokens.Quo(PowerReduction)).Int64()
 }
 
 // TokensFromTendermintPower - convert input power to tokens
@@ -100,7 +100,8 @@ type ValidatorSet interface {
 
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalPower(Context) Int                             // total power of the validator set
+	TotalBondedTokens(Context) Int                      // total bonded tokens within the validator set
+	TotalTokens(Context) Int                            // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)

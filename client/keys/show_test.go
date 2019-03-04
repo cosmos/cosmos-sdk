@@ -3,29 +3,28 @@ package keys
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
-
-	tmp := multiSigKey{
-		name: "myMultisig",
-		key:  tmpKey1.PubKey(),
-	}
+	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
+	tmp := keys.NewMultiInfo("myMultisig", pk)
 
 	assert.Equal(t, "myMultisig", tmp.GetName())
-	assert.Equal(t, keys.TypeLocal, tmp.GetType())
-	assert.Equal(t, "015ABFFB09DB738A45745A91E8C401423ECE4016", tmp.GetPubKey().Address().String())
-	assert.Equal(t, "cosmos1q9dtl7cfmdec53t5t2g733qpgglvusqk6xdntl", tmp.GetAddress().String())
+	assert.Equal(t, keys.TypeMulti, tmp.GetType())
+	assert.Equal(t, "79BF2B5B418A85329EC2149D1854D443F56F5A9F", tmp.GetPubKey().Address().String())
+	assert.Equal(t, "cosmos10xljkk6p32zn98kzzjw3s4x5g06k7k5lz6flcv", tmp.GetAddress().String())
 }
 
 func Test_showKeysCmd(t *testing.T) {
@@ -64,20 +63,35 @@ func Test_runShowCmd(t *testing.T) {
 	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	err = runShowCmd(cmd, []string{fakeKeyName1})
 	assert.NoError(t, err)
 
 	// Now try multisig key - set bech to acc
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
-	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
+
+	// Now try multisig key - set bech to acc + threshold=2
+	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(FlagDevice, true)
+	viper.Set(flagMultiSigThreshold, 2)
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
+
+	viper.Set(FlagBechPrefix, "val")
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
+
+	viper.Set(FlagPublicKey, true)
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
 
 	// TODO: Capture stdout and compare
 }
@@ -119,9 +133,9 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{"acc"}, Bech32KeyOutput, false},
-		{"val", args{"val"}, Bech32ValKeyOutput, false},
-		{"cons", args{"cons"}, Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keys.Bech32KeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, keys.Bech32ValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, keys.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

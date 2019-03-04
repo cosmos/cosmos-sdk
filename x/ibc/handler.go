@@ -7,9 +7,9 @@ import (
 func NewHandler(ibcm Mapper, ck BankKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case IBCTransferMsg:
+		case MsgIBCTransfer:
 			return handleIBCTransferMsg(ctx, ibcm, ck, msg)
-		case IBCReceiveMsg:
+		case MsgIBCReceive:
 			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
 		default:
 			errMsg := "Unrecognized IBC Msg type: " + msg.Type()
@@ -18,8 +18,8 @@ func NewHandler(ibcm Mapper, ck BankKeeper) sdk.Handler {
 	}
 }
 
-// IBCTransferMsg deducts coins from the account and creates an egress IBC packet.
-func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCTransferMsg) sdk.Result {
+// MsgIBCTransfer deducts coins from the account and creates an egress IBC packet.
+func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg MsgIBCTransfer) sdk.Result {
 	packet := msg.IBCPacket
 
 	_, _, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
@@ -35,8 +35,8 @@ func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCTr
 	return sdk.Result{}
 }
 
-// IBCReceiveMsg adds coins to the destination address and creates an ingress IBC packet.
-func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCReceiveMsg) sdk.Result {
+// MsgIBCReceive adds coins to the destination address and creates an ingress IBC packet.
+func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg MsgIBCReceive) sdk.Result {
 	packet := msg.IBCPacket
 
 	seq := ibcm.GetIngressSequence(ctx, packet.SrcChain)
@@ -44,6 +44,7 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg IBCRec
 		return ErrInvalidSequence(ibcm.codespace).Result()
 	}
 
+	// XXX Check that packet.Coins is valid and positive (nonzero)
 	_, _, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
 	if err != nil {
 		return err.Result()

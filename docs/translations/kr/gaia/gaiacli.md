@@ -31,7 +31,7 @@ gaiacli config chain-id gaia-9004
 키의 형태는 총 3개가 있습니다:
 
 - `cosmos`
-  - `gaiacli keyts add`로 생성되는 계정 키
+  - `gaiacli keys add`로 생성되는 계정 키
   - 자금을 받는데 사용
   - 예시) `cosmos15h6vd5f0wqps26zjlwrc6chah08ryu4hzzdwhc`
 
@@ -55,10 +55,10 @@ gaiacli config chain-id gaia-9004
 새로운 _secp256k1_ 키를 생성하기 위해서는:
 
 ```bash
-gaiacli keys add <account_name>
+gaiacli keys add <account_name(계정/키 이름)>
 ```
 
-새로운 키를 생성하는 과정에서 나오는 _시트키(seed phrase)_ 는 안전하게 저장하시길 바랍니다. 시드키는 다음과 같은 명령을 이용해 잊어버린 퍼블릭/프라이빗 키를 복구하는데 이용됩니다:
+새로운 키를 생성하는 과정에서 나오는 _시트키(seed phrase)_ 는 안전하게 저장하시길 바랍니다. 시드키는 다음과 같은 명령을 실행하여 잊어버린 퍼블릭/프라이빗 키를 복구하는데 이용됩니다:
 
 ```bash
 gaiacli keys add --recover
@@ -67,7 +67,7 @@ gaiacli keys add --recover
 이제 프라이빗 키를 확인하고 `<account_name>`을 찾으면 됩니다:
 
 ```bash
-gaiacli keys show <account_name>
+gaiacli keys show <account_name(계정/키 이름)>
 ```
 
 검증인 운영자 주소는 다음과 같이 확인하시고:
@@ -82,16 +82,16 @@ gaiacli keys show <account_name> --bech=val
 gaiacli keys list
 ```
 
-본인 노드의 검증인 pubkey는 다음과 같이 확인할 수 있습니다:
+본인이 연결된 노드의 검증인 pubkey는 다음과 같이 확인할 수 있습니다:
 
 ```bash
 gaiad tendermint show-validator
 ```
 
-위 키는 텐더민트 사이닝 키이며, 위임 트랜잭션에서 이용되는 오퍼레이터 키가 아니라는 점을 참고하세요.
+위 키는 텐더민트 사이닝 키이며, 위임 트랜잭션에서 이용되는 '오퍼레이터 키'가 아니라는 점을 참고하세요.
 
 ::: danger 경고
-다수의 키에 동일한 passphrase를 이용하는 것을 추천하지 않습니다. 텐더민트 팀과 인터체인 재단은 자산 손실에 대한 책임을 지지 않습니다.
+다수의 키에 동일한 passphrase를 사용하는 것을 추천하지 않습니다. 텐더민트 팀과 인터체인 재단은 자산 손실에 대한 책임을 지지 않습니다.
 :::
 
 #### 멀티시그 퍼블릭 키 생성하기
@@ -104,7 +104,7 @@ gaiacli keys add --multisig=name1,name2,name3[...] --multisig-threshold=K new_ke
 
 여기서 `K`는 트랜잭션이 승인되기 위해서 필요한 최소의 키 개수입니다.
 
-`--multisig` 플래그는 로컬 데이터베이스에 `new_key_name`으로 저장될 멀티시그 퍼블릭 키를 생성할때 사용되는 다수의 퍼블릭 키들의 값을 뜻합니다. `--multisig` 값에 포함될 키들은 로컬 데이터베이스에 존재하는 상태여야 합니다. `--nosort` 플래그가 정의된지 않은 경우, 멀티시그 조합에 필요한 키들이 입력되는 순서는 무관합니다. 예를 들어 다음 두 명령어는 두개의 동일한 멀티시그 퍼블릭 키를 생성합니다:
+`--multisig` 플래그는 로컬 데이터베이스에 `new_key_name`으로 저장될 멀티시그 퍼블릭 키를 생성할때 사용되는 다수의 퍼블릭 키들의 값을 뜻합니다. `--multisig` 값에 포함될 각 키는 로컬 데이터베이스에 존재해야 합니다. `--nosort` 플래그가 정의된지 않은 경우, 멀티시그 조합에 필요한 키들이 입력되는 순서는 무관합니다. 예를 들어 다음 두 명령어는 두개의 동일한 멀티시그 퍼블릭 키를 생성합니다:
 
 ```bash
 gaiacli keys add --multisig=foo,bar,baz --multisig-threshold=2 multisig_address
@@ -117,11 +117,11 @@ gaiacli keys add --multisig=baz,foo,bar --multisig-threshold=2 multisig_address
 gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 ```
 
-멀티시그 트랜잭션를 생성, 사인, 전파하는 방법은 [멀티시그 트랜잭션](#멀티시그-트랜잭션) 항목을 참고하세요.
+멀티시그 트랜잭션를 생성, 서명, 전파하는 방법은 [멀티시그 트랜잭션](#멀티시그-트랜잭션) 항목을 참고하세요.
 
 ### 수수료와 가스
 
-각 트랜잭션은 수수료(fee)를 지정하거나 가스 가격(gas price)을 지정할 수 있지만, 두 값을 함께 지정하는 것은 불가능합니다. 대다수의 유저는 지정된 비용만을 수수료로 사용하기 위해 수수료(fee)를 지정하는 방식으로 트랜잭션을 발생할 것으로 예상됩니다.
+각 트랜잭션은 수수료(fee)를 지정하거나 가스 가격(gas price)을 지정할 수 있지만, 두 값을 함께 지정하는 것은 불가능합니다. 대다수의 유저는 본인이 지불하고 싶은 수수료 금액을 지정할 것으로 예상되며, 이 경우에는 수수료(fee)를 지정하는 방식으로 트랜잭션을 생성하면 됩니다.
 
 각 검증인은 최소 가스 가격(minimum gas price)를 (다수 토큰 사용 가능) 설정할 수 있으며 이 값을 기준으로 `CheckTx` 단계에서 특정 트랜잭션을 블록에 포함시킬지 확인합니다. `gasPrices >= minGasPrices`일때 검증인은 트랜잭션을 처리합니다. 참고로 트랜잭션 전파시 검증인이 요구하는 토큰 중 하나를 수수료 지불 토큰으로 사용하셔야 합니다.
 
@@ -150,7 +150,7 @@ gaiacli tx send ... --gas-prices=0.000001stake
 주소에 토큰을 받으신 후 잔고를 확인하시려면 다음 명령어를 입력하시면 됩니다:
 
 ```bash
-gaiacli query account <account_cosmos>
+gaiacli query account <account_cosmos(코스모스 주소)>
 ```
 
 ::: warning 참고
@@ -162,9 +162,9 @@ gaiacli query account <account_cosmos>
 한 계정에서 다른 계정으로 토큰/코인을 전송하기 위해서는 다음 명령어를 이용하시면 됩니다:
 
 ```bash
-gaiacli tx send <destination_cosmos> 10faucetToken \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
+gaiacli tx send <destination_cosmos(수신자 코스모스 주소)> 10faucetToken \
+  --chain-id=<chain_id(체인 아이디)> \
+  --from=<key_name(보낼 키/계정 이름)> \
 ```
 
 ::: warning 참고
@@ -172,37 +172,37 @@ gaiacli tx send <destination_cosmos> 10faucetToken \
 :::
 
 ::: tip 참고
-해당 트랜잭션이 사용하는 가스 값의 최대치를 설정하기 원하시면 `--gas` 플래그를 이용하세요. 만약 `--gas=auto`를 이용하시는 경우, 트랜잭션이 실행되기 전에 가스 서플라이가 자동으로 예측됩니다. 예측된 가스 값과 실제 트랜잭션이 일어나는 사이에 블록체인 상태가 변경될 수 있으며, 기존 예측 수량에서 값이 변경이 될 수 있다는 점을 유의하세요. 변경 값은 `--gas-adjustment` 플래그를 이용해 설정하실 수 있으며 기본 값은 1.0입니다.
+해당 트랜잭션이 사용할 가스에 한도를 설정하기 원하시면 `--gas` 플래그를 이용하세요. 만약 `--gas=auto`를 이용하시는 경우, 트랜잭션이 실행되기 전에 가스 서플라이가 자동으로 예측됩니다. 예측된 가스 값과 실제 트랜잭션이 일어나는 사이에 블록체인 상태가 변경될 수 있으며, 기존 예측 수량에서 값이 변경이 될 수 있다는 점을 유의하십시오. 변경 값은 `--gas-adjustment` 플래그를 이용해 설정하실 수 있으며 기본 값은 1.0입니다.
 :::
 
 이제 토큰을 전송한 계정과 토큰을 받은 계정의 잔고를 확인합니다:
 
 ```bash
-gaiacli query account <account_cosmos>
-gaiacli query account <destination_cosmos>
+gaiacli query account <account_cosmos(보낸 코스모스 계정 주소)>
+gaiacli query account <destination_cosmos(수신자 코스모스 주소)>
 ```
 
-특정 블록에서의 잔고를 확인하고 싶으시다면 `--block` 플래그를 사용하실 수 있습니다:
+특정 블록 높의에서의 잔고를 확인하고 싶으시다면 `--block` 플래그를 사용하실 수 있습니다:
 
 ```bash
-gaiacli query account <account_cosmos> --block=<block_height>
+gaiacli query account <account_cosmos(코스모스 코스모스 주소)> --block=<block_height(블록 높이)>
 ```
 
 트랜잭션을 실제 전파하지 않고 시뮬레이션을 하시려면 명령어 뒤에 `--dry-run` 플래그를 추가하세요:
 
 ```bash
-gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
+gaiacli tx send <destination_cosmosaccaddr(받는이 계정 주소)> 10faucetToken \
+  --chain-id=<chain_id(체인아이디)> \
+  --from=<key_name(보내는 키/계정 이름)> \
   --dry-run
 ```
 
 또한 트랜잭션을 빌드한 후 해당 트랜잭션을 JSON 포맷으로 STDOUT에 프린트 하시기를 원하면 `--generate-only`를 명령어에 추가하시면 됩니다:
 
 ```bash
-gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
+gaiacli tx send <destination_cosmosaccaddr(받는이 코스모스 주소)> 10faucetToken \
+  --chain-id=<chain_id(체인 아이디)> \
+  --from=<key_name(보내는 키/계정 이름)> \
   --generate-only > unsignedSendTx.json
 ```
 
@@ -214,8 +214,8 @@ gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
 
 ```bash
 gaiacli tx sign \
-  --chain-id=<chain_id> \
-  --from=<key_name>
+  --chain-id=<chain_id(체인 아이디)> \
+  --from=<key_name(보내는 키/계정 이름)>
   unsignedSendTx.json > signedSendTx.json
 ```
 
@@ -237,12 +237,12 @@ gaiacli tx broadcast --node=<node> signedSendTx.json
 
 트랜잭션 검색 명령을 이용하여 모든 트랜잭션에 추가되는 특정 `tags` 세트를 검색할 수 있습니다.
 
-각 태그의 키-값 페어는 `<tag>:<value>` 형태로 이루어집니다. 더 상세한 검색을 원하실 경우 `&` 를 사용하여 태그를 추가할 수 있습니다.
+각 태그의 키-값 페어는 `<tag(태그)>:<value(값)>` 형태로 이루어집니다. 더 상세한 검색을 원하실 경우 `&` 를 사용하여 태그를 추가할 수 있습니다.
 
 `tag`를 이용한 트랜잭션 조회는 다음과 같이 합니다:
 
 ```bash
-gaiacli query txs --tags='<tag>:<value>'
+gaiacli query txs --tags='<tag(태그)>:<value(값)>'
 ```
 
 다수의 `tags`를 이용하실 경우:
@@ -254,7 +254,7 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 페이지네이션은 `page`와 `limit` 값으로 지원됩니다.
 
 ```bash
-gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
+gaiacli query txs --tags='<tag(태그)>:<value(값)>' --page=1 --limit=20
 ```
 
 ::: tip 참고
@@ -286,7 +286,7 @@ gaiacli query tx [hash]
 제일링 된 검증인을 언제일 하기 위해서는:
 
 ```bash
-gaiacli tx slashing unjail --from <validator-operator-addr>
+gaiacli tx slashing unjail --from <validator-operator-addr(검증인 오퍼레이터 주소)>
 ```
 
 #### 서명 정보
@@ -294,7 +294,7 @@ gaiacli tx slashing unjail --from <validator-operator-addr>
 특정 검증인의 서명 정보를 확인하기 위해서는:
 
 ```bash
-gaiacli query slashing signing-info <validator-pubkey>
+gaiacli query slashing signing-info <validator-pubkey(검증인 pubkey)>
 ```
 
 #### 슬래싱 파라미터 조회
@@ -325,7 +325,7 @@ gaiacli query staking validators
 특정 검증인에 대한 정보를 원하실 경우 다음 명령을 실행하세요:
 
 ```bash
-gaiacli query staking validator <account_cosmosval>
+gaiacli query staking validator <account_cosmosval(cosmosval 계정)>
 ```
 
 #### 토큰 본딩하기
@@ -336,9 +336,9 @@ gaiacli query staking validator <account_cosmosval>
 ```bash
 gaiacli tx staking delegate \
   --amount=10steak \
-  --validator=<validator> \
-  --from=<key_name> \
-  --chain-id=<chain_id>
+  --validator=<validator(검증인 주소)> \
+  --from=<key_name(트랜잭션을 발생할 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 `<validator>` 는 검증 대상 검증인의 운영자 주소입니다. 로컬 테스트넷을 운영하시는 경우, 다음 명령어로 관련 주소를 확인하실 수 있습니다:
@@ -361,14 +361,14 @@ gaiacli keys show [name] --bech val
 위임 요청을 검증인에게 전송한 경우, 관련 정보를 다음 명령을 통해 조회하실 수 있습니다:
 
 ```bash
-gaiacli query staking delegation <delegator_addr> <validator_addr>
+gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)> <validator_addr(검증인 주소)>
 
 ```
 
 만약 특정 검증인에 대한 모든 위임 상태를 확인하고 싶으실 경우 다음 명령을 이용하세요:
 
 ```bash
-gaiacli query staking delegation <delegator_addr>
+gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 ```
 
 과거 위임 기록에 대해서는 `--height` 플래그를 추가 하셔서 해당 블록 높이에 대한 기록을 조회하실 수 있습니다.
@@ -380,10 +380,10 @@ gaiacli query staking delegation <delegator_addr>
 
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval> \
+  --validator=<account_cosmosval(검증인 cosmosval 주소)> \
   --shares-fraction=0.5 \
-  --from=<key_name> \
-  --chain-id=<chain_id>
+  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 언본딩은 언본딩 기간이 끝나는 대로 완료됩니다.
@@ -393,19 +393,19 @@ gaiacli tx staking unbond \
 언본딩 절차를 시작하신 후 관련 정보를 조회하는 방법은 다음과 같습니다:
 
 ```bash
-gaiacli query staking unbonding-delegation <delegator_addr> <validator_addr>
+gaiacli query staking unbonding-delegation <delegator_addr(위임자 주소)> <validator_addr(검증인 주소)>
 ```
 
-또는 모든 언본딩 정보를 확인하고 싶으신 경우:
+또는 특정 위임자의 모든 언본딩 정보를 확인하고 싶으신 경우:
 
 ```bash
-gaiacli query staking unbonding-delegations <account_cosmos>
+gaiacli query staking unbonding-delegations <account_cosmos(위임자 주소)>
 ```
 
 추가적으로 특정 검증인으로 부터 언본딩하는 정보를 확인하고 싶으신 경우:
 
 ```bash
-gaiacli query staking unbonding-delegations-from <account_cosmosval>
+gaiacli query staking unbonding-delegations-from <account_cosmosval(검증인 cosmosval 주소)>
 ```
 
 과거 언본딩 정보는 `--height` 플래그를 통해서 특정 블록 높이에 대한 언본딩 정보를 조회할 수 있습니다.
@@ -416,11 +416,11 @@ gaiacli query staking unbonding-delegations-from <account_cosmosval>
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval> \
-  --addr-validator-dest=<account_cosmosval> \
+  --addr-validator-source=<account_cosmosval(스테이킹을 취소할 검증인의 cosmosval 주소)> \
+  --addr-validator-dest=<account_cosmosval(스테이킹을 받을 검증인의 cosmosval 주소)> \
   --shares-fraction=50 \
-  --from=<key_name> \
-  --chain-id=<chain_id>
+  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 위 예시와 같이 재위임될 토큰의 수량은 특정 수량(`shares-amount`) 또는 일정 비율(`shares-fraction`)로 표현될 수 있습니다.
@@ -432,19 +432,19 @@ gaiacli tx staking redelegate \
 재위임을 시작하신 후, 다음 명령을 통해서 관련 정보를 조회하실 수 있습니다:
 
 ```bash
-gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
+gaiacli query staking redelegation <delegator_addr(위임자 주소)> <src_val_addr(위임 취소한 검증인 주소)> <dst_val_addr(위임 받을 검증인 주소)>
 ```
 
-모든 검증인에 대한 재위임을 확인하고 싶으신 경우:
+특정 위임자의 모든 검증인에 대한 재위임을 확인하고 싶으신 경우:
 
 ```bash
-gaiacli query staking redelegations <account_cosmos>
+gaiacli query staking redelegations <account_cosmos(위임자 코스모스 주소)>
 ```
 
 특정 검증인에 대한 재위임을 확인하고 싶으신 경우:
 
 ```bash
-  gaiacli query staking redelegations-from <account_cosmosval>
+  gaiacli query staking redelegations-from <account_cosmosval(검증인 주소)>
 ```
 
 과거 재위임에 대한 정보는 다른 트랜잭션과 동일하게 `--height` 플래그를 이용하여 특정 블록 높이에 대한 재위임 정보를 확인하실 수 있습니다.
@@ -484,7 +484,7 @@ gaiacli query staking pool
 특정 검증인에 대한 모든 위임은 다음 명령으로 조회가 가능합니다:
 
 ```bash
-  gaiacli query delegations-to <account_cosmosval>
+  gaiacli query delegations-to <account_cosmosval(검증인 주소)>
 ```
 
 ### 거버넌스
@@ -512,12 +512,12 @@ gaiacli query staking pool
 
 ```bash
 gaiacli tx gov submit-proposal \
-  --title=<title> \
-  --description=<description> \
-  --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --deposit=<40steak> \
-  --from=<name> \
-  --chain-id=<chain_id>
+  --title=<title(프로포절 제목)> \
+  --description=<description(프로포절 설명)> \
+  --type=<Text/ParameterChange/SoftwareUpgrade(프로포절 타입)> \
+  --deposit=<40steak(예치금 수량)> \
+  --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 ##### 프로포절 조회
@@ -539,7 +539,7 @@ gaiacli query gov proposals
 특정 거버넌스 프로포절의 제안자를 확인하기 위해서는:
 
 ```bash
-gaiacli query gov proposer <proposal_id>
+gaiacli query gov proposer <proposal_id(프로포절 ID)>
 ```
 
 #### 보증금 추가하기
@@ -547,9 +547,9 @@ gaiacli query gov proposer <proposal_id>
 프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 steak`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
 
 ```bash
-gaiacli tx gov deposit <proposal_id> <200steak> \
-  --from=<name> \
-  --chain-id=<chain_id>
+gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200steak(금액)> \
+  --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 > _참고_: 기본 보증금 기준을 충족하지 못한 프로포절은 `MaxDepositPeriod`이 지나면 자동으로 삭제됩니다.
@@ -559,13 +559,13 @@ gaiacli tx gov deposit <proposal_id> <200steak> \
 새로운 프로포절이 생성된 후, 해당 프로포절에 대한 보증금은 다음과 같이 조회할 수 있습니다:
 
 ```bash
-gaiacli query gov deposits <proposal_id>
+gaiacli query gov deposits <proposal_id(프로포절 ID)>
 ```
 
 특정 주소에 대한 보증금은 다음과 같이 확인하실 수 있습니다:
 
 ```bash
-gaiacli query gov deposit <proposal_id> <depositor_address>
+gaiacli query gov deposit <proposal_id(프로포절 ID)> <depositor_address(예치자 주소)>
 ```
 
 #### 프로포절 투표하기
@@ -574,9 +574,9 @@ gaiacli query gov deposit <proposal_id> <depositor_address>
 
 
 ```bash
-gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
-  --from=<name> \
-  --chain-id=<chain_id>
+gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain(표 선택)> \
+  --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
+  --chain-id=<chain_id(체인 아이디)>
 ```
 
 ##### 표 조회하기
@@ -584,12 +584,12 @@ gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
 특정 표와 관련한 정보를 조회하기 위해서는:
 
 ```bash
-gaiacli query gov vote <proposal_id> <voter_address>
+gaiacli query gov vote <proposal_id(프로포절 ID)> <voter_address(투표자 주소)>
 ```
 과거 프로포절에 대한 표 정보를 확인하기 위해서는:
 
 ```bash
-gaiacli query gov votes <proposal_id>
+gaiacli query gov votes <proposal_id(프로포절 ID)>
 ```
 
 #### 프로포절 결과 조회하기
@@ -597,7 +597,7 @@ gaiacli query gov votes <proposal_id>
 특정 프로포절에 대한 결과를 확인하기 위해서는:
 
 ```bash
-gaiacli query gov tally <proposal_id>
+gaiacli query gov tally <proposal_id(프로포절 ID)>
 ```
 
 #### 거버넌스 파라미터 조회하기
@@ -633,7 +633,7 @@ gaiacli query distr outstanding-rewards
 특정 검증인의 커미션을 조회하기 위해서는:
 
 ```bash
-gaiacli query distr commission <validator_address>
+gaiacli query distr commission <validator_address(검증인 주소)>
 ```
 
 #### 검증인 슬래싱 조회
@@ -641,7 +641,7 @@ gaiacli query distr commission <validator_address>
 특정 검증인의 슬래싱 기록을 조회하기 위해서는:
 
 ```bash
-gaiacli query distr slashes <validator_address> <start_height> <end_height>
+gaiacli query distr slashes <validator_address(검증인 주소)> <start_height(시작 블록 높이)> <end_height(마지막 블록 높이)>
 ```
 
 #### 특정 검증인에서 수령되지 않은 리워드 조회
@@ -649,7 +649,7 @@ gaiacli query distr slashes <validator_address> <start_height> <end_height>
 위임자의 특정 검증인에서 발생된 미수령 리워드를 조회하기 위해서는:
 
 ```bash
-gaiacli query distr rewards <delegator_address> <validator_address>
+gaiacli query distr rewards <delegator_address(위임자 주소)> <validator_address(검증인 주소)>
 ```
 
 #### 위임자의 수령 대기중인 모든 리워드 조회
@@ -657,7 +657,7 @@ gaiacli query distr rewards <delegator_address> <validator_address>
 위임자의 모든 수령 대기 리워드를 조회하기 위해서는:
 
 ```bash
-gaiacli query distr rewards <delegator_address>
+gaiacli query distr rewards <delegator_address(위임자 주소)>
 ```
 
 ### 멀티시그 트랜잭션
@@ -689,7 +689,7 @@ gaiacli keys show --address p1p2p3
 
 ```bash
 gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
-  --from=<multisig_address> \
+  --from=<multisig_address(멀티시그 주소)> \
   --generate-only > unsignedTx.json
 ```
 
@@ -697,7 +697,7 @@ gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
 
 ```bash
 gaiacli tx sign \
-  --multisig=<multisig_address> \
+  --multisig=<multisig_address(멀티시그 주소)> \
   --name=p1 \
   --output-document=p1signature.json \
   unsignedTx.json
@@ -707,7 +707,7 @@ gaiacli tx sign \
 
 ```bash
 gaiacli tx sign \
-  --multisig=<multisig_address> \
+  --multisig=<multisig_address(멀티시그 주소)> \
   --name=p2 \
   --output-document=p2signature.json \
   unsignedTx.json

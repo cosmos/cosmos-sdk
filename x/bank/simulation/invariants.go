@@ -32,7 +32,7 @@ func TotalCoinsInvariant(ak auth.AccountKeeper, totalSupplyFn func() sdk.Coins) 
 
 		chkAccount := func(acc auth.Account) bool {
 			coins := acc.GetCoins()
-			totalCoins = totalCoins.Plus(coins)
+			totalCoins = totalCoins.Add(coins)
 			return false
 		}
 

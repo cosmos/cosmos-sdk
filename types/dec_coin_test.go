@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,96 +10,48 @@ import (
 func TestNewDecCoin(t *testing.T) {
 	t.Parallel()
 	require.NotPanics(t, func() {
-		NewDecCoin("atom", 5)
+		NewInt64DecCoin(testDenom1, 5)
 	})
 	require.NotPanics(t, func() {
-		NewDecCoin("atom", 0)
+		NewInt64DecCoin(testDenom1, 0)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("Atom", 5)
+		NewInt64DecCoin(strings.ToUpper(testDenom1), 5)
 	})
 	require.Panics(t, func() {
-		NewDecCoin("atom", -5)
-	})
-}
-
-func TestNewPositiveDecCoin(t *testing.T) {
-	t.Parallel()
-	require.NotPanics(t, func() {
-		NewPositiveDecCoin("atom", 5)
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoin("atom", 0)
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoin("Atom", 5)
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoin("atom", -5)
+		NewInt64DecCoin(testDenom1, -5)
 	})
 }
 
 func TestNewDecCoinFromDec(t *testing.T) {
 	t.Parallel()
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("atom", NewDec(5))
+		NewDecCoinFromDec(testDenom1, NewDec(5))
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("atom", ZeroDec())
+		NewDecCoinFromDec(testDenom1, ZeroDec())
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("Atom", NewDec(5))
+		NewDecCoinFromDec(strings.ToUpper(testDenom1), NewDec(5))
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("atom", NewDec(-5))
-	})
-}
-
-func TestNewPositiveDecCoinFromDec(t *testing.T) {
-	t.Parallel()
-	require.NotPanics(t, func() {
-		NewPositiveDecCoinFromDec("atom", NewDec(5))
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromDec("atom", ZeroDec())
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromDec("Atom", NewDec(5))
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromDec("atom", NewDec(-5))
+		NewDecCoinFromDec(testDenom1, NewDec(-5))
 	})
 }
 
 func TestNewDecCoinFromCoin(t *testing.T) {
 	t.Parallel()
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"atom", NewInt(5)})
+		NewDecCoinFromCoin(Coin{testDenom1, NewInt(5)})
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"atom", NewInt(0)})
+		NewDecCoinFromCoin(Coin{testDenom1, NewInt(0)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"Atom", NewInt(5)})
+		NewDecCoinFromCoin(Coin{strings.ToUpper(testDenom1), NewInt(5)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"atom", NewInt(-5)})
-	})
-}
-
-func TestNewPositiveDecCoinFromCoin(t *testing.T) {
-	t.Parallel()
-	require.NotPanics(t, func() {
-		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(5)})
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(0)})
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromCoin(Coin{"Atom", NewInt(5)})
-	})
-	require.Panics(t, func() {
-		NewPositiveDecCoinFromCoin(Coin{"atom", NewInt(-5)})
+		NewDecCoinFromCoin(Coin{testDenom1, NewInt(-5)})
 	})
 }
 
@@ -109,25 +62,30 @@ func TestDecCoinIsPositive(t *testing.T) {
 
 	dc = NewDecCoin("atom", 0)
 	require.False(t, dc.IsPositive())
+
+	dc := NewInt64DecCoin(testDenom1, 5)
+	require.True(t, dc.IsPositive())
+
+	dc = NewInt64DecCoin(testDenom1, 0)
+	require.False(t, dc.IsPositive())
 }
 
-func TestPlusDecCoin(t *testing.T) {
-	t.Parallel()
-	decCoinA1 := NewDecCoinFromDec("atom", NewDecWithPrec(11, 1))
-	decCoinA2 := NewDecCoinFromDec("atom", NewDecWithPrec(22, 1))
-	decCoinB1 := NewDecCoinFromDec("btc", NewDecWithPrec(11, 1))
+func TestAddDecCoin(t *testing.T) {
+	decCoinA1 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(11, 1))
+	decCoinA2 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(22, 1))
+	decCoinB1 := NewDecCoinFromDec(testDenom2, NewDecWithPrec(11, 1))
 
 	// regular add
-	res := decCoinA1.Plus(decCoinA1)
+	res := decCoinA1.Add(decCoinA1)
 	require.Equal(t, decCoinA2, res, "sum of coins is incorrect")
 
 	// bad denom add
 	require.Panics(t, func() {
-		decCoinA1.Plus(decCoinB1)
+		decCoinA1.Add(decCoinB1)
 	}, "expected panic on sum of different denoms")
 }
 
-func TestPlusDecCoins(t *testing.T) {
+func TestAddDecCoins(t *testing.T) {
 	t.Parallel()
 	one := NewDec(1)
 	zero := NewDec(0)
@@ -138,13 +96,13 @@ func TestPlusDecCoins(t *testing.T) {
 		inputTwo DecCoins
 		expected DecCoins
 	}{
-		{DecCoins{{"atom", one}, {"btc", one}}, DecCoins{{"atom", one}, {"btc", one}}, DecCoins{{"atom", two}, {"btc", two}}},
-		{DecCoins{{"atom", zero}, {"btc", one}}, DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins{{"btc", one}}},
-		{DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins{{"atom", zero}, {"btc", zero}}, DecCoins(nil)},
+		{DecCoins{{testDenom1, one}, {testDenom2, one}}, DecCoins{{testDenom1, one}, {testDenom2, one}}, DecCoins{{testDenom1, two}, {testDenom2, two}}},
+		{DecCoins{{testDenom1, zero}, {testDenom2, one}}, DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins{{testDenom2, one}}},
+		{DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Plus(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo)
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
@@ -152,32 +110,32 @@ func TestPlusDecCoins(t *testing.T) {
 func TestSortDecCoins(t *testing.T) {
 	t.Parallel()
 	good := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
-		NewDecCoin("tree", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
+		NewInt64DecCoin("tree", 1),
 	}
 	empty := DecCoins{
-		NewDecCoin("gold", 0),
+		NewInt64DecCoin("gold", 0),
 	}
 	badSort1 := DecCoins{
-		NewDecCoin("tree", 1),
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("tree", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 	badSort2 := DecCoins{ // both are after the first one, but the second and third are in the wrong order
-		NewDecCoin("gas", 1),
-		NewDecCoin("tree", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("tree", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 	badAmt := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("tree", 0),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("tree", 0),
+		NewInt64DecCoin("mineral", 1),
 	}
 	dup := DecCoins{
-		NewDecCoin("gas", 1),
-		NewDecCoin("gas", 1),
-		NewDecCoin("mineral", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("gas", 1),
+		NewInt64DecCoin("mineral", 1),
 	}
 
 	cases := []struct {
@@ -206,14 +164,14 @@ func TestDecCoinsIsValid(t *testing.T) {
 		expected bool
 	}{
 		{DecCoins{}, true},
-		{DecCoins{DecCoin{"atom", NewDec(5)}}, true},
-		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"btc", NewDec(100000)}}, true},
-		{DecCoins{DecCoin{"atom", NewDec(-5)}}, false},
-		{DecCoins{DecCoin{"Atom", NewDec(5)}}, false},
-		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"Btc", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"atom", NewDec(5)}, DecCoin{"btc", NewDec(-100000)}}, false},
-		{DecCoins{DecCoin{"atom", NewDec(-5)}, DecCoin{"btc", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"Atom", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{testDenom1, NewDec(5)}}, true},
+		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, true},
+		{DecCoins{DecCoin{testDenom1, NewDec(-5)}}, false},
+		{DecCoins{DecCoin{"AAA", NewDec(5)}}, false},
+		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(-100000)}}, false},
+		{DecCoins{DecCoin{testDenom1, NewDec(-5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"AAA", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {
@@ -342,5 +300,37 @@ func TestDecCoinTruncateDecimal(t *testing.T) {
 			require.True(t, tt.want.IsEqual(got))
 			require.Equal(t, tt.want1, got1)
 		})
+	}
+}
+
+func TestDecCoinsCap(t *testing.T) {
+	testCases := []struct {
+		input1         string
+		input2         string
+		expectedResult string
+	}{
+		{"", "", ""},
+		{"1.0stake", "", ""},
+		{"1.0stake", "1.0stake", "1.0stake"},
+		{"", "1.0stake", ""},
+		{"1.0stake", "", ""},
+		{"2.0stake,1.0trope", "1.9stake", "1.9stake"},
+		{"2.0stake,1.0trope", "2.1stake", "2.0stake"},
+		{"2.0stake,1.0trope", "0.9trope", "0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope,20.0other", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.0other", ""},
+	}
+
+	for i, tc := range testCases {
+		in1, err := ParseDecCoins(tc.input1)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		in2, err := ParseDecCoins(tc.input2)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		exr, err := ParseDecCoins(tc.expectedResult)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+
+		require.True(t, in1.Cap(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		// require.Equal(t, tc.expectedResult, in1.Cap(in2).String(), "in1.cap(in2) != exr in %v", i)
 	}
 }

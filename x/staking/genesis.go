@@ -37,7 +37,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			keeper.AfterValidatorCreated(ctx, validator.OperatorAddr)
+			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
 		}
 
 		// Set timeslice if necessary
@@ -49,12 +49,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	for _, delegation := range data.Delegations {
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 	}
 

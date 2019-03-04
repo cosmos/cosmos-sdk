@@ -289,7 +289,8 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 
 // getMaximumBlockGas gets the maximum gas from the consensus params.
 func (app *BaseApp) getMaximumBlockGas() (maxGas uint64) {
-	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
+	if app.consensusParams == nil || app.consensusParams.BlockSize == nil ||
+		app.consensusParams.BlockSize.MaxGas <= 0 {
 		return 0
 	}
 	return uint64(app.consensusParams.BlockSize.MaxGas)

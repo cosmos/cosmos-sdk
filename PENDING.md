@@ -114,5 +114,6 @@ truncation of undelegation tokens.
 * [\#3717] Ignore unknown proposers in allocating rewards for proposers, in case
   unbonding period was just 1 block and proposer was already deleted.
 * [\#3726] Cap(clip) reward to remaining coins in AllocateTokens.
+* [\#3791] baseapp: allow for infinite gas when maxGas < 0
 
 ### Tendermint

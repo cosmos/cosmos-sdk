@@ -211,7 +211,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 // CheckTransferDisabledBurnMultiSend
 func validateMultiSendTransfersDisabled(msg bank.MsgMultiSend) bool {
 	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9*atomsToUatoms)}
-	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 10*atomsToUatoms)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1*atomsToUatoms)}
 
 	if len(msg.Inputs) != 1 {
 		return false

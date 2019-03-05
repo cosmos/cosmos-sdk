@@ -1,3 +1,9 @@
+// Package bank contains a forked version of the bank module. It only contains
+// a modified message router to support a very limited form of transfers during
+// mainnet launch -- MsgMultiSend messages.
+//
+// NOTE: This fork should be removed entirely once transfers are enabled and
+// the Gaia router should be reset to using the original bank module router.
 package bank
 
 import (

@@ -23,6 +23,10 @@
 modified message router, where the modified message router behaves the same as
 the standard `x/bank` message router except for `MsgMultiSend` that must burn
 exactly 9 atoms and transfer 1 atom.
+* [\#3789] Update validator creation flow:
+  * Remove `NewMsgCreateValidatorOnBehalfOf` and corresponding business logic
+  * Ensure the validator address equals the delegator address during
+  `MsgCreateValidator#ValidateBasic`
 
 ### SDK
 

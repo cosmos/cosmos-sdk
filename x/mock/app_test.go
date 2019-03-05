@@ -60,15 +60,17 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	acct := mApp.AccountKeeper.GetAccount(ctxCheck, addrs[0])
 	require.Equal(t, accs[0], acct.(*auth.BaseAccount))
 
+	header := abci.Header{Height: mApp.LastBlockHeight() + 1}
 	SignCheckDeliver(
-		t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{msg},
+		t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{msg},
 		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence()},
 		true, true, privKeys[0],
 	)
 
 	// Signing a tx with the wrong privKey should result in an auth error
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
 	res := SignCheckDeliver(
-		t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{msg},
+		t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{msg},
 		[]uint64{accs[1].GetAccountNumber()}, []uint64{accs[1].GetSequence() + 1},
 		true, false, privKeys[1],
 	)
@@ -77,8 +79,9 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 
 	// Resigning the tx with the correct privKey should result in an OK result
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
 	SignCheckDeliver(
-		t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{msg},
+		t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{msg},
 		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence() + 1},
 		true, true, privKeys[0],
 	)

@@ -72,9 +72,10 @@ func CheckGenTx(
 // block commitment with the given transaction. A test assertion is made using
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
-func SignCheckDeliver(t *testing.T, cdc *codec.Codec, app *baseapp.BaseApp,
-	msgs []sdk.Msg, accNums, seq []uint64, expSimPass, expPass bool,
-	priv ...crypto.PrivKey) sdk.Result {
+func SignCheckDeliver(
+	t *testing.T, cdc *codec.Codec, app *baseapp.BaseApp, header abci.Header, msgs []sdk.Msg,
+	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
+) sdk.Result {
 
 	tx := GenTx(msgs, accNums, seq, priv...)
 
@@ -91,7 +92,7 @@ func SignCheckDeliver(t *testing.T, cdc *codec.Codec, app *baseapp.BaseApp,
 	}
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{})
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res = app.Deliver(tx)
 
 	if expPass {

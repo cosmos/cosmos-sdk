@@ -123,7 +123,8 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origSeq := res1.GetSequence()
 
 	sendMsg := NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
 
@@ -173,7 +174,8 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -212,7 +214,8 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -241,7 +244,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	testCases := []appTestCase{
 		{
 			msgs:       []sdk.Msg{multiSendMsg3},
-			accNums:    []uint64{0, 0},
+			accNums:    []uint64{0, 2},
 			accSeqs:    []uint64{0, 0},
 			expSimPass: true,
 			expPass:    true,
@@ -256,7 +259,8 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -289,7 +293,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 		},
 		{
 			msgs:       []sdk.Msg{multiSendMsg4},
-			accNums:    []uint64{0},
+			accNums:    []uint64{1},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
 			expPass:    true,
@@ -301,7 +305,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)

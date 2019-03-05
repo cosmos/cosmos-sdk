@@ -13,7 +13,10 @@ import (
 
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -26,7 +29,10 @@ func TestGetSetProposal(t *testing.T) {
 
 func TestIncrementProposalNumber(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -41,9 +47,11 @@ func TestIncrementProposalNumber(t *testing.T) {
 
 func TestActivateVotingPeriod(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
 	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
@@ -63,9 +71,11 @@ func TestActivateVotingPeriod(t *testing.T) {
 func TestDeposits(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
@@ -149,9 +159,11 @@ func TestDeposits(t *testing.T) {
 func TestVotes(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
@@ -204,7 +216,10 @@ func TestVotes(t *testing.T) {
 
 func TestProposalQueues(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 

@@ -70,6 +70,8 @@ CLI flag.
 
 ### Gaia
 
+* `gaiad` and `gaiacli` integration tests use ./build/ binaries.
+
 ### SDK
 
 * \#3753 Remove no-longer-used governance penalty parameter

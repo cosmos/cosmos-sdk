@@ -278,9 +278,12 @@ func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// Trims any denom amount from coin which exceeds that of coinB,
-// such that (coin.Cap(coinB)).IsLTE(coinB).
-func (coins DecCoins) Cap(coinsB DecCoins) DecCoins {
+// Intersect will return a new set of coins which contains the minimum DecCoin
+// for common denoms found in both `coins` and `coinsB`. For denoms not common
+// to both `coins` and `coinsB` the minimum is considered to be 0, thus they
+// are not added to the final set.In other words, trim any denom amount from
+// coin which exceeds that of coinB, such that (coin.Intersect(coinB)).IsLTE(coinB).
+func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {
 		minCoin := DecCoin{
@@ -476,27 +479,6 @@ func (coins DecCoins) IsAllPositive() bool {
 	}
 
 	return true
-}
-
-// MinSet will return a new set of coins which contains the minimum decCoin
-// for common denoms found in both `coins` and `coinsB`. For denoms not common
-// to both `coins` and `coinsB` the minimum is considered to be 0, thus they are
-// not added to the final set.
-func MinSet(coinsA, coinsB DecCoins) DecCoins {
-	minSet := ([]DecCoin)(nil)
-
-	for _, coinA := range coinsA {
-		denom := coinA.Denom
-		amountA := coinA.Amount
-		amountB := coinsB.AmountOf(coinA.Denom)
-
-		if amountA.LT(amountB) {
-			minSet = append(minSet, coinA)
-		} else {
-			minSet = append(minSet, NewDecCoinFromDec(denom, amountB))
-		}
-	}
-	return minSet
 }
 
 func removeZeroDecCoins(coins DecCoins) DecCoins {

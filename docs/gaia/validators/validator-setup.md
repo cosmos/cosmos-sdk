@@ -57,7 +57,7 @@ __Note__: This section only concerns validators that want to be in the genesis
 file. If the chain you want to validate is already live, skip this section.
 
 __Note__: `Gaia-9002` and `Game of stakes` will not use this process. They will
-be bootstrapped using Tendermint seed validators. You will just need to use the
+be bootstrapped using validators operated by Tendermint. You will just need to use the
 [create-validator](#create-your-validator) command in order to join as a validator
 for these networks.
 

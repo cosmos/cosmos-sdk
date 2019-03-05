@@ -287,19 +287,15 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
-// when the maximum block gas is non-positive.
+// getMaximumBlockGas gets the maximum gas from the consensus params.
 func (app *BaseApp) getMaximumBlockGas() uint64 {
-	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
+	if app.consensusParams == nil ||
+		app.consensusParams.BlockSize == nil ||
+		app.consensusParams.BlockSize.MaxGas <= 0 {
 		return 0
 	}
 
-	maxGas := app.consensusParams.BlockSize.MaxGas
-	if maxGas < 0 {
-		return 0
-	}
-
-	return uint64(maxGas)
+	return uint64(app.consensusParams.BlockSize.MaxGas)
 }
 
 // ----------------------------------------------------------------------------

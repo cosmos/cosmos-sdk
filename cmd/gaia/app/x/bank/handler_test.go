@@ -128,7 +128,7 @@ func TestHandlerMsgMultiSendTransfersDisabledBurn(t *testing.T) {
 			bank.NewInput(addrs[0], sdk.Coins{sdk.NewCoin(uatomDenom, totalAmt)}),
 		},
 		[]bank.Output{
-			bank.NewOutput(burnedCoinsAccAddr, sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)}),
+			bank.NewOutput(BurnedCoinsAccAddr, sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)}),
 			bank.NewOutput(addrs[1], sdk.Coins{sdk.NewCoin(uatomDenom, transAmt)}),
 		},
 	)
@@ -144,7 +144,7 @@ func TestHandlerMsgMultiSendTransfersDisabledBurn(t *testing.T) {
 	balance = initAmt.Add(transAmt)
 	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, balance)})
 
-	burn := ak.GetAccount(ctx, burnedCoinsAccAddr)
+	burn := ak.GetAccount(ctx, BurnedCoinsAccAddr)
 	require.Equal(t, burn.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)})
 }
 
@@ -161,7 +161,7 @@ func TestHandlerMsgMultiSendTransfersDisabledInvalidBurn(t *testing.T) {
 			bank.NewInput(addrs[0], sdk.Coins{sdk.NewCoin(uatomDenom, totalAmt)}),
 		},
 		[]bank.Output{
-			bank.NewOutput(burnedCoinsAccAddr, sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)}),
+			bank.NewOutput(BurnedCoinsAccAddr, sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)}),
 			bank.NewOutput(addrs[1], sdk.Coins{sdk.NewCoin(uatomDenom, transAmt)}),
 		},
 	)

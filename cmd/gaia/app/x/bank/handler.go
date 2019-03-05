@@ -14,9 +14,13 @@ import (
 )
 
 var (
-	uatomDenom         = "uatom"
-	atomsToUatoms      = int64(1000000)
-	burnedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("bankBurnedCoins")))
+	uatomDenom    = "uatom"
+	atomsToUatoms = int64(1000000)
+
+	// BurnedCoinsAccAddr represents the burn account address used for
+	// MsgMultiSend message during the period for which transfers are disabled.
+	// Its Bech32 address is cosmos1x4p90uuy63fqzsheamn48vq88q3eusykf0a69v.
+	BurnedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("bankBurnedCoins")))
 )
 
 // NewHandler returns a handler for "bank" type messages.
@@ -82,7 +86,7 @@ func validateMultiSendTransfersDisabled(msg bank.MsgMultiSend) bool {
 		return false
 	}
 
-	if !msg.Outputs[0].Address.Equals(burnedCoinsAccAddr) {
+	if !msg.Outputs[0].Address.Equals(BurnedCoinsAccAddr) {
 		return false
 	}
 	if !msg.Outputs[0].Coins.IsEqual(nineAtoms) {

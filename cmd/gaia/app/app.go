@@ -186,11 +186,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 			return
 		}
 
+		// TODO remove this once transfers are enabled.
 		if !sendEnabled {
 			for _, msg := range tx.GetMsgs() {
 				switch msg.(type) {
 				case bank.MsgSend:
-					// LCD tests requires this to be commented out
 					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
 				case bank.MsgMultiSend:
 					if !validateMultiSendTransfersDisabled(msg.(bank.MsgMultiSend)) {

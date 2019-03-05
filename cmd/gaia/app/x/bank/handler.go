@@ -1,0 +1,52 @@
+package bank
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+)
+
+// NewHandler returns a handler for "bank" type messages.
+func NewHandler(k bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		switch msg := msg.(type) {
+		case bank.MsgSend:
+			return handleMsgSend(ctx, k, msg)
+		case bank.MsgMultiSend:
+			return handleMsgMultiSend(ctx, k, msg)
+		default:
+			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
+			return sdk.ErrUnknownRequest(errMsg).Result()
+		}
+	}
+}
+
+// Handle MsgSend.
+func handleMsgSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgSend) sdk.Result {
+	if !k.GetSendEnabled(ctx) {
+		return bank.ErrSendDisabled(k.Codespace()).Result()
+	}
+	tags, err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	if err != nil {
+		return err.Result()
+	}
+
+	return sdk.Result{
+		Tags: tags,
+	}
+}
+
+// Handle MsgMultiSend.
+func handleMsgMultiSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgMultiSend) sdk.Result {
+	// NOTE: totalIn == totalOut should already have been checked
+	if !k.GetSendEnabled(ctx) {
+		return bank.ErrSendDisabled(k.Codespace()).Result()
+	}
+	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	if err != nil {
+		return err.Result()
+	}
+
+	return sdk.Result{
+		Tags: tags,
+	}
+}

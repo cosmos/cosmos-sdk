@@ -7,8 +7,15 @@
 package bank
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+)
+
+var (
+	atomsToUatoms      = int64(1000000)
+	burnedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("bankBurnedCoins")))
 )
 
 // NewHandler returns a handler for "bank" type messages.
@@ -26,7 +33,10 @@ func NewHandler(k bank.Keeper) sdk.Handler {
 	}
 }
 
-// Handle MsgSend.
+// handleMsgSend implements a MsgSend message handler. It operates no differently
+// than the standard bank module MsgSend message handler in that it transfers
+// an amount from one account to another under the condition of transfers being
+// enabled.
 func handleMsgSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgSend) sdk.Result {
 	if !k.GetSendEnabled(ctx) {
 		return bank.ErrSendDisabled(k.Codespace()).Result()
@@ -41,12 +51,20 @@ func handleMsgSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgSend) sdk.Result 
 	}
 }
 
-// Handle MsgMultiSend.
+// handleMsgMultiSend implements a modified forked version of a MsgMultiSend
+// message handler. If transfers are disabled, a modified version of MsgMultiSend
+// is allowed where there must be a single input and only two outputs. The first
+// of the two outputs must be to a specific burn address defined by
+// burnedCoinsAccAddr. In addition, the output amounts must be of 9atom and
+// 1uatom respectively.
 func handleMsgMultiSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgMultiSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 	if !k.GetSendEnabled(ctx) {
-		return bank.ErrSendDisabled(k.Codespace()).Result()
+		if !validateMultiSendTransfersDisabled(msg) {
+			return bank.ErrSendDisabled(k.Codespace()).Result()
+		}
 	}
+
 	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
@@ -55,4 +73,28 @@ func handleMsgMultiSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgMultiSend) s
 	return sdk.Result{
 		Tags: tags,
 	}
+}
+
+func validateMultiSendTransfersDisabled(msg bank.MsgMultiSend) bool {
+	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9*atomsToUatoms)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1*atomsToUatoms)}
+
+	if len(msg.Inputs) != 1 {
+		return false
+	}
+	if len(msg.Outputs) != 2 {
+		return false
+	}
+
+	if !msg.Outputs[0].Address.Equals(burnedCoinsAccAddr) {
+		return false
+	}
+	if !msg.Outputs[0].Coins.IsEqual(nineAtoms) {
+		return false
+	}
+	if !msg.Outputs[1].Coins.IsEqual(oneAtom) {
+		return false
+	}
+
+	return true
 }

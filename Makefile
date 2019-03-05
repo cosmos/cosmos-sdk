@@ -1,8 +1,10 @@
-PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
+# TODO: After transfers are enabled, remove references to send_enabled in this Makefile
+
+PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation' | grep -v '/cmd/gaia/cli_test')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
-BUILD_TAGS = netgo
+BUILD_TAGS = netgo $(BUILD_TAGS_ENV)
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 BUILD_FLAGS = -tags "$(BUILD_TAGS)" -ldflags \
     '-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
@@ -63,6 +65,10 @@ else
 	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
+# TODO remove after sends are enabled; temporary
+build_send_enabled:
+	BUILD_TAGS_ENV=send_enabled $(MAKE) build
+
 build-linux: vendor-deps
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
@@ -92,6 +98,7 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
+	# TODO is this flag used, and does it need to be a recursive call?
 	$(MAKE) --always-make tools
 
 update_dev_tools:
@@ -140,10 +147,12 @@ godocs:
 ########################################
 ### Testing
 
-test: test_unit
+test: test_unit test_cli
 
-test_cli:
-	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+test_cli: build_send_enabled
+	@go test -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
+	# defensively delete build which has send enabled.
+	rm build/gaiad
 
 test_ledger:
     # First test with mock
@@ -152,10 +161,10 @@ test_ledger:
 	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock send_enabled'
 
 test_race:
-	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION) -tags='send_enabled'
 
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."

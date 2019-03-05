@@ -28,8 +28,13 @@ const (
 	appName = "GaiaApp"
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
+)
 
-	atomsToUatoms = 1000000
+var (
+	// Temporary vars for cosmos launch w/ send disabled.
+	atomsToUatoms = int64(1000000)
+	// Sends are enabled for cli tests via go tags.
+	sendEnabled = false
 )
 
 // default home directories for expected binaries
@@ -181,14 +186,16 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 			return
 		}
 
-		for _, msg := range tx.GetMsgs() {
-			switch msg.(type) {
-			case bank.MsgSend:
-				// LCD tests requires this to be commented out
-				// return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
-			case bank.MsgMultiSend:
-				if !validateMultiSendTransfersDisabled(msg.(bank.MsgMultiSend)) {
+		if !sendEnabled {
+			for _, msg := range tx.GetMsgs() {
+				switch msg.(type) {
+				case bank.MsgSend:
+					// LCD tests requires this to be commented out
 					return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
+				case bank.MsgMultiSend:
+					if !validateMultiSendTransfersDisabled(msg.(bank.MsgMultiSend)) {
+						return ctx, bank.ErrSendDisabled(bank.DefaultCodespace).Result(), true
+					}
 				}
 			}
 		}

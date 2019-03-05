@@ -27,6 +27,7 @@ tags.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
+* [\#3804] Update to Tendermint `v0.31.0-dev0`
 
 <!--------------------------------- FEATURES --------------------------------->
 

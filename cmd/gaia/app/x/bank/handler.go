@@ -25,8 +25,10 @@ func NewHandler(k bank.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case bank.MsgSend:
 			return handleMsgSend(ctx, k, msg)
+
 		case bank.MsgMultiSend:
 			return handleMsgMultiSend(ctx, k, msg)
+
 		default:
 			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()

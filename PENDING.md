@@ -23,7 +23,7 @@
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
 tags.
-* #3788 change order of operations for greater accuracy when calculation delegation share token value
+* #3788 Change order of operations for greater accuracy when calculating delegation share token value
 
 ### Tendermint
 

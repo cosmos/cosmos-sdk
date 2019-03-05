@@ -62,7 +62,7 @@ be bootstrapped using validators operated by Tendermint. You will just need to u
 for these networks.
 
 If you want to participate in genesis as a validator, you need to justify that
-you have some stake at genesis, create one (or multiple) transaction to bond this
+you have some stake at genesis, create one (or multiple) transactions to bond this
 stake to your validator address, and include this transaction in the genesis file.
 
 You will need create a `gentx`:

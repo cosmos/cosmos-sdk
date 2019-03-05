@@ -38,17 +38,10 @@ func NewHandler(k bank.Keeper) sdk.Handler {
 // an amount from one account to another under the condition of transfers being
 // enabled.
 func handleMsgSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgSend) sdk.Result {
-	if !k.GetSendEnabled(ctx) {
-		return bank.ErrSendDisabled(k.Codespace()).Result()
-	}
-	tags, err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
-	if err != nil {
-		return err.Result()
-	}
-
-	return sdk.Result{
-		Tags: tags,
-	}
+	// No need to modify handleMsgSend as the forked module requires no changes,
+	// so we can just call the standard bank modules handleMsgSend since we know
+	// the message is of type MsgSend.
+	return bank.NewHandler(k)(ctx, msg)
 }
 
 // handleMsgMultiSend implements a modified forked version of a MsgMultiSend

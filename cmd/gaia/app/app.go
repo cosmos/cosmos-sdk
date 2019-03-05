@@ -11,8 +11,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	// TODO: Replace with original x/bank once transfers are enabled and remove
-	// forked module.
+	// TODO: Remove once transfers are enabled.
 	gaiabank "github.com/cosmos/cosmos-sdk/cmd/gaia/app/x/bank"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -153,6 +152,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	)
 
 	// register message routes
+	//
+	// TODO: Use standard bank router once transfers are enabled.
 	app.Router().
 		AddRoute(bank.RouterKey, gaiabank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).

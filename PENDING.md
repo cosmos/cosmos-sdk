@@ -19,6 +19,11 @@
 
 ### Gaia
 
+* [\#3787] Fork the `x/bank` module into the Gaia application with only a
+modified message router, where the modified message router behaves the same as
+the standard `x/bank` message router except for `MsgMultiSend` that must burn
+exactly 9 atoms and transfer 1 atom.
+
 ### SDK
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
@@ -27,6 +32,7 @@ tags.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
+
 * [\#3804] Update to Tendermint `v0.31.0-dev0`
 
 <!--------------------------------- FEATURES --------------------------------->

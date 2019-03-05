@@ -116,7 +116,6 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 
 	// defensive edge case may happen on the very final digits
 	// of the decCoins due to operation order of the distribution mechanism.
-	// TODO log if rewards is reduced in this step
 	rewards := rewardsRaw.Intersect(outstanding)
 	if !rewards.IsEqual(rewardsRaw) {
 		logger := ctx.Logger().With("module", "x/distr")

@@ -25,8 +25,7 @@ var (
 		sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()),
 	}
 
-	testDenom = "test"
-	initAmt   = sdk.NewInt(10000)
+	initAmt = sdk.NewInt(10000)
 )
 
 func newTestCodec() *codec.Codec {
@@ -71,7 +70,7 @@ func createTestInput(t *testing.T) (sdk.Context, auth.AccountKeeper, bank.Keeper
 	)
 
 	for _, addr := range addrs {
-		_, _, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.NewCoin(testDenom, initAmt)})
+		_, _, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.NewCoin(uatomDenom, initAmt)})
 		require.NoError(t, err)
 	}
 
@@ -84,16 +83,16 @@ func TestHandlerMsgSendTransfersDisabled(t *testing.T) {
 
 	handler := NewHandler(bk)
 	amt := sdk.NewInt(1000)
-	msg := bank.NewMsgSend(addrs[0], addrs[1], sdk.Coins{sdk.NewCoin(testDenom, amt)})
+	msg := bank.NewMsgSend(addrs[0], addrs[1], sdk.Coins{sdk.NewCoin(uatomDenom, amt)})
 
 	res := handler(ctx, msg)
 	require.False(t, res.IsOK())
 
 	from := ak.GetAccount(ctx, addrs[0])
-	require.Equal(t, from.GetCoins(), sdk.Coins{sdk.NewCoin(testDenom, initAmt)})
+	require.Equal(t, from.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, initAmt)})
 
 	to := ak.GetAccount(ctx, addrs[1])
-	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(testDenom, initAmt)})
+	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, initAmt)})
 }
 
 func TestHandlerMsgSendTransfersEnabled(t *testing.T) {
@@ -102,16 +101,44 @@ func TestHandlerMsgSendTransfersEnabled(t *testing.T) {
 
 	handler := NewHandler(bk)
 	amt := sdk.NewInt(1000)
-	msg := bank.NewMsgSend(addrs[0], addrs[1], sdk.Coins{sdk.NewCoin(testDenom, amt)})
+	msg := bank.NewMsgSend(addrs[0], addrs[1], sdk.Coins{sdk.NewCoin(uatomDenom, amt)})
 
 	res := handler(ctx, msg)
 	require.True(t, res.IsOK())
 
 	from := ak.GetAccount(ctx, addrs[0])
 	balance := initAmt.Sub(amt)
-	require.Equal(t, from.GetCoins(), sdk.Coins{sdk.NewCoin(testDenom, balance)})
+	require.Equal(t, from.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, balance)})
 
 	to := ak.GetAccount(ctx, addrs[1])
 	balance = initAmt.Add(amt)
-	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(testDenom, balance)})
+	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, balance)})
+}
+
+func TestHandlerMsgMultiSendTransfersDisabled(t *testing.T) {
+	ctx, ak, bk := createTestInput(t)
+	bk.SetSendEnabled(ctx, false)
+
+	handler := NewHandler(bk)
+	totalAmt := sdk.NewInt(10 * atomsToUatoms)
+	burnAmt := sdk.NewInt(9 * atomsToUatoms)
+	transAmt := sdk.NewInt(1 * atomsToUatoms)
+	msg := bank.NewMsgMultiSend(
+		[]bank.Input{
+			bank.NewInput(addrs[0], sdk.Coins{sdk.NewCoin(uatomDenom, totalAmt)}),
+		},
+		[]bank.Output{
+			bank.NewOutput(burnedCoinsAccAddr, sdk.Coins{sdk.NewCoin(uatomDenom, burnAmt)}),
+			bank.NewOutput(addrs[1], sdk.Coins{sdk.NewCoin(uatomDenom, transAmt)}),
+		},
+	)
+
+	res := handler(ctx, msg)
+	require.False(t, res.IsOK())
+
+	from := ak.GetAccount(ctx, addrs[0])
+	require.Equal(t, from.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, initAmt)})
+
+	to := ak.GetAccount(ctx, addrs[1])
+	require.Equal(t, to.GetCoins(), sdk.Coins{sdk.NewCoin(uatomDenom, initAmt)})
 }

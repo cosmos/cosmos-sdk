@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	uatomDenom         = "uatom"
 	atomsToUatoms      = int64(1000000)
 	burnedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("bankBurnedCoins")))
 )
@@ -69,8 +70,8 @@ func handleMsgMultiSend(ctx sdk.Context, k bank.Keeper, msg bank.MsgMultiSend) s
 }
 
 func validateMultiSendTransfersDisabled(msg bank.MsgMultiSend) bool {
-	nineAtoms := sdk.Coins{sdk.NewInt64Coin("uatom", 9*atomsToUatoms)}
-	oneAtom := sdk.Coins{sdk.NewInt64Coin("uatom", 1*atomsToUatoms)}
+	nineAtoms := sdk.Coins{sdk.NewInt64Coin(uatomDenom, 9*atomsToUatoms)}
+	oneAtom := sdk.Coins{sdk.NewInt64Coin(uatomDenom, 1*atomsToUatoms)}
 
 	if len(msg.Inputs) != 1 {
 		return false

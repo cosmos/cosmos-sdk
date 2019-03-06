@@ -3,7 +3,15 @@ package types
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"time"
+
+	dbm "github.com/tendermint/tendermint/libs/db"
+)
+
+var (
+	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
+	DBBackend = ""
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
@@ -57,4 +65,18 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 		return t, err
 	}
 	return t.UTC().Round(0), nil
+}
+
+// NewLevelDB instantiate a new LevelDB instance according to DBBackend.
+func NewLevelDB(name, dir string) (db dbm.DB, err error) {
+	backend := dbm.GoLevelDBBackend
+	if DBBackend == string(dbm.CLevelDBBackend) {
+		backend = dbm.CLevelDBBackend
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("couldn't create db: %v", r)
+		}
+	}()
+	return dbm.NewDB(name, backend, dir), err
 }

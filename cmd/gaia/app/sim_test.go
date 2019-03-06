@@ -305,7 +305,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
-	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	db, _ = sdk.NewLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
@@ -347,7 +347,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	}
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
-	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	db, _ = sdk.NewLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
@@ -388,7 +388,7 @@ func TestGaiaImportExport(t *testing.T) {
 	}
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
-	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	db, _ = sdk.NewLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
@@ -421,7 +421,7 @@ func TestGaiaImportExport(t *testing.T) {
 	fmt.Printf("Importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
-	newDB, _ := dbm.NewGoLevelDB("Simulation-2", dir)
+	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
 	defer func() {
 		newDB.Close()
 		os.RemoveAll(newDir)
@@ -483,7 +483,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		logger = log.NewNopLogger()
 	}
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
-	db, _ := dbm.NewGoLevelDB("Simulation", dir)
+	db, _ := sdk.NewLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
@@ -525,7 +525,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	fmt.Printf("Importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
-	newDB, _ := dbm.NewGoLevelDB("Simulation-2", dir)
+	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
 	defer func() {
 		newDB.Close()
 		os.RemoveAll(newDir)

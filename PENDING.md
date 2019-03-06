@@ -19,6 +19,15 @@
 
 ### Gaia
 
+* [\#3787] Fork the `x/bank` module into the Gaia application with only a
+modified message handler, where the modified message handler behaves the same as
+the standard `x/bank` message handler except for `MsgMultiSend` that must burn
+exactly 9 atoms and transfer 1 atom, and `MsgSend` is disabled.
+* [\#3789] Update validator creation flow:
+  * Remove `NewMsgCreateValidatorOnBehalfOf` and corresponding business logic
+  * Ensure the validator address equals the delegator address during
+  `MsgCreateValidator#ValidateBasic`
+
 ### SDK
 
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
@@ -27,6 +36,8 @@ tags.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
+
+* [\#3804] Update to Tendermint `v0.31.0-dev0`
 
 <!--------------------------------- FEATURES --------------------------------->
 
@@ -39,6 +50,9 @@ tags.
 ### Gaia
 
 ### SDK
+
+* [\#3719](https://github.com/cosmos/cosmos-sdk/issues/3719) DBBackend can now be set at compile time.
+  Defaults: goleveldb. Supported: cleveldb.
 
 ### Tendermint
 
@@ -81,6 +95,7 @@ CLI flag.
 * [\#3791] Ensure proper handling of invalid block maximum gas in the `BaseApp`.
 * [\#3790] Ensure a valid height is provided by `abci.RequestBeginBlock` in
 `BeginBlock`.
+* [\#3681](https://github.com/cosmos/cosmos-sdk/issues/3681) Migrate ledger-cosmos-go from ZondaX to Cosmos organization 
 
 ### Tendermint
 
@@ -100,6 +115,7 @@ CLI flag.
 ### Gaia
 
 * [\#3777](https://github.com/cosmso/cosmos-sdk/pull/3777) `gaiad export` no longer panics when the database is empty
+* [\#3806](https://github.com/cosmos/cosmos-sdk/pull/3806) Properly return errors from a couple of struct Unmarshal functions
 
 ### SDK
 

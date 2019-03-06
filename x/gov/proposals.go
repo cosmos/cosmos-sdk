@@ -206,7 +206,7 @@ func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	bz2, err := ProposalTypeFromString(s)
@@ -307,7 +307,7 @@ func (status *ProposalStatus) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	bz2, err := ProposalStatusFromString(s)

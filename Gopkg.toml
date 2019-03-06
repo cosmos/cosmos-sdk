@@ -40,10 +40,10 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.30.1"
+  revision = "v0.31.0-dev0"
 
 [[constraint]]
-  name = "github.com/zondax/ledger-cosmos-go"
+  name = "github.com/cosmos/ledger-cosmos-go"
   version = "=v0.9.8"
 
 ## deps without releases:

@@ -30,7 +30,7 @@ func NewCoin(denom string, amount Int) Coin {
 	mustValidateDenom(denom)
 
 	if amount.LT(ZeroInt()) {
-		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
+		panic(fmt.Errorf("negative coin amount: %v", amount))
 	}
 
 	return Coin{
@@ -148,7 +148,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		if err := validateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -389,8 +389,6 @@ func (coins Coins) AmountOf(denom string) Int {
 
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
-//
-// TODO: Remove once unsigned integers are used.
 func (coins Coins) IsAllPositive() bool {
 	if len(coins) == 0 {
 		return false
@@ -479,22 +477,19 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt     = `[[:digit:]]+`
-	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
-	reSpc     = `[[:space:]]*`
-	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reDnmString = `[a-z][a-z0-9]{2,15}`
+	reAmt       = `[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc       = `[[:space:]]*`
+	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
+	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
+	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
 func validateDenom(denom string) error {
-	if len(denom) < 3 || len(denom) > 16 {
-		return fmt.Errorf("invalid denom length: %s", denom)
+	if !reDnm.MatchString(denom) {
+		return fmt.Errorf("invalid denom: %s", denom)
 	}
-	if strings.ToLower(denom) != denom {
-		return fmt.Errorf("denom cannot contain upper case characters: %s", denom)
-	}
-
 	return nil
 }
 
@@ -521,8 +516,8 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if denomStr != strings.ToLower(denomStr) {
-		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	if err := validateDenom(denomStr); err != nil {
+		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
 	return NewCoin(denomStr, amount), nil

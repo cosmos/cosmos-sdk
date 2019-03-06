@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,6 +10,7 @@ import (
 
 // allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
+	logger := ctx.Logger().With("module", "x/distribution")
 
 	// fetch collected fees & fee pool
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
@@ -31,13 +34,24 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	// calculate proposer reward
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
-	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(fractionVotes))
-	proposerReward := feesCollected.MulDec(proposerMultiplier)
+	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(fractionVotes))
+	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
 
 	// pay proposer
+	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-	remaining := feesCollected.Sub(proposerReward)
+	if proposerValidator != nil {
+		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
+		remaining = feesCollected.Sub(proposerReward)
+	} else {
+		// proposer can be unknown if say, the unbonding period is 1 block, so
+		// e.g. a validator undelegates at block X, it's removed entirely by
+		// block X+1's endblock, then X+2 we need to refer to the previous
+		// proposer for X+1, but we've forgotten about them.
+		logger.Error(fmt.Sprintf(
+			"WARNING: Attempt to allocate proposer rewards to unknown proposer %s. This should happen only if the proposer unbonded completely within a single block, which generally should not happen except in exceptional circumstances (or fuzz testing). We recommend you investigate immediately.",
+			proposer.String()))
+	}
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
@@ -48,10 +62,11 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	for _, vote := range votes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
-		// TODO likely we should only reward validators who actually signed the block.
+		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
-		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPower))
+		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		reward = reward.Cap(remaining)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}

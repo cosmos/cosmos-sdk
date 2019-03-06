@@ -279,7 +279,7 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	va2, err := ValAddressFromBech32(s)
@@ -415,7 +415,7 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	ca2, err := ConsAddressFromBech32(s)

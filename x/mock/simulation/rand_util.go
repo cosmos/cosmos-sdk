@@ -37,13 +37,32 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // Generate a random amount
+// Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
+	var randInt = big.NewInt(0)
+	switch r.Intn(10) {
+	case 0:
+		// randInt = big.NewInt(0)
+	case 1:
+		randInt = max.BigInt()
+	default: // NOTE: there are 10 total cases.
+		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
+	}
+	return sdk.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
+// Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
-	randInt := big.NewInt(0).Rand(r, max.Int)
+	var randInt = big.NewInt(0)
+	switch r.Intn(10) {
+	case 0:
+		// randInt = big.NewInt(0)
+	case 1:
+		randInt = max.Int // the underlying big int with all precision bits.
+	default: // NOTE: there are 10 total cases.
+		randInt = big.NewInt(0).Rand(r, max.Int)
+	}
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 

@@ -14,10 +14,11 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,10 +71,13 @@ type Fixtures struct {
 func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir, err := ioutil.TempDir("", "gaia_integration_"+t.Name()+"_")
 	require.NoError(t, err)
+
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
+
 	return &Fixtures{
 		T:        t,
 		GDHome:   filepath.Join(tmpDir, ".gaiad"),
@@ -257,7 +261,7 @@ func (f *Fixtures) KeysShow(name string, flags ...string) keys.KeyOutput {
 	cmd := fmt.Sprintf("gaiacli keys show --home=%s %s", f.GCLIHome, name)
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var ko keys.KeyOutput
-	err := keys.UnmarshalJSON([]byte(out), &ko)
+	err := clientkeys.UnmarshalJSON([]byte(out), &ko)
 	require.NoError(f.T, err)
 	return ko
 }

@@ -10,22 +10,21 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
-
-	tmp := multiSigKey{
-		name: "myMultisig",
-		key:  tmpKey1.PubKey(),
-	}
+	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
+	tmp := keys.NewMultiInfo("myMultisig", pk)
 
 	assert.Equal(t, "myMultisig", tmp.GetName())
-	assert.Equal(t, keys.TypeLocal, tmp.GetType())
-	assert.Equal(t, "015ABFFB09DB738A45745A91E8C401423ECE4016", tmp.GetPubKey().Address().String())
-	assert.Equal(t, "cosmos1q9dtl7cfmdec53t5t2g733qpgglvusqk6xdntl", tmp.GetAddress().String())
+	assert.Equal(t, keys.TypeMulti, tmp.GetType())
+	assert.Equal(t, "79BF2B5B418A85329EC2149D1854D443F56F5A9F", tmp.GetPubKey().Address().String())
+	assert.Equal(t, "cosmos10xljkk6p32zn98kzzjw3s4x5g06k7k5lz6flcv", tmp.GetAddress().String())
 }
 
 func Test_showKeysCmd(t *testing.T) {
@@ -134,9 +133,9 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{sdk.PrefixAccount}, Bech32KeyOutput, false},
-		{"val", args{sdk.PrefixValidator}, Bech32ValKeyOutput, false},
-		{"cons", args{sdk.PrefixConsensus}, Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keys.Bech32KeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, keys.Bech32ValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, keys.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

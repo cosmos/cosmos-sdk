@@ -45,7 +45,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 
 	// load the app
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
+	db, err := sdk.NewLevelDB("gaia", dataDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

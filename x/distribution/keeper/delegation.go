@@ -107,9 +107,11 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	k.SetFeePool(ctx, feePool)
 
 	// add coins to user account
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-		return err
+	if !coins.IsZero() {
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+			return err
+		}
 	}
 
 	// remove delegator starting info

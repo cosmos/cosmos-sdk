@@ -8,7 +8,6 @@ import (
 
 // nolint
 const (
-	FlagAddressDelegator    = "address-delegator"
 	FlagAddressValidator    = "validator"
 	FlagAddressValidatorSrc = "addr-validator-source"
 	FlagAddressValidatorDst = "addr-validator-dest"
@@ -67,7 +66,6 @@ func init() {
 	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
 	fsDescriptionEdit.String(FlagDetails, types.DoNotModifyDesc, "The validator's (optional) details")
 	fsValidator.String(FlagAddressValidator, "", "The Bech32 address of the validator")
-	fsDelegator.String(FlagAddressDelegator, "", "The Bech32 address of the delegator")
 	fsRedelegation.String(FlagAddressValidatorSrc, "", "The Bech32 address of the source validator")
 	fsRedelegation.String(FlagAddressValidatorDst, "", "The Bech32 address of the destination validator")
 }

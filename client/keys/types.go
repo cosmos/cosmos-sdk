@@ -1,13 +1,6 @@
 package keys
 
 // used for outputting keys.Info over REST
-type KeyOutput struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Address  string `json:"address"`
-	PubKey   string `json:"pub_key"`
-	Mnemonic string `json:"mnemonic,omitempty"`
-}
 
 // AddNewKey request a new key
 type AddNewKey struct {

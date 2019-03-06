@@ -42,23 +42,17 @@ type msgCreateValidatorJSON struct {
 }
 
 // Default way to create validator. Delegator address and validator address are the same
-func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
+func NewMsgCreateValidator(
+	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
+	description Description, commission CommissionMsg, minSelfDelegation sdk.Int,
+) MsgCreateValidator {
 
-	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission, minSelfDelegation,
-	)
-}
-
-// Creates validator msg by delegator address on behalf of validator address
-func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:       description,
-		DelegatorAddress:  delAddr,
+		DelegatorAddress:  sdk.AccAddress(valAddr),
 		ValidatorAddress:  valAddr,
-		PubKey:            pubkey,
-		Value:             value,
+		PubKey:            pubKey,
+		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
 	}
@@ -107,7 +101,11 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Commission = msgCreateValJSON.Commission
 	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
-	msg.PubKey = sdk.MustGetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	var err error
+	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	if err != nil {
+		return err
+	}
 	msg.Value = msgCreateValJSON.Value
 	msg.MinSelfDelegation = msgCreateValJSON.MinSelfDelegation
 
@@ -128,6 +126,9 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	}
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
+	}
+	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
+		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)

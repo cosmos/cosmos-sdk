@@ -47,6 +47,14 @@
   revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
 
 [[projects]]
+  digest = "1:a2b34d1436ac24a0db176f84c015d80438602eeec12f2f8358bb72749711ab52"
+  name = "github.com/cosmos/ledger-cosmos-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e2f595b3b7b222e1cbe9daf89e73e4dcab02d54c"
+  version = "v0.9.8"
+
+[[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -514,14 +522,6 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:a2b34d1436ac24a0db176f84c015d80438602eeec12f2f8358bb72749711ab52"
-  name = "github.com/zondax/ledger-cosmos-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "e2f595b3b7b222e1cbe9daf89e73e4dcab02d54c"
-  version = "v0.9.8"
-
-[[projects]]
   digest = "1:f8e4c0b959174a1fa5946b12f1f2ac7ea5651bef20a9e4a8dac55dbffcaa6cd6"
   name = "github.com/zondax/ledger-go"
   packages = ["."]
@@ -667,6 +667,7 @@
     "github.com/bgentry/speakeasy",
     "github.com/btcsuite/btcd/btcec",
     "github.com/cosmos/go-bip39",
+    "github.com/cosmos/ledger-cosmos-go",
     "github.com/gogo/protobuf/proto",
     "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
@@ -718,7 +719,6 @@
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/types/time",
     "github.com/tendermint/tendermint/version",
-    "github.com/zondax/ledger-cosmos-go",
     "golang.org/x/crypto/bcrypt",
   ]
   solver-name = "gps-cdcl"

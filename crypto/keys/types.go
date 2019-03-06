@@ -3,10 +3,11 @@ package keys
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Keybase exposes operations on a generic keystore
@@ -39,6 +40,9 @@ type Keybase interface {
 	// CreateOffline creates, stores, and returns a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
 
+	// CreateMulti creates, stores, and returns a new multsig (offline) key reference
+	CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error)
+
 	// The following operations will *only* work on locally-stored keys
 	Update(name, oldpass string, getNewpass func() (string, error)) error
 	Import(name string, armor string) (err error)
@@ -61,12 +65,14 @@ const (
 	TypeLocal   KeyType = 0
 	TypeLedger  KeyType = 1
 	TypeOffline KeyType = 2
+	TypeMulti   KeyType = 3
 )
 
 var keyTypes = map[KeyType]string{
 	TypeLocal:   "local",
 	TypeLedger:  "ledger",
 	TypeOffline: "offline",
+	TypeMulti:   "multi",
 }
 
 // String implements the stringer interface for KeyType.
@@ -88,9 +94,12 @@ type Info interface {
 	GetPath() (*hd.BIP44Params, error)
 }
 
-var _ Info = &localInfo{}
-var _ Info = &ledgerInfo{}
-var _ Info = &offlineInfo{}
+var (
+	_ Info = &localInfo{}
+	_ Info = &ledgerInfo{}
+	_ Info = &offlineInfo{}
+	_ Info = &multiInfo{}
+)
 
 // localInfo is the public information about a locally stored key
 type localInfo struct {
@@ -193,6 +202,54 @@ func (i offlineInfo) GetAddress() types.AccAddress {
 }
 
 func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
+	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+}
+
+type multisigPubKeyInfo struct {
+	PubKey crypto.PubKey `json:"pubkey"`
+	Weight uint          `json:"weight"`
+}
+type multiInfo struct {
+	Name      string               `json:"name"`
+	PubKey    crypto.PubKey        `json:"pubkey"`
+	Threshold uint                 `json:"threshold"`
+	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
+}
+
+func NewMultiInfo(name string, pub crypto.PubKey) Info {
+	multiPK := pub.(multisig.PubKeyMultisigThreshold)
+
+	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
+	for i, pk := range multiPK.PubKeys {
+		// TODO: Recursively check pk for total weight?
+		pubKeys[i] = multisigPubKeyInfo{pk, 1}
+	}
+
+	return &multiInfo{
+		Name:      name,
+		PubKey:    pub,
+		Threshold: multiPK.K,
+		PubKeys:   pubKeys,
+	}
+}
+
+func (i multiInfo) GetType() KeyType {
+	return TypeMulti
+}
+
+func (i multiInfo) GetName() string {
+	return i.Name
+}
+
+func (i multiInfo) GetPubKey() crypto.PubKey {
+	return i.PubKey
+}
+
+func (i multiInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
+}
+
+func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 

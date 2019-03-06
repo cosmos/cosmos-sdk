@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -27,39 +26,29 @@ const (
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagDevice = "device"
 
-	flagMultiSigThreshold  = "multisig-threshold"
+	flagMultiSigThreshold = "multisig-threshold"
+	flagShowMultiSig      = "show-multisig"
+
 	defaultMultiSigKeyName = "multi"
 )
 
-var _ keys.Info = (*multiSigKey)(nil)
-
-type multiSigKey struct {
-	name string
-	key  tmcrypto.PubKey
-}
-
-func (m multiSigKey) GetName() string            { return m.name }
-func (m multiSigKey) GetType() keys.KeyType      { return keys.TypeLocal }
-func (m multiSigKey) GetPubKey() tmcrypto.PubKey { return m.key }
-func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address()) }
-func (m multiSigKey) GetPath() (*hd.BIP44Params, error) {
-	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
-}
-
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name]",
+		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",
-		Long:  `Return public details of one local key.`,
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  runShowCmd,
+		Long: `Return public details of a single local key. If multiple names are
+provided, then an ephemeral multisig key will be created under the name "multi"
+consisting of all the keys provided by name and multisig threshold.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: runShowCmd,
 	}
 
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
-	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
-	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
-	cmd.Flags().BoolP(FlagDevice, "d", false, "output the address in the device")
+	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
+	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
+	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in the device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
+	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
 
 	return cmd
 }
@@ -79,6 +68,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			if err != nil {
 				return err
 			}
+
 			pks[i] = info.GetPubKey()
 		}
 
@@ -87,16 +77,15 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if err != nil {
 			return err
 		}
+
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = multiSigKey{
-			name: defaultMultiSigKeyName,
-			key:  multikey,
-		}
+		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)
 	isShowPubKey := viper.GetBool(FlagPublicKey)
 	isShowDevice := viper.GetBool(FlagDevice)
+	isShowMultiSig := viper.GetBool(flagShowMultiSig)
 
 	isOutputSet := false
 	tmp := cmd.Flag(cli.OutputFlag)
@@ -122,6 +111,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		printKeyAddress(info, bechKeyOut)
 	case isShowPubKey:
 		printPubKey(info, bechKeyOut)
+	case isShowMultiSig:
+		printMultiSigKeyInfo(info, bechKeyOut)
 	default:
 		printKeyInfo(info, bechKeyOut)
 	}
@@ -163,11 +154,11 @@ func validateMultisigThreshold(k, nKeys int) error {
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return Bech32KeyOutput, nil
+		return keys.Bech32KeyOutput, nil
 	case sdk.PrefixValidator:
-		return Bech32ValKeyOutput, nil
+		return keys.Bech32ValKeyOutput, nil
 	case sdk.PrefixConsensus:
-		return Bech32ConsKeyOutput, nil
+		return keys.Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)

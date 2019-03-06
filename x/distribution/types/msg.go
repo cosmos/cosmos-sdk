@@ -63,7 +63,7 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 }
 
 func (msg MsgWithdrawDelegatorReward) Route() string { return MsgRoute }
-func (msg MsgWithdrawDelegatorReward) Type() string  { return "withdraw_delegation_reward" }
+func (msg MsgWithdrawDelegatorReward) Type() string  { return "withdraw_delegator_reward" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {

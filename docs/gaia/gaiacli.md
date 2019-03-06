@@ -683,7 +683,7 @@ gaiacli query distr rewards <delegator_address>
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing
 a transaction from a multisig account involve cooperation among the parties involved. A multisig
 transaction can be initiated by any of the key holders, and at least one of them would need to
-import other parties' public keys into their local database and generate a multisig public key
+import other parties' public keys into their Keybase and generate a multisig public key
 in order to finalize and broadcast the transaction.
 
 For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each of which is held
@@ -692,17 +692,17 @@ generate the multisig account public key:
 
 ```
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
-  p2
+  p2 \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
 
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
-  p3
+  p3 \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t
 
 gaiacli keys add \
-  --multisig-threshold=2
+  p1p2p3 \
+  --multisig-threshold=2 \
   --multisig=p1,p2,p3
-  p1p2p3
 ```
 
 A new multisig public key `p1p2p3` has been stored, and its address will be
@@ -710,6 +710,15 @@ used as signer of multisig transactions:
 
 ```bash
 gaiacli keys show --address p1p2p3
+```
+
+You may also view multisig threshold, pubkey constituents and respective weights
+by viewing the JSON output of the key or passing the `--show-multisig` flag:
+
+```bash
+gaiacli keys show p1p2p3 -o json
+
+gaiacli keys show p1p2p3 --show-multisig
 ```
 
 The first step to create a multisig transaction is to initiate it on behalf
@@ -726,10 +735,10 @@ The file `unsignedTx.json` contains the unsigned transaction encoded in JSON.
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p1 \
+  --from=p1 \
   --output-document=p1signature.json \
-  unsignedTx.json
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -738,10 +747,10 @@ respective signature:
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p2 \
+  --from=p2 \
   --output-document=p2signature.json \
-  unsignedTx.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

@@ -19,6 +19,10 @@
 
 ### Gaia
 
+* [\#3787] Fork the `x/bank` module into the Gaia application with only a
+modified message handler, where the modified message handler behaves the same as
+the standard `x/bank` message handler except for `MsgMultiSend` that must burn
+exactly 9 atoms and transfer 1 atom, and `MsgSend` is disabled.
 * [\#3789] Update validator creation flow:
   * Remove `NewMsgCreateValidatorOnBehalfOf` and corresponding business logic
   * Ensure the validator address equals the delegator address during
@@ -32,6 +36,7 @@ tags.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
+
 * [\#3804] Update to Tendermint `v0.31.0-dev0`
 
 <!--------------------------------- FEATURES --------------------------------->

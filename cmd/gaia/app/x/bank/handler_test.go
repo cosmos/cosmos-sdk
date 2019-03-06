@@ -62,7 +62,7 @@ func createTestInput(t *testing.T) testInput {
 	require.NoError(t, ms.LoadLatestVersion())
 
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tKeyParams)
-	authKeeper := auth.NewAccountKeeper(
+	accKeeper := auth.NewAccountKeeper(
 		cdc,
 		keyAcc,
 		paramsKeeper.Subspace(auth.DefaultParamspace),
@@ -70,7 +70,7 @@ func createTestInput(t *testing.T) testInput {
 	)
 
 	bankKeeper := bank.NewBaseKeeper(
-		authKeeper,
+		accKeeper,
 		paramsKeeper.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,
 	)
@@ -80,7 +80,7 @@ func createTestInput(t *testing.T) testInput {
 		require.NoError(t, err)
 	}
 
-	return testInput{ctx, authKeeper, bankKeeper}
+	return testInput{ctx, accKeeper, bankKeeper}
 }
 
 func TestHandlerMsgSendTransfersDisabled(t *testing.T) {

@@ -32,6 +32,7 @@ tags.
 * [\#3751] Disable (temporarily) support for ED25519 account key pairs.
 
 ### Tendermint
+
 * [\#3804] Update to Tendermint `v0.31.0-dev0`
 
 <!--------------------------------- FEATURES --------------------------------->
@@ -48,6 +49,8 @@ tags.
 
 * [\#3719](https://github.com/cosmos/cosmos-sdk/issues/3719) DBBackend can now be set at compile time.
   Defaults: goleveldb. Supported: cleveldb.
+* [\#3747](https://github.com/cosmos/cosmos-sdk/pull/3747) Implement coin denomination
+conversion utilities.
 
 ### Tendermint
 

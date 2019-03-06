@@ -519,7 +519,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 	}
 
 	prevHeight := app.LastBlockHeight()
-	if prevHeight != 0 && req.Header.Height != prevHeight+1 {
+	if req.Header.Height != prevHeight+1 {
 		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
 	}
 

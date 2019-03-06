@@ -20,7 +20,7 @@
 ### Gaia
 
 * [\#3787] Fork the `x/bank` module into the Gaia application with only a
-modified message router, where the modified message router behaves the same as
+modified message handler, where the modified message handler behaves the same as
 the standard `x/bank` message handler except for `MsgMultiSend` that must burn
 exactly 9 atoms and transfer 1 atom, and `MsgSend` is disabled.
 * [\#3789] Update validator creation flow:

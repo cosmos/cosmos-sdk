@@ -348,10 +348,13 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 // CONTRACT: Tokens are assumed to have come from not-bonded pool.
 func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
 
-	// bondedShare/delegatedShare
-	exRate := v.DelegatorShareExRate()
-	if exRate.IsZero() {
-		panic("zero exRate should not happen")
+	// calculate the shares to issue
+	var issuedShares sdk.Dec
+	if v.DelegatorShares.IsZero() {
+		// the first delegation to a validator sets the exchange rate to one
+		issuedShares = amount.ToDec()
+	} else {
+		issuedShares = v.DelegatorShares.MulInt(amount).QuoInt(v.Tokens)
 	}
 
 	if v.Status == sdk.Bonded {
@@ -359,7 +362,6 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 	}
 
 	v.Tokens = v.Tokens.Add(amount)
-	issuedShares := amount.ToDec().Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
@@ -382,7 +384,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 
 		// leave excess tokens in the validator
 		// however fully use all the delegator shares
-		issuedTokens = v.DelegatorShareExRate().Mul(delShares).TruncateInt()
+		issuedTokens = v.ShareTokens(delShares).TruncateInt()
 		v.Tokens = v.Tokens.Sub(issuedTokens)
 		if v.Tokens.IsNegative() {
 			panic("attempting to remove more tokens than available in validator")
@@ -397,24 +399,21 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	return v, pool, issuedTokens
 }
 
-// DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
-// UNITS: tokens/delegator-shares
-func (v Validator) DelegatorShareExRate() sdk.Dec {
-	if v.DelegatorShares.IsZero() {
-		// the first delegation to a validator sets the exchange rate to one
-		return sdk.OneDec()
-	}
-	return v.Tokens.ToDec().Quo(v.DelegatorShares)
+// In some situations, the exchange rate becomes invalid, e.g. if
+// Validator loses all tokens due to slashing. In this case,
+// make all future delegations invalid.
+func (v Validator) InvalidExRate() bool {
+	return v.Tokens.IsZero() && v.DelegatorShares.IsPositive()
 }
 
-// DelegatorShareExRateTruncated gets the exchange rate of tokens over delegator shares, truncated.
-// UNITS: tokens/delegator-shares
-func (v Validator) DelegatorShareExRateTruncated() sdk.Dec {
-	if v.DelegatorShares.IsZero() {
-		// the first delegation to a validator sets the exchange rate to one
-		return sdk.OneDec()
-	}
-	return v.Tokens.ToDec().QuoTruncate(v.DelegatorShares)
+// calculate the token worth of provided shares
+func (v Validator) ShareTokens(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+}
+
+// calculate the token worth of provided shares, truncated
+func (v Validator) ShareTokensTruncated(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 
 // get the bonded tokens which the validator holds
@@ -443,19 +442,15 @@ func (v Validator) PotentialTendermintPower() int64 {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetJailed() bool                  { return v.Jailed }
-func (v Validator) GetMoniker() string               { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus        { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddress }
-func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
-func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
-func (v Validator) GetBondedTokens() sdk.Int         { return v.BondedTokens() }
-func (v Validator) GetTendermintPower() int64        { return v.TendermintPower() }
-func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() sdk.Int    { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }
-func (v Validator) GetDelegatorShareExRate() sdk.Dec { return v.DelegatorShareExRate() }
-func (v Validator) GetDelegatorShareExRateTruncated() sdk.Dec {
-	return v.DelegatorShareExRateTruncated()
-}
+func (v Validator) GetJailed() bool               { return v.Jailed }
+func (v Validator) GetMoniker() string            { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
+func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }
+func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
+func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
+func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
+func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
+func (v Validator) GetTendermintPower() int64     { return v.TendermintPower() }
+func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
+func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
+func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }

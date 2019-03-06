@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +49,10 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 		// block X+1's endblock, then X+2 we need to refer to the previous
 		// proposer for X+1, but we've forgotten about them.
 		logger.Error(fmt.Sprintf(
-			"WARNING: Attempt to allocate proposer rewards to unknown proposer %s. This should happen only if the proposer unbonded completely within a single block, which generally should not happen except in exceptional circumstances (or fuzz testing). We recommend you investigate immediately.",
+			"WARNING: Attempt to allocate proposer rewards to unknown proposer %s. "+
+				"This should happen only if the proposer unbonded completely within a single block, "+
+				"which generally should not happen except in exceptional circumstances (or fuzz testing). "+
+				"We recommend you investigate immediately.",
 			proposer.String()))
 	}
 
@@ -65,7 +69,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-		reward = reward.Cap(remaining)
+		reward = reward.Intersect(remaining)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}

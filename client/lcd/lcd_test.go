@@ -553,7 +553,7 @@ func TestBonding(t *testing.T) {
 	// hence we utilize the exchange rate in the following test
 
 	validator2 := getValidator(t, port, operAddrs[1])
-	delTokensAfterRedelegation := delegatorDels[0].GetShares().Mul(validator2.DelegatorShareExRate())
+	delTokensAfterRedelegation := validator2.ShareTokens(delegatorDels[0].GetShares())
 	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])

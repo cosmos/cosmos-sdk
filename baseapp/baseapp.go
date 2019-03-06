@@ -524,7 +524,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 }
 
 func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
-	if req.Header.Height < 0 {
+	if req.Header.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Header.Height)
 	}
 

@@ -53,6 +53,9 @@ tags.
 
 * [\#3719](https://github.com/cosmos/cosmos-sdk/issues/3719) DBBackend can now be set at compile time.
   Defaults: goleveldb. Supported: cleveldb.
+* [\3813](https://github.com/cosmos/cosmos-sdk/pull/3813) New sdk.NewCoins safe constructor to replace bare
+  sdk.Coins{} declarations.
+
 
 ### Tendermint
 

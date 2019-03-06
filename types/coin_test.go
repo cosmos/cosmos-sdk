@@ -519,3 +519,34 @@ func TestCoinsIsAnyGTE(t *testing.T) {
 	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAnyGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
 	assert.True(t, Coins{{"xxx", one}, {"yyy", one}}.IsAnyGTE(Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
+
+func TestNewCoins(t *testing.T) {
+	tenatom := NewInt64Coin("atom", 10)
+	tenbtc := NewInt64Coin("btc", 10)
+	zeroeth := NewInt64Coin("eth", 0)
+	type args struct {
+		coins []Coin
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      Coins
+		wantPanic bool
+	}{
+		{"empty args", args{[]Coin{}}, Coins{}, false},
+		{"one coin", args{[]Coin{tenatom}}, Coins{tenatom}, false},
+		{"sort after create", args{[]Coin{tenbtc, tenatom}}, Coins{tenatom, tenbtc}, false},
+		{"sort and remove zeroes", args{[]Coin{zeroeth, tenbtc, tenatom}}, Coins{tenatom, tenbtc}, false},
+		{"panic on dups", args{[]Coin{tenatom, tenatom}}, Coins{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { NewCoins(tt.args.coins...) })
+				return
+			}
+			got := NewCoins(tt.args.coins...)
+			require.True(t, got.IsEqual(tt.want))
+		})
+	}
+}

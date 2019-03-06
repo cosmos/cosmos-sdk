@@ -3,7 +3,7 @@
 // mainnet launch -- MsgMultiSend messages.
 //
 // NOTE: This fork should be removed entirely once transfers are enabled and
-// the Gaia router should be reset to using the original bank module router.
+// the Gaia router should be reset to using the original bank module handler.
 package bank
 
 import (

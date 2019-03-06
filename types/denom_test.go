@@ -39,6 +39,13 @@ func TestConvertCoins(t *testing.T) {
 		{NewCoin(Atom, NewInt(5)), Uatom, NewCoin(Uatom, NewInt(5000000)), false},  // atom => uatom
 		{NewCoin(Atom, NewInt(5)), Matom, NewCoin(Matom, NewInt(500000)), false},   // atom => matom
 		{NewCoin(Atom, NewInt(5)), "katom", NewCoin("katom", NewInt(5000)), false}, // atom => katom
+
+		{NewCoin(Uatom, NewInt(5000000)), Matom, NewCoin(Matom, NewInt(500000)), false},   // uatom => matom
+		{NewCoin(Uatom, NewInt(5000000)), "katom", NewCoin("katom", NewInt(5000)), false}, // uatom => katom
+		{NewCoin(Uatom, NewInt(5000000)), Atom, NewCoin(Atom, NewInt(5)), false},          // uatom => atom
+
+		{NewCoin(Matom, NewInt(500000)), "katom", NewCoin("katom", NewInt(5000)), false}, // matom => katom
+		{NewCoin(Matom, NewInt(500000)), Uatom, NewCoin(Uatom, NewInt(5000000)), false},  // matom => uatom
 	}
 
 	for i, tc := range testCases {

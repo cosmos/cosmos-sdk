@@ -107,6 +107,7 @@ CLI flag.
 ### Gaia
 
 * [\#3777](https://github.com/cosmso/cosmos-sdk/pull/3777) `gaiad export` no longer panics when the database is empty
+* [\#3806](https://github.com/cosmos/cosmos-sdk/pull/3806) Properly return errors from a couple of struct Unmarshal functions
 
 ### SDK
 

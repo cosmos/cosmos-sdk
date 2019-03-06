@@ -58,14 +58,14 @@ func ConvertCoins(coin Coin, denom string) (Coin, error) {
 		return Coin{}, err
 	}
 
-	srcUnit, ok := denomUnits[coin.Denom]
+	srcUnit, ok := GetDenomUnit(coin.Denom)
 	if !ok {
 		return Coin{}, fmt.Errorf("source denom not registered: %s", coin.Denom)
 	}
 
-	dstUnit, ok := denomUnits[denom]
+	dstUnit, ok := GetDenomUnit(denom)
 	if !ok {
-		return Coin{}, fmt.Errorf("destination denom not registered: %s", coin.Denom)
+		return Coin{}, fmt.Errorf("destination denom not registered: %s", denom)
 	}
 
 	if srcUnit.Equal(dstUnit) {
@@ -73,8 +73,8 @@ func ConvertCoins(coin Coin, denom string) (Coin, error) {
 	}
 
 	if srcUnit.LT(dstUnit) {
-		return NewCoin(denom, coin.Amount.Quo(srcUnit.Quo(dstUnit))), nil
+		return NewCoin(denom, coin.Amount.Mul(dstUnit.Quo(srcUnit))), nil
 	}
 
-	return NewCoin(Uatom, coin.Amount.Mul(dstUnit.Quo(srcUnit))), nil
+	return NewCoin(denom, coin.Amount.Quo(srcUnit.Quo(dstUnit))), nil
 }

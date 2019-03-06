@@ -26,6 +26,13 @@
 
 ### SDK
 
+* \#3750 Track outstanding rewards per-validator instead of globally,
+         and fix the main simulation issue, which was that slashes of
+         re-delegations to a validator were not correctly accounted for
+         in fee distribution when the redelegation in question had itself
+          been slashed (from a fault committed by a different validator)
+         in the same BeginBlock. Outstanding rewards are now available
+         on a per-validator basis in REST.
 * [\#3669] Ensure consistency in message naming, codec registration, and JSON
 tags.
 * #3788 Change order of operations for greater accuracy when calculating delegation share token value
@@ -80,12 +87,6 @@ CLI flag.
 
 ### SDK
 
-* \#3750 Track outstanding rewards per-validator instead of globally,
-         and fix the main simulation issue, which was that slashes of
-         re-delegations to a validator were not correctly accounted for
-         in fee distribution when the redelegation in question had itself
-          been slashed (from a fault committed by a different validator)
-         in the same BeginBlock
 * \#3753 Remove no-longer-used governance penalty parameter
 * \#3679 Consistent operators across Coins, DecCoins, Int, Dec
           replaced: Minus->Sub Plus->Add Div->Quo

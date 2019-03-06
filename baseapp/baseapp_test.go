@@ -1244,9 +1244,12 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas())
 
+	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+
 	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 5000000}})
 	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
 
 	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: -5000000}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+	require.Panics(t, func() { app.getMaximumBlockGas() })
 }

@@ -12,45 +12,65 @@ const (
 	Atom  = "atom"
 )
 
-// DenomUnits contains a mapping of denomination mapped to their respective unit
+// denomUnits contains a mapping of denomination mapped to their respective unit
 // multipliers.
-var DenomUnits = map[string]Int{
+var denomUnits = map[string]Int{
 	Atom:  OneInt(),
 	Uatom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)),
 	Matom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(5), nil)),
-	// further units to be supported...
 }
 
-// ToUatoms converts a coin to uatoms. It panics if the given coin does not have
-// a denom unit multiplier.
-func ToUatoms(coin Coin) Coin {
-	if coin.Denom == Uatom {
-		return coin
+// RegisterDenom registers a denomination with a corresponding unit. If the
+// denomination is already registered, an error will be returned.
+func RegisterDenom(denom string, unit Int) error {
+	if err := validateDenom(denom); err != nil {
+		return err
 	}
 
-	unit, ok := DenomUnits[coin.Denom]
-	if !ok {
-		panic(fmt.Sprintf("unsupported coin type: %s", coin.Denom))
+	if _, ok := denomUnits[denom]; ok {
+		return fmt.Errorf("denom %s already registered", denom)
 	}
 
-	return NewCoin(Uatom, coin.Amount.Mul(DenomUnits["uatom"].Quo(unit)))
+	denomUnits[denom] = unit
+	return nil
 }
 
-// FromUatoms converts a uatom coin to another coin specified by the given denom.
-// It panics if the denom does not have a unit multiplier.
-func FromUatoms(coin Coin, denom string) Coin {
-	if coin.Denom != Uatom {
-		panic(fmt.Sprintf("invalid coin type: %s", coin.Denom))
+// GetDenomUnit returns a unit for a given denomination if it exists. A boolean
+// is returned if the denomination is registered.
+func GetDenomUnit(denom string) (Int, bool) {
+	if err := validateDenom(denom); err != nil {
+		return ZeroInt(), false
 	}
 
-	if denom == Uatom {
-		return coin
+	unit, ok := denomUnits[denom]
+	return unit, ok
+}
+
+// ConvertCoins attempts to convert a coin to a given denomination. If the given
+// denomination is invalid or if neither denomination is registered, an error
+// is returned.
+func ConvertCoins(coin Coin, denom string) (Coin, error) {
+	if err := validateDenom(denom); err != nil {
+		return Coin{}, err
 	}
 
-	unit, ok := DenomUnits[denom]
+	srcUnit, ok := denomUnits[coin.Denom]
 	if !ok {
-		panic(fmt.Sprintf("unsupported coin type: %s", denom))
+		return Coin{}, fmt.Errorf("source denom not registered: %s", coin.Denom)
 	}
 
-	return NewCoin(denom, coin.Amount.Quo(DenomUnits[Uatom].Quo(unit)))
+	dstUnit, ok := denomUnits[denom]
+	if !ok {
+		return Coin{}, fmt.Errorf("destination denom not registered: %s", coin.Denom)
+	}
+
+	if srcUnit.Equal(dstUnit) {
+		return NewCoin(denom, coin.Amount), nil
+	}
+
+	if srcUnit.LT(dstUnit) {
+		return NewCoin(denom, coin.Amount.Quo(srcUnit.Quo(dstUnit))), nil
+	}
+
+	return NewCoin(Uatom, coin.Amount.Mul(dstUnit.Quo(srcUnit))), nil
 }

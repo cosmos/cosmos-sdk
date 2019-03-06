@@ -2,23 +2,11 @@ package types
 
 import (
 	"fmt"
-	"math/big"
-)
-
-// Denomination constants
-const (
-	Uatom = "uatom"
-	Matom = "matom"
-	Atom  = "atom"
 )
 
 // denomUnits contains a mapping of denomination mapped to their respective unit
 // multipliers.
-var denomUnits = map[string]Int{
-	Atom:  OneInt(),
-	Uatom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)),
-	Matom: NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(5), nil)),
-}
+var denomUnits = map[string]Int{}
 
 // RegisterDenom registers a denomination with a corresponding unit. If the
 // denomination is already registered, an error will be returned.

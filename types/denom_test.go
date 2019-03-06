@@ -49,7 +49,7 @@ func TestConvertCoins(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		res, err := ConvertCoins(tc.input, tc.denom)
+		res, err := ConvertCoin(tc.input, tc.denom)
 		require.Equal(
 			t, tc.expErr, err != nil,
 			"unexpected error; tc: #%d, input: %s, denom: %s", i, tc.input, tc.denom,

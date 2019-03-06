@@ -50,10 +50,10 @@ func GetDenomUnit(denom string) (Int, bool) {
 	return unit, true
 }
 
-// ConvertCoins attempts to convert a coin to a given denomination. If the given
+// ConvertCoin attempts to convert a coin to a given denomination. If the given
 // denomination is invalid or if neither denomination is registered, an error
 // is returned.
-func ConvertCoins(coin Coin, denom string) (Coin, error) {
+func ConvertCoin(coin Coin, denom string) (Coin, error) {
 	if err := validateDenom(denom); err != nil {
 		return Coin{}, err
 	}

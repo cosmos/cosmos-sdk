@@ -21,7 +21,7 @@
 
 * [\#3787] Fork the `x/bank` module into the Gaia application with only a
 modified message router, where the modified message router behaves the same as
-the standard `x/bank` message router except for `MsgMultiSend` that must burn
+the standard `x/bank` message handler except for `MsgMultiSend` that must burn
 exactly 9 atoms and transfer 1 atom, and `MsgSend` is disabled.
 * [\#3789] Update validator creation flow:
   * Remove `NewMsgCreateValidatorOnBehalfOf` and corresponding business logic

@@ -43,7 +43,11 @@ func GetDenomUnit(denom string) (Int, bool) {
 	}
 
 	unit, ok := denomUnits[denom]
-	return unit, ok
+	if !ok {
+		return ZeroInt(), false
+	}
+
+	return unit, true
 }
 
 // ConvertCoins attempts to convert a coin to a given denomination. If the given

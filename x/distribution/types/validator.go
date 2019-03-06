@@ -91,3 +91,7 @@ func (vs ValidatorSlashEvents) String() string {
 	}
 	return strings.TrimSpace(out)
 }
+
+// outstanding (un-withdrawn) rewards for a validator
+// inexpensive to track, allows simple sanity checks
+type ValidatorOutstandingRewards = sdk.DecCoins

@@ -51,13 +51,13 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
+		ok := handler(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
 
-		event(fmt.Sprintf("staking/MsgCreateValidator/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("staking/MsgCreateValidator/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }
@@ -89,12 +89,12 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
+		ok := handler(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgEditValidator/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("staking/MsgEditValidator/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }
@@ -129,12 +129,12 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
+		ok := handler(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgDelegate/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("staking/MsgDelegate/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }
@@ -168,12 +168,12 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 				msg.GetSignBytes(), msg.ValidateBasic())
 		}
 		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
+		ok := handler(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgUndelegate/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("staking/MsgUndelegate/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }
@@ -213,12 +213,12 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
+		ok := handler(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }

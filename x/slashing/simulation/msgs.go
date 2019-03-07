@@ -23,12 +23,12 @@ func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		result := slashing.NewHandler(k)(ctx, msg)
-		if result.IsOK() {
+		ok := slashing.NewHandler(k)(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		event(fmt.Sprintf("slashing/MsgUnjail/%v", result.IsOK()))
-		opMsg = simulation.NewOperationMsg(msg, result.IsOK(), "")
+		event(fmt.Sprintf("slashing/MsgUnjail/%v", ok))
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }

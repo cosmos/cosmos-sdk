@@ -145,7 +145,6 @@ func NewCoins(coins ...Coin) Coins {
 		panic(fmt.Errorf("find duplicate denom: %s", newCoins[dupIndex]))
 	}
 
-	// validate
 	if !newCoins.IsValid() {
 		panic(fmt.Errorf("invalid coin set: %s", newCoins))
 	}

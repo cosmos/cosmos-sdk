@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // initialize the mock application for this module
@@ -36,7 +36,7 @@ func TestIBCMsgs(t *testing.T) {
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
 
-	priv1 := ed25519.GenPrivKey()
+	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	var emptyCoins sdk.Coins
@@ -62,11 +62,11 @@ func TestIBCMsgs(t *testing.T) {
 		DestChain: destChain,
 	}
 
-	transferMsg := IBCTransferMsg{
+	transferMsg := MsgIBCTransfer{
 		IBCPacket: packet,
 	}
 
-	receiveMsg := IBCReceiveMsg{
+	receiveMsg := MsgIBCReceive{
 		IBCPacket: packet,
 		Relayer:   addr1,
 		Sequence:  0,

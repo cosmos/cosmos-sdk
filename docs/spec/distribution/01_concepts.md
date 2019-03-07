@@ -1,3 +1,5 @@
+# Concepts
+
 ## Reference Counting in F1 Fee Distribution
 
 In F1 fee distribution, in order to calculate the rewards a delegator ought to receive when they

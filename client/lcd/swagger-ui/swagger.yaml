@@ -3,14 +3,12 @@ swagger: "2.0"
 info:
   version: "3.0"
   title: Gaia-Lite for Cosmos
-  description: A REST interface for state queries, transaction generation, signing, and broadcast.
+  description: A REST interface for state queries, transaction generation and broadcasting.
 tags:
   - name: ICS0
     description: Tendermint APIs, such as query blocks, transactions and validatorset
-  - name: ICS1
-    description: Key management APIs
   - name: ICS20
-    description: Create, sign and broadcast transactions
+    description: Create and broadcast transactions
   - name: ICS21
     description: Stake module APIs
   - name: ICS22
@@ -243,8 +241,8 @@ paths:
     post:
       tags:
         - ICS0
-      summary: broadcast Tx
-      description: broadcast tx with tendermint rpc
+      summary: Broadcast a signed tx
+      description: Broadcast a signed tx to a full node
       consumes:
         - application/json
       produces:
@@ -252,93 +250,28 @@ paths:
       parameters:
         - in: body
           name: txBroadcast
-          description: Build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
+          description: The tx must be a signed StdTx. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
           required: true
           schema:
             type: object
             properties:
               tx:
-                type: string
+                $ref: "#/definitions/StdTx"
               return:
                 type: string
                 example: block
       responses:
         200:
-          description: Broadcast tx result
+          description: Tx broadcasting result
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
         500:
           description: Internal Server Error
-  /tx/sign:
+  /txs/encode:
     post:
       tags:
-        - ICS20
-      summary: Sign a Tx
-      description: Sign a Tx providing locally stored account and according password
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: sendToken
-          description: sign tx
-          required: true
-          schema:
-            type: object
-            properties:
-              base_req:
-                $ref: "#/definitions/BaseReq"
-              tx:
-                $ref: "#/definitions/StdTx"
-              append_sig:
-                type: boolean
-                example: true
-      responses:
-        200:
-          description: The signed Tx
-          schema:
-            $ref: "#/definitions/StdTx"
-        400:
-          description: The Tx was malformated or key doesn't exist
-        401:
-          description: Key password is wrong
-        500:
-          description: Server internal error
-  /tx/broadcast:
-    post:
-      tags:
-        - ICS20
-      summary: Send a signed Tx
-      description: Send a signed Tx to a Gaiad full node
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: txBroadcast
-          description: broadcast tx
-          required: true
-          schema:
-            type: object
-            properties:
-              tx:
-                $ref: "#/definitions/StdTx"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-          schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
-        400:
-          description: The Tx was malformated
-        500:
-          description: Server internal error
-  /tx/encode:
-    post:
-      tags:
-        - ICS20
-      summary: Encode a transaction to wire format
+        - ICS0
+      summary: Encode a transaction to the Amino wire format
       description: Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
       consumes:
         - application/json
@@ -347,7 +280,7 @@ paths:
       parameters:
         - in: body
           name: tx
-          description: The transaction to encode
+          description: The tx to encode
           required: true
           schema:
             type: object
@@ -356,15 +289,15 @@ paths:
                 $ref: "#/definitions/StdTx"
       responses:
         200:
-          description: Transaction was successfully decoded and re-encoded
+          description: The tx was successfully decoded and re-encoded
           schema:
             type: object
             properties:
               tx:
                 type: string
-                example: The base64-encoded Amino-serialized bytes for the transaction
+                example: The base64-encoded Amino-serialized bytes for the tx
         400:
-          description: The Tx was malformated
+          description: The tx was malformated
         500:
           description: Server internal error
   /bank/balances/{address}:
@@ -393,8 +326,7 @@ paths:
           description: Server internal error
   /bank/accounts/{address}/transfers:
     post:
-      summary: Send coins (build -> sign -> send)
-      description: Send coins (build -> sign -> send)
+      summary: Send coins from one account to another
       tags:
         - ICS20
       consumes:
@@ -409,7 +341,7 @@ paths:
           type: string
         - in: body
           name: account
-          description: The password of the account to remove from the KMS
+          description: The sender and tx information
           required: true
           schema:
             type: object
@@ -422,188 +354,13 @@ paths:
                   $ref: "#/definitions/Coin"
       responses:
         202:
-          description: Tx was send and will probably be added to the next block
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid request
-        401:
-          description: Key password is wrong
         500:
           description: Server internal error
-  /keys:
-    get:
-      summary: List of accounts stored locally
-      tags:
-        - ICS1
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Array of accounts
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/KeyOutput"
-        500:
-          description: Server internal error
-    post:
-      summary: Create a new account locally
-      tags:
-        - ICS1
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: account
-          description: The account to create
-          schema:
-            type: object
-            required:
-              - name
-              - password
-              - seed
-            properties:
-              name:
-                type: string
-              password:
-                type: string
-              seed:
-                type: string
-      responses:
-        200:
-          description: Returns account information of the created key
-          schema:
-            $ref: "#/definitions/KeyOutput"
-        400:
-          description: Invalid request
-        409:
-          description: Key name confliction
-        500:
-          description: Server internal error
-  /keys/seed:
-    get:
-      summary: Create a new seed to create a new account with
-      tags:
-        - ICS1
-      responses:
-        200:
-          description: 24 word Seed
-          schema:
-            type: string
-            example: blossom pool issue kidney elevator blame furnace winter account merry vessel security depend exact travel bargain problem jelly rural net again mask roast chest
-  /keys/{name}/recover:
-    post:
-      summary: Recover a account from a seed
-      tags:
-        - ICS1
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: name
-          description: Account name
-          required: true
-          type: string
-        - in: body
-          name: pwdAndSeed
-          description: Provide password and seed to recover a key
-          schema:
-            type: object
-            required:
-              - password
-              - seed
-            properties:
-              password:
-                type: string
-              seed:
-                type: string
-      responses:
-        200:
-          description: Returns account information of the recovered key
-          schema:
-            $ref: "#/definitions/KeyOutput"
-        400:
-          description: Invalid request
-        409:
-          description: Key name confliction
-        500:
-          description: Server internal error
-  /keys/{name}:
-    parameters:
-      - in: path
-        name: name
-        description: Account name
-        required: true
-        type: string
-    get:
-      summary: Get a certain locally stored account
-      tags:
-        - ICS1
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Locally stored account
-          schema:
-            $ref: "#/definitions/KeyOutput"
-        404:
-          description: Key doesn't exist
-    put:
-      summary: Update the password for this account in the KMS
-      tags:
-        - ICS1
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: account
-          description: The new and old password
-          schema:
-            type: object
-            required:
-              - new_password
-              - old_password
-            properties:
-              new_password:
-                type: string
-              old_password:
-                type: string
-      responses:
-        200:
-          description: Updated password
-        401:
-          description: Key password is wrong
-        404:
-          description: Key doesn't exist
-    delete:
-      summary: Remove an account
-      tags:
-        - ICS1
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: account
-          description: The password of the account to remove from the KMS
-          schema:
-            type: object
-            required:
-              - password
-            properties:
-              password:
-                type: string
-      responses:
-        200:
-          description: Removed account
-        401:
-          description: Key password is wrong
-        404:
-          description: Key doesn't exist
   /auth/accounts/{address}:
     get:
       summary: Get the account information on blockchain
@@ -679,9 +436,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               delegation:
                 $ref: "#/definitions/Coin"
@@ -764,9 +521,9 @@ paths:
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_addr:
+              validator_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -861,17 +618,17 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: The sender and tx information
           schema:
             type: object
             properties:
               base_req:
                 $ref: "#/definitions/BaseReq"
-              delegator_addr:
+              delegator_address:
                 $ref: "#/definitions/Address"
-              validator_src_addr:
+              validator_src_addressess:
                 $ref: "#/definitions/ValidatorAddress"
-              validator_dst_addr:
+              validator_dst_address:
                 $ref: "#/definitions/ValidatorAddress"
               shares:
                 type: string
@@ -884,13 +641,11 @@ paths:
         - application/json
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or redelegation request body
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
   /staking/delegators/{delegatorAddr}/validators:
@@ -1170,16 +925,14 @@ paths:
             type: object
             properties:
               base_req:
-                $ref: "#/definitions/BaseReq"
+                $ref: "#/definitions/StdTx"
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: Invalid validator address or base_req
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
   /slashing/parameters:
@@ -1246,13 +999,11 @@ paths:
                   $ref: "#/definitions/Coin"
       responses:
         200:
-          description: OK
+          description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal body
-        401:
-          description: Key password is wrong
         500:
           description: Internal Server Error
     get:
@@ -1807,6 +1558,28 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
+  /distribution/validators/{validatorAddr}/outstanding_rewards:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+     summary: Fee distribution outstanding rewards of a single validator
+     tags:
+       - ICS24
+     produces:
+       - application/json
+     responses:
+       200:
+         description: OK
+         schema:
+           type: array
+           items:
+             $ref: "#/definitions/Coin"
+       500:
+         description: Internal Server Error
   /distribution/validators/{validatorAddr}/rewards:
     parameters:
       - in: path
@@ -1815,8 +1588,8 @@ paths:
         required: true
         type: string
     get:
-      summary: Commission and self-delegation rewards of a single a validator
-      description: Query the commission and self-delegation rewards of a validator.
+      summary: Commission and self-delegation rewards of a single validator
+      description: Query the commission and self-delegation rewards of validator.
       tags:
         - ICS24
       produces:
@@ -1877,22 +1650,6 @@ paths:
                 type: string
               community_tax:
                 type: string
-        500:
-          description: Internal Server Error
-  /distribution/outstanding_rewards:
-    get:
-      summary: Fee distribution outstanding rewards
-      tags:
-        - ICS24
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Coin"
         500:
           description: Internal Server Error
 definitions:
@@ -2189,9 +1946,6 @@ definitions:
         type: string
         example: "cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
         description: Sender address or Keybase name to generate a transaction
-      password:
-        type: string
-        example: "12345678"
       memo:
         type: string
         example: "Sent via Cosmos Voyager 🚀"
@@ -2214,10 +1968,6 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
-      generate_only:
-        type: boolean
-        example: false
-        description: Create a JSON transaction that can be signed client side instead of actually signing and broadcasting
       simulate:
         type: boolean
         example: false
@@ -2358,9 +2108,9 @@ definitions:
   Delegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       shares:
         type: string
@@ -2369,9 +2119,9 @@ definitions:
   UnbondingDelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_addr:
+      validator_address:
         type: string
       initial_balance:
         type: string
@@ -2384,11 +2134,11 @@ definitions:
   Redelegation:
     type: object
     properties:
-      delegator_addr:
+      delegator_address:
         type: string
-      validator_src_addr:
+      validator_src_address:
         type: string
-      validator_dst_addr:
+      validator_dst_address:
         type: string
       creation_height:
         type: integer
@@ -2405,7 +2155,7 @@ definitions:
   ValidatorDistInfo:
     type: object
     properties:
-      operator_addr:
+      operator_address:
         $ref: "#/definitions/ValidatorAddress"
       self_bond_rewards:
         type: array

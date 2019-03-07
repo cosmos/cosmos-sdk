@@ -1,4 +1,4 @@
-# Design Overview
+# Concepts
 
 *Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
@@ -139,20 +139,7 @@ If a delegator does not vote, it will inherit its validator vote.
 
 ### Validator’s punishment for non-voting
 
-Validators are required to vote on all proposals to ensure that results have 
-legitimacy. Voting is part of validators' directives and failure to do it will 
-result in a penalty. 
-
-If a validator’s address is not in the list of addresses that voted on a 
-proposal and the vote is closed (i.e. `MinDeposit` was reached and `Voting 
-period` is over), then the validator will automatically be partially slashed by
-`GovernancePenalty`.
-
-*Note: Need to define values for `GovernancePenalty`*
-
-**Exception:** If a proposal is accepted via the special condition of having a ratio of `Yes` votes to `InitTotalVotingPower` that exceeds 2:3, validators cannot be punished for not having voted on it. 
-That is because the proposal will close as soon as the ratio exceeds 2:3, 
-making it mechanically impossible for some validators to vote on it.
+At present, validators are not punished for failing to vote.
 
 ### Governance address
 

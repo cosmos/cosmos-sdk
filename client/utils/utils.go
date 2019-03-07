@@ -3,12 +3,13 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -40,8 +41,6 @@ func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 // QueryContext. It ensures that the account exists, has a proper number and
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
-//
-// NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
@@ -62,6 +61,22 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	if cliCtx.Simulate {
 		return nil
+	}
+
+	if !cliCtx.SkipConfirm {
+		stdSignMsg, err := txBldr.BuildSignMsg(msgs)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
+
+		buf := client.BufferStdin()
+		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		if err != nil || !ok {
+			fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+			return err
+		}
 	}
 
 	passphrase, err := keys.GetPassphrase(fromName)
@@ -110,20 +125,27 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool,
+) (err error) {
+
 	var stdTx auth.StdTx
+
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
 	} else {
 		stdTx, err = buildUnsignedStdTx(txBldr, cliCtx, msgs)
 	}
+
 	if err != nil {
 		return
 	}
+
 	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err == nil {
 		fmt.Fprintf(cliCtx.Output, "%s\n", json)
 	}
+
 	return
 }
 
@@ -188,6 +210,23 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, false)
+}
+
+// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+func ReadStdTxFromFile(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
+	var bytes []byte
+	if filename == "-" {
+		bytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		bytes, err = ioutil.ReadFile(filename)
+	}
+	if err != nil {
+		return
+	}
+	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
+		return
+	}
+	return
 }
 
 func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,

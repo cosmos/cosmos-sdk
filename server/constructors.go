@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -24,7 +25,7 @@ type (
 
 func openDB(rootDir string) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("application", dataDir)
+	db, err := sdk.NewLevelDB("application", dataDir)
 	return db, err
 }
 

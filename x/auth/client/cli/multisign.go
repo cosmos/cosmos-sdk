@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
@@ -52,7 +52,7 @@ recommended to set such parameters manually.
 
 func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := authclient.ReadStdTxFromFile(cdc, args[0])
+		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
@@ -66,9 +66,8 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return
 		}
-		if multisigInfo.GetType() != crkeys.TypeOffline {
-			return fmt.Errorf("%q must be of type offline: %s",
-				args[1], multisigInfo.GetType())
+		if multisigInfo.GetType() != crkeys.TypeMulti {
+			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)

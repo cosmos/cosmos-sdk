@@ -13,24 +13,26 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
 	keeper.SetWithdrawAddrEnabled(ctx, data.WithdrawAddrEnabled)
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddr, dwi.WithdrawAddr)
+		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
 	}
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
-	keeper.SetOutstandingRewards(ctx, data.OutstandingRewards)
+	for _, rew := range data.OutstandingRewards {
+		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
+	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddr, acc.Accumulated)
+		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		keeper.SetValidatorHistoricalRewards(ctx, his.ValidatorAddr, his.Period, his.Rewards)
+		keeper.SetValidatorHistoricalRewards(ctx, his.ValidatorAddress, his.Period, his.Rewards)
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		keeper.SetValidatorCurrentRewards(ctx, cur.ValidatorAddr, cur.Rewards)
+		keeper.SetValidatorCurrentRewards(ctx, cur.ValidatorAddress, cur.Rewards)
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		keeper.SetDelegatorStartingInfo(ctx, del.ValidatorAddr, del.DelegatorAddr, del.StartingInfo)
+		keeper.SetDelegatorStartingInfo(ctx, del.ValidatorAddress, del.DelegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddr, evt.Height, evt.Event)
+		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Event)
 	}
 }
 
@@ -44,19 +46,28 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	keeper.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddr: del,
-			WithdrawAddr:  addr,
+			DelegatorAddress: del,
+			WithdrawAddress:  addr,
 		})
 		return false
 	})
 	pp := keeper.GetPreviousProposerConsAddr(ctx)
-	outstanding := keeper.GetOutstandingRewards(ctx)
+	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
+	keeper.IterateValidatorOutstandingRewards(ctx,
+		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
+				ValidatorAddress:   addr,
+				OutstandingRewards: rewards,
+			})
+			return false
+		},
+	)
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
 	keeper.IterateValidatorAccumulatedCommissions(ctx,
 		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
 			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
-				ValidatorAddr: addr,
-				Accumulated:   commission,
+				ValidatorAddress: addr,
+				Accumulated:      commission,
 			})
 			return false
 		},
@@ -65,9 +76,9 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	keeper.IterateValidatorHistoricalRewards(ctx,
 		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
-				ValidatorAddr: val,
-				Period:        period,
-				Rewards:       rewards,
+				ValidatorAddress: val,
+				Period:           period,
+				Rewards:          rewards,
 			})
 			return false
 		},
@@ -76,8 +87,8 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	keeper.IterateValidatorCurrentRewards(ctx,
 		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool) {
 			cur = append(cur, types.ValidatorCurrentRewardsRecord{
-				ValidatorAddr: val,
-				Rewards:       rewards,
+				ValidatorAddress: val,
+				Rewards:          rewards,
 			})
 			return false
 		},
@@ -86,9 +97,9 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	keeper.IterateDelegatorStartingInfos(ctx,
 		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
 			dels = append(dels, types.DelegatorStartingInfoRecord{
-				ValidatorAddr: val,
-				DelegatorAddr: del,
-				StartingInfo:  info,
+				ValidatorAddress: val,
+				DelegatorAddress: del,
+				StartingInfo:     info,
 			})
 			return false
 		},
@@ -97,9 +108,9 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	keeper.IterateValidatorSlashEvents(ctx,
 		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
-				ValidatorAddr: val,
-				Height:        height,
-				Event:         event,
+				ValidatorAddress: val,
+				Height:           height,
+				Event:            event,
 			})
 			return false
 		},

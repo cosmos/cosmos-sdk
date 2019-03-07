@@ -22,7 +22,6 @@ type GasEstimateResponse struct {
 // that all share common "base" fields.
 type BaseReq struct {
 	From          string       `json:"from"`
-	Password      string       `json:"password"`
 	Memo          string       `json:"memo"`
 	ChainID       string       `json:"chain_id"`
 	AccountNumber uint64       `json:"account_number"`
@@ -31,19 +30,17 @@ type BaseReq struct {
 	GasPrices     sdk.DecCoins `json:"gas_prices"`
 	Gas           string       `json:"gas"`
 	GasAdjustment string       `json:"gas_adjustment"`
-	GenerateOnly  bool         `json:"generate_only"`
 	Simulate      bool         `json:"simulate"`
 }
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	from, password, memo, chainID string, gas, gasAdjustment string,
-	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
+	from, memo, chainID string, gas, gasAdjustment string, accNumber, seq uint64,
+	fees sdk.Coins, gasPrices sdk.DecCoins, simulate bool,
 ) BaseReq {
 
 	return BaseReq{
 		From:          strings.TrimSpace(from),
-		Password:      password,
 		Memo:          strings.TrimSpace(memo),
 		ChainID:       strings.TrimSpace(chainID),
 		Fees:          fees,
@@ -52,7 +49,6 @@ func NewBaseReq(
 		GasAdjustment: strings.TrimSpace(gasAdjustment),
 		AccountNumber: accNumber,
 		Sequence:      seq,
-		GenerateOnly:  genOnly,
 		Simulate:      simulate,
 	}
 }
@@ -60,8 +56,8 @@ func NewBaseReq(
 // Sanitize performs basic sanitization on a BaseReq object.
 func (br BaseReq) Sanitize() BaseReq {
 	return NewBaseReq(
-		br.From, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
-		br.AccountNumber, br.Sequence, br.Fees, br.GasPrices, br.GenerateOnly, br.Simulate,
+		br.From, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
+		br.AccountNumber, br.Sequence, br.Fees, br.GasPrices, br.Simulate,
 	)
 }
 
@@ -69,12 +65,8 @@ func (br BaseReq) Sanitize() BaseReq {
 // logic is needed, the implementing request handler should perform those
 // checks manually.
 func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
-	if !br.GenerateOnly && !br.Simulate {
+	if !br.Simulate {
 		switch {
-		case len(br.Password) == 0:
-			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-			return false
-
 		case len(br.ChainID) == 0:
 			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
 			return false
@@ -91,8 +83,8 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 		}
 	}
 
-	if len(br.From) == 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "name or address required but not specified")
+	if _, err := sdk.AccAddressFromBech32(br.From); err != nil || len(br.From) == 0 {
+		WriteErrorResponse(w, http.StatusUnauthorized, fmt.Sprintf("invalid from address: %s", br.From))
 		return false
 	}
 
@@ -119,13 +111,13 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 
 // ErrorResponse defines the attributes of a JSON error response.
 type ErrorResponse struct {
-	Code    int    `json:"code,omitempty"`
-	Message string `json:"message"`
+	Code  int    `json:"code,omitempty"`
+	Error string `json:"error"`
 }
 
 // NewErrorResponse creates a new ErrorResponse instance.
-func NewErrorResponse(code int, msg string) ErrorResponse {
-	return ErrorResponse{Code: code, Message: msg}
+func NewErrorResponse(code int, err string) ErrorResponse {
+	return ErrorResponse{Code: code, Error: err}
 }
 
 // WriteErrorResponse prepares and writes a HTTP error
@@ -200,6 +192,9 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	var output []byte
 
 	switch response.(type) {
+	case []byte:
+		output = response.([]byte)
+
 	default:
 		var err error
 		if indent {
@@ -211,8 +206,6 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-	case []byte:
-		output = response.([]byte)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

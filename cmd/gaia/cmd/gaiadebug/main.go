@@ -112,12 +112,17 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 				pubKeyI, err4 = sdk.GetValPubKeyBech32(pubkeyString)
 
 				if err4 != nil {
-					return fmt.Errorf(`Expected hex, base64, or bech32. Got errors:
-			hex: %v,
-			base64: %v
-			bech32 acc: %v
-			bech32 val: %v
-			`, err, err2, err3, err4)
+					var err5 error
+					pubKeyI, err5 = sdk.GetConsPubKeyBech32(pubkeyString)
+					if err5 != nil {
+						return fmt.Errorf(`Expected hex, base64, or bech32. Got errors:
+								hex: %v,
+								base64: %v
+								bech32 Acc: %v
+								bech32 Val: %v
+								bech32 Cons: %v`,
+							err, err2, err3, err4, err5)
+					}
 
 				}
 			}

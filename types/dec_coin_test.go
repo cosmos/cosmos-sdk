@@ -60,22 +60,22 @@ func TestDecCoinIsPositive(t *testing.T) {
 	require.False(t, dc.IsPositive())
 }
 
-func TestPlusDecCoin(t *testing.T) {
+func TestAddDecCoin(t *testing.T) {
 	decCoinA1 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(11, 1))
 	decCoinA2 := NewDecCoinFromDec(testDenom1, NewDecWithPrec(22, 1))
 	decCoinB1 := NewDecCoinFromDec(testDenom2, NewDecWithPrec(11, 1))
 
 	// regular add
-	res := decCoinA1.Plus(decCoinA1)
+	res := decCoinA1.Add(decCoinA1)
 	require.Equal(t, decCoinA2, res, "sum of coins is incorrect")
 
 	// bad denom add
 	require.Panics(t, func() {
-		decCoinA1.Plus(decCoinB1)
+		decCoinA1.Add(decCoinB1)
 	}, "expected panic on sum of different denoms")
 }
 
-func TestPlusDecCoins(t *testing.T) {
+func TestAddDecCoins(t *testing.T) {
 	one := NewDec(1)
 	zero := NewDec(0)
 	two := NewDec(2)
@@ -91,7 +91,7 @@ func TestPlusDecCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Plus(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo)
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
@@ -222,5 +222,37 @@ func TestDecCoinsString(t *testing.T) {
 	for i, tc := range testCases {
 		out := tc.input.String()
 		require.Equal(t, tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
+	}
+}
+
+func TestDecCoinsIntersect(t *testing.T) {
+	testCases := []struct {
+		input1         string
+		input2         string
+		expectedResult string
+	}{
+		{"", "", ""},
+		{"1.0stake", "", ""},
+		{"1.0stake", "1.0stake", "1.0stake"},
+		{"", "1.0stake", ""},
+		{"1.0stake", "", ""},
+		{"2.0stake,1.0trope", "1.9stake", "1.9stake"},
+		{"2.0stake,1.0trope", "2.1stake", "2.0stake"},
+		{"2.0stake,1.0trope", "0.9trope", "0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.9stake,0.9trope,20.0other", "1.9stake,0.9trope"},
+		{"2.0stake,1.0trope", "1.0other", ""},
+	}
+
+	for i, tc := range testCases {
+		in1, err := ParseDecCoins(tc.input1)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		in2, err := ParseDecCoins(tc.input2)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+		exr, err := ParseDecCoins(tc.expectedResult)
+		require.NoError(t, err, "unexpected parse error in %v", i)
+
+		require.True(t, in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		// require.Equal(t, tc.expectedResult, in1.Intersect(in2).String(), "in1.cap(in2) != exr in %v", i)
 	}
 }

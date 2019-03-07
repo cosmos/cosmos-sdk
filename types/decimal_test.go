@@ -156,44 +156,61 @@ func TestDecsEqual(t *testing.T) {
 
 func TestArithmetic(t *testing.T) {
 	tests := []struct {
-		d1, d2                         Dec
-		expMul, expDiv, expAdd, expSub Dec
+		d1, d2                                Dec
+		expMul, expMulTruncate                Dec
+		expQuo, expQuoRoundUp, expQuoTruncate Dec
+		expAdd, expSub                        Dec
 	}{
-		// d1       d2         MUL        DIV        ADD        SUB
-		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
-		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
+		//  d1         d2         MUL    MulTruncate    QUO    QUORoundUp QUOTrunctate  ADD         SUB
+		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
+		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
+		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
+		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
+		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
 
-		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
-		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
-		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
-		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
+		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
+		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
+		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
+		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
 
-		{NewDec(3), NewDec(7), NewDec(21), NewDecWithPrec(428571428571428571, 18), NewDec(10), NewDec(-4)},
-		{NewDec(2), NewDec(4), NewDec(8), NewDecWithPrec(5, 1), NewDec(6), NewDec(-2)},
-		{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
+		{NewDec(3), NewDec(7), NewDec(21), NewDec(21),
+			NewDecWithPrec(428571428571428571, 18), NewDecWithPrec(428571428571428572, 18), NewDecWithPrec(428571428571428571, 18),
+			NewDec(10), NewDec(-4)},
+		{NewDec(2), NewDec(4), NewDec(8), NewDec(8), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1),
+			NewDec(6), NewDec(-2)},
 
-		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2),
-			NewDec(1), NewDec(3), NewDec(0)},
-		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8),
-			MustNewDecFromStr("10.009009009009009009"), NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
+		{NewDec(100), NewDec(100), NewDec(10000), NewDec(10000), NewDec(1), NewDec(1), NewDec(1), NewDec(200), NewDec(0)},
+
+		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2), NewDecWithPrec(225, 2),
+			NewDec(1), NewDec(1), NewDec(1), NewDec(3), NewDec(0)},
+		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8), NewDecWithPrec(1109889, 8),
+			MustNewDecFromStr("10.009009009009009009"), MustNewDecFromStr("10.009009009009009010"), MustNewDecFromStr("10.009009009009009009"),
+			NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
 	}
 
 	for tcIndex, tc := range tests {
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
+		resMulTruncate := tc.d1.MulTruncate(tc.d2)
 		require.True(t, tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
 		require.True(t, tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
 		require.True(t, tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
+		require.True(t, tc.expMulTruncate.Equal(resMulTruncate), "exp %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
 
 		if tc.d2.IsZero() { // panic for divide by zero
 			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
 		} else {
-			resDiv := tc.d1.Quo(tc.d2)
-			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
+			resQuo := tc.d1.Quo(tc.d2)
+			require.True(t, tc.expQuo.Equal(resQuo), "exp %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
+
+			resQuoRoundUp := tc.d1.QuoRoundUp(tc.d2)
+			require.True(t, tc.expQuoRoundUp.Equal(resQuoRoundUp), "exp %v, res %v, tc %d",
+				tc.expQuoRoundUp.String(), resQuoRoundUp.String(), tcIndex)
+
+			resQuoTruncate := tc.d1.QuoTruncate(tc.d2)
+			require.True(t, tc.expQuoTruncate.Equal(resQuoTruncate), "exp %v, res %v, tc %d",
+				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
 		}
 	}
 }

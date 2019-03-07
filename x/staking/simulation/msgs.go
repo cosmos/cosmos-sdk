@@ -82,6 +82,9 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 			Details:  simulation.RandStringOfLength(r, 10),
 		}
 
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return noOperation, nil, nil
+		}
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
@@ -110,6 +113,9 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return noOperation, nil, nil
+		}
 		val := keeper.RandomValidator(r, k, ctx)
 		validatorAddress := val.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
@@ -119,7 +125,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "no-operation", nil, nil
+			return noOperation, nil, nil
 		}
 
 		msg := staking.NewMsgDelegate(
@@ -159,9 +165,9 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 			return noOperation, nil, nil
 		}
 		msg := staking.MsgUndelegate{
-			DelegatorAddr: delegatorAddress,
-			ValidatorAddr: delegation.ValidatorAddr,
-			SharesAmount:  numShares,
+			DelegatorAddress: delegatorAddress,
+			ValidatorAddress: delegation.ValidatorAddress,
+			SharesAmount:     numShares,
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
@@ -186,6 +192,9 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return noOperation, nil, nil
+		}
 		srcVal := keeper.RandomValidator(r, k, ctx)
 		srcValidatorAddress := srcVal.GetOperator()
 		destVal := keeper.RandomValidator(r, k, ctx)
@@ -201,10 +210,10 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			return noOperation, nil, nil
 		}
 		msg := staking.MsgBeginRedelegate{
-			DelegatorAddr:    delegatorAddress,
-			ValidatorSrcAddr: srcValidatorAddress,
-			ValidatorDstAddr: destValidatorAddress,
-			SharesAmount:     sdk.NewDecFromInt(amount),
+			DelegatorAddress:    delegatorAddress,
+			ValidatorSrcAddress: srcValidatorAddress,
+			ValidatorDstAddress: destValidatorAddress,
+			SharesAmount:        amount.ToDec(),
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -215,7 +224,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			write()
 		}
 		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgBeginRedelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }

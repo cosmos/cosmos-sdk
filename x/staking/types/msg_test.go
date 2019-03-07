@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,55 +75,6 @@ func TestMsgEditValidator(t *testing.T) {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
-}
-
-// test ValidateBasic and GetSigners for MsgCreateValidatorOnBehalfOf
-func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
-	commission1 := NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	commission2 := NewCommissionMsg(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
-
-	tests := []struct {
-		name, moniker, identity, website, details string
-		commissionMsg                             CommissionMsg
-		minSelfDelegation                         sdk.Int
-		delegatorAddr                             sdk.AccAddress
-		validatorAddr                             sdk.ValAddress
-		validatorPubKey                           crypto.PubKey
-		bond                                      sdk.Coin
-		expectPass                                bool
-	}{
-		{"basic good", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
-		{"partial description", "", "", "c", "", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
-		{"empty description", "", "", "", "", commission1, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"empty delegator address", "a", "b", "c", "d", commission1, sdk.OneInt(), sdk.AccAddress(emptyAddr), addr2, pk2, coinPos, false},
-		{"empty validator address", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), emptyAddr, pk2, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.OneInt(), sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", commission2, sdk.OneInt(), sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
-		{"zero min self delegation", "a", "b", "c", "d", commission2, sdk.ZeroInt(), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"negative min self delegation", "", "", "c", "", commission2, sdk.NewInt(-1), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-		{"delegation less than min self delegation", "a", "b", "c", "d", commission2, coinPos.Amount.Add(sdk.OneInt()), sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
-	}
-
-	for _, tc := range tests {
-		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidatorOnBehalfOf(
-			tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation,
-		)
-
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-
-	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneInt())
-	addrs := msg.GetSigners()
-	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr1)}, addrs, "Signers on default msg is wrong")
-
-	msg = NewMsgCreateValidatorOnBehalfOf(sdk.AccAddress(addr2), addr1, pk1, coinPos, Description{}, CommissionMsg{}, sdk.OneInt())
-	addrs = msg.GetSigners()
-	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr2), sdk.AccAddress(addr1)}, addrs, "Signers for onbehalfof msg is wrong")
 }
 
 // test ValidateBasic for MsgDelegate

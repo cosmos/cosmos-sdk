@@ -233,7 +233,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
+			spendableCoins = spendableCoins.Add(sdk.Coins{spendableCoin})
 		}
 	}
 
@@ -270,15 +270,15 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Add(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Minus(sdk.Coins{coin})
+		bva.Coins = bva.Coins.Sub(sdk.Coins{coin})
 	}
 }
 
@@ -286,6 +286,11 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 // values by which delegated vesting and delegated vesting need to decrease and
 // by which amount the base coins need to increase. The resulting base coins are
 // returned.
+//
+// NOTE: The undelegation (bond refund) amount may exceed the delegated
+// vesting (bond) amount due to the way undelegation truncates the bond refund,
+// which can increase the validator's exchange rate (tokens/shares) slightly if
+// the undelegated tokens are non-integral.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
@@ -295,24 +300,25 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			panic("undelegation attempt with zero coins")
 		}
 		delegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
+		delegatedVesting := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
-		// Y := D - X
+		// Y := min(DV, D - X)
 		x := sdk.MinInt(delegatedFree, coin.Amount)
-		y := coin.Amount.Sub(x)
+		y := sdk.MinInt(delegatedVesting, coin.Amount.Sub(x))
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Minus(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Sub(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Minus(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Plus(sdk.Coins{coin})
+		bva.Coins = bva.Coins.Add(sdk.Coins{coin})
 	}
 }
 
@@ -407,7 +413,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
-		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
+		vestedAmt := ovc.Amount.ToDec().Mul(s).RoundInt()
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 
@@ -417,7 +423,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return cva.OriginalVesting.Minus(cva.GetVestedCoins(blockTime))
+	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins per denom for a
@@ -480,7 +486,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 // GetVestingCoins returns the total number of vesting coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.OriginalVesting.Minus(dva.GetVestedCoins(blockTime))
+	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins for a delayed

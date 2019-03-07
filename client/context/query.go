@@ -66,15 +66,13 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 		return nil, errors.New("account decoder required but not provided")
 	}
 
-	res, err := ctx.QueryStore(auth.AddressStoreKey(address), ctx.AccountStore)
+	res, err := ctx.queryAccount(address)
 	if err != nil {
 		return nil, err
-	} else if len(res) == 0 {
-		return nil, ErrInvalidAccount(address)
 	}
 
-	account, err := ctx.AccDecoder(res)
-	if err != nil {
+	var account auth.Account
+	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
 		return nil, err
 	}
 
@@ -117,32 +115,33 @@ func (ctx CLIContext) GetAccountSequence(address []byte) (uint64, error) {
 // error is returned if it does not.
 func (ctx CLIContext) EnsureAccountExists() error {
 	addr := ctx.GetFromAddress()
-	accountBytes, err := ctx.QueryStore(auth.AddressStoreKey(addr), ctx.AccountStore)
-	if err != nil {
-		return err
-	}
-
-	if len(accountBytes) == 0 {
-		return ErrInvalidAccount(addr)
-	}
-
-	return nil
+	return ctx.EnsureAccountExistsFromAddr(addr)
 }
 
 // EnsureAccountExistsFromAddr ensures that an account exists for a given
 // address. Instead of using the context's from name, a direct address is
 // given. An error is returned if it does not.
 func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
-	accountBytes, err := ctx.QueryStore(auth.AddressStoreKey(addr), ctx.AccountStore)
+	_, err := ctx.queryAccount(addr)
+	return err
+}
+
+// queryAccount queries an account using custom query endpoint of auth module
+// returns an error if result is `null` otherwise account data
+func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
+	bz, err := ctx.Codec.MarshalJSON(auth.NewQueryAccountParams(addr))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if len(accountBytes) == 0 {
-		return ErrInvalidAccount(addr)
+	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, auth.QueryAccount)
+
+	res, err := ctx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return res, nil
 }
 
 // query performs a query from a Tendermint node with the provided store name

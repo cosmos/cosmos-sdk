@@ -57,13 +57,6 @@ __참고__: 이 문항은 제네시스 파일에 참가하려는 밸리데이터
 
 밸리데이터로써 제네시스에 참가하고 싶으시다면 우선 본인(또는 위임자)가 stake를 보유하고 있다는 것을 증명해야 합니다. 스테이크를 검증인에게 본딩하는 하나 이상의 트랜잭션을 발생하신 후, 해당 트랜잭션을 제네시스 파일에 추가하시기 바랍니다.
 
-우선 두가지의 케이스가 존재합니다:
-
-- 경우 1: 본인 밸리데이터의 stake를 본딩(위임)한다.
-- 경우 2: 타인(위임자)의 stake를 본딩한다.
-
-### Case 1: 최초 위임이 밸리데이터 본인 주소에서 발생하는 경우
-
 이런 경우에는 `gentx`를 생성하셔야 합니다:
 
 ```bash
@@ -83,40 +76,6 @@ __참고__: 이 명령어는 제네시스에서의 처리를 위해 `gentx`를 `
 :::
 
 `gentx`는 자체위임 정보가 포함된 JSON 파일입니다. 모든 제네시스 트랜잭셕은 `genesis coordinator`에 의하여 모아진 후 최초 `genesis.json`파일과 대치하여 검증합니다. 최초 `genesis.json`에는 계정 리스트와 각 계정이 보유하고 있는 코인 정보가 포함되어있습니다. 트랜잭션이 처리되었다면 해당 정보는 `genesis.json`의 `gentx` 항목에 머지(merge)됩니다.
-
-### Case 2:  최초 위임이 위임자(delegator) 주소에서 발생하는 경우
-
-이런 경우에는 위임자와 검증인의 서명이 둘다 필요합니다. 우선 서명이 되지 않은 `create-validator` 트랜잭션을 생성하신 후 `unsignedValTx`라는 파일에 저장하십시오:
-
-```bash
-gaiacli tx staking create-validator \
-  --amount=5STAKE \
-  --pubkey=$(gaiad tendermint show-validator) \
-  --moniker="choose a moniker" \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
-  --commission-rate="0.10" \
-  --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01" \
-  --address-delegator="address of the delegator" \
-  --generate-only \
-  > unsignedValTx.json
-```
-
-이제 해당 `unsignedValTx`를 밸리데이터의 프라이빗 키를 이용해 서명합니다. 서명이된 아웃풋을 `signedValTx.json`이라는 파일에 저장합니다:
-
-```bash
-gaiacli tx sign unsignedValTx.json --from=<validator_key_name> > signedValTx.json
-```
-
-이제 이 파일을 위임자에게 전달하세요. 위임인은 다음 명령어를 실행하면 됩니다:
-
-```bash
-gaiacli tx sign signedValTx.json --from=<delegator_key_name> > gentx.json
-```
-
-이 파일은 제네시스 절차에서 필요하기 때문에 Case 1과 동일하게  `gentx.json`은 밸리데이터 머신의 `~/.gaiad/config/gentx` 폴더에 포함되어야 합니다 (Case 2 에서는 직접 해당 파을을 이동해야 합니다). 
-
 
 ### 제네시스 파일 복사, 제네시스 트랜잭션 처리하기
 

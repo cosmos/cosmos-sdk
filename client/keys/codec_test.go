@@ -6,35 +6,37 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 type testCases struct {
-	Keys    []KeyOutput
-	Answers []KeyOutput
+	Keys    []keys.KeyOutput
+	Answers []keys.KeyOutput
 	JSON    [][]byte
 }
 
 func getTestCases() testCases {
 	return testCases{
-		[]KeyOutput{
-			{"A", "B", "C", "D", "E"},
-			{"A", "B", "C", "D", ""},
-			{"", "B", "C", "D", ""},
-			{"", "", "", "", ""},
+		[]keys.KeyOutput{
+			{"A", "B", "C", "D", "E", 0, nil},
+			{"A", "B", "C", "D", "", 0, nil},
+			{"", "B", "C", "D", "", 0, nil},
+			{"", "", "", "", "", 0, nil},
 		},
-		make([]KeyOutput, 4),
+		make([]keys.KeyOutput, 4),
 		[][]byte{
-			[]byte(`{"name":"A","type":"B","address":"C","pub_key":"D","mnemonic":"E"}`),
-			[]byte(`{"name":"A","type":"B","address":"C","pub_key":"D"}`),
-			[]byte(`{"name":"","type":"B","address":"C","pub_key":"D"}`),
-			[]byte(`{"name":"","type":"","address":"","pub_key":""}`),
+			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D","mnemonic":"E"}`),
+			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D"}`),
+			[]byte(`{"name":"","type":"B","address":"C","pubkey":"D"}`),
+			[]byte(`{"name":"","type":"","address":"","pubkey":""}`),
 		},
 	}
 }
 
 func TestMarshalJSON(t *testing.T) {
 	type args struct {
-		o KeyOutput
+		o keys.KeyOutput
 	}
 
 	data := getTestCases()

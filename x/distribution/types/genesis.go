@@ -9,41 +9,47 @@ import (
 // the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses
 type DelegatorWithdrawInfo struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	WithdrawAddress  sdk.AccAddress `json:"withdraw_address"`
+}
+
+// used for import/export via genesis json
+type ValidatorOutstandingRewardsRecord struct {
+	ValidatorAddress   sdk.ValAddress `json:"validator_address"`
+	OutstandingRewards sdk.DecCoins   `json:"outstanding_rewards"`
 }
 
 // used for import / export via genesis json
 type ValidatorAccumulatedCommissionRecord struct {
-	ValidatorAddr sdk.ValAddress                 `json:"validator_addr"`
-	Accumulated   ValidatorAccumulatedCommission `json:"accumulated"`
+	ValidatorAddress sdk.ValAddress                 `json:"validator_address"`
+	Accumulated      ValidatorAccumulatedCommission `json:"accumulated"`
 }
 
 // used for import / export via genesis json
 type ValidatorHistoricalRewardsRecord struct {
-	ValidatorAddr sdk.ValAddress             `json:"validator_addr"`
-	Period        uint64                     `json:"period"`
-	Rewards       ValidatorHistoricalRewards `json:"rewards"`
+	ValidatorAddress sdk.ValAddress             `json:"validator_address"`
+	Period           uint64                     `json:"period"`
+	Rewards          ValidatorHistoricalRewards `json:"rewards"`
 }
 
 // used for import / export via genesis json
 type ValidatorCurrentRewardsRecord struct {
-	ValidatorAddr sdk.ValAddress          `json:"validator_addr"`
-	Rewards       ValidatorCurrentRewards `json:"rewards"`
+	ValidatorAddress sdk.ValAddress          `json:"validator_address"`
+	Rewards          ValidatorCurrentRewards `json:"rewards"`
 }
 
 // used for import / export via genesis json
 type DelegatorStartingInfoRecord struct {
-	DelegatorAddr sdk.AccAddress        `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress        `json:"validator_addr"`
-	StartingInfo  DelegatorStartingInfo `json:"starting_info"`
+	DelegatorAddress sdk.AccAddress        `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress        `json:"validator_address"`
+	StartingInfo     DelegatorStartingInfo `json:"starting_info"`
 }
 
 // used for import / export via genesis json
 type ValidatorSlashEventRecord struct {
-	ValidatorAddr sdk.ValAddress      `json:"validator_addr"`
-	Height        uint64              `json:"height"`
-	Event         ValidatorSlashEvent `json:"validator_slash_event"`
+	ValidatorAddress sdk.ValAddress      `json:"validator_address"`
+	Height           uint64              `json:"height"`
+	Event            ValidatorSlashEvent `json:"validator_slash_event"`
 }
 
 // GenesisState - all distribution state that must be provided at genesis
@@ -55,7 +61,7 @@ type GenesisState struct {
 	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
-	OutstandingRewards              sdk.DecCoins                           `json:"outstanding_rewards"`
+	OutstandingRewards              []ValidatorOutstandingRewardsRecord    `json:"outstanding_rewards"`
 	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `json:"validator_accumulated_commissions"`
 	ValidatorHistoricalRewards      []ValidatorHistoricalRewardsRecord     `json:"validator_historical_rewards"`
 	ValidatorCurrentRewards         []ValidatorCurrentRewardsRecord        `json:"validator_current_rewards"`
@@ -64,7 +70,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
+	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
 	slashes []ValidatorSlashEventRecord) GenesisState {
@@ -96,7 +102,7 @@ func DefaultGenesisState() GenesisState {
 		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
-		OutstandingRewards:              sdk.DecCoins{},
+		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
 		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
 		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},
 		ValidatorCurrentRewards:         []ValidatorCurrentRewardsRecord{},

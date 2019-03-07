@@ -1,6 +1,6 @@
-## State
+# State
 
-### Minter
+## Minter
 
 The minter is a space for holding current inflation information.
 
@@ -13,7 +13,7 @@ type Minter struct {
 }
 ```
 
-### Params
+## Params
 
 Minting params are held in the global params store. 
 

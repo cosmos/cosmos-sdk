@@ -25,8 +25,8 @@ type MsgCreateValidator struct {
 	Description       Description    `json:"description"`
 	Commission        CommissionMsg  `json:"commission"`
 	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
-	DelegatorAddr     sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddr     sdk.ValAddress `json:"validator_address"`
+	DelegatorAddress  sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress `json:"validator_address"`
 	PubKey            crypto.PubKey  `json:"pubkey"`
 	Value             sdk.Coin       `json:"value"`
 }
@@ -35,30 +35,24 @@ type msgCreateValidatorJSON struct {
 	Description       Description    `json:"description"`
 	Commission        CommissionMsg  `json:"commission"`
 	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
-	DelegatorAddr     sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddr     sdk.ValAddress `json:"validator_address"`
+	DelegatorAddress  sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress `json:"validator_address"`
 	PubKey            string         `json:"pubkey"`
 	Value             sdk.Coin       `json:"value"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
-func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
+func NewMsgCreateValidator(
+	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
+	description Description, commission CommissionMsg, minSelfDelegation sdk.Int,
+) MsgCreateValidator {
 
-	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission, minSelfDelegation,
-	)
-}
-
-// Creates validator msg by delegator address on behalf of validator address
-func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg, minSelfDelegation sdk.Int) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:       description,
-		DelegatorAddr:     delAddr,
-		ValidatorAddr:     valAddr,
-		PubKey:            pubkey,
-		Value:             value,
+		DelegatorAddress:  sdk.AccAddress(valAddr),
+		ValidatorAddress:  valAddr,
+		PubKey:            pubKey,
+		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
 	}
@@ -71,12 +65,12 @@ func (msg MsgCreateValidator) Type() string  { return "create_validator" }
 // Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	// delegator is first signer so delegator pays fees
-	addrs := []sdk.AccAddress{msg.DelegatorAddr}
+	addrs := []sdk.AccAddress{msg.DelegatorAddress}
 
-	if !bytes.Equal(msg.DelegatorAddr.Bytes(), msg.ValidatorAddr.Bytes()) {
+	if !bytes.Equal(msg.DelegatorAddress.Bytes(), msg.ValidatorAddress.Bytes()) {
 		// if validator addr is not same as delegator addr, validator must sign
 		// msg as well
-		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddr))
+		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddress))
 	}
 	return addrs
 }
@@ -87,8 +81,8 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msgCreateValidatorJSON{
 		Description:       msg.Description,
 		Commission:        msg.Commission,
-		DelegatorAddr:     msg.DelegatorAddr,
-		ValidatorAddr:     msg.ValidatorAddr,
+		DelegatorAddress:  msg.DelegatorAddress,
+		ValidatorAddress:  msg.ValidatorAddress,
 		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
 		Value:             msg.Value,
 		MinSelfDelegation: msg.MinSelfDelegation,
@@ -105,9 +99,13 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 
 	msg.Description = msgCreateValJSON.Description
 	msg.Commission = msgCreateValJSON.Commission
-	msg.DelegatorAddr = msgCreateValJSON.DelegatorAddr
-	msg.ValidatorAddr = msgCreateValJSON.ValidatorAddr
-	msg.PubKey = sdk.MustGetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
+	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
+	var err error
+	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	if err != nil {
+		return err
+	}
 	msg.Value = msgCreateValJSON.Value
 	msg.MinSelfDelegation = msgCreateValJSON.MinSelfDelegation
 
@@ -123,11 +121,14 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	// note that unmarshaling from bech32 ensures either empty or valid
-	if msg.DelegatorAddr.Empty() {
+	if msg.DelegatorAddress.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr.Empty() {
+	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
+	}
+	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
+		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
@@ -151,7 +152,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 // MsgEditValidator - struct for editing a validator
 type MsgEditValidator struct {
 	Description
-	ValidatorAddr sdk.ValAddress `json:"address"`
+	ValidatorAddress sdk.ValAddress `json:"address"`
 
 	// We pass a reference to the new commission rate and min self delegation as it's not mandatory to
 	// update. If not updated, the deserialized rate will be zero with no way to
@@ -166,7 +167,7 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 	return MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
-		ValidatorAddr:     valAddr,
+		ValidatorAddress:  valAddr,
 		MinSelfDelegation: newMinSelfDelegation,
 	}
 }
@@ -175,7 +176,7 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 func (msg MsgEditValidator) Route() string { return RouterKey }
 func (msg MsgEditValidator) Type() string  { return "edit_validator" }
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
+	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddress)}
 }
 
 // get the bytes for the message signer to sign on
@@ -186,7 +187,7 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgEditValidator) ValidateBasic() sdk.Error {
-	if msg.ValidatorAddr.Empty() {
+	if msg.ValidatorAddress.Empty() {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
 
@@ -209,16 +210,16 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-	Value         sdk.Coin       `json:"value"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	Value            sdk.Coin       `json:"value"`
 }
 
 func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, value sdk.Coin) MsgDelegate {
 	return MsgDelegate{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		Value:         value,
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
+		Value:            value,
 	}
 }
 
@@ -226,7 +227,7 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, value sdk.Co
 func (msg MsgDelegate) Route() string { return RouterKey }
 func (msg MsgDelegate) Type() string  { return "delegate" }
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
+	return []sdk.AccAddress{msg.DelegatorAddress}
 }
 
 // get the bytes for the message signer to sign on
@@ -237,10 +238,10 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr.Empty() {
+	if msg.DelegatorAddress.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr.Empty() {
+	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
@@ -253,20 +254,20 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgBeginRedelegate struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"`
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"`
-	SharesAmount     sdk.Dec        `json:"shares_amount"`
+	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`
+	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"`
+	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"`
+	SharesAmount        sdk.Dec        `json:"shares_amount"`
 }
 
 func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
 	valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) MsgBeginRedelegate {
 
 	return MsgBeginRedelegate{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-		SharesAmount:     sharesAmount,
+		DelegatorAddress:    delAddr,
+		ValidatorSrcAddress: valSrcAddr,
+		ValidatorDstAddress: valDstAddr,
+		SharesAmount:        sharesAmount,
 	}
 }
 
@@ -274,7 +275,7 @@ func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
 func (msg MsgBeginRedelegate) Route() string { return RouterKey }
 func (msg MsgBeginRedelegate) Type() string  { return "begin_redelegate" }
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
+	return []sdk.AccAddress{msg.DelegatorAddress}
 }
 
 // get the bytes for the message signer to sign on
@@ -285,13 +286,13 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr.Empty() {
+	if msg.DelegatorAddress.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorSrcAddr.Empty() {
+	if msg.ValidatorSrcAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorDstAddr.Empty() {
+	if msg.ValidatorDstAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
@@ -302,23 +303,23 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 
 // MsgUndelegate - struct for unbonding transactions
 type MsgUndelegate struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-	SharesAmount  sdk.Dec        `json:"shares_amount"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	SharesAmount     sdk.Dec        `json:"shares_amount"`
 }
 
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) MsgUndelegate {
 	return MsgUndelegate{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		SharesAmount:  sharesAmount,
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
+		SharesAmount:     sharesAmount,
 	}
 }
 
 //nolint
 func (msg MsgUndelegate) Route() string                { return RouterKey }
 func (msg MsgUndelegate) Type() string                 { return "begin_unbonding" }
-func (msg MsgUndelegate) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddr} }
+func (msg MsgUndelegate) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddress} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgUndelegate) GetSignBytes() []byte {
@@ -328,10 +329,10 @@ func (msg MsgUndelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgUndelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr.Empty() {
+	if msg.DelegatorAddress.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr.Empty() {
+	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {

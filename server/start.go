@@ -88,7 +88,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	}
 
 	// wait forever
-	cmn.TrapSignal(func() {
+	cmn.TrapSignal(ctx.Logger, func() {
 		// cleanup
 		err = svr.Stop()
 		if err != nil {

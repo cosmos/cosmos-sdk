@@ -38,6 +38,8 @@
 
 ### Gaia
 
+* #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
+
 ### SDK
 
 ### Tendermint

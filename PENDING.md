@@ -70,7 +70,7 @@ CLI flag.
 
 ### Gaia
 
-* `gaiad` and `gaiacli` integration tests use ./build/ binaries.
+* #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
 
 ### SDK
 

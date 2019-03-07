@@ -529,23 +529,23 @@ func TestNewCoins(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		args      args
+		coins     Coins
 		want      Coins
 		wantPanic bool
 	}{
-		{"empty args", args{[]Coin{}}, Coins{}, false},
-		{"one coin", args{[]Coin{tenatom}}, Coins{tenatom}, false},
-		{"sort after create", args{[]Coin{tenbtc, tenatom}}, Coins{tenatom, tenbtc}, false},
-		{"sort and remove zeroes", args{[]Coin{zeroeth, tenbtc, tenatom}}, Coins{tenatom, tenbtc}, false},
-		{"panic on dups", args{[]Coin{tenatom, tenatom}}, Coins{}, true},
+		{"empty args", []Coin{}, Coins{}, false},
+		{"one coin", []Coin{tenatom}, Coins{tenatom}, false},
+		{"sort after create", []Coin{tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"sort and remove zeroes", []Coin{zeroeth, tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"panic on dups", []Coin{tenatom, tenatom}, Coins{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
-				require.Panics(t, func() { NewCoins(tt.args.coins...) })
+				require.Panics(t, func() { NewCoins(tt.coins...) })
 				return
 			}
-			got := NewCoins(tt.args.coins...)
+			got := NewCoins(tt.coins...)
 			require.True(t, got.IsEqual(tt.want))
 		})
 	}

@@ -138,7 +138,6 @@ func NewCoins(coins ...Coin) Coins {
 		return Coins{}
 	}
 
-	// sort
 	newCoins.Sort()
 
 	// detect duplicate Denoms

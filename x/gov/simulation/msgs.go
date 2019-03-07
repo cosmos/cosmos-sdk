@@ -96,8 +96,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 
 func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (ok bool) {
 	ctx, write := ctx.CacheContext()
-	result := handler(ctx, msg)
-	ok = result.IsOK()
+	ok = handler(ctx, msg).IsOK()
 	if ok {
 		write()
 	}
@@ -136,11 +135,10 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		result := gov.NewHandler(k)(ctx, msg)
-		if result.IsOK() {
+		ok = gov.NewHandler(k)(ctx, msg).IsOK()
+		if ok {
 			write()
 		}
-		ok = gov.NewHandler(k)(ctx, msg).IsOK()
 
 		event(fmt.Sprintf("gov/MsgDeposit/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")

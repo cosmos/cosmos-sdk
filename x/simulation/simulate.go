@@ -261,7 +261,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			op, r2 := opAndR.op, opAndR.rand
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
 			if !lean || (opMsg.OK && lean) {
-				logWriter.AddEntry(MsgEntry(header.Height, opMsg))
+				logWriter.AddEntry(MsgEntry(header.Height, opMsg, int64(i)))
 			}
 			if err != nil {
 				logWriter.PrintLogs()

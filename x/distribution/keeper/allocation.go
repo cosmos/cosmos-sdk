@@ -12,6 +12,8 @@ import (
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
 
+	logger := ctx.Logger().With("module", "x/distribution")
+
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
@@ -36,12 +38,10 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(previousFractionVotes))
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
-	fmt.Printf("\ndebug proposerReward: %v\n", proposerReward)
 
 	// pay previous proposer
 	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
-	fmt.Printf("debug proposerValidator: %v\n", proposerValidator)
 
 	if proposerValidator != nil {
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
@@ -51,21 +51,24 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 		// e.g. a validator undelegates at block X, it's removed entirely by
 		// block X+1's endblock, then X+2 we need to refer to the previous
 		// proposer for X+1, but we've forgotten about them.
+		logger.Error(fmt.Sprintf(
+			"WARNING: Attempt to allocate proposer rewards to unknown proposer %s. "+
+				"This should happen only if the proposer unbonded completely within a single block, "+
+				"which generally should not happen except in exceptional circumstances (or fuzz testing). "+
+				"We recommend you investigate immediately.",
+			previousProposer.String()))
 	}
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
-	fmt.Printf("debug communityTax: %v\n", communityTax)
-	fmt.Printf("debug proposerMultiplier: %v\n", proposerMultiplier)
-	fmt.Printf("debug voteMultiplier: %v\n", voteMultiplier)
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range previousVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
-		// TODO likely we should only reward validators who actually signed the block.
+		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)

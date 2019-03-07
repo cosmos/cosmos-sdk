@@ -523,7 +523,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, newApp))
 	require.Nil(t, err)
 
 }

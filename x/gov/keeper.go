@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"fmt"
 	"time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -203,6 +204,9 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sd
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz != nil {
+		var proposalID uint64
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
+		fmt.Printf("debug proposalID: %v\n", proposalID)
 		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)

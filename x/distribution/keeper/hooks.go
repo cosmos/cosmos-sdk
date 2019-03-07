@@ -33,8 +33,8 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		h.k.SetFeePool(ctx, feePool)
 
 		// update outstanding
-		outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr)
-		h.k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(commission))
+		outstanding := h.k.GetOutstandingRewards(ctx)
+		h.k.SetOutstandingRewards(ctx, outstanding.Sub(commission))
 
 		// add to validator account
 		if !coins.IsZero() {
@@ -68,27 +68,10 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
-	//fmt.Printf("PRE WITHDRAW\n")
-	withdrawablePre, _, _ := h.k.CalcWithdrawable(ctx, val)
-
 	// withdraw delegation rewards (which also increments period)
-	rewards, err := h.k.withdrawDelegationRewards(ctx, val, del)
-	if err != nil {
+	if err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		panic(err)
 	}
-
-	//fmt.Printf("REWARDS: %v\n", rewards)
-
-	ctx, _ = ctx.CacheContext()
-	h.k.initializeDelegation(ctx, valAddr, delAddr)
-
-	withdrawablePost, _, _ := h.k.CalcWithdrawable(ctx, val)
-	//fmt.Printf("POST WITHDRAW: %v\n", withdrawablePost)
-	diff := withdrawablePost.Sub(withdrawablePre)
-	if len(diff) > 0 && rewards[0].IsGT(diff[0]) {
-		panic("should not happen")
-	}
-
 }
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	// nothing needed here since BeforeDelegationSharesModified will always also be called

@@ -21,14 +21,14 @@ import (
 type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
 // Simulate tests application by sending random messages.
-//func Simulate(t *testing.T, app *baseapp.BaseApp,
-//appStateFn AppStateFn, ops WeightedOperations,
-//invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
+func Simulate(t *testing.T, app *baseapp.BaseApp,
+	appStateFn AppStateFn, ops WeightedOperations,
+	invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
 
-//time := time.Now().UnixNano()
-//return SimulateFromSeed(t, app, appStateFn, time, ops,
-//invariants, numBlocks, blockSize, commit, lean)
-//}
+	time := time.Now().UnixNano()
+	return SimulateFromSeed(t, app, appStateFn, time, ops,
+		invariants, numBlocks, blockSize, commit, lean)
+}
 
 // initialize the chain for the simulation
 func initChain(
@@ -260,24 +260,6 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-
-			//if (header.Height >= 27 && header.Height <= 37) ||
-			//(header.Height == 26 && i > 131) ||
-			//(header.Height >= 23 && header.Height <= 25) ||
-			//(header.Height >= 18 && header.Height <= 19) ||
-			//(header.Height >= 12 && header.Height <= 15) ||
-			//(header.Height >= 8 && header.Height <= 10) ||
-			//(header.Height >= 6 && header.Height <= 6) {
-			//continue
-			//}
-
-			//if ! //(header.Height == 5) ||
-			//(header.Height == 4) ||
-			//(header.Height == 3) ||
-			//(header.Height == 2) ||
-			//if header.Height > 1 {
-			//}
-			continue
 
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
 			if !lean || (opMsg.OK && lean) {

@@ -301,8 +301,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 
 	pool := keeper.GetPool(ctx)
-	exRate := validator.DelegatorShareExRate()
-	require.True(t, exRate.Equal(sdk.OneDec()), "expected exRate 1 got %v", exRate)
 	require.Equal(t, bondAmount, pool.BondedTokens)
 
 	// just send the same msgbond multiple times
@@ -319,9 +317,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		require.True(t, found)
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
-
-		exRate := validator.DelegatorShareExRate()
-		require.True(t, exRate.Equal(sdk.OneDec()), "expected exRate 1 got %v, i = %v", exRate, i)
 
 		expBond := bondAmount.MulRaw(i + 1)
 		expDelegatorShares := bondAmount.MulRaw(i + 2) // (1 self delegation)

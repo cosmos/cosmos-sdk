@@ -110,7 +110,7 @@ func (keeper Keeper) submitProposal(ctx sdk.Context, content ProposalContent) (p
 
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.Coins{},
+		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       submitTime,
 		DepositEndTime:   submitTime.Add(depositPeriod),
 	}

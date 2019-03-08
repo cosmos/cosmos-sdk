@@ -13,6 +13,12 @@ type DelegatorWithdrawInfo struct {
 	WithdrawAddress  sdk.AccAddress `json:"withdraw_address"`
 }
 
+// used for import/export via genesis json
+type ValidatorOutstandingRewardsRecord struct {
+	ValidatorAddress   sdk.ValAddress `json:"validator_address"`
+	OutstandingRewards sdk.DecCoins   `json:"outstanding_rewards"`
+}
+
 // used for import / export via genesis json
 type ValidatorAccumulatedCommissionRecord struct {
 	ValidatorAddress sdk.ValAddress                 `json:"validator_address"`
@@ -55,7 +61,7 @@ type GenesisState struct {
 	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
-	OutstandingRewards              sdk.DecCoins                           `json:"outstanding_rewards"`
+	OutstandingRewards              []ValidatorOutstandingRewardsRecord    `json:"outstanding_rewards"`
 	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `json:"validator_accumulated_commissions"`
 	ValidatorHistoricalRewards      []ValidatorHistoricalRewardsRecord     `json:"validator_historical_rewards"`
 	ValidatorCurrentRewards         []ValidatorCurrentRewardsRecord        `json:"validator_current_rewards"`
@@ -64,7 +70,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
+	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
 	slashes []ValidatorSlashEventRecord) GenesisState {
@@ -96,7 +102,7 @@ func DefaultGenesisState() GenesisState {
 		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
-		OutstandingRewards:              sdk.DecCoins{},
+		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
 		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
 		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},
 		ValidatorCurrentRewards:         []ValidatorCurrentRewardsRecord{},

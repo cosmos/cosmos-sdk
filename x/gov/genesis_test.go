@@ -27,7 +27,10 @@ func TestEqualProposals(t *testing.T) {
 	// Generate mock app and keepers
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	// Submit two proposals
@@ -63,11 +66,13 @@ func TestEqualProposals(t *testing.T) {
 }
 
 func TestImportExportQueues(t *testing.T) {
-
 	// Generate mock app and keepers
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	// Create two proposals, put the second into the voting period
@@ -96,7 +101,9 @@ func TestImportExportQueues(t *testing.T) {
 	genState := ExportGenesis(ctx, keeper)
 	mapp2, keeper2, _, _, _, _ := getMockApp(t, 2, genState, genAccs)
 
-	mapp2.BeginBlock(abci.RequestBeginBlock{})
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp2.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx2 := mapp2.BaseApp.NewContext(false, abci.Header{})
 
 	// Jump the time forward past the DepositPeriod and VotingPeriod

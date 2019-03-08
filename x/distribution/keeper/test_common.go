@@ -158,5 +158,5 @@ func (fck DummyFeeCollectionKeeper) SetCollectedFees(in sdk.Coins) {
 	heldFees = in
 }
 func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
-	heldFees = sdk.Coins{}
+	heldFees = sdk.NewCoins()
 }

@@ -2,7 +2,7 @@ package staking
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	priv1 = ed25519.GenPrivKey()
+	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = ed25519.GenPrivKey()
+	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	priv4 = ed25519.GenPrivKey()
+	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	priv4 = secp256k1.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
 	fee   = auth.NewStdFee(
@@ -53,11 +53,4 @@ func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, pubK
 func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return NewMsgDelegate(delAddr, valAddr, amount)
-}
-
-func NewTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	valPubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
-
-	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
-	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, valPubKey, amount, Description{}, commissionMsg, sdk.OneInt())
 }

@@ -225,7 +225,7 @@ func TestDecCoinsString(t *testing.T) {
 	}
 }
 
-func TestDecCoinsCap(t *testing.T) {
+func TestDecCoinsIntersect(t *testing.T) {
 	testCases := []struct {
 		input1         string
 		input2         string
@@ -252,7 +252,7 @@ func TestDecCoinsCap(t *testing.T) {
 		exr, err := ParseDecCoins(tc.expectedResult)
 		require.NoError(t, err, "unexpected parse error in %v", i)
 
-		require.True(t, in1.Cap(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
-		// require.Equal(t, tc.expectedResult, in1.Cap(in2).String(), "in1.cap(in2) != exr in %v", i)
+		require.True(t, in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		// require.Equal(t, tc.expectedResult, in1.Intersect(in2).String(), "in1.cap(in2) != exr in %v", i)
 	}
 }

@@ -13,7 +13,10 @@ import (
 
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
@@ -29,7 +32,10 @@ func TestGetSetProposal(t *testing.T) {
 
 func TestIncrementProposalNumber(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
@@ -46,7 +52,10 @@ func TestIncrementProposalNumber(t *testing.T) {
 
 func TestActivateVotingPeriod(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
@@ -73,7 +82,10 @@ func TestActivateVotingPeriod(t *testing.T) {
 func TestDeposits(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
@@ -81,15 +93,15 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	fourSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4))}
-	fiveSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
+	fourSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
+	fiveSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
 	expTokens := sdk.TokensFromTendermintPower(42)
-	require.Equal(t, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)}, addr0Initial)
-	require.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{}))
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
+	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
@@ -171,7 +183,10 @@ func TestDeposits(t *testing.T) {
 func TestVotes(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
@@ -228,7 +243,10 @@ func TestVotes(t *testing.T) {
 
 func TestProposalQueues(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 

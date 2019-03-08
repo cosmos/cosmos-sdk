@@ -701,7 +701,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Test sign --validate-signatures
 	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
+	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
 	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name())
@@ -718,7 +718,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Test sign --validate-signatures
 	success, stdout, _ = f.TxSign(keyFoo, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
+	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n  0: %v\t\t\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
 
 	// Ensure foo has right amount of funds

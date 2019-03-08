@@ -553,7 +553,7 @@ func TestBonding(t *testing.T) {
 	// hence we utilize the exchange rate in the following test
 
 	validator2 := getValidator(t, port, operAddrs[1])
-	delTokensAfterRedelegation := delegatorDels[0].GetShares().Mul(validator2.DelegatorShareExRate())
+	delTokensAfterRedelegation := validator2.ShareTokens(delegatorDels[0].GetShares())
 	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
@@ -945,7 +945,7 @@ func TestDistributionFlow(t *testing.T) {
 	operAddr := sdk.AccAddress(valAddr)
 
 	var rewards sdk.DecCoins
-	res, body := Request(t, port, "GET", fmt.Sprintf("/distribution/outstanding_rewards"), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/distribution/validators/%s/outstanding_rewards", valAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
 
@@ -967,7 +967,7 @@ func TestDistributionFlow(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	// Query outstanding rewards changed
-	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/outstanding_rewards"), nil)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/validators/%s/outstanding_rewards", valAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
 

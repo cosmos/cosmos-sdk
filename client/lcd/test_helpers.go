@@ -19,8 +19,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/keys"
+	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -558,7 +559,7 @@ func getKeys(t *testing.T, port string) []keys.KeyOutput {
 
 // POST /keys Create a new account locally
 func doKeysPost(t *testing.T, port, name, password, mnemonic string, account int, index int) keys.KeyOutput {
-	pk := keys.AddNewKey{name, password, mnemonic, account, index}
+	pk := clientkeys.AddNewKey{name, password, mnemonic, account, index}
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
@@ -584,7 +585,7 @@ func getKeysSeed(t *testing.T, port string) string {
 
 // POST /keys/{name}/recove Recover a account from a seed
 func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, mnemonic string, account uint32, index uint32) {
-	pk := keys.RecoverKey{recoverPassword, mnemonic, int(account), int(index)}
+	pk := clientkeys.RecoverKey{recoverPassword, mnemonic, int(account), int(index)}
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
@@ -612,7 +613,7 @@ func getKey(t *testing.T, port, name string) keys.KeyOutput {
 
 // PUT /keys/{name} Update the password for this account in the KMS
 func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail bool) {
-	kr := keys.UpdateKeyReq{oldPassword, newPassword}
+	kr := clientkeys.UpdateKeyReq{oldPassword, newPassword}
 	req, err := cdc.MarshalJSON(kr)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)
@@ -626,7 +627,7 @@ func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail b
 
 // DELETE /keys/{name} Remove an account
 func deleteKey(t *testing.T, port, name, password string) {
-	dk := keys.DeleteKeyReq{password}
+	dk := clientkeys.DeleteKeyReq{password}
 	req, err := cdc.MarshalJSON(dk)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)
@@ -667,7 +668,7 @@ func doTransfer(
 	resp, body, recvAddr := doTransferWithGas(
 		t, port, seed, name, memo, pwd, addr, "", 1.0, false, true, fees,
 	)
-	require.Equal(t, http.StatusOK, resp.StatusCode, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	var txResp sdk.TxResponse
 	err := cdc.UnmarshalJSON([]byte(body), &txResp)

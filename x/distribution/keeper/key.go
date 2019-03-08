@@ -13,9 +13,9 @@ const (
 
 // keys
 var (
-	FeePoolKey            = []byte{0x00} // key for global distribution state
-	ProposerKey           = []byte{0x01} // key for the proposer operator address
-	OutstandingRewardsKey = []byte{0x02} // key for outstanding rewards
+	FeePoolKey                        = []byte{0x00} // key for global distribution state
+	ProposerKey                       = []byte{0x01} // key for the proposer operator address
+	ValidatorOutstandingRewardsPrefix = []byte{0x02} // key for outstanding rewards
 
 	DelegatorWithdrawAddrPrefix          = []byte{0x03} // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = []byte{0x04} // key for delegator starting info
@@ -29,6 +29,15 @@ var (
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
+
+// gets an address from a validator's outstanding rewards key
+func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.ValAddress(addr)
+}
 
 // gets an address from a delegator's withdraw info key
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
@@ -100,6 +109,11 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	}
 	height = binary.BigEndian.Uint64(b)
 	return
+}
+
+// gets the outstanding rewards key for a validator
+func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
+	return append(ValidatorOutstandingRewardsPrefix, valAddr.Bytes()...)
 }
 
 // gets the key for a delegator's withdraw addr

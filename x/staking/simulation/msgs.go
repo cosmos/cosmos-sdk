@@ -224,7 +224,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			write()
 		}
 		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgBeginRedelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }

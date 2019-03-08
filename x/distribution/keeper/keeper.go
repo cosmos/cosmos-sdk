@@ -79,9 +79,12 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	}
 
 	coins, remainder := commission.TruncateDecimal()
-
-	// leave remainder to withdraw later
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder)
+	if remainder.IsZero() {
+		k.SetValidatorAccumulatedCommission(ctx, valAddr, types.InitialValidatorAccumulatedCommission())
+	} else {
+		// leave remainder to withdraw later
+		k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder)
+	}
 
 	// update outstanding
 	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)

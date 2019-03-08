@@ -48,6 +48,9 @@
 
 ### Tendermint
 
+### CI/CD
+* [\198](https://github.com/cosmos/cosmos-sdk/pull/3832)
+
 <!--------------------------------- BUG FIXES -------------------------------->
 
 ## BUG FIXES

@@ -524,9 +524,6 @@ func TestNewCoins(t *testing.T) {
 	tenatom := NewInt64Coin("atom", 10)
 	tenbtc := NewInt64Coin("btc", 10)
 	zeroeth := NewInt64Coin("eth", 0)
-	type args struct {
-		coins []Coin
-	}
 	tests := []struct {
 		name      string
 		coins     Coins

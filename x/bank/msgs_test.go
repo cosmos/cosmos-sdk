@@ -30,27 +30,24 @@ func TestMsgSendValidation(t *testing.T) {
 	var emptyAddr sdk.AccAddress
 
 	cases := []struct {
-		name  string
 		valid bool
 		tx    MsgSend
 	}{
-		{"valid send", true, NewMsgSend(addr1, addr2, atom123)},
-		{"valid send with multiple coins", true, NewMsgSend(addr1, addr2, atom123eth123)},
-		{"non positive coin", false, NewMsgSend(addr1, addr2, atom0)},
-		{"non positive coin in multicoins", false, NewMsgSend(addr1, addr2, atom123eth0)},
-		{"empty from addr", false, NewMsgSend(emptyAddr, addr2, atom123)},
-		{"empty to addr", false, NewMsgSend(addr1, emptyAddr, atom123)},
+		{true, NewMsgSend(addr1, addr2, atom123)},       // valid send
+		{true, NewMsgSend(addr1, addr2, atom123eth123)}, // valid send with multiple coins
+		{false, NewMsgSend(addr1, addr2, atom0)},        // non positive coin
+		{false, NewMsgSend(addr1, addr2, atom123eth0)},  // non positive coin in multicoins
+		{false, NewMsgSend(emptyAddr, addr2, atom123)},  // empty from addr
+		{false, NewMsgSend(addr1, emptyAddr, atom123)},  // empty to addr
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.tx.ValidateBasic()
-			if tc.valid {
-				require.Nil(t, err)
-			} else {
-				require.NotNil(t, err)
-			}
-		})
+		err := tc.tx.ValidateBasic()
+		if tc.valid {
+			require.Nil(t, err)
+		} else {
+			require.NotNil(t, err)
+		}
 	}
 }
 

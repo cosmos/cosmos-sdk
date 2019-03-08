@@ -276,10 +276,7 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
-	empty := Coins{
-		{"gold", NewInt(0)},
-	}
-	null := Coins{}
+	empty := NewCoins()
 	badSort1 := Coins{
 		{"tree", NewInt(1)},
 		{"gas", NewInt(1)},
@@ -312,7 +309,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
 	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
-	assert.False(t, null.IsAllPositive(), "Expected coins to not be positive: %v", null)
+	assert.False(t, empty.IsAllPositive(), "Expected coins to not be positive: %v", empty)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
 	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
 	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
@@ -331,7 +328,7 @@ func TestCoinsGT(t *testing.T) {
 	assert.True(t, Coins{{testDenom1, one}}.IsAllGT(Coins{}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom1, one}}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom2, one}}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(Coins{{testDenom2, one}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom2, two}}))
 }
 
@@ -358,7 +355,7 @@ func TestCoinsLT(t *testing.T) {
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom2, one}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom2, two}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, two}, {testDenom2, two}}))
 	assert.True(t, Coins{}.IsAllLT(Coins{{testDenom1, one}}))
 }
 

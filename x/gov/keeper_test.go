@@ -79,15 +79,15 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4))}
-	fiveSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
+	fourSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
+	fiveSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
 	expTokens := sdk.TokensFromTendermintPower(42)
-	require.Equal(t, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)}, addr0Initial)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])

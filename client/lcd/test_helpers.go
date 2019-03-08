@@ -668,7 +668,7 @@ func doTransfer(
 	resp, body, recvAddr := doTransferWithGas(
 		t, port, seed, name, memo, pwd, addr, "", 1.0, false, true, fees,
 	)
-	require.Equal(t, http.StatusOK, resp.StatusCode, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	var txResp sdk.TxResponse
 	err := cdc.UnmarshalJSON([]byte(body), &txResp)

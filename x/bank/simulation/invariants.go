@@ -28,7 +28,7 @@ func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 // is what is expected
 func TotalCoinsInvariant(ak auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		totalCoins := sdk.Coins{}
+		totalCoins := sdk.NewCoins()
 
 		chkAccount := func(acc auth.Account) bool {
 			coins := acc.GetCoins()

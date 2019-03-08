@@ -27,8 +27,3 @@ func (f FeePool) ValidateGenesis() error {
 
 	return nil
 }
-
-// outstanding (un-withdrawn) rewards for everyone
-// excludes the community pool
-// inexpensive to track, allows simple sanity checks
-type OutstandingRewards = sdk.DecCoins

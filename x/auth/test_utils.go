@@ -55,7 +55,7 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 
 func newStdFee() StdFee {
 	return NewStdFee(50000,
-		sdk.Coins{sdk.NewInt64Coin("atom", 150)},
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
 	)
 }
 

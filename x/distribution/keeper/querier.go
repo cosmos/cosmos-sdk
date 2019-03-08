@@ -12,14 +12,14 @@ import (
 
 // nolint
 const (
-	QueryParams                = "params"
-	QueryOutstandingRewards    = "outstanding_rewards"
-	QueryValidatorCommission   = "validator_commission"
-	QueryValidatorSlashes      = "validator_slashes"
-	QueryDelegationRewards     = "delegation_rewards"
-	QueryDelegatorTotalRewards = "delegator_total_rewards"
-	QueryDelegatorValidators   = "delegator_validators"
-	QueryWithdrawAddr          = "withdraw_addr"
+	QueryParams                      = "params"
+	QueryValidatorOutstandingRewards = "validator_outstanding_rewards"
+	QueryValidatorCommission         = "validator_commission"
+	QueryValidatorSlashes            = "validator_slashes"
+	QueryDelegationRewards           = "delegation_rewards"
+	QueryDelegatorTotalRewards       = "delegator_total_rewards"
+	QueryDelegatorValidators         = "delegator_validators"
+	QueryWithdrawAddr                = "withdraw_addr"
 
 	ParamCommunityTax        = "community_tax"
 	ParamBaseProposerReward  = "base_proposer_reward"
@@ -33,8 +33,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case QueryParams:
 			return queryParams(ctx, path[1:], req, k)
 
-		case QueryOutstandingRewards:
-			return queryOutstandingRewards(ctx, path[1:], req, k)
+		case QueryValidatorOutstandingRewards:
+			return queryValidatorOutstandingRewards(ctx, path[1:], req, k)
 
 		case QueryValidatorCommission:
 			return queryValidatorCommission(ctx, path[1:], req, k)
@@ -91,8 +91,25 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 	}
 }
 
-func queryOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	bz, err := codec.MarshalJSONIndent(k.cdc, k.GetOutstandingRewards(ctx))
+// params for query 'custom/distr/validator_outstanding_rewards'
+type QueryValidatorOutstandingRewardsParams struct {
+	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+}
+
+// creates a new instance of QueryValidatorOutstandingRewardsParams
+func NewQueryValidatorOutstandingRewardsParams(validatorAddr sdk.ValAddress) QueryValidatorOutstandingRewardsParams {
+	return QueryValidatorOutstandingRewardsParams{
+		ValidatorAddress: validatorAddr,
+	}
+}
+
+func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QueryValidatorOutstandingRewardsParams
+	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+	bz, err := codec.MarshalJSONIndent(k.cdc, k.GetValidatorOutstandingRewards(ctx, params.ValidatorAddress))
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

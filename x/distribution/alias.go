@@ -50,14 +50,15 @@ var (
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission = types.NewMsgWithdrawValidatorCommission
 
-	NewKeeper                           = keeper.NewKeeper
-	NewQuerier                          = keeper.NewQuerier
-	NewQueryValidatorCommissionParams   = keeper.NewQueryValidatorCommissionParams
-	NewQueryValidatorSlashesParams      = keeper.NewQueryValidatorSlashesParams
-	NewQueryDelegationRewardsParams     = keeper.NewQueryDelegationRewardsParams
-	NewQueryDelegatorParams             = keeper.NewQueryDelegatorParams
-	NewQueryDelegatorWithdrawAddrParams = keeper.NewQueryDelegatorWithdrawAddrParams
-	DefaultParamspace                   = keeper.DefaultParamspace
+	NewKeeper                                 = keeper.NewKeeper
+	NewQuerier                                = keeper.NewQuerier
+	NewQueryValidatorOutstandingRewardsParams = keeper.NewQueryValidatorOutstandingRewardsParams
+	NewQueryValidatorCommissionParams         = keeper.NewQueryValidatorCommissionParams
+	NewQueryValidatorSlashesParams            = keeper.NewQueryValidatorSlashesParams
+	NewQueryDelegationRewardsParams           = keeper.NewQueryDelegationRewardsParams
+	NewQueryDelegatorParams                   = keeper.NewQueryDelegatorParams
+	NewQueryDelegatorWithdrawAddrParams       = keeper.NewQueryDelegatorWithdrawAddrParams
+	DefaultParamspace                         = keeper.DefaultParamspace
 
 	RegisterCodec       = types.RegisterCodec
 	DefaultGenesisState = types.DefaultGenesisState

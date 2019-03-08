@@ -44,6 +44,7 @@
 * #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
 
 ### SDK
+* #3801 `baseapp` saftey improvements
 
 ### Tendermint
 

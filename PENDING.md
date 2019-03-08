@@ -45,6 +45,8 @@
 
 ### SDK
 
+* [\#3820] Make Coins.IsAllGT() more robust and consistent.
+
 ### Tendermint
 
 <!--------------------------------- BUG FIXES -------------------------------->

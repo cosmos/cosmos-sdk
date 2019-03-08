@@ -34,7 +34,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	default:
 		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
 	}
-	proposal, err := keeper.submitProposal(ctx, content)
+	proposal, err := keeper.SubmitProposal(ctx, content)
 	if err != nil {
 		return err.Result()
 	}

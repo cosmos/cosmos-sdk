@@ -95,7 +95,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 }
 
 // Proposals
-func (keeper Keeper) submitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
 		return

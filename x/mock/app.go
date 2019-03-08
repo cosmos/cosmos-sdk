@@ -62,7 +62,7 @@ func NewApp() *App {
 		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
-		TotalCoinsSupply: sdk.Coins{},
+		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
@@ -213,7 +213,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
+		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
 		Gas:    100000,
 	}
 

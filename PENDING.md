@@ -26,6 +26,9 @@
 
 ### SDK
 
+* [\3813](https://github.com/cosmos/cosmos-sdk/pull/3813) New sdk.NewCoins safe constructor to replace bare
+  sdk.Coins{} declarations.
+
 ### Tendermint
 
 <!------------------------------- IMPROVEMENTS ------------------------------->

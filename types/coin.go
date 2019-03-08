@@ -130,6 +130,28 @@ func (coin Coin) IsNegative() bool {
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
+// NewCoins constructs a new coin set.
+func NewCoins(coins ...Coin) Coins {
+	// remove zeroes
+	newCoins := removeZeroCoins(Coins(coins))
+	if len(newCoins) == 0 {
+		return Coins{}
+	}
+
+	newCoins.Sort()
+
+	// detect duplicate Denoms
+	if dupIndex := findDup(newCoins); dupIndex != -1 {
+		panic(fmt.Errorf("find duplicate denom: %s", newCoins[dupIndex]))
+	}
+
+	if !newCoins.IsValid() {
+		panic(fmt.Errorf("invalid coin set: %s", newCoins))
+	}
+
+	return newCoins
+}
+
 func (coins Coins) String() string {
 	if len(coins) == 0 {
 		return ""
@@ -551,4 +573,20 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	}
 
 	return coins, nil
+}
+
+// findDup works on the assumption that coins is sorted
+func findDup(coins Coins) int {
+	if len(coins) <= 1 {
+		return -1
+	}
+
+	prevDenom := coins[0]
+	for i := 1; i < len(coins); i++ {
+		if coins[i] == prevDenom {
+			return i
+		}
+	}
+
+	return -1
 }

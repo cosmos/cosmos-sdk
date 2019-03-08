@@ -300,18 +300,18 @@ func TestAnteHandlerFees(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
 
-	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 149)})
+	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	input.ak.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
 
 	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 
-	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	input.ak.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
-	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewInt64Coin("atom", 150)}))
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
 }
 
@@ -333,24 +333,24 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	fee := NewStdFee(0, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
+	fee := NewStdFee(0, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(801, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
+	fee = NewStdFee(801, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(9000, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
+	fee = NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(9000, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
+	fee = NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
@@ -721,28 +721,28 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		input      StdFee
 		expectedOK bool
 	}{
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 5)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 1)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 2)}), true},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 10)}), true},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 10))), true},
 		{
 			NewStdFee(
 				200000,
-				sdk.Coins{
+				sdk.NewCoins(
 					sdk.NewInt64Coin("photino", 10),
 					sdk.NewInt64Coin("stake", 2),
-				},
+				),
 			),
 			true,
 		},
 		{
 			NewStdFee(
 				200000,
-				sdk.Coins{
+				sdk.NewCoins(
 					sdk.NewInt64Coin("atom", 5),
 					sdk.NewInt64Coin("photino", 10),
 					sdk.NewInt64Coin("stake", 2),
-				},
+				),
 			),
 			true,
 		},

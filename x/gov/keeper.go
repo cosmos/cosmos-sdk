@@ -109,7 +109,7 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		ProposalType:     proposalType,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.Coins{},
+		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       ctx.BlockHeader().Time,
 	}
 

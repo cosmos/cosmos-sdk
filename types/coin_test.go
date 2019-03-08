@@ -559,3 +559,31 @@ func TestCoinsIsAllGTE(t *testing.T) {
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
 	assert.False(t, Coins{{"xxx", one}, {"yyy", one}}.IsAllGTE(Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
+
+func TestNewCoins(t *testing.T) {
+	tenatom := NewInt64Coin("atom", 10)
+	tenbtc := NewInt64Coin("btc", 10)
+	zeroeth := NewInt64Coin("eth", 0)
+	tests := []struct {
+		name      string
+		coins     Coins
+		want      Coins
+		wantPanic bool
+	}{
+		{"empty args", []Coin{}, Coins{}, false},
+		{"one coin", []Coin{tenatom}, Coins{tenatom}, false},
+		{"sort after create", []Coin{tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"sort and remove zeroes", []Coin{zeroeth, tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"panic on dups", []Coin{tenatom, tenatom}, Coins{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { NewCoins(tt.coins...) })
+				return
+			}
+			got := NewCoins(tt.coins...)
+			require.True(t, got.IsEqual(tt.want))
+		})
+	}
+}

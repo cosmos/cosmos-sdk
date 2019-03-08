@@ -160,8 +160,8 @@ godocs:
 
 test: test_unit
 
-test_cli:
-	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+test_cli: build
+	@go test -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
 
 test_ledger:
     # First test with mock

@@ -43,11 +43,11 @@ $ gaiacli version --long
 `gaiacli` for instance should output something similar to:
 
 ```
-cosmos-sdk: 0.31.2-10-g1fba7308
-git commit: 1fba7308fa226e971964cd6baad9527d4b51d9fc
-vendor hash: 1aec7edfad9888a967b3e9063e42f66b28f447e6
+cosmos-sdk: 0.33.0
+git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
+vendor hash: 
 build tags: netgo ledger
-go version go1.11.5 linux/amd64
+go version go1.12 darwin/amd64
 ```
 
 ##### Build Tags

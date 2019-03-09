@@ -142,11 +142,19 @@ func printInfos(infos []keys.Info) {
 		}
 
 	case OutputFormatJSON:
-		out, err := MarshalJSON(kos)
+		var out []byte
+		var err error
+
+		switch viper.Get(client.FlagIndentResponse) {
+		case true:
+			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+		case false:
+			out, err = cdc.MarshalJSON(kos)
+		}
+
 		if err != nil {
 			panic(err)
 		}
-
 		fmt.Println(string(out))
 	}
 }

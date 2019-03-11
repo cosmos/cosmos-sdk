@@ -74,6 +74,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 

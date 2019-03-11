@@ -160,24 +160,33 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
-		numShares := simulation.RandomDecAmount(r, delegation.Shares)
-		if numShares.Equal(sdk.ZeroDec()) {
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		if !found {
 			return noOperation, nil, nil
 		}
+
+		totalBond := validator.ShareTokens(delegation.GetShares()).TruncateInt()
+		unbondAmt := simulation.RandomAmount(r, totalBond)
+		if unbondAmt.Equal(sdk.ZeroInt()) {
+			return noOperation, nil, nil
+		}
+
 		msg := staking.MsgUndelegate{
 			DelegatorAddress: delegatorAddress,
 			ValidatorAddress: delegation.ValidatorAddress,
-			SharesAmount:     numShares,
+			Amount:           sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
 				msg.GetSignBytes(), msg.ValidateBasic())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
+
 		event(fmt.Sprintf("staking/MsgUndelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgUndelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -209,20 +218,23 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		if amount.Equal(sdk.ZeroInt()) {
 			return noOperation, nil, nil
 		}
+
 		msg := staking.MsgBeginRedelegate{
 			DelegatorAddress:    delegatorAddress,
 			ValidatorSrcAddress: srcValidatorAddress,
 			ValidatorDstAddress: destValidatorAddress,
-			SharesAmount:        amount.ToDec(),
+			Amount:              sdk.NewCoin(denom, amount),
 		}
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
+
 		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgBeginRedelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil

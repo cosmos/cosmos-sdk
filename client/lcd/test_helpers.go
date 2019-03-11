@@ -907,7 +907,7 @@ func doBeginRedelegation(
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,
 		ValidatorDstAddress: valDstAddr,
-		SharesAmount:        amount.ToDec(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)

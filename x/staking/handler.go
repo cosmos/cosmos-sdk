@@ -229,7 +229,13 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 }
 
 func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) sdk.Result {
-	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.SharesAmount)
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
+	if !found {
+		return ErrNoValidatorFound(k.Codespace()).Result()
+	}
+
+	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens)
+	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, sharesAmt)
 	if err != nil {
 		return err.Result()
 	}
@@ -245,8 +251,15 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
-	completionTime, err := k.BeginRedelegation(ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress,
-		msg.ValidatorDstAddress, msg.SharesAmount)
+	validator, found := k.GetValidator(ctx, msg.ValidatorSrcAddress)
+	if !found {
+		return ErrNoValidatorFound(k.Codespace()).Result()
+	}
+
+	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens)
+	completionTime, err := k.BeginRedelegation(
+		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.ValidatorDstAddress, sharesAmt,
+	)
 	if err != nil {
 		return err.Result()
 	}

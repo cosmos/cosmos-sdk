@@ -45,7 +45,7 @@ type (
 		DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
 		ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
 		ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
-		SharesAmount        sdk.Dec        `json:"shares"`
+		Amount              sdk.Coin       `json:"amount"`
 	}
 
 	// MsgUndelegateInput defines the properties of a undelegate request's body.
@@ -53,7 +53,7 @@ type (
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
 		ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-		SharesAmount     sdk.Dec        `json:"shares"`
+		Amount           sdk.Coin       `json:"amount"`
 	}
 )
 
@@ -104,7 +104,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddress, req.ValidatorSrcAddress, req.ValidatorDstAddress, req.SharesAmount)
+		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddress, req.ValidatorSrcAddress, req.ValidatorDstAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -138,7 +138,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		msg := staking.NewMsgUndelegate(req.DelegatorAddress, req.ValidatorAddress, req.SharesAmount)
+		msg := staking.NewMsgUndelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

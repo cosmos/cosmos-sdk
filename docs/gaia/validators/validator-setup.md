@@ -16,28 +16,6 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 You may want to skip the next section if you have already [set up a full-node](../join-mainnet.md).
 
-::: warning
-On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1.000.000uatom`
-:::
-
-### A note on gas and fees
-
-Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
-
-```
-fees = gas * gasPrices
-```
-
-The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
-
-The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transactions that have a `gasPrice` greater than their `min-gas-price`. 
-
-The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`/`fees`, the higher the chance that your transaction will get included in a block. 
-
-::: tip
-For mainnet, the recommended `gas-prices` is `0.025uatom`. 
-::: 
-
 ## Create Your Validator
 
 Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:

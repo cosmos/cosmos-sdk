@@ -815,7 +815,7 @@ func doDelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := stakingrest.MsgDelegationsInput{
+	msg := stakingrest.DelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
@@ -852,7 +852,7 @@ func doUndelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := stakingrest.MsgUndelegateInput{
+	msg := stakingrest.UndelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
@@ -888,7 +888,7 @@ func doBeginRedelegation(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := stakingrest.MsgBeginRedelegateInput{
+	msg := stakingrest.RedelegateRequest{
 		BaseReq:             baseReq,
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,

@@ -2,6 +2,7 @@ package gov
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 var msgCdc = codec.New()
@@ -12,7 +13,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
 	cdc.RegisterConcrete(MsgVote{}, "cosmos-sdk/MsgVote", nil)
 
-	cdc.RegisterInterface((*ProposalContent)(nil), nil)
+	proposal.RegisterCodec(cdc)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
 	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

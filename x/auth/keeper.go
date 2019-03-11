@@ -7,7 +7,7 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 const (

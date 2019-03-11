@@ -1,5 +1,5 @@
 //nolint
-package gov
+package errors
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = ModuleName
+	DefaultCodespace sdk.CodespaceType = "gov"
 
 	CodeUnknownProposal          sdk.CodeType = 1
 	CodeInactiveProposal         sdk.CodeType = 2
@@ -58,7 +58,7 @@ func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sd
 	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", proposalType))
 }
 
-func ErrInvalidVote(codespace sdk.CodespaceType, voteOption VoteOption) sdk.Error {
+func ErrInvalidVote(codespace sdk.CodespaceType, voteOption byte) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%v' is not a valid voting option", voteOption))
 }
 
@@ -66,6 +66,6 @@ func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, msg)
 }
 
-func ErrProposalHandlerNotExists(codespace sdk.CodespaceType, content ProposalContent) sdk.Error {
-	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have corredponding handler, with route %s", content, content.ProposalRoute()))
+func ErrProposalHandlerNotExists(codespace sdk.CodespaceType, content interface{}) sdk.Error {
+	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have corredponding handler", content))
 }

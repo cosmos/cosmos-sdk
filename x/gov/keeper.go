@@ -5,7 +5,9 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/x/gov/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
+	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -104,14 +106,14 @@ func (keeper Keeper) Router() Router {
 }
 
 // Proposals
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposalID uint64, err sdk.Error) {
-	err = IsValidProposalContent(keeper.codespace, content.GetTitle(), content.GetDescription())
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content proposal.Content) (proposalID uint64, err sdk.Error) {
+	err = proposal.IsValidContent(keeper.codespace, content.GetTitle(), content.GetDescription())
 	if err != nil {
 		return
 	}
 
 	if keeper.router.Route(content.ProposalRoute()) == nil {
-		err = ErrProposalHandlerNotExists(keeper.codespace, content)
+		err = errors.ErrProposalHandlerNotExists(keeper.codespace, content)
 		return
 	}
 
@@ -124,8 +126,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (p
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
 	proposal := Proposal{
-		ProposalContent: content,
-		ProposalID:      proposalID,
+		Content:    content,
+		ProposalID: proposalID,
 
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
@@ -223,7 +225,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sd
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz != nil {
-		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
+		return errors.ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
 	store.Set(KeyNextProposalID, bz)
@@ -245,7 +247,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID uint64, err s
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return 0, errors.ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)
@@ -258,7 +260,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID uint64, 
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return 0, errors.ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	return proposalID, nil
@@ -316,14 +318,14 @@ func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option VoteOption) sdk.Error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return ErrUnknownProposal(keeper.codespace, proposalID)
+		return errors.ErrUnknownProposal(keeper.codespace, proposalID)
 	}
 	if proposal.Status != StatusVotingPeriod {
-		return ErrInactiveProposal(keeper.codespace, proposalID)
+		return errors.ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
 	if !validVoteOption(option) {
-		return ErrInvalidVote(keeper.codespace, option)
+		return errors.ErrInvalidVote(keeper.codespace, byte(option))
 	}
 
 	vote := Vote{
@@ -392,12 +394,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return ErrUnknownProposal(keeper.codespace, proposalID), false
+		return errors.ErrUnknownProposal(keeper.codespace, proposalID), false
 	}
 
 	// Check if proposal is still depositable
 	if (proposal.Status != StatusDepositPeriod) && (proposal.Status != StatusVotingPeriod) {
-		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
+		return errors.ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
 	// Send coins from depositor's account to DepositedCoinsAccAddr account

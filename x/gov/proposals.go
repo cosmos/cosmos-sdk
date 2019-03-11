@@ -7,36 +7,13 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
-
-const (
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
-)
-
-func IsValidProposalContent(codespace sdk.CodespaceType, title, description string) sdk.Error {
-	if len(title) == 0 {
-		return ErrInvalidTitle(codespace, "No title present in proposal")
-	}
-	if len(title) > MaxTitleLength {
-		return ErrInvalidTitle(codespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
-	}
-	if len(description) == 0 {
-		return ErrInvalidDescription(codespace, "No description present in proposal")
-	}
-	if len(description) > MaxDescriptionLength {
-		return ErrInvalidDescription(codespace, fmt.Sprintf("Proposal description is longer than max length of %d", MaxDescriptionLength))
-	}
-	return nil
-}
-
-// type synonym for ProposalContent
-type ProposalContent = sdk.ProposalContent
 
 // Proposal is a struct used by gov module internally
 // embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
-	ProposalContent `json:"proposal_content"` // Proposal content interface
+	proposal.Content `json:"content"` // Proposal content interface
 
 	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
 
@@ -79,39 +56,6 @@ func (p Proposals) String() string {
 	}
 	return strings.TrimSpace(out)
 }
-
-// Text Proposals
-type TextProposal struct {
-	sdk.ProposalAbstract `json:"proposal_abstract"`
-}
-
-func NewTextProposal(title, description string) TextProposal {
-	return TextProposal{sdk.NewProposalAbstract(title, description)}
-}
-
-// Implements Proposal Interface
-var _ ProposalContent = TextProposal{}
-
-// nolint
-func (tp TextProposal) ProposalRoute() string { return RouterKey }
-func (tp TextProposal) ProposalType() string  { return ProposalTypeText }
-
-// Software Upgrade Proposals
-type SoftwareUpgradeProposal struct {
-	sdk.ProposalAbstract `json:"proposal_abstract"`
-}
-
-func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradeProposal {
-	return SoftwareUpgradeProposal{sdk.NewProposalAbstract(title, description)}
-}
-
-// Implements Proposal Interface
-var _ ProposalContent = SoftwareUpgradeProposal{}
-
-// nolint
-
-func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
-func (sup SoftwareUpgradeProposal) ProposalType() string  { return ProposalTypeSoftwareUpgrade }
 
 // ProposalQueue
 type ProposalQueue []uint64

@@ -2,26 +2,22 @@ package params
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 const RouteKey = "params"
 
 type MsgSubmitParameterChangeProposal struct {
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Space          string         `json:"space"`
-	Changes        []Change       `json:"changes"`
-	Proposer       sdk.AccAddress `json:"proposer"`
-	InitialDeposit sdk.Coins      `json:"initial_deposit"`
+	proposal.SubmitForm `json:"submit_form"`
+	Space               string   `json:"space"`
+	Changes             []Change `json:"changes"`
 }
 
-func NewMsgSubmitParameterChangeProposal(title, description string, changes []Change, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitParameterChangeProposal {
+func NewMsgSubmitParameterChangeProposal(title, description string, space string, changes []Change, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitParameterChangeProposal {
 	return MsgSubmitParameterChangeProposal{
-		Title:          title,
-		Description:    description,
-		Changes:        changes,
-		Proposer:       proposer,
-		InitialDeposit: initialDeposit,
+		SubmitForm: proposal.NewSubmitForm(title, description, proposer, initialDeposit),
+		Space:      space,
+		Changes:    changes,
 	}
 }
 

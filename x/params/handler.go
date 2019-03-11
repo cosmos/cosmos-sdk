@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k ProposalKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case MsgSubmitParameterChangeProposal:
@@ -18,30 +19,12 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgSubmitParameterChangeProposal(ctx sdk.Context, k Keeper, msg MsgSubmitParameterChangeProposal) sdk.Result {
-	// XXX: generalize
-	// we can make gov import params.subspace, gov can export helper functions
-	// which params can import and use without import cycle
-
-	content := NewProposalChange(msg.Title, msg.Description, msg.Space, msg.Changes)
-	proposalID, err := k.pk.SubmitProposal(ctx, content)
-	if err != nil {
-		return err.Result()
-	}
-	err, _ = k.pk.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
-	if err != nil {
-		return err.Result()
-	}
-	/*
-		resTags := sdk.NewTags(
-
-		)
-	*/
-	return sdk.Result{}
+func handleMsgSubmitParameterChangeProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitParameterChangeProposal) sdk.Result {
+	return proposal.HandleSubmit(ctx, k.cdc, k.proposal, ProposalChangeProto(msg.Space, msg.Changes), msg.SubmitForm)
 }
 
-func NewProposalHandler(k Keeper) sdk.ProposalHandler {
-	return func(ctx sdk.Context, p sdk.ProposalContent) sdk.Error {
+func NewProposalHandler(k ProposalKeeper) proposal.Handler {
+	return func(ctx sdk.Context, p proposal.Content) sdk.Error {
 		switch p := p.(type) {
 		case ProposalChange:
 			return handleProposalChange(ctx, k, p)
@@ -52,7 +35,7 @@ func NewProposalHandler(k Keeper) sdk.ProposalHandler {
 	}
 }
 
-func handleProposalChange(ctx sdk.Context, k Keeper, p ProposalChange) sdk.Error {
+func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) sdk.Error {
 	s, ok := k.GetSubspace(p.Space)
 	if !ok {
 		// XXX

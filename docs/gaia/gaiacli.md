@@ -130,29 +130,24 @@ multi signature account see [Multisig Transactions](#multisig-transactions).
 
 ### Fees & Gas
 
-Each transaction may either supply fees or gas prices, but not both. Most users
-will typically provide fees as this is the cost you will end up incurring for
-the transaction being included in the ledger.
+Each transaction may either supply fees or gas prices, but not both. 
 
 Validator's have a minimum gas price (multi-denom) configuration and they use
-this value when when determining if they should include the transaction in a block
-during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
-supply fees that are greater than or equal to __any__ of the denominations the validator requires.
+this value when when determining if they should include the transaction in a block during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must supply fees that are greater than or equal to __any__ of the denominations the validator requires.
 
 __Note__: With such a mechanism in place, validators may start to prioritize
-txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
-higher tx priority.
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield higher tx priority.
 
 e.g.
 
 ```bash
-gaiacli tx send ... --fees=100photino
+gaiacli tx send ... --fees=1000000uatom
 ```
 
 or
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=0.025uatom
 ```
 
 ### Account
@@ -345,11 +340,11 @@ gaiacli query staking validator <account_cosmosval>
 
 #### Bond Tokens
 
-On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
+On the Cosmos Hub mainnet, we delegate `uatom`, where `1atom = 10000000uatom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10steak \
+  --amount=10000000uatom \
   --validator=<validator> \
   --from=<key_name> \
   --chain-id=<chain_id>
@@ -366,7 +361,7 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
 ::: tip Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `uatom` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ##### Query Delegations
@@ -527,7 +522,7 @@ gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --deposit=<40steak> \
+  --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -556,10 +551,10 @@ gaiacli query gov proposer <proposal_id>
 
 #### Increase deposit
 
-In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx gov deposit <proposal_id> <200steak> \
+gaiacli tx gov deposit <proposal_id> "10000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -725,7 +720,7 @@ The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 
 ```bash
-gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 1000000uatom \
   --from=<multisig_address> \
   --generate-only > unsignedTx.json
 ```

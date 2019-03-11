@@ -16,6 +16,28 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 You may want to skip the next section if you have already [set up a full-node](../join-mainnet.md).
 
+::: warning
+On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1.000.000uatom`
+:::
+
+### A note on gas and fees
+
+Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
+
+```
+fees = gas * gasPrices
+```
+
+The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
+
+The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transactions that have a `gasPrice` greater than their `min-gas-price`. 
+
+The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`/`fees`, the higher the chance that your transaction will get included in a block. 
+
+::: tip
+For mainnet, the recommended `gas-prices` is `0.025uatom`. 
+::: 
+
 ## Create Your Validator
 
 Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
@@ -32,18 +54,25 @@ Don't use more `uatom` thank you have!
 
 ```bash
 gaiacli tx staking create-validator \
-  --amount=5STAKE \
+  --amount=1000000uatom \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
+  --min-self-delegation="1" \
+  --gas="auto" \
+  --gas-prices="0.025uatom" \
   --from=<key_name>
 ```
 
 ::: tip
 When specifying commission parameters, the `commission-max-change-rate` is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is a 100% rate increase, but only 1 percentage point.
+:::
+
+::: tip
+`Min-self-delegation` is a stritly positive integer that represents the minimum amount of self-delegated voting power your validator must always have. A `min-self-delegation` of 1 means your validator will never have a self-delegation lower than `1atom`, or `1000000uatom`
 :::
 
 You can confirm that you are in the validator set by using a third party explorer.
@@ -75,26 +104,18 @@ Don't use more `uatom` thank you have!
 :::
 
 ```bash
-gaiacli tx staking create-validator \
-  --amount=50000000uatom \
-  --pubkey=$(gaiad tendermint show-validator) \
-  --moniker="choose a moniker" \
-  --chain-id=<chain_id> \
-  --commission-rate="0.10" \
-  --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01" \
-  --generate-only > myUnsignedGentx.json
+gaiad gentx \
+  --amount <amount_of_delegation_uatom> \
+  --commission-rate <commission_rate> \
+  --commission-max-rate <commission_max_rate> \
+  --commission-max-change-rate <commission_max_change_rate> \
+  --pubkey <consensus_pubkey> \
+  --name <key_name>
 ```
 
 ::: tip
 When specifying commission parameters, the `commission-max-change-rate` is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is a 100% rate increase, but only 1 percentage point.
 :::
-
-After you generate your unsigned `gentx`, sign it.
-
-```bash
-gaiacli tx sign myUnsignedGentx.json --from <key_name> > myGentx.json
-```
 
 You can then submit your `gentx` on the [launch repository](https://github.com/cosmos/launch). These `gentx` will be used to form the final genesis file. 
 
@@ -111,6 +132,8 @@ gaiacli tx staking edit-validator
   --identity=6A0D65E29A4CBC8E \
   --details="To infinity and beyond!" \
   --chain-id=<chain_id> \
+  --gas="auto" \
+  --gas-prices="0.025uatom" \
   --from=<key_name> \
   --commission-rate="0.10"
 ```

@@ -241,7 +241,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := testProposal()
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusDepositPeriod

@@ -20,7 +20,7 @@ func TestGetSetProposal(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	keeper.SetProposal(ctx, proposal)
@@ -39,12 +39,12 @@ func TestIncrementProposalNumber(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	proposal6, err := keeper.SubmitProposal(ctx, tp)
+	testSubmitProposal(ctx, keeper, tp)
+	testSubmitProposal(ctx, keeper, tp)
+	testSubmitProposal(ctx, keeper, tp)
+	testSubmitProposal(ctx, keeper, tp)
+	testSubmitProposal(ctx, keeper, tp)
+	proposal6, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.ProposalID)
@@ -59,7 +59,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 
 	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
@@ -89,7 +89,7 @@ func TestDeposits(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
@@ -190,7 +190,7 @@ func TestVotes(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	tp := testProposal()
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
@@ -252,7 +252,7 @@ func TestProposalQueues(t *testing.T) {
 
 	// create test proposals
 	tp := testProposal()
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := testSubmitProposal(ctx, keeper, tp)
 	require.NoError(t, err)
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)

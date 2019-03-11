@@ -104,8 +104,13 @@ func (keeper Keeper) Router() Router {
 }
 
 // Proposals
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
-	proposalID, err := keeper.getNewProposalID(ctx)
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposalID uint64, err sdk.Error) {
+	err = IsValidProposalContent(keeper.codespace, content)
+	if err != nil {
+		return
+	}
+
+	proposalID, err = keeper.getNewProposalID(ctx)
 	if err != nil {
 		return
 	}
@@ -113,7 +118,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (p
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal = Proposal{
+	proposal := Proposal{
 		ProposalContent: content,
 		ProposalID:      proposalID,
 

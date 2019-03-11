@@ -44,18 +44,6 @@ func validProposalType(proposalType string) bool {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	if len(msg.Title) == 0 {
-		return ErrInvalidTitle(DefaultCodespace, "No title present in proposal")
-	}
-	if len(msg.Title) > MaxTitleLength {
-		return ErrInvalidTitle(DefaultCodespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
-	}
-	if len(msg.Description) == 0 {
-		return ErrInvalidDescription(DefaultCodespace, "No description present in proposal")
-	}
-	if len(msg.Description) > MaxDescriptionLength {
-		return ErrInvalidDescription(DefaultCodespace, fmt.Sprintf("Proposal description is longer than max length of %d", MaxDescriptionLength))
-	}
 	if !validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}

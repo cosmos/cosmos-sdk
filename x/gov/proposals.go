@@ -9,6 +9,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
+)
+
+func IsValidProposalContent(codespace sdk.CodespaceType, content ProposalContent) sdk.Error {
+	title := content.GetTitle()
+	if len(title) == 0 {
+		return ErrInvalidTitle(codespace, "No title present in proposal")
+	}
+	if len(title) > MaxTitleLength {
+		return ErrInvalidTitle(codespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
+	}
+	description := content.GetDescription()
+	if len(description) == 0 {
+		return ErrInvalidDescription(codespace, "No description present in proposal")
+	}
+	if len(description) > MaxDescriptionLength {
+		return ErrInvalidDescription(codespace, fmt.Sprintf("Proposal description is longer than max length of %d", MaxDescriptionLength))
+	}
+	return nil
+}
+
 // type synonym for ProposalContent
 type ProposalContent = sdk.ProposalContent
 

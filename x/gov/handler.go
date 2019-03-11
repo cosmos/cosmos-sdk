@@ -34,11 +34,10 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	default:
 		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
 	}
-	proposal, err := keeper.SubmitProposal(ctx, content)
+	proposalID, err := keeper.SubmitProposal(ctx, content)
 	if err != nil {
 		return err.Result()
 	}
-	proposalID := proposal.ProposalID
 	proposalIDStr := fmt.Sprintf("%d", proposalID)
 
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)

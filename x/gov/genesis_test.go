@@ -35,9 +35,9 @@ func TestEqualProposals(t *testing.T) {
 
 	// Submit two proposals
 	proposal := testProposal()
-	proposal1, err := keeper.SubmitProposal(ctx, proposal)
+	proposal1, err := testSubmitProposal(ctx, keeper, proposal)
 	require.NoError(t, err)
-	proposal2, err := keeper.SubmitProposal(ctx, proposal)
+	proposal2, err := testSubmitProposal(ctx, keeper, proposal)
 	require.NoError(t, err)
 
 	// They are similar but their IDs should be different
@@ -77,11 +77,11 @@ func TestImportExportQueues(t *testing.T) {
 
 	// Create two proposals, put the second into the voting period
 	proposal := testProposal()
-	proposal1, err := keeper.SubmitProposal(ctx, proposal)
+	proposal1, err := testSubmitProposal(ctx, keeper, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalID
 
-	proposal2, err := keeper.SubmitProposal(ctx, proposal)
+	proposal2, err := testSubmitProposal(ctx, keeper, proposal)
 	require.NoError(t, err)
 	proposalID2 := proposal2.ProposalID
 

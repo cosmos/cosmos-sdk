@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/errors"
 )
 
 // query endpoints supported by the governance Querier
@@ -101,7 +102,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 	proposal, ok := keeper.GetProposal(ctx, params.ProposalID)
 	if !ok {
-		return nil, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
+		return nil, errors.ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposal)
@@ -207,7 +208,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return nil, ErrUnknownProposal(DefaultCodespace, proposalID)
+		return nil, errors.ErrUnknownProposal(DefaultCodespace, proposalID)
 	}
 
 	var tallyResult TallyResult

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
@@ -25,39 +27,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	var content ProposalContent
+	var proto proposal.Proto
 	switch msg.ProposalType {
 	case ProposalTypeText:
-		content = NewTextProposal(msg.Title, msg.Description)
+		proto = NewTextProposal
 	case ProposalTypeSoftwareUpgrade:
-		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
+		proto = NewSoftwareUpgradeProposal
 	default:
-		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
-	}
-	proposalID, err := keeper.SubmitProposal(ctx, content)
-	if err != nil {
-		return err.Result()
-	}
-	proposalIDStr := fmt.Sprintf("%d", proposalID)
-
-	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
-	if err != nil {
-		return err.Result()
+		return errors.ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
 	}
 
-	resTags := sdk.NewTags(
-		tags.Proposer, []byte(msg.Proposer.String()),
-		tags.ProposalID, proposalIDStr,
-	)
-
-	if votingStarted {
-		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDStr)
-	}
-
-	return sdk.Result{
-		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID),
-		Tags: resTags,
-	}
+	return proposal.HandleSubmit(ctx, keeper.cdc, keeper, proto, msg.SubmitForm)
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
@@ -95,7 +75,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	}
 }
 
-func ProposalHandler(ctx sdk.Context, p sdk.ProposalContent) sdk.Error {
+func ProposalHandler(ctx sdk.Context, p proposal.Content) sdk.Error {
 	switch p.(type) {
 	case TextProposal, SoftwareUpgradeProposal:
 		// Both proposal type does not effect on the state

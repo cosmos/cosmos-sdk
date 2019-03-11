@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -149,7 +150,7 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
-func testProposal() TextProposal {
+func testProposal() proposal.Content {
 	return NewTextProposal("Test", "description")
 }
 
@@ -159,7 +160,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 }
 
 // SubmitProposal which returns Proposal instead of ProposalID
-func testSubmitProposal(ctx sdk.Context, k Keeper, content ProposalContent) (p Proposal, err sdk.Error) {
+func testSubmitProposal(ctx sdk.Context, k Keeper, content proposal.Content) (p Proposal, err sdk.Error) {
 	var id uint64
 	id, err = k.SubmitProposal(ctx, content)
 	if err != nil {

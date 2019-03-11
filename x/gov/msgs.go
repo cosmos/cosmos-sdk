@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 // Governance message types and routes
@@ -11,26 +13,22 @@ const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+
+	DefaultCodespace sdk.CodespaceType = ModuleName
 )
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
+	proposal.SubmitForm `json:"submit_form"`
+	ProposalType        string `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
 func NewMsgSubmitProposal(title, description string, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
-		Title:          title,
-		Description:    description,
-		ProposalType:   proposalType,
-		Proposer:       proposer,
-		InitialDeposit: initialDeposit,
+		SubmitForm:   proposal.NewSubmitForm(title, description, proposer, initialDeposit),
+		ProposalType: proposalType,
 	}
 }
 
@@ -44,25 +42,10 @@ func validProposalType(proposalType string) bool {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	// XXX: we are already checking IsValidProposalContent in SubmitProposal.
-	// Is it efficient to put it in ValidateBasic?
-	err := IsValidProposalContent(DefaultCodespace, msg.Title, msg.Description)
-	if err != nil {
-		return err
-	}
 	if !validProposalType(msg.ProposalType) {
-		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
+		return errors.ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}
-	if msg.Proposer.Empty() {
-		return sdk.ErrInvalidAddress(msg.Proposer.String())
-	}
-	if !msg.InitialDeposit.IsValid() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
-	}
-	if msg.InitialDeposit.IsAnyNegative() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
-	}
-	return nil
+	return msg.SubmitForm.ValidateBasic()
 }
 
 func (msg MsgSubmitProposal) String() string {
@@ -112,7 +95,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
 	if msg.ProposalID < 0 {
-		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
+		return errors.ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	return nil
 }
@@ -158,10 +141,10 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
 	if msg.ProposalID < 0 {
-		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
+		return errors.ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	if !validVoteOption(msg.Option) {
-		return ErrInvalidVote(DefaultCodespace, msg.Option)
+		return errors.ErrInvalidVote(DefaultCodespace, byte(msg.Option))
 	}
 	return nil
 }

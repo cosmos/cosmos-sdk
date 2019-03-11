@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 type testInput struct {
@@ -39,8 +39,8 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
-	ak := NewAccountKeeper(cdc, authCapKey, pk.Subspace(DefaultParamspace), ProtoBaseAccount)
+	ps := params.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
+	ak := NewAccountKeeper(cdc, authCapKey, ps, ProtoBaseAccount)
 	fck := NewFeeCollectionKeeper(cdc, fckCapKey)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 

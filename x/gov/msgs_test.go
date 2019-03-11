@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
@@ -39,8 +40,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
-		{strings.Repeat("#", MaxTitleLength*2), "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, false},
-		{"Test Proposal", strings.Repeat("#", MaxDescriptionLength*2), ProposalTypeText, addrs[0], coinsMulti, false},
+		{strings.Repeat("#", proposal.MaxTitleLength*2), "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, false},
+		{"Test Proposal", strings.Repeat("#", proposal.MaxDescriptionLength*2), ProposalTypeText, addrs[0], coinsMulti, false},
 	}
 
 	for i, tc := range tests {

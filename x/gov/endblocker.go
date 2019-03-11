@@ -69,7 +69,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 				// Panic here because it does not make sense that there is no handler exists
 				panic(fmt.Sprintf("handler for proposal %d does not exist", proposalID))
 			}
-			tagError = handler(ctx, activeProposal.ProposalContent)
+			tagError = handler(ctx, activeProposal.Content)
 			if tagError == nil {
 				tagValue = tags.ActionProposalPassed
 			} else {

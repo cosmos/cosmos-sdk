@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"regexp"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 type Router interface {
-	AddRoute(r string, h sdk.ProposalHandler) (rtr Router)
-	Route(path string) (h sdk.ProposalHandler)
+	AddRoute(r string, h proposal.Handler) (rtr Router)
+	Route(path string) (h proposal.Handler)
 }
 
 type router struct {
-	routes map[string]sdk.ProposalHandler
+	routes map[string]proposal.Handler
 }
 
 var _ Router = (*router)(nil)
 
 func NewRouter() *router {
 	return &router{
-		routes: make(map[string]sdk.ProposalHandler),
+		routes: make(map[string]proposal.Handler),
 	}
 }
 
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
-func (rtr *router) AddRoute(path string, h sdk.ProposalHandler) Router {
+func (rtr *router) AddRoute(path string, h proposal.Handler) Router {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -38,6 +38,6 @@ func (rtr *router) AddRoute(path string, h sdk.ProposalHandler) Router {
 	return rtr
 }
 
-func (rtr *router) Route(path string) sdk.ProposalHandler {
+func (rtr *router) Route(path string) proposal.Handler {
 	return rtr.routes[path]
 }

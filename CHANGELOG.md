@@ -65,7 +65,6 @@ IMPROVEMENTS
   * [\#3730](https://github.com/cosmos/cosmos-sdk/issues/3730) Improve workflow for
   `gaiad gentx` with offline public keys, by outputting stdtx file that needs to be signed.
   * [\#3761](https://github.com/cosmos/cosmos-sdk/issues/3761) Querying account related information using custom querier in auth module
-  * [\#3841](https://github.com/cosmos/cosmos-sdk/pull/3841) Add indent to JSON of `gaiacli key [add|show|list]`
 
 * SDK
   * [\#3753](https://github.com/cosmos/cosmos-sdk/issues/3753) Remove no-longer-used governance penalty parameter

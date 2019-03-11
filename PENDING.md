@@ -102,7 +102,13 @@ CLI flag.
 * [\#3694] Push tagged docker images on docker hub when tag is created.
 * [\#3716] Update file permissions the client keys directory and contents to `0700`.
 * [\#3681](https://github.com/cosmos/cosmos-sdk/issues/3681) Migrate ledger-cosmos-go from ZondaX to Cosmos organization 
-* \#3819 simulation refactor, log output now stored in ~/.gaiad/simulation/ 
+* \#3819 Simulation refactor, log output now stored in ~/.gaiad/simulation/ 
+  * Simulation moved to its own module (not a part of mock)
+  * Logger type instead of passing function variables everywhere
+  * Logger json output (for reloadable simulation running)
+  * Cleanup bank simulation messages / remove dup code in bank simulation
+  * Simulations saved in `~/.gaiad/simulations/` 
+  * "Lean" simulation output option to exclude No-ops and !ok functions (`--SimulationLean` flag)  
 
 ### Tendermint
 

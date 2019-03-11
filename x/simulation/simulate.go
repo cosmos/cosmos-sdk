@@ -260,7 +260,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
-			if !lean || (opMsg.OK && lean) {
+			if !lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, opMsg, int64(i)))
 			}
 			if err != nil {
@@ -303,7 +303,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
 		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
-		if !lean || (opMsg.OK && lean) {
+		if !lean || opMsg.OK {
 			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
 		if err != nil {
@@ -327,7 +327,7 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
 		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
-		if !lean || (opMsg.OK && lean) {
+		if !lean || opMsg.OK {
 			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}
 		if err != nil {

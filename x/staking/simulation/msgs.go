@@ -16,7 +16,7 @@ import (
 func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
@@ -56,7 +56,6 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 			write()
 		}
 
-		event(fmt.Sprintf("staking/MsgCreateValidator/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -66,8 +65,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		description := staking.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
@@ -93,7 +91,6 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgEditValidator/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -103,8 +100,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -133,7 +129,6 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgDelegate/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -143,8 +138,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
@@ -172,7 +166,6 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgUndelegate/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -182,8 +175,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -217,7 +209,6 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		if ok {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgBeginRedelegate/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}

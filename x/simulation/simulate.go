@@ -259,7 +259,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-			opMsg, futureOps, err := op(r2, app, ctx, accounts, event)
+			opMsg, futureOps, err := op(r2, app, ctx, accounts)
+			opMsg.LogEvent(event)
 			if !lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, opMsg, int64(i)))
 			}
@@ -302,7 +303,8 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, tallyEvent)
+		opMsg, _, err := queuedOp[i](r, app, ctx, accounts)
+		opMsg.LogEvent(tallyEvent)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
@@ -326,7 +328,8 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, tallyEvent)
+		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts)
+		opMsg.LogEvent(tallyEvent)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}

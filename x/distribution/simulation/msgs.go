@@ -15,8 +15,7 @@ import (
 func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
@@ -32,7 +31,6 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgSetWithdrawAddress/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -42,8 +40,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
 		validatorAccount := simulation.RandomAcc(r, accs)
@@ -59,7 +56,6 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorReward/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -69,8 +65,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
 		msg := distribution.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
@@ -85,7 +80,6 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawValidatorCommission/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}

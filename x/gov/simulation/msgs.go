@@ -38,7 +38,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 	})
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
@@ -47,7 +47,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 		if err != nil {
 			return simulation.NoOpMsg(), nil, err
 		}
-		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
+		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx)
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		// don't schedule votes if proposal failed
 		if !ok {
@@ -80,7 +80,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 // Note: Currently doesn't ensure that the proposal txt is in JSON form
 func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		sender := simulation.RandomAcc(r, accs)
@@ -88,19 +88,18 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 		if err != nil {
 			return simulation.NoOpMsg(), nil, err
 		}
-		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx, event)
+		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx)
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (ok bool) {
+func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
 	ctx, write := ctx.CacheContext()
 	ok = handler(ctx, msg).IsOK()
 	if ok {
 		write()
 	}
-	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
 	return ok
 }
 
@@ -121,7 +120,7 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) 
 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
@@ -140,7 +139,6 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 			write()
 		}
 
-		event(fmt.Sprintf("gov/MsgDeposit/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -154,7 +152,7 @@ func SimulateMsgVote(k gov.Keeper) simulation.Operation {
 
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID uint64) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		if acc.Equals(simulation.Account{}) {
@@ -181,7 +179,6 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 			write()
 		}
 
-		event(fmt.Sprintf("gov/MsgVote/%v", ok))
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}

@@ -20,7 +20,7 @@ import (
 // accounts already exist.
 func SimulateMsgSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, mapper)
@@ -32,7 +32,6 @@ func SimulateMsgSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Opera
 		if err != nil {
 			return opMsg, nil, err
 		}
-		event("bank/sendAndVerifyTxSend/ok")
 		return opMsg, nil, nil
 	}
 }
@@ -115,7 +114,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg b
 // accounts already exist.
 func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, mapper)
@@ -127,9 +126,6 @@ func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk bank.Keeper) 
 		if err != nil {
 			return opMsg, nil, err
 		}
-		event("bank/sendAndVerifyMsgMultiSend/ok")
-
-		opMsg = simulation.NewOperationMsg(msg, ok, comment)
 		return opMsg, nil, nil
 	}
 }

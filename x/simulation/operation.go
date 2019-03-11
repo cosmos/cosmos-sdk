@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"sort"
 	"time"
@@ -20,7 +21,7 @@ import (
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account, event func(string)) (
+	ctx sdk.Context, accounts []Account) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
 // entry kinds for use within OperationEntry
@@ -122,7 +123,7 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 	}
 }
 
-// OperationMsg - create a new operation message from sdk.Msg
+// NoOpMsg - create a no-operation message
 func NoOpMsg() OperationMsg {
 	return OperationMsg{
 		Route:   "",
@@ -133,7 +134,7 @@ func NoOpMsg() OperationMsg {
 	}
 }
 
-// LogEntry - log entry text for this operation msg
+// log entry text for this operation msg
 func (om OperationMsg) String() string {
 	out, err := json.Marshal(om)
 	if err != nil {
@@ -142,13 +143,22 @@ func (om OperationMsg) String() string {
 	return string(out)
 }
 
-// LogEntry - log entry text for this operation msg
+// Marshal the operation msg, panic on error
 func (om OperationMsg) MustMarshal() json.RawMessage {
 	out, err := json.Marshal(om)
 	if err != nil {
 		panic(err)
 	}
 	return out
+}
+
+// add event for event stats
+func (om OperationMsg) LogEvent(eventLogger func(string)) {
+	pass := "ok"
+	if !om.OK {
+		pass = "failure"
+	}
+	eventLogger(fmt.Sprintf("%v/%v/%v", om.Route, om.Name, pass))
 }
 
 // queue of operations

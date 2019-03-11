@@ -1,7 +1,7 @@
 # Join the mainnet
 
 ::: tip 
-See the [launch](https://github.com/cosmos/launch) for
+See the [launch repo](https://github.com/cosmos/launch) for
 information on the mainnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::

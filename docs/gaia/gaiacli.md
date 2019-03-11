@@ -340,7 +340,7 @@ gaiacli query staking validator <account_cosmosval>
 
 #### Bond Tokens
 
-On the Cosmos Hub mainnet, we delegate `uatom`, where `1atom = 10000000uatom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
+On the Cosmos Hub mainnet, we delegate `uatom`, where `1atom = 1000000uatom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
 gaiacli tx staking delegate \
@@ -361,7 +361,7 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
 ::: tip Note
-Don't use more `uatom` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `uatom` than you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ##### Query Delegations

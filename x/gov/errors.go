@@ -10,17 +10,18 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeUnknownProposal         sdk.CodeType = 1
-	CodeInactiveProposal        sdk.CodeType = 2
-	CodeAlreadyActiveProposal   sdk.CodeType = 3
-	CodeAlreadyFinishedProposal sdk.CodeType = 4
-	CodeAddressNotStaked        sdk.CodeType = 5
-	CodeInvalidTitle            sdk.CodeType = 6
-	CodeInvalidDescription      sdk.CodeType = 7
-	CodeInvalidProposalType     sdk.CodeType = 8
-	CodeInvalidVote             sdk.CodeType = 9
-	CodeInvalidGenesis          sdk.CodeType = 10
-	CodeInvalidProposalStatus   sdk.CodeType = 11
+	CodeUnknownProposal          sdk.CodeType = 1
+	CodeInactiveProposal         sdk.CodeType = 2
+	CodeAlreadyActiveProposal    sdk.CodeType = 3
+	CodeAlreadyFinishedProposal  sdk.CodeType = 4
+	CodeAddressNotStaked         sdk.CodeType = 5
+	CodeInvalidTitle             sdk.CodeType = 6
+	CodeInvalidDescription       sdk.CodeType = 7
+	CodeInvalidProposalType      sdk.CodeType = 8
+	CodeInvalidVote              sdk.CodeType = 9
+	CodeInvalidGenesis           sdk.CodeType = 10
+	CodeInvalidProposalStatus    sdk.CodeType = 11
+	CodeProposalHandlerNotExists sdk.CodeType = 12
 )
 
 // Error constructors
@@ -63,4 +64,8 @@ func ErrInvalidVote(codespace sdk.CodespaceType, voteOption VoteOption) sdk.Erro
 
 func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, msg)
+}
+
+func ErrProposalHandlerNotExists(codespace sdk.CodespaceType, content ProposalContent) sdk.Error {
+	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have corredponding handler, with route %s", content, content.ProposalRoute()))
 }

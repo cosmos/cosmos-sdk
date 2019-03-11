@@ -14,15 +14,13 @@ const (
 	MaxTitleLength       int = 140
 )
 
-func IsValidProposalContent(codespace sdk.CodespaceType, content ProposalContent) sdk.Error {
-	title := content.GetTitle()
+func IsValidProposalContent(codespace sdk.CodespaceType, title, description string) sdk.Error {
 	if len(title) == 0 {
 		return ErrInvalidTitle(codespace, "No title present in proposal")
 	}
 	if len(title) > MaxTitleLength {
 		return ErrInvalidTitle(codespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
 	}
-	description := content.GetDescription()
 	if len(description) == 0 {
 		return ErrInvalidDescription(codespace, "No description present in proposal")
 	}

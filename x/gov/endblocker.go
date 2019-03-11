@@ -64,7 +64,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			// to disable some of the proposal types
 			// currently panics(same behaviour with baseapp.router)
 			handler := keeper.router.Route(activeProposal.ProposalRoute())
-			tagError = handler(ctx, activeProposal)
+			if handler == nil {
+				// SubmitProposal checks whether there is a handler for this proposal already
+				// Panic here because it does not make sense that there is no handler exists
+				panic(fmt.Sprintf("handler for proposal %d does not exist", proposalID))
+			}
+			tagError = handler(ctx, activeProposal.ProposalContent)
 			if tagError == nil {
 				tagValue = tags.ActionProposalPassed
 			} else {

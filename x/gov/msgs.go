@@ -44,6 +44,12 @@ func validProposalType(proposalType string) bool {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
+	// XXX: we are already checking IsValidProposalContent in SubmitProposal.
+	// Is it efficient to put it in ValidateBasic?
+	err := IsValidProposalContent(DefaultCodespace, msg.Title, msg.Description)
+	if err != nil {
+		return err
+	}
 	if !validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}

@@ -16,10 +16,15 @@ type ProposalChange struct {
 	Changes              []Change `json:"changes"`
 }
 
+func NewProposalChange(title string, description string, space string, changes []Change) ProposalChange {
+	return ProposalChange{
+		ProposalAbstract: sdk.NewProposalAbstract(title, description),
+		Space:            space,
+		Changes:          changes,
+	}
+}
+
 var _ sdk.ProposalContent = ProposalChange{}
 
-func (pc ProposalChange) ProposalRoute() string { return RouterKey }
-func (pc ProposalChange) ProposalType() string  { return ProposalTypeParameterChange }
-
-const RouterKey = "params"
-const ProposalTypeParameterChange = "ParameterChange"
+func (pc ProposalChange) ProposalRoute() string { return RouteKey }
+func (pc ProposalChange) ProposalType() string  { return "ParameterChange" }

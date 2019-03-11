@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -25,13 +26,15 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
+func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey, pk ProposalKeeper) (k Keeper) {
 	k = Keeper{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
 
 		spaces: make(map[string]*Subspace),
+
+		pk: pk,
 	}
 
 	return k
@@ -62,4 +65,10 @@ func (k Keeper) GetSubspace(storename string) (Subspace, bool) {
 		return Subspace{}, false
 	}
 	return *space, ok
+}
+
+type ProposalKeeper struct {
+	Keeper
+
+	gov.Keeper
 }

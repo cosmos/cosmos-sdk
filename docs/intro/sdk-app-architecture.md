@@ -32,7 +32,7 @@ The Cosmos SDK gives you maximum flexibility to define the state of your applica
 
 ## Tendermint
 
-As a developer, you just have to define the state machine using the Cosmos-SDK, and [*Tendermint*](https://tendermint.com/docs/introduction/introduction.html) will handle replication over the network for you.
+As a developer, you just have to define the state machine using the Cosmos-SDK, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for you.
 
 
 ```
@@ -52,7 +52,7 @@ Blockchain node |  |           Consensus           |  |
 ```
 
 
-Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is reponsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/introduction.html).
+Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is responsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html).
 
 Tendermint consensus algorithm works with a set of special nodes called *Validators*. Validators are responsible for adding blocks of transactions to the blockchain. At any given block, there is a validator set V. A validator in V is chosen by the algorithm to be the proposer of the next block. This block is considered valid if more than two thirds of V signed a *[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)* and a *[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)* on it, and if all the transactions that it contains are valid. The validator set can be changed by rules written in the state-machine. For a deeper look at the algorithm, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview).
 
@@ -81,7 +81,7 @@ Tendermint passes transactions from the network to the application through an in
 +---------------------+
 ```
 
-Note that Tendermint only handles transaction bytes. It has no knowledge of what these bytes realy mean. All Tendermint does is to order them deterministically. It is the job of the application to give meaning to these bytes. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the message was succesful or not. 
+Note that Tendermint only handles transaction bytes. It has no knowledge of what these bytes really mean. All Tendermint does is to order them deterministically. It is the job of the application to give meaning to these bytes. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the message was successful or not. 
 
 Here are the most important messages of the ABCI:
 

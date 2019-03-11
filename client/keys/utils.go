@@ -118,7 +118,7 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		printKeyTextHeader()
 		printKeyOutput(ko)
 
-	case "json":
+	case OutputFormatJSON:
 		out, err := MarshalJSON(ko)
 		if err != nil {
 			panic(err)

@@ -74,9 +74,9 @@ The power of the Cosmos SDK lies in its modularity. SDK applications are built b
                                        v
 ```
 
-Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* Messages are extracted from transactions in `baseapp`'s methods). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-cababilities](./ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called keepers that can be passed to other modules to grant a pre-defined set of capabilities. 
+Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* Messages are extracted from transactions in `baseapp`'s methods). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](./ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called keepers that can be passed to other modules to grant a pre-defined set of capabilities. 
 
-SDK modules are defined in the `.x/` folder of the SDK. Some core modules include:
+SDK modules are defined in the `x/` folder of the SDK. Some core modules include:
 
 - `x/auth`: Used to manage accounts and signatures.
 - `x/bank`: Used to enable tokens and token transfers.

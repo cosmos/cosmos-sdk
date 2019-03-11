@@ -259,7 +259,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	case "json":
 		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
 		} else {
 			out, err = ctx.Codec.MarshalJSON(toPrint)
 		}

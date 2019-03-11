@@ -27,7 +27,7 @@ gaiad tendermint show-validator
 To create your validator, just use the following command:
 
 ::: warning 
-Don't use more `uatom` thank you have! 
+Don't use more `uatom` than you have! 
 :::
 
 ```bash
@@ -78,7 +78,7 @@ A `gentx` is a JSON file carrying a self-delegation. All genesis transactions ar
 :::
 
 ::: warning Note
-Don't use more `uatom` thank you have! 
+Don't use more `uatom` than you have! 
 :::
 
 ```bash

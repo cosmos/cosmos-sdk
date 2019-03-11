@@ -815,7 +815,7 @@ func doDelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgDelegationsInput{
+	msg := stakingrest.MsgDelegationsInput{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
@@ -839,13 +839,6 @@ func doDelegate(
 	return txResp
 }
 
-type msgDelegationsInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	Delegation       sdk.Coin       `json:"delegation"`
-}
-
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(
 	t *testing.T, port, name, pwd string, delAddr sdk.AccAddress,
@@ -859,11 +852,11 @@ func doUndelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgUndelegateInput{
+	msg := stakingrest.MsgUndelegateInput{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		SharesAmount:     amount.ToDec(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -880,13 +873,6 @@ func doUndelegate(
 	require.NoError(t, err)
 
 	return txResp
-}
-
-type msgUndelegateInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	SharesAmount     sdk.Dec        `json:"shares"`
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
@@ -924,14 +910,6 @@ func doBeginRedelegation(
 	require.NoError(t, err)
 
 	return txResp
-}
-
-type msgBeginRedelegateInput struct {
-	BaseReq             rest.BaseReq   `json:"base_req"`
-	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
-	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
-	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
-	SharesAmount        sdk.Dec        `json:"shares"`
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator

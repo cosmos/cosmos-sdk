@@ -43,37 +43,6 @@ func (lw *StandardLogWriter) PrintLogs() {
 	}
 }
 
-//// Builds a function to append logs
-//func getLogWriter(testingmode bool, opEntries []*OperationEntry) func(OperationEntry) {
-
-//if !testingmode {
-//return func(_ OperationEntry) {}
-//}
-
-//return func(opEntry OperationEntry) {
-//opEntries = append(opEntries, opEntry)
-//}
-//}
-
-//// Creates a function to print out the logs
-//func logPrinter(testingmode bool, opEntries []*OperationEntry) func() {
-//if !testingmode {
-//return func() {}
-//}
-
-//return func() {
-//f := createLogFile()
-//_, _ = f.WriteString(fmt.Sprintf("debug opEntries: %v\n", opEntries))
-//for i := 0; i < len(opEntries); i++ {
-//writeEntry := fmt.Sprintf("%s\n", (*opEntries[i]).MustMarshal())
-//_, err := f.WriteString(writeEntry)
-//if err != nil {
-//panic("Failed to write logs to file")
-//}
-//}
-//}
-//}
-
 func createLogFile() *os.File {
 	var f *os.File
 	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))

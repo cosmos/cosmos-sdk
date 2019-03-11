@@ -1,10 +1,5 @@
 package types
 
-const (
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
-)
-
 // ProposalContent is an interface that has title, description, and proposaltype
 // that the governance module can use to identify them and generate human readable messages
 // ProposalContent can have additional fields, which will handled by ProposalHandlers
@@ -27,23 +22,6 @@ func NewProposalAbstract(title, description string) ProposalAbstract {
 		Title:       title,
 		Description: description,
 	}
-}
-
-func (abs ProposalAbstract) ValidateBasic() Error {
-	// XXX
-	if len(abs.Title) == 0 {
-
-	}
-	if len(abs.Title) > MaxTitleLength {
-
-	}
-	if len(abs.Description) == 0 {
-
-	}
-	if len(abs.Description) > MaxDescriptionLength {
-
-	}
-	return nil
 }
 
 // nolint

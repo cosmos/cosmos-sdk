@@ -155,3 +155,19 @@ func testProposal() TextProposal {
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return bytes.Equal(msgCdc.MustMarshalBinaryBare(proposalA), msgCdc.MustMarshalBinaryBare(proposalB))
 }
+
+// SubmitProposal which returns Proposal instead of ProposalID
+func testSubmitProposal(ctx sdk.Context, k Keeper, content ProposalContent) (p Proposal, err sdk.Error) {
+	var id uint64
+	id, err = k.SubmitProposal(ctx, content)
+	if err != nil {
+		return
+	}
+
+	var ok bool
+	p, ok = k.GetProposal(ctx, id)
+	if !ok {
+		err = sdk.NewError(sdk.CodespaceUndefined, sdk.CodeType(1), "Invalid ProposalID in testSubmitProposal; id=%d", id)
+	}
+	return
+}

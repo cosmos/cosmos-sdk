@@ -101,7 +101,7 @@ func ProposalHandler(ctx sdk.Context, p sdk.ProposalContent) sdk.Error {
 		// Both proposal type does not effect on the state
 		return nil
 	default:
-		// XXX
-		return nil
+		errMsg := fmt.Sprintf("Unrecognized gov proposal type: %T", p)
+		return sdk.ErrUnknownRequest(errMsg)
 	}
 }

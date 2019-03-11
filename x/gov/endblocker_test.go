@@ -228,7 +228,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 func TestProposalPassedEndblocker(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	keeper.ck.SetSendEnabled(ctx, true)
 	stakingHandler := staking.NewHandler(sk)
@@ -264,6 +265,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(keeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	restags := EndBlocker(ctx, keeper)
+	// Handler registered, not panics
+	var restags sdk.Tags
+	require.NotPanics(t, func() { restags = EndBlocker(ctx, keeper) })
+
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), restags[1])
 }

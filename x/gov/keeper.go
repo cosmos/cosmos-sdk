@@ -5,7 +5,7 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -105,8 +105,13 @@ func (keeper Keeper) Router() Router {
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposalID uint64, err sdk.Error) {
-	err = IsValidProposalContent(keeper.codespace, content)
+	err = IsValidProposalContent(keeper.codespace, content.GetTitle(), content.GetDescription())
 	if err != nil {
+		return
+	}
+
+	if keeper.router.Route(content.ProposalRoute()) == nil {
+		err = ErrProposalHandlerNotExists(keeper.codespace, content)
 		return
 	}
 

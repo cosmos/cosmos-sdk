@@ -54,7 +54,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -86,7 +86,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -119,7 +119,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -156,7 +156,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -192,7 +192,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -231,7 +231,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -270,7 +270,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -309,7 +309,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -348,7 +348,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -389,7 +389,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	stakingHandler(ctx, delegator1Msg)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -434,7 +434,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	stakingHandler(ctx, delegator1Msg)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -479,7 +479,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	stakingHandler(ctx, delegator1Msg2)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -539,7 +539,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod
@@ -591,7 +591,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	tp := TextProposal{"Test", "description"}
-	proposal, err := keeper.submitProposal(ctx, tp)
+	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = StatusVotingPeriod

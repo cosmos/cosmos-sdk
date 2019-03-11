@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -154,6 +153,5 @@ func testProposal() TextProposal {
 
 // checks if two proposals are equal
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	cdc := codec.New()
-	return bytes.Equal(cdc.MustMarshalBinaryBare(proposalA), cdc.MustMarshalBinaryBare(proposalB))
+	return bytes.Equal(msgCdc.MustMarshalBinaryBare(proposalA), msgCdc.MustMarshalBinaryBare(proposalB))
 }

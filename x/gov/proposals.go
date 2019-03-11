@@ -12,7 +12,7 @@ import (
 // Proposal is a struct used by gov module internally
 // embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
-	ProposalContent `json:"proposal_content"` // Proposal interface
+	ProposalContent `json:"proposal_content"` // Proposal content interface
 
 	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
 
@@ -42,7 +42,10 @@ func (p Proposal) String() string {
 		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime)
 }
 
-// ProposalContent is an interface that has title, description, and proposaltype for the Proposal
+// ProposalContent is an interface that has title, description, and proposaltype
+// that the governance module can use to identify them and generate human readable messages
+// ProposalContent can have additional fields, which will handled by ProposalHandlers
+// via type assertion, e.g. parameter change amount in ParameterChangeProposal
 type ProposalContent interface {
 	GetTitle() string
 	GetDescription() string

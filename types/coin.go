@@ -269,8 +269,8 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 	}
 }
 
-// DenomsSubsetOf returns true if coinsB' denom set
-// is subset of the receiver's denoms.
+// DenomsSubsetOf returns true if receiver's denom set
+// is subset of coinsB's denoms.
 func (coins Coins) DenomsSubsetOf(coinsB Coins) bool {
 	// more denoms in B than in receiver
 	if len(coins) > len(coinsB) {
@@ -311,8 +311,8 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// IsAllGT returns true if for every denom in coins, the denom is present at a
-// greater amount in coinsB.
+// IsAllGT returns true if for every denom in coinsB,
+// the denom is present at a greater amount in coins.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
 	if len(coins) == 0 {
 		return false

@@ -332,18 +332,6 @@ func TestCoinsGT(t *testing.T) {
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom2, two}}))
 }
 
-func TestCoinsGTE(t *testing.T) {
-	one := NewInt(1)
-	two := NewInt(2)
-
-	assert.True(t, Coins{}.IsAllGTE(Coins{}))
-	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{}))
-	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, one}}))
-	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, one}}))
-	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, two}}))
-}
-
 func TestCoinsLT(t *testing.T) {
 	one := NewInt(1)
 	two := NewInt(2)
@@ -543,6 +531,8 @@ func TestCoinsIsAllGTE(t *testing.T) {
 
 	assert.True(t, Coins{}.IsAllGTE(Coins{}))
 	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, two}}))
 	assert.False(t, Coins{}.IsAllGTE(Coins{{testDenom1, one}}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, two}}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom2, one}}))

@@ -12,6 +12,9 @@
 
 ### SDK
 
+* [\#3516] Remove concept of shares from staking unbonding and redelegation UX;
+replaced by direct coin amount.
+
 ### Tendermint
 
 <!--------------------------------- FEATURES --------------------------------->
@@ -44,11 +47,13 @@
 * #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
 
 ### SDK
+
 * #3801 `baseapp` saftey improvements
 
 ### Tendermint
 
 ### CI/CD
+
 * [\198](https://github.com/cosmos/cosmos-sdk/pull/3832)
 
 <!--------------------------------- BUG FIXES -------------------------------->

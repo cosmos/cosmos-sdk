@@ -377,13 +377,12 @@ gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 
 만약 특정 검증인이 악의적인 행동을 했거나 또는 본인이 개인적인 이유로 일부 토큰을 언본딩을 워하는 경우 다음 명령어를 통해 토큰을 언본딩 할 수 있습니다. 언본딩은 정확한 수량인 `shares-amount`(예시, `12.1`) 또는 언본딩을 원하는 물량의 비율인 `shares-fraction`(예시, `0.25`) 값으로 표현될 수 있습니다.
 
-
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval(검증인 cosmosval 주소)> \
-  --shares-fraction=0.5 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <validator_addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 언본딩은 언본딩 기간이 끝나는 대로 완료됩니다.
@@ -416,11 +415,11 @@ gaiacli query staking unbonding-delegations-from <account_cosmosval(검증인 co
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval(스테이킹을 취소할 검증인의 cosmosval 주소)> \
-  --addr-validator-dest=<account_cosmosval(스테이킹을 받을 검증인의 cosmosval 주소)> \
-  --shares-fraction=50 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 위 예시와 같이 재위임될 토큰의 수량은 특정 수량(`shares-amount`) 또는 일정 비율(`shares-fraction`)로 표현될 수 있습니다.

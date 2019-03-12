@@ -66,44 +66,43 @@ func SupplyInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(k.BondDenom(ctx))))
+			loose = loose.Add(acc.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec())
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
 			for _, entry := range ubd.Entries {
-				loose = loose.Add(sdk.NewDecFromInt(entry.Balance))
+				loose = loose.Add(entry.Balance.ToDec())
 			}
 			return false
 		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(sdk.NewDecFromInt(validator.GetBondedTokens()))
+				bonded = bonded.Add(validator.GetBondedTokens().ToDec())
 			case sdk.Unbonding, sdk.Unbonded:
-				loose = loose.Add(sdk.NewDecFromInt(validator.GetTokens()))
+				loose = loose.Add(validator.GetTokens().ToDec())
 			}
+			// add yet-to-be-withdrawn
+			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx))))
+		loose = loose.Add(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx)).ToDec())
 
 		// add community pool
 		loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
 
-		// add yet-to-be-withdrawn
-		loose = loose.Add(d.GetOutstandingRewardsCoins(ctx).AmountOf(k.BondDenom(ctx)))
-
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
-		if !sdk.NewDecFromInt(pool.NotBondedTokens).Equal(loose) {
+		if !pool.NotBondedTokens.ToDec().Equal(loose) {
 			return fmt.Errorf("loose token invariance:\n"+
 				"\tpool.NotBondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.NotBondedTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !sdk.NewDecFromInt(pool.BondedTokens).Equal(bonded) {
+		if !pool.BondedTokens.ToDec().Equal(bonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tpool.BondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.BondedTokens, bonded)

@@ -9,7 +9,7 @@ import (
 	"errors"
 
 	"github.com/bgentry/speakeasy"
-	"github.com/mattn/go-isatty"
+	isatty "github.com/mattn/go-isatty"
 )
 
 // MinPassLength is the minimum acceptable password length
@@ -90,8 +90,9 @@ func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error)
 func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 	for {
 		if inputIsTty() {
-			fmt.Print(fmt.Sprintf("%s [y/n]:", prompt))
+			fmt.Print(fmt.Sprintf("%s [Y/n]: ", prompt))
 		}
+
 		response, err := readLineFromBuf(buf)
 		if err != nil {
 			return false, err

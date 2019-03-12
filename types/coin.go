@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -27,10 +28,10 @@ type Coin struct {
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
-	validateDenom(denom)
+	mustValidateDenom(denom)
 
 	if amount.LT(ZeroInt()) {
-		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
+		panic(fmt.Errorf("negative coin amount: %v", amount))
 	}
 
 	return Coin{
@@ -86,7 +87,7 @@ func (coin Coin) IsEqual(other Coin) bool {
 
 // Adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
-func (coin Coin) Plus(coinB Coin) Coin {
+func (coin Coin) Add(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -96,7 +97,7 @@ func (coin Coin) Plus(coinB Coin) Coin {
 
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
-func (coin Coin) Minus(coinB Coin) Coin {
+func (coin Coin) Sub(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
@@ -129,6 +130,28 @@ func (coin Coin) IsNegative() bool {
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
+// NewCoins constructs a new coin set.
+func NewCoins(coins ...Coin) Coins {
+	// remove zeroes
+	newCoins := removeZeroCoins(Coins(coins))
+	if len(newCoins) == 0 {
+		return Coins{}
+	}
+
+	newCoins.Sort()
+
+	// detect duplicate Denoms
+	if dupIndex := findDup(newCoins); dupIndex != -1 {
+		panic(fmt.Errorf("find duplicate denom: %s", newCoins[dupIndex]))
+	}
+
+	if !newCoins.IsValid() {
+		panic(fmt.Errorf("invalid coin set: %s", newCoins))
+	}
+
+	return newCoins
+}
+
 func (coins Coins) String() string {
 	if len(coins) == 0 {
 		return ""
@@ -148,7 +171,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		if err := validateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -178,27 +201,27 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// Plus adds two sets of coins.
+// Add adds two sets of coins.
 //
 // e.g.
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
-// NOTE: Plus operates under the invariant that coins are sorted by
+// NOTE: Add operates under the invariant that coins are sorted by
 // denominations.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a non-positive
+// CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Plus(coinsB Coins) Coins {
-	return coins.safePlus(coinsB)
+func (coins Coins) Add(coinsB Coins) Coins {
+	return coins.safeAdd(coinsB)
 }
 
-// safePlus will perform addition of two coins sets. If both coin sets are
+// safeAdd will perform addition of two coins sets. If both coin sets are
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
-func (coins Coins) safePlus(coinsB Coins) Coins {
+func (coins Coins) safeAdd(coinsB Coins) Coins {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
@@ -228,7 +251,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 			indexA++
 
 		case 0: // coin A denom == coin B denom
-			res := coinA.Plus(coinB)
+			res := coinA.Add(coinB)
 			if !res.IsZero() {
 				sum = append(sum, res)
 			}
@@ -246,17 +269,17 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 	}
 }
 
-// Minus subtracts a set of coins from another.
+// Sub subtracts a set of coins from another.
 //
 // e.g.
 // {2A, 3B} - {A} = {A, 3B}
 // {2A} - {0B} = {2A}
 // {A, B} - {A} = {B}
 //
-// CONTRACT: Minus will never return Coins where one Coin has a non-positive
+// CONTRACT: Sub will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Minus(coinsB Coins) Coins {
-	diff, hasNeg := coins.SafeMinus(coinsB)
+func (coins Coins) Sub(coinsB Coins) Coins {
+	diff, hasNeg := coins.SafeSub(coinsB)
 	if hasNeg {
 		panic("negative coin amount")
 	}
@@ -264,17 +287,17 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 	return diff
 }
 
-// SafeMinus performs the same arithmetic as Minus but returns a boolean if any
+// SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
-func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
-	diff := coins.safePlus(coinsB.negative())
+func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
+	diff := coins.safeAdd(coinsB.negative())
 	return diff, diff.IsAnyNegative()
 }
 
 // IsAllGT returns true if for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
+	diff, _ := coins.SafeSub(coinsB)
 	if len(diff) == 0 {
 		return false
 	}
@@ -285,7 +308,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
 // an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
+	diff, _ := coins.SafeSub(coinsB)
 	if len(diff) == 0 {
 		return true
 	}
@@ -360,7 +383,7 @@ func (coins Coins) Empty() bool {
 
 // Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
-	validateDenom(denom)
+	mustValidateDenom(denom)
 
 	switch len(coins) {
 	case 0:
@@ -389,8 +412,6 @@ func (coins Coins) AmountOf(denom string) Int {
 
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
-//
-// TODO: Remove once unsigned integers are used.
 func (coins Coins) IsAllPositive() bool {
 	if len(coins) == 0 {
 		return false
@@ -479,20 +500,25 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt     = `[[:digit:]]+`
-	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
-	reSpc     = `[[:space:]]*`
-	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reDnmString = `[a-z][a-z0-9]{2,15}`
+	reAmt       = `[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc       = `[[:space:]]*`
+	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
+	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
+	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
-func validateDenom(denom string) {
-	if len(denom) < 3 || len(denom) > 16 {
-		panic(fmt.Sprintf("invalid denom length: %s", denom))
+func validateDenom(denom string) error {
+	if !reDnm.MatchString(denom) {
+		return errors.New("illegal characters")
 	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s", denom))
+	return nil
+}
+
+func mustValidateDenom(denom string) {
+	if err := validateDenom(denom); err != nil {
+		panic(err)
 	}
 }
 
@@ -513,8 +539,8 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if denomStr != strings.ToLower(denomStr) {
-		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	if err := validateDenom(denomStr); err != nil {
+		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
 	return NewCoin(denomStr, amount), nil
@@ -547,4 +573,20 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	}
 
 	return coins, nil
+}
+
+// findDup works on the assumption that coins is sorted
+func findDup(coins Coins) int {
+	if len(coins) <= 1 {
+		return -1
+	}
+
+	prevDenom := coins[0]
+	for i := 1; i < len(coins); i++ {
+		if coins[i] == prevDenom {
+			return i
+		}
+	}
+
+	return -1
 }

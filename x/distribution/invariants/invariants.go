@@ -43,11 +43,23 @@ func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
 func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		outstanding := k.GetOutstandingRewards(ctx)
+
+		var outstanding sdk.DecCoins
+
+		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			outstanding = rewards
+			if outstanding.IsAnyNegative() {
+				return true
+			}
+			return false
+		})
+
 		if outstanding.IsAnyNegative() {
 			return fmt.Errorf("negative outstanding coins: %v", outstanding)
 		}
+
 		return nil
+
 	}
 }
 
@@ -58,19 +70,34 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
-		// iterate over all bonded validators, withdraw commission
-		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
-			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-			return false
-		})
+		var remaining sdk.DecCoins
 
-		// iterate over all current delegations, withdraw rewards
-		dels := sk.GetAllSDKDelegations(ctx)
-		for _, delegation := range dels {
-			_ = k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
+		valDelegationAddrs := make(map[string][]sdk.AccAddress)
+		for _, del := range sk.GetAllSDKDelegations(ctx) {
+			valAddr := del.GetValidatorAddr().String()
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
 		}
 
-		remaining := k.GetOutstandingRewards(ctx)
+		// iterate over all validators
+		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
+
+			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
+			if ok {
+				for _, delAddr := range delegationAddrs {
+					if err := k.WithdrawDelegationRewards(ctx, delAddr, val.GetOperator()); err != nil {
+						panic(err)
+					}
+				}
+			}
+
+			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+			if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
+				return true
+			}
+
+			return false
+		})
 
 		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
 			return fmt.Errorf("negative remaining coins: %v", remaining)

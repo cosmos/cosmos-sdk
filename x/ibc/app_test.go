@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // initialize the mock application for this module
@@ -36,7 +36,7 @@ func TestIBCMsgs(t *testing.T) {
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
 
-	priv1 := ed25519.GenPrivKey()
+	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	var emptyCoins sdk.Coins
@@ -62,20 +62,27 @@ func TestIBCMsgs(t *testing.T) {
 		DestChain: destChain,
 	}
 
-	transferMsg := IBCTransferMsg{
+	transferMsg := MsgIBCTransfer{
 		IBCPacket: packet,
 	}
 
-	receiveMsg := IBCReceiveMsg{
+	receiveMsg := MsgIBCReceive{
 		IBCPacket: packet,
 		Relayer:   addr1,
 		Sequence:  0,
 	}
 
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, emptyCoins)
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, true, true, priv1)
+
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, coins)
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, false, false, priv1)
+
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, false, false, priv1)
 }

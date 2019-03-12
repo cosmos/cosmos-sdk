@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -21,7 +20,7 @@ const (
 	defaultKeyDBName = "keys"
 )
 
-type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
+type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
@@ -90,68 +89,22 @@ func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
-// create a list of KeyOutput in bech32 format
-func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
-	kos := make([]KeyOutput, len(infos))
-	for i, info := range infos {
-		ko, err := Bech32KeyOutput(info)
-		if err != nil {
-			return nil, err
-		}
-		kos[i] = ko
-	}
-	return kos, nil
+func printKeyTextHeader() {
+	fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
 }
 
-// create a KeyOutput in bech32 format
-func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
-	accAddr := sdk.AccAddress(info.GetPubKey().Address().Bytes())
-	bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
-
-	return KeyOutput{
-		Name:    info.GetName(),
-		Type:    info.GetType().String(),
-		Address: accAddr.String(),
-		PubKey:  bechPubKey,
-	}, nil
+func printMultiSigKeyTextHeader() {
+	fmt.Printf("WEIGHT:\tTHRESHOLD:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
 }
 
-// Bech32ConsKeyOutput returns key output for a consensus node's key
-// information.
-func Bech32ConsKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
-	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := sdk.Bech32ifyConsPub(keyInfo.GetPubKey())
+func printMultiSigKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
-		return KeyOutput{}, err
+		panic(err)
 	}
 
-	return KeyOutput{
-		Name:    keyInfo.GetName(),
-		Type:    keyInfo.GetType().String(),
-		Address: consAddr.String(),
-		PubKey:  bechPubKey,
-	}, nil
-}
-
-// Bech32ValKeyOutput returns key output for a validator's key information.
-func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
-	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := sdk.Bech32ifyValPub(keyInfo.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
-
-	return KeyOutput{
-		Name:    keyInfo.GetName(),
-		Type:    keyInfo.GetType().String(),
-		Address: valAddr.String(),
-		PubKey:  bechPubKey,
-	}, nil
+	printMultiSigKeyTextHeader()
+	printMultiSigKeyOutput(ko)
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -162,9 +115,10 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		printKeyTextHeader()
 		printKeyOutput(ko)
-	case "json":
+
+	case OutputFormatJSON:
 		out, err := MarshalJSON(ko)
 		if err != nil {
 			panic(err)
@@ -175,27 +129,36 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 }
 
 func printInfos(infos []keys.Info) {
-	kos, err := Bech32KeysOutput(infos)
+	kos, err := keys.Bech32KeysOutput(infos)
 	if err != nil {
 		panic(err)
 	}
+
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		printKeyTextHeader()
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}
+
 	case OutputFormatJSON:
 		out, err := MarshalJSON(kos)
 		if err != nil {
 			panic(err)
 		}
+
 		fmt.Println(string(out))
 	}
 }
 
-func printKeyOutput(ko KeyOutput) {
+func printKeyOutput(ko keys.KeyOutput) {
 	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
+}
+
+func printMultiSigKeyOutput(ko keys.KeyOutput) {
+	for _, pk := range ko.PubKeys {
+		fmt.Printf("%d\t%d\t\t%s\t%s\n", pk.Weight, ko.Threshold, pk.Address, pk.PubKey)
+	}
 }
 
 func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {

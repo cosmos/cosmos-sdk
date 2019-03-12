@@ -141,7 +141,7 @@ func (fee StdFee) Bytes() []byte {
 	// (in the lcd_test, client side its null,
 	// server side its [])
 	if len(fee.Amount) == 0 {
-		fee.Amount = sdk.Coins{}
+		fee.Amount = sdk.NewCoins()
 	}
 	bz, err := msgCdc.MarshalJSON(fee) // TODO
 	if err != nil {

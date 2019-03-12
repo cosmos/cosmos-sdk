@@ -26,12 +26,12 @@ type IBCPacket struct {
 }
 
 // Implements sdk.Msg
-type IBCTransferMsg struct {
+type MsgIBCTransfer struct {
     IBCPacket
 }
 
 // Implements sdk.Msg
-type IBCReceiveMsg struct {
+type MsgIBCReceive struct {
     IBCPacket
     Relayer  sdk.Address
     Sequence int64

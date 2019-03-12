@@ -62,7 +62,7 @@ func NewApp() *App {
 		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
-		TotalCoinsSupply: sdk.Coins{},
+		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
@@ -177,7 +177,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
 	addrKeysSlice := AddrKeysSlice{}
 
 	for i := 0; i < numAccs; i++ {
-		privKey := ed25519.GenPrivKey()
+		privKey := secp256k1.GenPrivKey()
 		pubKey := privKey.PubKey()
 		addr := sdk.AccAddress(pubKey.Address())
 
@@ -213,7 +213,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
+		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
 		Gas:    100000,
 	}
 
@@ -235,12 +235,12 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 	return auth.NewStdTx(msgs, fee, sigs, memo)
 }
 
-// GeneratePrivKeys generates a total n Ed25519 private keys.
+// GeneratePrivKeys generates a total n secp256k1 private keys.
 func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO: Randomize this between ed25519 and secp256k1
 	keys = make([]crypto.PrivKey, n)
 	for i := 0; i < n; i++ {
-		keys[i] = ed25519.GenPrivKey()
+		keys[i] = secp256k1.GenPrivKey()
 	}
 
 	return
@@ -304,7 +304,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 			}
 		}
 
-		app.TotalCoinsSupply = app.TotalCoinsSupply.Plus(coins)
+		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
 		(&baseAcc).SetCoins(coins)

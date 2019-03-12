@@ -54,30 +54,13 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		if req.BaseReq.GenerateOnly {
-			// When generate only is supplied, the from field must be a valid Bech32
-			// address.
-			fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-				return
-			}
-
-			msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
-			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
-			return
-		}
-
-		// derive the from account address and name from the Keybase
-		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
-		msg := bank.NewMsgSend(cliCtx.GetFromAddress(), toAddr, req.Amount)
-
-		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
+		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

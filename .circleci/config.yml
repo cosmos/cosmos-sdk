@@ -35,7 +35,7 @@ set_macos_env: &macos_env
 docs_update: &docs_deploy
   working_directory: ~/repo
   docker:
-    - image: tendermint/docs_deployment
+    - image: tendermintdev/jq_curl
   environment:
     AWS_REGION: us-east-1
 
@@ -280,7 +280,22 @@ jobs:
       - run:
           name: Trigger website build
           command: |
-            chamber exec cosmos-sdk -- start_website_build
+            curl --silent \
+                 --show-error \
+                 -X POST \
+                 --header "Content-Type: application/json" \
+                 -d "{\"branch\": \"$CIRCLE_BRANCH\"}" \
+                 "https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$WEBSITE_REPO_NAME/build?circle-token=$TENDERBOT_API_TOKEN" > response.json
+
+            RESULT=`jq -r '.status' response.json`
+            MESSAGE=`jq -r '.message' response.json`
+
+            if [[ ${RESULT} == "null" ]] || [[ ${RESULT} -ne "200" ]]; then
+                echo "CircleCI API call failed: $MESSAGE"
+                exit 1
+            else
+                echo "Website build started"
+            fi
 
   macos_ci:
     <<: *macos_defaults
@@ -326,12 +341,23 @@ jobs:
             GAIAD_VERSION="stable"
           elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
             GAIAD_VERSION="develop"
-          else
-            GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
           fi
           docker build -t tendermint/gaia:$GAIAD_VERSION .
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push tendermint/gaia:$GAIAD_VERSION
+
+  docker_tagged:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          docker build -t tendermint/gaia:$CIRCLE_TAG .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$CIRCLE_TAG
 
 workflows:
   version: 2
@@ -343,6 +369,16 @@ workflows:
               only:
                 - master
                 - develop
+          requires:
+            - setup_dependencies
+      - docker_tagged:
+          filters:
+            tags:
+              only:
+                - /^v.*/
+            branches:
+              ignore:
+                - /.*/
           requires:
             - setup_dependencies
       - macos_ci:
@@ -357,7 +393,12 @@ workflows:
               only:
                 - master
                 - develop
-      - setup_dependencies
+      - setup_dependencies:
+          # filters here are needed to enable this job also for tags
+          filters:
+            tags:
+              only:
+                - /^v.*/
       - lint:
           requires:
             - setup_dependencies

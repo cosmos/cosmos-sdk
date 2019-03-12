@@ -26,6 +26,9 @@
 
 ### SDK
 
+* [\3813](https://github.com/cosmos/cosmos-sdk/pull/3813) New sdk.NewCoins safe constructor to replace bare
+  sdk.Coins{} declarations.
+
 ### Tendermint
 
 <!------------------------------- IMPROVEMENTS ------------------------------->
@@ -38,9 +41,22 @@
 
 ### Gaia
 
+* #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
+* \#3819 Simulation refactor, log output now stored in ~/.gaiad/simulation/ 
+  * Simulation moved to its own module (not a part of mock)
+  * Logger type instead of passing function variables everywhere
+  * Logger json output (for reloadable simulation running)
+  * Cleanup bank simulation messages / remove dup code in bank simulation
+  * Simulations saved in `~/.gaiad/simulations/` 
+  * "Lean" simulation output option to exclude No-ops and !ok functions (`--SimulationLean` flag)  
+
 ### SDK
+* #3801 `baseapp` saftey improvements
 
 ### Tendermint
+
+### CI/CD
+* [\198](https://github.com/cosmos/cosmos-sdk/pull/3832)
 
 <!--------------------------------- BUG FIXES -------------------------------->
 

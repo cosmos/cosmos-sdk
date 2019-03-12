@@ -1,24 +1,19 @@
 package keys
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/tendermint/tendermint/crypto"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-
 	"errors"
+	"fmt"
 
-	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -28,36 +23,32 @@ const (
 	FlagPublicKey = "pubkey"
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagBechPrefix = "bech"
+	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
+	FlagDevice = "device"
 
-	flagMultiSigThreshold  = "multisig-threshold"
+	flagMultiSigThreshold = "multisig-threshold"
+	flagShowMultiSig      = "show-multisig"
+
 	defaultMultiSigKeyName = "multi"
 )
 
-var _ keys.Info = (*multiSigKey)(nil)
-
-type multiSigKey struct {
-	name string
-	key  crypto.PubKey
-}
-
-func (m multiSigKey) GetName() string            { return m.name }
-func (m multiSigKey) GetType() keys.KeyType      { return keys.TypeLocal }
-func (m multiSigKey) GetPubKey() crypto.PubKey   { return m.key }
-func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address()) }
-
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name]",
+		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",
-		Long:  `Return public details of one local key.`,
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  runShowCmd,
+		Long: `Return public details of a single local key. If multiple names are
+provided, then an ephemeral multisig key will be created under the name "multi"
+consisting of all the keys provided by name and multisig threshold.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: runShowCmd,
 	}
 
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
-	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
-	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
+	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
+	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
+	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in the device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
+	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
 
 	return cmd
 }
@@ -71,12 +62,13 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 	} else {
-		pks := make([]crypto.PubKey, len(args))
+		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
 			info, err := GetKeyInfo(keyName)
 			if err != nil {
 				return err
 			}
+
 			pks[i] = info.GetPubKey()
 		}
 
@@ -85,15 +77,15 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if err != nil {
 			return err
 		}
+
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = multiSigKey{
-			name: defaultMultiSigKeyName,
-			key:  multikey,
-		}
+		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)
 	isShowPubKey := viper.GetBool(FlagPublicKey)
+	isShowDevice := viper.GetBool(FlagDevice)
+	isShowMultiSig := viper.GetBool(flagShowMultiSig)
 
 	isOutputSet := false
 	tmp := cmd.Flag(cli.OutputFlag)
@@ -119,8 +111,30 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		printKeyAddress(info, bechKeyOut)
 	case isShowPubKey:
 		printPubKey(info, bechKeyOut)
+	case isShowMultiSig:
+		printMultiSigKeyInfo(info, bechKeyOut)
 	default:
 		printKeyInfo(info, bechKeyOut)
+	}
+
+	if isShowDevice {
+		if isShowPubKey {
+			return fmt.Errorf("the device flag (-d) can only be used for addresses not pubkeys")
+		}
+		if viper.GetString(FlagBechPrefix) != "acc" {
+			return fmt.Errorf("the device flag (-d) can only be used for accounts")
+		}
+		// Override and show in the device
+		if info.GetType() != keys.TypeLedger {
+			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
+		}
+
+		hdpath, err := info.GetPath()
+		if err != nil {
+			return nil
+		}
+
+		return crypto.LedgerShowAddress(*hdpath, info.GetPubKey())
 	}
 
 	return nil
@@ -140,55 +154,12 @@ func validateMultisigThreshold(k, nKeys int) error {
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return Bech32KeyOutput, nil
+		return keys.Bech32KeyOutput, nil
 	case sdk.PrefixValidator:
-		return Bech32ValKeyOutput, nil
+		return keys.Bech32ValKeyOutput, nil
 	case sdk.PrefixConsensus:
-		return Bech32ConsKeyOutput, nil
+		return keys.Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)
-}
-
-///////////////////////////
-// REST
-
-// get key REST handler
-func GetKeyRequestHandler(indent bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		name := vars["name"]
-		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
-
-		if bechPrefix == "" {
-			bechPrefix = sdk.PrefixAccount
-		}
-
-		bechKeyOut, err := getBechKeyOut(bechPrefix)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		info, err := GetKeyInfo(name)
-		if keyerror.IsErrKeyNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		} else if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		keyOutput, err := bechKeyOut(info)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		rest.PostProcessResponse(w, cdc, keyOutput, indent)
-	}
 }

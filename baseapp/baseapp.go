@@ -287,12 +287,25 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params.
-func (app *BaseApp) getMaximumBlockGas() (maxGas uint64) {
+// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// if maximum block gas is less than negative one and returns zero if negative
+// one.
+func (app *BaseApp) getMaximumBlockGas() uint64 {
 	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
 		return 0
 	}
-	return uint64(app.consensusParams.BlockSize.MaxGas)
+
+	maxGas := app.consensusParams.BlockSize.MaxGas
+	switch {
+	case maxGas < -1:
+		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
+
+	case maxGas == -1:
+		return 0
+
+	default:
+		return uint64(maxGas)
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -318,16 +331,17 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-
 	// stash the consensus params in the cms main store and memoize
 	if req.ConsensusParams != nil {
 		app.setConsensusParams(req.ConsensusParams)
 		app.storeConsensusParams(req.ConsensusParams)
 	}
 
-	// initialize the deliver state and check state with ChainID and run initChain
-	app.setDeliverState(abci.Header{ChainID: req.ChainId})
-	app.setCheckState(abci.Header{ChainID: req.ChainId})
+	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
+
+	// initialize the deliver state and check state with a correct header
+	app.setDeliverState(initHeader)
+	app.setCheckState(initHeader)
 
 	if app.initChainer == nil {
 		return
@@ -509,12 +523,29 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	}
 }
 
+func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
+	if req.Header.Height < 1 {
+		return fmt.Errorf("invalid height: %d", req.Header.Height)
+	}
+
+	prevHeight := app.LastBlockHeight()
+	if req.Header.Height != prevHeight+1 {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
+	}
+
+	return nil
+}
+
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
+	}
+
+	if err := app.validateHeight(req); err != nil {
+		panic(err)
 	}
 
 	// Initialize the DeliverTx state. If this is the first block, it should
@@ -628,15 +659,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 	return
 }
 
-type indexedABCILog struct {
-	MsgIndex int    `json:"msg_index"`
-	Success  bool   `json:"success"`
-	Log      string `json:"log"`
-}
-
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxlogs := make([]indexedABCILog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxlogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -665,7 +690,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
-		idxLog := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
+		idxLog := sdk.ABCIMessageLog{MsgIndex: msgIdx, Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {

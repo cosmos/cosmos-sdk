@@ -38,7 +38,10 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 func TestTallyNoOneVotes(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -63,7 +66,10 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 func TestTallyNoQuorum(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -89,7 +95,10 @@ func TestTallyNoQuorum(t *testing.T) {
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -119,7 +128,10 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 
 func TestTallyOnlyValidators51No(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -148,7 +160,10 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -180,7 +195,10 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -212,7 +230,10 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -244,7 +265,10 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -276,7 +300,10 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -306,7 +333,10 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 func TestTallyDelgatorOverride(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -344,7 +374,10 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 func TestTallyDelgatorInherit(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -380,7 +413,10 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -420,7 +456,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 
@@ -471,7 +510,10 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 func TestTallyJailedValidator(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(sk)
 

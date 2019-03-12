@@ -44,11 +44,13 @@
 * #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
 
 ### SDK
+
 * #3801 `baseapp` saftey improvements
 
 ### Tendermint
 
 ### CI/CD
+
 * [\198](https://github.com/cosmos/cosmos-sdk/pull/3832)
 
 <!--------------------------------- BUG FIXES -------------------------------->
@@ -62,5 +64,8 @@
 ### Gaia
 
 ### SDK
+
+* [\#3837] Fix `WithdrawValidatorCommission` to properly set the validator's
+remaining commission.
 
 ### Tendermint

@@ -25,7 +25,7 @@ func TestEqualProposalID(t *testing.T) {
 
 func TestEqualProposals(t *testing.T) {
 	// Generate mock app and keepers
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -67,7 +67,7 @@ func TestEqualProposals(t *testing.T) {
 
 func TestImportExportQueues(t *testing.T) {
 	// Generate mock app and keepers
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -99,7 +99,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	// Export the state and import it into a new Mock App
 	genState := ExportGenesis(ctx, keeper)
-	mapp2, keeper2, _, _, _, _ := getMockApp(t, 2, genState, genAccs)
+	mapp2, keeper2, _, _, _, _ := GetMockApp(t, 2, genState, genAccs)
 
 	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp2.BeginBlock(abci.RequestBeginBlock{Header: header})

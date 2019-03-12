@@ -10,6 +10,10 @@ type Change struct {
 	Value  interface{} `json:"value"`
 }
 
+func NewChange(key, subkey []byte, value interface{}) Change {
+	return Change{key, subkey, value}
+}
+
 type ProposalChange struct {
 	proposal.Abstract `json:"proposal_abstract"`
 	Space             string   `json:"space"`

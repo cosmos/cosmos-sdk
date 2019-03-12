@@ -10,11 +10,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -60,7 +59,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -120,7 +119,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -165,7 +164,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -226,48 +225,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 1, GenesisState{}, nil)
 	SortAddresses(addrs)
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
-	stakingHandler := staking.NewHandler(sk)
-	govHandler := NewHandler(keeper)
 
-	valAddrs := make([]sdk.ValAddress, 2)
-	valAddrs[0], valAddrs[1] = sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
+	resTags := TestProposal(t, mapp, addrs[0], keeper, sk, testProposal())
 
-	createValidators(t, stakingHandler, ctx, valAddrs, []int64{5, 5})
-	staking.EndBlocker(ctx, sk)
-
-	tp := testProposal()
-	proposal, err := testSubmitProposal(ctx, keeper, tp)
-	require.NoError(t, err)
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusDepositPeriod
-	keeper.SetProposal(ctx, proposal)
-
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
-	newDepositMsg := NewMsgDeposit(addrs[0], proposalID, proposalCoins)
-	res := govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
-	newDepositMsg = NewMsgDeposit(addrs[1], proposalID, proposalCoins)
-	res = govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
-
-	err = keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
-	require.NoError(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
-	require.NoError(t, err)
-
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(keeper.GetVotingParams(ctx).VotingPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
-
-	// Handler registered, not panics
-	var restags sdk.Tags
-	require.NotPanics(t, func() { restags = EndBlocker(ctx, keeper) })
-
-	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), restags[1])
+	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
 }

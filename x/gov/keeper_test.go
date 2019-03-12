@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetSetProposal(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
+	mapp, keeper, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -31,7 +31,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
+	mapp, keeper, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -51,7 +51,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
+	mapp, keeper, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -80,7 +80,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 }
 
 func TestDeposits(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -181,7 +181,7 @@ func TestDeposits(t *testing.T) {
 }
 
 func TestVotes(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
+	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -242,7 +242,7 @@ func TestVotes(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
+	mapp, keeper, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})

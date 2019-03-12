@@ -238,7 +238,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return ErrInsufficientShares(k.Codespace()).Result()
 	}
 
-	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens)
+	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens).TruncateDec()
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, sharesAmt)
 	if err != nil {
 		return err.Result()
@@ -264,7 +264,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return ErrInsufficientShares(k.Codespace()).Result()
 	}
 
-	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens)
+	sharesAmt := validator.DelegatorShares.MulInt(msg.Amount.Amount).QuoInt(validator.Tokens).TruncateDec()
 	completionTime, err := k.BeginRedelegation(
 		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.ValidatorDstAddress, sharesAmt,
 	)

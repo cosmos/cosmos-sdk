@@ -48,10 +48,10 @@ $ gaiacli version --long
 
 ```
 cosmos-sdk: 0.33.0
-git commit: 06f741609bbce747643e9f1f2abf67040ad78e16
-vendor hash: decf1ff8b31df2243aa27bcd6e1a40df4d30be81
+git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
+vendor hash: 5db0df3e24cf10545c84f462a24ddc61882aa58f
 build tags: netgo ledger
-go version go1.12 darwin/amd64
+go version go1.12 linux/amd64
 ```
 
 ##### Build Tags

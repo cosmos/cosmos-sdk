@@ -39,15 +39,23 @@ constructor to replace bare sdk.Coins{} declarations.
 
 ### Gaia CLI
 
+* [\#3859](https://github.com/cosmos/cosmos-sdk/pull/3859) Add newline to echo of `gaiacli keys ...`
+
 ### Gaia
 
 * #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.
 
 ### SDK
 
-* #3801 `baseapp` saftey improvements
+* [\#3820] Make Coins.IsAllGT() more robust and consistent.
+* [\#3864] Make Coins.IsAllGTE() more consistent.
+* [\#3801] `baseapp` saftey improvements
 
 ### Tendermint
+
+### CI/CD
+
+* [\198](https://github.com/cosmos/cosmos-sdk/pull/3832)
 
 <!--------------------------------- BUG FIXES -------------------------------->
 
@@ -60,5 +68,8 @@ constructor to replace bare sdk.Coins{} declarations.
 ### Gaia
 
 ### SDK
+
+* [\#3837] Fix `WithdrawValidatorCommission` to properly set the validator's
+remaining commission.
 
 ### Tendermint

@@ -336,15 +336,25 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 	return true
 }
 
-// IsAllGTE returns true iff for every denom in coins, the denom is present at
-// an equal or greater amount in coinsB.
+// IsAllGTE returns false if for any denom in coinsB,
+// the denom is present at a smaller amount in coins;
+// else returns true.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeSub(coinsB)
-	if len(diff) == 0 {
+	if len(coinsB) == 0 {
 		return true
 	}
 
-	return !diff.IsAnyNegative()
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		if coinB.Amount.GT(coins.AmountOf(coinB.Denom)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at

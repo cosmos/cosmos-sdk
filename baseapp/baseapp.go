@@ -287,12 +287,25 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params.
-func (app *BaseApp) getMaximumBlockGas() (maxGas uint64) {
+// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// if maximum block gas is less than negative one and returns zero if negative
+// one.
+func (app *BaseApp) getMaximumBlockGas() uint64 {
 	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
 		return 0
 	}
-	return uint64(app.consensusParams.BlockSize.MaxGas)
+
+	maxGas := app.consensusParams.BlockSize.MaxGas
+	switch {
+	case maxGas < -1:
+		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
+
+	case maxGas == -1:
+		return 0
+
+	default:
+		return uint64(maxGas)
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -510,12 +523,29 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	}
 }
 
+func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
+	if req.Header.Height < 1 {
+		return fmt.Errorf("invalid height: %d", req.Header.Height)
+	}
+
+	prevHeight := app.LastBlockHeight()
+	if req.Header.Height != prevHeight+1 {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
+	}
+
+	return nil
+}
+
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
+	}
+
+	if err := app.validateHeight(req); err != nil {
+		panic(err)
 	}
 
 	// Initialize the DeliverTx state. If this is the first block, it should

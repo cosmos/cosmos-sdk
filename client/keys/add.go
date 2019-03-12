@@ -146,7 +146,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 				return err
 			}
 
-			fmt.Fprintf(os.Stderr, "Key %q saved to disk.", name)
+			fmt.Fprintf(os.Stderr, "Key %q saved to disk.\n", name)
 			return nil
 		}
 
@@ -216,7 +216,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid")
+		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
 		return nil
 	}
 

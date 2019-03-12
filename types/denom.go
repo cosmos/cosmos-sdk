@@ -5,12 +5,12 @@ import (
 )
 
 // denomUnits contains a mapping of denomination mapped to their respective unit
-// multipliers.
-var denomUnits = map[string]Int{}
+// multipliers (e.g. 1atom = 10^-6uatom).
+var denomUnits = map[string]Dec{}
 
 // RegisterDenom registers a denomination with a corresponding unit. If the
 // denomination is already registered, an error will be returned.
-func RegisterDenom(denom string, unit Int) error {
+func RegisterDenom(denom string, unit Dec) error {
 	if err := validateDenom(denom); err != nil {
 		return err
 	}
@@ -25,14 +25,14 @@ func RegisterDenom(denom string, unit Int) error {
 
 // GetDenomUnit returns a unit for a given denomination if it exists. A boolean
 // is returned if the denomination is registered.
-func GetDenomUnit(denom string) (Int, bool) {
+func GetDenomUnit(denom string) (Dec, bool) {
 	if err := validateDenom(denom); err != nil {
-		return ZeroInt(), false
+		return ZeroDec(), false
 	}
 
 	unit, ok := denomUnits[denom]
 	if !ok {
-		return ZeroInt(), false
+		return ZeroDec(), false
 	}
 
 	return unit, true
@@ -60,9 +60,5 @@ func ConvertCoin(coin Coin, denom string) (Coin, error) {
 		return NewCoin(denom, coin.Amount), nil
 	}
 
-	if srcUnit.LT(dstUnit) {
-		return NewCoin(denom, coin.Amount.Mul(dstUnit.Quo(srcUnit))), nil
-	}
-
-	return NewCoin(denom, coin.Amount.Quo(srcUnit.Quo(dstUnit))), nil
+	return NewCoin(denom, coin.Amount.ToDec().Mul(srcUnit.Quo(dstUnit)).TruncateInt()), nil
 }

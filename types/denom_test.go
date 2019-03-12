@@ -1,45 +1,45 @@
 package types
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	atom  = "atom"
-	uatom = "uatom"
-	matom = "matom"
-	katom = "katom"
+	atom  = "atom"  // 1 (base denom unit)
+	matom = "matom" // 10^-3 (milli)
+	uatom = "uatom" // 10^-6 (micro)
+	natom = "natom" // 10^-9 (nano)
 )
 
 func TestRegisterDenom(t *testing.T) {
-	unit := NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil))
-	require.NoError(t, RegisterDenom("gwei", unit))
-	require.Error(t, RegisterDenom("gwei", unit))
+	atomUnit := OneDec() // 1 (base denom unit)
 
-	res, ok := GetDenomUnit("gwei")
+	require.NoError(t, RegisterDenom(atom, atomUnit))
+	require.Error(t, RegisterDenom(atom, atomUnit))
+
+	res, ok := GetDenomUnit(atom)
 	require.True(t, ok)
-	require.Equal(t, unit, res)
+	require.Equal(t, atomUnit, res)
 
-	res, ok = GetDenomUnit("finney")
+	res, ok = GetDenomUnit(matom)
 	require.False(t, ok)
-	require.Equal(t, ZeroInt(), res)
+	require.Equal(t, ZeroDec(), res)
 }
 
 func TestConvertCoins(t *testing.T) {
-	atomUnit := OneInt()
+	atomUnit := OneDec() // 1 (base denom unit)
 	require.NoError(t, RegisterDenom(atom, atomUnit))
 
-	katomUnit := NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(3), nil))
-	require.NoError(t, RegisterDenom(katom, katomUnit))
-
-	uatomUinit := NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
-	require.NoError(t, RegisterDenom(uatom, uatomUinit))
-
-	matomUnit := NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(5), nil))
+	matomUnit := NewDecWithPrec(10, 4) // 10^-3 (milli)
 	require.NoError(t, RegisterDenom(matom, matomUnit))
+
+	uatomUnit := NewDecWithPrec(10, 7) // 10^-6 (micro)
+	require.NoError(t, RegisterDenom(uatom, uatomUnit))
+
+	natomUnit := NewDecWithPrec(10, 10) // 10^-9 (nano)
+	require.NoError(t, RegisterDenom(natom, natomUnit))
 
 	testCases := []struct {
 		input  Coin
@@ -51,27 +51,27 @@ func TestConvertCoins(t *testing.T) {
 		{NewCoin(atom, ZeroInt()), "foo", Coin{}, true},
 		{NewCoin(atom, ZeroInt()), "FOO", Coin{}, true},
 
-		{NewCoin(atom, NewInt(5)), uatom, NewCoin(uatom, NewInt(5000000)), false}, // atom => uatom
-		{NewCoin(atom, NewInt(5)), matom, NewCoin(matom, NewInt(500000)), false},  // atom => matom
-		{NewCoin(atom, NewInt(5)), katom, NewCoin(katom, NewInt(5000)), false},    // atom => katom
+		{NewCoin(atom, NewInt(5)), matom, NewCoin(matom, NewInt(5000)), false},       // atom => matom
+		{NewCoin(atom, NewInt(5)), uatom, NewCoin(uatom, NewInt(5000000)), false},    // atom => uatom
+		{NewCoin(atom, NewInt(5)), natom, NewCoin(natom, NewInt(5000000000)), false}, // atom => natom
 
-		{NewCoin(uatom, NewInt(5000000)), matom, NewCoin(matom, NewInt(500000)), false}, // uatom => matom
-		{NewCoin(uatom, NewInt(5000000)), katom, NewCoin(katom, NewInt(5000)), false},   // uatom => katom
-		{NewCoin(uatom, NewInt(5000000)), atom, NewCoin(atom, NewInt(5)), false},        // uatom => atom
+		{NewCoin(uatom, NewInt(5000000)), matom, NewCoin(matom, NewInt(5000)), false},       // uatom => matom
+		{NewCoin(uatom, NewInt(5000000)), natom, NewCoin(natom, NewInt(5000000000)), false}, // uatom => natom
+		{NewCoin(uatom, NewInt(5000000)), atom, NewCoin(atom, NewInt(5)), false},            // uatom => atom
 
-		{NewCoin(matom, NewInt(500000)), katom, NewCoin(katom, NewInt(5000)), false},    // matom => katom
-		{NewCoin(matom, NewInt(500000)), uatom, NewCoin(uatom, NewInt(5000000)), false}, // matom => uatom
+		{NewCoin(matom, NewInt(5000)), natom, NewCoin(natom, NewInt(5000000000)), false}, // matom => natom
+		{NewCoin(matom, NewInt(5000)), uatom, NewCoin(uatom, NewInt(5000000)), false},    // matom => uatom
 	}
 
 	for i, tc := range testCases {
 		res, err := ConvertCoin(tc.input, tc.denom)
 		require.Equal(
 			t, tc.expErr, err != nil,
-			"unexpected error; tc: #%d, input: %s, denom: %s", i, tc.input, tc.denom,
+			"unexpected error; tc: #%d, input: %s, denom: %s", i+1, tc.input, tc.denom,
 		)
 		require.Equal(
 			t, tc.result, res,
-			"invalid result; tc: #%d, input: %s, denom: %s", i, tc.input, tc.denom,
+			"invalid result; tc: #%d, input: %s, denom: %s", i+1, tc.input, tc.denom,
 		)
 	}
 }

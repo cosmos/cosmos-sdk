@@ -39,6 +39,8 @@
 
 ### Gaia CLI
 
+* [\#3859](https://github.com/cosmos/cosmos-sdk/pull/3859) Add newline to echo of `gaiacli keys ...`
+
 ### Gaia
 
 * #3808 `gaiad` and `gaiacli` integration tests use ./build/ binaries.

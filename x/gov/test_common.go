@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -20,7 +21,7 @@ import (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (
+func GetMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (
 	mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress,
 	pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 
@@ -150,6 +151,29 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
+var (
+	pubkeys = []crypto.PubKey{ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey()}
+
+	testDescription   = staking.NewDescription("T", "E", "S", "T")
+	testCommissionMsg = staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+)
+
+func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
+
+	for i := 0; i < len(addrs); i++ {
+
+		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valCreateMsg := staking.NewMsgCreateValidator(
+			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			testDescription, testCommissionMsg, sdk.OneInt(),
+		)
+
+		res := stakingHandler(ctx, valCreateMsg)
+		require.True(t, res.IsOK())
+	}
+}
+
 func testProposal() proposal.Content {
 	return NewTextProposal("Test", "description")
 }
@@ -173,4 +197,40 @@ func testSubmitProposal(ctx sdk.Context, k Keeper, content proposal.Content) (p 
 		err = sdk.NewError(sdk.CodespaceUndefined, sdk.CodeType(1), "Invalid ProposalID in testSubmitProposal; id=%d", id)
 	}
 	return
+}
+
+// XXX: check if it is secure to export
+// calling handlers is not vulnearable, it is possible to do anyway
+// k.ck.SetSendEnabled might be vulnearable
+// using predefined address might be vulnearable(createValidators, k.AddVote)
+func TestProposal(t *testing.T, mapp *mock.App, addr sdk.AccAddress, k Keeper, sk staking.Keeper, content proposal.Content) sdk.Tags {
+	handler := NewHandler(k)
+	stakingHandler := staking.NewHandler(sk)
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+
+	valAddr := sdk.ValAddress(addr)
+
+	k.ck.SetSendEnabled(ctx, true)
+	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	staking.EndBlocker(ctx, sk)
+
+	id, err := k.SubmitProposal(ctx, content)
+	require.NoError(t, err)
+
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	newDepositMsg := NewMsgDeposit(addr, id, proposalCoins)
+	res := handler(ctx, newDepositMsg)
+	require.True(t, res.IsOK())
+
+	err = k.AddVote(ctx, id, addr, OptionYes)
+	require.NoError(t, err)
+
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(k.GetDepositParams(ctx).MaxDepositPeriod).Add(k.GetVotingParams(ctx).VotingPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
+	return EndBlocker(ctx, k)
 }

@@ -48,6 +48,7 @@
 ### SDK
 
 * [\#3820] Make Coins.IsAllGT() more robust and consistent.
+* [\#3864] Make Coins.IsAllGTE() more consistent.
 * #3801 `baseapp` saftey improvements
 
 ### Tendermint

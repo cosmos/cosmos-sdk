@@ -10,17 +10,19 @@ KMS and Ledger Tendermint app are currently work in progress. Details may vary. 
 
 ## Tendermint Validator app (for Ledger devices)
 
-TODO: Explain how to install/build the app, etc. [ISSUE#]()
+You should be able to find the Tendermint app in Ledger Live.
+
+*Note: at the moment, you might need to enable `developer mode` in Ledger Live settings*
 
 ## KMS configuration
 
 In this section, we will configure a KMS to use a Ledger device running the Tendermint Validator App. 
 
-#### Config file
+### Config file
 
 You can find other configuration examples [here](https://github.com/tendermint/kms/blob/master/tmkms.toml.example)
 
-- Create a `~/.tmkms/tmkms.toml` file with the following content:
+- Create a `~/.tmkms/tmkms.toml` file with the following content (use an adequate `chain_id`)
 
 ```toml
 # Example KMS configuration file
@@ -31,6 +33,7 @@ reconnect = true # true is the default
 secret_key = "~/.tmkms/secret_connection.key"
 
 [[providers.ledgertm]]
+chain_ids = ["gaia-11001"]
 ```
 
 - Edit `addr` to point to your `gaiad` instance.
@@ -39,7 +42,7 @@ secret_key = "~/.tmkms/secret_connection.key"
 
 *Plug your Ledger device and open the Tendermint validator app.*
 
-#### Generate secret key
+### Generate secret key
 
 Now you need to generate secret_key:
 
@@ -47,7 +50,7 @@ Now you need to generate secret_key:
 tmkms keygen ~/.tmkms/secret_connection.key
 ```
 
-#### Retrieve validator key
+### Retrieve validator key
 
 The last step is to retrieve the validator key that you will use in `gaiad`.
 
@@ -68,8 +71,6 @@ The output should look similar to:
 The KMS may complain that it cannot connect to gaiad. That is fine, we will fix it in the next section.
 
 This output indicates the validator key linked to this particular device is: `cosmosvalconspub1zcjduepqy53m39prgp9dz3nz96kaav3el5e0th8ltwcf8cpavqdvpxgr5slsd6wz6f`
-
-TODO: KMS CLI should allow for querying keys, etc. [ISSUE#]()
 
 Take note of the validator pubkey that appears in your screen. *We will use it in the next section.*
 
@@ -104,7 +105,6 @@ Click the right button, if the height and round are correct.
 After that, you will see that the KMS will start forwarding all signature requests to the ledger:
 
 ![](ledger_2.jpg)
-
 
 ::: danger Warning
 The word TEST in the second picture, second line appears because they were taken on a pre-release version.

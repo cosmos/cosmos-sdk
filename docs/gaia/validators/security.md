@@ -25,6 +25,7 @@ Sentry nodes can be quickly spun up or change their IP addresses. Because the li
 To setup your sentry node architecture you can follow the instructions below:
 
 Validators nodes should edit their config.toml:
+
 ```bash
 # Comma separated list of nodes to keep persistent connections to
 # Do not add private peers to this list if you don't want them advertised
@@ -35,6 +36,7 @@ pex = false
 ```
 
 Sentry Nodes should edit their config.toml:
+
 ```bash
 # Comma separated list of peer IDs to keep private (will not be gossiped to other peers)
 private_peer_ids = "ipaddress of validator nodes"
@@ -48,5 +50,5 @@ By default, uppercase environment variables with the following prefixes will rep
 - `TM` (for Tendermint flags)
 - `BC` (for democli or basecli flags)
 
-For example, the environment variable `GA_CHAIN_ID` will map to the command line flag `--chain-id`. Note that while explicit command-line flags will take precedence over environment variables, environment variables will take precedence over any of your configuration files. For this reason, it's imperative that you lock down your environment such that any critical parameters are defined as flags on the CLI or prevent modification of any environment variables. 
+For example, the environment variable `GA_CHAIN_ID` will map to the command line flag `--chain-id`. Note that while explicit command-line flags will take precedence over environment variables, environment variables will take precedence over any of your configuration files. For this reason, it's imperative that you lock down your environment such that any critical parameters are defined as flags on the CLI or prevent modification of any environment variables.
   

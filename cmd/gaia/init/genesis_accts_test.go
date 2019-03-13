@@ -56,8 +56,8 @@ func TestAddGenesisAccount(t *testing.T) {
 			args{
 				app.GenesisState{},
 				addr1,
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100)),
 				0,
 				0,
 			},
@@ -68,8 +68,8 @@ func TestAddGenesisAccount(t *testing.T) {
 			args{
 				app.GenesisState{},
 				addr1,
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50)),
 				1654668078,
 				1554668078,
 			},

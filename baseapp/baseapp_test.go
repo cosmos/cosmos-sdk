@@ -256,7 +256,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 }
 
 func TestSetMinGasPrices(t *testing.T) {
-	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
+	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("uatom", 5000)}
 	app := newBaseApp(t.Name(), SetMinGasPrices(minGasPrices.String()))
 	require.Equal(t, minGasPrices, app.minGasPrices)
 }

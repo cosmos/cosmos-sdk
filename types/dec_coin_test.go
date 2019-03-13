@@ -177,17 +177,17 @@ func TestParseDecCoins(t *testing.T) {
 		{"4uatom", nil, true},
 		{"5.5atom,4uatom", nil, true},
 		{"0.0uatom", nil, true},
-		{"0.004uatom", nil, true},
+		{"0.004UATOM", nil, true},
 		{
 			"0.004uatom",
-			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
+			DecCoins{NewDecCoinFromDec("uatom", NewDecWithPrec(4000000000000000, Precision))},
 			false,
 		},
 		{
 			"5.04atom,0.004uatom",
 			DecCoins{
 				NewDecCoinFromDec("atom", NewDecWithPrec(5040000000000000000, Precision)),
-				NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision)),
+				NewDecCoinFromDec("uatom", NewDecWithPrec(4000000000000000, Precision)),
 			},
 			false,
 		},
@@ -213,7 +213,7 @@ func TestDecCoinsString(t *testing.T) {
 		{
 			DecCoins{
 				NewDecCoinFromDec("atom", NewDecWithPrec(5040000000000000000, Precision)),
-				NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision)),
+				NewDecCoinFromDec("uatom", NewDecWithPrec(4000000000000000, Precision)),
 			},
 			"5.040000000000000000atom,0.004000000000000000uatom",
 		},

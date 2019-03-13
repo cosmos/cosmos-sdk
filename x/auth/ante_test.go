@@ -713,7 +713,7 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 	ctx := input.ctx.WithMinGasPrices(
 		sdk.DecCoins{
 			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001uatom
+			sdk.NewDecCoinFromDec("uatom", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001uatom
 		},
 	)
 
@@ -722,15 +722,15 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		expectedOK bool
 	}{
 		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
-		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
-		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("uatom", 1))), false},
+		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("uatom", 2))), true},
 		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 10))), true},
 		{
 			NewStdFee(
 				200000,
 				sdk.NewCoins(
 					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
+					sdk.NewInt64Coin("uatom", 2),
 				),
 			),
 			true,
@@ -741,7 +741,7 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 				sdk.NewCoins(
 					sdk.NewInt64Coin("atom", 5),
 					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
+					sdk.NewInt64Coin("uatom", 2),
 				),
 			),
 			true,

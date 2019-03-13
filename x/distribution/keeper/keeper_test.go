@@ -27,14 +27,14 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
+		sdk.NewDecCoinFromDec("uatom", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
 	expTokens := sdk.TokensFromTendermintPower(1000)
 	require.Equal(t, sdk.Coins{
-		sdk.NewCoin("stake", sdk.TokensFromTendermintPower(1000)),
+		sdk.NewCoin("uatom", sdk.TokensFromTendermintPower(1000)),
 	}, balance)
 
 	// set outstanding rewards
@@ -50,14 +50,14 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
 	require.Equal(t, sdk.Coins{
 		sdk.NewCoin("mytoken", sdk.NewInt(1)),
-		sdk.NewCoin("stake", expTokens.AddRaw(1)),
+		sdk.NewCoin("uatom", expTokens.AddRaw(1)),
 	}, balance)
 
 	// check remainder
 	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
 	require.Equal(t, sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(2))),
+		sdk.NewDecCoinFromDec("uatom", sdk.NewDec(1).Quo(sdk.NewDec(2))),
 	}, remainder)
 
 	require.True(t, true)

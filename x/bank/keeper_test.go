@@ -213,8 +213,8 @@ func TestVestingAccountSend(t *testing.T) {
 	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
-	origCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 50))
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 50))
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
@@ -247,8 +247,8 @@ func TestVestingAccountReceive(t *testing.T) {
 	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
-	origCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 50))
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 50))
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
@@ -281,8 +281,8 @@ func TestDelegateCoins(t *testing.T) {
 	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
-	origCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	delCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 50))
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 100))
+	delCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 50))
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
@@ -318,8 +318,8 @@ func TestUndelegateCoins(t *testing.T) {
 	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
-	origCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	delCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 50))
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 100))
+	delCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 50))
 	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 

@@ -198,7 +198,7 @@ func InitClientHome(t *testing.T, dir string) string {
 // TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
-// and initAddrs are the accounts to initialize with some steak tokens. It
+// and initAddrs are the accounts to initialize with some uatom tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
 	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {

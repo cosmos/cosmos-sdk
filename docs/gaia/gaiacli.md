@@ -360,10 +360,6 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
-::: tip Note
-Don't use more `uatom` than you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
-:::
-
 ##### Query Delegations
 
 Once submitted a delegation to a validator, you can see it's information by using the following command:

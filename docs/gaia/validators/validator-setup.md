@@ -175,7 +175,7 @@ If you got jailed for downtime, you can get your voting power back to your valid
 gaiad start
 ```
 
-Wait for your full node to catch up to the latest block. Next, run the following command. Then, you can [unjail your validator](#unjail-validator)
+Wait for your full node to catch up to the latest block. Then, you can [unjail your validator](#unjail-validator)
 
 Lastly, check your validator again to see if your voting power is back.
 

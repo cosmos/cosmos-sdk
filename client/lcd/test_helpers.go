@@ -819,7 +819,7 @@ func doDelegate(
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		Delegation:       sdk.NewCoin(sdk.DefaultBondDenom, amount),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)

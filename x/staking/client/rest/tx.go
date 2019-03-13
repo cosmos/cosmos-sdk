@@ -36,7 +36,7 @@ type (
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
 		ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-		Delegation       sdk.Coin       `json:"delegation"`
+		Amount           sdk.Coin       `json:"amount"`
 	}
 
 	// RedelegateRequest defines the properties of a redelegate request's body.
@@ -70,7 +70,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		msg := staking.NewMsgDelegate(req.DelegatorAddress, req.ValidatorAddress, req.Delegation)
+		msg := staking.NewMsgDelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

@@ -337,7 +337,7 @@ For each command, you can use the `-h` or `--help` flag to get more information.
 ## Sending Transactions
 
 ::: warning
-On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1,000,000uatom`
+On Cosmos Hub mainnet, the accepted denom is `uatom` (micro-Atom), where `1atom = 1,000,000uatom`
 :::
 
 ### A note on gas and fees

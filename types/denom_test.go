@@ -35,10 +35,10 @@ func TestConvertCoins(t *testing.T) {
 	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
 	require.NoError(t, RegisterDenom(matom, matomUnit))
 
-	uatomUnit := NewDecWithPrec(10, 7) // 10^-6 (micro)
+	uatomUnit := NewDecWithPrec(1, 6) // 10^-6 (micro)
 	require.NoError(t, RegisterDenom(uatom, uatomUnit))
 
-	natomUnit := NewDecWithPrec(10, 10) // 10^-9 (nano)
+	natomUnit := NewDecWithPrec(1, 9) // 10^-9 (nano)
 	require.NoError(t, RegisterDenom(natom, natomUnit))
 
 	testCases := []struct {

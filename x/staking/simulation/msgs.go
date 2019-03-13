@@ -165,7 +165,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 			return noOperation, nil, nil
 		}
 
-		totalBond := validator.ShareTokens(delegation.GetShares()).TruncateInt()
+		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		unbondAmt := simulation.RandomAmount(r, totalBond)
 		if unbondAmt.Equal(sdk.ZeroInt()) {
 			return noOperation, nil, nil

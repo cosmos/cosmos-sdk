@@ -92,7 +92,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.Equal(t, power2, power3)
 
 	// unbond self-delegation
-	totalBond := validator.ShareTokens(bond.GetShares()).TruncateInt()
+	totalBond := validator.TokensFromShares(bond.GetShares()).TruncateInt()
 	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, totalBond)
 	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
 

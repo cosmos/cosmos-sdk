@@ -75,7 +75,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
 	validator, _ := sk.GetValidator(ctx, operatorAddr)
 
-	totalBond := validator.ShareTokens(del.GetShares()).TruncateInt()
+	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(sk.GetParams(ctx).BondDenom, totalBond))
 	res = staking.NewHandler(sk)(ctx, msgUnbond)
 	require.True(t, res.IsOK())

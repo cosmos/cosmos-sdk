@@ -389,7 +389,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 
 		// leave excess tokens in the validator
 		// however fully use all the delegator shares
-		issuedTokens = v.ShareTokens(delShares).TruncateInt()
+		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
 		v.Tokens = v.Tokens.Sub(issuedTokens)
 		if v.Tokens.IsNegative() {
 			panic("attempting to remove more tokens than available in validator")
@@ -412,12 +412,12 @@ func (v Validator) InvalidExRate() bool {
 }
 
 // calculate the token worth of provided shares
-func (v Validator) ShareTokens(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
 }
 
 // calculate the token worth of provided shares, truncated
-func (v Validator) ShareTokensTruncated(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 

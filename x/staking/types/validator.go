@@ -354,7 +354,12 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		// the first delegation to a validator sets the exchange rate to one
 		issuedShares = amount.ToDec()
 	} else {
-		issuedShares = v.DelegatorShares.MulInt(amount).QuoInt(v.Tokens)
+		shares, err := v.SharesFromTokens(amount)
+		if err != nil {
+			panic(err)
+		}
+
+		issuedShares = shares
 	}
 
 	if v.Status == sdk.Bonded {
@@ -414,6 +419,16 @@ func (v Validator) ShareTokens(shares sdk.Dec) sdk.Dec {
 // calculate the token worth of provided shares, truncated
 func (v Validator) ShareTokensTruncated(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+}
+
+// SharesFromTokens returns the shares of a delegation given a bond amount. It
+// returns an error if the validator has no tokens.
+func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
+	if v.Tokens.IsZero() {
+		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+	}
+
+	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
 }
 
 // get the bonded tokens which the validator holds

@@ -174,17 +174,17 @@ func TestParseDecCoins(t *testing.T) {
 		expectedErr    bool
 	}{
 		{"", nil, false},
-		{"4stake", nil, true},
-		{"5.5atom,4stake", nil, true},
-		{"0.0stake", nil, true},
-		{"0.004STAKE", nil, true},
+		{"4uatom", nil, true},
+		{"5.5atom,4uatom", nil, true},
+		{"0.0uatom", nil, true},
+		{"0.004uatom", nil, true},
 		{
-			"0.004stake",
+			"0.004uatom",
 			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
 			false,
 		},
 		{
-			"5.04atom,0.004stake",
+			"5.04atom,0.004uatom",
 			DecCoins{
 				NewDecCoinFromDec("atom", NewDecWithPrec(5040000000000000000, Precision)),
 				NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision)),
@@ -215,7 +215,7 @@ func TestDecCoinsString(t *testing.T) {
 				NewDecCoinFromDec("atom", NewDecWithPrec(5040000000000000000, Precision)),
 				NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision)),
 			},
-			"5.040000000000000000atom,0.004000000000000000stake",
+			"5.040000000000000000atom,0.004000000000000000uatom",
 		},
 	}
 
@@ -232,16 +232,16 @@ func TestDecCoinsIntersect(t *testing.T) {
 		expectedResult string
 	}{
 		{"", "", ""},
-		{"1.0stake", "", ""},
-		{"1.0stake", "1.0stake", "1.0stake"},
-		{"", "1.0stake", ""},
-		{"1.0stake", "", ""},
-		{"2.0stake,1.0trope", "1.9stake", "1.9stake"},
-		{"2.0stake,1.0trope", "2.1stake", "2.0stake"},
-		{"2.0stake,1.0trope", "0.9trope", "0.9trope"},
-		{"2.0stake,1.0trope", "1.9stake,0.9trope", "1.9stake,0.9trope"},
-		{"2.0stake,1.0trope", "1.9stake,0.9trope,20.0other", "1.9stake,0.9trope"},
-		{"2.0stake,1.0trope", "1.0other", ""},
+		{"1.0uatom", "", ""},
+		{"1.0uatom", "1.0uatom", "1.0uatom"},
+		{"", "1.0uatom", ""},
+		{"1.0uatom", "", ""},
+		{"2.0uatom,1.0trope", "1.9uatom", "1.9uatom"},
+		{"2.0uatom,1.0trope", "2.1uatom", "2.0uatom"},
+		{"2.0uatom,1.0trope", "0.9trope", "0.9trope"},
+		{"2.0uatom,1.0trope", "1.9uatom,0.9trope", "1.9uatom,0.9trope"},
+		{"2.0uatom,1.0trope", "1.9uatom,0.9trope,20.0other", "1.9uatom,0.9trope"},
+		{"2.0uatom,1.0trope", "1.0other", ""},
 	}
 
 	for i, tc := range testCases {

@@ -309,7 +309,7 @@ gaiacli query
 
 ```bash
 // 아톰 위임하기 
-// 각 플래그 값 예시: <위임할 수량(amountToBound)> = 10000stake, <검증인의 bech32 주소(bech32AddressOfValidator)> = cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)> = 0.001stake
+// 각 플래그 값 예시: <위임할 수량(amountToBound)> = 10000uatom, <검증인의 bech32 주소(bech32AddressOfValidator)> = cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)> = 0.001uatom
 
 gaiacli tx staking --amount <위임할 수량(amountToBond)> --validator <검증인의 bech32 주소(bech32AddressOfValidator)> --from <위임자 키 명칭(delegatorKeyName)> --gas auto --gas-prices <가스 가격(gasPrice)>
 
@@ -379,13 +379,13 @@ gaiacli query tx <tx 해시값(txHash)>
 ```bash
 // 프로포절 제안하기
 // <프로포절 종류(type)>=text/parameter_change/software_upgrade
-// 플래그 값 예시: <가스 가격(gasPrice)>=0.0001stake
+// 플래그 값 예시: <가스 가격(gasPrice)>=0.0001uatom
 
-gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <프로포절 종류(type)> --deposit=10stake --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
+gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <프로포절 종류(type)> --deposit=10uatom --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
 
 // 프로포절의 예치금 추가하기
 // 프로포절의 proposalID 조회: $gaiacli query gov proposals --status deposit_period
-// 파라미터 값 예시: <예치금(deposit)>=1stake
+// 파라미터 값 예시: <예치금(deposit)>=1uatom
 
 gaiacli tx gov deposit <프로포절 ID(proposalID)> <추가할 예치금(deposit)> --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
 
@@ -402,7 +402,7 @@ gaiacli tx gov vote <프로포절 ID(proposalID)> <표 선택(option)> --gas aut
 
 ```bash
 // 아톰 본딩하기 
-// 플래그 값 예시: <본딩할 수량(amountToBond)>=10000stake, <위임할 검증인의 bech32 주소(bech32AddressOfValidator)>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)>=0.001stake
+// 플래그 값 예시: <본딩할 수량(amountToBond)>=10000uatom, <위임할 검증인의 bech32 주소(bech32AddressOfValidator)>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)>=0.001uatom
 
 gaiacli tx staking --amount <본딩할 수량(amountToBond)> --validator <위임할 검증인의 bech32 주소(bech32AddressOfValidator)> --gas auto --gas-prices <가스 가격(gasPrice)> --generate-only > unsignedTX.json
 ```

@@ -713,7 +713,7 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 	ctx := input.ctx.WithMinGasPrices(
 		sdk.DecCoins{
 			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001stake
+			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001uatom
 		},
 	)
 

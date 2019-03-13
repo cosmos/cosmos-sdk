@@ -32,7 +32,7 @@ func TestConvertCoins(t *testing.T) {
 	atomUnit := OneDec() // 1 (base denom unit)
 	require.NoError(t, RegisterDenom(atom, atomUnit))
 
-	matomUnit := NewDecWithPrec(10, 4) // 10^-3 (milli)
+	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
 	require.NoError(t, RegisterDenom(matom, matomUnit))
 
 	uatomUnit := NewDecWithPrec(10, 7) // 10^-6 (micro)

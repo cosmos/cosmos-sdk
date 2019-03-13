@@ -20,12 +20,12 @@ breaking changes.
 
 **Note**: Requires [Go 1.11.5+](https://golang.org/dl/)
 
-## Cosmos Hub Public Testnet
+## Cosmos Hub Mainnet
 
-To run a full-node in the latest public testnet of the Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-testnet.md).
+To run a full-node for the mainnet of the Cosmos Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-mainnet.md).
 
-For status updates and genesis files, see the
-[testnets repo](https://github.com/cosmos/testnets).
+For status updates and genesis file, see the
+[launch repo](https://github.com/cosmos/launch).
 
 
 ## Quick Start

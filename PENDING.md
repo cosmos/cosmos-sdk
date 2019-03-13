@@ -38,6 +38,7 @@
 ### Gaia REST API
 
 ### Gaia CLI
+
 * [\#3841](https://github.com/cosmos/cosmos-sdk/pull/3841) Add indent to JSON of `gaiacli keys [add|show|list]`
 
 ### Gaia

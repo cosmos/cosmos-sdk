@@ -58,8 +58,7 @@ You can confirm that you are in the validator set by using a third party explore
 ## Participate in genesis as a validator
 
 ::: warning
-This section only concerns validators that want to be in the genesis
-file of the Cosmos Hub mainnet. If the mainnet is already live, skip this section.
+The genesis ceremony for the Cosmos Hub mainnet is closed. Please skip to the next section.
 :::
 
 If you want to participate in genesis as a validator, you need to justify that

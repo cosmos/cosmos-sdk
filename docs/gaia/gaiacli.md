@@ -141,7 +141,7 @@ txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yie
 e.g.
 
 ```bash
-gaiacli tx send ... --fees=1000000uatom
+gaiacli tx send ... --fees=50000uatom
 ```
 
 or
@@ -547,7 +547,7 @@ gaiacli query gov proposer <proposal_id>
 
 #### Increase deposit
 
-In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (initial value: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
 gaiacli tx gov deposit <proposal_id> "10000000uatom" \

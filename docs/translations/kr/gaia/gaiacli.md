@@ -330,12 +330,12 @@ gaiacli query staking validator <account_cosmosval(cosmosval 계정)>
 
 #### 토큰 본딩하기
 
-테스트넷의 경우 `atom`이 아닌 `steak`를 위임합니다. 특정 테스트넷 검증인에게 토큰을 본딩하기 위해서는:
+테스트넷의 경우 `atom`이 아닌 `stake`를 위임합니다. 특정 테스트넷 검증인에게 토큰을 본딩하기 위해서는:
 
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10steak \
+  --amount=10stake \
   --validator=<validator(검증인 주소)> \
   --from=<key_name(트랜잭션을 발생할 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
@@ -353,7 +353,7 @@ gaiacli keys show [name] --bech val
 
 
 ::: tip 참고
-보유하고 있는 `steak` 이상을 사용하지 마세요. `steak`가 더 필요한 경우 [Faucet](https://faucetcosmos.network/)에서 추가로 받으실 수 있습니다!
+보유하고 있는 `stake` 이상을 사용하지 마세요. `stake`가 더 필요한 경우 [Faucet](https://faucetcosmos.network/)에서 추가로 받으실 수 있습니다!
 :::
 
 ##### 위임 조회
@@ -515,7 +515,7 @@ gaiacli tx gov submit-proposal \
   --title=<title(프로포절 제목)> \
   --description=<description(프로포절 설명)> \
   --type=<Text/ParameterChange/SoftwareUpgrade(프로포절 타입)> \
-  --deposit=<40steak(예치금 수량)> \
+  --deposit=<40stake(예치금 수량)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```
@@ -544,10 +544,10 @@ gaiacli query gov proposer <proposal_id(프로포절 ID)>
 
 #### 보증금 추가하기
 
-프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 steak`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
+프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 stake`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
 
 ```bash
-gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200steak(금액)> \
+gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200stake(금액)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```

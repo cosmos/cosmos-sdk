@@ -92,10 +92,9 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 
 // Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
-	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
+	encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
-		"kdf":  "bcrypt",
-		"salt": fmt.Sprintf("%X", saltBytes),
+		"kdf": "bcrypt",
 	}
 	armorStr := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
 	return armorStr
@@ -104,15 +103,14 @@ func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 // encrypt the given privKey with the passphrase using a randomly
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
-func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
-	saltBytes = crypto.CRandBytes(16)
+func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (encBytes []byte) {
 	key, err := bcrypt.GenerateFromPassword([]byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
 	}
 	key = crypto.Sha256(key) // get 32 bytes
 	privKeyBytes := privKey.Bytes()
-	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+	return xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
 // Unarmor and decrypt the private key.

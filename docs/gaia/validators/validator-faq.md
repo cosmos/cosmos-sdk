@@ -218,9 +218,10 @@ We have to solve this simple equation to find the reward R for each validator:
 
 ### What are the slashing conditions?
 
-If a validator misbehaves, their delegated stake will be partially slashed. There is currently one main fault that can result in slashing of funds for a validator and their delegators:
+If a validator misbehaves, their delegated stake will be partially slashed. There are currently two faults that can result in slashing of funds for a validator and their delegators:
 
-* **Double signing:** If someone reports on chain A that a validator signed two blocks at the same height on chain A and chain B, and if chain A and chain B share a common ancestor, then this validator will get slashed on chain A
+* **Double signing:** If someone reports on chain A that a validator signed two blocks at the same height on chain A and chain B, and if chain A and chain B share a common ancestor, then this validator will get slashed by 5% on chain A.
+* **Downtime:** If a validator misses more than 95% of the last 10.000 blocks, they will get slashed by 0.01%. 
 
 ### Do validators need to self-delegate Atoms?
 

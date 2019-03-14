@@ -47,6 +47,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gentx",
 		Short: "Generate a genesis tx carrying a self delegation",
+		Args:  cobra.NoArgs,
 		Long: fmt.Sprintf(`This command is an alias of the 'gaiad tx create-validator' command'.
 
 It creates a genesis piece carrying a self delegation with the
@@ -107,8 +108,17 @@ following delegation and commission default parameters:
 				}
 			}
 
+			// Read --website (optional)
+			website := viper.GetString(cli.FlagWebsite)
+
+			// Read --details (optional)
+			details := viper.GetString(cli.FlagDetails)
+
+			// Read --identity (optional)
+			identity := viper.GetString(cli.FlagIdentity)
+
 			// Set flags for creating gentx
-			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
+			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey, website, details, identity)
 
 			// Fetch the amount of coins staked
 			amount := viper.GetString(cli.FlagAmount)
@@ -188,6 +198,9 @@ following delegation and commission default parameters:
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
 	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
+	cmd.Flags().String(cli.FlagWebsite, "", "The validator's (optional) website")
+	cmd.Flags().String(cli.FlagDetails, "", "The validator's (optional) details")
+	cmd.Flags().String(cli.FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
@@ -225,7 +238,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
-	valPubKey crypto.PubKey) {
+	valPubKey crypto.PubKey, website string, details string, identity string) {
 	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
 	viper.Set(client.FlagChainID, chainID)
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
@@ -234,6 +247,9 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
 	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
 	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
+	viper.Set(cli.FlagWebsite, website)                            // --website
+	viper.Set(cli.FlagDetails, details)                            // --details
+	viper.Set(cli.FlagIdentity, identity)                          // --identity
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
 	}

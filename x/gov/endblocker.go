@@ -87,8 +87,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 		logger.Info(
 			fmt.Sprintf(
-				"proposal %d (%s) tallied; passed: %v",
+				"proposal %d (%s) tallied; passed: %v; handled: %v",
 				activeProposal.ProposalID, activeProposal.GetTitle(), passes,
+				tagValue == tags.ActionProposalPassed,
 			),
 		)
 

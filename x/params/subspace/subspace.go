@@ -1,6 +1,7 @@
 package subspace
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -176,7 +177,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
-func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) {
+func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
@@ -186,13 +187,15 @@ func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) {
 	dest := reflect.New(ty).Interface()
 	err := s.cdc.UnmarshalJSON(param, dest)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	store := s.kvStore(ctx)
 	store.Set(key, param)
 	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
+
+	return nil
 }
 
 // SetWithSubkey set a parameter with a key and subkey
@@ -214,19 +217,19 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	tstore.Set(newkey, []byte{})
 }
 
-func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) {
+func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
 	concatkey := concatKeys(key, subkey)
 
 	attr, ok := s.table.m[string(concatkey)]
 	if !ok {
-		panic("Parameter not registered")
+		return errors.New("parameter not registered")
 	}
 
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
 	err := s.cdc.UnmarshalJSON(param, &dest)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	store := s.kvStore(ctx)
@@ -234,6 +237,7 @@ func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, p
 	tstore := s.transientStore(ctx)
 	tstore.Set(concatkey, []byte{})
 
+	return nil
 }
 
 // Get to ParamSet

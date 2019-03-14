@@ -22,15 +22,19 @@ type Keeper struct {
 	key  sdk.StoreKey
 	tkey sdk.StoreKey
 
+	codespace sdk.CodespaceType
+
 	spaces map[string]*Subspace
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
+func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey, codespace sdk.CodespaceType) (k Keeper) {
 	k = Keeper{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
+
+		codespace: codespace,
 
 		spaces: make(map[string]*Subspace),
 	}

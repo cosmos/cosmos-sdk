@@ -35,19 +35,23 @@ func NewProposalHandler(k ProposalKeeper) proposal.Handler {
 	}
 }
 
-func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) sdk.Error {
+func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) (err sdk.Error) {
 	for _, c := range p.Changes {
 		s, ok := k.GetSubspace(c.Space)
 		if !ok {
-			// XXX
-			return nil
+			return ErrUnknownSubspace(k.codespace, c.Space)
 		}
+		var rawerr error
 		if len(c.Subkey) == 0 {
-			s.SetRaw(ctx, c.Key, c.Value)
+			rawerr = s.SetRaw(ctx, c.Key, c.Value)
 		} else {
-			s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
+			rawerr = s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
+		}
+
+		if rawerr != nil {
+			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, rawerr.Error())
 		}
 	}
 
-	return nil
+	return
 }

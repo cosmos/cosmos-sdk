@@ -108,7 +108,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	require.Nil(t, err)
 
 	cdc := MakeTestCodec()
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)

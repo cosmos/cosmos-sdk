@@ -70,7 +70,7 @@ func TestKeeper(t *testing.T) {
 	skey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
-	keeper := NewKeeper(cdc, skey, tkey)
+	keeper := NewKeeper(cdc, skey, tkey, DefaultCodespace)
 	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
 	space := keeper.Subspace("test").WithKeyTable(table)
 
@@ -141,7 +141,7 @@ func TestSubspace(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(key, tkey)
-	keeper := NewKeeper(cdc, key, tkey)
+	keeper := NewKeeper(cdc, key, tkey, DefaultCodespace)
 
 	kvs := []struct {
 		key   string

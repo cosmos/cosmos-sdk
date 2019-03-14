@@ -20,7 +20,8 @@ func NewHandler(k ProposalKeeper) sdk.Handler {
 }
 
 func handleMsgSubmitParameterChangeProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitParameterChangeProposal) sdk.Result {
-	return proposal.HandleSubmit(ctx, k.cdc, k.proposal, ProposalChangeProto(msg.Changes), msg.SubmitForm)
+	content := NewProposalChange(msg.Title, msg.Description, msg.Changes)
+	return proposal.HandleSubmit(ctx, k.proposal, content, msg.Proposer, msg.InitialDeposit)
 }
 
 func NewProposalHandler(k ProposalKeeper) proposal.Handler {

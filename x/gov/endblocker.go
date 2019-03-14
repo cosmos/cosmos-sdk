@@ -58,10 +58,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusPassed
 
-			// XXX: should we return error here if the router returns nil?
-			// I think we should, app can exclude certain handlers
-			// to disable some of the proposal types
-			// currently panics(same behaviour with baseapp.router)
 			handler := keeper.router.Route(activeProposal.ProposalRoute())
 			if handler == nil {
 				// SubmitProposal checks whether there is a handler for this proposal already

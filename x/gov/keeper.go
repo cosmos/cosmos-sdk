@@ -101,7 +101,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 	}
 }
 
-// XXX: implement seal
+// TODO: implement seal
 // Returns router
 func (keeper Keeper) Router() Router {
 	return keeper.router
@@ -109,11 +109,6 @@ func (keeper Keeper) Router() Router {
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content proposal.Content) (proposalID uint64, err sdk.Error) {
-	err = proposal.IsValidContent(keeper.codespace, content.GetTitle(), content.GetDescription())
-	if err != nil {
-		return
-	}
-
 	if keeper.router.Route(content.ProposalRoute()) == nil {
 		err = errors.ErrProposalHandlerNotExists(keeper.codespace, content)
 		return

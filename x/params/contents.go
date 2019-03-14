@@ -1,6 +1,7 @@
 package params
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
@@ -17,6 +18,26 @@ func NewChange(space string, key, subkey, value []byte) Change {
 	return Change{space, key, subkey, value}
 }
 
+// ValidateChange checks wheter the input data is empty or not
+func ValidateChanges(changes []Change) sdk.Error {
+	if len(changes) == 0 {
+		return ErrEmptyChanges(DefaultCodespace)
+	}
+
+	for _, c := range changes {
+		if len(c.Space) == 0 {
+			return ErrEmptySpace(DefaultCodespace)
+		}
+		if len(c.Key) == 0 {
+			return ErrEmptyKey(DefaultCodespace)
+		}
+		if len(c.Value) == 0 {
+			return ErrEmptyValue(DefaultCodespace)
+		}
+	}
+	return nil
+}
+
 // Proposal which contains multiple changes on proposals
 type ProposalChange struct {
 	proposal.Abstract `json:"proposal_abstract"`
@@ -28,13 +49,6 @@ func NewProposalChange(title string, description string, changes []Change) Propo
 	return ProposalChange{
 		Abstract: proposal.NewAbstract(title, description),
 		Changes:  changes,
-	}
-}
-
-// Constructs proposal.Proto
-func ProposalChangeProto(changes []Change) proposal.Proto {
-	return func(title, description string) proposal.Content {
-		return NewProposalChange(title, description, changes)
 	}
 }
 

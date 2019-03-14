@@ -14,7 +14,7 @@ const (
 )
 
 // Checks length of title and description
-func IsValidContent(codespace sdk.CodespaceType, title, description string) sdk.Error {
+func IsValidAbstract(codespace sdk.CodespaceType, title, description string) sdk.Error {
 	if len(title) == 0 {
 		return errors.ErrInvalidTitle(codespace, "No title present in proposal")
 	}
@@ -60,6 +60,3 @@ func (abs Abstract) GetDescription() string { return abs.Description }
 
 // Handler handles the proposals after it has passed the governance process
 type Handler func(ctx sdk.Context, content Content) sdk.Error
-
-// Proto is used to generate content from SubmitForm
-type Proto func(title, description string) Content

@@ -27,17 +27,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	var proto proposal.Proto
+	var content proposal.Content
 	switch msg.ProposalType {
 	case ProposalTypeText:
-		proto = NewTextProposal
+		content = NewTextProposal(msg.Title, msg.Description)
 	case ProposalTypeSoftwareUpgrade:
-		proto = NewSoftwareUpgradeProposal
+		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
 	default:
 		return errors.ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
 	}
 
-	return proposal.HandleSubmit(ctx, keeper.cdc, keeper, proto, msg.SubmitForm)
+	return proposal.HandleSubmit(ctx, keeper, content, msg.Proposer, msg.InitialDeposit)
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {

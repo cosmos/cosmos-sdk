@@ -177,6 +177,9 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
+// SetRaw stores the parameter bytes.
+// It returns error if stored parameter has different type from input.
+// IT also sets to the transient store to record change
 func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {

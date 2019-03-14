@@ -4,7 +4,7 @@
 
 The minting mechanism was designed to:
  - allow for a market evaluation of the inflation rate
- - optimize between market liquidity and staked supply.
+ - optimize between market liquidity and staked supply
 
 In order to best determine the appropriate market rate for inflation rewards, a
 moving change rate is used.  The moving change rate mechanism ensures that if

@@ -11,9 +11,10 @@
 - [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.
 - [REST API spec](https://cosmos.network/rpc/): List of endpoints to interact with a `gaia` full-node through REST.
 
-## Cosmos Hub testnet
+## Cosmos Hub 
 
-- [Join the public testnet](./gaia/join-testnet.md) of the Cosmos Hub.
+- [Join the mainnet](./gaia/join-mainnet.md) of the Cosmos Hub.
+- [Join the latest public testnet](./gaia/join-testnet.md) of the Cosmos Hub. 
 - [Start your own `gaia` testnet](./gaia/deploy-testnet.md).
 
 ## Creating a new SDK project

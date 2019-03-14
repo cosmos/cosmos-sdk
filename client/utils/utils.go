@@ -69,7 +69,11 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 			return err
 		}
 
-		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
+		json, err := cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := client.BufferStdin()
 		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)

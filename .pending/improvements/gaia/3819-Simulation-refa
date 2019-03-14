@@ -1,0 +1,7 @@
+\#3819 Simulation refactor, log output now stored in ~/.gaiad/simulation/ 
+ * Simulation moved to its own module (not a part of mock)
+ * Logger type instead of passing function variables everywhere
+ * Logger json output (for reloadable simulation running)
+ * Cleanup bank simulation messages / remove dup code in bank simulation
+ * Simulations saved in `~/.gaiad/simulations/` 
+ * "Lean" simulation output option to exclude No-ops and !ok functions (`--SimulationLean` flag)  

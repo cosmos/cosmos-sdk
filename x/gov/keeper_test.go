@@ -13,7 +13,10 @@ import (
 
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -26,7 +29,10 @@ func TestGetSetProposal(t *testing.T) {
 
 func TestIncrementProposalNumber(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -41,9 +47,11 @@ func TestIncrementProposalNumber(t *testing.T) {
 
 func TestActivateVotingPeriod(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
 	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
@@ -63,21 +71,23 @@ func TestActivateVotingPeriod(t *testing.T) {
 func TestDeposits(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4))}
-	fiveSteak := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
+	fourSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
+	fiveSteak := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
 	expTokens := sdk.TokensFromTendermintPower(42)
-	require.Equal(t, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)}, addr0Initial)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
@@ -149,9 +159,11 @@ func TestDeposits(t *testing.T) {
 func TestVotes(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
@@ -204,7 +216,10 @@ func TestVotes(t *testing.T) {
 
 func TestProposalQueues(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 

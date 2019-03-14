@@ -33,10 +33,11 @@ func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	store := ctx.KVStore(fck.key)
 	bz := store.Get(collectedFeesKey)
 	if bz == nil {
-		return sdk.Coins{}
+		return sdk.NewCoins()
 	}
 
-	feePool := &(sdk.Coins{})
+	emptyFees := sdk.NewCoins()
+	feePool := &emptyFees
 	fck.cdc.MustUnmarshalBinaryLengthPrefixed(bz, feePool)
 	return *feePool
 }
@@ -57,5 +58,5 @@ func (fck FeeCollectionKeeper) AddCollectedFees(ctx sdk.Context, coins sdk.Coins
 
 // ClearCollectedFees - clear the fee pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
-	fck.setCollectedFees(ctx, sdk.Coins{})
+	fck.setCollectedFees(ctx, sdk.NewCoins())
 }

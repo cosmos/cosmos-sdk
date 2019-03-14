@@ -10,17 +10,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-var (
-	// AddressStoreKeyPrefix prefix for account-by-address store
-	AddressStoreKeyPrefix = []byte{0x01}
-
-	globalAccountNumberKey = []byte("globalAccountNumber")
-
+const (
 	// StoreKey is string representation of the store key for auth
 	StoreKey = "acc"
 
 	// FeeStoreKey is a string representation of the store key for fees
 	FeeStoreKey = "fee"
+
+	// QuerierRoute is the querier route for acc
+	QuerierRoute = StoreKey
+)
+
+var (
+	// AddressStoreKeyPrefix prefix for account-by-address store
+	AddressStoreKeyPrefix = []byte{0x01}
+
+	globalAccountNumberKey = []byte("globalAccountNumber")
 )
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -193,7 +198,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	return accNumber
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Params
 
 // SetParams sets the auth module's parameters.
@@ -207,7 +212,7 @@ func (ak AccountKeeper) GetParams(ctx sdk.Context) (params Params) {
 	return
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Misc.
 
 func (ak AccountKeeper) decodeAccount(bz []byte) (acc Account) {

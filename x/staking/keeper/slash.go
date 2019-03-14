@@ -57,17 +57,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// call the before-modification hook
 	k.BeforeValidatorModified(ctx, operatorAddress)
 
-	// we need to calculate the *effective* slash fraction for distribution
-	if validator.Tokens.GT(sdk.ZeroInt()) {
-		effectiveFraction := slashAmountDec.Quo(validator.Tokens.ToDec())
-		// possible if power has changed
-		if effectiveFraction.GT(sdk.OneDec()) {
-			effectiveFraction = sdk.OneDec()
-		}
-		// call the before-slashed hook
-		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
-	}
-
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
 	// redelegations, as that stake has since unbonded
@@ -114,6 +103,17 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
 	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
+
+	// we need to calculate the *effective* slash fraction for distribution
+	if validator.Tokens.GT(sdk.ZeroInt()) {
+		effectiveFraction := tokensToBurn.ToDec().QuoRoundUp(validator.Tokens.ToDec())
+		// possible if power has changed
+		if effectiveFraction.GT(sdk.OneDec()) {
+			effectiveFraction = sdk.OneDec()
+		}
+		// call the before-slashed hook
+		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+	}
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// The deducted tokens are returned to pool.NotBondedTokens.

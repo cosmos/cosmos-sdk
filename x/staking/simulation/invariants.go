@@ -67,6 +67,8 @@ func SupplyInvariants(k staking.Keeper,
 			case sdk.Unbonding, sdk.Unbonded:
 				loose = loose.Add(validator.GetTokens().ToDec())
 			}
+			// add yet-to-be-withdrawn
+			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
 
@@ -75,9 +77,6 @@ func SupplyInvariants(k staking.Keeper,
 
 		// add community pool
 		loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
-
-		// add yet-to-be-withdrawn
-		loose = loose.Add(d.GetOutstandingRewardsCoins(ctx).AmountOf(k.BondDenom(ctx)))
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

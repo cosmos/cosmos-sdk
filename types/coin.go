@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -27,10 +28,10 @@ type Coin struct {
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
-	validateDenom(denom)
+	mustValidateDenom(denom)
 
 	if amount.LT(ZeroInt()) {
-		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
+		panic(fmt.Errorf("negative coin amount: %v", amount))
 	}
 
 	return Coin{
@@ -129,6 +130,28 @@ func (coin Coin) IsNegative() bool {
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
+// NewCoins constructs a new coin set.
+func NewCoins(coins ...Coin) Coins {
+	// remove zeroes
+	newCoins := removeZeroCoins(Coins(coins))
+	if len(newCoins) == 0 {
+		return Coins{}
+	}
+
+	newCoins.Sort()
+
+	// detect duplicate Denoms
+	if dupIndex := findDup(newCoins); dupIndex != -1 {
+		panic(fmt.Errorf("find duplicate denom: %s", newCoins[dupIndex]))
+	}
+
+	if !newCoins.IsValid() {
+		panic(fmt.Errorf("invalid coin set: %s", newCoins))
+	}
+
+	return newCoins
+}
+
 func (coins Coins) String() string {
 	if len(coins) == 0 {
 		return ""
@@ -148,7 +171,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		if err := validateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -246,6 +269,23 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 	}
 }
 
+// DenomsSubsetOf returns true if receiver's denom set
+// is subset of coinsB's denoms.
+func (coins Coins) DenomsSubsetOf(coinsB Coins) bool {
+	// more denoms in B than in receiver
+	if len(coins) > len(coinsB) {
+		return false
+	}
+
+	for _, coin := range coins {
+		if coinsB.AmountOf(coin.Denom).IsZero() {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Sub subtracts a set of coins from another.
 //
 // e.g.
@@ -271,26 +311,50 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// IsAllGT returns true if for every denom in coins, the denom is present at a
-// greater amount in coinsB.
+// IsAllGT returns true if for every denom in coinsB,
+// the denom is present at a greater amount in coins.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, _ := coins.SafeSub(coinsB)
-	if len(diff) == 0 {
+	if len(coins) == 0 {
 		return false
 	}
 
-	return diff.IsAllPositive()
-}
-
-// IsAllGTE returns true iff for every denom in coins, the denom is present at
-// an equal or greater amount in coinsB.
-func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeSub(coinsB)
-	if len(diff) == 0 {
+	if len(coinsB) == 0 {
 		return true
 	}
 
-	return !diff.IsAnyNegative()
+	if !coinsB.DenomsSubsetOf(coins) {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		amountA, amountB := coins.AmountOf(coinB.Denom), coinB.Amount
+		if !amountA.GT(amountB) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsAllGTE returns false if for any denom in coinsB,
+// the denom is present at a smaller amount in coins;
+// else returns true.
+func (coins Coins) IsAllGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return true
+	}
+
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		if coinB.Amount.GT(coins.AmountOf(coinB.Denom)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
@@ -360,7 +424,7 @@ func (coins Coins) Empty() bool {
 
 // Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
-	validateDenom(denom)
+	mustValidateDenom(denom)
 
 	switch len(coins) {
 	case 0:
@@ -389,8 +453,6 @@ func (coins Coins) AmountOf(denom string) Int {
 
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
-//
-// TODO: Remove once unsigned integers are used.
 func (coins Coins) IsAllPositive() bool {
 	if len(coins) == 0 {
 		return false
@@ -479,20 +541,25 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt     = `[[:digit:]]+`
-	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
-	reSpc     = `[[:space:]]*`
-	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
+	reDnmString = `[a-z][a-z0-9]{2,15}`
+	reAmt       = `[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc       = `[[:space:]]*`
+	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
+	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
+	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
-func validateDenom(denom string) {
-	if len(denom) < 3 || len(denom) > 16 {
-		panic(fmt.Sprintf("invalid denom length: %s", denom))
+func validateDenom(denom string) error {
+	if !reDnm.MatchString(denom) {
+		return errors.New("illegal characters")
 	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s", denom))
+	return nil
+}
+
+func mustValidateDenom(denom string) {
+	if err := validateDenom(denom); err != nil {
+		panic(err)
 	}
 }
 
@@ -513,8 +580,8 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if denomStr != strings.ToLower(denomStr) {
-		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	if err := validateDenom(denomStr); err != nil {
+		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
 	return NewCoin(denomStr, amount), nil
@@ -547,4 +614,20 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 	}
 
 	return coins, nil
+}
+
+// findDup works on the assumption that coins is sorted
+func findDup(coins Coins) int {
+	if len(coins) <= 1 {
+		return -1
+	}
+
+	prevDenom := coins[0]
+	for i := 1; i < len(coins); i++ {
+		if coins[i] == prevDenom {
+			return i
+		}
+	}
+
+	return -1
 }

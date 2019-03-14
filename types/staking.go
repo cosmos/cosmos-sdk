@@ -73,7 +73,8 @@ type Validator interface {
 	GetCommission() Dec           // validator commission rate
 	GetMinSelfDelegation() Int    // validator minimum self delegation
 	GetDelegatorShares() Dec      // total outstanding delegator shares
-	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
+	ShareTokens(Dec) Dec          // token worth of provided delegator shares
+	ShareTokensTruncated(Dec) Dec // token worth of provided delegator shares, truncated
 }
 
 // validator which fulfills abci validator interface for use in Tendermint

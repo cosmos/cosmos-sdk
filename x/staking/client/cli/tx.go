@@ -44,7 +44,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsCommissionCreate)
 	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
-	cmd.Flags().AddFlagSet(fsDelegator)
+
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", client.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 
@@ -259,23 +259,9 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, fmt.Errorf(staking.ErrMinSelfDelegationInvalid(staking.DefaultCodespace).Error())
 	}
 
-	delAddr := viper.GetString(FlagAddressDelegator)
-
-	var msg sdk.Msg
-	if delAddr != "" {
-		delAddr, err := sdk.AccAddressFromBech32(delAddr)
-		if err != nil {
-			return txBldr, nil, err
-		}
-
-		msg = staking.NewMsgCreateValidatorOnBehalfOf(
-			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
-		)
-	} else {
-		msg = staking.NewMsgCreateValidator(
-			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
-		)
-	}
+	msg := staking.NewMsgCreateValidator(
+		sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
+	)
 
 	if viper.GetBool(client.FlagGenerateOnly) {
 		ip := viper.GetString(FlagIP)
@@ -284,5 +270,6 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
 		}
 	}
+
 	return txBldr, msg, nil
 }

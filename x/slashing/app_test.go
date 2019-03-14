@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	priv1 = ed25519.GenPrivKey()
+	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 )
@@ -111,9 +111,13 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),
 	)
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, mapp, stakingKeeper, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
@@ -125,7 +129,8 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)
 
 	// unjail should fail with unknown validator
-	res := mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
+	res := mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.EqualValues(t, CodeValidatorNotJailed, res.Code)
 	require.EqualValues(t, DefaultCodespace, res.Codespace)
 }

@@ -207,7 +207,7 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(10)
 	pool.NotBondedTokens = startTokens
@@ -372,7 +372,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 }
 
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens

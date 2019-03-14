@@ -74,6 +74,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -142,11 +143,11 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			}
 
 			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-			if _, err := kb.CreateOffline(name, pk); err != nil {
+			if _, err := kb.CreateMulti(name, pk); err != nil {
 				return err
 			}
 
-			fmt.Fprintf(os.Stderr, "Key %q saved to disk.", name)
+			fmt.Fprintf(os.Stderr, "Key %q saved to disk.\n", name)
 			return nil
 		}
 
@@ -216,7 +217,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid")
+		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
 		return nil
 	}
 
@@ -263,7 +264,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	switch output {
 	case OutputFormatText:
 		fmt.Fprintln(os.Stderr)
-		printKeyInfo(info, Bech32KeyOutput)
+		printKeyInfo(info, keys.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -273,7 +274,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 			fmt.Fprintln(os.Stderr, mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := Bech32KeyOutput(info)
+		out, err := keys.Bech32KeyOutput(info)
 		if err != nil {
 			return err
 		}

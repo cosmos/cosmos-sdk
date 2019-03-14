@@ -22,9 +22,17 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+
+	// fetch outstanding
+	outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr)
+
 	// force-withdraw commission
 	commission := h.k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if !commission.IsZero() {
+		// subtract from outstanding
+		outstanding = outstanding.Sub(commission)
+
+		// split into integral & remainder
 		coins, remainder := commission.TruncateDecimal()
 
 		// remainder to community pool
@@ -32,18 +40,26 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
 		h.k.SetFeePool(ctx, feePool)
 
-		// update outstanding
-		outstanding := h.k.GetOutstandingRewards(ctx)
-		h.k.SetOutstandingRewards(ctx, outstanding.Sub(commission))
-
 		// add to validator account
-		accAddr := sdk.AccAddress(valAddr)
-		withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
+		if !coins.IsZero() {
 
-		if _, _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-			panic(err)
+			accAddr := sdk.AccAddress(valAddr)
+			withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
+
+			if _, _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+				panic(err)
+			}
 		}
 	}
+
+	// add outstanding to community pool
+	feePool := h.k.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Add(outstanding)
+	h.k.SetFeePool(ctx, feePool)
+
+	// delete outstanding
+	h.k.DeleteValidatorOutstandingRewards(ctx, valAddr)
+
 	// remove commission record
 	h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
 

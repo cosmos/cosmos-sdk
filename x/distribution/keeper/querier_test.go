@@ -57,13 +57,13 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	return
 }
 
-func getQueriedOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (outstandingRewards sdk.DecCoins) {
+func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (outstandingRewards sdk.DecCoins) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryOutstandingRewards}, "/"),
-		Data: []byte{},
+		Path: strings.Join([]string{custom, types.QuerierRoute, QueryValidatorOutstandingRewards}, "/"),
+		Data: cdc.MustMarshalJSON(NewQueryValidatorOutstandingRewardsParams(validatorAddr)),
 	}
 
-	bz, err := querier(ctx, []string{QueryOutstandingRewards}, query)
+	bz, err := querier(ctx, []string{QueryValidatorOutstandingRewards}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &outstandingRewards))
 
@@ -131,8 +131,8 @@ func TestQueries(t *testing.T) {
 
 	// test outstanding rewards query
 	outstandingRewards := sdk.DecCoins{{"mytoken", sdk.NewDec(3)}, {"myothertoken", sdk.NewDecWithPrec(3, 7)}}
-	keeper.SetOutstandingRewards(ctx, outstandingRewards)
-	retOutstandingRewards := getQueriedOutstandingRewards(t, ctx, cdc, querier)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, outstandingRewards)
+	retOutstandingRewards := getQueriedValidatorOutstandingRewards(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, outstandingRewards, retOutstandingRewards)
 
 	// test validator commission query
@@ -155,7 +155,6 @@ func TestQueries(t *testing.T) {
 
 	// test delegation rewards query
 	sh := staking.NewHandler(sk)
-	keeper.SetOutstandingRewards(ctx, sdk.DecCoins{})
 	comm := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt())
@@ -165,6 +164,7 @@ func TestQueries(t *testing.T) {
 	rewards := getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.True(t, rewards.IsZero())
 	initial := int64(10)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial)}}
 	keeper.AllocateTokensToValidator(ctx, val, tokens)
 	rewards = getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)

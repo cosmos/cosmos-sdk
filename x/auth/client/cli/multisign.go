@@ -66,9 +66,8 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return
 		}
-		if multisigInfo.GetType() != crkeys.TypeOffline {
-			return fmt.Errorf("%q must be of type offline: %s",
-				args[1], multisigInfo.GetType())
+		if multisigInfo.GetType() != crkeys.TypeMulti {
+			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)

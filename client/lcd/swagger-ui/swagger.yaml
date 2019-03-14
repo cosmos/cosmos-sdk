@@ -1744,7 +1744,7 @@ definitions:
     properties:
       denom:
         type: string
-        example: steak
+        example: stake
       amount:
         type: string
         example: "50"

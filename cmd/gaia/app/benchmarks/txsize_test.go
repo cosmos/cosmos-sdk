@@ -1,4 +1,4 @@
-package app
+package benchmarks_test
 
 import (
 	"fmt"

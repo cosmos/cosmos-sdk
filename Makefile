@@ -118,12 +118,15 @@ update_dev_tools:
 	go get -u github.com/tendermint/lint/golint
 
 devtools: devtools-stamp
-devtools-clean: tools-clean
 devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
+	go install ./cmd/sdkch
 	touch $@
+
+devtools-clean: tools-clean
+	rm -f devtools-stamp
 
 vendor-deps: tools
 	@echo "--> Generating vendor directory via dep ensure"

@@ -170,7 +170,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	app.govKeeper.Router().
 		AddRoute(gov.RouterKey, gov.ProposalHandler).
-		AddRoute(params.RouterKey, params.NewProposalHandler(app.paramsKeeper))
+		AddRoute(params.RouterKey, params.NewProposalHandler(
+			params.NewProposalKeeper(app.paramsKeeper, app.govKeeper)))
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,

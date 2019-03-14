@@ -20,7 +20,7 @@ func NewHandler(k ProposalKeeper) sdk.Handler {
 }
 
 func handleMsgSubmitParameterChangeProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitParameterChangeProposal) sdk.Result {
-	return proposal.HandleSubmit(ctx, k.cdc, k.proposal, ProposalChangeProto(msg.Space, msg.Changes), msg.SubmitForm)
+	return proposal.HandleSubmit(ctx, k.cdc, k.proposal, ProposalChangeProto(msg.Changes), msg.SubmitForm)
 }
 
 func NewProposalHandler(k ProposalKeeper) proposal.Handler {
@@ -36,17 +36,16 @@ func NewProposalHandler(k ProposalKeeper) proposal.Handler {
 }
 
 func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) sdk.Error {
-	s, ok := k.GetSubspace(p.Space)
-	if !ok {
-		// XXX
-		return nil
-	}
-
 	for _, c := range p.Changes {
+		s, ok := k.GetSubspace(c.Space)
+		if !ok {
+			// XXX
+			return nil
+		}
 		if len(c.Subkey) == 0 {
-			s.Set(ctx, c.Key, c.Value)
+			s.SetRaw(ctx, c.Key, c.Value)
 		} else {
-			s.SetWithSubkey(ctx, c.Key, c.Subkey, c.Value)
+			s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
 		}
 	}
 

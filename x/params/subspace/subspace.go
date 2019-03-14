@@ -176,6 +176,25 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
+func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) {
+	attr, ok := s.table.m[string(key)]
+	if !ok {
+		panic("Parameter not registered")
+	}
+
+	ty := attr.ty
+	dest := reflect.New(ty).Interface()
+	err := s.cdc.UnmarshalJSON(param, dest)
+	if err != nil {
+		panic(err)
+	}
+
+	store := s.kvStore(ctx)
+	store.Set(key, param)
+	tstore := s.transientStore(ctx)
+	tstore.Set(key, []byte{})
+}
+
 // SetWithSubkey set a parameter with a key and subkey
 // Checks parameter type only over the key
 func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
@@ -193,6 +212,28 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(newkey, []byte{})
+}
+
+func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) {
+	concatkey := concatKeys(key, subkey)
+
+	attr, ok := s.table.m[string(concatkey)]
+	if !ok {
+		panic("Parameter not registered")
+	}
+
+	ty := attr.ty
+	dest := reflect.New(ty).Interface()
+	err := s.cdc.UnmarshalJSON(param, &dest)
+	if err != nil {
+		panic(err)
+	}
+
+	store := s.kvStore(ctx)
+	store.Set(concatkey, param)
+	tstore := s.transientStore(ctx)
+	tstore.Set(concatkey, []byte{})
+
 }
 
 // Get to ParamSet

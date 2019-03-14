@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
-const RouteKey = "params"
+const RouterKey = "params"
 
 type MsgSubmitParameterChangeProposal struct {
 	proposal.SubmitForm `json:"submit_form"`
@@ -24,7 +24,7 @@ func NewMsgSubmitParameterChangeProposal(title, description string, space string
 var _ sdk.Msg = MsgSubmitParameterChangeProposal{}
 
 func (msg MsgSubmitParameterChangeProposal) Route() string {
-	return RouteKey
+	return RouterKey
 }
 
 func (msg MsgSubmitParameterChangeProposal) Type() string {

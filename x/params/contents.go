@@ -5,36 +5,35 @@ import (
 )
 
 type Change struct {
-	Key    []byte      `json:"key"`
-	Subkey []byte      `json:"subkey"`
-	Value  interface{} `json:"value"`
+	Space  string `json:"space"`
+	Key    []byte `json:"key"`
+	Subkey []byte `json:"subkey"`
+	Value  []byte `json:"value"`
 }
 
-func NewChange(key, subkey []byte, value interface{}) Change {
-	return Change{key, subkey, value}
+func NewChange(space string, key, subkey, value []byte) Change {
+	return Change{space, key, subkey, value}
 }
 
 type ProposalChange struct {
 	proposal.Abstract `json:"proposal_abstract"`
-	Space             string   `json:"space"`
 	Changes           []Change `json:"changes"`
 }
 
-func NewProposalChange(title string, description string, space string, changes []Change) ProposalChange {
+func NewProposalChange(title string, description string, changes []Change) ProposalChange {
 	return ProposalChange{
 		Abstract: proposal.NewAbstract(title, description),
-		Space:    space,
 		Changes:  changes,
 	}
 }
 
-func ProposalChangeProto(space string, changes []Change) proposal.Proto {
+func ProposalChangeProto(changes []Change) proposal.Proto {
 	return func(title, description string) proposal.Content {
-		return NewProposalChange(title, description, space, changes)
+		return NewProposalChange(title, description, changes)
 	}
 }
 
 var _ proposal.Content = ProposalChange{}
 
-func (pc ProposalChange) ProposalRoute() string { return RouteKey }
+func (pc ProposalChange) ProposalRoute() string { return RouterKey }
 func (pc ProposalChange) ProposalType() string  { return "ParameterChange" }

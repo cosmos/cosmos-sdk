@@ -71,16 +71,9 @@ type ProposalKeeper struct {
 	proposal proposal.Keeper
 }
 
-func NewProposalKeeperWithExisting(keeper Keeper, proposal proposal.Keeper) ProposalKeeper {
+func NewProposalKeeper(keeper Keeper, proposal proposal.Keeper) ProposalKeeper {
 	return ProposalKeeper{
 		Keeper:   keeper,
-		proposal: proposal,
-	}
-}
-
-func NewProposalKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey, proposal proposal.Keeper) ProposalKeeper {
-	return ProposalKeeper{
-		Keeper:   NewKeeper(cdc, key, tkey),
 		proposal: proposal,
 	}
 }

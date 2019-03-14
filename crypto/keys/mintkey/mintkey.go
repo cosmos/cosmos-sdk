@@ -1,7 +1,6 @@
 package mintkey
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -126,18 +125,11 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, 
 	if header["kdf"] != "bcrypt" {
 		return privKey, fmt.Errorf("Unrecognized KDF type: %v", header["KDF"])
 	}
-	if header["salt"] == "" {
-		return privKey, fmt.Errorf("Missing salt bytes")
-	}
-	saltBytes, err := hex.DecodeString(header["salt"])
-	if err != nil {
-		return privKey, fmt.Errorf("Error decoding salt: %v", err.Error())
-	}
-	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
+	privKey, err = decryptPrivKey(encBytes, passphrase)
 	return privKey, err
 }
 
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {
+func decryptPrivKey(encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {
 	key, err := bcrypt.GenerateFromPassword([]byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())

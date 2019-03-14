@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -43,19 +43,30 @@ var (
 	blockSize   int
 	enabled     bool
 	verbose     bool
+	lean        bool
 	commit      bool
 	period      int
 )
 
 func init() {
-	flag.StringVar(&genesisFile, "SimulationGenesis", "", "Custom simulation genesis file")
-	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
-	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
-	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
-	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
-	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
-	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
+	flag.StringVar(&genesisFile, "SimulationGenesis", "", "custom simulation genesis file")
+	flag.Int64Var(&seed, "SimulationSeed", 42, "simulation random seed")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "number of blocks")
+	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "operations per block")
+	flag.BoolVar(&enabled, "SimulationEnabled", false, "enable the simulation")
+	flag.BoolVar(&verbose, "SimulationVerbose", false, "verbose log output")
+	flag.BoolVar(&lean, "SimulationLean", false, "lean simulation log output")
+	flag.BoolVar(&commit, "SimulationCommit", false, "have the simulation commit")
+	flag.IntVar(&period, "SimulationPeriod", 1, "run slow invariants only once every period assertions")
+}
+
+// helper function for populating input for SimulateFromSeed
+func getSimulateFromSeedInput(tb testing.TB, app *GaiaApp) (
+	testing.TB, *baseapp.BaseApp, simulation.AppStateFn, int64,
+	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool) {
+
+	return tb, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
 func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
@@ -265,8 +276,8 @@ func randIntBetween(r *rand.Rand, min, max int) int {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
-		{100, banksim.SendMsg(app.accountKeeper, app.bankKeeper)},
-		{10, banksim.SingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
+		{100, banksim.SimulateMsgSend(app.accountKeeper, app.bankKeeper)},
+		{10, banksim.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
@@ -314,14 +325,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	_, err := simulation.SimulateFromSeed(
-		b, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app),
-		invariants(app), // these shouldn't get ran
-		numBlocks,
-		blockSize,
-		commit,
-	)
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, app))
 	if err != nil {
 		fmt.Println(err)
 		b.Fail()
@@ -356,14 +360,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(
-		t, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app),
-		invariants(app),
-		numBlocks,
-		blockSize,
-		commit,
-	)
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -397,14 +394,8 @@ func TestGaiaImportExport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(
-		t, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app),
-		invariants(app),
-		numBlocks,
-		blockSize,
-		commit,
-	)
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -446,7 +437,8 @@ func TestGaiaImportExport(t *testing.T) {
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keyMain, newApp.keyMain, [][]byte{}},
 		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
+		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
+			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
 		{app.keySlashing, newApp.keySlashing, [][]byte{}},
 		{app.keyMint, newApp.keyMint, [][]byte{}},
 		{app.keyDistr, newApp.keyDistr, [][]byte{}},
@@ -492,14 +484,8 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, err := simulation.SimulateFromSeed(
-		t, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app),
-		invariants(app),
-		numBlocks,
-		blockSize,
-		commit,
-	)
+	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -537,14 +523,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(
-		t, newApp.BaseApp, appStateFn, seed,
-		testAndRunTxs(newApp),
-		invariants(newApp),
-		numBlocks,
-		blockSize,
-		commit,
-	)
+	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, newApp))
 	require.Nil(t, err)
 
 }
@@ -575,6 +554,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				50,
 				100,
 				true,
+				false,
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

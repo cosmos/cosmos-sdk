@@ -217,6 +217,8 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	tstore.Set(newkey, []byte{})
 }
 
+// SetRawWithSubkey sets a raw bytes parameter with a key and subkey
+// Checks parameter type only over the key
 func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
 	concatkey := concatKeys(key, subkey)
 

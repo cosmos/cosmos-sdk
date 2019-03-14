@@ -69,6 +69,7 @@ func (k Keeper) GetSubspace(storename string) (Subspace, bool) {
 	return *space, ok
 }
 
+// Extended keeper which can process parameter change proposals
 type ProposalKeeper struct {
 	Keeper
 

@@ -101,6 +101,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 	}
 }
 
+// XXX: implement seal
+// Returns router
 func (keeper Keeper) Router() Router {
 	return keeper.router
 }

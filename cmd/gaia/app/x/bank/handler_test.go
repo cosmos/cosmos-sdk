@@ -61,7 +61,7 @@ func createTestInput(t *testing.T) testInput {
 
 	require.NoError(t, ms.LoadLatestVersion())
 
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tKeyParams)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tKeyParams, params.DefaultCodespace)
 	accKeeper := auth.NewAccountKeeper(
 		cdc,
 		keyAcc,

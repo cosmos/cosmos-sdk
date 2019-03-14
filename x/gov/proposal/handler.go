@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
+// HandleSubmit submits content and does initial deposit with provided SubmitForm
 func HandleSubmit(ctx sdk.Context, cdc *codec.Codec, k Keeper, proto Proto, form SubmitForm) sdk.Result {
 	content := proto(form.Title, form.Description)
 	proposalID, err := k.SubmitProposal(ctx, content)

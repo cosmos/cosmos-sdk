@@ -33,6 +33,5 @@ func NewSoftwareUpgradeProposal(title, description string) proposal.Content {
 var _ proposal.Content = SoftwareUpgradeProposal{}
 
 // nolint
-
 func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
 func (sup SoftwareUpgradeProposal) ProposalType() string  { return ProposalTypeSoftwareUpgrade }

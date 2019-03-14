@@ -57,7 +57,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusPassed
-			tagValue = tags.ActionProposalPassed
 
 			// XXX: should we return error here if the router returns nil?
 			// I think we should, app can exclude certain handlers

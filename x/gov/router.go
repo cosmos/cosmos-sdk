@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
+// Router is a map from string to proposal.Handler
+// copied and modified from baseapp/router.go
 type Router interface {
 	AddRoute(r string, h proposal.Handler) (rtr Router)
 	Route(path string) (h proposal.Handler)
@@ -18,6 +20,7 @@ type router struct {
 
 var _ Router = (*router)(nil)
 
+// Constructs new router
 func NewRouter() *router {
 	return &router{
 		routes: make(map[string]proposal.Handler),

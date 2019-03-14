@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/errors"
 )
 
+// nolint
 const (
 	ModuleName = "gov"
 
@@ -28,6 +29,7 @@ func NewSubmitForm(title, description string, proposer sdk.AccAddress, initialDe
 	}
 }
 
+// Partially implements sdk.Msg
 func (form SubmitForm) ValidateBasic() sdk.Error {
 	// XXX: we are already checking IsValidContent in Submit.
 	// Is it efficient to put it in ValidateBasic?
@@ -47,6 +49,7 @@ func (form SubmitForm) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// Partially implemets sdk.Msg
 func (form SubmitForm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{form.Proposer}
 }

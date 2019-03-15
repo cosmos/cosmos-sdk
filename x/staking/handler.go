@@ -234,9 +234,32 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
+	del, found := k.GetDelegation(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
+	if !found {
+		return ErrNoDelegation(k.Codespace()).Result()
+	}
+
 	shares, err := validator.SharesFromTokens(msg.Amount.Amount)
 	if err != nil {
 		return err.Result()
+	}
+
+	sharesTruncated, err := validator.SharesFromTokensTruncated(msg.Amount.Amount)
+	if err != nil {
+		return err.Result()
+	}
+
+	delShares := del.GetShares()
+	if sharesTruncated.GT(delShares) {
+		return ErrBadSharesAmount(k.Codespace()).Result()
+	}
+
+	// Cap the shares at the delegation's shares. Shares being greater could occur
+	// due to rounding, however we don't want to truncate the shares or take the
+	// minimum because we want to allow for the full withdraw of shares from a
+	// delegation.
+	if shares.GT(delShares) {
+		shares = delShares
 	}
 
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
@@ -270,12 +293,22 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return err.Result()
 	}
 
+	sharesTruncated, err := validator.SharesFromTokensTruncated(msg.Amount.Amount)
+	if err != nil {
+		return err.Result()
+	}
+
+	delShares := del.GetShares()
+	if sharesTruncated.GT(delShares) {
+		return ErrBadSharesAmount(k.Codespace()).Result()
+	}
+
 	// Cap the shares at the delegation's shares. Shares being greater could occur
 	// due to rounding, however we don't want to truncate the shares or take the
 	// minimum because we want to allow for the full withdraw of shares from a
 	// delegation.
-	if shares.GT(del.GetShares()) {
-		shares = del.GetShares()
+	if shares.GT(delShares) {
+		shares = delShares
 	}
 
 	completionTime, err := k.BeginRedelegation(

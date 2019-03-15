@@ -431,6 +431,16 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
 }
 
+// SharesFromTokensTruncated returns the truncated shares of a delegation given
+// a bond amount. It returns an error if the validator has no tokens.
+func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
+	if v.Tokens.IsZero() {
+		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+	}
+
+	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil
+}
+
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
 	if v.Status == sdk.Bonded {

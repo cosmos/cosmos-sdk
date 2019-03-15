@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 
@@ -69,9 +70,14 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 			return err
 		}
 
-		json, err := cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
-		if err != nil {
-			panic(err)
+		var json []byte
+		if viper.GetBool(client.FlagIndentResponse) {
+			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
 		}
 		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 

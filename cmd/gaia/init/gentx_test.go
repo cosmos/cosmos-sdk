@@ -1,39 +1,35 @@
 package init
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/log"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 func TestGenTxCmd(t *testing.T) {
 	defer server.SetupViper(t)()
 	defer setupClientHome(t)()
-
-	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-
+	logger := log.NewNopLogger()
 	ctx := server.NewContext(cfg, logger)
-	cdc := app.MakeCodec()
 
-	cmd := InitCmd(ctx, cdc)
-	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
-
-	nodeID, valPubKey, err := InitializeNodeValidatorFiles(cfg)
-	//cmd2 := GenTxCmd(ctx, cdc)
-
-	viper.Set(cli.FlagIP, "1.2.3.4")
-	viper.Set(cli.FlagMoniker, "gaianode-test")
-	viper.Set(client.FlagName, "gaianode-test")
-	viper.Set(cli.FlagNodeID, nodeID)
-	viper.Set(cli.FlagPubKey, valPubKey)
-	viper.Set(cli.FlagWebsite, "not.work.ing")
-	//require.NoError(t, cmd2.RunE(nil, nil))
+	nodeID := "X"
+	chainID := "X"
+	ip := "X"
+	valPubKey, _ := sdk.GetConsPubKeyBech32("cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
+	website := "http://cosmos.network"
+	details := "validator details"
+	identity := "that's me"
+	prepareFlagsForTxCreateValidator(ctx.Config, nodeID, ip, chainID, valPubKey, website, details, identity)
+	require.Equal(t, website, viper.GetString(cli.FlagWebsite))
+	require.Equal(t, details, viper.GetString(cli.FlagDetails))
+	require.Equal(t, identity, viper.GetString(cli.FlagIdentity))
 }

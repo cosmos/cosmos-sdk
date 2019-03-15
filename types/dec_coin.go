@@ -179,7 +179,9 @@ func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
 	for i, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		out[i] = truncated
-		changeSum = changeSum.Add(DecCoins{change})
+		if !change.IsZero() {
+			changeSum = changeSum.Add(DecCoins{change})
+		}
 	}
 
 	return out, changeSum

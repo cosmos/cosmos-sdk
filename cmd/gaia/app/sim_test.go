@@ -103,7 +103,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		numInitiallyBonded = numAccs
 	}
 	fmt.Printf("Selected randomly generated parameters for simulated genesis:\n"+
-		"\t{amount of steak per account: %v, initially bonded validators: %v}\n",
+		"\t{amount of stake per account: %v, initially bonded validators: %v}\n",
 		amount, numInitiallyBonded)
 
 	// randomly generate some genesis accounts

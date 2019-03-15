@@ -437,7 +437,7 @@ Once you begin an redelegation, you can see it's information by using the follow
 gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
-Or if you want to check all your current unbonding-delegations with disctinct validators:
+Or if you want to check all your current unbonding-delegations with distinct validators:
 
 ```bash
 gaiacli query staking redelegations <account_cosmos>

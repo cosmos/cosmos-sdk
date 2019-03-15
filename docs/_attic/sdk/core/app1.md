@@ -153,11 +153,11 @@ Along with the message, the Handler takes environmental information (a `Context`
 All information necessary for processing a message should be available in the context.
 
 Where is the KVStore in all of this? Access to the KVStore in a message handler is restricted by the Context via object-capability keys.
-Only handlers which were given explict access to a store's key will be able to access that store during message processsing.
+Only handlers which were given explicit access to a store's key will be able to access that store during message processsing.
 
 ### Context
 
-The SDK uses a `Context` to propogate common information across functions.
+The SDK uses a `Context` to propagate common information across functions.
 Most importantly, the `Context` restricts access to KVStores based on object-capability keys.
 Only handlers which have been given explicit access to a key will be able to access the corresponding store.
 
@@ -176,7 +176,7 @@ func newFooHandler(key sdk.StoreKey) sdk.Handler {
 `Context` is modeled after the Golang
 [context.Context](https://golang.org/pkg/context/), which has
 become ubiquitous in networking middleware and routing applications as a means
-to easily propogate request context through handler functions.
+to easily propagate request context through handler functions.
 Many methods on SDK objects receive a context as the first argument.
 
 The Context also contains the

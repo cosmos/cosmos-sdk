@@ -463,12 +463,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure propsal is directly queryable
 	proposal1 := f.QueryGovProposal(1)
-	require.Equal(t, uint64(1), proposal1.GetProposalID())
-	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
 
 	// Ensure query proposals returns properly
 	proposalsQuery = f.QueryGovProposals()
-	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// Query the deposits on the proposal
 	deposit := f.QueryGovDeposit(1, fooAddr)
@@ -507,8 +507,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Fetch the proposal and ensure it is now in the voting period
 	proposal1 = f.QueryGovProposal(1)
-	require.Equal(t, uint64(1), proposal1.GetProposalID())
-	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusVotingPeriod, proposal1.Status)
 
 	// Test vote generate only
 	success, stdout, stderr = f.TxGovVote(1, gov.OptionYes, keyFoo, "--generate-only")
@@ -544,7 +544,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure the proposal returns as in the voting period
 	proposalsQuery = f.QueryGovProposals("--status=VotingPeriod")
-	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// submit a second test proposal
 	f.TxGovSubmitProposal(keyFoo, "Text", "Apples", "test", sdk.NewCoin(denom, proposalTokens), "-y")
@@ -552,7 +552,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Test limit on proposals query
 	proposalsQuery = f.QueryGovProposals("--limit=1")
-	require.Equal(t, uint64(2), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(2), proposalsQuery[0].ProposalID)
 
 	f.Cleanup()
 }

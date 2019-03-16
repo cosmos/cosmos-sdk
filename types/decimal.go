@@ -332,6 +332,10 @@ func (d Dec) Format(s fmt.State, verb rune) {
 }
 
 func (d Dec) String() string {
+	if d.Int == nil {
+		return d.Int.String()
+	}
+
 	isNeg := d.IsNegative()
 	if d.IsNegative() {
 		d = d.Neg()
@@ -348,7 +352,6 @@ func (d Dec) String() string {
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
 	if inputSize <= Precision {
-
 		bzStr = make([]byte, Precision+2)
 
 		// 0. prefix
@@ -377,6 +380,7 @@ func (d Dec) String() string {
 	if isNeg {
 		return "-" + string(bzStr)
 	}
+
 	return string(bzStr)
 }
 

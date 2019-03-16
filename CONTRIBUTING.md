@@ -165,7 +165,7 @@ only pull requests targeted directly against master.
 ### Development Procedure:
   - the latest state of development is on `develop`
   - `develop` must never fail `make test` or `make test_cli`
-  - `develop` should not fail `make test_lint`
+  - `develop` should not fail `make lint`
   - no --force onto `develop` (except when reverting a broken commit, which should seldom happen)
   - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
   - before submitting a pull request, begin `git rebase` on top of `develop`

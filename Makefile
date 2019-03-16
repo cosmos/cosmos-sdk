@@ -4,9 +4,6 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 LEDGER_ENABLED ?= true
-GOTOOLS = \
-	github.com/alecthomas/gometalinter \
-	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
 GOSUM := $(shell which gosum)
 
@@ -62,7 +59,7 @@ ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: devtools install test_lint test
+all: tools install lint test
 
 # The below include contains the tools target.
 include scripts/Makefile
@@ -70,7 +67,7 @@ include scripts/Makefile
 ########################################
 ### CI
 
-ci: devtools install test_cover test_lint test
+ci: tools install test_cover lint test
 
 ########################################
 ### Build/Install
@@ -108,31 +105,6 @@ dist:
 ########################################
 ### Tools & dependencies
 
-check_tools:
-	@# https://stackoverflow.com/a/25668869
-	@echo "Found tools: $(foreach tool,$(notdir $(GOTOOLS)),\
-        $(if $(shell which $(tool)),$(tool),$(error "No $(tool) in PATH")))"
-
-update_tools:
-	@echo "--> Updating tools to correct version"
-	$(MAKE) --always-make tools
-
-update_dev_tools:
-	@echo "--> Downloading linters (this may take awhile)"
-	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
-	go get -u github.com/tendermint/lint/golint
-
-devtools: devtools-stamp
-devtools-stamp: tools
-	@echo "--> Downloading linters (this may take awhile)"
-	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
-	go get github.com/tendermint/lint/golint
-	go install -mod=readonly ./cmd/sdkch
-	touch $@
-
-devtools-clean: tools-clean
-	rm -f devtools-stamp
-
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
@@ -147,7 +119,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp snapcraft-local.yaml
+	rm -f snapcraft-local.yaml
 
 distclean: clean
 	rm -rf vendor/
@@ -227,13 +199,13 @@ test_sim_gaia_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-test_lint:
-	gometalinter --config=tools/gometalinter.json ./...
-	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+lint: tools
+	golangci-lint run
+	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 
-format:
+format: tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
@@ -292,10 +264,10 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build install install_debug dist clean distclean \
-check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
-test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
+draw_deps test test_cli test_unit \
+test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
-test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
-devtools-clean go-mod-cache
+test_sim_gaia_multi_seed test_sim_gaia_import_export \
+go-mod-cache

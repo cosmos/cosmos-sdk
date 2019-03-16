@@ -80,16 +80,10 @@ jobs:
       - checkout
       - *dependencies
       - run:
-          name: Get metalinter
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make devtools-clean
-            make devtools
-      - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_lint
+            make lint
 
   integration_tests:
     <<: *linux_defaults

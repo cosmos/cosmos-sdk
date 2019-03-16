@@ -33,26 +33,32 @@ cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && git fetch origin && git checkout -q $(3)
 
 go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && $(GO) install
 
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
+
 ###
 # tools
 ###
 all: tools
-tools: $(GOPATH)/bin/gometalinter $(GOPATH)/bin/statik $(GOPATH)/bin/goimports $(GOPATH)/bin/gosum
+tools: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/sdkch
 
 #v2.0.11
-$(GOPATH)/bin/gometalinter:
-	$(call go_install,alecthomas,gometalinter,v3.0.0)
+$(GOBIN)/golangci-lint:
+	sh tools/install-golangci.sh -d -b $(GOBIN)
 
-$(GOPATH)/bin/statik:
+$(GOBIN)/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
 
-$(GOPATH)/bin/goimports:
+$(GOBIN)/goimports:
 	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
 
-$(GOPATH)/bin/gosum:
-	go install ./cmd/gosum/
+$(GOBIN)/gosum:
+	go install -mod=readonly ./cmd/gosum/
+
+$(GOBIN)/sdkch:
+	go install -mod=readonly ./cmd/sdkch/
 
 tools-clean:
-	cd $(GOPATH)/bin && rm -f gometalinter statik goimports gosum
+	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum sdkch
 
 .PHONY: all tools-clean

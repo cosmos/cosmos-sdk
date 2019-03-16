@@ -172,7 +172,7 @@ func (coins DecCoins) String() string {
 }
 
 // TruncateDecimal returns the coins with truncated decimals and returns the
-// change. Note, it will not return any zero coins in either the truncated or
+// change. Note, it will not return any zero-amount coins in either the truncated or
 // change coins.
 func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCoins) {
 	for _, coin := range coins {

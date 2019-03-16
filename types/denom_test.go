@@ -26,6 +26,9 @@ func TestRegisterDenom(t *testing.T) {
 	res, ok = GetDenomUnit(matom)
 	require.False(t, ok)
 	require.Equal(t, ZeroDec(), res)
+
+	// reset registration
+	denomUnits = map[string]Dec{}
 }
 
 func TestConvertCoins(t *testing.T) {
@@ -74,4 +77,7 @@ func TestConvertCoins(t *testing.T) {
 			"invalid result; tc: #%d, input: %s, denom: %s", i+1, tc.input, tc.denom,
 		)
 	}
+
+	// reset registration
+	denomUnits = map[string]Dec{}
 }

@@ -46,6 +46,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.14.1
 	github.com/tendermint/iavl v0.12.1
+	github.com/tendermint/lint v0.0.1 // indirect
 	github.com/tendermint/tendermint v0.31.0-dev0
 	github.com/zondax/hid v0.9.0 // indirect
 	github.com/zondax/ledger-go v0.8.0 // indirect

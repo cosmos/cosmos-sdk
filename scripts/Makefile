@@ -31,7 +31,7 @@ mkdir -p $(GITHUBDIR)$(FS)$(1) &&\
 )\
 cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && git fetch origin && git checkout -q $(3)
 
-go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && $(GO) install -mod=readonly
+go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && $(GO) install
 
 ###
 # tools
@@ -50,7 +50,7 @@ $(GOPATH)/bin/goimports:
 	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
 
 $(GOPATH)/bin/gosum:
-	go install -mod=readonly ./cmd/gosum/
+	go install ./cmd/gosum/
 
 tools-clean:
 	cd $(GOPATH)/bin && rm -f gometalinter statik goimports gosum

@@ -286,7 +286,7 @@ gaiacli config trust-node false
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
 
 ```bash
-gaiacli config chain-id gos-6
+gaiacli config chain-id cosmoshub-1
 ```
 
 ## Querying the state

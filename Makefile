@@ -8,6 +8,7 @@ GOTOOLS = \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
+GOSUM := $(shell which gosum)
 
 export GO111MODULE = on
 
@@ -47,8 +48,11 @@ build_tags := $(strip $(build_tags))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell gosum go.sum) \
   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
+
+ifneq ($(GOSUM),)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(GOSUM) go.sum)
+endif
 
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb

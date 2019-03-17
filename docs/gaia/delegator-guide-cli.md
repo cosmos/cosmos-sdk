@@ -470,9 +470,15 @@ If you do not have a ledger device and want to interact with your private key on
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```
 
+<<<<<<< HEAD
 In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `chain-id` is a unique identifier for the blockchain on which you are submitting the transaction. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
 
 Get the chain-id from the genesis file (`cosmoshub-1`), and the two other fields using the account query:
+=======
+In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
+
+Get the chain-id from the genesis file (`cosmoshub-1`), and the two other information using the `account query`:
+>>>>>>> 6371dacb... docs offline procedure improvment + other minor fixes
 
 ```bash
 gaiacli query account <yourAddress> --chain-id cosmoshub-1
@@ -484,7 +490,11 @@ Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline compu
 cat unsignedTx.json
 ```
 
+<<<<<<< HEAD
 Now, sign the transaction using the following command. You will need the `chain-id`, `sequence` and `account-number` obtained earlier:
+=======
+Now, sign the transaction using the following command. You will need the `chaind-id`, `sequence` and `account-number` obtained earlier:
+>>>>>>> 6371dacb... docs offline procedure improvment + other minor fixes
 
 ```bash
 gaiacli tx sign unsignedTx.json --from <delegatorKeyName> --offline --chain-id cosmoshub-1 --sequence <sequence> --account-number <account-number> > signedTx.json

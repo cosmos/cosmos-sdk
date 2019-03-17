@@ -55,4 +55,4 @@ $(GOPATH)/bin/gosum:
 tools-clean:
 	cd $(GOPATH)/bin && rm -f gometalinter statik goimports gosum
 
-.PHONY: all clean-tools
+.PHONY: all tools-clean

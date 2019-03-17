@@ -77,13 +77,13 @@ ci: devtools install test_cover test_lint test
 
 build: go.sum
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
 else
-	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
-	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux: go.sum
@@ -93,13 +93,13 @@ update_gaia_lite_docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
 install: go.sum check-ledger update_gaia_lite_docs
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
 install_debug: go.sum
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
 dist:
 	@bash publish/dist.sh
@@ -127,7 +127,7 @@ devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
-	go install ./cmd/sdkch
+	go install -mod=readonly ./cmd/sdkch
 	touch $@
 
 devtools-clean: tools-clean

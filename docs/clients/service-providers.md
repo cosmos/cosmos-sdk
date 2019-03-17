@@ -52,7 +52,7 @@ gaiacli keys list
 After receiving tokens to your address, you can view your account's balance by typing:
 
 ```bash
-gaiacli account <YOUR_ADDRESS>
+gaiacli query account <YOUR_ADDRESS>
 ```
 
 *Note: When you query an account balance with zero tokens, you will get this error: No account with address <YOUR_ADDRESS> was found in the state. This is expected! We're working on improving our error messages.*

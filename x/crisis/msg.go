@@ -11,7 +11,7 @@ type MsgVerifyInvariance struct {
 }
 
 // ensure Msg interface compliance at compile time
-var _ sdk.Msg = &MsgTestInvariance{}
+var _ sdk.Msg = &MsgVerifyInvariance{}
 
 // MsgVerifyInvariance - create a new MsgVerifyInvariance object
 func NewMsgVerifyInvariance(sender sdk.AccAddress, invarianceRoute string) MsgVerifyInvariance {
@@ -27,6 +27,8 @@ func (msg MsgVerifyInvariance) Type() string  { return "verify_invariance" }
 
 // get the bytes for the message signer to sign on
 func (msg MsgVerifyInvariance) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
+
+// GetSignBytes gets the sign bytes for the msg MsgVerifyInvariance
 func (msg MsgVerifyInvariance) GetSignBytes() []byte {
 	bz := MsgCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)

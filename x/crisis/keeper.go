@@ -2,18 +2,21 @@ package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Crisis keeper
 type Keeper struct {
 	routes      []InvarRoute
+	paramSpace  params.Subspace
 	distrKeeper DistrKeeper
 }
 
-// Keeper - create a new crisis keeper
-func NewKeeper(routes []InvarRoute, distrKeeper DistrKeeper) Keeper {
+// Keeper creates a new crisis Keeper object
+func NewKeeper(routes []InvarRoute, paramSpace params.Subspace, distrKeeper DistrKeeper) Keeper {
 	return Keeper{
 		routes:      routes,
+		paramSpace:  paramSpace,
 		distrKeeper: distrKeeper,
 	}
 }

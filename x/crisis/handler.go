@@ -2,31 +2,34 @@ package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
+// ModuleName is the module name for this module
 const ModuleName = "crisis"
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k Keeper, d distr.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
 		switch msg := msg.(type) {
 		case MsgVerifyInvariance:
-			return handleMsgVerifyInvariance(ctx, msg, k)
+			return handleMsgVerifyInvariance(ctx, msg, k, d)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in crisis module").Result()
 		}
 	}
 }
 
-func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keeper) sdk.Result {
+func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keeper, d distr.Keeper) sdk.Result {
 
-	// get the initial gas consumption level, for refund comparison
-	initGas := ctx.GasMeter().GasConsumed()
+	// use a cached context to avoid gas costs
+	cacheCtx, _ := ctx.CacheContext()
 
 	found := false
-	for _, invarRoutes := range k.routes {
-		if invarRoutes.Route == msg.InvarianceRoute {
-			invarianceErr := invarRoutes.Invariant()
+	var invarianceErr error
+	for _, invarRoute := range k.routes {
+		if invarRoute.Route == msg.InvarianceRoute {
+			invarianceErr = invarRoute.Invar(cacheCtx)
 			found = true
 		}
 	}
@@ -36,12 +39,9 @@ func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keepe
 
 	if invarianceErr != nil {
 
-		// refund gas
-		finalGas := ctx.GasMeter().GasConsumed()
-		diffGas := finalGas - initGas
-		gasPrice := ctx.TxGasPrice()
-		refund, _ := gasPrice.MulDec(NewDec(int64(diffGas))).TruncateDecimal() // TODO verify if should round up
-		distrKeeper.DistributeFeePool(ctx, refund, msg.Sender)
+		// refund constant fee
+		refund := k.GetConstantFee(cacheCtx)
+		d.DistributeFeePool(ctx, refund, msg.Sender)
 
 		// TODO replace with circuit breaker
 		panic(invarianceErr)

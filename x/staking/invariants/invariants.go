@@ -6,24 +6,24 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // register all staking invariants
 func RegisterInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
-	d staking.DistributionKeeper, am auth.AccountKeeper,
-	invarRoutes sdk.InvarRoutes) InvarRoutes {
+	d staking.DistributionKeeper, am auth.AccountKeeper, c *crisis.Keeper) {
 
-	(&invarRoutes).Register(ModuleName+"/supply",
+	c.RegisterRoute(types.ModuleName+"/supply",
 		SupplyInvariants(k, f, d, am))
-	(&invarRoutes).Register(ModuleName+"/nonnegative-power",
+	c.RegisterRoute(types.ModuleName+"/nonnegative-power",
 		NonNegativePowerInvariant(k))
-	(&invarRoutes).Register(ModuleName+"/positive-delegation",
+	c.RegisterRoute(types.ModuleName+"/positive-delegation",
 		PositiveDelegationInvariant(k))
-	(&invarRoutes).Register(ModuleName+"/delegator-shares",
+	c.RegisterRoute(types.ModuleName+"/delegator-shares",
 		DelegatorSharesInvariant(k))
-	return invarRoutes
 }
 
 // AllInvariants runs all invariants of the staking module.

@@ -1,4 +1,4 @@
-package types
+package crisis
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

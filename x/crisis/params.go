@@ -1,59 +1,47 @@
 package crisis
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// Params are the params used for the crisis module
+type Params struct {
+	ConstantFee sdk.Coin
+}
+
+// Params - create a new Params object
+func NewParams(constantFee sdk.Coin) Params {
+	return Params{
+		ConstantFee: constantFee,
+	}
+}
 
 // Default parameter namespace
 const (
-	DefaultParamspace = types.ModuleName
+	DefaultParamspace = ModuleName
 )
 
-// ParamTable for staking module
+var (
+	// key for constant fee parameter
+	ParamStoreKeyConstantFee = []byte("ConstantFee")
+)
+
+// type declaration for parameters
 func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&types.Params{})
-}
-
-// UnbondingTime
-func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, types.KeyUnbondingTime, &res)
-	return
-}
-
-// MaxValidators - Maximum number of validators
-func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
-	k.paramstore.Get(ctx, types.KeyMaxValidators, &res)
-	return
-}
-
-// MaxEntries - Maximum number of simultaneous unbonding
-// delegations or redelegations (per pair/trio)
-func (k Keeper) MaxEntries(ctx sdk.Context) (res uint16) {
-	k.paramstore.Get(ctx, types.KeyMaxEntries, &res)
-	return
-}
-
-// BondDenom - Bondable coin denomination
-func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
-	return
-}
-
-// Get all parameteras as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(
-		k.UnbondingTime(ctx),
-		k.MaxValidators(ctx),
-		k.MaxEntries(ctx),
-		k.BondDenom(ctx),
+	return params.NewKeyTable(
+		ParamStoreKeyConstantFee, sdk.Coin{},
 	)
 }
 
-// set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+// GetConstantFee get's the constant fee from the paramSpace
+func (k Keeper) GetConstantFee(ctx sdk.Context) sdk.Coin {
+	var constantFee sdk.Coin
+	k.paramSpace.Get(ctx, ParamStoreKeyConstantFee, &constantFee)
+	return constantFee
+}
+
+// GetConstantFee set's the constant fee in the paramSpace
+func (k Keeper) SetConstantFee(ctx sdk.Context, constantFee sdk.Dec) {
+	k.paramSpace.Set(ctx, ParamStoreKeyConstantFee, &constantFee)
 }

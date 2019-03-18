@@ -4,11 +4,12 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 const (
 	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
+	DefaultParamspace = types.ModuleName
 )
 
 // keys

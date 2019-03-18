@@ -8,7 +8,7 @@ type InvarRoute struct {
 	Invar sdk.Invariant
 }
 
-// InvarRoute - TODO
+// NewInvarRoute - create an InvarRoute object
 func NewInvarRoute(route string, invar sdk.Invariant) InvarRoute {
 	return InvarRoute{
 		Route: route,
@@ -16,9 +16,5 @@ func NewInvarRoute(route string, invar sdk.Invariant) InvarRoute {
 	}
 }
 
+// InvarRoutes an array of InvarRoute
 type InvarRoutes []InvarRoute
-
-func (i *InvarRoutes) RegisterInvar(route string, invar sdk.Invariant) {
-	invarRoute := NewInvarRoute(route, invar)
-	i = append(i, invarRoute)
-}

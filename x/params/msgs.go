@@ -14,7 +14,7 @@ type MsgSubmitParameterChangeProposal struct {
 	Description    string         `json:"description"`     //  Description of the proposal
 	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	Changes        []Change       `json:"changes"`         // Paramters to be changed
+	Changes        []Change       `json:"changes"`         // Parameters to be changed
 }
 
 // Constructs new MsgSubmitParameterChangeProposal

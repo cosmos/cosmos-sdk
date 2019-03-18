@@ -30,6 +30,6 @@ func (k Keeper) GetConstantFee(ctx sdk.Context) sdk.Coin {
 }
 
 // GetConstantFee set's the constant fee in the paramSpace
-func (k Keeper) SetConstantFee(ctx sdk.Context, constantFee sdk.Dec) {
+func (k Keeper) SetConstantFee(ctx sdk.Context, constantFee sdk.Coin) {
 	k.paramSpace.Set(ctx, ParamStoreKeyConstantFee, &constantFee)
 }

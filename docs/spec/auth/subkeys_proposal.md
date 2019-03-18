@@ -1,3 +1,39 @@
+# Subkeys ADR
+
+## Abstract
+
+Currently, a `StdAccount` has only one public key assoiciated with it, and all transactions that are made with that key must be signed by that one public key.
+This is problematic because the security level required by different types of transactions executable by an account may be different.
+For example, an account may want to keep the key that has the ability to do `SendMsg`s in cold storage, but wants to keep a key that can vote on governance proposals on their phone.
+
+For this reason, we introduce the concept of SubKeys.  Accounts should be able to have multiple public keys, each of which can have different permissions.
+The main public key of account can provision new subkeys with specific msg routes who they are allowed to sign for.
+If a subkey tries to sign a tx with a msg type it is not permitted to use, the tx will be rejected.
+
+One complexity in this system is that all txs, regardless of their msg type, need to be able to tx fees.
+This means that even your lowest security subkey, if compromised, could drain your account by using your entire balance as the tx fee for a transaction.
+To resolve this, we add a notion of FeeAllowances.  The master pubkey along with provisioning subkeys with msg types they are allowed to use, also provisions them with
+a daily allowance of tokens that they are allowed to spend to pay transaction fees.  For example, if SubKey A has a daily fee allowance of 1atom, it can spend up to 1atom on transaction fees in
+a 24 hour window.  If it does not use its atom in a 24 hour window, their "allowance" does not accumulate, it still stays at 1atom in any 24 hour window.
+
+
+## Construction
+
+To begin, we add define the struct that stores the metadata about a certain account.  This includes the pubkey itself, the routes it's permitted to sign transactions for, it's daily allowance, and how much of its
+allowance its used in the last 24 hour window.
+
+
+```golang
+type SubKeyMetadata struct {
+  PubKey               crypto.PubKey
+  PermissionedRoutes   []string
+  DailyFeeAllowance    sdk.Coins
+  DailyFeeUsed         sdk.Coins
+}
+```
+
+We create a new `Account` type called `SubKeyAccount` that stores a list of `SubKeyMetadata`s.
+
 ```golang
 type SubKeyAccount struct {
   Address       AccAddress
@@ -5,26 +41,73 @@ type SubKeyAccount struct {
   PubKey        PubKey
   AccountNumber uint64
   Sequence      uint64
-  SubKeys       map[key]
+  SubKeys       []SubKeyMetadata
 }
 ```
+
+In the `StdSignature` type we need to add a new field called `PubKeyIndex` which tells the anteHandler which SubKey to use to verify this signature.
 
 ```golang
-type SubKeyMetadata struct {
-  PermissionedRoutes   []string
-  DailyFeeAllowance    sdk.Coins
-  DailyFeeUsed         sdk.Coins
+// StdSignature represents a sig
+type StdSignature struct {
+	crypto.PubKey                  `json:"pub_key"` // optional
+  Signature     []byte           `json:"signature"`
+  PubKeyIndex   uint
 }
 ```
 
-SubKey DailyFee Window Queue
-Similar to Queues used in staking and gov.
+If a `StdSignature.PubKeyIndex` is 0, this means that the account's "master" PubKey should be used to verify the signature.  If the `StdSignature.PubKeyIndex` is >0,
+it verifies the signature using the corresponding **1-indexed** SubKey in the SubKeyAccount.SubKeys slice.  Note, the SubKeys slice is 1-indexed rather than 0-indexed because the 0
+index is used to refer to the master PubKey.  See pseudocode below:
+
+```
+if stdSig.PubKeyIndex == 0 {
+  verify stdSig using acc.PubKey
+} else {
+  verify stdSig using acc.SubKeys[stdSig.PubKeyIndex - 1]
+}
+```
+
+In the AnteHandler, if a transaction comes from a SubKey, it verifies the msg route is permitted.
+
+```
+if msg.Route not in subKeyMetadata.PermissionedRoutes {
+  return ErrNotPermitted
+}
+```
+
+When a transaction signed by a SubKey is accepted and has paid fees, we need to log the fees it has paid.  We increase the `SubKeyMetadata.DailyFeeUsed` field.
+
+If a new transaction from a subkey comes in and the `tx.Fee + subKeyMetadata.DailyFeeUsed > subKeyMetadata.DailyFeeAllowance`, then the transaction is rejected as it the subkey
+is trying to exceed it's daily fee allowance.
+
+But now we need a way to decrease the `DailyFeeUsed` field once transactions are past the 24 hour window.  To do this we us a time based iterator similar to the ones used
+in the governance and staking queues.
+
+We start by defining a new struct called a `DailyFeeSpend`, which is what will be inserted into the Queue.
 
 ```golang
 type DailyFeeSpend struct {
   Address              sdk.AccAddress
-  SubKey               sdk.AccPubKey
+  SubKeyIndex          uint
   FeeSpent             sdk.Coins
 }
 ```
 
+When a transaction using a SubKey has paid its fee, into this queue's store we insert a new entry.
+- The key is `sdk.FormatTimeBytes(ctx.BlockTime.Add(time.Day * 1)`
+- The value is the Amino marshalled `DailyFeeSpend`
+
+Finally in the EndBlocker we iterate over the all the DailyFeeSpends in the queue which are expired (more than a day old).  We prune them from state, and deduct their FeeSpent amount
+from the corresponding SubKeyMetadata.
+
+```
+store := ctx.Store(spentFeeQueueStoreKey)
+iterator := sdk.Iterator(nil, sdk.FormatTimeBytes(ctx.BlockTime)) // pseudocode abstract this as a slice of DailyFeeSpend
+
+for _, dailyFeeSpend := range iterator {
+  acc := accountKeeper.GetAccount(dailyFeeSpend.Address)
+  acc.SubKeys[dailyFeeSpend.SubKeyIndex - 1].DailyFeeUsed -= dailyFeeSpend.FeeSpent
+  store.Delete(dailyFeeSpend)
+}
+```

@@ -88,6 +88,10 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			if err = app.GaiaValidateGenesisState(genesisState); err != nil {
+				return err
+			}
+
 			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err

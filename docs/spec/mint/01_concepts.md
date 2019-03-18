@@ -20,4 +20,3 @@ It can be broken down in the following way:
    rate will stay constant 
  - If the inflation rate is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
-

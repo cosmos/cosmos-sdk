@@ -470,7 +470,7 @@ If you do not have a ledger device and want to interact with your private key on
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```
 
-In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
+In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `chain-id` is a unique identifier for the blockchain on which you are submitting the transaction. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
 
 Get the chain-id from the genesis file (`cosmoshub-1`), and the two other information using the `account query`:
 

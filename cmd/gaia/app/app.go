@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -67,6 +68,7 @@ type GaiaApp struct {
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
+	crisisKeeper        crisis.Keeper
 	paramsKeeper        params.Keeper
 }
 
@@ -143,6 +145,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
 		gov.DefaultCodespace,
 	)
+	app.crisisKeeper = crisis.NewKeeper(
+		app.paramsKeeper.Subspace(crisis.DefaultParamspace),
+		app.distrKeeper,
+	)
 
 	// register the staking hooks
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
@@ -150,6 +156,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.stakingKeeper = *stakingKeeper.SetHooks(
 		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
+
+	// register the crisis routes
+	bank.RegisterInvariants(&app.crisisKeeper, app.accountKeeper)
+	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper, app.stakingKeeper)
+	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper)
 
 	// register message routes
 	//
@@ -197,6 +208,7 @@ func MakeCodec() *codec.Codec {
 	slashing.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
+	crisis.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc

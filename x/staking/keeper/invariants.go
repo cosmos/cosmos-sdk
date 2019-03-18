@@ -1,4 +1,4 @@
-package invariants
+package keeper
 
 import (
 	"bytes"
@@ -7,28 +7,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // register all staking invariants
-func RegisterInvariants(ctx sdk.Context, k staking.Keeper, f staking.FeeCollectionKeeper,
-	d staking.DistributionKeeper, am auth.AccountKeeper, c *crisis.Keeper) {
+func RegisterInvariants(c *crisis.Keeper, k Keeper, f types.FeeCollectionKeeper,
+	d types.DistributionKeeper, am auth.AccountKeeper) {
 
-	c.RegisterRoute(ctx, types.ModuleName+"/supply",
+	c.RegisterRoute(types.ModuleName+"/supply",
 		SupplyInvariants(k, f, d, am))
-	c.RegisterRoute(ctx, types.ModuleName+"/nonnegative-power",
+	c.RegisterRoute(types.ModuleName+"/nonnegative-power",
 		NonNegativePowerInvariant(k))
-	c.RegisterRoute(ctx, types.ModuleName+"/positive-delegation",
+	c.RegisterRoute(types.ModuleName+"/positive-delegation",
 		PositiveDelegationInvariant(k))
-	c.RegisterRoute(ctx, types.ModuleName+"/delegator-shares",
+	c.RegisterRoute(types.ModuleName+"/delegator-shares",
 		DelegatorSharesInvariant(k))
 }
 
 // AllInvariants runs all invariants of the staking module.
-func AllInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
-	d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
+	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		err := SupplyInvariants(k, f, d, am)(ctx)
@@ -57,8 +55,8 @@ func AllInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
 
 // SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
-func SupplyInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
-	d staking.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
+	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)
@@ -69,7 +67,7 @@ func SupplyInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
 			loose = loose.Add(acc.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec())
 			return false
 		})
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
+		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
 			for _, entry := range ubd.Entries {
 				loose = loose.Add(entry.Balance.ToDec())
 			}
@@ -113,7 +111,7 @@ func SupplyInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
 }
 
 // NonNegativePowerInvariant checks that all stored validators have >= 0 power.
-func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
+func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 
@@ -123,7 +121,7 @@ func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
 				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
 
-			powerKey := keeper.GetValidatorsByPowerIndexKey(validator)
+			powerKey := GetValidatorsByPowerIndexKey(validator)
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
@@ -141,7 +139,7 @@ func NonNegativePowerInvariant(k staking.Keeper) sdk.Invariant {
 }
 
 // PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
-func PositiveDelegationInvariant(k staking.Keeper) sdk.Invariant {
+func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
@@ -160,7 +158,7 @@ func PositiveDelegationInvariant(k staking.Keeper) sdk.Invariant {
 // DelegatorSharesInvariant checks whether all the delegator shares which persist
 // in the delegator object add up to the correct total delegator shares
 // amount stored in each validator
-func DelegatorSharesInvariant(k staking.Keeper) sdk.Invariant {
+func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		validators := k.GetAllValidators(ctx)
 		for _, validator := range validators {

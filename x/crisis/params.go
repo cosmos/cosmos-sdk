@@ -5,18 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// Params are the params used for the crisis module
-type Params struct {
-	ConstantFee sdk.Coin
-}
-
-// Params - create a new Params object
-func NewParams(constantFee sdk.Coin) Params {
-	return Params{
-		ConstantFee: constantFee,
-	}
-}
-
 // Default parameter namespace
 const (
 	DefaultParamspace = ModuleName

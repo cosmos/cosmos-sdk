@@ -5,24 +5,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// Crisis keeper
+// Keeper - crisis keeper
 type Keeper struct {
 	routes      []InvarRoute
 	paramSpace  params.Subspace
 	distrKeeper DistrKeeper
 }
 
-// Keeper creates a new crisis Keeper object
-func NewKeeper(routes []InvarRoute, paramSpace params.Subspace, distrKeeper DistrKeeper) Keeper {
+// NewKeeper creates a new crisis Keeper object
+func NewKeeper(paramSpace params.Subspace, distrKeeper DistrKeeper) Keeper {
 	return Keeper{
-		routes:      routes,
+		routes:      []InvarRoute{},
 		paramSpace:  paramSpace,
 		distrKeeper: distrKeeper,
 	}
 }
 
 // register routes for the
-func (k *Keeper) RegisterRoute(ctx sdk.Context, route string, invar sdk.Invariant) {
+func (k *Keeper) RegisterRoute(route string, invar sdk.Invariant) {
 	invarRoute := NewInvarRoute(route, invar)
 	k.routes = append(k.routes, invarRoute)
 }

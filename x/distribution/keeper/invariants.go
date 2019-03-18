@@ -1,38 +1,35 @@
-package invariants
+package keeper
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // register all distribution invariants
-func RegisterInvariants(ctx sdk.Context, k distr.Keeper, stk types.StakingKeeper,
-	c *crisis.Keeper) {
-
-	c.RegisterRoute(ctx, types.ModuleName+"/nonnegative-outstanding",
+func RegisterInvariants(c *crisis.Keeper, k Keeper, stk types.StakingKeeper) {
+	c.RegisterRoute(types.ModuleName+"/nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
-	c.RegisterRoute(ctx, types.ModuleName+"/can-withdraw",
+	c.RegisterRoute(types.ModuleName+"/can-withdraw",
 		CanWithdrawInvariant(k, stk))
-	c.RegisterRoute(ctx, types.ModuleName+"/reference-count",
+	c.RegisterRoute(types.ModuleName+"/reference-count",
 		ReferenceCountInvariant(k, stk))
 }
 
 // AllInvariants runs all invariants of the distribution module
-func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
+func AllInvariants(k Keeper, stk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		err := CanWithdrawInvariant(d, stk)(ctx)
+		err := CanWithdrawInvariant(k, stk)(ctx)
 		if err != nil {
 			return err
 		}
-		err = NonNegativeOutstandingInvariant(d)(ctx)
+		err = NonNegativeOutstandingInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
-		err = ReferenceCountInvariant(d, stk)(ctx)
+		err = ReferenceCountInvariant(k, stk)(ctx)
 		if err != nil {
 			return err
 		}
@@ -41,7 +38,7 @@ func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 }
 
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
-func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
+func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		var outstanding sdk.DecCoins
@@ -64,7 +61,7 @@ func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
+func CanWithdrawInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		// cache, we don't want to write changes
@@ -108,7 +105,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 }
 
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
-func ReferenceCountInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
+func ReferenceCountInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		valCount := uint64(0)

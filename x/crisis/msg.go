@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgVerifyInvariance - TODO
+// MsgVerifyInvariance - message struct to verify a particular invariance
 type MsgVerifyInvariance struct {
 	Sender          sdk.AccAddress `json:"sender"`
 	InvarianceRoute string         `json:"invariance_route"`

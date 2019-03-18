@@ -2,13 +2,12 @@ package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 // ModuleName is the module name for this module
 const ModuleName = "crisis"
 
-func NewHandler(k Keeper, d distr.Keeper) sdk.Handler {
+func NewHandler(k Keeper, d DistrKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
 		switch msg := msg.(type) {
@@ -20,7 +19,7 @@ func NewHandler(k Keeper, d distr.Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keeper, d distr.Keeper) sdk.Result {
+func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keeper, d DistrKeeper) sdk.Result {
 
 	// use a cached context to avoid gas costs
 	cacheCtx, _ := ctx.CacheContext()

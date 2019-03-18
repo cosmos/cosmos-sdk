@@ -59,6 +59,11 @@ var (
 	NewQueryDelegatorParams                   = keeper.NewQueryDelegatorParams
 	NewQueryDelegatorWithdrawAddrParams       = keeper.NewQueryDelegatorWithdrawAddrParams
 	DefaultParamspace                         = keeper.DefaultParamspace
+	RegisterInvariants                        = keeper.RegisterInvariants
+	AllInvariants                             = keeper.AllInvariants
+	NonNegativeOutstandingInvariant           = keeper.NonNegativeOutstandingInvariant
+	CanWithdrawInvariant                      = keeper.CanWithdrawInvariant
+	ReferenceCountInvariant                   = keeper.ReferenceCountInvariant
 
 	RegisterCodec       = types.RegisterCodec
 	DefaultGenesisState = types.DefaultGenesisState

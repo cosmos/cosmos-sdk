@@ -286,7 +286,7 @@ gaiacli config trust-node false
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
 
 ```bash
-gaiacli config chain-id gos-6
+gaiacli config chain-id cosmoshub-1
 ```
 
 ## Querying the state
@@ -299,7 +299,7 @@ gaiacli config chain-id gos-6
 
 ```bash
 // query account balances and other account-related information
-gaiacli query account
+gaiacli query account <yourAddress>
 
 // query the list of validators
 gaiacli query staking validators
@@ -348,7 +348,7 @@ Transactions on the Cosmos Hub network need to include a transaction fee in orde
 fees = ceil(gas * gasPrices)
 ```
 
-The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
+The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. For the remainder of this tutorial, we will use a `--gas-adjustment` of `1.5`.
 
 The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transactions that have a `gasPrice` greater than their `min-gas-price`. 
 
@@ -376,20 +376,20 @@ For mainnet, the recommended `gas-prices` is `0.025uatom`.
 // Bond a certain amount of Atoms to a given validator
 // ex value for flags: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToBound>=10000000uatom, <gasPrice>=0.025uatom
 
-gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
 
 // Withdraw all rewards
 // ex value for flag: <gasPrice>=0.025uatom
 
-gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
 
 // Unbond a certain amount of Atoms from a given validator 
 // You will have to wait 3 weeks before your Atoms are fully unbonded and transferrable 
 // ex value for flags: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToUnbound>=10000000uatom, <gasPrice>=0.025uatom
 
-gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 ```
 
 ::: warning
@@ -444,19 +444,19 @@ At the end of the voting period, the proposal is accepted if there are more than
 // <type>=text/parameter_change/software_upgrade
 // ex value for flag: <gasPrice>=0.025uatom
 
-gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10000000uatom --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
+gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10000000uatom --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --from <delegatorKeyName>
 
 // Increase deposit of a proposal
 // Retrieve proposalID from $gaiacli query gov proposals --status deposit_period
 // ex value for parameter: <deposit>=10000000uatom
 
-gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
+gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --from <delegatorKeyName>
 
 // Vote on a proposal
 // Retrieve proposalID from $gaiacli query gov proposals --status voting_period 
 // <option>=yes/no/no_with_veto/abstain
 
-gaiacli tx gov vote <proposalID> <option> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
+gaiacli tx gov vote <proposalID> <option> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --from <delegatorKeyName>
 ```
 
 ### Signing transactions from an offline computer
@@ -467,7 +467,15 @@ If you do not have a ledger device and want to interact with your private key on
 // Bond Atoms 
 // ex value for flags: <amountToBound>=10000000uatom, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.025uatom, <delegatorAddress>=cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg
 
-gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --generate-only > unsignedTX.json
+```
+
+In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `chain-id` is a unique identifier for the blockchain on which you are submitting the transaction. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
+
+Get the chain-id from the genesis file (`cosmoshub-1`), and the two other fields using the account query:
+
+```bash
+gaiacli query account <yourAddress> --chain-id cosmoshub-1
 ```
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:
@@ -476,10 +484,10 @@ Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline compu
 cat unsignedTx.json
 ```
 
-Now, sign the transaction using the following command:
+Now, sign the transaction using the following command. You will need the `chain-id`, `sequence` and `account-number` obtained earlier:
 
 ```bash
-gaiacli tx sign unsignedTx.json --from <delegatorKeyName> > signedTx.json
+gaiacli tx sign unsignedTx.json --from <delegatorKeyName> --offline --chain-id cosmoshub-1 --sequence <sequence> --account-number <account-number> > signedTx.json
 ```
 
 Copy `signedTx.json` and transfer it back to the online computer. Finally, use the following command to broadcast the transaction:

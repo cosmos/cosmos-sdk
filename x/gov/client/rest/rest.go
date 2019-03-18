@@ -90,7 +90,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		proposalType := govClientUtils.NormalizeProposalType(req.ProposalType)
 		if proposalType == "" {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "Invalid ProposalType "+req.ProposalType)
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid ProposalType %s", req.ProposalType))
 			return
 		}
 

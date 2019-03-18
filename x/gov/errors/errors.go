@@ -67,5 +67,5 @@ func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
 }
 
 func ErrProposalHandlerNotExists(codespace sdk.CodespaceType, content interface{}) sdk.Error {
-	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have corredponding handler", content))
+	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have corresponding handler", content))
 }

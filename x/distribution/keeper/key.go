@@ -8,7 +8,7 @@ import (
 
 const (
 	// default paramspace for params keeper
-	DefaultParamspace = "distr"
+	DefaultParamspace = ModuleName
 )
 
 // keys

@@ -15,7 +15,7 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coin, receiveAddr 
 		return errors.New("community pool does not have sufficient coins to distribute")
 	}
 
-	feePool.CommunityPool.Sub(sdk.NewDecFromInt(amount.Amount))
+	feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewCoins(amount)))
 	k.bankKeeper.AddCoins(ctx, receiveAddr, sdk.Coins{amount})
 
 	k.SetFeePool(ctx, feePool)

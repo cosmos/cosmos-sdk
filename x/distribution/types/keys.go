@@ -1,15 +1,18 @@
 package types
 
 const (
+	// ModuleName is the module name constant used in many places
+	ModuleName = "distr"
+
 	// StoreKey is the store key string for distribution
-	StoreKey = "distr"
+	StoreKey = ModuleName
 
 	// TStoreKey is the transient store key for distribution
-	TStoreKey = "transient_distr"
+	TStoreKey = "transient_" + ModuleName
 
 	// RouterKey is the message route for distribution
-	RouterKey = "distr"
+	RouterKey = ModuleName
 
 	// QuerierRoute is the querier route for distribution
-	QuerierRoute = "distr"
+	QuerierRoute = ModuleName
 )

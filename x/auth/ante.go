@@ -45,7 +45,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		// set the tx gas price in the new context
-		newCtx = newCtx.WithTxGasPrices(sdkTx.Fee.GasPrices())
+		newCtx = newCtx.WithTxGasPrices(stdTx.Fee.GasPrices())
 
 		params := ak.GetParams(ctx)
 

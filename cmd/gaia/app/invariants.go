@@ -7,17 +7,17 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	bankinvar "github.com/cosmos/cosmos-sdk/x/bank/invariants"
+	distrinvar "github.com/cosmos/cosmos-sdk/x/distribution/invariants"
+	stakinginvar "github.com/cosmos/cosmos-sdk/x/staking/invariants"
 )
 
 func (app *GaiaApp) runtimeInvariants() []sdk.Invariant {
 	return []sdk.Invariant{
-		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
-		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
-		stakingsim.SupplyInvariants(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
-		stakingsim.NonNegativePowerInvariant(app.stakingKeeper),
+		bankinvar.NonnegativeBalanceInvariant(app.accountKeeper),
+		distrinvar.NonNegativeOutstandingInvariant(app.distrKeeper),
+		stakinginvar.SupplyInvariants(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		stakinginvar.NonNegativePowerInvariant(app.stakingKeeper),
 	}
 }
 

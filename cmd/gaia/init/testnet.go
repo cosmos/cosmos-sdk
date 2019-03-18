@@ -156,7 +156,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 		baseport := viper.GetInt(flagBaseport)
 		port := baseport + i*100
-		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
+		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], ip, port) //okdex
 		genFiles = append(genFiles, config.GenesisFile())
 
 		buf := client.BufferStdin()

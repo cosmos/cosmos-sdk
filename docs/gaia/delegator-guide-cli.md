@@ -467,7 +467,15 @@ If you do not have a ledger device and want to interact with your private key on
 // Bond Atoms 
 // ex value for flags: <amountToBound>=10000000uatom, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.025uatom, <delegatorAddress>=cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg
 
-gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
+gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorAddress> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --generate-only > unsignedTX.json
+```
+
+In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `chain-id` is a unique identifier for the blockchain on which you are submitting the transaction. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
+
+Get the chain-id from the genesis file (`cosmoshub-1`), and the two other fields using the account query:
+
+```bash
+gaiacli query account <yourAddress> --chain-id cosmoshub-1
 ```
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:
@@ -476,7 +484,7 @@ Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline compu
 cat unsignedTx.json
 ```
 
-Now, sign the transaction using the following command:
+Now, sign the transaction using the following command. You will need the `chain-id`, `sequence` and `account-number` obtained earlier:
 
 ```bash
 gaiacli tx sign unsignedTx.json --from <delegatorKeyName> > signedTx.json

@@ -22,18 +22,18 @@ func init() {
 	legacyCdc.RegisterConcrete(legacyProposal{}, "gov/TextProposal", nil)
 }
 
-type legacyProposalKind byte
+type ProposalKind byte
 
 const (
-	legacyProposalTypeText            legacyProposalKind = 0x01
-	legacyProposalTypeSoftwareUpgrade legacyProposalKind = 0x03
+	legacyProposalTypeText            ProposalKind = 0x01
+	legacyProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
 type legacyProposal struct {
-	ProposalID   uint64             `json:"proposal_id"`   //  ID of the proposal
-	Title        string             `json:"title"`         //  Title of the proposal
-	Description  string             `json:"description"`   //  Description of the proposal
-	ProposalType legacyProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
+	Title        string       `json:"title"`         //  Title of the proposal
+	Description  string       `json:"description"`   //  Description of the proposal
+	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
 	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys

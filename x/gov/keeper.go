@@ -244,7 +244,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID uint64, err s
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return 0, errors.ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return 0, errors.ErrInvalidGenesis(keeper.codespace, "Initial proposal id never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)

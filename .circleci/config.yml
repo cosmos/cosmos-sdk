@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.5
+    - image: circleci/golang:1.12.1
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.5"
+    GO_VERSION: "1.12.1"
 
 set_macos_env: &macos_env
   run:
@@ -257,7 +257,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
-        GO_VERSION: "1.11.5"
+        GO_VERSION: "1.12.1"
       parallelism: 1
       steps:
         - checkout

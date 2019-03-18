@@ -273,3 +273,36 @@ func TestProposalQueues(t *testing.T) {
 	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }
+
+func TestLegacyProposal(t *testing.T) {
+	mapp, keeper, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	mapp.InitChainer(ctx, abci.RequestInitChain{})
+
+	ti := time.Unix(10000, 100)
+	lp := legacyProposal{
+		ProposalID:       1,
+		Title:            "title",
+		Description:      "description",
+		ProposalType:     legacyProposalTypeText,
+		Status:           StatusVotingPeriod,
+		FinalTallyResult: TallyResult{Yes: sdk.NewInt(3)},
+		SubmitTime:       ti,
+		DepositEndTime:   ti,
+		VotingStartTime:  ti,
+		VotingEndTime:    ti,
+		TotalDeposit:     sdk.NewCoins(sdk.NewCoin("mycoin", sdk.NewInt(333))),
+	}
+
+	store := ctx.KVStore(keeper.storeKey)
+	bz := legacyCdc.MustMarshalBinaryLengthPrefixed(lp)
+	store.Set(KeyProposal(1), bz)
+
+	proposal, ok := keeper.GetProposal(ctx, 1)
+	require.True(t, ok)
+	require.Equal(t, proposalFromLegacy(lp), proposal)
+}

@@ -145,7 +145,14 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal P
 	if bz == nil {
 		return
 	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
+
+	err := keeper.cdc.UnmarshalBinaryLengthPrefixed(bz, &proposal)
+	if err != nil {
+		var legacy legacyProposal
+		legacyCdc.MustUnmarshalBinaryLengthPrefixed(bz, &legacy)
+		proposal = proposalFromLegacy(legacy)
+	}
+
 	return proposal, true
 }
 

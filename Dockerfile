@@ -16,8 +16,6 @@ COPY . .
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && \
     make tools && \
-    make vendor-deps && \
-    make build && \
     make install
 
 # Final image

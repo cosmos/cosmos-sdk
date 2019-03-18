@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.5
+    - image: circleci/golang:1.12.1
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.5"
+    GO_VERSION: "1.12.1"
 
 set_macos_env: &macos_env
   run:
@@ -27,6 +27,7 @@ set_macos_env: &macos_env
       echo 'export GOPATH=$HOME/project' >> $BASH_ENV
       echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
       echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
+      echo 'export GO111MODULE=on'
 
 ############
 #
@@ -44,7 +45,6 @@ deps: &dependencies
     name: dependencies
     command: |
       export PATH="$GOBIN:$PATH"
-      make vendor-deps
 
 jobs:
   setup_dependencies:
@@ -63,6 +63,7 @@ jobs:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
+            make go-mod-cache
             make install
       - persist_to_workspace:
           root: /tmp/workspace
@@ -172,6 +173,7 @@ jobs:
           name: Test multi-seed Gaia simulation long
           command: |
             export PATH="$GOBIN:$PATH"
+            export GO111MODULE=on
             scripts/multisim.sh 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
@@ -186,6 +188,7 @@ jobs:
           name: Test multi-seed Gaia simulation short
           command: |
             export PATH="$GOBIN:$PATH"
+            export GO111MODULE=on
             scripts/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
@@ -202,9 +205,10 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
+            export GO111MODULE=on
             for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(echo "$pkg" | sed 's|[/.]|_|g')
-              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
+              go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace
@@ -253,7 +257,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
-        GO_VERSION: "1.11.5"
+        GO_VERSION: "1.12.1"
       parallelism: 1
       steps:
         - checkout
@@ -268,7 +272,6 @@ jobs:
               popd
               set -x
               make tools
-              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
@@ -315,7 +318,6 @@ jobs:
           command: |
             source $BASH_ENV
             make tools
-            make vendor-deps
             make install
       - run:
           name: Integration tests

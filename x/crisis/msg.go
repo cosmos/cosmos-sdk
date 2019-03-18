@@ -4,38 +4,38 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgVerifyInvariance - message struct to verify a particular invariance
-type MsgVerifyInvariance struct {
-	Sender          sdk.AccAddress `json:"sender"`
-	InvarianceRoute string         `json:"invariance_route"`
+// MsgVerifyInvariant - message struct to verify a particular invariance
+type MsgVerifyInvariant struct {
+	Sender         sdk.AccAddress `json:"sender"`
+	InvariantRoute string         `json:"invariant_route"`
 }
 
 // ensure Msg interface compliance at compile time
-var _ sdk.Msg = &MsgVerifyInvariance{}
+var _ sdk.Msg = &MsgVerifyInvariant{}
 
-// MsgVerifyInvariance - create a new MsgVerifyInvariance object
-func NewMsgVerifyInvariance(sender sdk.AccAddress, invarianceRoute string) MsgVerifyInvariance {
-	return MsgVerifyInvariance{
-		Sender:          sender,
-		InvarianceRoute: invarianceRoute,
+// MsgVerifyInvariant - create a new MsgVerifyInvariant object
+func NewMsgVerifyInvariance(sender sdk.AccAddress, invariantRoute string) MsgVerifyInvariant {
+	return MsgVerifyInvariant{
+		Sender:         sender,
+		InvariantRoute: invariantRoute,
 	}
 }
 
 //nolint
-func (msg MsgVerifyInvariance) Route() string { return ModuleName }
-func (msg MsgVerifyInvariance) Type() string  { return "verify_invariance" }
+func (msg MsgVerifyInvariant) Route() string { return ModuleName }
+func (msg MsgVerifyInvariant) Type() string  { return "verify_invariance" }
 
 // get the bytes for the message signer to sign on
-func (msg MsgVerifyInvariance) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
+func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 
-// GetSignBytes gets the sign bytes for the msg MsgVerifyInvariance
-func (msg MsgVerifyInvariance) GetSignBytes() []byte {
+// GetSignBytes gets the sign bytes for the msg MsgVerifyInvariant
+func (msg MsgVerifyInvariant) GetSignBytes() []byte {
 	bz := MsgCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
-func (msg MsgVerifyInvariance) ValidateBasic() sdk.Error {
+func (msg MsgVerifyInvariant) ValidateBasic() sdk.Error {
 	if msg.Sender.Empty() {
 		return ErrNilSender(DefaultCodespace)
 	}

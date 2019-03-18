@@ -5,29 +5,40 @@ import (
 )
 
 // ModuleName is the module name for this module
-const ModuleName = "crisis"
+const (
+	ModuleName = "crisis"
+	RouterKey  = ModuleName
+)
 
-func NewHandler(k Keeper, d DistrKeeper) sdk.Handler {
+func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
 		switch msg := msg.(type) {
-		case MsgVerifyInvariance:
-			return handleMsgVerifyInvariance(ctx, msg, k, d)
+		case MsgVerifyInvariant:
+			return handleMsgVerifyInvariant(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in crisis module").Result()
 		}
 	}
 }
 
-func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keeper, d DistrKeeper) sdk.Result {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper) sdk.Result {
 
-	// use a cached context to avoid gas costs
+	// remove the constant fee
+	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
+	_, _, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
+	if err != nil {
+		return err.Result()
+	}
+	_ = k.feeCollectionKeeper.AddCollectedFees(ctx, constantFee)
+
+	// use a cached context to avoid gas costs during invariants
 	cacheCtx, _ := ctx.CacheContext()
 
 	found := false
 	var invarianceErr error
 	for _, invarRoute := range k.routes {
-		if invarRoute.Route == msg.InvarianceRoute {
+		if invarRoute.Route == msg.InvariantRoute {
 			invarianceErr = invarRoute.Invar(cacheCtx)
 			found = true
 		}
@@ -39,15 +50,14 @@ func handleMsgVerifyInvariance(ctx sdk.Context, msg MsgVerifyInvariance, k Keepe
 	if invarianceErr != nil {
 
 		// refund constant fee
-		refund := k.GetConstantFee(cacheCtx)
-		d.DistributeFeePool(ctx, refund, msg.Sender)
+		k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
 
 		// TODO replace with circuit breaker
 		panic(invarianceErr)
 	}
 
 	tags := sdk.NewTags(
-		"invariant", msg.InvarianceRoute,
+		"invariant", msg.InvariantRoute,
 	)
 	return sdk.Result{
 		Tags: tags,

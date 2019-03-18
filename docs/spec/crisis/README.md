@@ -69,7 +69,7 @@ from the handler, without restructuring baseapp.
 
 Here is the message struct:
 ```
-type MsgVerifyInvariance struct {
+type MsgVerifyInvariant struct {
 	Sender          sdk.AccAddress 
 	InvarianceRoute string        
 }

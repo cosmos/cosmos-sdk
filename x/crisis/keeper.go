@@ -7,17 +7,25 @@ import (
 
 // Keeper - crisis keeper
 type Keeper struct {
-	routes      []InvarRoute
-	paramSpace  params.Subspace
-	distrKeeper DistrKeeper
+	routes     []InvarRoute
+	paramSpace params.Subspace
+
+	distrKeeper         DistrKeeper
+	bankKeeper          BankKeeper
+	feeCollectionKeeper FeeCollectionKeeper
 }
 
-// NewKeeper creates a new crisis Keeper object
-func NewKeeper(paramSpace params.Subspace, distrKeeper DistrKeeper) Keeper {
+// NewKeeper creates a new Keeper object
+func NewKeeper(paramSpace params.Subspace,
+	distrKeeper DistrKeeper, bankKeeper BankKeeper,
+	feeCollectionKeeper FeeCollectionKeeper) Keeper {
+
 	return Keeper{
-		routes:      []InvarRoute{},
-		paramSpace:  paramSpace,
-		distrKeeper: distrKeeper,
+		routes:              []InvarRoute{},
+		paramSpace:          paramSpace,
+		distrKeeper:         distrKeeper,
+		bankKeeper:          bankKeeper,
+		feeCollectionKeeper: feeCollectionKeeper,
 	}
 }
 
@@ -25,9 +33,4 @@ func NewKeeper(paramSpace params.Subspace, distrKeeper DistrKeeper) Keeper {
 func (k *Keeper) RegisterRoute(route string, invar sdk.Invariant) {
 	invarRoute := NewInvarRoute(route, invar)
 	k.routes = append(k.routes, invarRoute)
-}
-
-// expected bank keeper
-type DistrKeeper interface {
-	DistributeFeePool(ctx sdk.Context, amount sdk.Coin, receiveAddr sdk.AccAddress) error
 }

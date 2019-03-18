@@ -226,7 +226,7 @@ $ gaiacli query gov votes 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 			} else {
@@ -339,7 +339,7 @@ $ gaiacli query gov deposits 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 			} else {

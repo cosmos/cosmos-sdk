@@ -144,7 +144,7 @@ func loadConfigFile(cfgFile string) (*toml.Tree, error) {
 }
 
 func saveConfigFile(cfgFile string, tree *toml.Tree) error {
-	fp, err := os.OpenFile(cfgFile, os.O_WRONLY|os.O_CREATE, 0644)
+	fp, err := os.OpenFile(cfgFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}

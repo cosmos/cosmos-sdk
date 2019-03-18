@@ -266,7 +266,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 
 		// For inactive proposals we must query the txs directly to get the deposits
 		// as they're no longer in state.
-		propStatus := proposal.GetStatus()
+		propStatus := proposal.Status
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 		} else {
@@ -489,7 +489,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 
 		// For inactive proposals we must query the txs directly to get the votes
 		// as they're no longer in state.
-		propStatus := proposal.GetStatus()
+		propStatus := proposal.Status
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 		} else {

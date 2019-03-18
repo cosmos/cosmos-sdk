@@ -5,10 +5,12 @@ COMMIT := $(shell git log -1 --format='%H')
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 LEDGER_ENABLED ?= true
 GOTOOLS = \
-	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
+GOSUM := $(shell which gosum)
+
+export GO111MODULE = on
 
 # process build tags
 
@@ -46,8 +48,11 @@ build_tags := $(strip $(build_tags))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps) \
   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
+
+ifneq ($(GOSUM),)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(GOSUM) go.sum)
+endif
 
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -57,7 +62,7 @@ ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: devtools vendor-deps install test_lint test
+all: devtools install test_lint test
 
 # The below include contains the tools target.
 include scripts/Makefile
@@ -65,36 +70,36 @@ include scripts/Makefile
 ########################################
 ### CI
 
-ci: devtools vendor-deps install test_cover test_lint test
+ci: devtools install test_cover test_lint test
 
 ########################################
 ### Build/Install
 
-build:
+build: go.sum
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
 else
-	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
-	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
+	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
-build-linux: vendor-deps
+build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 update_gaia_lite_docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
-install: vendor-deps check-ledger update_gaia_lite_docs
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
+install: go.sum check-ledger update_gaia_lite_docs
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
-install_debug:
-	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
+install_debug: go.sum
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
 dist:
 	@bash publish/dist.sh
@@ -122,22 +127,19 @@ devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
-	go install ./cmd/sdkch
+	go install -mod=readonly ./cmd/sdkch
 	touch $@
 
 devtools-clean: tools-clean
 	rm -f devtools-stamp
 
-vendor-deps: tools
-	@echo "--> Generating vendor directory via dep ensure"
-	@rm -rf .vendor-new
-	@dep ensure -v -vendor-only
-	tar -c vendor/ | sha1sum | cut -d' ' -f1 > $@
+go-mod-cache: go.sum
+	@echo "--> Download go modules to local cache"
+	@go mod download
 
-update_vendor_deps: tools
-	@echo "--> Running dep ensure"
-	@rm -rf .vendor-new
-	@dep ensure -v
+go.sum: tools go.mod
+	@echo "--> Generating vendor directory via go mod vendor"
+	@go mod verify
 
 draw_deps: tools
 	@# requires brew install graphviz or apt-get install graphviz
@@ -145,7 +147,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp vendor-deps snapcraft-local.yaml
+	rm -f devtools-stamp snapcraft-local.yaml
 
 distclean: clean
 	rm -rf vendor/
@@ -229,8 +231,7 @@ test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
 	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
-	dep status >> /dev/null
-	!(grep -n branch Gopkg.toml)
+	go mod verify
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
@@ -297,4 +298,4 @@ build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
-devtools-clean
+devtools-clean go-mod-cache

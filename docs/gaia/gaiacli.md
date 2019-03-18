@@ -374,8 +374,6 @@ Or if you want to check all your current delegations with disctinct validators:
 gaiacli query staking delegations <delegator_addr>
 ```
 
-You can also get previous delegation(s) status by adding the `--height` flag.
-
 #### Unbond Tokens
 
 If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
@@ -410,8 +408,6 @@ Additionally, as you can get all the unbonding-delegations from a particular val
 gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
-To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
-
 #### Redelegate Tokens
 
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
@@ -437,7 +433,7 @@ Once you begin an redelegation, you can see it's information by using the follow
 gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
-Or if you want to check all your current unbonding-delegations with disctinct validators:
+Or if you want to check all your current unbonding-delegations with distinct validators:
 
 ```bash
 gaiacli query staking redelegations <account_cosmos>
@@ -448,8 +444,6 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 ```bash
   gaiacli query staking redelegations-from <account_cosmosval>
 ```
-
-To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
 #### Query Parameters
 

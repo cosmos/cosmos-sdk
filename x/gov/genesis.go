@@ -122,11 +122,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
 	for _, proposal := range data.Proposals {
-		switch proposal.GetStatus() {
+		switch proposal.Status {
 		case StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
+			k.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
 		case StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
+			k.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
 		}
 		k.SetProposal(ctx, proposal)
 	}
@@ -142,7 +142,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	var votes []VoteWithMetadata
 	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
 	for _, proposal := range proposals {
-		proposalID := proposal.GetProposalID()
+		proposalID := proposal.ProposalID
 		depositsIterator := k.GetDeposits(ctx, proposalID)
 		defer depositsIterator.Close()
 		for ; depositsIterator.Valid(); depositsIterator.Next() {

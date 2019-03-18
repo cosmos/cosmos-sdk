@@ -34,50 +34,52 @@ func Test_prepareFlagsForTxCreateValidator(t *testing.T) {
 		details   string
 		identity  string
 	}
-	tests := []struct {
+
+	type extraParams struct {
+		amount                  string
+		commissionRate          string
+		commissionMaxRate       string
+		commissionMaxChangeRate string
+		minSelfDelegation       string
+	}
+
+	type testcase struct {
 		name string
 		args args
-	}{
+	}
+
+	runTest := func(t *testing.T, tt testcase, params extraParams) {
+		prepareFlagsForTxCreateValidator(tt.args.config, tt.args.nodeID, tt.args.ip, tt.args.chainID, tt.args.valPubKey, tt.args.website, tt.args.details, tt.args.identity)
+		require.Equal(t, tt.args.website, viper.GetString(cli.FlagWebsite))
+		require.Equal(t, tt.args.details, viper.GetString(cli.FlagDetails))
+		require.Equal(t, tt.args.identity, viper.GetString(cli.FlagIdentity))
+		require.Equal(t, params.amount, viper.GetString(cli.FlagAmount))
+		require.Equal(t, params.commissionRate, viper.GetString(cli.FlagCommissionRate))
+		require.Equal(t, params.commissionMaxRate, viper.GetString(cli.FlagCommissionMaxRate))
+		require.Equal(t, params.commissionMaxChangeRate, viper.GetString(cli.FlagCommissionMaxChangeRate))
+		require.Equal(t, params.minSelfDelegation, viper.GetString(cli.FlagMinSelfDelegation))
+	}
+
+	tests := []testcase{
 		{"No parameters", args{ctx.Config, "X", "0.0.0.0", "chainId", valPubKey, "", "", ""}},
-		{"Oprtional parameters fed", args{ctx.Config, "X", "0.0.0.0", "chainId", valPubKey, "cosmos.network", "details", "identity"}},
+		{"Optional parameters fed", args{ctx.Config, "X", "0.0.0.0", "chainId", valPubKey, "cosmos.network", "details", "identity"}},
 	}
+
+	defaultParams := extraParams{defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prepareFlagsForTxCreateValidator(tt.args.config, tt.args.nodeID, tt.args.ip, tt.args.chainID, tt.args.valPubKey, tt.args.website, tt.args.details, tt.args.identity)
-			require.Equal(t, tt.args.website, viper.GetString(cli.FlagWebsite))
-			require.Equal(t, tt.args.details, viper.GetString(cli.FlagDetails))
-			require.Equal(t, tt.args.identity, viper.GetString(cli.FlagIdentity))
-			require.Equal(t, defaultAmount, viper.GetString(cli.FlagAmount))
-			require.Equal(t, defaultCommissionRate, viper.GetString(cli.FlagCommissionRate))
-			require.Equal(t, defaultCommissionMaxRate, viper.GetString(cli.FlagCommissionMaxRate))
-			require.Equal(t, defaultCommissionMaxChangeRate, viper.GetString(cli.FlagCommissionMaxChangeRate))
-			require.Equal(t, defaultMinSelfDelegation, viper.GetString(cli.FlagMinSelfDelegation))
+			t.Run(tt.name, func(t *testing.T) { runTest(t, tt, defaultParams) })
 		})
 	}
 
-	var amount = "5stake"
-	var commissionRate = "1.0"
-	var commissionMaxRate = "1.0"
-	var commissionMaxChangeRate = "1.0"
-	var minSelfDelegation = "1.0"
-
-	viper.Set(cli.FlagAmount, amount)
-	viper.Set(cli.FlagCommissionRate, commissionRate)
-	viper.Set(cli.FlagCommissionMaxRate, commissionMaxRate)
-	viper.Set(cli.FlagCommissionMaxChangeRate, commissionMaxChangeRate)
-	viper.Set(cli.FlagMinSelfDelegation, minSelfDelegation)
-
+	// Override default params
+	params := extraParams{"5stake", "1.0", "1.0", "1.0", "1.0"}
+	viper.Set(cli.FlagAmount, params.amount)
+	viper.Set(cli.FlagCommissionRate, params.commissionRate)
+	viper.Set(cli.FlagCommissionMaxRate, params.commissionMaxRate)
+	viper.Set(cli.FlagCommissionMaxChangeRate, params.commissionMaxChangeRate)
+	viper.Set(cli.FlagMinSelfDelegation, params.minSelfDelegation)
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			prepareFlagsForTxCreateValidator(tt.args.config, tt.args.nodeID, tt.args.ip, tt.args.chainID, tt.args.valPubKey, tt.args.website, tt.args.details, tt.args.identity)
-			require.Equal(t, tt.args.website, viper.GetString(cli.FlagWebsite))
-			require.Equal(t, tt.args.details, viper.GetString(cli.FlagDetails))
-			require.Equal(t, tt.args.identity, viper.GetString(cli.FlagIdentity))
-			require.Equal(t, amount, viper.GetString(cli.FlagAmount))
-			require.Equal(t, commissionRate, viper.GetString(cli.FlagCommissionRate))
-			require.Equal(t, commissionMaxRate, viper.GetString(cli.FlagCommissionMaxRate))
-			require.Equal(t, commissionMaxChangeRate, viper.GetString(cli.FlagCommissionMaxChangeRate))
-			require.Equal(t, minSelfDelegation, viper.GetString(cli.FlagMinSelfDelegation))
-		})
+		t.Run(tt.name, func(t *testing.T) { runTest(t, tt, params) })
 	}
 }

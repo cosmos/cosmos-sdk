@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
 const (
@@ -64,15 +63,6 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 		randInt = big.NewInt(0).Rand(r, max.Int)
 	}
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
-}
-
-// RandomSetGenesis wraps mock.RandomSetGenesis, but using simulation accounts
-func RandomSetGenesis(r *rand.Rand, app *mock.App, accs []Account, denoms []string) {
-	addrs := make([]sdk.AccAddress, len(accs))
-	for i := 0; i < len(accs); i++ {
-		addrs[i] = accs[i].Address
-	}
-	mock.RandomSetGenesis(r, app, addrs, denoms)
 }
 
 // RandTimestamp generates a random timestamp

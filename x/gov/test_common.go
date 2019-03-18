@@ -178,7 +178,7 @@ func testProposal() proposal.Content {
 	return NewTextProposal("Test", "description")
 }
 
-// checks if two proposals are equal
+// checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return bytes.Equal(msgCdc.MustMarshalBinaryBare(proposalA), msgCdc.MustMarshalBinaryBare(proposalB))
 }

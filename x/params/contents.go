@@ -40,7 +40,7 @@ func ValidateChanges(changes []Change) sdk.Error {
 
 // Proposal which contains multiple changes on proposals
 type ProposalChange struct {
-	proposal.Abstract `json:"proposal_abstract"`
+	proposal.Abstract `json:"abstract"`
 	Changes           []Change `json:"changes"`
 }
 

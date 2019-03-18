@@ -8,9 +8,12 @@ executable by an account may be different. For example, an account may want to k
 `SendMsg`s in cold storage, but wants to keep a key that can vote on governance proposals on their phone.
 
 For this reason, we introduce the concept of SubKeys.  Accounts should be able to have multiple public keys, each of which
-can have different permissions.  The main public key of account can provision new subkeys with specific msg routes who they are allowed to sign for.  If a subkey tries to sign a tx with a msg type it is not permitted to use, the tx will be rejected.
+can have different permissions.  The main public key of account can provision new subkeys with specific msg routes who they
+are allowed to sign for.  If a subkey tries to sign a tx with a msg type it is not permitted to use, the tx will be
+rejected.
 
-One complexity in this system is that all txs, regardless of their msg type, need to be able to tx fees. This means that even your lowest security subkey, if compromised, could drain your account by using your entire balance as the tx fee for a
+One complexity in this system is that all txs, regardless of their msg type, need to be able to tx fees. This means that
+even your lowest security subkey, if compromised, could drain your account by using your entire balance as the tx fee for a
 transaction.
 To resolve this, we add a notion of FeeAllowances.  The master pubkey along with provisioning subkeys with msg types they
 are allowed to use, also provisions them with a daily allowance of tokens that they are allowed to spend to pay transaction

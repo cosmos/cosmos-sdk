@@ -371,8 +371,6 @@ gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 ```
 
-과거 위임 기록에 대해서는 `--height` 플래그를 추가 하셔서 해당 블록 높이에 대한 기록을 조회하실 수 있습니다.
-
 #### 토큰 언본딩 하기
 
 만약 특정 검증인이 악의적인 행동을 했거나 또는 본인이 개인적인 이유로 일부 토큰을 언본딩을 워하는 경우 다음 명령어를 통해 토큰을 언본딩 할 수 있습니다. 언본딩은 정확한 수량인 `shares-amount`(예시, `12.1`) 또는 언본딩을 원하는 물량의 비율인 `shares-fraction`(예시, `0.25`) 값으로 표현될 수 있습니다.
@@ -407,8 +405,6 @@ gaiacli query staking unbonding-delegations <account_cosmos(위임자 주소)>
 ```bash
 gaiacli query staking unbonding-delegations-from <account_cosmosval(검증인 cosmosval 주소)>
 ```
-
-과거 언본딩 정보는 `--height` 플래그를 통해서 특정 블록 높이에 대한 언본딩 정보를 조회할 수 있습니다.
 
 #### 재위임(Redelegate) 하기
 
@@ -446,8 +442,6 @@ gaiacli query staking redelegations <account_cosmos(위임자 코스모스 주�
 ```bash
   gaiacli query staking redelegations-from <account_cosmosval(검증인 주소)>
 ```
-
-과거 재위임에 대한 정보는 다른 트랜잭션과 동일하게 `--height` 플래그를 이용하여 특정 블록 높이에 대한 재위임 정보를 확인하실 수 있습니다.
 
 #### 파라미터 조회
 

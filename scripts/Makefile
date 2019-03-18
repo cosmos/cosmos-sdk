@@ -37,11 +37,7 @@ go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) 
 # tools
 ###
 all: tools
-tools: $(GOPATH)/bin/dep $(GOPATH)/bin/gometalinter $(GOPATH)/bin/statik $(GOPATH)/bin/goimports
-
-$(GOPATH)/bin/dep:
-	$(call go_get,golang,dep,22125cfaa6ddc71e145b1535d4b7ee9744fefff2)
-	cd $(GITHUBDIR)$(FS)golang$(FS)dep$(FS)cmd$(FS)dep && $(GO) install
+tools: $(GOPATH)/bin/gometalinter $(GOPATH)/bin/statik $(GOPATH)/bin/goimports $(GOPATH)/bin/gosum
 
 #v2.0.11
 $(GOPATH)/bin/gometalinter:
@@ -51,9 +47,12 @@ $(GOPATH)/bin/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
 
 $(GOPATH)/bin/goimports:
-	go get golang.org/x/tools/cmd/goimports
+	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
+
+$(GOPATH)/bin/gosum:
+	go install ./cmd/gosum/
 
 tools-clean:
-	cd $(GOPATH)/bin && rm -f dep gometalinter statik goimports
+	cd $(GOPATH)/bin && rm -f gometalinter statik goimports gosum
 
-.PHONY: all clean-tools
+.PHONY: all tools-clean

@@ -114,7 +114,8 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
-// return the decimal coins with trunctated decimals, and return the change
+// TruncateDecimal returns a Coin with a truncated decimal and a DecCoin for the
+// change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
 	change := coin.Amount.Sub(truncated.ToDec())
@@ -171,20 +172,20 @@ func (coins DecCoins) String() string {
 }
 
 // TruncateDecimal returns the coins with truncated decimals and returns the
-// change.
-func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
-	changeSum := DecCoins{}
-	out := make(Coins, len(coins))
-
-	for i, coin := range coins {
+// change. Note, it will not return any zero-amount coins in either the truncated or
+// change coins.
+func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCoins) {
+	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
-		out[i] = truncated
+		if !truncated.IsZero() {
+			truncatedCoins = truncatedCoins.Add(Coins{truncated})
+		}
 		if !change.IsZero() {
-			changeSum = changeSum.Add(DecCoins{change})
+			changeCoins = changeCoins.Add(DecCoins{change})
 		}
 	}
 
-	return out, changeSum
+	return truncatedCoins, changeCoins
 }
 
 // Add adds two sets of DecCoins.

@@ -18,5 +18,4 @@ var (
 	Depositor         = "depositor"
 	Voter             = "voter"
 	ProposalResult    = "proposal-result"
-	ProposalError     = "proposal-error"
 )

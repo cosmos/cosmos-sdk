@@ -87,8 +87,8 @@ if msg.Route not in subKeyMetadata.PermissionedRoutes {
 When a transaction signed by a SubKey is accepted and has paid fees, we need to log the fees it has paid.  We increase the
 `SubKeyMetadata.DailyFeeUsed` field.
 
-If a new transaction from a subkey comes in and the `tx.Fee + subKeyMetadata.DailyFeeUsed > subKeyMetadata.DailyFeeAllowance`, then the transaction is rejected as it the subkey is trying to exceed it's daily fee 
-allowance.
+If a new transaction from a subkey comes in and the `tx.Fee + subKeyMetadata.DailyFeeUsed > subKeyMetadata.DailyFeeAllowance`,
+then the transaction is rejected as it the subkey is trying to exceed it's daily fee allowance.
 
 But now we need a way to decrease the `DailyFeeUsed` field once transactions are past the 24 hour window.  To do this we us
 a time based iterator similar to the ones used in the governance and staking queues.

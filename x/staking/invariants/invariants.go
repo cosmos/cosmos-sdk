@@ -13,16 +13,16 @@ import (
 )
 
 // register all staking invariants
-func RegisterInvariants(k staking.Keeper, f staking.FeeCollectionKeeper,
+func RegisterInvariants(ctx sdk.Context, k staking.Keeper, f staking.FeeCollectionKeeper,
 	d staking.DistributionKeeper, am auth.AccountKeeper, c *crisis.Keeper) {
 
-	c.RegisterRoute(types.ModuleName+"/supply",
+	c.RegisterRoute(ctx, types.ModuleName+"/supply",
 		SupplyInvariants(k, f, d, am))
-	c.RegisterRoute(types.ModuleName+"/nonnegative-power",
+	c.RegisterRoute(ctx, types.ModuleName+"/nonnegative-power",
 		NonNegativePowerInvariant(k))
-	c.RegisterRoute(types.ModuleName+"/positive-delegation",
+	c.RegisterRoute(ctx, types.ModuleName+"/positive-delegation",
 		PositiveDelegationInvariant(k))
-	c.RegisterRoute(types.ModuleName+"/delegator-shares",
+	c.RegisterRoute(ctx, types.ModuleName+"/delegator-shares",
 		DelegatorSharesInvariant(k))
 }
 

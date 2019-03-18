@@ -22,7 +22,8 @@ func NewKeeper(routes []InvarRoute, paramSpace params.Subspace, distrKeeper Dist
 }
 
 // register routes for the
-func (k *Keeper) RegisterRoute(ctx sdk.Context, invarRoute InvarRoute) {
+func (k *Keeper) RegisterRoute(ctx sdk.Context, route string, invar sdk.Invariant) {
+	invarRoute := NewInvarRoute(route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
 

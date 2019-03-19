@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// initialize starting info for a new delegation
+// DistributeFeePool distributes funds from the the community pool to a receiver address
 func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
 	feePool := k.GetFeePool(ctx)
 

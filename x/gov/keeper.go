@@ -109,7 +109,7 @@ func (keeper Keeper) Router() Router {
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content proposal.Content) (proposalID uint64, err sdk.Error) {
-	if keeper.router.Route(content.ProposalRoute()) == nil {
+	if !keeper.router.HasRoute(content.ProposalRoute()) {
 		err = errors.ErrProposalHandlerNotExists(keeper.codespace, content)
 		return
 	}

@@ -11,6 +11,7 @@ import (
 // copied and modified from baseapp/router.go
 type Router interface {
 	AddRoute(r string, h proposal.Handler) (rtr Router)
+	HasRoute(r string) bool
 	Route(path string) (h proposal.Handler)
 }
 
@@ -39,6 +40,10 @@ func (rtr *router) AddRoute(path string, h proposal.Handler) Router {
 
 	rtr.routes[path] = h
 	return rtr
+}
+
+func (rtr *router) HasRoute(path string) bool {
+	return rtr.routes[path] != nil
 }
 
 func (rtr *router) Route(path string) proposal.Handler {

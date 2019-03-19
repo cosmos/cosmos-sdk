@@ -2,16 +2,16 @@
 
 ## Abstract
 
-Currently, a `StdAccount` has only one public key assoiciated with it, and all transactions that are made with that key must be signed by that one public key. This is problematic because the security level required by different types of transactions executable by an account may be different. For example, an account may want to keep the key that has the ability to do `SendMsg`s in cold storage, but wants to keep a key that can vote on governance proposals on their phone.
+Currently, a `StdAccount` has only one public key assoiciated with it, and all transactions that are made with that key must be signed by that one public key. This is problematic because the security level required by different types of transactions executable by an account may be different. For example, a user may want to keep the key that has the ability to send their funds in cold storage, but keep a key that can vote on governance proposals on their phone.
 
-For this reason, we introduce the concept of SubKeys.  Accounts should be able to have multiple public keys, each of which can have different permissions.  The main public key of account can provision new subkeys with specific msg routes who they are allowed to sign for.  If a subkey tries to sign a tx with a msg type it is not permitted to use, the tx will be rejected.
+For this reason, we introduce the concept of SubKeys.  With this proposal, accounts will be able to have multiple public keys, each of which can have different permissions.  The main public key of an account can provision new subkeys with specific msg routes which the subkey is allowed to sign for.  If a subkey tries to sign a tx with a msg type it is not permitted to use, the tx will be rejected.
 
-One complexity in this system is that all txs, regardless of their msg type, need to be able to tx fees. This means that even your lowest security subkey, if compromised, could drain your account by using your entire balance as the tx fee for a transaction. To resolve this, we add a notion of FeeAllowances.  The master pubkey along with provisioning subkeys with msg types they are allowed to use, also provisions them with a daily allowance of tokens that they are allowed to spend to pay transaction fees.  For example, if SubKey A has a daily fee allowance of 1atom, it can spend up to 1atom on transaction fees in a 24 hour window.  If it does not use its atom in a 24 hour window, their "allowance" does not accumulate, it still stays at 1atom in any 24 hour window.
+One complexity in this system is that all txs, regardless of their msg type, need to be able to send tx fees. This means that even your lowest security subkey, if compromised, could drain your account by using your entire balance as the tx fee for a transaction. To resolve this, we add a notion of FeeAllowances.  The master pubkey, along with provisioning subkeys with msg types they are allowed to use, also provisions them with a daily allowance of tokens that they are allowed to spend to pay transaction fees.  For example, if SubKey A has a daily fee allowance of 1atom, it can spend up to 1atom on transaction fees in a 24 hour window.  If it does not use its atom in a 24 hour window, the "allowance" does not accumulate, it still stays at 1atom in any 24 hour window.
 
 
 ## Construction
 
-To begin, we add define the struct that stores the metadata about a certain account.  This includes the pubkey itself, the routes it's permitted to sign transactions for, it's daily allowance, and how much of its allowance its used in the last 24 hour window.
+To begin, we define the struct that stores the metadata about a certain account.  This includes the pubkey itself, the routes it's permitted to sign transactions for, its daily allowance, and how much of its allowance has been used in the last 24 hour window.
 
 ```golang
 type SubKeyMetadata struct {
@@ -66,7 +66,7 @@ if msg.Route not in subKeyMetadata.PermissionedRoutes {
 
 When a transaction signed by a SubKey is accepted and has paid fees, we need to log the fees it has paid.  We increase the `SubKeyMetadata.DailyFeeUsed` field.
 
-If a new transaction from a subkey comes in and the `tx.Fee + subKeyMetadata.DailyFeeUsed > subKeyMetadata.DailyFeeAllowance`, then the transaction is rejected as it the subkey is trying to exceed it's daily fee allowance.
+If a new transaction from a subkey comes in and the `tx.Fee + subKeyMetadata.DailyFeeUsed > subKeyMetadata.DailyFeeAllowance`, then the transaction is rejected as the subkey is trying to exceed its daily fee allowance.
 
 But now we need a way to decrease the `DailyFeeUsed` field once transactions are past the 24 hour window.  To do this we us a time based iterator similar to the ones used in the governance and staking queues.
 
@@ -80,7 +80,7 @@ type DailyFeeSpend struct {
 }
 ```
 
-When a transaction using a SubKey has paid its fee, into this queue's store we insert a new entry.
+When a transaction using a SubKey has paid its fee, we insert a new entry into this queue's store.
 - The key is `sdk.FormatTimeBytes(ctx.BlockTime.Add(time.Day * 1)`
 - The value is the Amino marshalled `DailyFeeSpend`
 
@@ -132,7 +132,7 @@ To make it easier to reason about the security of a SubKey, we do not allow you 
 To update a SubKey, we create a new `MsgUpdateSubKeyAllowance`
 
 ```golang
-type MsgMsgUpdateSubKeyAllowanceAddSubKey struct {
+type MsgMsgUpdateSubKeyAllowance struct {
   Address              sdk.AccAddress
   SubKeyIndex          uint
   DailyFeeAllowance    sdk.Coins

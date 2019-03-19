@@ -25,7 +25,7 @@ type MsgSubmitProposal struct {
 	Description    string         `json:"description"`     //  Description of the proposal
 	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. One of {PlainTextProposal, SoftwareUpgradeProposal}
+	Type   string         `json:"type"`   //  Type of proposal. One of {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
 func NewMsgSubmitProposal(title, description string, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {

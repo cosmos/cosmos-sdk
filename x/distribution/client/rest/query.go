@@ -213,7 +213,9 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 }
 
-func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) http.HanderFunc {
+func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 		if err != nil {
@@ -222,7 +224,7 @@ func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec, queryRout
 		}
 
 		var result sdk.DecCoins
-		if err := cdc.MustUnmarshalJSON(res, &result); if err != nil {
+		if err := cdc.UnmarshalJSON(res, &result); err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}

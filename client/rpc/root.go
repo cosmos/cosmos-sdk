@@ -28,7 +28,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.Version))); err != nil {
-		log.Printf("couldn't write response: %v", err)
+		log.Printf("could not write response: %v", err)
 	}
 }
 
@@ -43,7 +43,7 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		if _, err := w.Write(version); err != nil {
-			log.Printf("couldn't write response: %v", err)
+			log.Printf("could not write response: %v", err)
 		}
 	}
 }

@@ -69,7 +69,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(output); err != nil {
-		log.Printf("couldn't write response: %v", err)
+		log.Printf("could not write response: %v", err)
 	}
 	return
 }

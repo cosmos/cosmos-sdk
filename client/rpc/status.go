@@ -97,7 +97,7 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		if _, err := w.Write([]byte(strconv.FormatBool(syncing))); err != nil {
-			log.Printf("couldn'tv write response: %v", err)
+			log.Printf("could not write response: %v", err)
 		}
 	}
 }

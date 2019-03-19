@@ -31,7 +31,7 @@ hour window.
 
 ```golang
 type SubKeyMetadata struct {
-  PubKey               crypto.PubKey
+  PubKey               sdk.AccPubKey
   PermissionedRoutes   []string
   DailyFeeAllowance    sdk.Coins
   DailyFeeUsed         sdk.Coins
@@ -44,7 +44,7 @@ We create a new `Account` type called `SubKeyAccount` that stores a list of `Sub
 type SubKeyAccount struct {
   Address       AccAddress
   Coins         Coins
-  PubKey        PubKey
+  PubKey        sdk.AccPubKey
   AccountNumber uint64
   Sequence      uint64
   SubKeys       []SubKeyMetadata
@@ -120,3 +120,65 @@ for _, dailyFeeSpend := range iterator {
   store.Delete(dailyFeeSpend)
 }
 ```
+
+## Msgs
+
+In order to add, revoke, and update SubKeys, we would need to add some new `Msg` types to the auth module.
+
+We start by defining an `MsgAddSubKey` struct:
+
+```golang
+type MsgAddSubKey struct {
+  Address              sdk.AccAddress
+  PubKey               sdk.AccPubKey
+  PermissionedRoutes   []string
+  DailyFeeAllowance    sdk.Coins
+}
+```
+
+The handler of this Msg will create a new SubKeyMetadata struct using the data from this Msg, and append it to the end of the
+SubKeys slice of the Account associated with the Address.
+
+```
+acc := accountKeeper.GetAccount(msg.Address)
+
+acc.SubKeys := append(acc.SubKeys, SubKeyMetadata{
+  PubKey               msg.PubKey
+  PermissionedRoutes   msg.PermissionedRoutes
+  DailyFeeAllowance    msg.DailyFeeAllowance
+  DailyFeeUsed         sdk.Coins{}
+})
+
+accountKeeper.SetAccount(acc)
+```
+
+To make it easier to reason about the security of a SubKey, we do not allow you to add or remove permissions from a SubKey.
+If you want a SubKey with new permissions, you should create a new SubKey.  We do however allow you to update the allowance
+of a specific subkey. This can be useful because minimum transaction fee costs may fluctuate over time.
+
+To update a SubKey, we create a new `MsgUpdateSubKeyAllowance`
+
+```golang
+type MsgMsgUpdateSubKeyAllowanceAddSubKey struct {
+  Address              sdk.AccAddress
+  SubKeyIndex          uint
+  DailyFeeAllowance    sdk.Coins
+}
+```
+
+The handler of this message will update the SubKey at the index of `SubKeyIndex` in the account for `Address`.
+
+```
+if SubKeyIndex == 0 {
+  return Err
+}
+
+acc := accountKeeper.GetAccount(msg.Address)
+
+acc.SubKeys[msg.SubKeyIndex - 1].DailyFeeAllowance = msg.DailyFeeAllowance
+
+accountKeeper.SetAccount(acc)
+```
+
+We do not allow for the deletion of a SubKey, because removing it from state would mess up the indexing of subkeys.
+Instead, if you wish to revoke a SubKey, set its DailyFeeAllowance to 0.

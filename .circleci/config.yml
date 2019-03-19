@@ -53,6 +53,9 @@ jobs:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: tools
           command: |
@@ -65,6 +68,10 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make go-mod-cache
             make install
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -79,6 +86,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Lint source
           command: |
@@ -93,6 +103,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test cli
           command: |
@@ -107,6 +120,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test individual module simulations
           command: |
@@ -121,6 +137,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test full Gaia simulation
           command: |
@@ -135,6 +154,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -149,6 +171,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -163,6 +188,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation long
           command: |
@@ -178,6 +206,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation short
           command: |
@@ -194,6 +225,9 @@ jobs:
       - checkout
       - *dependencies
       - run: mkdir -p /tmp/logs
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Run tests
           command: |

@@ -83,7 +83,7 @@ jobs:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            make lint
+            make ci-lint
 
   integration_tests:
     <<: *linux_defaults

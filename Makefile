@@ -110,7 +110,7 @@ go-mod-cache: go.sum
 	@go mod download
 
 go.sum: tools go.mod
-	@echo "--> Generating vendor directory via go mod vendor"
+	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 
 draw_deps: tools

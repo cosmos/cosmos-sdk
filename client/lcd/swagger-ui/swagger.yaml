@@ -21,7 +21,7 @@ tags:
     description: Query app version
 schemes:
   - https
-host: fabo.interblock.io:1317
+host: stargate.cosmos.network
 securityDefinitions:
   kms:
     type: basic
@@ -65,6 +65,17 @@ paths:
               moniker:
                 type: string
                 example: validator-name
+              protocol_version:
+                properties:
+                  p2p:
+                    type: string
+                    example: 7
+                  block:
+                    type: string
+                    example: 10
+                  app:
+                    type: string
+                    example: 0
               network:
                 type: string
                 example: gaia-2
@@ -79,9 +90,14 @@ paths:
                 example: 0.15.0
               other:
                 description: more information on versions
-                type: array
-                items:
-                  type: string
+              type: object
+                properties:
+                  tx_index:
+                    type: string
+                    example: on
+                  rpc_address:
+                    type: string
+                    example: tcp://0.0.0.0:26657
         500:
           description: Failed to query node status
   /syncing:
@@ -1882,6 +1898,15 @@ definitions:
         $ref: "#/definitions/Hash"
       proposer_address:
         $ref: "#/definitions/Address"
+      version:
+        type: object
+          properties:
+            block:
+              type: string
+              example: 10
+            app:
+              type: string
+              example: 0
   Block:
     type: object
     properties:
@@ -1980,7 +2005,7 @@ definitions:
       pub_key:
         type: string
         example: cosmosvalconspub1zcjduepq7sjfglw7ra4mjxpw4ph7dtdhdheh7nz8dfgl6t8u2n5szuuql9mqsrwquu
-      power:
+      voting_power:
         type: string
         example: "1000"
       proposer_priority:

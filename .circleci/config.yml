@@ -77,7 +77,6 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - checkout
       - *dependencies
       - run:
           name: Lint source

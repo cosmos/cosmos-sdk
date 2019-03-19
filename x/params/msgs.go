@@ -55,6 +55,7 @@ func (msg MsgSubmitParameterChangeProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
+// Implements sdk.Msg
 func (msg MsgSubmitParameterChangeProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Proposer}
 }

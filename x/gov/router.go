@@ -22,7 +22,7 @@ type router struct {
 var _ Router = (*router)(nil)
 
 // Constructs new router
-func NewRouter() *router {
+func NewRouter() Router {
 	return &router{
 		routes: make(map[string]proposal.Handler),
 	}

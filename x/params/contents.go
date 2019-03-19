@@ -18,7 +18,7 @@ func NewChange(space string, key, subkey, value []byte) Change {
 	return Change{space, key, subkey, value}
 }
 
-// ValidateChange checks wheter the input data is empty or not
+// ValidateChange checks whether the input data is empty or not
 func ValidateChanges(changes []Change) sdk.Error {
 	if len(changes) == 0 {
 		return ErrEmptyChanges(DefaultCodespace)
@@ -54,6 +54,6 @@ func NewProposalChange(title string, description string, changes []Change) Propo
 
 var _ proposal.Content = ProposalChange{}
 
-// Implements proposal.Content
+// nolint - Implements proposal.Content
 func (pc ProposalChange) ProposalRoute() string { return RouterKey }
 func (pc ProposalChange) ProposalType() string  { return "ParameterChange" }

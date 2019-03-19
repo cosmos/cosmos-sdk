@@ -130,6 +130,7 @@ github.com/tendermint/go-amino v0.14.1 h1:o2WudxNfdLNBwMyl2dqOJxiro5rfrEaU0Ugs6o
 github.com/tendermint/go-amino v0.14.1/go.mod h1:i/UKE5Uocn+argJJBb12qTZsCDBcAYMbR92AaJVmKso=
 github.com/tendermint/iavl v0.12.1 h1:JDfyhM/Hhrumu1CL1Nxrypm8sNTPYqmeHo1IZLiJoXM=
 github.com/tendermint/iavl v0.12.1/go.mod h1:EoKMMv++tDOL5qKKVnoIqtVPshRrEPeJ0WsgDOLAauM=
+github.com/tendermint/lint v0.0.1 h1:A4nig2a92CjX6g7e1Y1WBhduDd5MEKXUHDf19ry28RI=
 github.com/tendermint/lint v0.0.1/go.mod h1:Aav3iBRDBr7T64mKcZjOpY/6ovUzgjqO1oRsVZ6pmQM=
 github.com/tendermint/tendermint v0.31.0-dev0 h1:SggTDR0UtPjqXaFmulEdUJ2X1y2fCXfTpc8utnJwb08=
 github.com/tendermint/tendermint v0.31.0-dev0/go.mod h1:ymcPyWblXCplCPQjbOYbrF1fWnpslATMVqiGgWbZrlc=
@@ -155,6 +156,7 @@ golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223 h1:DH4skfRX4EBpamg7iV4ZlCpbl
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+golang.org/x/tools v0.0.0-20190114222345-bf090417da8b h1:qMK98NmNCRVDIYFycQ5yVRkvgDUFfdP8Ip4KqmDEB7g=
 golang.org/x/tools v0.0.0-20190114222345-bf090417da8b/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8 h1:Nw54tB0rB7hY/N0NQvRW8DG4Yk3Q6T9cu9RcFQDu1tc=

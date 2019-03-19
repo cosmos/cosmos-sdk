@@ -62,4 +62,4 @@ $(GOBIN)/sdkch:
 tools-clean:
 	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum sdkch
 
-.PHONY: all tools-clean
+.PHONY: all tools tools-clean

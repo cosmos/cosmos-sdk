@@ -299,6 +299,9 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
 
+	// initialize crisis data
+	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+
 	// double check inflation is set according to the minting boolean flag
 	if minting {
 		require.Equal(t, sdk.MustNewDecFromStr("15000.0"),

@@ -277,6 +277,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	crisis.InitGenesis(ctx, app.crisisKeeper, genesisState.CrisisData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 
 	// validate genesis state

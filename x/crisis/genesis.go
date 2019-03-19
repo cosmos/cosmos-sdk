@@ -23,7 +23,7 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// new mint genesis
+// new crisis genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetConstantFee(ctx, data.ConstantFee)
 }

@@ -17,6 +17,8 @@ endif
 
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
+GOLANGCI_LINT_VERSION := v1.15.0
+GOLANGCI_LINT_HASHSUM := ac897cadc180bf0c1a4bf27776c410debad27205b22856b861d41d39d06509cf
 
 ###
 # Functions
@@ -42,9 +44,8 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 all: tools
 tools: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/sdkch
 
-#v2.0.11
-$(GOBIN)/golangci-lint:
-	sh tools/install-golangci.sh -d -b $(GOBIN)
+$(GOBIN)/golangci-lint: contrib/install-golangci-lint.sh $(GOBIN)/gosum
+	bash contrib/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
 $(GOBIN)/statik:
 	$(call go_install,rakyll,statik,v0.1.5)

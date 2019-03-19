@@ -42,7 +42,10 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 # tools
 ###
 all: tools
-tools: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/sdkch
+
+tools: tools-stamp
+tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/sdkch
+	touch $@
 
 $(GOBIN)/golangci-lint: contrib/install-golangci-lint.sh $(GOBIN)/gosum
 	bash contrib/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
@@ -61,5 +64,6 @@ $(GOBIN)/sdkch:
 
 tools-clean:
 	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum sdkch
+	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

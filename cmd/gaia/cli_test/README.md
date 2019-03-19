@@ -36,7 +36,7 @@ This boilerplate above:
 - Ensures the tests run in parallel. Because the tests are calling out to `os/exec` for many operations these tests can take a long time to run.
 - Creates `.gaiad` and `.gaiacli` folders in a new temp folder.
 - Uses `gaiacli` to create 2 accounts for use in testing: `foo` and `bar`
-- Creates a genesis file with coins (`1000footoken,1000feetoken,150atom`) controlled by the `foo` key
+- Creates a genesis file with coins (`1000footoken,1000feetoken,150stake`) controlled by the `foo` key
 - Generates an initial bonding transaction (`gentx`) to make the `foo` key a validator at genesis
 - Starts `gaiad` and stops it once the test exits
 - Cleans up test state on a successful run

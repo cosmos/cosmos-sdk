@@ -28,6 +28,19 @@ type Proposal struct {
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
+func NewProposal(content proposal.Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
+	return Proposal{
+		Content:    content,
+		ProposalID: id,
+
+		Status:           StatusDepositPeriod,
+		FinalTallyResult: EmptyTallyResult(),
+		TotalDeposit:     sdk.NewCoins(),
+		SubmitTime:       submitTime,
+		DepositEndTime:   depositEndTime,
+	}
+}
+
 // nolint
 func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:

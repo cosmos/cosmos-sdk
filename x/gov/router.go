@@ -12,7 +12,7 @@ import (
 type Router interface {
 	AddRoute(r string, h proposal.Handler) (rtr Router)
 	HasRoute(r string) bool
-	Route(path string) (h proposal.Handler)
+	GetRoute(path string) (h proposal.Handler)
 }
 
 type router struct {
@@ -46,6 +46,6 @@ func (rtr *router) HasRoute(path string) bool {
 	return rtr.routes[path] != nil
 }
 
-func (rtr *router) Route(path string) proposal.Handler {
+func (rtr *router) GetRoute(path string) proposal.Handler {
 	return rtr.routes[path]
 }

@@ -53,17 +53,14 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
 		var tagValue string
+		var err error
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusPassed
 
-			handler := keeper.router.Route(activeProposal.ProposalRoute())
-			if handler == nil {
-				// SubmitProposal checks whether there is a handler for this proposal already
-				// Panic here because it does not make sense that there is no handler exists
-				panic(fmt.Sprintf("handler for proposal %d does not exist", proposalID))
-			}
-			err := handler(ctx, activeProposal.Content)
+			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
+
+			err = handler(ctx, activeProposal.Content)
 			if err == nil {
 				tagValue = tags.ActionProposalPassed
 			} else {
@@ -81,9 +78,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 		logger.Info(
 			fmt.Sprintf(
-				"proposal %d (%s) tallied; passed: %v; handled: %v",
-				activeProposal.ProposalID, activeProposal.GetTitle(), passes,
-				tagValue == tags.ActionProposalPassed,
+				"proposal %d (%s) tallied; passed: %v; handler error: %v",
+				activeProposal.ProposalID, activeProposal.GetTitle(), passes, err,
 			),
 		)
 

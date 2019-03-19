@@ -30,7 +30,7 @@ func HandleSubmit(ctx sdk.Context, k Keeper,
 	}
 
 	resTags := sdk.NewTags(
-		tags.Proposer, []byte(proposer.String()),
+		tags.Proposer, proposer.String(),
 		tags.ProposalID, proposalIDStr,
 	)
 

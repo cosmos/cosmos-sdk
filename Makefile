@@ -4,9 +4,6 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 LEDGER_ENABLED ?= true
-GOTOOLS = \
-	github.com/alecthomas/gometalinter \
-	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
 GOSUM := $(shell which gosum)
 
@@ -62,7 +59,7 @@ ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: devtools install test_lint test
+all: tools install lint test
 
 # The below include contains the tools target.
 include scripts/Makefile
@@ -70,7 +67,7 @@ include scripts/Makefile
 ########################################
 ### CI
 
-ci: devtools install test_cover test_lint test
+ci: tools install test_cover lint test
 
 ########################################
 ### Build/Install
@@ -108,37 +105,12 @@ dist:
 ########################################
 ### Tools & dependencies
 
-check_tools:
-	@# https://stackoverflow.com/a/25668869
-	@echo "Found tools: $(foreach tool,$(notdir $(GOTOOLS)),\
-        $(if $(shell which $(tool)),$(tool),$(error "No $(tool) in PATH")))"
-
-update_tools:
-	@echo "--> Updating tools to correct version"
-	$(MAKE) --always-make tools
-
-update_dev_tools:
-	@echo "--> Downloading linters (this may take awhile)"
-	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
-	go get -u github.com/tendermint/lint/golint
-
-devtools: devtools-stamp
-devtools-stamp: tools
-	@echo "--> Downloading linters (this may take awhile)"
-	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
-	go get github.com/tendermint/lint/golint
-	go install -mod=readonly ./cmd/sdkch
-	touch $@
-
-devtools-clean: tools-clean
-	rm -f devtools-stamp
-
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
 
 go.sum: tools go.mod
-	@echo "--> Generating vendor directory via go mod vendor"
+	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 
 draw_deps: tools
@@ -147,7 +119,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp snapcraft-local.yaml
+	rm -f snapcraft-local.yaml
 
 distclean: clean
 	rm -rf vendor/
@@ -166,33 +138,33 @@ godocs:
 test: test_unit
 
 test_cli: build
-	@go test -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
+	@go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
 
 test_ledger:
     # First test with mock
-	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
     # Now test with a real device
-	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
+	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
 test_race:
-	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
-	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
+	@go test -mod=readonly ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
 test_sim_gaia_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
 		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
@@ -216,30 +188,31 @@ SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 test_sim_gaia_benchmark:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$  \
+	@go test -mod=readonly -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$  \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
 
 test_sim_gaia_profile:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ \
+	@go test -mod=readonly -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-test_lint:
-	gometalinter --config=tools/gometalinter.json ./...
-	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+lint: tools ci-lint
+ci-lint:
+	golangci-lint run
+	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 
-format:
+format: tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 
 benchmark:
-	@go test -bench=. $(PACKAGES_NOSIMULATION)
+	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
 
 ########################################
@@ -292,10 +265,10 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build install install_debug dist clean distclean \
-check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
-test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
+draw_deps test test_cli test_unit \
+test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
-test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
-devtools-clean go-mod-cache
+test_sim_gaia_multi_seed test_sim_gaia_import_export \
+go-mod-cache

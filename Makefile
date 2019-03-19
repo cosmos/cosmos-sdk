@@ -199,7 +199,7 @@ test_sim_gaia_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-lint: tools
+lint: $(GOBIN)/golangci-lint
 	golangci-lint run
 	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s

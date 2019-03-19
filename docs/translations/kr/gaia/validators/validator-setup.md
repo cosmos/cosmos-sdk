@@ -36,7 +36,7 @@ gaiad tendermint show-validator
 
 ```bash
 gaiacli tx staking create-validator \
-  --amount=5STAKE \
+  --amount=5atom \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \

@@ -32,6 +32,10 @@ func (c *Config) SetMinGasPrices(gasPrices sdk.DecCoins) {
 // GetMinGasPrices returns the validator's minimum gas prices based on the set
 // configuration.
 func (c *Config) GetMinGasPrices() sdk.DecCoins {
+	if c.MinGasPrices == "" {
+		return sdk.DecCoins{}
+	}
+
 	gasPricesStr := strings.Split(c.MinGasPrices, ";")
 	gasPrices := make(sdk.DecCoins, len(gasPricesStr))
 

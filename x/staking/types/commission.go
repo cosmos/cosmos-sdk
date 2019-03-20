@@ -10,18 +10,18 @@ import (
 type (
 	// Commission defines a commission parameters for a given validator.
 	Commission struct {
-		Rate          sdk.Dec   `json:"rate"`            // the commission rate charged to delegators
-		MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which this validator can ever charge
-		MaxChangeRate sdk.Dec   `json:"max_change_rate"` // maximum daily increase of the validator commission
+		Rate          sdk.Dec   `json:"rate"`            // the commission rate charged to delegators, as a fraction
+		MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which this validator can ever charge, as a fraction
+		MaxChangeRate sdk.Dec   `json:"max_change_rate"` // maximum daily increase of the validator commission, as a fraction
 		UpdateTime    time.Time `json:"update_time"`     // the last time the commission rate was changed
 	}
 
 	// CommissionMsg defines a commission message to be used for creating a
 	// validator.
 	CommissionMsg struct {
-		Rate          sdk.Dec `json:"rate"`            // the commission rate charged to delegators
-		MaxRate       sdk.Dec `json:"max_rate"`        // maximum commission rate which validator can ever charge
-		MaxChangeRate sdk.Dec `json:"max_change_rate"` // maximum daily increase of the validator commission
+		Rate          sdk.Dec `json:"rate"`            // the commission rate charged to delegators, as a fraction
+		MaxRate       sdk.Dec `json:"max_rate"`        // maximum commission rate which validator can ever charge, as a fraction
+		MaxChangeRate sdk.Dec `json:"max_change_rate"` // maximum daily increase of the validator commission, as a fraction
 	}
 )
 
@@ -80,7 +80,7 @@ func (c Commission) Validate() sdk.Error {
 		return ErrCommissionNegative(DefaultCodespace)
 
 	case c.MaxRate.GT(sdk.OneDec()):
-		// max rate cannot be greater than 100%
+		// max rate cannot be greater than 1
 		return ErrCommissionHuge(DefaultCodespace)
 
 	case c.Rate.LT(sdk.ZeroDec()):
@@ -119,7 +119,7 @@ func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) sdk.Er
 		// new rate cannot be greater than the max rate
 		return ErrCommissionGTMaxRate(DefaultCodespace)
 
-	case newRate.Sub(c.Rate).Abs().GT(c.MaxChangeRate):
+	case newRate.Sub(c.Rate).GT(c.MaxChangeRate):
 		// new rate % points change cannot be greater than the max change rate
 		return ErrCommissionGTMaxChangeRate(DefaultCodespace)
 	}

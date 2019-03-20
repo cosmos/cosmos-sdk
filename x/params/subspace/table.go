@@ -4,19 +4,23 @@ import (
 	"reflect"
 )
 
-// TypeTable subspaces appropriate type for each parameter key
-type TypeTable struct {
-	m map[string]reflect.Type
+type attribute struct {
+	ty reflect.Type
+}
+
+// KeyTable subspaces appropriate type for each parameter key
+type KeyTable struct {
+	m map[string]attribute
 }
 
 // Constructs new table
-func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
+func NewKeyTable(keytypes ...interface{}) (res KeyTable) {
 	if len(keytypes)%2 != 0 {
-		panic("odd number arguments in NewTypeTypeTable")
+		panic("odd number arguments in NewTypeKeyTable")
 	}
 
-	res = TypeTable{
-		m: make(map[string]reflect.Type),
+	res = KeyTable{
+		m: make(map[string]attribute),
 	}
 
 	for i := 0; i < len(keytypes); i += 2 {
@@ -38,7 +42,7 @@ func isAlphaNumeric(key []byte) bool {
 }
 
 // Register single key-type pair
-func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
+func (t KeyTable) RegisterType(key []byte, ty interface{}) KeyTable {
 	if len(key) == 0 {
 		panic("cannot register empty key")
 	}
@@ -57,20 +61,22 @@ func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
 		rty = rty.Elem()
 	}
 
-	t.m[keystr] = rty
+	t.m[keystr] = attribute{
+		ty: rty,
+	}
 
 	return t
 }
 
 // Register multiple pairs from ParamSet
-func (t TypeTable) RegisterParamSet(ps ParamSet) TypeTable {
-	for _, kvp := range ps.KeyValuePairs() {
+func (t KeyTable) RegisterParamSet(ps ParamSet) KeyTable {
+	for _, kvp := range ps.ParamSetPairs() {
 		t = t.RegisterType(kvp.Key, kvp.Value)
 	}
 	return t
 }
 
-func (t TypeTable) maxKeyLength() (res int) {
+func (t KeyTable) maxKeyLength() (res int) {
 	for k := range t.m {
 		l := len(k)
 		if l > res {

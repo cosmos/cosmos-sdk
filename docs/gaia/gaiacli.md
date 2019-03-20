@@ -130,29 +130,24 @@ multi signature account see [Multisig Transactions](#multisig-transactions).
 
 ### Fees & Gas
 
-Each transaction may either supply fees or gas prices, but not both. Most users
-will typically provide fees as this is the cost you will end up incurring for
-the transaction being included in the ledger.
+Each transaction may either supply fees or gas prices, but not both. 
 
 Validator's have a minimum gas price (multi-denom) configuration and they use
-this value when when determining if they should include the transaction in a block
-during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
-supply fees that match all the denominations the validator requires.
+this value when when determining if they should include the transaction in a block during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must supply fees that are greater than or equal to __any__ of the denominations the validator requires.
 
 __Note__: With such a mechanism in place, validators may start to prioritize
-txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
-higher tx priority.
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield higher tx priority.
 
 e.g.
 
 ```bash
-gaiacli tx send ... --fees=100photino
+gaiacli tx send ... --fees=1000000uatom
 ```
 
 or
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=0.025uatom
 ```
 
 ### Account
@@ -179,11 +174,9 @@ When you query an account balance with zero tokens, you will get this error: `No
 The following command could be used to send coins from one account to another:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmos> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmos>
 ```
 
 ::: warning Note
@@ -213,11 +206,9 @@ You can simulate a transaction without actually broadcasting it by appending the
 `--dry-run` flag to the command line:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --dry-run
 ```
 
@@ -225,22 +216,11 @@ Furthermore, you can build a transaction and print its JSON format to STDOUT by
 appending `--generate-only` to the list of the command line arguments:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --generate-only > unsignedSendTx.json
 ```
-
-::: tip Note
-Simulation cannot be used in conjunction with tx generation only functionality
-due to the fact that simulation requires a public key and generation only does
-not utilize a Keybase.
-
-You can now sign the transaction file generated through the `--generate-only`
-flag by providing your key to the following command:
-:::
 
 ```bash
 gaiacli tx sign \
@@ -360,11 +340,11 @@ gaiacli query staking validator <account_cosmosval>
 
 #### Bond Tokens
 
-On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
+On the Cosmos Hub mainnet, we delegate `uatom`, where `1atom = 1000000uatom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10steak \
+  --amount=10000000uatom \
   --validator=<validator> \
   --from=<key_name> \
   --chain-id=<chain_id>
@@ -380,10 +360,6 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
-::: tip Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
-:::
-
 ##### Query Delegations
 
 Once submitted a delegation to a validator, you can see it's information by using the following command:
@@ -397,8 +373,6 @@ Or if you want to check all your current delegations with disctinct validators:
 ```bash
 gaiacli query staking delegations <delegator_addr>
 ```
-
-You can also get previous delegation(s) status by adding the `--height` flag.
 
 #### Unbond Tokens
 
@@ -434,8 +408,6 @@ Additionally, as you can get all the unbonding-delegations from a particular val
 gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
-To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
-
 #### Redelegate Tokens
 
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
@@ -461,7 +433,7 @@ Once you begin an redelegation, you can see it's information by using the follow
 gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
-Or if you want to check all your current unbonding-delegations with disctinct validators:
+Or if you want to check all your current unbonding-delegations with distinct validators:
 
 ```bash
 gaiacli query staking redelegations <account_cosmos>
@@ -472,8 +444,6 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 ```bash
   gaiacli query staking redelegations-from <account_cosmosval>
 ```
-
-To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
 #### Query Parameters
 
@@ -542,7 +512,7 @@ gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --deposit=<40steak> \
+  --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -571,10 +541,10 @@ gaiacli query gov proposer <proposal_id>
 
 #### Increase deposit
 
-In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx gov deposit <proposal_id> <200steak> \
+gaiacli tx gov deposit <proposal_id> "10000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -698,7 +668,7 @@ gaiacli query distr rewards <delegator_address>
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing
 a transaction from a multisig account involve cooperation among the parties involved. A multisig
 transaction can be initiated by any of the key holders, and at least one of them would need to
-import other parties' public keys into their local database and generate a multisig public key
+import other parties' public keys into their Keybase and generate a multisig public key
 in order to finalize and broadcast the transaction.
 
 For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each of which is held
@@ -707,17 +677,17 @@ generate the multisig account public key:
 
 ```
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
-  p2
+  p2 \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
 
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
-  p3
+  p3 \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t
 
 gaiacli keys add \
-  --multisig-threshold=2
+  p1p2p3 \
+  --multisig-threshold=2 \
   --multisig=p1,p2,p3
-  p1p2p3
 ```
 
 A new multisig public key `p1p2p3` has been stored, and its address will be
@@ -727,14 +697,21 @@ used as signer of multisig transactions:
 gaiacli keys show --address p1p2p3
 ```
 
+You may also view multisig threshold, pubkey constituents and respective weights
+by viewing the JSON output of the key or passing the `--show-multisig` flag:
+
+```bash
+gaiacli keys show p1p2p3 -o json
+
+gaiacli keys show p1p2p3 --show-multisig
+```
+
 The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 
 ```bash
-gaiacli tx send \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 1000000uatom \
   --from=<multisig_address> \
-  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
-  --amount=10stake \
   --generate-only > unsignedTx.json
 ```
 
@@ -743,10 +720,10 @@ The file `unsignedTx.json` contains the unsigned transaction encoded in JSON.
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p1 \
+  --from=p1 \
   --output-document=p1signature.json \
-  unsignedTx.json
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -755,10 +732,10 @@ respective signature:
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p2 \
+  --from=p2 \
   --output-document=p2signature.json \
-  unsignedTx.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Param around Deposits for governance
+// Param around deposits for governance
 type DepositParams struct {
 	MinDeposit       sdk.Coins     `json:"min_deposit"`        //  Minimum deposit for a proposal to enter voting period.
 	MaxDepositPeriod time.Duration `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
@@ -26,19 +26,17 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 
 // Param around Tallying votes in governance
 type TallyParams struct {
-	Quorum            sdk.Dec `json:"quorum"`             //  Minimum percentage of total stake needed to vote for a result to be considered valid
-	Threshold         sdk.Dec `json:"threshold"`          //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-	Veto              sdk.Dec `json:"veto"`               //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-	GovernancePenalty sdk.Dec `json:"governance_penalty"` //  Penalty if validator does not vote
+	Quorum    sdk.Dec `json:"quorum"`    //  Minimum percentage of total stake needed to vote for a result to be considered valid
+	Threshold sdk.Dec `json:"threshold"` //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+	Veto      sdk.Dec `json:"veto"`      //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
 }
 
 func (tp TallyParams) String() string {
 	return fmt.Sprintf(`Tally Params:
   Quorum:             %s
   Threshold:          %s
-  Veto:               %s
-  Governance Penalty: %s`, tp.Quorum,
-		tp.Threshold, tp.Veto, tp.GovernancePenalty)
+  Veto:               %s`,
+		tp.Quorum, tp.Threshold, tp.Veto)
 }
 
 // Param around Voting in governance

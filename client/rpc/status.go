@@ -2,17 +2,18 @@ package rpc
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
-
 	"github.com/spf13/viper"
+
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 // StatusCommand returns the status of the network
@@ -71,13 +72,12 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		nodeInfo := status.NodeInfo
-		utils.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
 	}
 }
 
@@ -86,18 +86,18 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		syncing := status.SyncInfo.CatchingUp
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		w.Write([]byte(strconv.FormatBool(syncing)))
+		if _, err := w.Write([]byte(strconv.FormatBool(syncing))); err != nil {
+			log.Printf("could not write response: %v", err)
+		}
 	}
 }

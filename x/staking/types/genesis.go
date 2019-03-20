@@ -10,8 +10,8 @@ type GenesisState struct {
 	Params               Params                `json:"params"`
 	LastTotalPower       sdk.Int               `json:"last_total_power"`
 	LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers"`
-	Validators           []Validator           `json:"validators"`
-	Bonds                []Delegation          `json:"bonds"`
+	Validators           Validators            `json:"validators"`
+	Delegations          Delegations           `json:"delegations"`
 	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
 	Redelegations        []Redelegation        `json:"redelegations"`
 	Exported             bool                  `json:"exported"`
@@ -20,15 +20,15 @@ type GenesisState struct {
 // Last validator power, needed for validator set update logic
 type LastValidatorPower struct {
 	Address sdk.ValAddress
-	Power   sdk.Int
+	Power   int64
 }
 
-func NewGenesisState(pool Pool, params Params, validators []Validator, bonds []Delegation) GenesisState {
+func NewGenesisState(pool Pool, params Params, validators []Validator, delegations []Delegation) GenesisState {
 	return GenesisState{
-		Pool:       pool,
-		Params:     params,
-		Validators: validators,
-		Bonds:      bonds,
+		Pool:        pool,
+		Params:      params,
+		Validators:  validators,
+		Delegations: delegations,
 	}
 }
 

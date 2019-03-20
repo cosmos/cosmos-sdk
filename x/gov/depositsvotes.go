@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -57,6 +55,9 @@ func (d Deposit) String() string {
 type Deposits []Deposit
 
 func (d Deposits) String() string {
+	if len(d) == 0 {
+		return "[]"
+	}
 	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
@@ -98,7 +99,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	case "NoWithVeto":
 		return OptionNoWithVeto, nil
 	default:
-		return VoteOption(0xff), errors.Errorf("'%s' is not a valid vote option", str)
+		return VoteOption(0xff), fmt.Errorf("'%s' is not a valid vote option", str)
 	}
 }
 
@@ -134,7 +135,7 @@ func (vo *VoteOption) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	bz2, err := VoteOptionFromString(s)
@@ -166,7 +167,7 @@ func (vo VoteOption) String() string {
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", vo.String())))
+		s.Write([]byte(vo.String()))
 	default:
 		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
 	}

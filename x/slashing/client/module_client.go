@@ -5,6 +5,7 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
@@ -22,7 +23,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
-		Use:   "slashing",
+		Use:   slashing.ModuleName,
 		Short: "Querying commands for the slashing module",
 	}
 
@@ -40,7 +41,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	slashingTxCmd := &cobra.Command{
-		Use:   "slashing",
+		Use:   slashing.ModuleName,
 		Short: "Slashing transactions subcommands",
 	}
 

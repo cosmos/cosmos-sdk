@@ -10,6 +10,16 @@ Supporting code can be found in the [networks directory](https://github.com/cosm
 
 > NOTE: The `remote` network bootstrapping may be out of sync with the latest releases and is not to be relied upon.
 
+## Available Docker images
+
+In case you need to use or deploy gaia as a container you could skip the `build` steps and use the official images, $TAG stands for the version you are interested in:
+- `docker run -it -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli tendermint:$TAG gaiad init`
+- `docker run -it -p 26657:26657 -p 26656:26656 -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli tendermint:$TAG gaiad start`
+- ...
+- `docker run -it -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli tendermint:$TAG gaiacli version`
+
+The same images can be used to build your own docker-compose stack.
+
 ## Single-node, local, manual testnet
 
 This guide helps you create a single validator node that runs a network locally for testing and other development related uses.
@@ -26,7 +36,7 @@ This guide helps you create a single validator node that runs a network locally 
 cd $HOME
 
 # Initialize the genesis.json file that will help you to bootstrap the network
-gaiad init --chain-id testing --moniker testing
+gaiad init --chain-id=testing testing
 
 # Create a key to hold your validator account
 gaiacli keys add validator
@@ -34,7 +44,7 @@ gaiacli keys add validator
 # Add that key into the genesis.app_state.accounts array in the genesis file
 # NOTE: this command lets you set the number of coins. Make sure this account has some coins
 # with the genesis.app_state.staking.params.bond_denom denom, the default is staking
-gaiad add-genesis-account $(gaiacli keys show validator -a) 1000stake,1000validatortoken
+gaiad add-genesis-account $(gaiacli keys show validator -a) 1000000000stake,1000000000validatortoken
 
 # Generate the transaction that creates your validator
 gaiad gentx --name validator

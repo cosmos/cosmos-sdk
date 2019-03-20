@@ -31,6 +31,11 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrMissingSelfDelegation(k.codespace).Result()
 	}
 
+	if validator.ShareTokens(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
+		return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()
+	}
+
+	// cannot be unjailed if not jailed
 	if !validator.GetJailed() {
 		return ErrValidatorNotJailed(k.codespace).Result()
 	}
@@ -42,6 +47,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
+	// cannot be unjailed if tombstoned
 	if info.Tombstoned {
 		return ErrValidatorJailed(k.codespace).Result()
 	}
@@ -56,7 +62,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionValidatorUnjailed,
-		tags.Validator, []byte(msg.ValidatorAddr.String()),
+		tags.Validator, msg.ValidatorAddr.String(),
 	)
 
 	return sdk.Result{

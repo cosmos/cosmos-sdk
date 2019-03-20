@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -53,7 +54,7 @@ func TestKeeper(t *testing.T) {
 		{"key7", 9058701},
 	}
 
-	table := NewTypeTable(
+	table := NewKeyTable(
 		[]byte("key1"), int64(0),
 		[]byte("key2"), int64(0),
 		[]byte("key3"), int64(0),
@@ -70,8 +71,8 @@ func TestKeeper(t *testing.T) {
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
 	keeper := NewKeeper(cdc, skey, tkey)
-	space := keeper.Subspace("test").WithTypeTable(table)
-	store := ctx.KVStore(skey).Prefix([]byte("test/"))
+	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
+	space := keeper.Subspace("test").WithKeyTable(table)
 
 	// Set params
 	for i, kv := range kvs {
@@ -162,7 +163,7 @@ func TestSubspace(t *testing.T) {
 		{"struct", s{1}, s{0}, new(s)},
 	}
 
-	table := NewTypeTable(
+	table := NewKeyTable(
 		[]byte("string"), string(""),
 		[]byte("bool"), bool(false),
 		[]byte("int16"), int16(0),
@@ -177,8 +178,8 @@ func TestSubspace(t *testing.T) {
 		[]byte("struct"), s{},
 	)
 
-	store := ctx.KVStore(key).Prefix([]byte("test/"))
-	space := keeper.Subspace("test").WithTypeTable(table)
+	store := prefix.NewStore(ctx.KVStore(key), []byte("test/"))
+	space := keeper.Subspace("test").WithKeyTable(table)
 
 	// Test space.Set, space.Modified
 	for i, kv := range kvs {

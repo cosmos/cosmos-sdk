@@ -1,5 +1,7 @@
 package init
 
+// DONTCOVER
+
 import (
 	"bytes"
 	"fmt"
@@ -22,19 +24,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
+	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const (
-	defaultAmount                  = "100" + stakingTypes.DefaultBondDenom
+var (
+	defaultTokens                  = sdk.TokensFromTendermintPower(100)
+	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
+	defaultMinSelfDelegation       = "1"
 )
 
 // GenTxCmd builds the gaiad gentx command.
@@ -52,7 +56,8 @@ following delegation and commission default parameters:
 	commission rate:             %s
 	commission max rate:         %s
 	commission max change rate:  %s
-`, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate),
+	minimum self delegation:     %s
+`, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			config := ctx.Config
@@ -61,9 +66,16 @@ following delegation and commission default parameters:
 			if err != nil {
 				return err
 			}
-			ip, err := server.ExternalIP()
-			if err != nil {
-				return err
+
+			// Read --nodeID, if empty take it from priv_validator.json
+			if nodeIDString := viper.GetString(cli.FlagNodeID); nodeIDString != "" {
+				nodeID = nodeIDString
+			}
+
+			ip := viper.GetString(cli.FlagIP)
+			if ip == "" {
+				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
+					"the tx's memo field will be unset")
 			}
 
 			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
@@ -76,7 +88,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			kb, err := keys.GetKeyBaseFromDir(viper.GetString(flagClientHome))
+			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
 			}
@@ -118,9 +130,21 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			info, err := txBldr.Keybase().Get(name)
+			if err != nil {
+				return err
+			}
+
+			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
+				fmt.Println("Offline key passed in. Use `gaiacli tx sign` command to sign:")
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
+			}
+
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
-			if err := utils.PrintUnsignedStdTx(w, txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
+			cliCtx = cliCtx.WithOutput(w)
+
+			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
 				return err
 			}
 
@@ -151,15 +175,21 @@ following delegation and commission default parameters:
 
 			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
 			return nil
+
 		},
 	}
+
+	ip, _ := server.ExternalIP()
 
 	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
+	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
+	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
+	cmd.Flags().AddFlagSet(cli.FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
@@ -202,7 +232,7 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagGenesisFormat, true)                         // --genesis-format
+	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
 	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
@@ -218,6 +248,9 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	}
 	if viper.GetString(cli.FlagCommissionMaxChangeRate) == "" {
 		viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
+	}
+	if viper.GetString(cli.FlagMinSelfDelegation) == "" {
+		viper.Set(cli.FlagMinSelfDelegation, defaultMinSelfDelegation)
 	}
 }
 

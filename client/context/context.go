@@ -35,6 +35,7 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
+	Keybase       cryptokeys.Keybase
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -52,6 +53,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	FromName      string
 	Indent        bool
+	SkipConfirm   bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -95,6 +97,7 @@ func NewCLIContext() CLIContext {
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
+		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
 	}
 }
 
@@ -253,9 +256,10 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 	switch ctx.OutputFormat {
 	case "text":
 		out = []byte(toPrint.String())
+
 	case "json":
 		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
 		} else {
 			out, err = ctx.Codec.MarshalJSON(toPrint)
 		}
@@ -276,7 +280,7 @@ func GetFromFields(from string) (sdk.AccAddress, string, error) {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, "", err
 	}

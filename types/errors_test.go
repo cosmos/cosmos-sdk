@@ -72,18 +72,23 @@ func TestAppendMsgToErr(t *testing.T) {
 
 		// plain msg error
 		msg := AppendMsgToErr("something unexpected happened", errMsg)
-		require.Equal(t, fmt.Sprintf("something unexpected happened; %s",
-			errMsg),
+		require.Equal(
+			t,
+			fmt.Sprintf("something unexpected happened; %s", errMsg),
 			msg,
-			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i),
+		)
 
 		// ABCI Log msg error
 		msg = AppendMsgToErr("something unexpected happened", abciLog)
 		msgIdx := mustGetMsgIndex(abciLog)
-		require.Equal(t, fmt.Sprintf("%s%s; %s}",
-			abciLog[:msgIdx],
-			"something unexpected happened",
-			abciLog[msgIdx:len(abciLog)-1]),
+		require.Equal(
+			t,
+			fmt.Sprintf("%s%s; %s}",
+				abciLog[:msgIdx],
+				"something unexpected happened",
+				abciLog[msgIdx:len(abciLog)-1],
+			),
 			msg,
 			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
 	}

@@ -20,25 +20,26 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewInt(2)
+	pool.BondedTokens = sdk.TokensFromTendermintPower(2)
+	valTokens := sdk.TokensFromTendermintPower(1)
 
 	params := keeper.GetParams(ctx)
 	validators := make([]Validator, 2)
 	var delegations []Delegation
 
 	// initialize the validators
-	validators[0].OperatorAddr = sdk.ValAddress(keep.Addrs[0])
+	validators[0].OperatorAddress = sdk.ValAddress(keep.Addrs[0])
 	validators[0].ConsPubKey = keep.PKs[0]
-	validators[0].Description = Description{Moniker: "hoop"}
+	validators[0].Description = NewDescription("hoop", "", "", "")
 	validators[0].Status = sdk.Bonded
-	validators[0].Tokens = sdk.OneInt()
-	validators[0].DelegatorShares = sdk.OneDec()
-	validators[1].OperatorAddr = sdk.ValAddress(keep.Addrs[1])
+	validators[0].Tokens = valTokens
+	validators[0].DelegatorShares = valTokens.ToDec()
+	validators[1].OperatorAddress = sdk.ValAddress(keep.Addrs[1])
 	validators[1].ConsPubKey = keep.PKs[1]
-	validators[1].Description = Description{Moniker: "bloop"}
+	validators[1].Description = NewDescription("bloop", "", "", "")
 	validators[1].Status = sdk.Bonded
-	validators[1].Tokens = sdk.OneInt()
-	validators[1].DelegatorShares = sdk.OneDec()
+	validators[1].Tokens = valTokens
+	validators[1].DelegatorShares = valTokens.ToDec()
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
 	vals, err := InitGenesis(ctx, keeper, genesisState)
@@ -47,7 +48,7 @@ func TestInitGenesis(t *testing.T) {
 	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
-	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)
+	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
 
 	// now make sure the validators are bonded and intra-tx counters are correct
@@ -75,23 +76,25 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewInt(int64(200 + (size - 100)))
+	bondedTokens := sdk.TokensFromTendermintPower(int64(200 + (size - 100)))
+	pool.BondedTokens = bondedTokens
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
 	validators := make([]Validator, size)
 
 	for i := range validators {
-		validators[i] = NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], Description{Moniker: fmt.Sprintf("#%d", i)})
+		validators[i] = NewValidator(sdk.ValAddress(keep.Addrs[i]),
+			keep.PKs[i], NewDescription(fmt.Sprintf("#%d", i), "", "", ""))
 
 		validators[i].Status = sdk.Bonded
+
+		tokens := sdk.TokensFromTendermintPower(1)
 		if i < 100 {
-			validators[i].Tokens = sdk.NewInt(2)
-			validators[i].DelegatorShares = sdk.NewDec(2)
-		} else {
-			validators[i].Tokens = sdk.OneInt()
-			validators[i].DelegatorShares = sdk.OneDec()
+			tokens = sdk.TokensFromTendermintPower(2)
 		}
+		validators[i].Tokens = tokens
+		validators[i].DelegatorShares = tokens.ToDec()
 	}
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)

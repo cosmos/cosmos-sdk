@@ -71,17 +71,19 @@ func MakeTestCodec() *codec.Codec {
 }
 
 // test input with default values
-func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
+func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
-	return CreateTestInputAdvanced(t, isCheckTx, initCoins, communityTax)
+	return CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
+func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (
 	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
+
+	initCoins := sdk.TokensFromTendermintPower(initPower)
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
@@ -119,10 +121,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	for _, addr := range addrs {
 		pool := sk.GetPool(ctx)
 		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
-			{sk.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
+			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
 		})
 		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(sdk.NewInt(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
 		sk.SetPool(ctx, pool)
 	}
 
@@ -156,5 +158,5 @@ func (fck DummyFeeCollectionKeeper) SetCollectedFees(in sdk.Coins) {
 	heldFees = in
 }
 func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
-	heldFees = sdk.Coins{}
+	heldFees = sdk.NewCoins()
 }

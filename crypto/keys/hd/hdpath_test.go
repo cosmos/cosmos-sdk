@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cosmos/go-bip39"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var defaultBIP39Passphrase = ""
@@ -21,7 +21,27 @@ func mnemonicToSeed(mnemonic string) []byte {
 func ExampleStringifyPathParams() {
 	path := NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
-	// Output: 44'/0'/0'/0/0
+	path = NewParams(44, 33, 7, true, 9)
+	fmt.Println(path.String())
+	// Output:
+	// 44'/0'/0'/0/0
+	// 44'/33'/7'/1/9
+}
+
+func TestStringifyFundraiserPathParams(t *testing.T) {
+	path := NewFundraiserParams(4, 22)
+	require.Equal(t, "44'/118'/4'/0/22", path.String())
+
+	path = NewFundraiserParams(4, 57)
+	require.Equal(t, "44'/118'/4'/0/57", path.String())
+}
+
+func TestPathToArray(t *testing.T) {
+	path := NewParams(44, 118, 1, false, 4)
+	require.Equal(t, "[44 118 1 0 4]", fmt.Sprintf("%v", path.DerivationPath()))
+
+	path = NewParams(44, 118, 2, true, 15)
+	require.Equal(t, "[44 118 2 1 15]", fmt.Sprintf("%v", path.DerivationPath()))
 }
 
 func TestParamsFromPath(t *testing.T) {
@@ -60,6 +80,11 @@ func TestParamsFromPath(t *testing.T) {
 		{"44'/0'/0'/0/0'"},  // fifth field must not have '
 		{"44'/-1'/0'/0/0"},  // no negatives
 		{"44'/0'/0'/-1/0"},  // no negatives
+		{"a'/0'/0'/-1/0"},   // valid values
+		{"0/X/0'/-1/0"},     // valid values
+		{"44'/0'/X/-1/0"},   // valid values
+		{"44'/0'/0'/%/0"},   // valid values
+		{"44'/0'/0'/0/%"},   // valid values
 	}
 
 	for i, c := range badCases {
@@ -80,14 +105,39 @@ func ExampleSomeBIP32TestVecs() {
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
 	fmt.Println()
 	// cosmos
-	priv, _ := DerivePrivateKeyForPath(master, ch, FullFundraiserPath)
-	fmt.Println(hex.EncodeToString(priv[:]))
+	priv, err := DerivePrivateKeyForPath(master, ch, FullFundraiserPath)
+	if err != nil {
+		fmt.Println("INVALID")
+	} else {
+		fmt.Println(hex.EncodeToString(priv[:]))
+	}
 	// bitcoin
-	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	priv, err = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
+	if err != nil {
+		fmt.Println("INVALID")
+	} else {
+		fmt.Println(hex.EncodeToString(priv[:]))
+	}
 	// ether
-	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
-	fmt.Println(hex.EncodeToString(priv[:]))
+	priv, err = DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
+	if err != nil {
+		fmt.Println("INVALID")
+	} else {
+		fmt.Println(hex.EncodeToString(priv[:]))
+	}
+	// INVALID
+	priv, err = DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
+	if err != nil {
+		fmt.Println("INVALID")
+	} else {
+		fmt.Println(hex.EncodeToString(priv[:]))
+	}
+	priv, err = DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
+	if err != nil {
+		fmt.Println("INVALID")
+	} else {
+		fmt.Println(hex.EncodeToString(priv[:]))
+	}
 
 	fmt.Println()
 	fmt.Println("keys generated via https://coinomi.com/recovery-phrase-tool.html")
@@ -121,6 +171,8 @@ func ExampleSomeBIP32TestVecs() {
 	// bfcb217c058d8bbafd5e186eae936106ca3e943889b0b4a093ae13822fd3170c
 	// e77c3de76965ad89997451de97b95bb65ede23a6bf185a55d80363d92ee37c3d
 	// 7fc4d8a8146dea344ba04c593517d3f377fa6cded36cd55aee0a0bb968e651bc
+	// INVALID
+	// INVALID
 	//
 	// keys generated via https://coinomi.com/recovery-phrase-tool.html
 	//

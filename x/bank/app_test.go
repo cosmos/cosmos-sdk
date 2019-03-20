@@ -11,7 +11,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 type (
@@ -32,12 +32,12 @@ type (
 )
 
 var (
-	priv1 = ed25519.GenPrivKey()
+	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = ed25519.GenPrivKey()
+	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	priv4 = ed25519.GenPrivKey()
+	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	priv4 = secp256k1.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
@@ -45,18 +45,20 @@ var (
 	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
 	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
-	sendMsg1 = MsgSend{
+	sendMsg1 = NewMsgSend(addr1, addr2, coins)
+
+	multiSendMsg1 = MsgMultiSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
 	}
-	sendMsg2 = MsgSend{
+	multiSendMsg2 = MsgMultiSend{
 		Inputs: []Input{NewInput(addr1, coins)},
 		Outputs: []Output{
 			NewOutput(addr2, halfCoins),
 			NewOutput(addr3, halfCoins),
 		},
 	}
-	sendMsg3 = MsgSend{
+	multiSendMsg3 = MsgMultiSend{
 		Inputs: []Input{
 			NewInput(addr1, coins),
 			NewInput(addr4, coins),
@@ -66,7 +68,7 @@ var (
 			NewOutput(addr3, coins),
 		},
 	}
-	sendMsg4 = MsgSend{
+	multiSendMsg4 = MsgMultiSend{
 		Inputs: []Input{
 			NewInput(addr2, coins),
 		},
@@ -74,7 +76,7 @@ var (
 			NewOutput(addr1, coins),
 		},
 	}
-	sendMsg5 = MsgSend{
+	multiSendMsg5 = MsgMultiSend{
 		Inputs: []Input{
 			NewInput(addr1, manyCoins),
 		},
@@ -102,7 +104,38 @@ func getInitChainer(mapp *mock.App, keeper BaseKeeper) sdk.InitChainer {
 	}
 }
 
-func TestMsgSendWithAccounts(t *testing.T) {
+func TestSendNotEnoughBalance(t *testing.T) {
+	mapp := getMockApp(t)
+	acc := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
+	}
+
+	mock.SetGenesis(mapp, []auth.Account{acc})
+
+	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	require.NotNil(t, res1)
+	require.Equal(t, acc, res1.(*auth.BaseAccount))
+
+	origAccNum := res1.GetAccountNumber()
+	origSeq := res1.GetSequence()
+
+	sendMsg := NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
+
+	res2 := mapp.AccountKeeper.GetAccount(mapp.NewContext(true, abci.Header{}), addr1)
+	require.NotNil(t, res2)
+
+	require.True(t, res2.GetAccountNumber() == origAccNum)
+	require.True(t, res2.GetSequence() == origSeq+1)
+}
+
+func TestMsgMultiSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
 		Address: addr1,
@@ -119,7 +152,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{sendMsg1},
+			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -131,7 +164,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 			},
 		},
 		{
-			msgs:       []sdk.Msg{sendMsg1, sendMsg2},
+			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true, // doesn't check signature
@@ -141,7 +174,8 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -149,7 +183,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	}
 }
 
-func TestMsgSendMultipleOut(t *testing.T) {
+func TestMsgMultiSendMultipleOut(t *testing.T) {
 	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{
@@ -165,7 +199,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{sendMsg2},
+			msgs:       []sdk.Msg{multiSendMsg2},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -180,7 +214,8 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -188,7 +223,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	}
 }
 
-func TestSengMsgMultipleInOut(t *testing.T) {
+func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{
@@ -208,8 +243,8 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{sendMsg3},
-			accNums:    []uint64{0, 0},
+			msgs:       []sdk.Msg{multiSendMsg3},
+			accNums:    []uint64{0, 2},
 			accSeqs:    []uint64{0, 0},
 			expSimPass: true,
 			expPass:    true,
@@ -224,7 +259,8 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -232,7 +268,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	}
 }
 
-func TestMsgSendDependent(t *testing.T) {
+func TestMsgMultiSendDependent(t *testing.T) {
 	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{
@@ -244,7 +280,7 @@ func TestMsgSendDependent(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{sendMsg1},
+			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -256,8 +292,8 @@ func TestMsgSendDependent(t *testing.T) {
 			},
 		},
 		{
-			msgs:       []sdk.Msg{sendMsg4},
-			accNums:    []uint64{0},
+			msgs:       []sdk.Msg{multiSendMsg4},
+			accNums:    []uint64{1},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
 			expPass:    true,
@@ -269,7 +305,8 @@ func TestMsgSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)

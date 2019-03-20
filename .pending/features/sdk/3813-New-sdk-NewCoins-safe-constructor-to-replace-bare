@@ -1,0 +1,1 @@
+#3813 New sdk.NewCoins safe constructor to replace bare sdk.Coins{} declarations.

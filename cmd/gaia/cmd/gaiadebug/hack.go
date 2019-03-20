@@ -45,12 +45,12 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 
 	// load the app
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
+	db, err := sdk.NewLevelDB("gaia", dataDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db, baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))))
+	app := NewGaiaApp(logger, db, baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))))
 
 	// print some info
 	id := app.LastCommitID()
@@ -260,7 +260,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
 
 	return abci.ResponseInitChain{
 		Validators: validators,

@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -52,26 +51,8 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 	}
 }
 
-func (rs *RestServer) setKeybase(kb keybase.Keybase) {
-	// If a keybase is passed in, set it and return
-	if kb != nil {
-		rs.KeyBase = kb
-		return
-	}
-
-	// Otherwise get the keybase and set it
-	kb, err := keys.GetKeyBase() //XXX
-	if err != nil {
-		fmt.Printf("Failed to open Keybase: %s, exiting...", err)
-		os.Exit(1)
-	}
-	rs.KeyBase = kb
-}
-
 // Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, sslHosts string,
-	certFile string, keyFile string, maxOpen int, insecure bool) (err error) {
-
+func (rs *RestServer) Start(listenAddr string, maxOpen int) (err error) {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
@@ -87,43 +68,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	rs.log.Info(fmt.Sprintf("Starting Gaia Lite REST service (chain-id: %q)...",
 		viper.GetString(client.FlagChainID)))
 
-	// launch rest-server in insecure mode
-	if insecure {
-		return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
-	}
-
-	// handle certificates
-	if certFile != "" {
-		// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
-		if err := validateCertKeyFiles(certFile, keyFile); err != nil {
-			return err
-		}
-
-		//  cert/key pair is provided, read the fingerprint
-		rs.fingerprint, err = fingerprintFromFile(certFile)
-		if err != nil {
-			return err
-		}
-	} else {
-		// if certificate is not supplied, generate a self-signed one
-		certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
-		if err != nil {
-			return err
-		}
-
-		defer func() {
-			os.Remove(certFile)
-			os.Remove(keyFile)
-		}()
-	}
-
-	rs.log.Info(rs.fingerprint)
-	return rpcserver.StartHTTPAndTLSServer(
-		rs.listener,
-		rs.Mux,
-		certFile, keyFile,
-		rs.log,
-	)
+	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
 }
 
 // ServeCommand will start a Gaia Lite REST service as a blocking process. It
@@ -136,17 +81,11 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 
-			rs.setKeybase(nil)
 			registerRoutesFn(rs)
 
 			// Start the rest server and return error if one exists
-			err = rs.Start(
-				viper.GetString(client.FlagListenAddr),
-				viper.GetString(client.FlagSSLHosts),
-				viper.GetString(client.FlagSSLCertFile),
-				viper.GetString(client.FlagSSLKeyFile),
-				viper.GetInt(client.FlagMaxOpenConnections),
-				viper.GetBool(client.FlagInsecure))
+			err = rs.Start(viper.GetString(client.FlagListenAddr),
+				viper.GetInt(client.FlagMaxOpenConnections))
 
 			return err
 		},

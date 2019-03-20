@@ -177,7 +177,8 @@ func TestQueryDelegation(t *testing.T) {
 	keeper.SetValidator(ctx, val2)
 	keeper.SetValidatorByPowerIndex(ctx, val2)
 
-	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(20)), val1, true)
+	delTokens := sdk.TokensFromTendermintPower(20)
+	keeper.Delegate(ctx, addrAcc2, delTokens, val1, true)
 
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -296,7 +297,8 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegationsRes[0], delegation)
 
 	// Query unbonging delegation
-	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
+	unbondingTokens := sdk.TokensFromTendermintPower(10)
+	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.Nil(t, err)
 
 	queryBondParams = NewQueryBondsParams(addrAcc2, addrVal1)
@@ -348,12 +350,14 @@ func TestQueryDelegation(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Query redelegation
-	_, err = keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(10))
+	redelegationTokens := sdk.TokensFromTendermintPower(10)
+	_, err = keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
+		val2.OperatorAddress, redelegationTokens.ToDec())
 	require.Nil(t, err)
-	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
+	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
 
-	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(addrAcc2, val1.OperatorAddr, val2.OperatorAddr))
+	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(addrAcc2, val1.OperatorAddress, val2.OperatorAddress))
 	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
@@ -381,13 +385,15 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.SetValidator(ctx, val1)
 	keeper.SetValidator(ctx, val2)
 
-	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(100)), val1, true)
+	delAmount := sdk.TokensFromTendermintPower(100)
+	keeper.Delegate(ctx, addrAcc2, delAmount, val1, true)
 	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDec(20))
+	rdAmount := sdk.TokensFromTendermintPower(20)
+	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
+	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
 
 	// delegator redelegations

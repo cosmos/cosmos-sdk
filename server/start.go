@@ -1,7 +1,8 @@
 package server
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -50,7 +51,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
-		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.0001stake)",
+		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
 
 	// add support for all Tendermint-specific command line options
@@ -76,7 +77,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
-		return errors.Errorf("error creating listener: %v\n", err)
+		return fmt.Errorf("error creating listener: %v", err)
 	}
 
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
@@ -87,7 +88,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	}
 
 	// wait forever
-	cmn.TrapSignal(func() {
+	cmn.TrapSignal(ctx.Logger, func() {
 		// cleanup
 		err = svr.Stop()
 		if err != nil {

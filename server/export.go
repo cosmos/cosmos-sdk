@@ -1,15 +1,18 @@
 package server
 
+// DONTCOVER
+
 import (
 	"fmt"
+	"os"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"io/ioutil"
-	"path"
 
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +21,7 @@ import (
 const (
 	flagHeight        = "height"
 	flagForZeroHeight = "for-zero-height"
+	flagJailWhitelist = "jail-whitelist"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -26,37 +30,42 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home := viper.GetString("home")
+			config := ctx.Config
+			config.SetRoot(viper.GetString(cli.HomeFlag))
+
 			traceWriterFile := viper.GetString(flagTraceStore)
-			emptyState, err := isEmptyState(home)
+
+			db, err := openDB(config.RootDir)
 			if err != nil {
 				return err
 			}
 
-			if emptyState || appExporter == nil {
-				fmt.Println("WARNING: State is not initialized. Returning genesis file.")
-				genesisFile := path.Join(home, "config", "genesis.json")
-				genesis, err := ioutil.ReadFile(genesisFile)
+			if isEmptyState(db) || appExporter == nil {
+				if _, err := fmt.Fprintln(os.Stderr, "WARNING: State is not initialized. Returning genesis file."); err != nil {
+					return err
+				}
+
+				genesis, err := ioutil.ReadFile(config.GenesisFile())
 				if err != nil {
 					return err
 				}
+
 				fmt.Println(string(genesis))
 				return nil
 			}
 
-			db, err := openDB(home)
-			if err != nil {
-				return err
-			}
 			traceWriter, err := openTraceWriter(traceWriterFile)
 			if err != nil {
 				return err
 			}
+
 			height := viper.GetInt64(flagHeight)
 			forZeroHeight := viper.GetBool(flagForZeroHeight)
-			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight)
+			jailWhiteList := viper.GetStringSlice(flagJailWhitelist)
+
+			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
-				return errors.Errorf("error exporting state: %v\n", err)
+				return fmt.Errorf("error exporting state: %v", err)
 			}
 
 			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())
@@ -76,16 +85,16 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			return nil
 		},
 	}
+
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
+	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
 	return cmd
 }
 
-func isEmptyState(home string) (bool, error) {
-	files, err := ioutil.ReadDir(path.Join(home, "data"))
-	if err != nil {
-		return false, err
+func isEmptyState(db dbm.DB) bool {
+	if db.Stats()["leveldb.sstables"] != "" {
+		return false
 	}
-
-	return len(files) == 0, nil
+	return true
 }

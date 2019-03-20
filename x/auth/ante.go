@@ -15,6 +15,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	// simulation signature values used to estimate gas consumption
+	simSecp256k1Pubkey secp256k1.PubKeySecp256k1
+	simSecp256k1Sig    [64]byte
+)
+
+func init() {
+	// This decodes a valid hex string into a sepc256k1Pubkey for use in transaction simulation
+	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
+	copy(simSecp256k1Pubkey[:], bz)
+}
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -54,8 +66,12 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			if r := recover(); r != nil {
 				switch rType := r.(type) {
 				case sdk.ErrorOutOfGas:
-					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+					log := fmt.Sprintf(
+						"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+						rType.Descriptor, stdTx.Fee.Gas, newCtx.GasMeter().GasConsumed(),
+					)
 					res = sdk.ErrOutOfGas(log).Result()
+
 					res.GasWanted = stdTx.Fee.Gas
 					res.GasUsed = newCtx.GasMeter().GasConsumed()
 					abort = true
@@ -69,7 +85,9 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		if res := ValidateMemo(newCtx.GasMeter(), stdTx, params); !res.IsOK() {
+		newCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(newCtx.TxBytes())), "txSize")
+
+		if res := ValidateMemo(stdTx, params); !res.IsOK() {
 			return newCtx, res, true
 		}
 
@@ -128,12 +146,11 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Accou
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, sdk.Result{}
 	}
-	return nil, sdk.ErrUnknownAddress(addr.String()).Result()
+	return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr)).Result()
 }
 
-// ValidateMemo validates the memo and if successful consumes gas for
-// verification.
-func ValidateMemo(gasMeter sdk.GasMeter, stdTx StdTx, params Params) sdk.Result {
+// ValidateMemo validates the memo size.
+func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 	memoLength := len(stdTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
@@ -144,7 +161,6 @@ func ValidateMemo(gasMeter sdk.GasMeter, stdTx StdTx, params Params) sdk.Result 
 		).Result()
 	}
 
-	gasMeter.ConsumeGas(params.MemoCostPerByte*sdk.Gas(memoLength), "memo")
 	return sdk.Result{}
 }
 
@@ -164,25 +180,45 @@ func processSig(
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
-	consumeSignatureVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
+	if simulate {
+		// Simulated txs should not contain a signature and are not required to
+		// contain a pubkey, so we must account for tx size of including a
+		// StdSignature (Amino encoding) and simulate gas consumption
+		// (assuming a SECP256k1 simulation key).
+		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
+	}
+
+	if res := consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
+		return nil, res
+	}
+
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	err = acc.SetSequence(acc.GetSequence() + 1)
-	if err != nil {
-		// Handle w/ #870
+	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 		panic(err)
 	}
 
 	return acc, res
 }
 
-var dummySecp256k1Pubkey secp256k1.PubKeySecp256k1
+func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignature, params Params) {
+	simSig := StdSignature{PubKey: pubkey}
+	if len(sig.Signature) == 0 {
+		simSig.Signature = simSecp256k1Sig[:]
+	}
 
-func init() {
-	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
-	copy(dummySecp256k1Pubkey[:], bz)
+	sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	cost := sdk.Gas(len(sigBz) + 6)
+
+	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+	// number of signers.
+	if _, ok := pubkey.(multisig.PubKeyMultisigThreshold); ok {
+		cost *= params.TxSigLimit
+	}
+
+	gasmeter.ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 }
 
 // ProcessPubKey verifies that the given account address matches that of the
@@ -197,7 +233,7 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		// shall consume the largest amount, i.e. it takes more gas to verify
 		// secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
-			return dummySecp256k1Pubkey, sdk.Result{}
+			return simSecp256k1Pubkey, sdk.Result{}
 		}
 
 		return pubKey, sdk.Result{}
@@ -218,27 +254,36 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	return pubKey, sdk.Result{}
 }
 
-// consumeSignatureVerificationGas consumes gas for signature verification based
-// upon the public key type. The cost is fetched from the given params and is
-// matched by the concrete type.
+// consumeSigVerificationGas consumes gas for signature verification based upon
+// the public key type. The cost is fetched from the given params and is matched
+// by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSignatureVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
+func consumeSigVerificationGas(
+	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
+) sdk.Result {
+
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
+
 	switch {
 	case strings.Contains(pubkeyType, "ed25519"):
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+		return sdk.ErrInvalidPubKey("ED25519 public keys are unsupported").Result()
+
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
-	case strings.Contains(pubkeyType, "multisigthreshold"):
+		return sdk.Result{}
 
+	case strings.Contains(pubkeyType, "multisigthreshold"):
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
-		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
 
+		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
 		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
+		return sdk.Result{}
+
 	default:
-		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
+		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %s", pubkeyType)).Result()
 	}
 }
 
@@ -250,7 +295,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			consumeSignatureVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			consumeSigVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
 			sigIndex++
 		}
 	}
@@ -269,32 +314,32 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 	}
 
 	// get the resulting coins deducting the fees
-	newCoins, ok := coins.SafeMinus(feeAmount)
+	newCoins, ok := coins.SafeSub(feeAmount)
 	if ok {
-		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
-		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
+		return nil, sdk.ErrInsufficientFunds(
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, feeAmount),
+		).Result()
 	}
 
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
 	spendableCoins := acc.SpendableCoins(blockTime)
-	if _, hasNeg := spendableCoins.SafeMinus(feeAmount); hasNeg {
-		return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", spendableCoins, feeAmount)).Result()
+	if _, hasNeg := spendableCoins.SafeSub(feeAmount); hasNeg {
+		return nil, sdk.ErrInsufficientFunds(
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, feeAmount),
+		).Result()
 	}
 
 	if err := acc.SetCoins(newCoins); err != nil {
-		// Handle w/ #870
-		panic(err)
+		return nil, sdk.ErrInternal(err.Error()).Result()
 	}
 
 	return acc, sdk.Result{}
 }
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
-// enough fees to cover a proposer's minimum fees. An result object is returned
+// enough fees to cover a proposer's minimum fees. A result object is returned
 // indicating success or failure.
-//
-// TODO: Account for transaction size.
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
@@ -308,10 +353,10 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 		glDec := sdk.NewDec(int64(stdFee.Gas))
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
+			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 
-		if !stdFee.Amount.IsAllGTE(requiredFees) {
+		if !stdFee.Amount.IsAnyGTE(requiredFees) {
 			return sdk.ErrInsufficientFee(
 				fmt.Sprintf(
 					"insufficient fees; got: %q required: %q", stdFee.Amount, requiredFees,

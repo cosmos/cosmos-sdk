@@ -1,12 +1,13 @@
 package types
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	cmn "github.com/tendermint/tendermint/libs/common"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -19,10 +20,7 @@ type CodespaceType string
 
 // IsOK - is everything okay?
 func (code CodeType) IsOK() bool {
-	if code == CodeOK {
-		return true
-	}
-	return false
+	return code == CodeOK
 }
 
 // SDK error codes
@@ -249,19 +247,22 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	cdc := codec.New()
 	errMsg := err.cmnError.Error()
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		Message:   errMsg,
 	}
-	bz, er := cdc.MarshalJSON(jsonErr)
-	if er != nil {
-		panic(er)
+
+	var buff bytes.Buffer
+	enc := json.NewEncoder(&buff)
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(jsonErr); err != nil {
+		panic(errors.Wrap(err, "failed to encode ABCI error log"))
 	}
-	stringifiedJSON := string(bz)
-	return stringifiedJSON
+
+	return strings.TrimSpace(buff.String())
 }
 
 func (err *sdkError) Result() Result {

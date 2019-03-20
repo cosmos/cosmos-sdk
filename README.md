@@ -3,6 +3,7 @@
 
 [![version](https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/releases/latest)
 [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master)
+[![Snap Status](https://build.snapcraft.io/badge/cosmos/cosmos-sdk.svg)](https://build.snapcraft.io/user/cosmos/cosmos-sdk)
 [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk)](https://goreportcard.com/report/github.com/cosmos/cosmos-sdk)
 [![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE)
@@ -17,14 +18,14 @@ It is being used to build `Gaia`, the first implementation of the Cosmos Hub.
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.11.4+](https://golang.org/dl/)
+**Note**: Requires [Go 1.12.1+](https://golang.org/dl/)
 
-## Cosmos Hub Public Testnet
+## Cosmos Hub Mainnet
 
-To run a full-node in the latest public testnet of the Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-testnet.md).
+To run a full-node for the mainnet of the Cosmos Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-mainnet.md).
 
-For status updates and genesis files, see the
-[testnets repo](https://github.com/cosmos/testnets).
+For status updates and genesis file, see the
+[launch repo](https://github.com/cosmos/launch).
 
 
 ## Quick Start

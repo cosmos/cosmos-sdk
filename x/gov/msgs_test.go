@@ -8,14 +8,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000)}
-	coinsZero        = sdk.Coins{}
-	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
+	coinsPos         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
+	coinsZero        = sdk.NewCoins()
+	coinsPosNotAtoms = sdk.NewCoins(sdk.NewInt64Coin("foo", 10000))
+	coinsMulti       = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
 )
 
 func init() {
@@ -24,7 +23,7 @@ func init() {
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgSubmitProposal(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		title, description string
 		proposalType       ProposalKind
@@ -66,7 +65,7 @@ func TestMsgDepositGetSignBytes(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgDeposit(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		proposalID    uint64
 		depositorAddr sdk.AccAddress
@@ -91,7 +90,7 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgVote(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress

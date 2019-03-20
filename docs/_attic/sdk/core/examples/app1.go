@@ -151,10 +151,10 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	}
 
 	// Deduct msg amount from sender account.
-	senderCoins := acc.Coins.Minus(amt)
+	senderCoins := acc.Coins.Sub(amt)
 
 	// If any coin has negative amount, return insufficient coins error.
-	if !senderCoins.IsNotNegative() {
+	if senderCoins.IsAnyNegative() {
 		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
 	}
 
@@ -188,7 +188,7 @@ func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	}
 
 	// Add amount to receiver's old coins
-	receiverCoins := acc.Coins.Plus(amt)
+	receiverCoins := acc.Coins.Add(amt)
 
 	// Update receiver account
 	acc.Coins = receiverCoins

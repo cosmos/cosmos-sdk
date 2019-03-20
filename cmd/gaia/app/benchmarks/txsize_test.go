@@ -23,7 +23,7 @@ func ExampleTxSendSize() {
 	priv2 := secp256k1.GenPrivKeySecp256k1([]byte{1})
 	addr2 := sdk.AccAddress(priv2.PubKey().Address())
 	coins := sdk.Coins{sdk.NewCoin("denom", sdk.NewInt(10))}
-	msg1 := bank.MsgSend{
+	msg1 := bank.MsgMultiSend{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}

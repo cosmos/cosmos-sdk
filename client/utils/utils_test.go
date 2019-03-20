@@ -3,19 +3,19 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-
-	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
@@ -109,4 +109,33 @@ func makeCodec() *codec.Codec {
 	cdc := app.MakeCodec()
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
+}
+
+func TestReadStdTxFromFile(t *testing.T) {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+
+	// Build a test transaction
+	fee := auth.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	stdTx := auth.NewStdTx([]sdk.Msg{}, fee, []auth.StdSignature{}, "foomemo")
+
+	// Write it to the file
+	encodedTx, _ := cdc.MarshalJSON(stdTx)
+	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
+	defer os.Remove(jsonTxFile.Name())
+
+	// Read it back
+	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
+	require.Nil(t, err)
+	require.Equal(t, decodedTx.Memo, "foomemo")
+}
+
+func writeToNewTempFile(t *testing.T, data string) *os.File {
+	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
+	require.Nil(t, err)
+
+	_, err = fp.WriteString(data)
+	require.Nil(t, err)
+
+	return fp
 }

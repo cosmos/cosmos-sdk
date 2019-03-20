@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -22,12 +23,12 @@ import (
 // GetSignCommand returns the sign command
 func GetMultiSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multisign <file> <name> <<signature>...>",
+		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag that require multisig signatures.
 
-Read signature(s) from <signature> file(s), generate a multisig signature compliant to the
-multisig key <name>, and attach it to the transaction read from <file>. Example:
+Read signature(s) from [signature] file(s), generate a multisig signature compliant to the
+multisig key [name], and attach it to the transaction read from [file]. Example:
 
    gaiacli multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 
@@ -43,8 +44,7 @@ recommended to set such parameters manually.
 	}
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
-	cmd.Flags().String(flagOutfile, "",
-		"The document will be written to the given file instead of STDOUT")
+	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	// Add the flags here and return the command
 	return client.PostCommands(cmd)[0]
@@ -52,12 +52,12 @@ recommended to set such parameters manually.
 
 func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
+		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
 
-		keybase, err := keys.GetKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
 		if err != nil {
 			return
 		}
@@ -66,9 +66,8 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return
 		}
-		if multisigInfo.GetType() != crkeys.TypeOffline {
-			return fmt.Errorf("%q must be of type offline: %s",
-				args[1], multisigInfo.GetType())
+		if multisigInfo.GetType() != crkeys.TypeMulti {
+			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
@@ -100,13 +99,15 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 
 			// Validate each signature
 			sigBytes := auth.StdSignBytes(
-				txBldr.GetChainID(), txBldr.GetAccountNumber(), txBldr.GetSequence(),
+				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 			if ok := stdSig.PubKey.VerifyBytes(sigBytes, stdSig.Signature); !ok {
 				return fmt.Errorf("couldn't verify signature")
 			}
-			multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.PubKey, multisigPub.PubKeys)
+			if err := multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.PubKey, multisigPub.PubKeys); err != nil {
+				return err
+			}
 		}
 
 		newStdSig := auth.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub}

@@ -27,7 +27,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 
 	distQueryCmd.AddCommand(client.GetCommands(
 		distCmds.GetCmdQueryParams(mc.storeKey, mc.cdc),
-		distCmds.GetCmdQueryOutstandingRewards(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryValidatorOutstandingRewards(mc.storeKey, mc.cdc),
 		distCmds.GetCmdQueryValidatorCommission(mc.storeKey, mc.cdc),
 		distCmds.GetCmdQueryValidatorSlashes(mc.storeKey, mc.cdc),
 		distCmds.GetCmdQueryDelegatorRewards(mc.storeKey, mc.cdc),
@@ -46,6 +46,7 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	distTxCmd.AddCommand(client.PostCommands(
 		distCmds.GetCmdWithdrawRewards(mc.cdc),
 		distCmds.GetCmdSetWithdrawAddr(mc.cdc),
+		distCmds.GetCmdWithdrawAllRewards(mc.cdc, mc.storeKey),
 	)...)
 
 	return distTxCmd

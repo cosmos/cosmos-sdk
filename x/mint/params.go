@@ -3,8 +3,6 @@ package mint
 import (
 	"fmt"
 
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,7 +32,7 @@ func NewParams(mintDenom string, inflationRateChange, inflationMax,
 // default minting module parameters
 func DefaultParams() Params {
 	return Params{
-		MintDenom:           stakingTypes.DefaultBondDenom,
+		MintDenom:           sdk.DefaultBondDenom,
 		InflationRateChange: sdk.NewDecWithPrec(13, 2),
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
 		InflationMin:        sdk.NewDecWithPrec(7, 2),

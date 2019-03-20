@@ -13,11 +13,9 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	// TODO DEPRECATED: delete in next release and reorder keys
-	// ParamKey                         = []byte{0x00} // key for parameters relating to stake
-	PoolKey = []byte{0x01} // key for the staking pools
+	PoolKey = []byte{0x00} // key for the staking pools
 
-	// Last* values are const during a block.
+	// Last* values are constant during a block.
 	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
 
@@ -36,8 +34,6 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 )
-
-const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
 // gets the key for the validator with address
 // VALUE: staking/types.Validator
@@ -90,7 +86,7 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-	operAddrInvr := cp(validator.OperatorAddr)
+	operAddrInvr := cp(validator.OperatorAddress)
 	for i, b := range operAddrInvr {
 		operAddrInvr[i] = ^b
 	}

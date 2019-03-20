@@ -14,7 +14,7 @@ func NewGenesisState(sendEnabled bool) GenesisState {
 	return GenesisState{SendEnabled: sendEnabled}
 }
 
-// Return a default genesis state
+// DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState { return NewGenesisState(true) }
 
 // InitGenesis sets distribution information for genesis.

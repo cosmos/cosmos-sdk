@@ -1,0 +1,3 @@
+#3907: dep -> go mod migration
+- Drop dep in favor of go modules.
+- Upgrade to Go 1.12.1.

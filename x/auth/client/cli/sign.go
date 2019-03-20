@@ -1,14 +1,14 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -30,10 +30,10 @@ const (
 // GetSignCommand returns the sign command
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign <file>",
+		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from <file>, sign it, and print its JSON encoding.
+Read a transaction from [file], sign it, and print its JSON encoding.
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
@@ -55,27 +55,30 @@ be generated via the 'multisign' command.
 		RunE: makeSignCmd(codec),
 		Args: cobra.ExactArgs(1),
 	}
-	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
-	cmd.Flags().String(flagMultisig, "",
-		"Address of the multisig account on behalf of which the "+
-			"transaction shall be signed")
-	cmd.Flags().Bool(flagAppend, true,
-		"Append the signature to the existing ones. "+
-			"If disabled, old signatures would be overwritten. Ignored if --multisig is on")
-	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
-		"those who have already signed it, and make sure that signatures are in the correct order")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
-	cmd.Flags().String(flagOutfile, "",
-		"The document will be written to the given file instead of STDOUT")
 
-	// Add the flags here and return the command
+	cmd.Flags().String(
+		flagMultisig, "",
+		"Address of the multisig account on behalf of which the transaction shall be signed",
+	)
+	cmd.Flags().Bool(
+		flagAppend, true,
+		"Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on",
+	)
+	cmd.Flags().Bool(
+		flagValidateSigs, false,
+		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
+	)
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
+	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
+	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
+
+	// add the flags here and return the command
 	return client.PostCommands(cmd)[0]
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
+		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
@@ -85,16 +88,16 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.GetChainID(), stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 
 			return nil
 		}
 
-		name := viper.GetString(client.FlagName)
-		if name == "" {
-			return errors.New("required flag \"name\" has not been set")
+		from := viper.GetString(client.FlagFrom)
+		if from == "" {
+			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
 		// if --signature-only is on, then override --append
@@ -104,19 +107,21 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
+
 			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
 			if err != nil {
 				return err
 			}
 
 			newTx, err = utils.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, name, stdTx, offline)
+				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, offline,
+			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = utils.SignStdTx(
-				txBldr, cliCtx, name, stdTx, appendSig, offline)
+			newTx, err = utils.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
 		}
+
 		if err != nil {
 			return err
 		}
@@ -128,13 +133,16 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx.Signatures[0])
 			}
+
 		default:
 			switch cliCtx.Indent {
 			case true:
 				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
+
 			default:
 				json, err = cdc.MarshalJSON(newTx)
 			}
@@ -174,7 +182,7 @@ func printAndValidateSigs(
 
 	signers := stdTx.GetSigners()
 	for i, signer := range signers {
-		fmt.Printf(" %v: %v\n", i, signer.String())
+		fmt.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
@@ -190,6 +198,11 @@ func printAndValidateSigs(
 	for i, sig := range sigs {
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
+
+		var (
+			multiSigHeader string
+			multiSigMsg    string
+		)
 
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
@@ -216,20 +229,28 @@ func printAndValidateSigs(
 			}
 		}
 
-		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
+		multiPK, ok := sig.PubKey.(multisig.PubKeyMultisigThreshold)
+		if ok {
+			var multiSig multisig.Multisignature
+			cliCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
+
+			var b strings.Builder
+			b.WriteString("\n  MultiSig Signatures:\n")
+
+			for i := 0; i < multiSig.BitArray.Size(); i++ {
+				if multiSig.BitArray.GetIndex(i) {
+					addr := sdk.AccAddress(multiPK.PubKeys[i].Address().Bytes())
+					b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
+				}
+			}
+
+			multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.K, len(multiPK.PubKeys))
+			multiSigMsg = b.String()
+		}
+
+		fmt.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	fmt.Println("")
 	return success
-}
-
-func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
-		return
-	}
-	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
-		return
-	}
-	return
 }

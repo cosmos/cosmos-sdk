@@ -1,6 +1,6 @@
 ## Install Gaia
 
-This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the latest testnet as either a [Full Node](./join-testnet.md#run-a-full-node) or a [Validator](./validators/validator-setup.md).
+This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the mainnet as either a [Full Node](./join-mainnet.md) or a [Validator](./validators/validator-setup.md).
 
 ### Install Go
 
@@ -14,7 +14,7 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.11.4+** is required for the Cosmos SDK.
+**Go 1.12.1+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries
@@ -22,6 +22,10 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 Next, let's install the latest version of Gaia. Here we'll use the `master` branch, which contains the latest stable release.
 If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
+
+::: warning
+For the mainnet, make sure your version if greater than `v0.33.0`
+::: 
 
 ```bash
 mkdir -p $GOPATH/src/github.com/cosmos
@@ -36,10 +40,34 @@ make tools install
 That will install the `gaiad` and `gaiacli` binaries. Verify that everything is OK:
 
 ```bash
-$ gaiad version
-$ gaiacli version
+$ gaiad version --long
+$ gaiacli version --long
 ```
+
+`gaiacli` for instance should output something similar to:
+
+```
+cosmos-sdk: 0.33.0
+git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
+vendor hash: 5db0df3e24cf10545c84f462a24ddc61882aa58f
+build tags: netgo ledger
+go version go1.12 linux/amd64
+```
+
+##### Build Tags
+
+Build tags indicate special features that have been enabled in the binary.
+
+| Build Tag | Description                                     |
+| --------- | ----------------------------------------------- |
+| netgo     | Name resolution will use pure Go code           |
+| ledger    | Ledger devices are supported (hardware wallets) |
+
+### Install binary distribution via snap (Linux only)
+
+**Do not use snap at this time to install the binaries for production until we have a reproducible binary system.**
+
 
 ### Next
 
-Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)
+Now you can [join the mainnet](./join-mainnet.md), [the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

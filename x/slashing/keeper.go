@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store
@@ -29,7 +28,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 		storeKey:     key,
 		cdc:          cdc,
 		validatorSet: vs,
-		paramspace:   paramspace.WithTypeTable(ParamTypeTable()),
+		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
 		codespace:    codespace,
 	}
 	return keeper
@@ -39,17 +38,31 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 // power: power of the double-signing validator at the height of infraction
 func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
+
+	// calculate the age of the evidence
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
+
+	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
+		// Ignore evidence that cannot be handled.
+		// NOTE:
+		// We used to panic with:
+		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
+		// but this couples the expectations of the app to both Tendermint and
+		// the simulator.  Both are expected to provide the full range of
+		// allowable but none of the disallowed evidence types.  Instead of
+		// getting this coordination right, it is easier to relax the
+		// constraints and ignore evidence that cannot be handled.
+		return
 	}
 
-	// Reject evidence if the double is too old
+	// Reject evidence if the double-sign is too old
 	if age > k.MaxEvidenceAge(ctx) {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d",
+			pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
 		return
 	}
 
@@ -61,25 +74,27 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		// Tendermint might break this assumption at some point.
 		return
 	}
+
+	// fetch the validator signing info
 	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 
-	// Validator is already tombstoned
+	// validator is already tombstoned
 	if signInfo.Tombstoned {
 		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", pubkey.Address(), infractionHeight))
 		return
 	}
 
-	// Double sign confirmed
+	// double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", pubkey.Address(), infractionHeight, age))
 
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - staking.ValidatorUpdateDelay
+	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
 	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
@@ -97,7 +112,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		k.validatorSet.Jail(ctx, consAddr)
 	}
 
-	// Set slashed so far to total slash
+	// Set tombstoned to be true
 	signInfo.Tombstoned = true
 
 	// Set jailed until to be forever (max time)
@@ -117,12 +132,15 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	if err != nil {
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
-	// Local index, so counts blocks validator *should* have signed
-	// Will use the 0-value default signing info if not present, except for start height
+
+	// fetch signing info
 	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
+
+	// this is a relative index, so it counts blocks the validator *should* have signed
+	// will use the 0-value default signing info if not present, except for start height
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
 
@@ -145,25 +163,31 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	if missed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", addr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Info(fmt.Sprintf("Absent validator %s (%v) at height %d, %d missed, threshold %d", addr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
+
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
+
+	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
+
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - staking.ValidatorUpdateDelay - 1
+			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
+
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0

@@ -49,7 +49,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
 //_______________________________________________________________________________________
@@ -74,8 +74,12 @@ func MakeTestCodec() *codec.Codec {
 	return cdc
 }
 
-// hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+// Hogpodge of all sorts of input required for testing.
+// `initPower` is converted to an amount of tokens.
+// If `initPower` is 0, no addrs get created.
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+
+	initCoins := sdk.TokensFromTendermintPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
@@ -125,11 +129,14 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
-		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
-			{keeper.BondDenom(ctx), sdk.NewInt(initCoins)},
-		})
+		err := error(nil)
+		if !initCoins.IsZero() {
+			_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+				{keeper.BondDenom(ctx), initCoins},
+			})
+		}
 		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(sdk.NewInt(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
 		keeper.SetPool(ctx, pool)
 	}
 
@@ -163,7 +170,7 @@ func TestAddr(addr string, bech string) sdk.AccAddress {
 	if err != nil {
 		panic(err)
 	}
-	if bytes.Compare(bechres, res) != 0 {
+	if !bytes.Equal(bechres, res) {
 		panic("Bech decode and hex decode don't match")
 	}
 
@@ -223,7 +230,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		deleted := false
 		for ; iterator.Valid(); iterator.Next() {
 			valAddr := parseValidatorPowerRankKey(iterator.Key())
-			if bytes.Equal(valAddr, validator.OperatorAddr) {
+			if bytes.Equal(valAddr, validator.OperatorAddress) {
 				if deleted {
 					panic("found duplicate power index key")
 				} else {
@@ -236,7 +243,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 	if apply {
 		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-		validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+		validator, found := keeper.GetValidator(ctx, validator.OperatorAddress)
 		if !found {
 			panic("validator expected but not found")
 		}
@@ -244,7 +251,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	}
 	cachectx, _ := ctx.CacheContext()
 	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
-	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
+	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddress)
 	if !found {
 		panic("validator expected but not found")
 	}

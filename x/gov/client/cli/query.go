@@ -43,7 +43,7 @@ $ gaiacli query gov proposal 1
 
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
-			return cliCtx.PrintOutput(proposal)
+			return cliCtx.PrintOutput(proposal) // nolint:errcheck
 		},
 	}
 }
@@ -118,7 +118,7 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 				return fmt.Errorf("No matching proposals found")
 			}
 
-			return cliCtx.PrintOutput(matchingProposals)
+			return cliCtx.PrintOutput(matchingProposals) // nolint:errcheck
 		},
 	}
 
@@ -134,7 +134,7 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 // GetCmdQueryVote implements the query proposal vote command.
 func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "vote [proposal-id] [voter-address]",
+		Use:   "vote [proposal-id] [voter-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
 		Long: strings.TrimSpace(`
@@ -175,17 +175,21 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var vote gov.Vote
-			cdc.UnmarshalJSON(res, &vote)
+			if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+				return err
+			}
 
 			if vote.Empty() {
 				res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
 				if err != nil {
 					return err
 				}
-				cdc.UnmarshalJSON(res, &vote)
+				if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+					return err
+				}
 			}
 
-			return cliCtx.PrintOutput(vote)
+			return cliCtx.PrintOutput(vote) //nolint:errcheck
 		},
 	}
 }
@@ -226,7 +230,7 @@ $ gaiacli query gov votes 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 			} else {
@@ -248,7 +252,7 @@ $ gaiacli query gov votes 1
 // GetCmdQueryDeposit implements the query proposal deposit command.
 func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "deposit [proposal-id] [depositer-address]",
+		Use:   "deposit [proposal-id] [depositer-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
 		Long: strings.TrimSpace(`
@@ -339,7 +343,7 @@ $ gaiacli query gov deposits 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 			} else {
@@ -407,7 +411,12 @@ $ gaiacli query gov tally 1
 func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "params",
-		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
+		Short: "Query the parameters of the governance process",
+		Long: strings.TrimSpace(`Query the all the parameters for the governance process:
+
+$ gaiacli query gov params
+`),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			tp, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", queryRoute), nil)
@@ -441,6 +450,12 @@ func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "param [param-type]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
+		Long: strings.TrimSpace(`Query the all the parameters for the governance process:
+
+$ gaiacli query gov param voting
+$ gaiacli query gov param tallying
+$ gaiacli query gov param deposit
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -478,6 +493,10 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "proposer [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the proposer of a governance proposal",
+		Long: strings.TrimSpace(`Query which address proposed a proposal with a given ID:
+
+$ gaiacli query gov proposer 1
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -496,3 +515,5 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 }
+
+// DONTCOVER

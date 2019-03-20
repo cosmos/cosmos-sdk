@@ -249,6 +249,16 @@ func (d Dec) MulInt(i Int) Dec {
 	return Dec{mul}
 }
 
+// MulInt64 - multiplication with int64
+func (d Dec) MulInt64(i int64) Dec {
+	mul := new(big.Int).Mul(d.Int, big.NewInt(i))
+
+	if mul.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{mul}
+}
+
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
 
@@ -281,9 +291,30 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// quotient, round up
+func (d Dec) QuoRoundUp(d2 Dec) Dec {
+	// multiply precision twice
+	mul := new(big.Int).Mul(d.Int, precisionReuse)
+	mul.Mul(mul, precisionReuse)
+
+	quo := new(big.Int).Quo(mul, d2.Int)
+	chopped := chopPrecisionAndRoundUp(quo)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
 // quotient
 func (d Dec) QuoInt(i Int) Dec {
 	mul := new(big.Int).Quo(d.Int, i.i)
+	return Dec{mul}
+}
+
+// QuoInt64 - quotient with int64
+func (d Dec) QuoInt64(i int64) Dec {
+	mul := new(big.Int).Quo(d.Int, big.NewInt(i))
 	return Dec{mul}
 }
 
@@ -301,6 +332,10 @@ func (d Dec) Format(s fmt.State, verb rune) {
 }
 
 func (d Dec) String() string {
+	if d.Int == nil {
+		return d.Int.String()
+	}
+
 	isNeg := d.IsNegative()
 	if d.IsNegative() {
 		d = d.Neg()
@@ -317,7 +352,6 @@ func (d Dec) String() string {
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
 	if inputSize <= Precision {
-
 		bzStr = make([]byte, Precision+2)
 
 		// 0. prefix
@@ -346,6 +380,7 @@ func (d Dec) String() string {
 	if isNeg {
 		return "-" + string(bzStr)
 	}
+
 	return string(bzStr)
 }
 
@@ -394,6 +429,29 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 		}
 		return quo.Add(quo, oneInt)
 	}
+}
+
+func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
+
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		// truncate since d is negative...
+		d = chopPrecisionAndTruncate(d)
+		d = d.Neg(d)
+		return d
+	}
+
+	// get the truncated quotient and remainder
+	quo, rem := d, big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+
+	if rem.Sign() == 0 { // remainder is zero
+		return quo
+	}
+
+	return quo.Add(quo, oneInt)
 }
 
 func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {

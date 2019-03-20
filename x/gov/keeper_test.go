@@ -9,129 +9,161 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
 	keeper.SetProposal(ctx, proposal)
 
-	gotProposal := keeper.GetProposal(ctx, proposalID)
+	gotProposal, ok := keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
 	require.True(t, ProposalEqual(proposal, gotProposal))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	tp := testProposal()
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	proposal6, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 
-	require.Equal(t, uint64(6), proposal6.GetProposalID())
+	require.Equal(t, uint64(6), proposal6.ProposalID)
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
+	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
+
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }
 
 func TestDeposits(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
 
-	fourSteak := sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 4)}
-	fiveSteak := sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 5)}
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)}))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)}, addr0Initial)
-
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
+	expTokens := sdk.TokensFromTendermintPower(42)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
+	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(time.Time{}))
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	// Check first deposit
-	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourStake)
 	require.Nil(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	require.True(t, found)
-	require.Equal(t, fourSteak, deposit.Amount)
+	require.Equal(t, fourStake, deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake, proposal.TotalDeposit)
+	require.Equal(t, addr0Initial.Sub(fourStake), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check a second deposit from same address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveStake)
 	require.Nil(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	require.True(t, found)
-	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
+	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake.Add(fiveStake), proposal.TotalDeposit)
+	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check third deposit from a new address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[1], fourStake)
 	require.Nil(t, err)
 	require.True(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.True(t, found)
 	require.Equal(t, addrs[1], deposit.Depositor)
-	require.Equal(t, fourSteak, deposit.Amount)
-	require.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
-	require.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
+	require.Equal(t, fourStake, deposit.Amount)
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), proposal.TotalDeposit)
+	require.Equal(t, addr1Initial.Sub(fourStake), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	// Check that proposal moved to voting period
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
+	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
 	depositsIterator.Next()
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[1], deposit.Depositor)
-	require.Equal(t, fourSteak, deposit.Amount)
+	require.Equal(t, fourStake, deposit.Amount)
 	depositsIterator.Next()
 	require.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
@@ -139,7 +171,7 @@ func TestDeposits(t *testing.T) {
 	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.True(t, found)
-	require.Equal(t, fourSteak, deposit.Amount)
+	require.Equal(t, fourStake, deposit.Amount)
 	keeper.RefundDeposits(ctx, proposalID)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
@@ -151,13 +183,18 @@ func TestDeposits(t *testing.T) {
 func TestVotes(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
 
-	proposal.SetStatus(StatusVotingPeriod)
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	// Test first vote
@@ -206,25 +243,33 @@ func TestVotes(t *testing.T) {
 
 func TestProposalQueues(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 
 	// create test proposals
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 
-	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.GetDepositEndTime())
+	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	inactiveIterator.Close()
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
+
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }

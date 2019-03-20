@@ -159,11 +159,9 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 			return simulation.NoOpMsg(), nil, nil
 		}
 
-		msg := staking.MsgUndelegate{
-			DelegatorAddress: delegatorAddress,
-			ValidatorAddress: delegation.ValidatorAddress,
-			Amount:           sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
-		}
+		msg := staking.NewMsgDelegate(
+			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
+		)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
 				msg.GetSignBytes(), msg.ValidateBasic())
@@ -205,12 +203,9 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			return simulation.NoOpMsg(), nil, nil
 		}
 
-		msg := staking.MsgBeginRedelegate{
-			DelegatorAddress:    delegatorAddress,
-			ValidatorSrcAddress: srcValidatorAddress,
-			ValidatorDstAddress: destValidatorAddress,
-			Amount:              sdk.NewCoin(denom, amount),
-		}
+		msg := staking.NewMsgBeginRedelegate(
+			delegatorAddress, srcValidatorAddress, destValidatorAddress, sdk.NewCoin(denom, amount),
+		)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}

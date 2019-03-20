@@ -128,6 +128,15 @@ gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 For more information regarding how to generate, sign and broadcast transactions with a
 multi signature account see [Multisig Transactions](#multisig-transactions).
 
+### Tx Broadcasting
+
+By default transactions will be broadcast synchronously (`--sync`). This means
+the tx broadcast response will be returned after CheckTx execution. Clients may
+also wish to broadcast asynchronously (`--sync=false`) where the tx broadcast
+response will be returned immediately. In either case, the tx hash will be
+returned which can be used to query for the tx and check that it is included in
+a block.
+
 ### Fees & Gas
 
 Each transaction may either supply fees or gas prices, but not both. 

@@ -19,12 +19,10 @@ import (
 )
 
 const (
-	// Returns with the response from CheckTx.
+	// Broadcast the tx and return after CheckTx.
 	flagSync = "sync"
-	// Returns right away, with no response
+	// Broadcast the tx and return immediately.
 	flagAsync = "async"
-	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
-	flagBlock = "block"
 )
 
 // BroadcastReq defines a tx broadcasting request.
@@ -60,9 +58,6 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 		var res interface{}
 		switch req.Return {
-		case flagBlock:
-			res, err = cliCtx.BroadcastTx(txBytes)
-
 		case flagSync:
 			res, err = cliCtx.BroadcastTxSync(txBytes)
 
@@ -70,8 +65,9 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			res, err = cliCtx.BroadcastTxAsync(txBytes)
 
 		default:
-			rest.WriteErrorResponse(w, http.StatusInternalServerError,
-				"unsupported return type. supported types: block, sync, async")
+			rest.WriteErrorResponse(
+				w, http.StatusInternalServerError, "unsupported return type; supported types: sync, async",
+			)
 			return
 		}
 

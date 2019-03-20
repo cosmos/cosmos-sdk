@@ -44,7 +44,7 @@ type CLIContext struct {
 	AccountStore  string
 	TrustNode     bool
 	UseLedger     bool
-	Async         bool
+	Sync          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
 	VerifierHome  string
@@ -89,7 +89,7 @@ func NewCLIContext() CLIContext {
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
-		Async:         viper.GetBool(client.FlagAsync),
+		Sync:          viper.GetBool(client.FlagSync),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),

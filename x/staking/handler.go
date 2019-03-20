@@ -209,11 +209,11 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
-	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Amount.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
-	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Value.Amount, validator, true)
+	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount, validator, true)
 	if err != nil {
 		return err.Result()
 	}

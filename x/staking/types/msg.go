@@ -212,14 +212,14 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgDelegate struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Value            sdk.Coin       `json:"value"`
+	Amount           sdk.Coin       `json:"amount"`
 }
 
-func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, value sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		Value:            value,
+		Amount:           amount,
 	}
 }
 
@@ -244,7 +244,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

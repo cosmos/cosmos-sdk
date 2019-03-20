@@ -68,6 +68,7 @@ type TxResponse struct {
 	TxHash    string          `json:"txhash"`
 	Code      uint32          `json:"code,omitempty"`
 	Data      []byte          `json:"data,omitempty"`
+	RawLog    string          `json:"raw_log,omitempty"`
 	Logs      ABCIMessageLogs `json:"logs,omitempty"`
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
@@ -90,6 +91,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		Height:    res.Height,
 		Code:      res.TxResult.Code,
 		Data:      res.TxResult.Data,
+		RawLog:    res.TxResult.Log,
 		Logs:      parsedLogs,
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
@@ -97,34 +99,6 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		Tags:      TagsToStringTags(res.TxResult.Tags),
 		Tx:        tx,
 	}
-}
-
-// NewResponseFormatBroadcastTxCommit returns a TxResponse given a ResultBroadcastTxCommit from tendermint
-func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
-	if res == nil {
-		return TxResponse{}
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
-
-	return TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Code:      res.DeliverTx.Code,
-		Data:      res.DeliverTx.Data,
-		Logs:      parsedLogs,
-		Info:      res.DeliverTx.Info,
-		GasWanted: res.DeliverTx.GasWanted,
-		GasUsed:   res.DeliverTx.GasUsed,
-		Tags:      TagsToStringTags(res.DeliverTx.Tags),
-		Codespace: res.DeliverTx.Codespace,
-	}
-
 }
 
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
@@ -138,6 +112,7 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	return TxResponse{
 		Code:   res.Code,
 		Data:   res.Data.Bytes(),
+		RawLog: res.Log,
 		Logs:   parsedLogs,
 		TxHash: res.Hash.String(),
 	}
@@ -161,6 +136,10 @@ func (r TxResponse) String() string {
 
 	if r.Data != nil {
 		sb.WriteString(fmt.Sprintf("  Data: %s\n", string(r.Data)))
+	}
+
+	if r.RawLog != "" {
+		sb.WriteString(fmt.Sprintf("  Raw Log: %s\n", r.RawLog))
 	}
 
 	if r.Logs != nil {

@@ -20,14 +20,4 @@ gaiacli rest-server --chain-id=test \
     --trust-node=false
 ```
 
-서버는 기본적으로 HTTP를 확인합니다. 보안 계층을 사용하시려면 `--tls` 플래그를 추가해주세요. 기본적으로 자체 서명이 된 인증서가 생성되며, fingerprint가 프린트됩니다. 서버에 특정 SSL 인증서를 사용하기 ㅜ이해서는 `--ssl-certfile`과 `--ssl-keyfile` 플래그를 지정해주세요:
-
-```bash
-gaiacli rest-server --chain-id=test \
-    --laddr=tcp://localhost:1317 \
-    --node tcp://localhost:26657 \
-    --trust-node=false \
-    --ssl-certfile=mycert.pem --ssl-keyfile=mykey.key
-```
-
 Gaia-Lite RPC에 대한 추가적인 정보를 원하시면 [Swagger 문서](https://cosmos.network/rpc/)를 확인하세요.

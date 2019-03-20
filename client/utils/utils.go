@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -69,7 +71,16 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 			return err
 		}
 
-		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
+		var json []byte
+		if viper.GetBool(client.FlagIndentResponse) {
+			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
+		}
+		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := client.BufferStdin()
 		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
@@ -92,7 +103,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	// broadcast to a Tendermint node
 	res, err := cliCtx.BroadcastTx(txBytes)
-	cliCtx.PrintOutput(res)
+	cliCtx.PrintOutput(res) // nolint:errcheck
 	return err
 }
 

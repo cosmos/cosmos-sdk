@@ -40,10 +40,6 @@ const (
 	FlagListenAddr         = "laddr"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
-	FlagTLS                = "tls"
-	FlagSSLHosts           = "ssl-hosts"
-	FlagSSLCertFile        = "ssl-certfile"
-	FlagSSLKeyFile         = "ssl-keyfile"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 )
@@ -62,7 +58,6 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
-		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
@@ -111,10 +106,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Bool(FlagTLS, false, "Enable SSL/TLS layer")
-	cmd.Flags().String(FlagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
-	cmd.Flags().String(FlagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
-	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
 	cmd.Flags().String(FlagCORS, "", "Set the domains that can make CORS requests (* for all)")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
 

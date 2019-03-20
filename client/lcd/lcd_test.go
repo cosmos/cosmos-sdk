@@ -680,7 +680,7 @@ func TestDeposit(t *testing.T) {
 	// query proposal
 	totalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
 	proposal = getProposal(t, port, proposalID)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(totalCoins))
+	require.True(t, proposal.TotalDeposit.IsEqual(totalCoins))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
@@ -718,7 +718,7 @@ func TestVote(t *testing.T) {
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
-	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
+	require.Equal(t, gov.StatusVotingPeriod, proposal.Status)
 
 	// vote
 	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, "Yes", fees)
@@ -855,13 +855,13 @@ func TestProposalsQuery(t *testing.T) {
 	// Only proposals #1 should be in Deposit Period
 	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
 	require.Len(t, proposals, 1)
-	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+	require.Equal(t, proposalID1, proposals[0].ProposalID)
 
 	// Only proposals #2 and #3 should be in Voting Period
 	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
 	require.Len(t, proposals, 2)
-	require.Equal(t, proposalID2, proposals[0].GetProposalID())
-	require.Equal(t, proposalID3, proposals[1].GetProposalID())
+	require.Equal(t, proposalID2, proposals[0].ProposalID)
+	require.Equal(t, proposalID3, proposals[1].ProposalID)
 
 	// Addr1 votes on proposals #2 & #3
 	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2, "Yes", fees)
@@ -875,31 +875,31 @@ func TestProposalsQuery(t *testing.T) {
 
 	// Test query all proposals
 	proposals = getProposalsAll(t, port)
-	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[2]).ProposalID)
 
 	// Test query deposited by addr1
 	proposals = getProposalsFilterDepositor(t, port, addrs[0])
-	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
 
 	// Test query deposited by addr2
 	proposals = getProposalsFilterDepositor(t, port, addrs[1])
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query voted by addr1
 	proposals = getProposalsFilterVoter(t, port, addrs[0])
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
-	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query voted by addr2
 	proposals = getProposalsFilterVoter(t, port, addrs[1])
-	require.Equal(t, proposalID3, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID3, (proposals[0]).ProposalID)
 
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositor(t, port, addrs[0], addrs[0])
-	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
 
 	// Test query votes on Proposal 2
 	votes := getVotes(t, port, proposalID2)

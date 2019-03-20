@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -67,6 +68,8 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(output)
+	if _, err := w.Write(output); err != nil {
+		log.Printf("could not write response: %v", err)
+	}
 	return
 }

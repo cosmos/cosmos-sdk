@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -552,7 +551,7 @@ var (
 
 func validateDenom(denom string) error {
 	if !reDnm.MatchString(denom) {
-		return errors.New("illegal characters")
+		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
 }

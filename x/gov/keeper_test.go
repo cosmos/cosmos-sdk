@@ -19,11 +19,14 @@ func TestGetSetProposal(t *testing.T) {
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
 	keeper.SetProposal(ctx, proposal)
 
-	gotProposal := keeper.GetProposal(ctx, proposalID)
+	gotProposal, ok := keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
 	require.True(t, ProposalEqual(proposal, gotProposal))
 }
 
@@ -35,14 +38,16 @@ func TestIncrementProposalNumber(t *testing.T) {
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	tp := testProposal()
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	keeper.SubmitProposal(ctx, tp)
+	proposal6, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 
-	require.Equal(t, uint64(6), proposal6.GetProposalID())
+	require.Equal(t, uint64(6), proposal6.ProposalID)
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
@@ -52,19 +57,25 @@ func TestActivateVotingPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+
+	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
+
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }
 
@@ -76,8 +87,11 @@ func TestDeposits(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
+
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
@@ -87,12 +101,14 @@ func TestDeposits(t *testing.T) {
 
 	expTokens := sdk.TokensFromTendermintPower(42)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.NewCoins()))
+	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(time.Time{}))
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	// Check first deposit
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourStake)
@@ -102,7 +118,9 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourStake, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake, proposal.TotalDeposit)
 	require.Equal(t, addr0Initial.Sub(fourStake), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check a second deposit from same address
@@ -113,7 +131,9 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
 	require.Equal(t, addrs[0], deposit.Depositor)
-	require.Equal(t, fourStake.Add(fiveStake), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake.Add(fiveStake), proposal.TotalDeposit)
 	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	// Check third deposit from a new address
@@ -124,11 +144,15 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, addrs[1], deposit.Depositor)
 	require.Equal(t, fourStake, deposit.Amount)
-	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), proposal.TotalDeposit)
 	require.Equal(t, addr1Initial.Sub(fourStake), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	// Check that proposal moved to voting period
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	proposal, ok = keeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -164,10 +188,13 @@ func TestVotes(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
 
-	proposal.SetStatus(StatusVotingPeriod)
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	// Test first vote
@@ -224,20 +251,25 @@ func TestProposalQueues(t *testing.T) {
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 
 	// create test proposals
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	tp := testProposal()
+	proposal, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 
-	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.GetDepositEndTime())
+	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	inactiveIterator.Close()
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	require.True(t, ok)
+
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.GetProposalID())
+	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }

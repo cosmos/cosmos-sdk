@@ -250,7 +250,7 @@ paths:
       parameters:
         - in: body
           name: txBroadcast
-          description: The tx must be a signed StdTx. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
+          description: The tx must be a signed StdTx. The supported return types includes `"sync"`(return afer CheckTx) and `"async"`(return right away).
           required: true
           schema:
             type: object

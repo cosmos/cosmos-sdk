@@ -22,7 +22,6 @@ const (
 	FlagChainID            = "chain-id"
 	FlagNode               = "node"
 	FlagHeight             = "height"
-	FlagGas                = "gas"
 	FlagGasAdjustment      = "gas-adjustment"
 	FlagTrustNode          = "trust-node"
 	FlagFrom               = "from"
@@ -32,7 +31,7 @@ const (
 	FlagMemo               = "memo"
 	FlagFees               = "fees"
 	FlagGasPrices          = "gas-prices"
-	FlagAsync              = "async"
+	FlagSync               = "sync"
 	FlagPrintResponse      = "print-response"
 	FlagDryRun             = "dry-run"
 	FlagGenerateOnly       = "generate-only"
@@ -80,7 +79,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
-		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
+		c.Flags().Bool(FlagSync, true, "Broadcast the transaction and return the CheckTx response (false returns immediately)")
 		c.Flags().Bool(FlagPrintResponse, true, "return tx response (only works with async = false)")
 		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")

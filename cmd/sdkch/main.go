@@ -23,10 +23,12 @@ const (
 )
 
 var (
-	progName string
+	progName   string
+	verboseLog *log.Logger
 
 	entriesDir         string
 	pruneAfterGenerate bool
+	verboseLogging     bool
 
 	// sections name-title map
 	sections = map[string]string{
@@ -51,15 +53,24 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	flag.StringVar(&entriesDir, "d", filepath.Join(cwd, entriesDirName), "entry files directory")
 	flag.BoolVar(&pruneAfterGenerate, "prune", false, "prune old entries after changelog generation")
+	flag.BoolVar(&verboseLogging, "v", false, "enable verbose logging")
 	flag.Usage = printUsage
+
 }
 
 func main() {
+	logPrefix := fmt.Sprintf("%s: ", filepath.Base(progName))
 	log.SetFlags(0)
-	log.SetPrefix(fmt.Sprintf("%s: ", filepath.Base(progName)))
+	log.SetPrefix(logPrefix)
 	flag.Parse()
+	verboseLog = log.New(ioutil.Discard, "", 0)
+	if verboseLogging {
+		verboseLog.SetOutput(os.Stderr)
+		verboseLog.SetPrefix(logPrefix)
+	}
 
 	if flag.NArg() < 1 {
 		errInsufficientArgs()
@@ -131,18 +142,53 @@ func generateFileName(line string) string {
 	return ret[:int(math.Min(float64(len(ret)), float64(maxEntryFilenameLength)))]
 }
 
+func directoryContents(dirPath string) ([]os.FileInfo, error) {
+	contents, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return nil, errors.New("couldn't read directory")
+	}
+
+	if len(contents) == 0 {
+		return nil, nil
+	}
+
+	// Filter out hidden files
+	newContents := contents[:0]
+	for _, f := range contents {
+		if f.Name()[0] != '.' {
+			newContents = append(newContents, f)
+		}
+	}
+	for i := len(newContents); i < len(contents); i++ {
+		contents[i] = nil
+	}
+
+	return newContents, nil
+}
+
 func generateChangelog(version string, prune bool) {
 	fmt.Printf("# %s\n\n", version)
 	for sectionDir, sectionTitle := range sections {
-
-		fmt.Printf("## %s\n\n", sectionTitle)
+		sectionTitlePrinted := false
 		for stanzaDir, stanzaTitle := range stanzas {
-			fmt.Printf("### %s\n\n", stanzaTitle)
 			path := filepath.Join(entriesDir, sectionDir, stanzaDir)
+			if contents, err := directoryContents(path); err != nil || len(contents) == 0 {
+				if err != nil {
+					verboseLog.Printf("skipping %s: %v", filepath.Join(filepath.Base(entriesDir), sectionDir, stanzaDir), err)
+				}
+				continue
+			}
+			if !sectionTitlePrinted {
+				fmt.Printf("## %s\n\n", sectionTitle)
+				sectionTitlePrinted = true
+			}
+
+			fmt.Printf("### %s\n\n", stanzaTitle)
 			files, err := ioutil.ReadDir(path)
 			if err != nil && !os.IsNotExist(err) {
 				log.Fatal(err)
 			}
+
 			for _, f := range files {
 				if f.Name()[0] == '.' {
 					continue // skip hidden files
@@ -154,7 +200,7 @@ func generateChangelog(version string, prune bool) {
 
 				if prune {
 					if err := os.Remove(filename); err != nil {
-						fmt.Fprintln(os.Stderr, "couldn't delete file:", filename)
+						verboseLog.Printf("couldn't delete %s: %v", filename, err)
 					}
 				}
 			}
@@ -210,8 +256,8 @@ func writeEntryFile(filename string, bs []byte) {
 		log.Fatal(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Unreleased changelog entry written to: %s\n", filename)
-	fmt.Fprintln(os.Stderr, "To modify this entry please edit or delete the above file directly.")
+	log.Printf("Unreleased changelog entry written to: %s\n", filename)
+	log.Println("To modify this entry please edit or delete the above file directly.")
 }
 
 func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
@@ -282,7 +328,7 @@ func launchUserEditor() (string, error) {
 }
 
 func printUsage() {
-	usageText := fmt.Sprintf(`usage: %s [-d directory] [-prune] command
+	usageText := fmt.Sprintf(`usage: %s [-d directory] [-prune] [-v] command
 
 Maintain unreleased changelog entries in a modular fashion.
 

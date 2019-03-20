@@ -248,6 +248,11 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
 // is false, it replaces the signatures already attached with the new signature.
 func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appendSig bool) (signedStdTx auth.StdTx, err error) {
+	chainID := bldr.chainID
+	if chainID == "" {
+		return auth.StdTx{}, fmt.Errorf("chain ID required but not specified")
+	}
+	
 	stdSignature, err := MakeSignature(bldr.keybase, name, passphrase, StdSignMsg{
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,

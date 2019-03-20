@@ -116,6 +116,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		genFiles []string
 	)
 
+	genVals := make([]types.GenesisValidator, numValidators)
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(flagNodeDirPrefix), i)
@@ -152,6 +153,13 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err
+		}
+
+		genVals[i] = types.GenesisValidator{
+			Address: valPubKeys[i].Address(),
+			PubKey:  valPubKeys[i],
+			Power:   1000,
+			Name:    nodeDirName,
 		}
 
 		baseport := viper.GetInt(flagBaseport)
@@ -244,17 +252,17 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		srvconfig.WriteConfigFile(gaiaConfigFilePath, gaiaConfig)
 	}
 
-	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
+	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators, genVals); err != nil {
 		return err
 	}
 
-	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
-		outDir, viper.GetString(flagNodeDirPrefix), viper.GetString(flagNodeDaemonHome),
-	)
-	if err != nil {
-		return err
-	}
+	// err := collectGenFiles(
+	// 	cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+	// 	outDir, viper.GetString(flagNodeDirPrefix), viper.GetString(flagNodeDaemonHome), genVals,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 
 	fmt.Printf("Successfully initialized %d node directories\n", numValidators)
 	return nil
@@ -262,7 +270,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 func initGenFiles(
 	cdc *codec.Codec, chainID string, accs []app.GenesisAccount,
-	genFiles []string, numValidators int,
+	genFiles []string, numValidators int, genVals []types.GenesisValidator,
 ) error {
 
 	appGenState := app.NewDefaultGenesisState()
@@ -273,10 +281,11 @@ func initGenFiles(
 		return err
 	}
 
-	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		AppState:   appGenStateJSON,
-		Validators: nil,
+	genDoc := &types.GenesisDoc{
+		GenesisTime: tmtime.Now(),
+		ChainID:     chainID,
+		AppState:    appGenStateJSON,
+		Validators:  genVals,
 	}
 
 	// generate empty genesis files for each validator and save

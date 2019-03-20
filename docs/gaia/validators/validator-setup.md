@@ -63,7 +63,7 @@ file of the Cosmos Hub mainnet. If the mainnet is already live, skip this sectio
 :::
 
 If you want to participate in genesis as a validator, you need to justify that
-you have some atom at genesis, create one (or multiple) transactions to bond this atom to your validator address, and include this transaction in the genesis file.
+you have some atoms at genesis, create one (or multiple) transactions to bond these atoms to your validator address, and include this transaction in the genesis file.
 
 Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 

@@ -15,8 +15,13 @@ import (
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
-		"/slashing/validators/{validatorPubKey}/signing_info",
+		"/slashing/validators/signing_info/{validatorPubKey}",
 		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
+	).Methods("GET")
+
+	r.HandleFunc(
+		"/slashing/validators/signing_info",
+		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
@@ -30,16 +35,36 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
 		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
+		signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, pk.Address())
 
-		res, err := cliCtx.QueryStore(key, storeName)
+		if err != nil {
+			rest.WriteErrorResponse(w, code, err.Error())
+			return
+		}
+
+		if signingInfo == nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
+	}
+}
+
+// http request handler to query signing info
+// nolint: unparam
+func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var signingInfoList []slashing.ValidatorSigningInfo
+		// loop o ver all validators
+
+		res, err := cliCtx.QueryWithData("custom/staking/validators", nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -50,15 +75,30 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		var signingInfo slashing.ValidatorSigningInfo
-
-		err = cdc.UnmarshalBinaryLengthPrefixed(res, &signingInfo)
+		var validators []sdk.Validator
+		err = cdc.UnmarshalBinaryLengthPrefixed(res, &validators)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
+		for _, validator := range validators {
+			pubKey := validator.GetConsPubKey()
+			address := pubKey.Address()
+			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, address)
+			if err != nil {
+				rest.WriteErrorResponse(w, code, err.Error())
+				return
+			}
+			signingInfoList = append(signingInfoList, signingInfo)
+		}
+
+		if len(signingInfoList) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 	}
 }
 
@@ -74,4 +114,27 @@ func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Hand
 
 		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
+}
+
+func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Codec, address []byte) (signingInfo slashing.ValidatorSigningInfo, code int, err error) {
+	key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(address))
+
+	res, err := cliCtx.QueryStore(key, storeName)
+	if err != nil {
+		code = http.StatusInternalServerError
+		return
+	}
+
+	if len(res) == 0 {
+		code = http.StatusNoContent
+		return
+	}
+
+	err = cdc.UnmarshalBinaryLengthPrefixed(res, &signingInfo)
+	if err != nil {
+		code = http.StatusInternalServerError
+		return
+	}
+
+	return
 }

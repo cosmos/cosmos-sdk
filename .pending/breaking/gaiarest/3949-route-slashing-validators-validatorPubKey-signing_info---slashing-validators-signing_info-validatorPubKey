@@ -1,0 +1,1 @@
+#3949 route /slashing/validators/{validatorPubKey}/signing_info -> /slashing/validators/signing_info/{validatorPubKey}

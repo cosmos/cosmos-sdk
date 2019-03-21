@@ -6,7 +6,7 @@ import (
 
 // expected bank keeper
 type DistrKeeper interface {
-	DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+	DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error
 }
 
 // expected fee collection keeper

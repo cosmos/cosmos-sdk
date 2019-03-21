@@ -50,7 +50,10 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 	if invarianceErr != nil {
 
 		// refund constant fee
-		k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
+		err := k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
+		if err != nil {
+			return err.Result()
+		}
 
 		// TODO replace with circuit breaker
 		panic(invarianceErr)

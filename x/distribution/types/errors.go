@@ -36,3 +36,6 @@ func ErrNoValidatorCommission(codespace sdk.CodespaceType) sdk.Error {
 func ErrSetWithdrawAddrDisabled(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeSetWithdrawAddrDisabled, "set withdraw address disabled")
 }
+func ErrBadDistribution(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "community pool does not have sufficient coins to distribute")
+}

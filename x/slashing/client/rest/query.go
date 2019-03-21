@@ -48,7 +48,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		if signingInfo == nil {
+		if code == http.StatusNoContent {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

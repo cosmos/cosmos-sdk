@@ -1,6 +1,9 @@
 package context
 
 import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,19 +12,21 @@ import (
 // an intermediate structure which is logged if the context has a logger
 // defined.
 func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error) {
-	if ctx.Sync {
+	switch ctx.BroadcastMode {
+	case client.BroadcastSync:
 		res, err = ctx.BroadcastTxSync(txBytes)
-		if err != nil {
-			return res, err
-		}
-	} else {
+
+	case client.BroadcastAsync:
 		res, err = ctx.BroadcastTxAsync(txBytes)
-		if err != nil {
-			return res, err
-		}
+
+	case client.BroadcastBlock:
+		res, err = ctx.BroadcastTxAndAwaitCommit(txBytes)
+
+	default:
+		return sdk.TxResponse{}, fmt.Errorf("unsupported return type %s; supported types: sync, async, block", ctx.BroadcastMode)
 	}
 
-	return res, nil
+	return res, err
 }
 
 // BroadcastTxSync broadcasts transaction bytes to a Tendermint node
@@ -46,4 +51,16 @@ func (ctx CLIContext) BroadcastTxAsync(txBytes []byte) (sdk.TxResponse, error) {
 
 	res, err := node.BroadcastTxAsync(txBytes)
 	return sdk.NewResponseFormatBroadcastTx(res), err
+}
+
+// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
+// and waits for a commit.
+func (ctx CLIContext) BroadcastTxAndAwaitCommit(txBytes []byte) (sdk.TxResponse, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	res, err := node.BroadcastTxCommit(txBytes)
+	return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 }

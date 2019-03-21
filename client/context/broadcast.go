@@ -20,13 +20,41 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error
 		res, err = ctx.BroadcastTxAsync(txBytes)
 
 	case client.BroadcastBlock:
-		res, err = ctx.BroadcastTxAndAwaitCommit(txBytes)
+		res, err = ctx.BroadcastTxCommit(txBytes)
 
 	default:
 		return sdk.TxResponse{}, fmt.Errorf("unsupported return type %s; supported types: sync, async, block", ctx.BroadcastMode)
 	}
 
 	return res, err
+}
+
+// BroadcastTxCommit broadcasts transaction bytes to a Tendermint node and
+// waits for a commit.
+//
+// NOTE: This should ideally not be used as the request may timeout but the tx
+// may still be included in a block. Use BroadcastTxAsync or BroadcastTxSync
+// instead.
+func (ctx CLIContext) BroadcastTxCommit(txBytes []byte) (sdk.TxResponse, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	res, err := node.BroadcastTxCommit(txBytes)
+	if err != nil {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), err
+	}
+
+	if !res.CheckTx.IsOK() {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
+	}
+
+	if !res.DeliverTx.IsOK() {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
+	}
+
+	return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 }
 
 // BroadcastTxSync broadcasts transaction bytes to a Tendermint node
@@ -51,32 +79,4 @@ func (ctx CLIContext) BroadcastTxAsync(txBytes []byte) (sdk.TxResponse, error) {
 
 	res, err := node.BroadcastTxAsync(txBytes)
 	return sdk.NewResponseFormatBroadcastTx(res), err
-}
-
-// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
-// and waits for a commit.
-//
-// NOTE: This should ideally not be used as the request may timeout but the tx
-// may still be included in a block. Use BroadcastTxAsync or BroadcastTxSync
-// instead.
-func (ctx CLIContext) BroadcastTxAndAwaitCommit(txBytes []byte) (sdk.TxResponse, error) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	res, err := node.BroadcastTxCommit(txBytes)
-	if err != nil {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), err
-	}
-
-	if !res.CheckTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
-	}
-
-	if !res.DeliverTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
-	}
-
-	return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 }

@@ -16,7 +16,7 @@ examples/build/*
 docs/_build
 docs/tutorial
 dist
-devtools-stamp
+tools-stamp
 
 # Data - ideally these don't exist
 baseapp/data/*

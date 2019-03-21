@@ -23,10 +23,11 @@ const (
 )
 
 var (
-	progName string
+	progName   string
+	verboseLog *log.Logger
 
-	entriesDir         string
-	pruneAfterGenerate bool
+	entriesDir     string
+	verboseLogging bool
 
 	// sections name-title map
 	sections = map[string]string{
@@ -51,15 +52,23 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	flag.StringVar(&entriesDir, "d", filepath.Join(cwd, entriesDirName), "entry files directory")
-	flag.BoolVar(&pruneAfterGenerate, "prune", false, "prune old entries after changelog generation")
+	flag.BoolVar(&verboseLogging, "v", false, "enable verbose logging")
 	flag.Usage = printUsage
+
 }
 
 func main() {
+	logPrefix := fmt.Sprintf("%s: ", filepath.Base(progName))
 	log.SetFlags(0)
-	log.SetPrefix(fmt.Sprintf("%s: ", filepath.Base(progName)))
+	log.SetPrefix(logPrefix)
 	flag.Parse()
+	verboseLog = log.New(ioutil.Discard, "", 0)
+	if verboseLogging {
+		verboseLog.SetOutput(os.Stderr)
+		verboseLog.SetPrefix(logPrefix)
+	}
 
 	if flag.NArg() < 1 {
 		errInsufficientArgs()
@@ -88,7 +97,10 @@ func main() {
 		if flag.NArg() > 1 {
 			version = strings.Join(flag.Args()[1:], " ")
 		}
-		generateChangelog(version, pruneAfterGenerate)
+		generateChangelog(version)
+
+	case "prune":
+		pruneEmptyDirectories()
 
 	default:
 		unknownCommand(cmd)
@@ -131,36 +143,66 @@ func generateFileName(line string) string {
 	return ret[:int(math.Min(float64(len(ret)), float64(maxEntryFilenameLength)))]
 }
 
-func generateChangelog(version string, prune bool) {
+func directoryContents(dirPath string) []os.FileInfo {
+	contents, err := ioutil.ReadDir(dirPath)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatalf("couldn't read directory %s: %v", dirPath, err)
+	}
+
+	if len(contents) == 0 {
+		return nil
+	}
+
+	// Filter out hidden files
+	newContents := contents[:0]
+	for _, f := range contents {
+		if f.Name()[0] != '.' { // skip hidden files
+			newContents = append(newContents, f)
+		}
+	}
+	for i := len(newContents); i < len(contents); i++ {
+		contents[i] = nil
+	}
+
+	return newContents
+}
+
+func generateChangelog(version string) {
 	fmt.Printf("# %s\n\n", version)
 	for sectionDir, sectionTitle := range sections {
-
-		fmt.Printf("## %s\n\n", sectionTitle)
+		sectionTitlePrinted := false
 		for stanzaDir, stanzaTitle := range stanzas {
-			fmt.Printf("### %s\n\n", stanzaTitle)
 			path := filepath.Join(entriesDir, sectionDir, stanzaDir)
-			files, err := ioutil.ReadDir(path)
-			if err != nil && !os.IsNotExist(err) {
-				log.Fatal(err)
+			files := directoryContents(path)
+			if len(files) == 0 {
+				continue
 			}
+
+			if !sectionTitlePrinted {
+				fmt.Printf("## %s\n\n", sectionTitle)
+				sectionTitlePrinted = true
+			}
+
+			fmt.Printf("### %s\n\n", stanzaTitle)
 			for _, f := range files {
-				if f.Name()[0] == '.' {
-					continue // skip hidden files
-				}
+				verboseLog.Println("processing", f.Name())
 				filename := filepath.Join(path, f.Name())
 				if err := indentAndPrintFile(filename); err != nil {
 					log.Fatal(err)
-				}
-
-				if prune {
-					if err := os.Remove(filename); err != nil {
-						fmt.Fprintln(os.Stderr, "couldn't delete file:", filename)
-					}
 				}
 			}
 
 			fmt.Println()
 		}
+	}
+}
+
+func pruneEmptyDirectories() {
+	for sectionDir, _ := range sections {
+		for stanzaDir, _ := range stanzas {
+			mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+		}
+		mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
 	}
 }
 
@@ -210,8 +252,8 @@ func writeEntryFile(filename string, bs []byte) {
 		log.Fatal(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Unreleased changelog entry written to: %s\n", filename)
-	fmt.Fprintln(os.Stderr, "To modify this entry please edit or delete the above file directly.")
+	log.Printf("Unreleased changelog entry written to: %s\n", filename)
+	log.Println("To modify this entry please edit or delete the above file directly.")
 }
 
 func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
@@ -281,8 +323,20 @@ func launchUserEditor() (string, error) {
 	return tempfilename, nil
 }
 
+func mustPruneDirIfEmpty(path string) {
+	if contents := directoryContents(path); len(contents) == 0 {
+		if err := os.Remove(path); err != nil {
+			if !os.IsNotExist(err) {
+				log.Fatal(err)
+			}
+			return
+		}
+		log.Println(path, "removed")
+	}
+}
+
 func printUsage() {
-	usageText := fmt.Sprintf(`usage: %s [-d directory] [-prune] command
+	usageText := fmt.Sprintf(`usage: %s [-d directory] [-v] command
 
 Maintain unreleased changelog entries in a modular fashion.
 
@@ -291,6 +345,7 @@ Commands:
                                       the editor to edit the message.
     generate [version]                Generate a changelog in Markdown format and print
                                       it to STDOUT. version defaults to UNRELEASED.
+    prune                             Delete empty sub-directories recursively.
 
     Sections             Stanzas
          ---                 ---

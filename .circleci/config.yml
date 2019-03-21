@@ -53,6 +53,9 @@ jobs:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: tools
           command: |
@@ -65,6 +68,10 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make go-mod-cache
             make install
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -79,17 +86,14 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
-      - run:
-          name: Get metalinter
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make devtools-clean
-            make devtools
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_lint
+            make ci-lint
 
   integration_tests:
     <<: *linux_defaults
@@ -99,6 +103,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test cli
           command: |
@@ -113,6 +120,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test individual module simulations
           command: |
@@ -127,6 +137,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test full Gaia simulation
           command: |
@@ -141,6 +154,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -155,6 +171,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -169,6 +188,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation long
           command: |
@@ -184,6 +206,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation short
           command: |
@@ -200,6 +225,9 @@ jobs:
       - checkout
       - *dependencies
       - run: mkdir -p /tmp/logs
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Run tests
           command: |
@@ -208,7 +236,7 @@ jobs:
             export GO111MODULE=on
             for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(echo "$pkg" | sed 's|[/.]|_|g')
-              go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
+              go test -mod=readonly -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace

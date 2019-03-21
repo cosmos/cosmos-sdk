@@ -288,7 +288,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
+	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s --broadcast-mode=block", to, amount, f.Flags(), from)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -296,7 +296,7 @@ func (f *Fixtures) txSendWithConfirm(
 	from string, to sdk.AccAddress, amount sdk.Coin, confirm string, flags ...string,
 ) (bool, string, string) {
 
-	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
+	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s --broadcast-mode=block", to, amount, f.Flags(), from)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, app.DefaultKeyPass)
 }
 
@@ -308,7 +308,7 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 
 // TxBroadcast is gaiacli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx broadcast %v %v", f.Flags(), fileName)
+	cmd := fmt.Sprintf("../../../build/gaiacli tx broadcast %v %v --broadcast-mode=block", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -337,12 +337,13 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
 	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
+	cmd += " --broadcast-mode=block"
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
 // TxStakingUnbond is gaiacli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx staking unbond %s %v --from=%s %v", validator, shares, from, f.Flags())
+	cmd := fmt.Sprintf("../../../build/gaiacli tx staking unbond %s %v --from=%s %v --broadcast-mode=block", validator, shares, from, f.Flags())
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -351,20 +352,20 @@ func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress
 
 // TxGovSubmitProposal is gaiacli tx gov submit-proposal
 func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx gov submit-proposal %v --from=%s --type=%s", f.Flags(), from, typ)
+	cmd := fmt.Sprintf("../../../build/gaiacli tx gov submit-proposal %v --from=%s --type=%s --broadcast-mode=block", f.Flags(), from, typ)
 	cmd += fmt.Sprintf(" --title=%s --description=%s --deposit=%s", title, description, deposit)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
 // TxGovDeposit is gaiacli tx gov deposit
 func (f *Fixtures) TxGovDeposit(proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx gov deposit %d %s --from=%s %v", proposalID, amount, from, f.Flags())
+	cmd := fmt.Sprintf("../../../build/gaiacli tx gov deposit %d %s --from=%s %v --broadcast-mode=block", proposalID, amount, from, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
 // TxGovVote is gaiacli tx gov vote
 func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx gov vote %d %s --from=%s %v", proposalID, option, from, f.Flags())
+	cmd := fmt.Sprintf("../../../build/gaiacli tx gov vote %d %s --from=%s %v --broadcast-mode=block", proposalID, option, from, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

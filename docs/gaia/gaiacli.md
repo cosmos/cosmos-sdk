@@ -130,12 +130,16 @@ multi signature account see [Multisig Transactions](#multisig-transactions).
 
 ### Tx Broadcasting
 
-By default transactions will be broadcast synchronously (`--sync`). This means
-the tx broadcast response will be returned after CheckTx execution. Clients may
-also wish to broadcast asynchronously (`--sync=false`) where the tx broadcast
-response will be returned immediately. In either case, the tx hash will be
-returned which can be used to query for the tx and check that it is included in
-a block.
+When broadcasting transactions, `gaiacli` accepts a `--broadcast-mode` flag. This
+flag can have a value of `sync` (default), `async`, or `block`, where `sync` makes
+the client return a CheckTx response, `async` makes the client return immediately,
+and `block` makes the client wait for the tx to be committed (or timing out).
+
+It is important to note that the `block` mode should **not** be used in most
+circumstances. This is because broadcasting can timeout but the tx may still be
+included in a block. This can result in many undesirable situations. Therefor, it
+is best to use `sync` or `async` and query by tx hash to determine when the tx
+is included in a block.
 
 ### Fees & Gas
 

@@ -67,7 +67,8 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName, err := GetFromFields(from)
+	genOnly := viper.GetBool(client.FlagGenerateOnly)
+	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -93,7 +94,7 @@ func NewCLIContext() CLIContext {
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),
-		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
+		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
@@ -274,10 +275,20 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 }
 
 // GetFromFields returns a from account address and Keybase name given either
-// an address or key name.
-func GetFromFields(from string) (sdk.AccAddress, string, error) {
+// an address or key name. If genOnly is true, only a valid Bech32 cosmos
+// address is returned.
+func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
+	}
+
+	if genOnly {
+		addr, err := sdk.AccAddressFromBech32(from)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return addr, "", nil
 	}
 
 	keybase, err := keys.NewKeyBaseFromHomeFlag()

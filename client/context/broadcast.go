@@ -55,6 +55,10 @@ func (ctx CLIContext) BroadcastTxAsync(txBytes []byte) (sdk.TxResponse, error) {
 
 // BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
 // and waits for a commit.
+//
+// NOTE: This should ideally not be used as the request may timeout but the tx
+// may still be included in a block. Use BroadcastTxAsync or BroadcastTxSync
+// instead.
 func (ctx CLIContext) BroadcastTxAndAwaitCommit(txBytes []byte) (sdk.TxResponse, error) {
 	node, err := ctx.GetNode()
 	if err != nil {

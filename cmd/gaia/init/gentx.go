@@ -238,7 +238,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
-	valPubKey crypto.PubKey, website string, details string, identity string) {
+	valPubKey crypto.PubKey, website, details, identity string) {
 	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
 	viper.Set(client.FlagChainID, chainID)
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from

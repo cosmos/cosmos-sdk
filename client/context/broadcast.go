@@ -66,5 +66,17 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(txBytes []byte) (sdk.TxResponse,
 	}
 
 	res, err := node.BroadcastTxCommit(txBytes)
+	if err != nil {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), err
+	}
+
+	if !res.CheckTx.IsOK() {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
+	}
+
+	if !res.DeliverTx.IsOK() {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
+	}
+
 	return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 }

@@ -104,15 +104,15 @@ func (f Fixtures) GenesisState() app.GenesisState {
 	return appState
 }
 
-// InitFixtures is called at the beginning of a test
-// and initializes a chain with 1 validator
+// InitFixtures is called at the beginning of a test  and initializes a chain
+// with 1 validator.
 func InitFixtures(t *testing.T) (f *Fixtures) {
 	f = NewFixtures(t)
 
-	// Reset test state
+	// reset test state
 	f.UnsafeResetAll()
 
-	// Ensure keystore has foo and bar keys
+	// ensure keystore has foo and bar keys
 	f.KeysDelete(keyFoo)
 	f.KeysDelete(keyBar)
 	f.KeysDelete(keyBar)
@@ -124,14 +124,14 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	f.KeysAdd(keyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
 		"--multisig=%s,%s,%s", keyFoo, keyBar, keyBaz))
 
-	// Ensure that CLI output is in JSON format
+	// ensure that CLI output is in JSON format
 	f.CLIConfig("output", "json")
 
 	// NOTE: GDInit sets the ChainID
 	f.GDInit(keyFoo)
 	f.CLIConfig("chain-id", f.ChainID)
 
-	// Start an account with tokens
+	// start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
 	f.AddGenesisAccount(
 		f.KeyAddress(keyVesting), startCoins,
@@ -139,8 +139,10 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 		fmt.Sprintf("--vesting-start-time=%d", time.Now().UTC().UnixNano()),
 		fmt.Sprintf("--vesting-end-time=%d", time.Now().Add(60*time.Second).UTC().UnixNano()),
 	)
+
 	f.GenTx(keyFoo)
 	f.CollectGenTxs()
+
 	return
 }
 

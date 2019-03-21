@@ -108,13 +108,8 @@ following delegation and commission default parameters:
 				}
 			}
 
-			// Read --website (optional)
 			website := viper.GetString(cli.FlagWebsite)
-
-			// Read --details (optional)
 			details := viper.GetString(cli.FlagDetails)
-
-			// Read --identity (optional)
 			identity := viper.GetString(cli.FlagIdentity)
 
 			// Set flags for creating gentx

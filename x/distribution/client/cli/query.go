@@ -170,7 +170,7 @@ func GetCmdQueryCommunityPool(queryRoute string, cdc *codec.Codec) *cobra.Comman
 		Use:   "community-pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the amount of coins in the community pool",
-		Long: strings.TrimSpace(`Query all coins in the community pool which is under Governance control
+		Long: strings.TrimSpace(`Query all coins in the community pool which is under Governance control.
 
 $ gaiacli query distr community-pool
 `),

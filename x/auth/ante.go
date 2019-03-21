@@ -44,9 +44,6 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
-		// set the tx gas price in the new context
-		newCtx = newCtx.WithTxGasPrices(stdTx.Fee.GasPrices())
-
 		params := ak.GetParams(ctx)
 
 		// Ensure that the provided fees meet a minimum threshold for the validator,

@@ -22,7 +22,7 @@ func NewKeeper(paramSpace params.Subspace,
 
 	return Keeper{
 		routes:              []InvarRoute{},
-		paramSpace:          paramSpace,
+		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
 		distrKeeper:         distrKeeper,
 		bankKeeper:          bankKeeper,
 		feeCollectionKeeper: feeCollectionKeeper,

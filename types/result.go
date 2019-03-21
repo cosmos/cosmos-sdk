@@ -101,6 +101,70 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 	}
 }
 
+// NewResponseFormatBroadcastTxCommit returns a TxResponse given a
+// ResultBroadcastTxCommit from tendermint.
+func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	if !res.CheckTx.IsOK() {
+		return newTxResponseCheckTx(res)
+	}
+
+	return newTxResponseDeliverTx(res)
+}
+
+func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
+	parsedLogs, _ := ParseABCILogs(res.CheckTx.Log)
+
+	return TxResponse{
+		Height:    res.Height,
+		TxHash:    txHash,
+		Code:      res.CheckTx.Code,
+		Data:      res.CheckTx.Data,
+		RawLog:    res.CheckTx.Log,
+		Logs:      parsedLogs,
+		Info:      res.CheckTx.Info,
+		GasWanted: res.CheckTx.GasWanted,
+		GasUsed:   res.CheckTx.GasUsed,
+		Tags:      TagsToStringTags(res.CheckTx.Tags),
+		Codespace: res.CheckTx.Codespace,
+	}
+}
+
+func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
+	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
+
+	return TxResponse{
+		Height:    res.Height,
+		TxHash:    txHash,
+		Code:      res.DeliverTx.Code,
+		Data:      res.DeliverTx.Data,
+		RawLog:    res.DeliverTx.Log,
+		Logs:      parsedLogs,
+		Info:      res.DeliverTx.Info,
+		GasWanted: res.DeliverTx.GasWanted,
+		GasUsed:   res.DeliverTx.GasUsed,
+		Tags:      TagsToStringTags(res.DeliverTx.Tags),
+		Codespace: res.DeliverTx.Codespace,
+	}
+}
+
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
 func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	if res == nil {

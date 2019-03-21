@@ -18,17 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-const (
-	// Broadcast the tx and return after CheckTx.
-	flagSync = "sync"
-	// Broadcast the tx and return immediately.
-	flagAsync = "async"
-)
-
 // BroadcastReq defines a tx broadcasting request.
 type BroadcastReq struct {
-	Tx     auth.StdTx `json:"tx"`
-	Return string     `json:"return"`
+	Tx   auth.StdTx `json:"tx"`
+	Mode string     `json:"mode"`
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
@@ -56,21 +49,9 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 
-		var res interface{}
-		switch req.Return {
-		case flagSync:
-			res, err = cliCtx.BroadcastTxSync(txBytes)
+		cliCtx = cliCtx.WithBroadcastMode(req.Mode)
 
-		case flagAsync:
-			res, err = cliCtx.BroadcastTxAsync(txBytes)
-
-		default:
-			rest.WriteErrorResponse(
-				w, http.StatusInternalServerError, "unsupported return type; supported types: sync, async",
-			)
-			return
-		}
-
+		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

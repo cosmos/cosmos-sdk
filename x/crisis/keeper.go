@@ -7,7 +7,7 @@ import (
 
 // Keeper - crisis keeper
 type Keeper struct {
-	routes     InvarRoutes
+	routes     []InvarRoute
 	paramSpace params.Subspace
 
 	distrKeeper         DistrKeeper
@@ -33,9 +33,4 @@ func NewKeeper(paramSpace params.Subspace,
 func (k *Keeper) RegisterRoute(route string, invar sdk.Invariant) {
 	invarRoute := NewInvarRoute(route, invar)
 	k.routes = append(k.routes, invarRoute)
-}
-
-// register routes for the
-func (k *Keeper) Routes() Routes {
-	return k.routes.Routes()
 }

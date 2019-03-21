@@ -13,32 +13,19 @@ import (
 type ModuleClient struct {
 	storeKey string
 	cdc      *amino.Codec
-	routes   crisis.Routes
 }
 
 // NewModuleClient creates a new ModuleClient object
-func NewModuleClient(storeKey string, cdc *amino.Codec, routes crisis.Routes) ModuleClient {
+func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 	return ModuleClient{
 		storeKey: storeKey,
 		cdc:      cdc,
-		routes:   routes,
 	}
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (mc ModuleClient) GetQueryCmd() *cobra.Command {
-	slashingQueryCmd := &cobra.Command{
-		Use:   crisis.ModuleName,
-		Short: "Querying commands for the crisis module",
-	}
-
-	slashingQueryCmd.AddCommand(
-		client.GetCommands(
-			cli.GetCmdQuerySigningInfo(mc.storeKey, mc.cdc, mc.routes),
-		)...,
-	)
-
-	return slashingQueryCmd
+func (ModuleClient) GetQueryCmd() *cobra.Command {
+	return nil
 }
 
 // GetTxCmd returns the transaction commands for this module

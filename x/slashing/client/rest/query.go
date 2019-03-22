@@ -90,11 +90,15 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		// Pagination should happen at QueryWithData
 		pageParam := r.FormValue("page")
 		pageSizeParam := r.FormValue("pageSize")
+
+		// If we are in the not-paginated route return everything
 		start := 0
 		end := len(validators)
 		if pageParam != "" && pageSizeParam != "" {
 			page, errPage := strconv.Atoi(pageParam)
 			pageSize, errPageSize := strconv.Atoi(pageSizeParam)
+
+			// Quit if pages are non valid integers or dummy values
 			if errPage != nil {
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPage.Error())
 				return
@@ -103,8 +107,29 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPageSize.Error())
 				return
 			}
-			start = page * pageSize
-			end = start + pageSize
+			if page < 0 {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, "Page should be greater than 0")
+				return
+			}
+			if pageSize < 1 {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, "PageSize should be greater than 1")
+				return
+			}
+
+			// If someone asks for pages bigger than our dataset, just return everything
+			if pageSize > end {
+				pageSize = end
+			}
+
+			// Do pagination only when healthy, fallback to 0
+			if page*pageSize < end {
+				start = page * pageSize
+			}
+
+			// Do pagination only when healthy, fallback to len(dataset)
+			if start+pageSize < end {
+				end = start + pageSize
+			}
 		}
 
 		for _, validator := range validators[start:end] {

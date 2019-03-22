@@ -2,16 +2,13 @@ package rest
 
 import (
 	"fmt"
-	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
@@ -25,7 +22,14 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).
 		Methods("GET").
-		Queries("page", "{page}", "pageSize", "{pageSize}")
+		Queries("page", "{page}", "limit", "{limit}")
+
+	r.HandleFunc(
+		"/slashing/validators/signing_info",
+		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
+	).
+		Methods("GET").
+		Queries("page", "{page}")
 
 	r.HandleFunc(
 		"/slashing/validators/signing_info",
@@ -69,6 +73,12 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 	return func(w http.ResponseWriter, r *http.Request) {
 		var signingInfoList []slashing.ValidatorSigningInfo
 
+		_, page, limit, err := rest.ParseHTTPArgs(r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		res, err := cliCtx.QueryWithData("custom/staking/validators", nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -87,51 +97,9 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 			return
 		}
 
-		// Pagination should happen at QueryWithData
-		pageParam := r.FormValue("page")
-		pageSizeParam := r.FormValue("pageSize")
-
-		// If we are in the not-paginated route return everything
-		start := 0
-		end := len(validators)
-		if pageParam != "" && pageSizeParam != "" {
-			page, errPage := strconv.Atoi(pageParam)
-			pageSize, errPageSize := strconv.Atoi(pageSizeParam)
-
-			// Quit if pages are non valid integers or dummy values
-			if errPage != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPage.Error())
-				return
-			}
-			if errPageSize != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPageSize.Error())
-				return
-			}
-			if page < 0 {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, "Page should be greater than 0")
-				return
-			}
-			if pageSize < 1 {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, "PageSize should be greater than 1")
-				return
-			}
-
-			// If someone asks for pages bigger than our dataset, just return everything
-			if pageSize > end {
-				pageSize = end
-			}
-
-			// Do pagination only when healthy, fallback to 0
-			if page*pageSize < end {
-				start = page * pageSize
-			}
-
-			// Do pagination only when healthy, fallback to len(dataset)
-			if start+pageSize < end {
-				end = start + pageSize
-			}
-		}
-
+		// TODO: this should happen when querying Validators from RPC,
+		//  as soon as it's available this is not needed anymore
+		start, end := adjustPagination(len(validators), page, limit)
 		for _, validator := range validators[start:end] {
 			pubKey := validator.GetConsPubKey()
 			address := pubKey.Address()
@@ -187,4 +155,25 @@ func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Code
 	}
 
 	return
+}
+
+func adjustPagination(size int, page int, limit int) (int, int) {
+	// If someone asks for pages bigger than our dataset, just return everything
+	if limit > size {
+		return 0, size
+	}
+
+	// Do pagination when healthy, fallback to 0
+	start := 0
+	if page*limit < size {
+		start = page * limit
+	}
+
+	// Do pagination only when healthy, fallback to len(dataset)
+	end := size
+	if start+limit <= size {
+		end = start + limit
+	}
+
+	return start, end
 }

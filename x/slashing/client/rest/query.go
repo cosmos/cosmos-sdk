@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -22,6 +23,13 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	r.HandleFunc(
 		"/slashing/validators/signing_info",
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
+	).
+		Methods("GET").
+		Queries("page", "{page}", "pageSize", "{pageSize}")
+
+	r.HandleFunc(
+		"/slashing/validators/signing_info",
+		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
@@ -31,7 +39,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 }
 
 // http request handler to query signing info
-// nolint: unparam
 func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -58,11 +65,9 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 }
 
 // http request handler to query signing info
-// nolint: unparam
 func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var signingInfoList []slashing.ValidatorSigningInfo
-		// loop o ver all validators
 
 		res, err := cliCtx.QueryWithData("custom/staking/validators", nil)
 		if err != nil {
@@ -82,7 +87,27 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 			return
 		}
 
-		for _, validator := range validators {
+		// Pagination should happen at QueryWithData
+		pageParam := r.FormValue("page")
+		pageSizeParam := r.FormValue("pageSize")
+		start := 0
+		end := len(validators)
+		if pageParam != "" && pageSizeParam != "" {
+			page, errPage := strconv.Atoi(pageParam)
+			pageSize, errPageSize := strconv.Atoi(pageSizeParam)
+			if errPage != nil {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPage.Error())
+				return
+			}
+			if errPageSize != nil {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, errPageSize.Error())
+				return
+			}
+			start = page * pageSize
+			end = start + pageSize
+		}
+
+		for _, validator := range validators[start:end] {
 			pubKey := validator.GetConsPubKey()
 			address := pubKey.Address()
 			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, address)

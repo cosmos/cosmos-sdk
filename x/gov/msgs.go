@@ -97,7 +97,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 	if msg.Amount.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
-	if msg.ProposalID < 0 {
+	if msg.ProposalID < startingProposalID {
 		return errors.ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	return nil
@@ -143,7 +143,8 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if msg.Voter.Empty() {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
-	if msg.ProposalID < 0 {
+	if msg.ProposalID < startingProposalID {
+		fmt.Println(startingProposalID)
 		return errors.ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	if !validVoteOption(msg.Option) {

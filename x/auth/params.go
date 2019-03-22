@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -29,7 +29,7 @@ var (
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
 
-var _ params.ParamSet = &Params{}
+var _ subspace.ParamSet = &Params{}
 
 // Params defines the parameters for the auth module.
 type Params struct {
@@ -41,15 +41,15 @@ type Params struct {
 }
 
 // ParamKeyTable for auth module
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() subspace.KeyTable {
+	return subspace.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
 // nolint
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
+func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
+	return subspace.ParamSetPairs{
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
 		{KeyTxSigLimit, &p.TxSigLimit},
 		{KeyTxSizeCostPerByte, &p.TxSizeCostPerByte},

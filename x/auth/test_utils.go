@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	subspace "github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 type testInput struct {
@@ -29,8 +29,8 @@ func setupTestInput() testInput {
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyParams := sdk.NewKVStoreKey("subspace")
+	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
@@ -39,7 +39,7 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
-	ps := params.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
+	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
 	ak := NewAccountKeeper(cdc, authCapKey, ps, ProtoBaseAccount)
 	fck := NewFeeCollectionKeeper(cdc, fckCapKey)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())

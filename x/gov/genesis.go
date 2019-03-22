@@ -3,6 +3,7 @@ package gov
 import (
 	"bytes"
 	"fmt"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,27 @@ const (
 	// Default period for deposits & voting
 	DefaultPeriod time.Duration = 86400 * 2 * time.Second // 2 days
 )
+
+var (
+	startingProposalID       uint64
+	onceStartingProposalID   sync.Once
+	initedStartingProposalID bool
+)
+
+// MsgVote.ValidateBasic() needs StartingProposalID provided by the genesis
+// but it cannot know about the genesis / keeper information
+// setStartingProposalID ensures setting startingProposalID only once
+// so unless there is more than one gov keeper the var will store the genesis StartingProposalID
+// TODO: temporal solution
+func setStartingProposalID(id uint64) {
+	if initedStartingProposalID {
+		panic("cannot set multiple genesis StartingProposalID")
+	}
+	onceStartingProposalID.Do(func() {
+		startingProposalID = id
+		initedStartingProposalID = true
+	})
+}
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
@@ -130,6 +152,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		}
 		k.SetProposal(ctx, proposal)
 	}
+	setStartingProposalID(data.StartingProposalID)
 }
 
 // ExportGenesis - output genesis parameters

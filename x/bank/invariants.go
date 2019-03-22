@@ -6,11 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 )
 
 // register bank invariants
-func RegisterInvariants(c *crisis.Keeper, ak auth.AccountKeeper) {
+func RegisterInvariants(c CrisisKeeper, ak auth.AccountKeeper) {
 	c.RegisterRoute("bank/nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }

@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // register all distribution invariants
-func RegisterInvariants(c *crisis.Keeper, k Keeper, stk types.StakingKeeper) {
+func RegisterInvariants(c types.CrisisKeeper, k Keeper, stk types.StakingKeeper) {
 	c.RegisterRoute(types.ModuleName+"/nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
 	c.RegisterRoute(types.ModuleName+"/can-withdraw",

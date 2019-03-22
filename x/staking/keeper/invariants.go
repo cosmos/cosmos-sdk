@@ -6,12 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // register all staking invariants
-func RegisterInvariants(c *crisis.Keeper, k Keeper, f types.FeeCollectionKeeper,
+func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKeeper,
 	d types.DistributionKeeper, am auth.AccountKeeper) {
 
 	c.RegisterRoute(types.ModuleName+"/supply",

@@ -64,6 +64,9 @@ var (
 	NonNegativeOutstandingInvariant           = keeper.NonNegativeOutstandingInvariant
 	CanWithdrawInvariant                      = keeper.CanWithdrawInvariant
 	ReferenceCountInvariant                   = keeper.ReferenceCountInvariant
+	CreateTestInputDefault                    = keeper.CreateTestInputDefault
+	CreateTestInputAdvanced                   = keeper.CreateTestInputAdvanced
+	TestAddrs                                 = keeper.TestAddrs
 
 	RegisterCodec       = types.RegisterCodec
 	DefaultGenesisState = types.DefaultGenesisState

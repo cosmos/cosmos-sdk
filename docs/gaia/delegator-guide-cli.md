@@ -31,7 +31,7 @@ Please exercise extreme caution!
 
 - [Installing `gaiacli`](#installing-gaiacli)
 - [Cosmos Accounts](#cosmos-accounts)
-    + [Restoring an account from the fundrasier](#restoring-an-account-from-the-fundraiser)
+    + [Restoring an account from the fundraiser](#restoring-an-account-from-the-fundraiser)
     + [Creating an account](#creating-an-account)
 - [Accessing the Cosmos Hub network](#accessing-the-cosmos-hub-network)
     + [Running your own full-node](#running-your-own-full-node)
@@ -157,7 +157,7 @@ You will be prompted to input a passphrase that is used to encrypt the private k
 
 ### Creating an account
 
-To create an account, you just need to have `gaiacli` installed. Before creating it, you need to know where you intend to store and interract with your private keys. The best options are to store them in an offline dedicated computer or a ledger device. Storing them on your regular online computer involves more risk, since anyone who infiltrates your computer through the internet could exfiltrate your private keys and steal your funds.
+To create an account, you just need to have `gaiacli` installed. Before creating it, you need to know where you intend to store and interact with your private keys. The best options are to store them in an offline dedicated computer or a ledger device. Storing them on your regular online computer involves more risk, since anyone who infiltrates your computer through the internet could exfiltrate your private keys and steal your funds.
 
 #### Using a ledger device
 
@@ -337,7 +337,7 @@ For each command, you can use the `-h` or `--help` flag to get more information.
 ## Sending Transactions
 
 ::: warning
-On Cosmos Hub mainnet, the accepted denom is `uatom` (micro-Atom), where `1atom = 1,000,000uatom`
+On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1,000,000uatom`
 :::
 
 ### A note on gas and fees
@@ -365,7 +365,7 @@ For mainnet, the recommended `gas-prices` is `0.025uatom`.
 :::
 
 ::: warning
-**Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
+**Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsibilities involved with delegating**
 :::
 
 ::: warning
@@ -378,6 +378,14 @@ For mainnet, the recommended `gas-prices` is `0.025uatom`.
 
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
+
+// Redelegate a certain amount of Atoms from a validator to another
+// Can only be used if already bonded to a validator
+// Redelegation takes effect immediately, there is no waiting period to redelegate
+// After a redelegation, no other redelegation can be made from the account for the next 3 weeks
+// ex value for flags: <stcValidatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToRedelegate>=100000000uatom, <gasPrice>=0.025uatom
+
+gaiacli tx staking redelegate <srcValidatorAddress> <destValidatorAddress> <amountToRedelegate> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
 // Withdraw all rewards
 // ex value for flag: <gasPrice>=0.025uatom

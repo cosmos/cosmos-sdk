@@ -13,6 +13,5 @@ func init() {
 // Registers types to codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSubmitParameterChangeProposal{}, "params/MsgSubmitParameterChangeProposal", nil)
-
 	cdc.RegisterConcrete(ProposalChange{}, "params/ProposalChange", nil)
 }

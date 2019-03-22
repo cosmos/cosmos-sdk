@@ -34,7 +34,7 @@ func (rtr *router) AddRoute(path string, h proposal.Handler) Router {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	if rtr.routes[path] != nil {
+	if rtr.HasRoute(path) {
 		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 

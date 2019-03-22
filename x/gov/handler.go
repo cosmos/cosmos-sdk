@@ -77,7 +77,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 // ProposalHandler is a proposal.Handler that processes proposal.Content
 // Does nothing since both TextProposal and SoftUpgradeProposal
-// does not directly effect on the state
+// does not directly effect the state.
 func ProposalHandler(ctx sdk.Context, p proposal.Content) sdk.Error {
 	switch p.(type) {
 	case TextProposal, SoftwareUpgradeProposal:

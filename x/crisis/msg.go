@@ -23,7 +23,7 @@ func NewMsgVerifyInvariance(sender sdk.AccAddress, invariantRoute string) MsgVer
 
 //nolint
 func (msg MsgVerifyInvariant) Route() string { return ModuleName }
-func (msg MsgVerifyInvariant) Type() string  { return "verify_invariance" }
+func (msg MsgVerifyInvariant) Type() string  { return "verify_invariant" }
 
 // get the bytes for the message signer to sign on
 func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }

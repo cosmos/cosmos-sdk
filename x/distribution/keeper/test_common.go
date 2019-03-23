@@ -77,7 +77,7 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, fck, _ := CreateTestInputAdvanced(t, false, 10, communityTax)
+	ctx, ak, _, dk, sk, fck, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
 	return ctx, ak, dk, sk, fck
 }
 

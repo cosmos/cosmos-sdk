@@ -2,6 +2,7 @@ package crisis
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,8 @@ func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper) {
 	paramSpace := paramsKeeper.Subspace(DefaultParamspace)
 	crisisKeeper := NewKeeper(paramSpace, distrKeeper, bankKeeper, feeCollectionKeeper)
 	crisisKeeper.SetConstantFee(ctx, sdk.NewInt64Coin("stake", 1000))
+	crisisKeeper.RegisterRoute(dummyRouteWhichPasses.Route, dummyRouteWhichPasses.Invar)
+	crisisKeeper.RegisterRoute(dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
 
 	return ctx, crisisKeeper, accKeeper
 }
@@ -34,23 +37,46 @@ func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper) {
 func TestHandleMsgVerifyInvariantWithNotEnoughCoins(t *testing.T) {
 	ctx, crisisKeeper, accKeeper := CreateTestInput(t)
 	sender := addrs[0]
-	coins := accKeeper.GetAccount(ctx, sender).GetCoins()
-	excessCoins := sdk.NewCoin(coins[0].Denom, coins[0].Amount.AddRaw(1))
+	coin := accKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	crisisKeeper.SetConstantFee(ctx, excessCoins)
 
-	msg := NewMsgVerifyInvariance(sender, "dummy_route")
+	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichPasses.Route)
 	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
 	require.False(t, res.IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
-	// TODO
+	ctx, crisisKeeper, accKeeper := CreateTestInput(t)
+	sender := addrs[0]
+	coin := accKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	crisisKeeper.SetConstantFee(ctx, coin)
+
+	msg := NewMsgVerifyInvariance(sender, "route-that-doesnt-exist")
+	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+	require.False(t, res.IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
-	// TODO
+	ctx, crisisKeeper, accKeeper := CreateTestInput(t)
+	sender := addrs[0]
+	coin := accKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	crisisKeeper.SetConstantFee(ctx, coin)
+
+	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichPasses.Route)
+	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+	require.True(t, res.IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithInvariantBroken(t *testing.T) {
-	// TODO
+	ctx, crisisKeeper, accKeeper := CreateTestInput(t)
+	sender := addrs[0]
+	coin := accKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	crisisKeeper.SetConstantFee(ctx, coin)
+
+	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichFails.Route)
+	var res sdk.Result
+	require.Panics(t, func() {
+		res = handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+	}, fmt.Sprintf("%v", res))
 }

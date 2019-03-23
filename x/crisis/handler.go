@@ -1,6 +1,8 @@
 package crisis
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -52,7 +54,12 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		// refund constant fee
 		err := k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
 		if err != nil {
-			return err.Result()
+
+			// if there are insufficient coins to refund, log the error,
+			// but still halt the chain.
+			logger := ctx.Logger().With("module", "x/crisis")
+			logger.Error(fmt.Sprintf(
+				"WARNING: insufficient funds to allocate to sender from fee pool, err: %s", err))
 		}
 
 		// TODO replace with circuit breaker

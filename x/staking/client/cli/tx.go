@@ -120,7 +120,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 		Short: "delegate liquid tokens to a validator",
 		Long: strings.TrimSpace(`Delegate an amount of liquid coins to a validator from your wallet:
 
-$ gaiacli tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000uatom --from mykey
+$ gaiacli tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))

@@ -122,15 +122,15 @@ In order to generate an unsigned transaction (example with
 [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)),
 you need to use the field `generate_only` in the body of `base_req`.
 
-## Cosmos signing
+## Cosmos SDK Transaction Signing
 
 
-Cosmos transaction signing is a fairly simple process. 
+Cosmos SDK transaction signing is a fairly simple process. 
 
-Every Cosmos transaction has a canonical json representation. The gaiacli and stargate rest interfaces provides canonical json representations of transactions and their broadcast function will provide compact amino(a protobuf like format) encoding translations.
+Every Cosmos SDK transaction has a canonical JSON representation. The `gaiacli` and Stargate rest interfaces provides canonical JSON representations of transactions and their "broadcast" functions will provide compact Amino (a protobuf-like wire format) encoding translations.
 
 
-Things to know when signing messages.
+Things to know when signing messages:
 
 The format is 
 ```json
@@ -144,17 +144,17 @@ The format is
 }
 ```
 
-The signer must supply chain_id, account number and sequence number.
+The signer must supply `"chain_id"`, `"account number"` and `"sequence number"`.
 
-Fee, msg and memo will be supplied by the transaction composer interface.
+`"fee"`, `"msgs"` and `"memo"` will be supplied by the transaction composer interface.
 
-`account_number` and `sequence` can be queried directly from the blockchain or cached locally. Getting these numbers wrong is a common cause of invalid signature errors. You can load the mempool of a full node or validator with a sequence of uncommitted transactions with incrementing sequence numbers and it will mostly do the correct thing.  
+`"account_number"` and `"sequence"` can be queried directly from the blockchain or cached locally. Getting these numbers wrong is a common cause of invalid signature errors. You can load the mempool of a full node or validator with a sequence of uncommitted transactions with incrementing sequence numbers and it will mostly do the correct thing.  
 
-Before signing, all keys are lexicographically sorted and all white space is removed from the JSON output before signing.
+Before signing, all keys are lexicographically sorted and all white space is removed from the JSON output.
 
-The Signature encoding is the 64-byte concatenation of ECDSArands(ie.r || s), where s is lexicographically less than it’s inverse, to prevent malleability. This is like Ethereum, but without the extra byte for pubkey recovery, since Tendermint assumes the pubkey is always provided anyway.
+The signature encoding is the 64-byte concatenation of ECDSArands (i.e.r || s), where s is lexicographically less than its inverse in order to prevent malleability. This is like Ethereum, but without the extra byte for pubkey recovery, since Tendermint assumes the pubkey is always provided anyway.
 
-Singatures and public public key examples
+Signatures and public key examples:
 
 ``` json
 [{
@@ -166,4 +166,4 @@ Singatures and public public key examples
 }]
 ```
 
-Once signatures are properly generated, insert the json into into the generated transaction and then use the broadcast endpoint.
+Once signatures are properly generated, insert the JSON into into the generated transaction and then use the broadcast endpoint.

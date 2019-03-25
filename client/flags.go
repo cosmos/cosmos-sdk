@@ -72,8 +72,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
-		c.Flags().Uint64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
-		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
+		c.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number number of the signing account")
+		c.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
 		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
 		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 0.00001stake)")

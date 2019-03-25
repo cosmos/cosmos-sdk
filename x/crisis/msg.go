@@ -14,7 +14,7 @@ type MsgVerifyInvariant struct {
 var _ sdk.Msg = &MsgVerifyInvariant{}
 
 // MsgVerifyInvariant - create a new MsgVerifyInvariant object
-func NewMsgVerifyInvariance(sender sdk.AccAddress, invariantRoute string) MsgVerifyInvariant {
+func NewMsgVerifyInvariant(sender sdk.AccAddress, invariantRoute string) MsgVerifyInvariant {
 	return MsgVerifyInvariant{
 		Sender:         sender,
 		InvariantRoute: invariantRoute,

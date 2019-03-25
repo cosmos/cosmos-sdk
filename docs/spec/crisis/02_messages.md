@@ -8,7 +8,7 @@ corresponding updates to the state.
 Blockchain invariants can be check using the `MsgVerifyInvariant` message. 
 
 ```golang
-type MsgCreateValidator struct {
+type MsgVerifyInvariant struct {
 	Sender         sdk.AccAddress 
 	InvariantRoute string
 }
@@ -18,8 +18,8 @@ This message is expected to fail if:
  - the sender does not have enough coins for the constant fee
  - the invariant route is not registered 
 
-This message checks the invariant provided, if the invariant is broken it
-panics halting the blockchain. If the invariant is broken, the constant fee is
+This message checks the invariant provided, and if the invariant is broken it
+panics, halting the blockchain. If the invariant is broken, the constant fee is
 refunded to the message sender from the community pool, however if the
 invariant is not broken, the constant fee will not be refunded.
 

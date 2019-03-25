@@ -9,8 +9,8 @@ import (
 func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error {
 	feePool := k.GetFeePool(ctx)
 
-	poolTruncted, _ := feePool.CommunityPool.TruncateDecimal()
-	if !poolTruncted.IsAllGTE(amount) {
+	poolTruncated, _ := feePool.CommunityPool.TruncateDecimal()
+	if !poolTruncated.IsAllGTE(amount) {
 		return types.ErrBadDistribution(k.codespace)
 	}
 

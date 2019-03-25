@@ -21,5 +21,5 @@ type BankKeeper interface {
 
 // expected crisis keeper
 type CrisisKeeper interface {
-	RegisterRoute(route string, invar sdk.Invariant)
+	RegisterRoute(moduleName, route string, invar sdk.Invariant)
 }

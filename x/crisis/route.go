@@ -6,14 +6,21 @@ import (
 
 // invariant route
 type InvarRoute struct {
-	Route string
-	Invar sdk.Invariant
+	ModuleName string
+	Route      string
+	Invar      sdk.Invariant
 }
 
 // NewInvarRoute - create an InvarRoute object
-func NewInvarRoute(route string, invar sdk.Invariant) InvarRoute {
+func NewInvarRoute(moduleName, route string, invar sdk.Invariant) InvarRoute {
 	return InvarRoute{
-		Route: route,
-		Invar: invar,
+		ModuleName: moduleName,
+		Route:      route,
+		Invar:      invar,
 	}
+}
+
+// get the full invariance route
+func (i InvarRoute) FullRoute() string {
+	return i.ModuleName + "/" + i.Route
 }

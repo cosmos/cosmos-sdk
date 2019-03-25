@@ -8,9 +8,3 @@ type Invariant func(ctx Context) error
 
 // group of Invarient
 type Invariants []Invariant
-
-// InvariantMsgHandler - register handlers for use in invariant
-// verification transactions
-type InvariantMsgHandler interface {
-	RegisterInvariant(route string, invar Invariant)
-}

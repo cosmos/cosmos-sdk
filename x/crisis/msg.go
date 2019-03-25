@@ -6,18 +6,22 @@ import (
 
 // MsgVerifyInvariant - message struct to verify a particular invariance
 type MsgVerifyInvariant struct {
-	Sender         sdk.AccAddress `json:"sender"`
-	InvariantRoute string         `json:"invariant_route"`
+	Sender              sdk.AccAddress `json:"sender"`
+	InvariantModuleName string         `json:"invariant_module_name"`
+	InvariantRoute      string         `json:"invariant_route"`
 }
 
 // ensure Msg interface compliance at compile time
 var _ sdk.Msg = &MsgVerifyInvariant{}
 
-// MsgVerifyInvariant - create a new MsgVerifyInvariant object
-func NewMsgVerifyInvariant(sender sdk.AccAddress, invariantRoute string) MsgVerifyInvariant {
+// NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
+func NewMsgVerifyInvariant(sender sdk.AccAddress, invariantModuleName,
+	invariantRoute string) MsgVerifyInvariant {
+
 	return MsgVerifyInvariant{
-		Sender:         sender,
-		InvariantRoute: invariantRoute,
+		Sender:              sender,
+		InvariantModuleName: invariantModuleName,
+		InvariantRoute:      invariantRoute,
 	}
 }
 
@@ -40,4 +44,9 @@ func (msg MsgVerifyInvariant) ValidateBasic() sdk.Error {
 		return ErrNilSender(DefaultCodespace)
 	}
 	return nil
+}
+
+// FullInvariantRoute - get the messages full invariant route
+func (msg MsgVerifyInvariant) FullInvariantRoute() string {
+	return msg.InvariantModuleName + "/" + msg.InvariantRoute
 }

@@ -30,8 +30,8 @@ func NewKeeper(paramSpace params.Subspace,
 }
 
 // register routes for the
-func (k *Keeper) RegisterRoute(route string, invar sdk.Invariant) {
-	invarRoute := NewInvarRoute(route, invar)
+func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
+	invarRoute := NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
 

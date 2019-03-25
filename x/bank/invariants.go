@@ -10,7 +10,7 @@ import (
 
 // register bank invariants
 func RegisterInvariants(c CrisisKeeper, ak auth.AccountKeeper) {
-	c.RegisterRoute("bank/nonnegative-outstanding",
+	c.RegisterRoute("bank", "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }
 

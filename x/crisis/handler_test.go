@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	dummyRouteWhichPasses = NewInvarRoute("dummy-pass", func(_ sdk.Context) error { return nil })
-	dummyRouteWhichFails  = NewInvarRoute("dummy-fail", func(_ sdk.Context) error { return errors.New("whoops") })
+	testModuleName        = "dummy"
+	dummyRouteWhichPasses = NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) error { return nil })
+	dummyRouteWhichFails  = NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) error { return errors.New("whoops") })
 	addrs                 = distr.TestAddrs
 )
 
@@ -28,8 +29,8 @@ func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper, dis
 	constantFee := sdk.NewInt64Coin("stake", 10000000)
 	crisisKeeper.SetConstantFee(ctx, constantFee)
 
-	crisisKeeper.RegisterRoute(dummyRouteWhichPasses.Route, dummyRouteWhichPasses.Invar)
-	crisisKeeper.RegisterRoute(dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
+	crisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichPasses.Route, dummyRouteWhichPasses.Invar)
+	crisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
 
 	// set the community pool to pay back the constant fee
 	feePool := distr.InitialFeePool()
@@ -48,7 +49,7 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	crisisKeeper.SetConstantFee(ctx, excessCoins)
 
-	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichPasses.Route)
+	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
 	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
 	require.False(t, res.IsOK())
 }
@@ -57,7 +58,7 @@ func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariance(sender, "route-that-doesnt-exist")
+	msg := NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist")
 	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
 	require.False(t, res.IsOK())
 }
@@ -66,7 +67,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichFails.Route)
+	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
 		res = handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
@@ -82,7 +83,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	feePool.CommunityPool = sdk.DecCoins{}
 	distrKeeper.SetFeePool(ctx, feePool)
 
-	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichFails.Route)
+	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
 		res = handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
@@ -93,7 +94,7 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariance(sender, dummyRouteWhichPasses.Route)
+	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
 	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
 	require.True(t, res.IsOK())
 }

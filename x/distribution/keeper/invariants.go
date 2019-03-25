@@ -9,11 +9,11 @@ import (
 
 // register all distribution invariants
 func RegisterInvariants(c types.CrisisKeeper, k Keeper, stk types.StakingKeeper) {
-	c.RegisterRoute(types.ModuleName+"/nonnegative-outstanding",
+	c.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
-	c.RegisterRoute(types.ModuleName+"/can-withdraw",
+	c.RegisterRoute(types.ModuleName, "can-withdraw",
 		CanWithdrawInvariant(k, stk))
-	c.RegisterRoute(types.ModuleName+"/reference-count",
+	c.RegisterRoute(types.ModuleName, "reference-count",
 		ReferenceCountInvariant(k, stk))
 }
 

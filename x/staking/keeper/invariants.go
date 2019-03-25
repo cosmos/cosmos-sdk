@@ -13,13 +13,13 @@ import (
 func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKeeper,
 	d types.DistributionKeeper, am auth.AccountKeeper) {
 
-	c.RegisterRoute(types.ModuleName+"/supply",
+	c.RegisterRoute(types.ModuleName, "supply",
 		SupplyInvariants(k, f, d, am))
-	c.RegisterRoute(types.ModuleName+"/nonnegative-power",
+	c.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
-	c.RegisterRoute(types.ModuleName+"/positive-delegation",
+	c.RegisterRoute(types.ModuleName, "positive-delegation",
 		PositiveDelegationInvariant(k))
-	c.RegisterRoute(types.ModuleName+"/delegator-shares",
+	c.RegisterRoute(types.ModuleName, "delegator-shares",
 		DelegatorSharesInvariant(k))
 }
 

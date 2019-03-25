@@ -15,17 +15,17 @@ import (
 // command to replace a delegator's withdrawal address
 func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "invariant-broken [invariant-route]",
+		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "submit proof that an invariant broken to halt the chain",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 
 			senderAddr := cliCtx.GetFromAddress()
-			route := args[0]
-			msg := crisis.NewMsgVerifyInvariance(senderAddr, route)
+			moduleName, route := args[0], args[1]
+			msg := crisis.NewMsgVerifyInvariant(senderAddr, moduleName, route)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}

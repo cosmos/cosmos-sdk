@@ -39,10 +39,12 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 
 	found := false
 	var invarianceErr error
+	msgFullRoute := msg.FullInvariantRoute()
 	for _, invarRoute := range k.routes {
-		if invarRoute.Route == msg.InvariantRoute {
+		if invarRoute.FullRoute() == msgFullRoute {
 			invarianceErr = invarRoute.Invar(cacheCtx)
 			found = true
+			break
 		}
 	}
 	if !found {
@@ -67,7 +69,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 	}
 
 	tags := sdk.NewTags(
-		"sender", msg.Sender,
+		"sender", msg.Sender.String(),
 		"invariant", msg.InvariantRoute,
 	)
 	return sdk.Result{

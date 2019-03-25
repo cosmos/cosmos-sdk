@@ -8,7 +8,7 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace            sdk.CodespaceType = "DISTR"
+	DefaultCodespace            sdk.CodespaceType = "distr"
 	CodeInvalidInput            CodeType          = 103
 	CodeNoDistributionInfo      CodeType          = 104
 	CodeNoValidatorCommission   CodeType          = 105

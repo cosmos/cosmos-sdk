@@ -533,7 +533,7 @@ func TestBonding(t *testing.T) {
 	// this test takes a long time to run,  eventually this second validator
 	// will get slashed, meaning that it's exchange rate is no-longer 1-to-1,
 	// hence we utilize the exchange rate in the following test
-	delTokensAfterRedelegation := validator2.ShareTokens(delegatorDels[0].GetShares())
+	delTokensAfterRedelegation := validator2.TokensFromShares(delegatorDels[0].GetShares())
 	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 
 	// verify balance after paying fees

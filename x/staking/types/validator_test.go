@@ -77,11 +77,11 @@ func TestShareTokens(t *testing.T) {
 		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
-	assert.True(sdk.DecEq(t, sdk.NewDec(50), validator.ShareTokens(sdk.NewDec(50))))
+	assert.True(sdk.DecEq(t, sdk.NewDec(50), validator.TokensFromShares(sdk.NewDec(50))))
 
 	validator.Tokens = sdk.NewInt(50)
-	assert.True(sdk.DecEq(t, sdk.NewDec(25), validator.ShareTokens(sdk.NewDec(50))))
-	assert.True(sdk.DecEq(t, sdk.NewDec(5), validator.ShareTokens(sdk.NewDec(10))))
+	assert.True(sdk.DecEq(t, sdk.NewDec(25), validator.TokensFromShares(sdk.NewDec(50))))
+	assert.True(sdk.DecEq(t, sdk.NewDec(5), validator.TokensFromShares(sdk.NewDec(10))))
 }
 
 func TestRemoveTokens(t *testing.T) {

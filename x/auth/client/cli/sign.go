@@ -27,26 +27,27 @@ const (
 	flagOutfile      = "output-document"
 )
 
-// GetSignCommand returns the sign command
+// GetSignCommand returns the transaction sign command.
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from [file], sign it, and print its JSON encoding.
+It will read a transaction from [file], sign it, and print its JSON encoding.
 
-If the flag --signature-only flag is on, it outputs a JSON representation
+If the flag --signature-only flag is set, it will output a JSON representation
 of the generated signature only.
 
-If the flag --validate-signatures is on, then the command would check whether all required
+If the flag --validate-signatures is set, then the command would check whether all required
 signers have signed the transactions, whether the signatures were collected in the right
 order, and if the signature is valid over the given transaction. If the --offline
-flag is also provided, signature validation over the transaction will be not be
-performed as that will require communication with a full node.
+flag is also set, signature validation over the transaction will be not be
+performed as that will require RPC communication with a full node.
 
-The --offline flag makes sure that the client will not reach out to an external node.
-Thus account number or sequence number lookups will not be performed and it is
-recommended to set such parameters manually.
+The --offline flag makes sure that the client will not reach out to full node.
+As a result, the account and sequence number queries will not be performed and
+it is required to set such parameters manually. Note, invalid values will cause
+the transaction to fail.
 
 The --multisig=<multisig_key> flag generates a signature on behalf of a multisig account
 key. It implies --signature-only. Full multisig signed transactions may eventually

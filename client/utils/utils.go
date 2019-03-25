@@ -163,12 +163,14 @@ func PrintUnsignedStdTx(
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
+func SignStdTx(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
+	stdTx auth.StdTx, appendSig bool, offline bool,
+) (auth.StdTx, error) {
+
 	var signedStdTx auth.StdTx
 
-	keybase := txBldr.Keybase()
-
-	info, err := keybase.Get(name)
+	info, err := txBldr.Keybase().Get(name)
 	if err != nil {
 		return signedStdTx, err
 	}
@@ -181,8 +183,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	}
 
 	if !offline {
-		txBldr, err = populateAccountFromState(
-			txBldr, cliCtx, sdk.AccAddress(addr))
+		txBldr, err = populateAccountFromState(txBldr, cliCtx, sdk.AccAddress(addr))
 		if err != nil {
 			return signedStdTx, err
 		}
@@ -240,8 +241,10 @@ func ReadStdTxFromFile(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err
 	return
 }
 
-func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress) (authtxb.TxBuilder, error) {
+func populateAccountFromState(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
+) (authtxb.TxBuilder, error) {
+
 	if txBldr.AccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(addr)
 		if err != nil {

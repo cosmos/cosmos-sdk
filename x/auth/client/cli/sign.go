@@ -53,8 +53,9 @@ The --multisig=<multisig_key> flag generates a signature on behalf of a multisig
 key. It implies --signature-only. Full multisig signed transactions may eventually
 be generated via the 'multisign' command.
 `,
-		RunE: makeSignCmd(codec),
-		Args: cobra.ExactArgs(1),
+		PreRun: preSignCmd,
+		RunE:   makeSignCmd(codec),
+		Args:   cobra.ExactArgs(1),
 	}
 
 	cmd.Flags().String(
@@ -77,6 +78,15 @@ be generated via the 'multisign' command.
 	cmd.MarkFlagRequired(client.FlagFrom)
 
 	return cmd
+}
+
+func preSignCmd(cmd *cobra.Command, _ []string) {
+	// Conditionally mark the account and sequence numbers required as no RPC
+	// query will be done.
+	if viper.GetBool(flagOffline) {
+		cmd.MarkFlagRequired(client.FlagAccountNumber)
+		cmd.MarkFlagRequired(client.FlagSequence)
+	}
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {

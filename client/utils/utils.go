@@ -245,23 +245,17 @@ func populateAccountFromState(
 	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtxb.TxBuilder, error) {
 
-	if txBldr.AccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(addr)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithAccountNumber(accNum)
+	accNum, err := cliCtx.GetAccountNumber(addr)
+	if err != nil {
+		return txBldr, err
 	}
 
-	if txBldr.Sequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(addr)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
+	accSeq, err := cliCtx.GetAccountSequence(addr)
+	if err != nil {
+		return txBldr, err
 	}
 
-	return txBldr, nil
+	return txBldr.WithAccountNumber(accNum).WithSequence(accSeq), nil
 }
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.

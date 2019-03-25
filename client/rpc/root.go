@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -26,7 +27,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // cli version REST handler endpoint
 func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.Version)))
+	if _, err := w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.Version))); err != nil {
+		log.Printf("could not write response: %v", err)
+	}
 }
 
 // connected node version REST handler endpoint
@@ -39,6 +42,8 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(version)
+		if _, err := w.Write(version); err != nil {
+			log.Printf("could not write response: %v", err)
+		}
 	}
 }

@@ -3,9 +3,10 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -102,7 +103,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	// broadcast to a Tendermint node
 	res, err := cliCtx.BroadcastTx(txBytes)
-	cliCtx.PrintOutput(res)
+	cliCtx.PrintOutput(res) // nolint:errcheck
 	return err
 }
 

@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -71,8 +72,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -86,18 +86,18 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		syncing := status.SyncInfo.CatchingUp
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		w.Write([]byte(strconv.FormatBool(syncing)))
+		if _, err := w.Write([]byte(strconv.FormatBool(syncing))); err != nil {
+			log.Printf("could not write response: %v", err)
+		}
 	}
 }

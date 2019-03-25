@@ -20,8 +20,6 @@ This message is expected to fail if:
 
 This message checks the invariant provided, and if the invariant is broken it
 panics, halting the blockchain. If the invariant is broken, the constant fee is
-refunded to the message sender from the community pool, however if the
-invariant is not broken, the constant fee will not be refunded.
-
-This message should never fail if the invariant is broken, even if there are
-insufficient funds to refund the sender of the message. 
+never deducted as the transaction is never committed to a block (equivalent to
+being refunded). However, if the invariant is not broken, the constant fee will
+not be refunded.

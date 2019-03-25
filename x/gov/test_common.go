@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"log"
 	"sort"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,18 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func resetStartingProposalID() {
-	startingProposalID = 0
-	onceStartingProposalID = sync.Once{}
-	initedStartingProposalID = false
-}
-
 // initialize the mock application for this module
 func GetMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (
 	mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress,
 	pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
-
-	resetStartingProposalID()
 
 	mapp = mock.NewApp()
 

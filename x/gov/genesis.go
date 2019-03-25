@@ -3,7 +3,6 @@ package gov
 import (
 	"bytes"
 	"fmt"
-	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,24 +14,25 @@ const (
 )
 
 var (
-	startingProposalID       uint64
-	onceStartingProposalID   sync.Once
-	initedStartingProposalID bool
+	startingProposalID uint64
 )
 
 // MsgVote.ValidateBasic() needs StartingProposalID provided by the genesis
 // but it cannot know about the genesis / keeper information
 // setStartingProposalID ensures setting startingProposalID only once
 // so unless there is more than one gov keeper the var will store the genesis StartingProposalID
-// TODO: temporal solution
+// TODO: deactivated for testing
 func setStartingProposalID(id uint64) {
-	if initedStartingProposalID {
-		panic("cannot set multiple genesis StartingProposalID")
-	}
-	onceStartingProposalID.Do(func() {
-		startingProposalID = id
-		initedStartingProposalID = true
-	})
+	/*
+		if initedStartingProposalID {
+			panic("cannot set multiple genesis StartingProposalID")
+		}
+		onceStartingProposalID.Do(func() {
+			startingProposalID = id
+			initedStartingProposalID = true
+		})
+	*/
+	startingProposalID = id
 }
 
 // GenesisState - all staking state that must be provided at genesis

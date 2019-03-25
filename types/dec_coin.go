@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -545,21 +544,21 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 // ParseDecCoins will parse out a list of decimal coins separated by commas.
 // If nothing is provided, it returns nil DecCoins. Returned decimal coins are
 // sorted.
-func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
+func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}
 
-	splitRe := regexp.MustCompile(",|;")
-	coinStrs := splitRe.Split(coinsStr, -1)
-	for _, coinStr := range coinStrs {
+	coinStrs := strings.Split(coinsStr, ",")
+	coins := make(DecCoins, len(coinStrs))
+	for i, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
 
-		coins = append(coins, coin)
+		coins[i] = coin
 	}
 
 	// sort coins for determinism

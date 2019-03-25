@@ -70,11 +70,13 @@ be generated via the 'multisign' command.
 		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
+	cmd.Flags().Bool(flagOffline, false, "Offline mode; Do not query a full node")
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
-	// add the flags here and return the command
-	return client.PostCommands(cmd)[0]
+	cmd = client.PostCommands(cmd)[0]
+	cmd.MarkFlagRequired(client.FlagFrom)
+
+	return cmd
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
@@ -94,11 +96,6 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			}
 
 			return nil
-		}
-
-		from := viper.GetString(client.FlagFrom)
-		if from == "" {
-			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
 		// if --signature-only is on, then override --append

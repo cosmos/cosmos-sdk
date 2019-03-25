@@ -124,46 +124,66 @@ you need to use the field `generate_only` in the body of `base_req`.
 
 ## Cosmos SDK Transaction Signing
 
+Cosmos SDK transaction signing is a fairly simple process.
 
-Cosmos SDK transaction signing is a fairly simple process. 
-
-Every Cosmos SDK transaction has a canonical JSON representation. The `gaiacli` and Stargate rest interfaces provides canonical JSON representations of transactions and their "broadcast" functions will provide compact Amino (a protobuf-like wire format) encoding translations.
-
+Every Cosmos SDK transaction has a canonical JSON representation. The `gaiacli`
+and Stargate REST interfaces provide canonical JSON representations of transactions
+and their "broadcast" functions will provide compact Amino (a protobuf-like wire format)
+encoding translations.
 
 Things to know when signing messages:
 
-The format is 
+The format is as follows
+
 ```json
-{ 
-"account_number": XXX,
-"chain_id":XXX,
-"fee":XXX,
-"sequence":XXX 
-"memo":XXX,
-"msgs":XXX
+{
+  "account_number": XXX,
+  "chain_id": XXX,
+  "fee": XXX,
+  "sequence": XXX,
+  "memo": XXX,
+  "msgs": XXX
 }
 ```
 
 The signer must supply `"chain_id"`, `"account number"` and `"sequence number"`.
 
-`"fee"`, `"msgs"` and `"memo"` will be supplied by the transaction composer interface.
+The `"fee"`, `"msgs"` and `"memo"` fields will be supplied by the transaction
+composer interface.
 
-`"account_number"` and `"sequence"` can be queried directly from the blockchain or cached locally. Getting these numbers wrong is a common cause of invalid signature errors. You can load the mempool of a full node or validator with a sequence of uncommitted transactions with incrementing sequence numbers and it will mostly do the correct thing.  
+The `"account_number"` and `"sequence"` fields can be queried directly from the
+blockchain or cached locally. Getting these numbers wrong, along with the chainID,
+is a common cause of invalid signature error. You can load the mempool of a full
+node or validator with a sequence of uncommitted transactions with incrementing
+sequence numbers and it will mostly do the correct thing.  
 
-Before signing, all keys are lexicographically sorted and all white space is removed from the JSON output.
+Before signing, all keys are lexicographically sorted and all white space is
+removed from the JSON output.
 
-The signature encoding is the 64-byte concatenation of ECDSArands (i.e.r || s), where s is lexicographically less than its inverse in order to prevent malleability. This is like Ethereum, but without the extra byte for pubkey recovery, since Tendermint assumes the pubkey is always provided anyway.
+The signature encoding is the 64-byte concatenation of ECDSArands (i.e. `r || s`),
+where `s` is lexicographically less than its inverse in order to prevent malleability.
+This is like Ethereum, but without the extra byte for PubKey recovery, since
+Tendermint assumes the PubKey is always provided anyway.
 
-Signatures and public key examples:
+Signatures and public key examples in a signed transaction:
 
 ``` json
-[{
-"pub_key":{
-"type":"tendermint/PubKeySecp256k1",
-"value":XXX
-},
-"signature":XXX
-}]
+{
+  "type": "auth/StdTx",
+  "value": {
+    "msg": [...],
+    "signatures": [
+      {
+        "pub_key": {
+          "type": "tendermint/PubKeySecp256k1",
+          "value": XXX
+        },
+        "signature": XXX
+      }
+    ],
+  }
+}
 ```
 
-Once signatures are properly generated, insert the JSON into into the generated transaction and then use the broadcast endpoint.
+Once signatures are properly generated, insert the JSON into into the generated
+transaction and then use the broadcast endpoint.

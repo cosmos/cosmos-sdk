@@ -7,19 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-func (app *GaiaApp) runtimeInvariants() []sdk.Invariant {
-	return []sdk.Invariant{
-		bank.NonnegativeBalanceInvariant(app.accountKeeper),
-		distr.NonNegativeOutstandingInvariant(app.distrKeeper),
-		staking.SupplyInvariants(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
-		staking.NonNegativePowerInvariant(app.stakingKeeper),
-	}
-}
 
 func (app *GaiaApp) assertRuntimeInvariants() {
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
@@ -28,10 +16,12 @@ func (app *GaiaApp) assertRuntimeInvariants() {
 
 func (app *GaiaApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
 	start := time.Now()
-	invariants := app.runtimeInvariants()
-	for _, inv := range invariants {
-		if err := inv(ctx); err != nil {
-			panic(fmt.Errorf("invariant broken: %s", err))
+	invarRoutes := app.crisisKeeper.Routes()
+	for _, ir := range invarRoutes {
+		if err := ir.Invar(ctx); err != nil {
+			panic(fmt.Errorf("invariant broken: %s\n"+
+				"\tCRITICAL please submit the following transaction:\n"+
+				"\t\t gaiacli tx crisis invariant-broken %v", err, ir.Route))
 		}
 	}
 	end := time.Now()

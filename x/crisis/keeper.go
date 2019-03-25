@@ -34,3 +34,8 @@ func (k *Keeper) RegisterRoute(route string, invar sdk.Invariant) {
 	invarRoute := NewInvarRoute(route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
+
+// Routes - return the keeper's invariant routes
+func (k Keeper) Routes() []InvarRoute {
+	return k.routes
+}

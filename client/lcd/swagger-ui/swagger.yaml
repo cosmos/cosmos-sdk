@@ -867,7 +867,7 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /slashing/validators/{validatorPubKey}/signing_info:
+  /slashing/validators/signing_info/{validatorPubKey}:
     get:
       summary: Get sign info of given validator
       description: Get sign info of given validator
@@ -885,20 +885,32 @@ paths:
         200:
           description: OK
           schema:
-            type: object
-            properties:
-              start_height:
-                type: string
-              index_offset:
-                type: string
-              jailed_until:
-                type: string
-              missed_blocks_counter:
-                type: string
+            $ref: "#/definitions/SigningInfo"
         204:
           description: No sign info of this validator
         400:
           description: Invalid validator public key
+        500:
+          description: Internal Server Error
+  /slashing/validators/signing_info:
+    get:
+      summary: Get sign info of given all validators
+      description: Get sign info of all validators
+      produces:
+        - application/json
+      tags:
+        - ICS23
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/SigningInfo"
+        204:
+          description: No validators with sign info
+        400:
+          description: Invalid validator public key for one of the validators
         500:
           description: Internal Server Error
   /slashing/validators/{validatorAddr}/unjail:
@@ -2165,3 +2177,14 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
+  SigningInfo:
+    type: object
+    properties:
+      start_height:
+        type: string
+      index_offset:
+        type: string
+      jailed_until:
+        type: string
+      missed_blocks_counter:
+        type: string

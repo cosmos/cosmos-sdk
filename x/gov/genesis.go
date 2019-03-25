@@ -35,6 +35,10 @@ func setStartingProposalID(id uint64) {
 	startingProposalID = id
 }
 
+func GetStartingProposalID() uint64 {
+	return startingProposalID
+}
+
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
 	StartingProposalID uint64                `json:"starting_proposal_id"`

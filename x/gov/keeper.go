@@ -225,7 +225,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sd
 func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID uint64) {
 	proposalID, err := keeper.peekCurrentProposalID(ctx)
 	if err != nil {
-		return 0
+		proposalID = startingProposalID
 	}
 	proposalID--
 	return

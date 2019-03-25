@@ -10,7 +10,7 @@ import (
 // Router is a map from string to proposal.Handler
 // copied and modified from baseapp/router.go
 type Router interface {
-	AddRoute(r string, h proposal.Handler) (rtr Router)
+	SetRoute(r string, h proposal.Handler) (rtr Router)
 	HasRoute(r string) bool
 	GetRoute(path string) (h proposal.Handler)
 }
@@ -30,7 +30,7 @@ func NewRouter() Router {
 
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
-func (rtr *router) AddRoute(path string, h proposal.Handler) Router {
+func (rtr *router) SetRoute(path string, h proposal.Handler) Router {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -47,5 +47,8 @@ func (rtr *router) HasRoute(path string) bool {
 }
 
 func (rtr *router) GetRoute(path string) proposal.Handler {
+	if !rtr.HasRoute(path) {
+		panic(fmt.Sprintf("route \"%s\" does not exists", path))
+	}
 	return rtr.routes[path]
 }

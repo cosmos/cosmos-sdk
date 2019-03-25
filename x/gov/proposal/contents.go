@@ -2,6 +2,7 @@ package proposal
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/errors"
@@ -15,7 +16,7 @@ const (
 
 // Checks length of title and description
 func IsValidAbstract(codespace sdk.CodespaceType, title, description string) sdk.Error {
-	if len(title) == 0 {
+	if len(strings.TrimSpace(title)) == 0 {
 		return errors.ErrInvalidTitle(codespace, "No title present in proposal")
 	}
 	if len(title) > MaxTitleLength {

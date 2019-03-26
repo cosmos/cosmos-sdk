@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -79,30 +80,36 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/staking/validators", nil)
+		// get the node
+		node, err := cliCtx.GetNode()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		if len(res) == 0 {
+		status, err := node.Status()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		height := status.SyncInfo.LatestBlockHeight
+		validators, err := rpc.GetValidators(cliCtx, &height)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if len(validators.Validators) == 0 {
 			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		var validators []sdk.Validator
-		err = cdc.UnmarshalBinaryLengthPrefixed(res, &validators)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// TODO: this should happen when querying Validators from RPC,
 		//  as soon as it's available this is not needed anymore
-		start, end := adjustPagination(len(validators), page, limit)
-		for _, validator := range validators[start:end] {
-			pubKey := validator.GetConsPubKey()
-			address := pubKey.Address()
+		start, end := adjustPagination(len(validators.Validators), page, limit)
+		for _, validator := range validators.Validators[start:end] {
+			address := validator.Address
 			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, address)
 			if err != nil {
 				rest.WriteErrorResponse(w, code, err.Error())

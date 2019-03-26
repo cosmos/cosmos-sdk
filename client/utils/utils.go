@@ -160,7 +160,7 @@ func PrintUnsignedStdTx(
 	return
 }
 
-// SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
+// SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
 func SignStdTx(

@@ -136,7 +136,7 @@ gaiacli tx send ... --fees=100photino
 또는
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=1uatom
 ```
 
 ### 계정
@@ -335,7 +335,7 @@ gaiacli query staking validator <account_cosmosval(cosmosval 계정)>
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10stake \
+  --amount=10000000uatom \
   --validator=<validator(검증인 주소)> \
   --from=<key_name(트랜잭션을 발생할 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
@@ -375,13 +375,12 @@ gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 
 만약 특정 검증인이 악의적인 행동을 했거나 또는 본인이 개인적인 이유로 일부 토큰을 언본딩을 워하는 경우 다음 명령어를 통해 토큰을 언본딩 할 수 있습니다. 언본딩은 정확한 수량인 `shares-amount`(예시, `12.1`) 또는 언본딩을 원하는 물량의 비율인 `shares-fraction`(예시, `0.25`) 값으로 표현될 수 있습니다.
 
-
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval(검증인 cosmosval 주소)> \
-  --shares-fraction=0.5 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <validator_addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 언본딩은 언본딩 기간이 끝나는 대로 완료됩니다.
@@ -412,11 +411,11 @@ gaiacli query staking unbonding-delegations-from <account_cosmosval(검증인 co
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval(스테이킹을 취소할 검증인의 cosmosval 주소)> \
-  --addr-validator-dest=<account_cosmosval(스테이킹을 받을 검증인의 cosmosval 주소)> \
-  --shares-fraction=50 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 위 예시와 같이 재위임될 토큰의 수량은 특정 수량(`shares-amount`) 또는 일정 비율(`shares-fraction`)로 표현될 수 있습니다.
@@ -509,7 +508,7 @@ gaiacli tx gov submit-proposal \
   --title=<title(프로포절 제목)> \
   --description=<description(프로포절 설명)> \
   --type=<Text/ParameterChange/SoftwareUpgrade(프로포절 타입)> \
-  --deposit=<40stake(예치금 수량)> \
+  --deposit=<40000000uatom(예치금 수량)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```
@@ -541,7 +540,7 @@ gaiacli query gov proposer <proposal_id(프로포절 ID)>
 프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 stake`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
 
 ```bash
-gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200stake(금액)> \
+gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200000000uatom(금액)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```
@@ -682,7 +681,7 @@ gaiacli keys show --address p1p2p3
 위 주소를 기반으로 멀티시그 트랜잭션을 생성하는 과정의 첫 단계는 다음과 같습니다:
 
 ```bash
-gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10000000uatom \
   --from=<multisig_address(멀티시그 주소)> \
   --generate-only > unsignedTx.json
 ```

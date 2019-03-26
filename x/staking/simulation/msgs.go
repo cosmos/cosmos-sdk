@@ -148,24 +148,31 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
-		numShares := simulation.RandomDecAmount(r, delegation.Shares)
-		if numShares.Equal(sdk.ZeroDec()) {
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		if !found {
 			return simulation.NoOpMsg(), nil, nil
 		}
-		msg := staking.MsgUndelegate{
-			DelegatorAddress: delegatorAddress,
-			ValidatorAddress: delegation.ValidatorAddress,
-			SharesAmount:     numShares,
+
+		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		unbondAmt := simulation.RandomAmount(r, totalBond)
+		if unbondAmt.Equal(sdk.ZeroInt()) {
+			return simulation.NoOpMsg(), nil, nil
 		}
+
+		msg := staking.NewMsgDelegate(
+			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
+		)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
 				msg.GetSignBytes(), msg.ValidateBasic())
 		}
+
 		ctx, write := ctx.CacheContext()
 		ok := handler(ctx, msg).IsOK()
 		if ok {
 			write()
 		}
+
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
@@ -195,20 +202,20 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		if amount.Equal(sdk.ZeroInt()) {
 			return simulation.NoOpMsg(), nil, nil
 		}
-		msg := staking.MsgBeginRedelegate{
-			DelegatorAddress:    delegatorAddress,
-			ValidatorSrcAddress: srcValidatorAddress,
-			ValidatorDstAddress: destValidatorAddress,
-			SharesAmount:        amount.ToDec(),
-		}
+
+		msg := staking.NewMsgBeginRedelegate(
+			delegatorAddress, srcValidatorAddress, destValidatorAddress, sdk.NewCoin(denom, amount),
+		)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		ok := handler(ctx, msg).IsOK()
 		if ok {
 			write()
 		}
+
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}

@@ -389,12 +389,13 @@ gaiacli query staking delegations <delegator_addr>
 
 #### Unbond Tokens
 
-If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
+If for any reason the validator misbehaves, or you just want to unbond a certain
+amount of tokens, use this following command.
 
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval> \
-  --shares-fraction=0.5 \
+  <validator_addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -427,9 +428,9 @@ A redelegation is a type delegation that allows you to bond illiquid tokens from
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval> \
-  --addr-validator-dest=<account_cosmosval> \
-  --shares-fraction=50 \
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```

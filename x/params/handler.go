@@ -30,8 +30,8 @@ func NewProposalHandler(k ProposalKeeper) proposal.Handler {
 		case ProposalChange:
 			return handleProposalChange(ctx, k, p)
 		default:
-			// XXX
-			return nil
+			errMsg := fmt.Sprintf("Unrecognized gov proposal type: %T", p)
+			return sdk.ErrUnknownRequest(errMsg)
 		}
 	}
 }
@@ -44,13 +44,13 @@ func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) s
 		}
 		var err error
 		if len(c.Subkey) == 0 {
-			rawerr = s.SetRaw(ctx, c.Key, c.Value)
+			err = s.SetRaw(ctx, c.Key, c.Value)
 		} else {
-			rawerr = s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
+			err = s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
 		}
 
-		if rawerr != nil {
-			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, rawerr.Error())
+		if err != nil {
+			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, err.Error())
 		}
 	}
 

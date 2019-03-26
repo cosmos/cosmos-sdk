@@ -53,22 +53,28 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
 		var tagValue string
-		var err error
+		var logmsg string
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusPassed
 
 			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
 
-			err = handler(ctx, activeProposal.Content)
-			if err == nil {
+			cctx, write := ctx.CacheContext()
+
+			contentErr := handler(cctx, activeProposal.Content)
+			if contentErr == nil {
 				tagValue = tags.ActionProposalPassed
+				logmsg = "passed"
+				write()
 			} else {
+				logmsg = fmt.Sprintf("passed, but failed on execution: \"%s\"", contentErr.ABCILog())
 				tagValue = tags.ActionProposalFailed
 			}
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusRejected
+			logmsg = "rejected"
 			tagValue = tags.ActionProposalRejected
 		}
 
@@ -78,8 +84,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 		logger.Info(
 			fmt.Sprintf(
-				"proposal %d (%s) tallied; passed: %v; handler error: %v",
-				activeProposal.ProposalID, activeProposal.GetTitle(), passes, err,
+				"proposal %d (%s) %s",
+				activeProposal.ProposalID, activeProposal.GetTitle(), logmsg,
 			),
 		)
 

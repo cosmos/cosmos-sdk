@@ -62,13 +62,16 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 			cctx, write := ctx.CacheContext()
 
+			// handler is state mutating logic depending on the proposal content.
+			// handler may mutate the state or not
+			// if handler failes no state mutation happened and the err msg is logged
 			contentErr := handler(cctx, activeProposal.Content)
 			if contentErr == nil {
 				tagValue = tags.ActionProposalPassed
 				logmsg = "passed"
 				write()
 			} else {
-				logmsg = fmt.Sprintf("passed, but failed on execution: \"%s\"", contentErr.ABCILog())
+				logmsg = fmt.Sprintf("passed, but failed on execution: %s", contentErr.ABCILog())
 				tagValue = tags.ActionProposalFailed
 			}
 		} else {

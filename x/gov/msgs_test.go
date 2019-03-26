@@ -72,11 +72,10 @@ func TestMsgDeposit(t *testing.T) {
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
-		{startingProposalID - 1, addrs[0], coinsPos, false},
-		{startingProposalID, addrs[0], coinsPos, true},
-		{startingProposalID + 1, sdk.AccAddress{}, coinsPos, false},
-		{startingProposalID + 1, addrs[0], coinsZero, true},
-		{startingProposalID + 1, addrs[0], coinsMulti, true},
+		{0, addrs[0], coinsPos, true},
+		{1, sdk.AccAddress{}, coinsPos, false},
+		{1, addrs[0], coinsZero, true},
+		{1, addrs[0], coinsMulti, true},
 	}
 
 	for i, tc := range tests {
@@ -98,13 +97,12 @@ func TestMsgVote(t *testing.T) {
 		option     VoteOption
 		expectPass bool
 	}{
-		{startingProposalID, addrs[0], OptionYes, true},
-		{startingProposalID - 1, addrs[0], OptionYes, false},
-		{startingProposalID, sdk.AccAddress{}, OptionYes, false},
-		{startingProposalID, addrs[0], OptionNo, true},
-		{startingProposalID, addrs[0], OptionNoWithVeto, true},
-		{startingProposalID, addrs[0], OptionAbstain, true},
-		{startingProposalID, addrs[0], VoteOption(0x13), false},
+		{0, addrs[0], OptionYes, true},
+		{0, sdk.AccAddress{}, OptionYes, false},
+		{0, addrs[0], OptionNo, true},
+		{0, addrs[0], OptionNoWithVeto, true},
+		{0, addrs[0], OptionAbstain, true},
+		{0, addrs[0], VoteOption(0x13), false},
 	}
 
 	for i, tc := range tests {

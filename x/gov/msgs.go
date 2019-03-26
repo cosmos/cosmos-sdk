@@ -28,7 +28,7 @@ type MsgSubmitProposal struct {
 	ProposalType   string         `json:"type"`            //  Type of proposal. One of {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
-func NewMsgSubmitProposal(title, description string, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title, description, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,

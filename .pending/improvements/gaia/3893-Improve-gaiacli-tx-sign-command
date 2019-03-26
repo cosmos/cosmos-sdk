@@ -1,0 +1,4 @@
+#3893 Improve `gaiacli tx sign` command
+  * Add shorthand flags -a and -s for the account and sequence numbers respectively
+  * Mark the account and sequence numbers required during "offline" mode
+  * Always do an RPC query for account and sequence number during "online" mode

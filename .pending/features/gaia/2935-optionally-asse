@@ -1,1 +1,1 @@
-#2935 optionally assert invariants on a blockly basis using `gaiad assert-invariants-blockly`
+#2935 Optionally assert invariants on a blockly basis using `gaiad --assert-invariants-blockly`

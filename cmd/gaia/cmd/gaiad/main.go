@@ -25,7 +25,7 @@ import (
 // gaiad custom flags
 const flagAssertInvariantsBlockly = "assert-invariants-blockly"
 
-var assertInvariantsBlockly = false
+var assertInvariantsBlockly bool
 
 func main() {
 	cdc := app.MakeCodec()
@@ -56,7 +56,7 @@ func main() {
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	rootCmd.Flags().BoolVar(&assertInvariantsBlockly, flagAssertInvariantsBlockly,
-		false, "assert registered invariants on a blockly basis")
+		false, "Assert registered invariants on a blockly basis")
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870

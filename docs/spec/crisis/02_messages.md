@@ -5,7 +5,7 @@ corresponding updates to the state.
 
 ## MsgVerifyInvariant
 
-Blockchain invariants can be check using the `MsgVerifyInvariant` message. 
+Blockchain invariants can be checked using the `MsgVerifyInvariant` message. 
 
 ```golang
 type MsgVerifyInvariant struct {

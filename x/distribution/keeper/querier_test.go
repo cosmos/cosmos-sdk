@@ -183,7 +183,7 @@ func TestQueries(t *testing.T) {
 	rewards = getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
 
-	// currently community Pool hold nothing so we should return null
+	// currently community pool hold nothing so we should return null
 	communityPool := getQueriedCommunityPool(t, ctx, cdc, querier)
 	require.Nil(t, communityPool)
 }

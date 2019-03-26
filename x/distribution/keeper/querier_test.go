@@ -111,7 +111,7 @@ func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec
 
 func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (ptr []byte) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryCommunityPool}, "/"),
+		Path: path.Join(custom, types.QuerierRoute, QueryCommunityPool),
 		Data: []byte{},
 	}
 

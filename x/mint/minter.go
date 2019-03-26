@@ -61,8 +61,8 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 		Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
 
-	// increase the new annual inflation for this next cycle
-	inflation = m.Inflation.Add(inflationRateChange)
+	// adjust the new annual inflation for this next cycle
+	inflation = m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}

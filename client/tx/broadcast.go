@@ -18,19 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-const (
-	// Returns with the response from CheckTx.
-	flagSync = "sync"
-	// Returns right away, with no response
-	flagAsync = "async"
-	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
-	flagBlock = "block"
-)
-
 // BroadcastReq defines a tx broadcasting request.
 type BroadcastReq struct {
-	Tx     auth.StdTx `json:"tx"`
-	Return string     `json:"return"`
+	Tx   auth.StdTx `json:"tx"`
+	Mode string     `json:"mode"`
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
@@ -58,23 +49,9 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 
-		var res interface{}
-		switch req.Return {
-		case flagBlock:
-			res, err = cliCtx.BroadcastTx(txBytes)
+		cliCtx = cliCtx.WithBroadcastMode(req.Mode)
 
-		case flagSync:
-			res, err = cliCtx.BroadcastTxSync(txBytes)
-
-		case flagAsync:
-			res, err = cliCtx.BroadcastTxAsync(txBytes)
-
-		default:
-			rest.WriteErrorResponse(w, http.StatusInternalServerError,
-				"unsupported return type. supported types: block, sync, async")
-			return
-		}
-
+		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -110,7 +87,7 @@ $ gaiacli tx broadcast ./mytxn.json
 			}
 
 			res, err := cliCtx.BroadcastTx(txBytes)
-			cliCtx.PrintOutput(res)
+			cliCtx.PrintOutput(res) // nolint:errcheck
 			return err
 		},
 	}

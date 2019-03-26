@@ -89,6 +89,10 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			if err = app.GaiaValidateGenesisState(genesisState); err != nil {
+				return err
+			}
+
 			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
@@ -127,9 +131,17 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			// Run gaiad tx create-validator
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// XXX: Set the generate-only flag here after the CLI context has
+			// been created. This allows the from name/key to be correctly populated.
+			//
+			// TODO: Consider removing the manual setting of generate-only in
+			// favor of a 'gentx' flag in the create-validator command.
+			viper.Set(client.FlagGenerateOnly, true)
+
+			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
 				return err
@@ -232,19 +244,22 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 	return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
 }
 
-func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
-	valPubKey crypto.PubKey, website, details, identity string) {
-	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
+func prepareFlagsForTxCreateValidator(
+  config *cfg.Config, nodeID, ip, chainID string, valPubKey crypto.PubKey,
+  website, details, identity string
+) {
+	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))
 	viper.Set(client.FlagChainID, chainID)
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
-	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
-	viper.Set(cli.FlagIP, ip)                                      // --ip
-	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
-	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
-	viper.Set(cli.FlagWebsite, website)                            // --website
-	viper.Set(cli.FlagDetails, details)                            // --details
-	viper.Set(cli.FlagIdentity, identity)                          // --identity
+	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
+	viper.Set(cli.FlagNodeID, nodeID)
+	viper.Set(cli.FlagIP, ip)
+	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
+	viper.Set(client.FlagGenerateOnly, true)
+	viper.Set(cli.FlagMoniker, config.Moniker)
+	viper.Set(cli.FlagWebsite, website)
+	viper.Set(cli.FlagDetails, details)
+	viper.Set(cli.FlagIdentity, identity)
+
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
 	}

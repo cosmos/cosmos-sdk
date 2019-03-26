@@ -110,19 +110,18 @@ func TestMsgBeginRedelegate(t *testing.T) {
 		delegatorAddr    sdk.AccAddress
 		validatorSrcAddr sdk.ValAddress
 		validatorDstAddr sdk.ValAddress
-		sharesAmount     sdk.Dec
+		amount           sdk.Coin
 		expectPass       bool
 	}{
-		{"regular", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(1, 1), true},
-		{"negative decimal", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(-1, 1), false},
-		{"zero amount", sdk.AccAddress(addr1), addr2, addr3, sdk.ZeroDec(), false},
-		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, addr3, sdk.NewDecWithPrec(1, 1), false},
-		{"empty source validator", sdk.AccAddress(addr1), emptyAddr, addr3, sdk.NewDecWithPrec(1, 1), false},
-		{"empty destination validator", sdk.AccAddress(addr1), addr2, emptyAddr, sdk.NewDecWithPrec(1, 1), false},
+		{"regular", sdk.AccAddress(addr1), addr2, addr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), true},
+		{"zero amount", sdk.AccAddress(addr1), addr2, addr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), false},
+		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, addr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
+		{"empty source validator", sdk.AccAddress(addr1), emptyAddr, addr3, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
+		{"empty destination validator", sdk.AccAddress(addr1), addr2, emptyAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgBeginRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr, tc.sharesAmount)
+		msg := NewMsgBeginRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr, tc.amount)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -137,18 +136,17 @@ func TestMsgUndelegate(t *testing.T) {
 		name          string
 		delegatorAddr sdk.AccAddress
 		validatorAddr sdk.ValAddress
-		sharesAmount  sdk.Dec
+		amount        sdk.Coin
 		expectPass    bool
 	}{
-		{"regular", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(1, 1), true},
-		{"negative decimal", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(-1, 1), false},
-		{"zero amount", sdk.AccAddress(addr1), addr2, sdk.ZeroDec(), false},
-		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, sdk.NewDecWithPrec(1, 1), false},
-		{"empty validator", sdk.AccAddress(addr1), emptyAddr, sdk.NewDecWithPrec(1, 1), false},
+		{"regular", sdk.AccAddress(addr1), addr2, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), true},
+		{"zero amount", sdk.AccAddress(addr1), addr2, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), false},
+		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
+		{"empty validator", sdk.AccAddress(addr1), emptyAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1), false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgUndelegate(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
+		msg := NewMsgUndelegate(tc.delegatorAddr, tc.validatorAddr, tc.amount)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

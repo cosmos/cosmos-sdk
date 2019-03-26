@@ -253,6 +253,40 @@ func TestDecCoinsIntersect(t *testing.T) {
 		require.NoError(t, err, "unexpected parse error in %v", i)
 
 		require.True(t, in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
-		// require.Equal(t, tc.expectedResult, in1.Intersect(in2).String(), "in1.cap(in2) != exr in %v", i)
+	}
+}
+
+func TestDecCoinsTruncateDecimal(t *testing.T) {
+	decCoinA := NewDecCoinFromDec("bar", MustNewDecFromStr("5.41"))
+	decCoinB := NewDecCoinFromDec("foo", MustNewDecFromStr("6.00"))
+
+	testCases := []struct {
+		input          DecCoins
+		truncatedCoins Coins
+		changeCoins    DecCoins
+	}{
+		{DecCoins{}, Coins(nil), DecCoins(nil)},
+		{
+			DecCoins{decCoinA, decCoinB},
+			Coins{NewInt64Coin(decCoinA.Denom, 5), NewInt64Coin(decCoinB.Denom, 6)},
+			DecCoins{NewDecCoinFromDec(decCoinA.Denom, MustNewDecFromStr("0.41"))},
+		},
+		{
+			DecCoins{decCoinB},
+			Coins{NewInt64Coin(decCoinB.Denom, 6)},
+			DecCoins(nil),
+		},
+	}
+
+	for i, tc := range testCases {
+		truncatedCoins, changeCoins := tc.input.TruncateDecimal()
+		require.Equal(
+			t, tc.truncatedCoins, truncatedCoins,
+			"unexpected truncated coins; tc #%d, input: %s", i, tc.input,
+		)
+		require.Equal(
+			t, tc.changeCoins, changeCoins,
+			"unexpected change coins; tc #%d, input: %s", i, tc.input,
+		)
 	}
 }

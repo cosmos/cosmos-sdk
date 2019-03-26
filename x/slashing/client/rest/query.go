@@ -13,26 +13,26 @@ import (
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
-		"/slashing/validators/signing_info/{validatorPubKey}",
+		"/slashing/validators/{validatorPubKey}/signing_info",
 		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
-		"/slashing/validators/signing_info",
+		"/slashing/signing_infos",
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).
 		Methods("GET").
 		Queries("page", "{page}", "limit", "{limit}")
 
 	r.HandleFunc(
-		"/slashing/validators/signing_info",
+		"/slashing/signing_infos",
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).
 		Methods("GET").
 		Queries("page", "{page}")
 
 	r.HandleFunc(
-		"/slashing/validators/signing_info",
+		"/slashing/signing_infos",
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
 	).Methods("GET")
 

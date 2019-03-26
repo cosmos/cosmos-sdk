@@ -1,1 +1,1 @@
-#3949 added /slashing/validators/signing_info to get signing_info for all validators
+#3949 added /slashing/signing_infos to get signing_info for all validators

@@ -867,7 +867,7 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /slashing/validators/signing_info/{validatorPubKey}:
+  /slashing/validators/{validatorPubKey}/signing_info:
     get:
       summary: Get sign info of given validator
       description: Get sign info of given validator
@@ -892,7 +892,7 @@ paths:
           description: Invalid validator public key
         500:
           description: Internal Server Error
-  /slashing/validators/signing_info:
+  /slashing/signing_infos:
     get:
       summary: Get sign info of given all validators
       description: Get sign info of all validators

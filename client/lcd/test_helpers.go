@@ -1404,7 +1404,7 @@ func getVotingParam(t *testing.T, port string) gov.VotingParams {
 // ----------------------------------------------------------------------
 // GET /slashing/validators/{validatorPubKey}/signing_info Get sign info of given validator
 func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.ValidatorSigningInfo {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/validators/signing_info/%s", validatorPubKey), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/validators/%s/signing_info", validatorPubKey), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var signingInfo slashing.ValidatorSigningInfo
@@ -1419,7 +1419,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 // ----------------------------------------------------------------------
 // GET /slashing/validators/{validatorPubKey}/signing_info Get sign info of given validator
 func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
-	res, body := Request(t, port, "GET", "/slashing/validators/signing_info", nil)
+	res, body := Request(t, port, "GET", "/slashing/signing_infos", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var signingInfo []slashing.ValidatorSigningInfo

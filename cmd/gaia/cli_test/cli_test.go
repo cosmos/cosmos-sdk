@@ -963,6 +963,7 @@ func TestGaiaCLIConfig(t *testing.T) {
 	node := fmt.Sprintf("%s:%s", f.RPCAddr, f.Port)
 
 	// Set available configuration options
+	f.CLIConfig("broadcast-mode", "block")
 	f.CLIConfig("node", node)
 	f.CLIConfig("output", "text")
 	f.CLIConfig("trust-node", "true")
@@ -972,7 +973,8 @@ func TestGaiaCLIConfig(t *testing.T) {
 
 	config, err := ioutil.ReadFile(path.Join(f.GCLIHome, "config", "config.toml"))
 	require.NoError(t, err)
-	expectedConfig := fmt.Sprintf(`chain-id = "%s"
+	expectedConfig := fmt.Sprintf(`broadcast-mode = "block"
+chain-id = "%s"
 indent = true
 node = "%s"
 output = "text"

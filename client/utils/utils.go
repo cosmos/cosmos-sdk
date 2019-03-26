@@ -80,6 +80,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		} else {
 			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
 		}
+
 		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := client.BufferStdin()
@@ -103,8 +104,11 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	// broadcast to a Tendermint node
 	res, err := cliCtx.BroadcastTx(txBytes)
-	cliCtx.PrintOutput(res) // nolint:errcheck
-	return err
+	if err != nil {
+		return err
+	}
+
+	return cliCtx.PrintOutput(res)
 }
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the

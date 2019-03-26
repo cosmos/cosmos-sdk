@@ -129,7 +129,9 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 	// NOTE: GDInit sets the ChainID
 	f.GDInit(keyFoo)
+
 	f.CLIConfig("chain-id", f.ChainID)
+	f.CLIConfig("broadcast-mode", "block")
 
 	// start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)

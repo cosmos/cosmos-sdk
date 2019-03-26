@@ -651,7 +651,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, tx auth.StdTx) (*http.Response, string) {
-	txReq := clienttx.BroadcastReq{Tx: tx, Return: "block"}
+	txReq := clienttx.BroadcastReq{Tx: tx, Mode: "block"}
 
 	req, err := cdc.MarshalJSON(txReq)
 	require.Nil(t, err)

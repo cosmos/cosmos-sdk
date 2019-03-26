@@ -44,7 +44,7 @@ type CLIContext struct {
 	AccountStore  string
 	TrustNode     bool
 	UseLedger     bool
-	Async         bool
+	BroadcastMode string
 	PrintResponse bool
 	Verifier      tmlite.Verifier
 	VerifierHome  string
@@ -90,7 +90,7 @@ func NewCLIContext() CLIContext {
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
-		Async:         viper.GetBool(client.FlagAsync),
+		BroadcastMode: viper.GetString(client.FlagBroadcastMode),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),
@@ -245,6 +245,13 @@ func (ctx CLIContext) WithFromName(name string) CLIContext {
 // address.
 func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
 	ctx.FromAddress = addr
+	return ctx
+}
+
+// WithBroadcastMode returns a copy of the context with an updated broadcast
+// mode.
+func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
+	ctx.BroadcastMode = mode
 	return ctx
 }
 

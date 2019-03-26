@@ -45,6 +45,7 @@ module.exports = {
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
           "/gaia/delegator-guide-cli",
+          "/gaia/genesis.md",
           "/gaia/ledger",
           "/gaia/gaiacli",
           "/gaia/join-testnet",

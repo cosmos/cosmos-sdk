@@ -21,21 +21,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	r.HandleFunc(
 		"/slashing/signing_infos",
 		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
-	).
-		Methods("GET").
-		Queries("page", "{page}", "limit", "{limit}")
-
-	r.HandleFunc(
-		"/slashing/signing_infos",
-		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
-	).
-		Methods("GET").
-		Queries("page", "{page}")
-
-	r.HandleFunc(
-		"/slashing/signing_infos",
-		signingInfoHandlerListFn(cliCtx, slashing.StoreKey, cdc),
-	).Methods("GET")
+	).Methods("GET").Queries("page", "{page}", "limit", "{limit}")
 
 	r.HandleFunc(
 		"/slashing/parameters",

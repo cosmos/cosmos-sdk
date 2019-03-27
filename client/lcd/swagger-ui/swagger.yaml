@@ -224,7 +224,7 @@ paths:
           description: Pagination page
           type: integer
         - in: query
-          name: size
+          name: limit
           description: Pagination size
           type: integer
       responses:
@@ -900,6 +900,17 @@ paths:
         - application/json
       tags:
         - ICS23
+      parameters:
+        - in: query
+          name: page
+          description: Pagination page
+          type: integer
+          required: true
+        - in: query
+          name: limit
+          description: Pagination size
+          type: integer
+          required: true
       responses:
         200:
           description: OK

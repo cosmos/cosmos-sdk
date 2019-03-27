@@ -40,20 +40,24 @@ func ValidateChanges(changes []Change) sdk.Error {
 
 // Proposal which contains multiple changes on proposals
 type ProposalChange struct {
-	proposal.Abstract `json:"abstract"`
-	Changes           []Change `json:"changes"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Changes     []Change `json:"changes"`
 }
 
 // Constructs new ProposalChange
 func NewProposalChange(title string, description string, changes []Change) ProposalChange {
 	return ProposalChange{
-		Abstract: proposal.NewAbstract(title, description),
-		Changes:  changes,
+		Title:       title,
+		Description: description,
+		Changes:     changes,
 	}
 }
 
 var _ proposal.Content = ProposalChange{}
 
 // nolint - Implements proposal.Content
-func (pc ProposalChange) ProposalRoute() string { return RouterKey }
-func (pc ProposalChange) ProposalType() string  { return "ParameterChange" }
+func (pc ProposalChange) GetTitle() string       { return pc.Title }
+func (pc ProposalChange) GetDescription() string { return pc.Description }
+func (pc ProposalChange) ProposalRoute() string  { return RouterKey }
+func (pc ProposalChange) ProposalType() string   { return "ParameterChange" }

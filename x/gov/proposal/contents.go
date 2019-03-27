@@ -42,22 +42,5 @@ type Content interface {
 	ProposalType() string
 }
 
-// Text Proposals
-type Abstract struct {
-	Title       string `json:"title"`       //  Title of the proposal
-	Description string `json:"description"` //  Description of the proposal
-}
-
-func NewAbstract(title, description string) Abstract {
-	return Abstract{
-		Title:       title,
-		Description: description,
-	}
-}
-
-// nolint
-func (abs Abstract) GetTitle() string       { return abs.Title }
-func (abs Abstract) GetDescription() string { return abs.Description }
-
 // Handler handles the proposals after it has passed the governance process
 type Handler func(ctx sdk.Context, content Content) sdk.Error

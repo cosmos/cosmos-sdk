@@ -10,13 +10,6 @@ import (
 // HandleSubmit submits content and does initial deposit with provided SubmitForm
 func HandleSubmit(ctx sdk.Context, k Keeper,
 	content Content, proposer sdk.AccAddress, initialDeposit sdk.Coins) sdk.Result {
-	// XXX: ValidateSubmitProposalBasic is supposed to be called in each msg types
-	// It it inefficient to do it here again?
-	// I think we still should do, proposer can still skip CheckTx()
-	err := ValidateMsgBasic(content.GetTitle(), content.GetDescription(), proposer, initialDeposit)
-	if err != nil {
-		return err.Result()
-	}
 
 	proposalID, err := k.SubmitProposal(ctx, content)
 	if err != nil {

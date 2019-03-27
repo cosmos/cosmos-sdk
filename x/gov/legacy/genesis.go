@@ -1,4 +1,4 @@
-package gov_0_33
+package legacy
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

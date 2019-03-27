@@ -589,25 +589,27 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 // ParseCoins will parse out a list of coins separated by commas.
 // If nothing is provided, it returns nil Coins.
 // Returned coins are sorted.
-func ParseCoins(coinsStr string) (coins Coins, err error) {
+func ParseCoins(coinsStr string) (Coins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}
 
 	coinStrs := strings.Split(coinsStr, ",")
-	for _, coinStr := range coinStrs {
+	coins := make(Coins, len(coinStrs))
+	for i, coinStr := range coinStrs {
 		coin, err := ParseCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
-		coins = append(coins, coin)
+
+		coins[i] = coin
 	}
 
-	// Sort coins for determinism.
+	// sort coins for determinism
 	coins.Sort()
 
-	// Validate coins before returning.
+	// validate coins before returning
 	if !coins.IsValid() {
 		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
 	}

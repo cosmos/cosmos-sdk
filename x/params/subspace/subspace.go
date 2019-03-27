@@ -199,7 +199,11 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 // Get to ParamSet
 func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.ParamSetPairs() {
-		s.Get(ctx, pair.Key, pair.Value)
+		err := s.Get(ctx, pair.Key, pair.Value)
+		if err != nil {
+			// TODO: return error - needs rewrite interfaces
+			// and handle error on the caller side
+		}
 	}
 }
 
@@ -211,7 +215,11 @@ func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 		// since SetStruct is meant to be used in InitGenesis
 		// so this method will not be called frequently
 		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
-		s.Set(ctx, pair.Key, v)
+		err := s.Set(ctx, pair.Key, v)
+		if err != nil {
+			// TODO: return error - needs rewrite interfaces
+			// and handle error on the caller side
+		}
 	}
 }
 

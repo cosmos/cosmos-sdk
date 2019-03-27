@@ -168,7 +168,11 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 
 // SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
+	err := keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+	}
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)

@@ -29,7 +29,11 @@ func DefaultGenesisState() GenesisState {
 // new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
-	keeper.SetParams(ctx, data.Params)
+	err := keeper.SetParams(ctx, data.Params)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The

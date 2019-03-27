@@ -66,20 +66,12 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 			return
 		}
 
-		// get the node
-		node, err := cliCtx.GetNode()
+		height, err := rpc.GetChainHeight(cliCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		status, err := node.Status()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		height := status.SyncInfo.LatestBlockHeight
 		validators, err := rpc.GetValidators(cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

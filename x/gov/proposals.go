@@ -30,16 +30,19 @@ type Proposal struct {
 // nolint
 func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:
-		  Title:              %s
-		  Type:               %s
-		  Status:             %s
-		  Submit Time:        %s
-		  Deposit End Time:   %s
-		  Total Deposit:      %s
-		  Voting Start Time:  %s
-		  Voting End Time:    %s`, p.ProposalID, p.GetTitle(), p.ProposalType(),
+  Title:              %s
+  Type:               %s
+  Status:             %s
+  Submit Time:        %s
+  Deposit End Time:   %s
+  Total Deposit:      %s
+  Voting Start Time:  %s
+  Voting End Time:    %s
+  Description:        %s`,
+		p.ProposalID, p.GetTitle(), p.ProposalType(),
 		p.Status, p.SubmitTime, p.DepositEndTime,
-		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime)
+		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
+	)
 }
 
 // ProposalContent is an interface that has title, description, and proposaltype

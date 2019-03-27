@@ -623,6 +623,14 @@ To check the current distribution parameters, run:
 gaiacli query distr params
 ```
 
+#### Query distribution Community Pool
+
+To query all coins in the community pool which is under Governance control:
+
+```bash
+gaiacli query distr community-pool
+```
+
 #### Query outstanding rewards
 
 To check the current outstanding (un-withdrawn) rewards, run:

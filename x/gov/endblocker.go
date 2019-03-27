@@ -60,7 +60,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
 
-			cctx, write := ctx.CacheContext()
+			cctx, writeCache := ctx.CacheContext()
 
 			// handler is state mutating logic depending on the proposal content.
 			// handler may mutate the state or not
@@ -69,7 +69,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			if contentErr == nil {
 				tagValue = tags.ActionProposalPassed
 				logmsg = "passed"
-				write()
+
+				// writes state mutation to the underlying multistore
+				writeCache()
 			} else {
 				logmsg = fmt.Sprintf("passed, but failed on execution: %s", contentErr.ABCILog())
 				tagValue = tags.ActionProposalFailed

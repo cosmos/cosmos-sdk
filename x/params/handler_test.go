@@ -22,12 +22,12 @@ func testProposal(changes ...params.Change) params.ProposalChange {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	mapp, gk, sk, addrs, _, _ := gov.GetMockApp(t, 1, gov.GenesisState{}, nil)
+	mapp, gk, router, sk, addrs, _, _ := gov.GetMockApp(t, 1, gov.GenesisState{}, nil)
 
 	params.RegisterCodec(mapp.Cdc)
 
 	pk := params.NewProposalKeeper(mapp.ParamsKeeper, gk)
-	gk.Router().AddRoute(params.RouterKey, params.NewProposalHandler(pk))
+	router.AddRoute(params.RouterKey, params.NewProposalHandler(pk))
 	space := mapp.ParamsKeeper.Subspace("myspace").WithKeyTable(params.NewKeyTable(
 		[]byte("key"), uint64(0),
 	))
@@ -44,12 +44,12 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestProposalFailedEndblocker(t *testing.T) {
-	mapp, gk, sk, addrs, _, _ := gov.GetMockApp(t, 1, gov.GenesisState{}, nil)
+	mapp, gk, router, sk, addrs, _, _ := gov.GetMockApp(t, 1, gov.GenesisState{}, nil)
 
 	params.RegisterCodec(mapp.Cdc)
 
 	pk := params.NewProposalKeeper(mapp.ParamsKeeper, gk)
-	gk.Router().AddRoute(params.RouterKey, params.NewProposalHandler(pk))
+	router.AddRoute(params.RouterKey, params.NewProposalHandler(pk))
 	space := mapp.ParamsKeeper.Subspace("myspace").WithKeyTable(params.NewKeyTable(
 		[]byte("key"), uint64(0),
 	))

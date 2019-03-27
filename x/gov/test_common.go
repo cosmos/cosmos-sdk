@@ -22,7 +22,7 @@ import (
 
 // initialize the mock application for this module
 func GetMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (
-	mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress,
+	mapp *mock.App, keeper Keeper, router Router, sk staking.Keeper, addrs []sdk.AccAddress,
 	pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 
 	mapp = mock.NewApp()
@@ -37,9 +37,9 @@ func GetMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	keeper, router = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
-	keeper.Router().AddRoute(RouterKey, ProposalHandler)
+	router.AddRoute(RouterKey, ProposalHandler)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
@@ -57,7 +57,7 @@ func GetMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	mock.SetGenesis(mapp, genAccs)
 
-	return mapp, keeper, sk, addrs, pubKeys, privKeys
+	return mapp, keeper, router, sk, addrs, pubKeys, privKeys
 }
 
 // gov and staking endblocker

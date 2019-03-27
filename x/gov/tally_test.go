@@ -13,7 +13,7 @@ import (
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -45,7 +45,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -78,7 +78,7 @@ func TestTallyNoQuorum(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -115,7 +115,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -151,7 +151,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -190,7 +190,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -229,7 +229,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -268,7 +268,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -307,7 +307,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -344,7 +344,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -389,7 +389,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -432,7 +432,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -479,7 +479,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -537,7 +537,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})

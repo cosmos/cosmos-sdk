@@ -13,7 +13,7 @@ import (
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -59,7 +59,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -119,7 +119,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -164,7 +164,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
+	mapp, keeper, _, _, addrs, _, _ := GetMockApp(t, 10, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
@@ -225,7 +225,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := GetMockApp(t, 1, GenesisState{}, nil)
+	mapp, keeper, _, sk, addrs, _, _ := GetMockApp(t, 1, GenesisState{}, nil)
 	SortAddresses(addrs)
 
 	resTags := TestProposal(t, mapp, addrs[0], keeper, sk, testProposal())

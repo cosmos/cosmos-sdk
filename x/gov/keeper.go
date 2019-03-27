@@ -86,25 +86,21 @@ type Keeper struct {
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
-
-	return Keeper{
+	paramSpace params.Subspace, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) (k Keeper, r Router) {
+	r = NewRouter()
+	k = Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
 		ds:           ds,
-		router:       NewRouter(),
+		router:       r,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
 		codespace:    codespace,
 	}
-}
 
-// TODO: implement seal
-// Returns router
-func (keeper Keeper) Router() Router {
-	return keeper.router
+	return
 }
 
 // Proposals

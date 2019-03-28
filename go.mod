@@ -7,8 +7,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
 	github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8
-	github.com/cosmos/ledger-cosmos-go v0.9.11
-	github.com/cosmos/ledger-go v0.9.1 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.10.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.1.1

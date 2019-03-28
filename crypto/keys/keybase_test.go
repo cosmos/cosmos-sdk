@@ -37,7 +37,7 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	kb := NewInMemory()
-	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
+	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
 }
@@ -49,7 +49,7 @@ func TestCreateLedger(t *testing.T) {
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
-	ledger, err := kb.CreateLedger("some_account", Secp256k1, 3, 1)
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
 
 	if err != nil {
 		assert.Error(t, err)

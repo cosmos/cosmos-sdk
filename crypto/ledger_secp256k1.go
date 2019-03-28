@@ -32,6 +32,7 @@ type (
 	LedgerSECP256K1 interface {
 		Close() error
 		GetPublicKeySECP256K1([]uint32) ([]byte, error)
+		GetAddressPubKeySECP256K1([]uint32, string) ([]byte, string, error)
 		SignSECP256K1([]uint32, []byte) ([]byte, error)
 		ShowAddressSECP256K1([]uint32, string) error
 	}
@@ -47,21 +48,41 @@ type (
 	}
 )
 
-// NewPrivKeyLedgerSecp256k1 will generate a new key and store the public key
-// for later use.
-func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
+// NewPrivKeyLedgerSecp256k1Unsafe will generate a new key and store the public key for later use.
+//
+// This function is marked as unsafe as it will retrieve a pubkey without user verification
+// It can only be used to verify pubkey but never to create new accounts/keys in that case,
+// please refer to NewPrivKeyLedgerSecp256k1
+func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	device, err := getLedgerDevice()
 	if err != nil {
 		return nil, err
 	}
 	defer warnIfErrors(device.Close)
 
-	pubKey, err := getPubKey(device, path)
+	pubKey, err := getPubKeyUnsafe(device, path)
 	if err != nil {
 		return nil, err
 	}
 
 	return PrivKeyLedgerSecp256k1{pubKey, path}, nil
+}
+
+// NewPrivKeyLedgerSecp256k1 will generate a new key and store the public key for later use.
+// The request will require user confirmation and will show account and index in the device
+func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, string, error) {
+	device, err := getLedgerDevice()
+	if err != nil {
+		return nil, "", err
+	}
+	defer warnIfErrors(device.Close)
+
+	pubKey, addr, err := getPubKeyAddrSafe(device, path, hrp)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return PrivKeyLedgerSecp256k1{pubKey, path}, addr, nil
 }
 
 // LedgerShowAddress triggers a ledger device to show the corresponding address.
@@ -72,7 +93,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) erro
 	}
 	defer warnIfErrors(device.Close)
 
-	pubKey, err := getPubKey(device, path)
+	pubKey, err := getPubKeyUnsafe(device, path)
 	if err != nil {
 		return err
 	}
@@ -161,7 +182,7 @@ func getLedgerDevice() (LedgerSECP256K1, error) {
 }
 
 func validateKey(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1) error {
-	pub, err := getPubKey(device, pkl.Path)
+	pub, err := getPubKeyUnsafe(device, pkl.Path)
 	if err != nil {
 		return err
 	}
@@ -193,10 +214,15 @@ func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byt
 	return convertDERtoBER(sig)
 }
 
-// getPubKey reads the pubkey the ledger itself
+// getPubKeyUnsafe reads the pubkey from a ledger device
+//
+// This function is marked as unsafe as it will retrieve a pubkey without user verification
+// It can only be used to verify pubkey but never to create new accounts/keys in that case,
+// please refer to getPubKeyAddrSafe
+//
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func getPubKey(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
+func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
 		return nil, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
@@ -212,4 +238,28 @@ func getPubKey(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 	copy(compressedPublicKey[:], cmp.SerializeCompressed())
 
 	return compressedPublicKey, nil
+}
+
+// getPubKeyAddr reads the pubkey and the address from a ledger device
+// This function is marked as Safe as it will require user confirmation and
+// account and index will be shown in the device
+//
+// since this involves IO, it may return an error, which is not exposed
+// in the PubKey interface, so this function allows better error handling
+func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string)(tmcrypto.PubKey, string, error) {
+	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
+	if err != nil {
+		return nil, "", fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
+	}
+
+	// re-serialize in the 33-byte compressed format
+	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
+	if err != nil {
+		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+	}
+
+	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
+	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+
+	return compressedPublicKey, addr, nil
 }

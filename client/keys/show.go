@@ -25,7 +25,7 @@ const (
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagBechPrefix = "bech"
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
-	FlagDevice = "device"
+	FlagUseLedger = "ledger"
 
 	flagMultiSigThreshold = "multisig-threshold"
 	flagShowMultiSig      = "show-multisig"
@@ -47,7 +47,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
-	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in the device")
+	cmd.Flags().BoolP(FlagUseLedger, "l", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
@@ -86,7 +86,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	isShowAddr := viper.GetBool(FlagAddress)
 	isShowPubKey := viper.GetBool(FlagPublicKey)
-	isShowDevice := viper.GetBool(FlagDevice)
+	isShowDevice := viper.GetBool(FlagUseLedger)
 	isShowMultiSig := viper.GetBool(flagShowMultiSig)
 
 	isOutputSet := false

@@ -80,7 +80,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, "acc")
-	viper.Set(FlagDevice, true)
+	viper.Set(FlagUseLedger, true)
 	viper.Set(flagMultiSigThreshold, 2)
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")

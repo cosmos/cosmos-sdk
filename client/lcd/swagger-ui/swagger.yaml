@@ -221,11 +221,11 @@ paths:
           required: true
         - in: query
           name: page
-          description: Pagination page
+          description: Page number
           type: integer
         - in: query
           name: limit
-          description: Pagination size
+          description: Maximum number of items per page
           type: integer
       responses:
         200:
@@ -903,12 +903,12 @@ paths:
       parameters:
         - in: query
           name: page
-          description: Pagination page
+          description: Page number
           type: integer
           required: true
         - in: query
           name: limit
-          description: Pagination size
+          description: Maximum number of items per page
           type: integer
           required: true
       responses:

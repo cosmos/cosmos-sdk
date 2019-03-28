@@ -93,7 +93,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 
 		// TODO: this should happen when querying Validators from RPC,
 		//  as soon as it's available this is not needed anymore
-		start, end := adjustPagination(len(validators.Validators), page, limit)
+		start, end := adjustPagination(uint(len(validators.Validators)), uint(page), uint(limit))
 		for _, validator := range validators.Validators[start:end] {
 			address := validator.Address
 			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, address)
@@ -150,20 +150,20 @@ func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Code
 	return
 }
 
-func adjustPagination(size int, page int, limit int) (int, int) {
+func adjustPagination(size, page, limit uint) (start uint, end uint) {
 	// If someone asks for pages bigger than our dataset, just return everything
 	if limit > size {
 		return 0, size
 	}
 
 	// Do pagination when healthy, fallback to 0
-	start := 0
+	start = 0
 	if page*limit < size {
 		start = page * limit
 	}
 
 	// Do pagination only when healthy, fallback to len(dataset)
-	end := size
+	end = size
 	if start+limit <= size {
 		end = start + limit
 	}

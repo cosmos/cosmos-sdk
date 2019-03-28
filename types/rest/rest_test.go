@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -57,39 +58,14 @@ func TestBaseReqValidateBasic(t *testing.T) {
 }
 
 func TestParseHTTPArgs(t *testing.T) {
-	req0, err := http.NewRequest("", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req1, err := http.NewRequest("", "/?limit=5", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req2, err := http.NewRequest("", "/?page=5", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req3, err := http.NewRequest("", "/?page=5&limit=5", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	reqE1, err := http.NewRequest("", "/?page=-1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	reqE2, err := http.NewRequest("", "/?limit=-1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	req0 := mustNewRequest(t, "", "/", nil)
+	req1 := mustNewRequest(t, "", "/?limit=5", nil)
+	req2 := mustNewRequest(t, "", "/?page=5", nil)
+	req3 := mustNewRequest(t, "", "/?page=5&limit=5", nil)
 
-	req4, err := http.NewRequest("", "/?foo=faa", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = req4.ParseForm()
-	if err != nil {
-		t.Fatal(err)
-	}
+	reqE1 := mustNewRequest(t, "", "/?page=-1", nil)
+	reqE2 := mustNewRequest(t, "", "/?limit=-1", nil)
+	req4 := mustNewRequest(t, "", "/?foo=faa", nil)
 
 	tests := []struct {
 		name  string
@@ -123,4 +99,12 @@ func TestParseHTTPArgs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {
+	req, err := http.NewRequest(method, url, body)
+	require.NoError(t, err)
+	err = req.ParseForm()
+	require.NoError(t, err)
+	return req
 }

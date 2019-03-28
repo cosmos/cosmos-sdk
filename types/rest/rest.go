@@ -220,6 +220,8 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	_, _ = w.Write(output)
 }
 
+// ParseHTTPArgs parses the query parameters and returns them as array,
+// It separates page and limit used for pagination
 func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
 	tags = make([]string, 0, len(r.Form))
 	for key, values := range r.Form {

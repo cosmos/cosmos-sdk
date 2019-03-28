@@ -1417,7 +1417,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 // ----------------------------------------------------------------------
 // ICS 23 - SlashingList
 // ----------------------------------------------------------------------
-// GET /slashing/signing_infos Get sign info of given validator
+// GET /slashing/signing_infos Get sign info of all validators with pagination
 func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
 	res, body := Request(t, port, "GET", "/slashing/signing_infos?page=1&limit=1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

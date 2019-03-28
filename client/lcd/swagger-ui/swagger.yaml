@@ -90,7 +90,7 @@ paths:
                 example: 0.15.0
               other:
                 description: more information on versions
-              type: object
+                type: object
                 properties:
                   tx_index:
                     type: string
@@ -138,6 +138,7 @@ paths:
           description: Block height
           required: true
           type: number
+          x-example: 1
       responses:
         200:
           description: The block at a specific height
@@ -183,6 +184,7 @@ paths:
           description: Block height
           required: true
           type: number
+          x-example: 1
       responses:
         200:
           description: The validator set at a specific block height
@@ -1900,13 +1902,13 @@ definitions:
         $ref: "#/definitions/Address"
       version:
         type: object
-          properties:
-            block:
-              type: string
-              example: 10
-            app:
-              type: string
-              example: 0
+        properties:
+          block:
+            type: string
+            example: 10
+          app:
+            type: string
+            example: 0
   Block:
     type: object
     properties:

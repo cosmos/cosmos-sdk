@@ -1632,6 +1632,22 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
+  /distribution/community_pool:
+    get:
+      summary: Community pool parameters
+      tags:
+        - ICS24
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        500:
+          description: Internal Server Error
   /distribution/parameters:
     get:
       summary: Fee distribution parameters

@@ -140,6 +140,19 @@ func (s *TestSuite) TestNoSpuriousUpgrades() {
 	})
 }
 
+func (s *TestSuite) TestPlanStringer() {
+	t, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
+	s.Require().Nil(err)
+	s.Require().Equal(`Upgrade Plan
+  Name: test
+  Time: 2020-01-01T00:00:00Z
+  Info: `, Plan{Name: "test", Time: t}.String())
+	s.Require().Equal(`Upgrade Plan
+  Name: test
+  Height: 100
+  Info: `, Plan{Name: "test", Height: 100}.String())
+}
+
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

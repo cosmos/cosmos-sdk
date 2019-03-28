@@ -1,3 +1,5 @@
+// +build cli_test
+
 package clitest
 
 import (

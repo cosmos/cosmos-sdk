@@ -255,7 +255,7 @@ type SearchTxsResult struct {
 	Number     int          `json:"number"`
 	Page       int          `json:"page"`
 	Limit      int          `json:"limit"`
-	Data       []TxResponse `json:"data"`
+	Txs        []TxResponse `json:"txs"`
 }
 
 func NewSearchTxsResult(totalCount, number, page, limit int, txs []TxResponse) SearchTxsResult {
@@ -264,7 +264,7 @@ func NewSearchTxsResult(totalCount, number, page, limit int, txs []TxResponse) S
 		Number:     number,
 		Page:       page,
 		Limit:      limit,
-		Data:       txs,
+		Txs:        txs,
 	}
 }
 

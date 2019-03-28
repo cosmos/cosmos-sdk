@@ -495,8 +495,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction tags can be queried
-	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txs.Data, 1)
+	searchResult := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure deposit was deducted
 	fooAcc = f.QueryAccount(fooAddr)
@@ -539,8 +539,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(denom))
 
 	// Ensure tags are set on the transaction
-	txs = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txs.Data, 1)
+	searchResult = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure account has expected amount of funds
 	fooAcc = f.QueryAccount(fooAddr)
@@ -576,8 +576,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	// Ensure tags are applied to voting transaction properly
-	txs = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txs.Data, 1)
+	searchResult = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure no proposals in deposit period
 	proposalsQuery = f.QueryGovProposals("--status=DepositPeriod")
@@ -620,26 +620,26 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 
 	// perPage = 15, 2 pages
 	txsPage1 := f.QueryTxs(1, 15, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPage1.Data, 15)
+	require.Len(t, txsPage1.Txs, 15)
 	require.Equal(t, txsPage1.Number, 15)
 	txsPage2 := f.QueryTxs(2, 15, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPage2.Data, 15)
-	require.NotEqual(t, txsPage1.Data, txsPage2.Data)
+	require.Len(t, txsPage2.Txs, 15)
+	require.NotEqual(t, txsPage1.Txs, txsPage2.Txs)
 	txsPage3 := f.QueryTxs(3, 15, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPage3.Data, 15)
-	require.Equal(t, txsPage2.Data, txsPage3.Data)
+	require.Len(t, txsPage3.Txs, 15)
+	require.Equal(t, txsPage2.Txs, txsPage3.Txs)
 
 	// perPage = 16, 2 pages
 	txsPage1 = f.QueryTxs(1, 16, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPage1.Data, 16)
+	require.Len(t, txsPage1.Txs, 16)
 	txsPage2 = f.QueryTxs(2, 16, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPage2.Data, 14)
-	require.NotEqual(t, txsPage1.Data, txsPage2.Data)
+	require.Len(t, txsPage2.Txs, 14)
+	require.NotEqual(t, txsPage1.Txs, txsPage2.Txs)
 
 	// perPage = 50
 	txsPageFull := f.QueryTxs(1, 50, fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txsPageFull.Data, 30)
-	require.Equal(t, txsPageFull.Data, append(txsPage1.Data, txsPage2.Data...))
+	require.Len(t, txsPageFull.Txs, 30)
+	require.Equal(t, txsPageFull.Txs, append(txsPage1.Txs, txsPage2.Txs...))
 
 	// perPage = 0
 	f.QueryTxsInvalid(errors.New("ERROR: page must greater than 0"), 0, 50, fmt.Sprintf("sender:%s", fooAddr))

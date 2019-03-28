@@ -621,7 +621,7 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	// perPage = 15, 2 pages
 	txsPage1 := f.QueryTxs(1, 15, fmt.Sprintf("sender:%s", fooAddr))
 	require.Len(t, txsPage1.Txs, 15)
-	require.Equal(t, txsPage1.Number, 15)
+	require.Equal(t, txsPage1.Count, 15)
 	txsPage2 := f.QueryTxs(2, 15, fmt.Sprintf("sender:%s", fooAddr))
 	require.Len(t, txsPage2.Txs, 15)
 	require.NotEqual(t, txsPage1.Txs, txsPage2.Txs)

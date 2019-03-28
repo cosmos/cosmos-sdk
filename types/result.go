@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -252,17 +253,19 @@ func (r TxResponse) Empty() bool {
 // SearchTxsResult defines a structure for querying txs pageable
 type SearchTxsResult struct {
 	TotalCount int          `json:"total_count"`
-	Number     int          `json:"number"`
-	Page       int          `json:"page"`
+	Count      int          `json:"count"`
+	PageNumber int          `json:"page_number"`
+	PageCount  int          `json:"page_count"`
 	Limit      int          `json:"limit"`
 	Txs        []TxResponse `json:"txs"`
 }
 
-func NewSearchTxsResult(totalCount, number, page, limit int, txs []TxResponse) SearchTxsResult {
+func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) SearchTxsResult {
 	return SearchTxsResult{
 		TotalCount: totalCount,
-		Number:     number,
-		Page:       page,
+		Count:      count,
+		PageNumber: page,
+		PageCount:  int(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Txs:        txs,
 	}

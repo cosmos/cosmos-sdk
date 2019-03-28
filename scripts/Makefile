@@ -69,4 +69,4 @@ tools-clean:
 	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum sdkch
 	rm -f tools-stamp
 
-.PHONY: all tools tools-clean
+.PHONY: all tools tools-gosum tools-clean

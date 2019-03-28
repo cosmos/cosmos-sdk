@@ -1,4 +1,4 @@
-package simulation
+package bank
 
 import (
 	"errors"
@@ -7,6 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
+
+// register bank invariants
+func RegisterInvariants(c CrisisKeeper, ak auth.AccountKeeper) {
+	c.RegisterRoute("bank", "nonnegative-outstanding",
+		NonnegativeBalanceInvariant(ak))
+}
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
 func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {

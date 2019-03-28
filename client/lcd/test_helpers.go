@@ -220,7 +220,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true)
+	app := gapp.NewGaiaApp(logger, db, nil, true, false)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
@@ -298,6 +298,9 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	}
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
+
+	// initialize crisis data
+	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {

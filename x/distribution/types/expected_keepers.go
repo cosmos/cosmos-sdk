@@ -28,3 +28,8 @@ type FeeCollectionKeeper interface {
 	GetCollectedFees(ctx sdk.Context) sdk.Coins
 	ClearCollectedFees(ctx sdk.Context)
 }
+
+// expected crisis keeper
+type CrisisKeeper interface {
+	RegisterRoute(moduleName, route string, invar sdk.Invariant)
+}

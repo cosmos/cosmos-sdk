@@ -535,18 +535,19 @@ func getTransactionRequest(t *testing.T, port, hash string) (*http.Response, str
 // POST /txs broadcast txs
 
 // GET /txs search transactions
-func getTransactions(t *testing.T, port string, tags ...string) []sdk.TxResponse {
+func getTransactions(t *testing.T, port string, tags ...string) *sdk.SearchTxsResult {
 	var txs []sdk.TxResponse
+	result := sdk.NewSearchTxsResult(0, 0, 1, 30, txs)
 	if len(tags) == 0 {
-		return txs
+		return &result
 	}
 	queryStr := strings.Join(tags, "&")
 	res, body := Request(t, port, "GET", fmt.Sprintf("/txs?%s", queryStr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := cdc.UnmarshalJSON([]byte(body), &txs)
+	err := cdc.UnmarshalJSON([]byte(body), &result)
 	require.NoError(t, err)
-	return txs
+	return &result
 }
 
 // ----------------------------------------------------------------------

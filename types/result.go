@@ -249,6 +249,25 @@ func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
 }
 
+// SearchTxsResult defines a structure for querying txs pageable
+type SearchTxsResult struct {
+	TotalCount int          `json:"total_count"`
+	Number     int          `json:"number"`
+	Page       int          `json:"page"`
+	Limit      int          `json:"limit"`
+	Data       []TxResponse `json:"data"`
+}
+
+func NewSearchTxsResult(totalCount, number, page, limit int, txs []TxResponse) SearchTxsResult {
+	return SearchTxsResult{
+		TotalCount: totalCount,
+		Number:     number,
+		Page:       page,
+		Limit:      limit,
+		Data:       txs,
+	}
+}
+
 // ParseABCILogs attempts to parse a stringified ABCI tx log into a slice of
 // ABCIMessageLog types. It returns an error upon JSON decoding failure.
 func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {

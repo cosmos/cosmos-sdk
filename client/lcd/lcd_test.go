@@ -327,19 +327,19 @@ func TestTxs(t *testing.T) {
 	defer cleanup()
 
 	var emptyTxs []sdk.TxResponse
-	txs := getTransactions(t, port)
-	require.Equal(t, emptyTxs, txs)
+	txResult := getTransactions(t, port)
+	require.Equal(t, emptyTxs, txResult.Data)
 
 	// query empty
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Data)
 
 	// also tests url decoding
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Data)
 
-	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Data)
 
 	// create tx
 	receiveAddr, resultTx := doTransfer(t, port, seed, name1, memo, pw, addr, fees)
@@ -350,14 +350,14 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.TxHash, tx.TxHash)
 
 	// query sender
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	// query recipient
-	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	// query transaction that doesn't exist
 	validTxHash := "9ADBECAAD8DACBEC3F4F535704E7CF715C765BDCEDBEF086AFEAD31BA664FB0B"
@@ -456,12 +456,12 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	// query tx
-	txs := getTransactions(t, port,
+	txResult := getTransactions(t, port,
 		fmt.Sprintf("action=delegate&sender=%s", addr),
 		fmt.Sprintf("destination-validator=%s", operAddrs[0]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -509,12 +509,12 @@ func TestBonding(t *testing.T) {
 	expectedBalance = coins[0]
 
 	// query tx
-	txs = getTransactions(t, port,
+	txResult = getTransactions(t, port,
 		fmt.Sprintf("action=begin_unbonding&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	ubd := getUnbondingDelegation(t, port, addr, operAddrs[0])
 	require.Len(t, ubd.Entries, 1)
@@ -546,13 +546,13 @@ func TestBonding(t *testing.T) {
 	)
 
 	// query tx
-	txs = getTransactions(t, port,
+	txResult = getTransactions(t, port,
 		fmt.Sprintf("action=begin_redelegate&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 		fmt.Sprintf("destination-validator=%s", operAddrs[1]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
@@ -580,7 +580,7 @@ func TestBonding(t *testing.T) {
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
 
 	// query txs
-	txs = getBondingTxs(t, port, addr, "")
+	txs := getBondingTxs(t, port, addr, "")
 	require.Len(t, txs, 3, "All Txs found")
 
 	txs = getBondingTxs(t, port, addr, "bond")
@@ -675,9 +675,9 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.Sub(depositTokens), acc.GetCoins().AmountOf(sdk.DefaultBondDenom))
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&sender=%s", addr))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult := getTransactions(t, port, fmt.Sprintf("action=deposit&sender=%s", addr))
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	// query proposal
 	totalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
@@ -736,9 +736,9 @@ func TestVote(t *testing.T) {
 	expectedBalance = coins[0]
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=vote&sender=%s", addr))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult := getTransactions(t, port, fmt.Sprintf("action=vote&sender=%s", addr))
+	require.Len(t, txResult.Data, 1)
+	require.Equal(t, resultTx.Height, txResult.Data[0].Height)
 
 	vote := getVote(t, port, proposalID, addr)
 	require.Equal(t, proposalID, vote.ProposalID)

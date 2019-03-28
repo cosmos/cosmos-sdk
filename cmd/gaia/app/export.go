@@ -117,7 +117,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []st
 
 	// reinitialize all delegations
 	for _, del := range dels {
-		app.distrKeeper.DeleteDelegatorStartingInfo(ctx, del.ValidatorAddress, del.DelegatorAddress)
 		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, del.DelegatorAddress, del.ValidatorAddress)
 		app.distrKeeper.Hooks().AfterDelegationModified(ctx, del.DelegatorAddress, del.ValidatorAddress)
 	}

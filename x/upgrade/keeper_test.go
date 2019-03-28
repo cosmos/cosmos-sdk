@@ -113,23 +113,38 @@ func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 }
 
 func (s *TestSuite) TestDoShutdowner() {
-	s.T().Log("Set a custom DoShutdowner")
-	shutdownerCalled := false
-	s.keeper.SetDoShutdowner(func(ctx sdk.Context, plan Plan) {
-		shutdownerCalled = true
+	s.T().Log("Set custom WillUpgrader and OnUpgrader")
+	willUpgraderCalled := false
+	onUpgraderCalled := false
+	s.keeper.SetWillUpgrader(func(ctx sdk.Context, plan Plan) {
+		willUpgraderCalled = true
+	})
+	s.keeper.SetOnUpgrader(func(ctx sdk.Context, plan Plan) {
+		onUpgraderCalled = true
 	})
 
-	s.T().Log("Run an upgrade and verify that the custom shutdowner was called and no panic happened")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
+	s.T().Log("Run an upgrade and verify that the custom WillUpgrader and OnUpgrader's are called")
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 2})
 	s.Require().Nil(err)
 
-	header := abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}
+	header := abci.Header{Height: s.ctx.BlockHeight() + 1}
 	newCtx := sdk.NewContext(s.cms, header, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: header}
 	s.Require().NotPanics(func() {
 		s.keeper.BeginBlocker(newCtx, req)
 	})
-	s.Require().True(shutdownerCalled)
+	s.Require().True(willUpgraderCalled)
+	s.Require().False(onUpgraderCalled)
+
+	willUpgraderCalled = false
+	header = abci.Header{Height: s.ctx.BlockHeight() + 2}
+	newCtx = sdk.NewContext(s.cms, header, false, log.NewNopLogger())
+	req = abci.RequestBeginBlock{Header: header}
+	s.Require().Panics(func() {
+		s.keeper.BeginBlocker(newCtx, req)
+	})
+	s.Require().True(onUpgraderCalled)
+	s.Require().False(willUpgraderCalled)
 }
 
 func (s *TestSuite) TestNoSpuriousUpgrades() {
@@ -138,6 +153,19 @@ func (s *TestSuite) TestNoSpuriousUpgrades() {
 	s.Require().NotPanics(func() {
 		s.keeper.BeginBlocker(s.ctx, req)
 	})
+}
+
+func (s *TestSuite) TestPlanStringer() {
+	t, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
+	s.Require().Nil(err)
+	s.Require().Equal(`Upgrade Plan
+  Name: test
+  Time: 2020-01-01T00:00:00Z
+  Info: `, Plan{Name: "test", Time: t}.String())
+	s.Require().Equal(`Upgrade Plan
+  Name: test
+  Height: 100
+  Info: `, Plan{Name: "test", Height: 100}.String())
 }
 
 func TestTestSuite(t *testing.T) {

@@ -1392,6 +1392,21 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	return signingInfo
 }
 
+// ----------------------------------------------------------------------
+// ICS 23 - SlashingList
+// ----------------------------------------------------------------------
+// GET /slashing/signing_infos Get sign info of all validators with pagination
+func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", "/slashing/signing_infos?page=1&limit=1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var signingInfo []slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
+	require.Nil(t, err)
+
+	return signingInfo
+}
+
 // TODO: Test this functionality, it is not currently in any of the tests
 // POST /slashing/validators/{validatorAddr}/unjail Unjail a jailed validator
 func doUnjail(

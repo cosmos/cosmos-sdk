@@ -785,6 +785,8 @@ func TestUnjail(t *testing.T) {
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
 	require.Equal(t, time.Unix(0, 0).UTC(), signingInfo.JailedUntil)
 	require.Equal(t, true, signingInfo.MissedBlocksCounter == 0)
+	signingInfoList := getSigningInfoList(t, port)
+	require.NotZero(t, len(signingInfoList))
 }
 
 func TestProposalsQuery(t *testing.T) {

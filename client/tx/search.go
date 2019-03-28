@@ -4,15 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
+	rest "github.com/cosmos/cosmos-sdk/types/rest"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,12 +20,10 @@ import (
 )
 
 const (
-	flagTags     = "tags"
-	flagAny      = "any"
-	flagPage     = "page"
-	flagLimit    = "limit"
-	defaultPage  = 1
-	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	flagTags  = "tags"
+	flagAny   = "any"
+	flagPage  = "page"
+	flagLimit = "limit"
 )
 
 // default client command to search through tagged transactions
@@ -96,8 +92,8 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
-	cmd.Flags().Int32(flagPage, defaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int32(flagLimit, defaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().Int32(flagPage, rest.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int32(flagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.MarkFlagRequired(flagTags)
 	return cmd
 }
@@ -184,7 +180,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		tags, page, limit, err = parseHTTPArgs(r)
+		tags, page, limit, err = rest.ParseHTTPArgs(r)
 
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -199,52 +195,4 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 		rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
-}
-
-func parseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
-	tags = make([]string, 0, len(r.Form))
-	for key, values := range r.Form {
-		if key == "page" || key == "limit" {
-			continue
-		}
-		var value string
-		value, err = url.QueryUnescape(values[0])
-		if err != nil {
-			return tags, page, limit, err
-		}
-
-		var tag string
-		if key == types.TxHeightKey {
-			tag = fmt.Sprintf("%s=%s", key, value)
-		} else {
-			tag = fmt.Sprintf("%s='%s'", key, value)
-		}
-		tags = append(tags, tag)
-	}
-
-	pageStr := r.FormValue("page")
-	if pageStr == "" {
-		page = defaultPage
-	} else {
-		page, err = strconv.Atoi(pageStr)
-		if err != nil {
-			return tags, page, limit, err
-		} else if page <= 0 {
-			return tags, page, limit, errors.New("page must greater than 0")
-		}
-	}
-
-	limitStr := r.FormValue("limit")
-	if limitStr == "" {
-		limit = defaultLimit
-	} else {
-		limit, err = strconv.Atoi(limitStr)
-		if err != nil {
-			return tags, page, limit, err
-		} else if limit <= 0 {
-			return tags, page, limit, errors.New("limit must greater than 0")
-		}
-	}
-
-	return tags, page, limit, nil
 }

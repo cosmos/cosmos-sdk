@@ -224,7 +224,7 @@ paths:
           description: Pagination page
           type: integer
         - in: query
-          name: size
+          name: limit
           description: Pagination size
           type: integer
       responses:

@@ -39,13 +39,13 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 
 	prove := !cliCtx.TrustNode
 
-	res, err := node.TxSearch(query, prove, page, limit)
+	resTxs, err := node.TxSearch(query, prove, page, limit)
 	if err != nil {
 		return nil, err
 	}
 
 	if prove {
-		for _, tx := range res.Txs {
+		for _, tx := range resTxs.Txs {
 			err := ValidateTxResult(cliCtx, tx)
 			if err != nil {
 				return nil, err
@@ -53,12 +53,12 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 		}
 	}
 
-	resBlocks, err := getBlocksForTxResults(cliCtx, res.Txs)
+	resBlocks, err := getBlocksForTxResults(cliCtx, resTxs.Txs)
 	if err != nil {
 		return nil, err
 	}
 
-	txs, err := formatTxResults(cdc, res.Txs, resBlocks)
+	txs, err := formatTxResults(cdc, resTxs.Txs, resBlocks)
 	if err != nil {
 		return nil, err
 	}

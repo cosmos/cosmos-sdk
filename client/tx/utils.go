@@ -52,7 +52,7 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 		}
 	}
 
-	info, err := FormatTxResults(cdc, res.Txs)
+	info, err := formatTxResults(cdc, res.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +60,8 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 	return info, nil
 }
 
-// FormatTxResults parses the indexed txs into a slice of TxResponse objects.
-func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]sdk.TxResponse, error) {
+// formatTxResults parses the indexed txs into a slice of TxResponse objects.
+func formatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]sdk.TxResponse, error) {
 	var err error
 	out := make([]sdk.TxResponse, len(res))
 	for i := range res {
@@ -109,29 +109,30 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (out sdk.TxResponse, err error) {
+func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
-		return out, err
+		return sdk.TxResponse{}, err
 	}
 
 	node, err := cliCtx.GetNode()
 	if err != nil {
-		return out, err
+		return sdk.TxResponse{}, err
 	}
 
 	res, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
-		return out, err
+		return sdk.TxResponse{}, err
 	}
 
 	if !cliCtx.TrustNode {
 		if err = ValidateTxResult(cliCtx, res); err != nil {
-			return out, err
+			return sdk.TxResponse{}, err
 		}
 	}
 
-	if out, err = formatTxResult(cdc, res); err != nil {
+	out, err := formatTxResult(cdc, res)
+	if err != nil {
 		return out, err
 	}
 

@@ -27,33 +27,35 @@ const (
 	flagOutfile      = "output-document"
 )
 
-// GetSignCommand returns the sign command
+// GetSignCommand returns the transaction sign command.
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from [file], sign it, and print its JSON encoding.
+It will read a transaction from [file], sign it, and print its JSON encoding.
 
-If the flag --signature-only flag is on, it outputs a JSON representation
+If the flag --signature-only flag is set, it will output a JSON representation
 of the generated signature only.
 
-If the flag --validate-signatures is on, then the command would check whether all required
+If the flag --validate-signatures is set, then the command would check whether all required
 signers have signed the transactions, whether the signatures were collected in the right
 order, and if the signature is valid over the given transaction. If the --offline
-flag is also provided, signature validation over the transaction will be not be
-performed as that will require communication with a full node.
+flag is also set, signature validation over the transaction will be not be
+performed as that will require RPC communication with a full node.
 
-The --offline flag makes sure that the client will not reach out to an external node.
-Thus account number or sequence number lookups will not be performed and it is
-recommended to set such parameters manually.
+The --offline flag makes sure that the client will not reach out to full node.
+As a result, the account and sequence number queries will not be performed and
+it is required to set such parameters manually. Note, invalid values will cause
+the transaction to fail.
 
 The --multisig=<multisig_key> flag generates a signature on behalf of a multisig account
 key. It implies --signature-only. Full multisig signed transactions may eventually
 be generated via the 'multisign' command.
 `,
-		RunE: makeSignCmd(codec),
-		Args: cobra.ExactArgs(1),
+		PreRun: preSignCmd,
+		RunE:   makeSignCmd(codec),
+		Args:   cobra.ExactArgs(1),
 	}
 
 	cmd.Flags().String(
@@ -69,11 +71,22 @@ be generated via the 'multisign' command.
 		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
+	cmd.Flags().Bool(flagOffline, false, "Offline mode; Do not query a full node")
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
-	// add the flags here and return the command
-	return client.PostCommands(cmd)[0]
+	cmd = client.PostCommands(cmd)[0]
+	cmd.MarkFlagRequired(client.FlagFrom)
+
+	return cmd
+}
+
+func preSignCmd(cmd *cobra.Command, _ []string) {
+	// Conditionally mark the account and sequence numbers required as no RPC
+	// query will be done.
+	if viper.GetBool(flagOffline) {
+		cmd.MarkFlagRequired(client.FlagAccountNumber)
+		cmd.MarkFlagRequired(client.FlagSequence)
+	}
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
@@ -93,11 +106,6 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			}
 
 			return nil
-		}
-
-		from := viper.GetString(client.FlagFrom)
-		if from == "" {
-			return fmt.Errorf("required flag '%s' has not been set", client.FlagFrom)
 		}
 
 		// if --signature-only is on, then override --append

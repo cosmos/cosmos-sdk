@@ -109,6 +109,19 @@ func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec
 	return
 }
 
+func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (ptr []byte) {
+	query := abci.RequestQuery{
+		Path: strings.Join([]string{custom, types.QuerierRoute, QueryCommunityPool}, ""),
+		Data: []byte{},
+	}
+
+	cp, err := querier(ctx, []string{QueryCommunityPool}, query)
+	require.Nil(t, err)
+	require.Nil(t, cdc.UnmarshalJSON(cp, &ptr))
+
+	return
+}
+
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
@@ -169,4 +182,8 @@ func TestQueries(t *testing.T) {
 	keeper.AllocateTokensToValidator(ctx, val, tokens)
 	rewards = getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
+
+	// currently community pool hold nothing so we should return null
+	communityPool := getQueriedCommunityPool(t, ctx, cdc, querier)
+	require.Nil(t, communityPool)
 }

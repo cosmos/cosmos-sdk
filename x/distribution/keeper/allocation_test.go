@@ -105,7 +105,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	communityTax := sdk.NewDec(0)
-	ctx, _, k, sk, fck := CreateTestInputAdvanced(t, false, 1000000, communityTax)
+	ctx, _, _, k, sk, fck, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 10% commission

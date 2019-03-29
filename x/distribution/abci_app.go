@@ -11,11 +11,11 @@ import (
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 
 	// determine the total power signing the block
-	var totalPower, sumPrecommitPower int64
+	var previousTotalPower, sumPreviousPrecommitPower int64
 	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
-		totalPower += voteInfo.Validator.Power
+		previousTotalPower += voteInfo.Validator.Power
 		if voteInfo.SignedLastBlock {
-			sumPrecommitPower += voteInfo.Validator.Power
+			sumPreviousPrecommitPower += voteInfo.Validator.Power
 		}
 	}
 
@@ -23,7 +23,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
-		k.AllocateTokens(ctx, sumPrecommitPower, totalPower, previousProposer, req.LastCommitInfo.GetVotes())
+		k.AllocateTokens(ctx, sumPreviousPrecommitPower, previousTotalPower, previousProposer, req.LastCommitInfo.GetVotes())
 	}
 
 	// record the proposer for when we payout on the next block

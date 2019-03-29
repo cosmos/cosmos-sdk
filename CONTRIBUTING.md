@@ -100,21 +100,15 @@ Please don't make Pull Requests to `master`.
 
 ## Dependencies
 
-We use [dep](https://github.com/golang/dep) to manage dependencies.
+We use [Go 1.11 Modules](https://github.com/golang/go/wiki/Modules) to manage
+dependency versions.
 
-That said, the master branch of every Cosmos repository should just build
-with `go get`, which means they should be kept up-to-date with their
-dependencies so we can get away with telling people they can just `go get` our
-software.
+The master branch of every Cosmos repository should just build with `go get`,
+which means they should be kept up-to-date with their dependencies so we can
+get away with telling people they can just `go get` our software.
 
 Since some dependencies are not under our control, a third party may break our
-build, in which case we can fall back on `dep ensure` (or `make
-get_vendor_deps`). Even for dependencies under our control, dep helps us to
-keep multiple repos in sync as they evolve. Anything with an executable, such
-as apps, tools, and the core, should use dep.
-
-Run `dep status` to get a list of vendor dependencies that may not be
-up-to-date.
+build, in which case we can fall back on `go mod tidy -v`.
 
 ## Testing
 
@@ -171,7 +165,7 @@ only pull requests targeted directly against master.
 ### Development Procedure:
   - the latest state of development is on `develop`
   - `develop` must never fail `make test` or `make test_cli`
-  - `develop` should not fail `make test_lint`
+  - `develop` should not fail `make lint`
   - no --force onto `develop` (except when reverting a broken commit, which should seldom happen)
   - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
   - before submitting a pull request, begin `git rebase` on top of `develop`

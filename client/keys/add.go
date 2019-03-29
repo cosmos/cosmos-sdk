@@ -74,6 +74,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -146,7 +147,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 				return err
 			}
 
-			fmt.Fprintf(os.Stderr, "Key %q saved to disk.", name)
+			fmt.Fprintf(os.Stderr, "Key %q saved to disk.\n", name)
 			return nil
 		}
 
@@ -216,7 +217,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid")
+		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
 		return nil
 	}
 

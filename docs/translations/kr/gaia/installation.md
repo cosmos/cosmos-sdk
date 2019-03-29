@@ -7,10 +7,11 @@
 공식 [Go 문서](https://golang.org/doc/install)를 따라서 `go`를 설치하십시오. `$GOPATH`, `$GOBIN`, 그리고 `$PATH`의 환경을 꼭 세팅하세요. 예시: 
 
 ```bash
-mkdir -p $HOME/go/b4n
+mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
-echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
+echo "export GOBIN=\$GOPATH/bin" >> ~/.bash_profile
+echo "export PATH=\$PATH:\$GOBIN" >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ::: tip

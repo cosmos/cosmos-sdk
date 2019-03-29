@@ -1,6 +1,6 @@
 ## Install Gaia
 
-This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the latest testnet as either a [Full Node](./join-testnet.md#run-a-full-node) or a [Validator](./validators/validator-setup.md).
+This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the mainnet as either a [Full Node](./join-mainnet.md) or a [Validator](./validators/validator-setup.md).
 
 ### Install Go
 
@@ -9,12 +9,13 @@ Install `go` by following the [official docs](https://golang.org/doc/install). R
 ```bash
 mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
-echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
+echo "export GOBIN=\$GOPATH/bin" >> ~/.bash_profile
+echo "export PATH=\$PATH:\$GOBIN" >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.11.5+** is required for the Cosmos SDK.
+**Go 1.12.1+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries
@@ -22,6 +23,10 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 Next, let's install the latest version of Gaia. Here we'll use the `master` branch, which contains the latest stable release.
 If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
+
+::: warning
+For the mainnet, make sure your version if greater than `v0.33.0`
+::: 
 
 ```bash
 mkdir -p $GOPATH/src/github.com/cosmos
@@ -43,11 +48,11 @@ $ gaiacli version --long
 `gaiacli` for instance should output something similar to:
 
 ```
-cosmos-sdk: 0.31.2-10-g1fba7308
-git commit: 1fba7308fa226e971964cd6baad9527d4b51d9fc
-vendor hash: 1aec7edfad9888a967b3e9063e42f66b28f447e6
+cosmos-sdk: 0.33.0
+git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
+vendor hash: 5db0df3e24cf10545c84f462a24ddc61882aa58f
 build tags: netgo ledger
-go version go1.11.5 linux/amd64
+go version go1.12 linux/amd64
 ```
 
 ##### Build Tags
@@ -61,9 +66,9 @@ Build tags indicate special features that have been enabled in the binary.
 
 ### Install binary distribution via snap (Linux only)
 
-**Do not use snap at this time to install the binaries for production until we have a reproduceable binary system.**
+**Do not use snap at this time to install the binaries for production until we have a reproducible binary system.**
 
 
 ### Next
 
-Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)
+Now you can [join the mainnet](./join-mainnet.md), [the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

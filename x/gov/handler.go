@@ -25,8 +25,20 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
-	proposalID := proposal.GetProposalID()
+	var content ProposalContent
+	switch msg.ProposalType {
+	case ProposalTypeText:
+		content = NewTextProposal(msg.Title, msg.Description)
+	case ProposalTypeSoftwareUpgrade:
+		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
+	default:
+		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
+	}
+	proposal, err := keeper.SubmitProposal(ctx, content)
+	if err != nil {
+		return err.Result()
+	}
+	proposalID := proposal.ProposalID
 	proposalIDStr := fmt.Sprintf("%d", proposalID)
 
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)

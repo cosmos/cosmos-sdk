@@ -128,31 +128,39 @@ gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 For more information regarding how to generate, sign and broadcast transactions with a
 multi signature account see [Multisig Transactions](#multisig-transactions).
 
+### Tx Broadcasting
+
+When broadcasting transactions, `gaiacli` accepts a `--broadcast-mode` flag. This
+flag can have a value of `sync` (default), `async`, or `block`, where `sync` makes
+the client return a CheckTx response, `async` makes the client return immediately,
+and `block` makes the client wait for the tx to be committed (or timing out).
+
+It is important to note that the `block` mode should **not** be used in most
+circumstances. This is because broadcasting can timeout but the tx may still be
+included in a block. This can result in many undesirable situations. Therefor, it
+is best to use `sync` or `async` and query by tx hash to determine when the tx
+is included in a block.
+
 ### Fees & Gas
 
-Each transaction may either supply fees or gas prices, but not both. Most users
-will typically provide fees as this is the cost you will end up incurring for
-the transaction being included in the ledger.
+Each transaction may either supply fees or gas prices, but not both. 
 
 Validator's have a minimum gas price (multi-denom) configuration and they use
-this value when when determining if they should include the transaction in a block
-during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
-supply fees that are greater than or equal to __any__ of the denominations the validator requires.
+this value when when determining if they should include the transaction in a block during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must supply fees that are greater than or equal to __any__ of the denominations the validator requires.
 
 __Note__: With such a mechanism in place, validators may start to prioritize
-txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
-higher tx priority.
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield higher tx priority.
 
 e.g.
 
 ```bash
-gaiacli tx send ... --fees=100photino
+gaiacli tx send ... --fees=1000000uatom
 ```
 
 or
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=0.025uatom
 ```
 
 ### Account
@@ -345,11 +353,11 @@ gaiacli query staking validator <account_cosmosval>
 
 #### Bond Tokens
 
-On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
+On the Cosmos Hub mainnet, we delegate `uatom`, where `1atom = 1000000uatom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10steak \
+  --amount=10000000uatom \
   --validator=<validator> \
   --from=<key_name> \
   --chain-id=<chain_id>
@@ -365,10 +373,6 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
-::: tip Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
-:::
-
 ##### Query Delegations
 
 Once submitted a delegation to a validator, you can see it's information by using the following command:
@@ -383,16 +387,15 @@ Or if you want to check all your current delegations with disctinct validators:
 gaiacli query staking delegations <delegator_addr>
 ```
 
-You can also get previous delegation(s) status by adding the `--height` flag.
-
 #### Unbond Tokens
 
-If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
+If for any reason the validator misbehaves, or you just want to unbond a certain
+amount of tokens, use this following command.
 
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval> \
-  --shares-fraction=0.5 \
+  <validator_addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -419,17 +422,15 @@ Additionally, as you can get all the unbonding-delegations from a particular val
 gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
-To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
-
 #### Redelegate Tokens
 
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval> \
-  --addr-validator-dest=<account_cosmosval> \
-  --shares-fraction=50 \
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -446,7 +447,7 @@ Once you begin an redelegation, you can see it's information by using the follow
 gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
-Or if you want to check all your current unbonding-delegations with disctinct validators:
+Or if you want to check all your current unbonding-delegations with distinct validators:
 
 ```bash
 gaiacli query staking redelegations <account_cosmos>
@@ -457,8 +458,6 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 ```bash
   gaiacli query staking redelegations-from <account_cosmosval>
 ```
-
-To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
 #### Query Parameters
 
@@ -527,7 +526,7 @@ gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --deposit=<40steak> \
+  --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -556,10 +555,10 @@ gaiacli query gov proposer <proposal_id>
 
 #### Increase deposit
 
-In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx gov deposit <proposal_id> <200steak> \
+gaiacli tx gov deposit <proposal_id> "10000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -636,6 +635,14 @@ To check the current distribution parameters, run:
 
 ```bash
 gaiacli query distr params
+```
+
+#### Query distribution Community Pool
+
+To query all coins in the community pool which is under Governance control:
+
+```bash
+gaiacli query distr community-pool
 ```
 
 #### Query outstanding rewards
@@ -725,7 +732,7 @@ The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 
 ```bash
-gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 1000000uatom \
   --from=<multisig_address> \
   --generate-only > unsignedTx.json
 ```

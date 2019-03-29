@@ -4,12 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenesisState - all distribution state that must be provided at genesis
+// GenesisState - minter state
 type GenesisState struct {
 	Minter Minter `json:"minter"` // minter object
 	Params Params `json:"params"` // inflation params
 }
 
+// NewGenesisState creates a new GenesisState object
 func NewGenesisState(minter Minter, params Params) GenesisState {
 	return GenesisState{
 		Minter: minter,
@@ -17,7 +18,7 @@ func NewGenesisState(minter Minter, params Params) GenesisState {
 	}
 }
 
-// get raw genesis raw message for testing
+// DefaultGenesisState creates a default GenesisState object
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Minter: DefaultInitialMinter(),
@@ -31,8 +32,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetParams(ctx, data.Params)
 }
 
-// ExportGenesis returns a GenesisState for a given context and keeper. The
-// GenesisState will contain the pool, and validator/delegator distribution info's
+// ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 
 	minter := keeper.GetMinter(ctx)
@@ -40,8 +40,8 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 	return NewGenesisState(minter, params)
 }
 
-// ValidateGenesis validates the provided staking genesis state to ensure the
-// expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
+// ValidateGenesis validates the provided genesis state to ensure the
+// expected invariants holds.
 func ValidateGenesis(data GenesisState) error {
 	err := validateParams(data.Params)
 	if err != nil {

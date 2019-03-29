@@ -16,7 +16,7 @@ The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that the wei
 
 Any user in the system can declare their intention to become a validator by sending a `create-validator` transaction. From there, they become validator candidates.
 
-The weight (i.e. voting power) of a validator determines wether or not they are an active validator. Initially, only the top 100 validators with the most voting power will be active validators. 
+The weight (i.e. voting power) of a validator determines whether or not they are an active validator. Initially, only the top 100 validators with the most voting power will be active validators. 
 
 ### What is a full-node?
 
@@ -94,7 +94,7 @@ After a validator is created with a `create-validator` transaction, they can be 
 - `unbonded`: Validator is not in the active set, and therefore not signing blocs. Validator cannot be slashed, and does not earn any reward. It is still possible to delegate Atoms to this validator. Un-delegating from an `unbonded` validator is immediate.
 
 
-### What is 'self-delegation'? How can I increase my 'self-delegatino'?
+### What is 'self-delegation'? How can I increase my 'self-delegation'?
 
 Self-delegation is delegation from a validator to themselves. This amount can be increases by sending a `delegate` transaction from your validator's `application` application key.
 
@@ -113,13 +113,13 @@ Delegators are free to choose validators according to their own subjective crite
 
 Apart from these criteria, there will be a possibility for validators to signal a website address to complete their resume. Validators will need to build reputation one way or another to attract delegators. For example, it would be a good practice for validators to have their setup audited by third parties. Note though, that the Tendermint team will not approve or conduct any audit themselves. For more on due diligence, see [this blog post](https://medium.com/@interchain_io/3d0faf10ce6f)
 
-## Responsibilites
+## Responsibilities
 
 ### Do validators need to be publicly identified?
 
 No, they do not. Each delegator will value validators based on their own criteria. Validators will be able to register a website address when they nominate themselves so that they can advertise their operation as they see fit. Some delegators may prefer a website that clearly displays the team operating the validator and their resume, while others might prefer anonymous validators with positive track records.
 
-### What are the responsiblities of a validator?
+### What are the responsibilities of a validator?
 
 Validators have two main responsibilities:
 
@@ -218,9 +218,10 @@ We have to solve this simple equation to find the reward R for each validator:
 
 ### What are the slashing conditions?
 
-If a validator misbehaves, their delegated stake will be partially slashed. There is currently one main fault that can result in slashing of funds for a validator and their delegators:
+If a validator misbehaves, their delegated stake will be partially slashed. There are currently two faults that can result in slashing of funds for a validator and their delegators:
 
-* **Double signing:** If someone reports on chain A that a validator signed two blocks at the same height on chain A and chain B, and if chain A and chain B share a common ancestor, then this validator will get slashed on chain A
+* **Double signing:** If someone reports on chain A that a validator signed two blocks at the same height on chain A and chain B, and if chain A and chain B share a common ancestor, then this validator will get slashed by 5% on chain A.
+* **Downtime:** If a validator misses more than 95% of the last 10.000 blocks, they will get slashed by 0.01%. 
 
 ### Do validators need to self-delegate Atoms?
 

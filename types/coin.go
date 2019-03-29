@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -269,6 +268,23 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 	}
 }
 
+// DenomsSubsetOf returns true if receiver's denom set
+// is subset of coinsB's denoms.
+func (coins Coins) DenomsSubsetOf(coinsB Coins) bool {
+	// more denoms in B than in receiver
+	if len(coins) > len(coinsB) {
+		return false
+	}
+
+	for _, coin := range coins {
+		if coinsB.AmountOf(coin.Denom).IsZero() {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Sub subtracts a set of coins from another.
 //
 // e.g.
@@ -294,26 +310,50 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// IsAllGT returns true if for every denom in coins, the denom is present at a
-// greater amount in coinsB.
+// IsAllGT returns true if for every denom in coinsB,
+// the denom is present at a greater amount in coins.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, _ := coins.SafeSub(coinsB)
-	if len(diff) == 0 {
+	if len(coins) == 0 {
 		return false
 	}
 
-	return diff.IsAllPositive()
-}
-
-// IsAllGTE returns true iff for every denom in coins, the denom is present at
-// an equal or greater amount in coinsB.
-func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeSub(coinsB)
-	if len(diff) == 0 {
+	if len(coinsB) == 0 {
 		return true
 	}
 
-	return !diff.IsAnyNegative()
+	if !coinsB.DenomsSubsetOf(coins) {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		amountA, amountB := coins.AmountOf(coinB.Denom), coinB.Amount
+		if !amountA.GT(amountB) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsAllGTE returns false if for any denom in coinsB,
+// the denom is present at a smaller amount in coins;
+// else returns true.
+func (coins Coins) IsAllGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return true
+	}
+
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		if coinB.Amount.GT(coins.AmountOf(coinB.Denom)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
@@ -511,7 +551,7 @@ var (
 
 func validateDenom(denom string) error {
 	if !reDnm.MatchString(denom) {
-		return errors.New("illegal characters")
+		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
 }
@@ -549,25 +589,27 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 // ParseCoins will parse out a list of coins separated by commas.
 // If nothing is provided, it returns nil Coins.
 // Returned coins are sorted.
-func ParseCoins(coinsStr string) (coins Coins, err error) {
+func ParseCoins(coinsStr string) (Coins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}
 
 	coinStrs := strings.Split(coinsStr, ",")
-	for _, coinStr := range coinStrs {
+	coins := make(Coins, len(coinStrs))
+	for i, coinStr := range coinStrs {
 		coin, err := ParseCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
-		coins = append(coins, coin)
+
+		coins[i] = coin
 	}
 
-	// Sort coins for determinism.
+	// sort coins for determinism
 	coins.Sort()
 
-	// Validate coins before returning.
+	// validate coins before returning
 	if !coins.IsValid() {
 		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
 	}

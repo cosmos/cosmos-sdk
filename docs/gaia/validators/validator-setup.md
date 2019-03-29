@@ -1,12 +1,10 @@
-# Run a Validator on the public testnet
+# Run a Validator on the Cosmos Hub Mainnet
 
 ::: tip
-Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
+Information on how to join the mainnet (`genesis.json` file and seeds) is held [in our `launch` repo](https://github.com/cosmos/launch/tree/master/latest). 
 :::
 
-__Note__: This documentation is only intended for validators of the **public testnet**
-
-Before setting up your validator node, make sure you've already gone through the [Full Node Setup](../join-testnet.md) guide.
+Before setting up your validator node, make sure you've already gone through the [Full Node Setup](../join-mainnet.md) guide.
 
 ## What is a Validator?
 
@@ -16,7 +14,7 @@ Before setting up your validator node, make sure you've already gone through the
 If you want to become a validator for the Hub's `mainnet`, you should [research security](./security.md).
 :::
 
-You may want to skip the next section if you have already [set up a full-node](../join-testnet.md).
+You may want to skip the next section if you have already [set up a full-node](../join-mainnet.md).
 
 ## Create Your Validator
 
@@ -26,50 +24,66 @@ Your `cosmosvalconspub` can be used to create a new validator by staking tokens.
 gaiad tendermint show-validator
 ```
 
-Next, craft your `gaiad gentx` command:
+To create your validator, just use the following command:
 
-::: warning Note
-Don't use more `STAKE` thank you have! You can always get more by using the [Faucet](https://faucet.cosmos.network/)!
+::: warning 
+Don't use more `uatom` than you have! 
 :::
 
 ```bash
 gaiacli tx staking create-validator \
-  --amount=5STAKE \
+  --amount=1000000uatom \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --from=<key_name> \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01" 
+  --commission-max-change-rate="0.01" \
+  --min-self-delegation="1" \
+  --gas="auto" \
+  --gas-prices="0.025uatom" \
+  --from=<key_name>
 ```
 
-__Note__: When specifying commission parameters, the `commission-max-change-rate`
-is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
-a 100% rate increase, but only 1 percentage point.
+::: tip
+When specifying commission parameters, the `commission-max-change-rate` is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is a 100% rate increase, but only 1 percentage point.
+:::
 
-__Note__: If unspecified, `consensus_pubkey` will default to the output of `gaiad tendermint show-validator`.
-`key_name` is the name of the private key that will be used to sign the transaction.
+::: tip
+`Min-self-delegation` is a stritly positive integer that represents the minimum amount of self-delegated voting power your validator must always have. A `min-self-delegation` of 1 means your validator will never have a self-delegation lower than `1atom`, or `1000000uatom`
+:::
+
+You can confirm that you are in the validator set by using a third party explorer.
 
 ## Participate in genesis as a validator
 
-__Note__: This section only concerns validators that want to be in the genesis
-file. If the chain you want to validate is already live, skip this section.
-
-__Note__: `Gaia-9002` and `Game of stakes` will not use this process. They will
-be bootstrapped using validators operated by Tendermint. You will just need to use the
-[create-validator](#create-your-validator) command in order to join as a validator
-for these networks.
+::: warning
+This section only concerns validators that want to be in the genesis
+file of the Cosmos Hub mainnet. If the mainnet is already live, skip this section.
+:::
 
 If you want to participate in genesis as a validator, you need to justify that
-you have some stake at genesis, create one (or multiple) transactions to bond this
-stake to your validator address, and include this transaction in the genesis file.
+you have some atoms at genesis, create one (or multiple) transactions to bond these atoms to your validator address, and include this transaction in the genesis file.
 
-You will need create a `gentx`:
+Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+
+```bash
+gaiad tendermint show-validator
+```
+
+Next, craft your `gaiad gentx` command. 
+
+::: tip
+A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are collected by a `genesis coordinator` and validated against an initial `genesis.json`.
+:::
+
+::: warning Note
+Don't use more `uatom` than you have! 
+:::
 
 ```bash
 gaiad gentx \
-  --amount <amount_of_delegation> \
+  --amount <amount_of_delegation_uatom> \
   --commission-rate <commission_rate> \
   --commission-max-rate <commission_max_rate> \
   --commission-max-change-rate <commission_max_change_rate> \
@@ -77,50 +91,17 @@ gaiad gentx \
   --name <key_name>
 ```
 
-__Note__: This command automatically store your `gentx` in `~/.gaiad/config/gentx`
-for it to be processed at genesis.
-
 ::: tip
-Consult `gaiad gentx --help` for more information on the flags defaults.
+When specifying commission parameters, the `commission-max-change-rate` is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is a 100% rate increase, but only 1 percentage point.
 :::
 
-A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are
-collected by a `genesis coordinator` and validated against an initial `genesis.json`.
-Such initial `genesis.json` contains only a list of accounts and their coins.
-Once the transactions are processed, they are merged in the `genesis.json`'s `gentxs` field.
-
-### Copy the Initial Genesis File and Process Genesis Transactions
-
-Fetch the `genesis.json` file into `gaiad`'s config directory.
-
-```bash
-mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
-```
-
-__Note:__ We use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
-which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
-
-
-You also need to fetch the genesis transactions of all the other genesis validators. For now there is no repository where genesis transactions can be submitted by validators, but this will as soon as we try out this feature in a testnet.
-
-Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you can run:
-
-```bash
-gaiad collect-gentxs
-```
-
-__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess stake tokens in the genesis file, otherwise `collect-gentx` will fail.
-
-The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
-
-```bash
-gaiad start
-```
+You can then submit your `gentx` on the [launch repository](https://github.com/cosmos/launch). These `gentx` will be used to form the final genesis file. 
 
 ## Edit Validator Description
 
-You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
+You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below. If a flag is not included in the command the field will default to empty (`--moniker` defaults to the machine name) if the field has never been set or remain the same if it has been set in the past.
+
+The <key_name> specifies which validator you are editing. If you choose to not include certain flags, remember that the --from flag must be included to identify the validator to update.
 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
@@ -131,6 +112,8 @@ gaiacli tx staking edit-validator
   --identity=6A0D65E29A4CBC8E \
   --details="To infinity and beyond!" \
   --chain-id=<chain_id> \
+  --gas="auto" \
+  --gas-prices="0.025uatom" \
   --from=<key_name> \
   --commission-rate="0.10"
 ```
@@ -187,23 +170,15 @@ To be in the validator set, you need to have more total voting power than the 10
 
 ### Problem #1: My validator has `voting_power: 0`
 
-Your validator has become auto-unbonded. In `gaia-8000`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+Your validator has become jailed. Validators get jailed, i.e. get removed from the active validator set, if they do not vote on `500` of the last `10000` blocks, or if they double sign. 
 
-Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
+If you got jailed for downtime, you can get your voting power back to your validator. First, if `gaiad` is not running, start it up again:
 
 ```bash
 gaiad start
 ```
 
-Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
-
-```bash
-gaiacli tx slashing unjail <cosmos> --chain-id=<chain_id> --from=<from>
-```
-
-::: danger Warning
-If you don't wait for `gaiad` to sync before running `unjail`, you will receive an error message telling you your validator is still jailed.
-:::
+Wait for your full node to catch up to the latest block. Next, run the following command. Then, you can [unjail your validator](#unjail-validator)
 
 Lastly, check your validator again to see if your voting power is back.
 

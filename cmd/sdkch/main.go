@@ -92,7 +92,7 @@ func main() {
 		}
 		addEntryFile(sectionDir, stanzaDir)
 
-	case "add-slow":
+	case "add-interactive":
 		addEntryFileFromConsoleInput()
 
 	case "generate":
@@ -283,8 +283,8 @@ func writeEntryFile(filename string, bs []byte) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Unreleased changelog entry written to: %s\n", filename)
-	fmt.Println("To modify this entry please edit or delete the above file directly.")
+	log.Printf("Unreleased changelog entry written to: %s\n", filename)
+	log.Println("To modify this entry please edit or delete the above file directly.")
 }
 
 func validateSectionStanzaDirs(sectionDir, stanzaDir string) {

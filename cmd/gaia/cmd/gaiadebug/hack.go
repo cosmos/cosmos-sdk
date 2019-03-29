@@ -218,9 +218,7 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
-	var resp abci.ResponseBeginBlock
-	var err error
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (resp abci.ResponseBeginBlock, err error) {
 	resp.Tags, err = slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 	return resp, err
 }

@@ -522,19 +522,16 @@ func TestBonding(t *testing.T) {
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], rdTokens, fees)
 	require.Equal(t, uint32(0), resultTx.Code)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	validator2 := getValidator(t, port, operAddrs[1])
 
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, operAddrs[1], delegatorDels[0].ValidatorAddress)
 
-	// because the second validator never signs during these tests, if this
-	// this test takes a long time to run,  eventually this second validator
-	// will get slashed, meaning that it's exchange rate is no-longer 1-to-1,
-	// hence we utilize the exchange rate in the following test
-	delTokensAfterRedelegation := validator2.TokensFromShares(delegatorDels[0].GetShares())
-	require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
+	// TODO uncomment once all validators actually sign in the lcd tests
+	//validator2 := getValidator(t, port, operAddrs[1])
+	//delTokensAfterRedelegation := validator2.ShareTokens(delegatorDels[0].GetShares())
+	//require.Equal(t, rdTokens.ToDec(), delTokensAfterRedelegation)
 
 	// verify balance after paying fees
 	acc = getAccount(t, port, addr)

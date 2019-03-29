@@ -76,10 +76,11 @@ type TxResponse struct {
 	Tags      StringTags      `json:"tags,omitempty"`
 	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
+	Timestamp string          `json:"timestamp,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
+func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxResponse {
 	if res == nil {
 		return TxResponse{}
 	}
@@ -98,6 +99,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		GasUsed:   res.TxResult.GasUsed,
 		Tags:      TagsToStringTags(res.TxResult.Tags),
 		Tx:        tx,
+		Timestamp: timestamp,
 	}
 }
 
@@ -228,6 +230,10 @@ func (r TxResponse) String() string {
 
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
+	}
+
+	if r.Timestamp != "" {
+		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
 	}
 
 	return strings.TrimSpace(sb.String())

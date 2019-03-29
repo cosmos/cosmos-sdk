@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,20 +53,25 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 		}
 	}
 
-	info, err := formatTxResults(cdc, res.Txs)
+	resBlocks, err := getBlocksForTxResults(cliCtx, res.Txs)
 	if err != nil {
 		return nil, err
 	}
 
-	return info, nil
+	txs, err := formatTxResults(cdc, res.Txs, resBlocks)
+	if err != nil {
+		return nil, err
+	}
+
+	return txs, nil
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
-func formatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]sdk.TxResponse, error) {
+func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]sdk.TxResponse, error) {
 	var err error
-	out := make([]sdk.TxResponse, len(res))
-	for i := range res {
-		out[i], err = formatTxResult(cdc, res[i])
+	out := make([]sdk.TxResponse, len(resTxs))
+	for i := range resTxs {
+		out[i], err = formatTxResult(cdc, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
 			return nil, err
 		}
@@ -75,13 +81,13 @@ func formatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]sdk.TxResponse
 }
 
 // ValidateTxResult performs transaction verification.
-func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
+func ValidateTxResult(cliCtx context.CLIContext, resTx *ctypes.ResultTx) error {
 	if !cliCtx.TrustNode {
-		check, err := cliCtx.Verify(res.Height)
+		check, err := cliCtx.Verify(resTx.Height)
 		if err != nil {
 			return err
 		}
-		err = res.Proof.Validate(check.Header.DataHash)
+		err = resTx.Proof.Validate(check.Header.DataHash)
 		if err != nil {
 			return err
 		}
@@ -89,13 +95,35 @@ func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
 	return nil
 }
 
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.TxResponse, error) {
-	tx, err := parseTx(cdc, res.Tx)
+func getBlocksForTxResults(cliCtx context.CLIContext, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {
+	node, err := cliCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	resBlocks := make(map[int64]*ctypes.ResultBlock)
+
+	for _, resTx := range resTxs {
+		if _, ok := resBlocks[resTx.Height]; !ok {
+			resBlock, err := node.Block(&resTx.Height)
+			if err != nil {
+				return nil, err
+			}
+
+			resBlocks[resTx.Height] = resBlock
+		}
+	}
+
+	return resBlocks, nil
+}
+
+func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (sdk.TxResponse, error) {
+	tx, err := parseTx(cdc, resTx.Tx)
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
 
-	return sdk.NewResponseResultTx(res, tx), nil
+	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
@@ -120,18 +148,23 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sd
 		return sdk.TxResponse{}, err
 	}
 
-	res, err := node.Tx(hash, !cliCtx.TrustNode)
+	resTx, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
 
 	if !cliCtx.TrustNode {
-		if err = ValidateTxResult(cliCtx, res); err != nil {
+		if err = ValidateTxResult(cliCtx, resTx); err != nil {
 			return sdk.TxResponse{}, err
 		}
 	}
 
-	out, err := formatTxResult(cdc, res)
+	resBlocks, err := getBlocksForTxResults(cliCtx, []*ctypes.ResultTx{resTx})
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	out, err := formatTxResult(cdc, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}

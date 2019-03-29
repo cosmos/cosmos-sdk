@@ -9,7 +9,6 @@ require (
 	github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8
 	github.com/cosmos/ledger-cosmos-go v0.9.11
 	github.com/cosmos/ledger-go v0.9.1 // indirect
-	github.com/ethereum/go-ethereum v1.8.23 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.1.1
@@ -47,8 +46,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.14.1
 	github.com/tendermint/iavl v0.12.1
-	github.com/tendermint/lint v0.0.1 // indirect
-	github.com/tendermint/tendermint v0.31.0-dev0
+	github.com/tendermint/tendermint v0.31.1
 	github.com/zondax/hid v0.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect

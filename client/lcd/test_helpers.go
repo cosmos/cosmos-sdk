@@ -393,11 +393,11 @@ func startTM(
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
 	registerRoutes(rs)
-	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
+	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger) //nolint:errcheck
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger, tmrpc.DefaultConfig()) //nolint:errcheck
 	return listener, nil
 }
 

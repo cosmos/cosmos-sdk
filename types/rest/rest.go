@@ -228,19 +228,23 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 		if key == "page" || key == "limit" {
 			continue
 		}
+
 		var value string
 		value, err = url.QueryUnescape(values[0])
 		if err != nil {
 			return tags, page, limit, err
 		}
 
-		var tag string
-		if key == types.TxHeightKey {
-			tag = fmt.Sprintf("%s=%s", key, value)
+		// Parse request from swagger
+		// tag="action=send&sender=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
+		if key == "tag" {
+			for _, tag := range strings.Split(value, "&") {
+				value := strings.Split(tag, "=")[1]
+				tags = append(tags, formatTag(key, value))
+			}
 		} else {
-			tag = fmt.Sprintf("%s='%s'", key, value)
+			tags = append(tags, formatTag(key, value))
 		}
-		tags = append(tags, tag)
 	}
 
 	pageStr := r.FormValue("page")
@@ -268,4 +272,12 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 	}
 
 	return tags, page, limit, nil
+}
+
+func formatTag(key, value string) string {
+	if key == types.TxHeightKey {
+		return fmt.Sprintf("%s=%s", key, value)
+	} else {
+		return fmt.Sprintf("%s='%s'", key, value)
+	}
 }

@@ -124,6 +124,9 @@ clean:
 distclean: clean
 	rm -rf vendor/
 
+cl:
+	@go run cmd/sdkch/main.go add-slow
+	
 ########################################
 ### Documentation
 

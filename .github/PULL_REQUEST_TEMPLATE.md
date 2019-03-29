@@ -9,7 +9,7 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Linked to github-issue with discussion and accepted design OR link to spec that describes this work.
 - [ ] Wrote tests
 - [ ] Updated relevant documentation (`docs/`)
-- [ ] Added a relevant changelog entry: `sdkch add [section] [stanza] [message]`
+- [ ] Added a relevant changelog entry (command `make cl`)
 - [ ] rereviewed `Files changed` in the github PR explorer
 
 ______

@@ -92,6 +92,9 @@ func main() {
 		}
 		addEntryFile(sectionDir, stanzaDir)
 
+	case "add-slow":
+		addEntryFileFromConsoleInput()
+
 	case "generate":
 		version := "UNRELEASED"
 		if flag.NArg() > 1 {
@@ -107,6 +110,34 @@ func main() {
 	}
 }
 
+func addEntryFileFromConsoleInput() {
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Please enter the section (either: \"breaking\", \"features\", \"improvements\", \"bugfixes\")")
+	sectionDir, _ := reader.ReadString('\n')
+	sectionDir = strings.TrimSpace(sectionDir)
+	if _, ok := sections[sectionDir]; !ok {
+		log.Fatalln("invalid section, please try again")
+	}
+
+	fmt.Println("Please enter the stanza (either: \"gaia\", \"gaiacli\", \"gaiarest\", \"sdk\", \"tendermint\")")
+	stanzaDir, _ := reader.ReadString('\n')
+	stanzaDir = strings.TrimSpace(stanzaDir)
+	if _, ok := stanzas[stanzaDir]; !ok {
+		log.Fatalln("invalid stanza, please try again")
+	}
+
+	fmt.Println("Please enter the changelog message (or press enter to write in  default $EDITOR)")
+	message, _ := reader.ReadString('\n')
+	message = strings.TrimSpace(message)
+	if message == "" {
+		addEntryFile(sectionDir, stanzaDir)
+		return
+	}
+
+	addSinglelineEntryFile(sectionDir, stanzaDir, message)
+}
+
 func addSinglelineEntryFile(sectionDir, stanzaDir, message string) {
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
@@ -117,7 +148,7 @@ func addSinglelineEntryFile(sectionDir, stanzaDir, message string) {
 }
 
 func addEntryFile(sectionDir, stanzaDir string) {
-	bs := readUserInput()
+	bs := readUserInputFromEditor()
 	firstLine := strings.TrimSpace(strings.Split(string(bs), "\n")[0])
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
@@ -198,8 +229,8 @@ func generateChangelog(version string) {
 }
 
 func pruneEmptyDirectories() {
-	for sectionDir, _ := range sections {
-		for stanzaDir, _ := range stanzas {
+	for sectionDir := range sections {
+		for stanzaDir := range stanzas {
 			mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
 		}
 		mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
@@ -252,8 +283,8 @@ func writeEntryFile(filename string, bs []byte) {
 		log.Fatal(err)
 	}
 
-	log.Printf("Unreleased changelog entry written to: %s\n", filename)
-	log.Println("To modify this entry please edit or delete the above file directly.")
+	fmt.Printf("Unreleased changelog entry written to: %s\n", filename)
+	fmt.Println("To modify this entry please edit or delete the above file directly.")
 }
 
 func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
@@ -266,7 +297,7 @@ func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
 }
 
 // nolint: errcheck
-func readUserInput() []byte {
+func readUserInputFromEditor() []byte {
 	tempfilename, err := launchUserEditor()
 	if err != nil {
 		log.Fatalf("couldn't open an editor: %v", err)
@@ -317,7 +348,7 @@ func launchUserEditor() (string, error) {
 		return "", err
 	}
 	if fileInfo.Size() == 0 {
-		log.Fatal("aborting due to empty message")
+		return "", errors.New("aborting due to empty message")
 	}
 
 	return tempfilename, nil

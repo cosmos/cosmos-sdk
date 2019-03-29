@@ -92,6 +92,7 @@ func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return
 }
@@ -102,6 +103,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return
 }
@@ -113,6 +115,7 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 
@@ -127,6 +130,7 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return
 }
@@ -137,6 +141,7 @@ func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return
 }
@@ -147,6 +152,7 @@ func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return
 }

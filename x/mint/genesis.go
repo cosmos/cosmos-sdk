@@ -29,10 +29,10 @@ func DefaultGenesisState() GenesisState {
 // new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
-	err := keeper.SetParams(ctx, data.Params)
-	if err != nil {
+	if err := keeper.SetParams(ctx, data.Params); err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 }
 

@@ -265,6 +265,7 @@ func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return depositParams
 }
@@ -276,6 +277,7 @@ func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return votingParams
 }
@@ -287,6 +289,7 @@ func (keeper Keeper) GetTallyParams(ctx sdk.Context) TallyParams {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 	return tallyParams
 }
@@ -296,6 +299,7 @@ func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams DepositPara
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 }
 
@@ -304,6 +308,7 @@ func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams VotingParams)
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 }
 
@@ -312,6 +317,7 @@ func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 }
 

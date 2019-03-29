@@ -172,6 +172,7 @@ func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	if err != nil {
 		// TODO: return error - needs rewrite interfaces
 		// and handle error on the caller side
+		// check PR #3782
 	}
 }
 

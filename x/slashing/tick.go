@@ -27,7 +27,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (sdk.T
 		case tmtypes.ABCIEvidenceTypeDuplicateVote:
 			sk.handleDoubleSign(ctx, evidence.Validator.Address, evidence.Height, evidence.Time, evidence.Validator.Power)
 		default:
-			return nil, fmt.Errorf("ignored unknown evidence type: %s", evidence.Type)
+			return sdk.EmptyTags(), fmt.Errorf("ignored unknown evidence type: %s", evidence.Type)
 		}
 	}
 

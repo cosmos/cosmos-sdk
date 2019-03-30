@@ -63,6 +63,10 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	}
 }
 
+func (p *Params) ValidateKV(key string, value string) (interface{}, sdk.Error) {
+	return nil, nil
+}
+
 // Equal returns a boolean determining if two Param types are identical.
 // TODO: This is slower than comparing struct fields directly
 func (p Params) Equal(p2 Params) bool {

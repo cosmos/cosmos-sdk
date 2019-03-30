@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -56,6 +57,10 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 		{KeySigVerifyCostED25519, &p.SigVerifyCostED25519},
 		{KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1},
 	}
+}
+
+func (p *Params) ValidateKV(key string, value string) (interface{}, sdk.Error) {
+	return nil, nil
 }
 
 // Equal returns a boolean determining if two Params types are identical.

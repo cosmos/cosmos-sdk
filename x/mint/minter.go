@@ -45,10 +45,8 @@ func validateMinter(minter Minter) error {
 	return nil
 }
 
-// get the new inflation rate for the next hour
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
-	inflation sdk.Dec) {
-
+// NextInflationRate returns the new inflation rate for the next hour.
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
@@ -62,7 +60,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
-	inflation = m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
+	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}
@@ -73,14 +71,14 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	return inflation
 }
 
-// calculate the annual provisions based on current total supply and inflation rate
-func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Int) (
-	provisions sdk.Dec) {
-
+// NextAnnualProvisions returns the annual provisions based on current total
+// supply and inflation rate.
+func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Int) sdk.Dec {
 	return m.Inflation.MulInt(totalSupply)
 }
 
-// get the provisions for a block based on the annual provisions rate
+// BlockProvision returns the provisions for a block based on the annual
+// provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
 	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())

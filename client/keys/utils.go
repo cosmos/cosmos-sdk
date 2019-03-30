@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	//"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
@@ -60,14 +60,15 @@ func GetPassphrase(name string) (string, error) {
 // ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
 // error upon failure.
 func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
-	}
-
+	//buf := client.BufferStdin()
+	//prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	//
+	//passphrase, err := client.GetPassword(prompt, buf)
+	//if err != nil {
+	//	return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
+	//}
+	// TODO:delete later, just for test using --passwd
+	passphrase := viper.GetString("passwd")
 	return passphrase, nil
 }
 

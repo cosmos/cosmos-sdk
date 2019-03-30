@@ -27,7 +27,7 @@ func contains(stringSlice []string, txType string) bool {
 
 // queries staking txs
 func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]sdk.TxResponse, error) {
-	page := 0
+	page := 1
 	limit := 100
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tag),
@@ -35,50 +35,6 @@ func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegator
 	}
 
 	return tx.SearchTxs(cliCtx, cdc, tags, page, limit)
-}
-
-func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32srcValidator := vars["srcValidatorAddr"]
-		bech32dstValidator := vars["dstValidatorAddr"]
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		srcValidatorAddr, err := sdk.ValAddressFromBech32(bech32srcValidator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		dstValidatorAddr, err := sdk.ValAddressFromBech32(bech32dstValidator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		params := staking.QueryRedelegationParams{
-			DelegatorAddr:    delegatorAddr,
-			SrcValidatorAddr: srcValidatorAddr,
-			DstValidatorAddr: dstValidatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		res, err := cliCtx.QueryWithData(endpoint, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
-	}
 }
 
 func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {

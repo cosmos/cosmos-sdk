@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/parameters", mint.QuerierRoute)
+			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryParameters)
 			res, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
@@ -31,6 +32,32 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 			}
 
 			return cliCtx.PrintOutput(params)
+		},
+	}
+}
+
+// GetCmdQueryInflation implements a command to return the current minting
+// inflation value.
+func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "inflation",
+		Short: "Query the current minting inflation value",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryInflation)
+			res, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			var inflation sdk.Dec
+			if err := cdc.UnmarshalJSON(res, &inflation); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(inflation)
 		},
 	}
 }

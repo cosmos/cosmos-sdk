@@ -61,3 +61,29 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 }
+
+// GetCmdQueryAnnualProvisions implements a command to return the current minting
+// annual provisions value.
+func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "annual-provisions",
+		Short: "Query the current minting annual provisions value",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryAnnualProvisions)
+			res, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			var inflation sdk.Dec
+			if err := cdc.UnmarshalJSON(res, &inflation); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(inflation)
+		},
+	}
+}

@@ -149,6 +149,7 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, acco
 	}
 	pub := priv.PubKey()
 
+	// Note: Once Cosmos App v1.3.1 is compulsory, it could be possible to check that pubkey and addr match
 	return kb.writeLedgerKey(name, pub, *hdPath), nil
 }
 

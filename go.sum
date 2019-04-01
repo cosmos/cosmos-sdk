@@ -31,6 +31,8 @@ github.com/cosmos/ledger-cosmos-go v0.9.11 h1:bkcIKqaM6evicjkSP+Le8HDLXt9P+MqGRn
 github.com/cosmos/ledger-cosmos-go v0.9.11/go.mod h1:RWldjvUf4Hfi46ti/8etBH3eQ2rOqqz2hstdzROQSHo=
 github.com/cosmos/ledger-cosmos-go v0.10.0 h1:ER5J2wJJQgrO232CYDLn0VgEfIxAHnqyi891N6iPQNM=
 github.com/cosmos/ledger-cosmos-go v0.10.0/go.mod h1:fT5C2lbyzNnq5WO3S3VgUxLhS1BqJVMv8Teh4EHrjIQ=
+github.com/cosmos/ledger-cosmos-go v0.10.1 h1:eXtwmrlTteOzkm2SmwjTdZa+7g8nMj6FRuOuLwxRsOo=
+github.com/cosmos/ledger-cosmos-go v0.10.1/go.mod h1:fT5C2lbyzNnq5WO3S3VgUxLhS1BqJVMv8Teh4EHrjIQ=
 github.com/cosmos/ledger-go v0.9.1 h1:bRIamtlWShVk1THw52NdCPHxtBxKnauglSB23mH1/w8=
 github.com/cosmos/ledger-go v0.9.1/go.mod h1:oZJ2hHAZROdlHiwTg4t7kP+GKIIkBT+o6c9QWFanOyI=
 github.com/davecgh/go-spew v0.0.0-20171005155431-ecdeabc65495/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

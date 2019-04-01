@@ -37,7 +37,7 @@ pex = false
 Sentry Nodes should edit their config.toml:
 ```bash
 # Comma separated list of peer IDs to keep private (will not be gossiped to other peers)
-private_peer_ids = "ipaddress of validator nodes"
+private_peer_ids = "id of validator nodes"
 ```
 
 ## Environment Variables

@@ -27,10 +27,6 @@ github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46f
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8 h1:Iwin12wRQtyZhH6FV3ykFcdGNlYEzoeR0jN8Vn+JWsI=
 github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
-github.com/cosmos/ledger-cosmos-go v0.9.11 h1:bkcIKqaM6evicjkSP+Le8HDLXt9P+MqGRnGiMUC20m4=
-github.com/cosmos/ledger-cosmos-go v0.9.11/go.mod h1:RWldjvUf4Hfi46ti/8etBH3eQ2rOqqz2hstdzROQSHo=
-github.com/cosmos/ledger-cosmos-go v0.10.0 h1:ER5J2wJJQgrO232CYDLn0VgEfIxAHnqyi891N6iPQNM=
-github.com/cosmos/ledger-cosmos-go v0.10.0/go.mod h1:fT5C2lbyzNnq5WO3S3VgUxLhS1BqJVMv8Teh4EHrjIQ=
 github.com/cosmos/ledger-cosmos-go v0.10.1 h1:eXtwmrlTteOzkm2SmwjTdZa+7g8nMj6FRuOuLwxRsOo=
 github.com/cosmos/ledger-cosmos-go v0.10.1/go.mod h1:fT5C2lbyzNnq5WO3S3VgUxLhS1BqJVMv8Teh4EHrjIQ=
 github.com/cosmos/ledger-go v0.9.1 h1:bRIamtlWShVk1THw52NdCPHxtBxKnauglSB23mH1/w8=

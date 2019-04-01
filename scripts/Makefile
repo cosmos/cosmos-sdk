@@ -57,7 +57,7 @@ $(GOBIN)/goimports:
 	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
 
 $(GOBIN)/gosum:
-	go install -v -mod=readonly ./cmd/gosum/
+	go install -mod=readonly ./cmd/gosum/
 
 $(GOBIN)/sdkch:
 	go install -mod=readonly ./cmd/sdkch/

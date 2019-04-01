@@ -61,6 +61,12 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 		paramsHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
 
+	// Get the amount held in the community pool
+	r.HandleFunc(
+		"/distribution/community_pool",
+		communityPoolHandler(cliCtx, cdc, queryRoute),
+	).Methods("GET")
+
 }
 
 // HTTP request handler to query the total rewards balance from all delegations
@@ -204,6 +210,26 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 		rest.PostProcessResponse(w, cdc, params, cliCtx.Indent)
+	}
+}
+
+func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var result sdk.DecCoins
+		if err := cdc.UnmarshalJSON(res, &result); err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, result, cliCtx.Indent)
 	}
 }
 

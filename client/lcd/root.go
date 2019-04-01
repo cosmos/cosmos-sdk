@@ -58,17 +58,21 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int) (err error) {
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	rs.listener, err = rpcserver.Listen(
-		listenAddr,
-		rpcserver.Config{MaxOpenConnections: maxOpen},
-	)
+	cfg := rpcserver.DefaultConfig()
+	cfg.MaxOpenConnections = maxOpen
+
+	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {
 		return
 	}
-	rs.log.Info(fmt.Sprintf("Starting Gaia Lite REST service (chain-id: %q)...",
-		viper.GetString(client.FlagChainID)))
+	rs.log.Info(
+		fmt.Sprintf(
+			"Starting Gaia Lite REST service (chain-id: %q)...",
+			viper.GetString(client.FlagChainID),
+		),
+	)
 
-	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
+	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
 // ServeCommand will start a Gaia Lite REST service as a blocking process. It

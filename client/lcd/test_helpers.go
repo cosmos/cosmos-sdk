@@ -220,7 +220,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true)
+	app := gapp.NewGaiaApp(logger, db, nil, true, false)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
@@ -298,6 +298,9 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	}
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
+
+	// initialize crisis data
+	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {
@@ -390,11 +393,11 @@ func startTM(
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
 	registerRoutes(rs)
-	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
+	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger) //nolint:errcheck
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger, tmrpc.DefaultConfig()) //nolint:errcheck
 	return listener, nil
 }
 
@@ -1386,6 +1389,21 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var signingInfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
+	require.Nil(t, err)
+
+	return signingInfo
+}
+
+// ----------------------------------------------------------------------
+// ICS 23 - SlashingList
+// ----------------------------------------------------------------------
+// GET /slashing/signing_infos Get sign info of all validators with pagination
+func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", "/slashing/signing_infos?page=1&limit=1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var signingInfo []slashing.ValidatorSigningInfo
 	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
 	require.Nil(t, err)
 

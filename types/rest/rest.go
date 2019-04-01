@@ -3,14 +3,22 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
+	"github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	DefaultPage  = 1
+	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -210,4 +218,54 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(output)
+}
+
+// ParseHTTPArgs parses the request's URL and returns a slice containing all arguments pairs.
+// It separates page and limit used for pagination
+func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
+	tags = make([]string, 0, len(r.Form))
+	for key, values := range r.Form {
+		if key == "page" || key == "limit" {
+			continue
+		}
+		var value string
+		value, err = url.QueryUnescape(values[0])
+		if err != nil {
+			return tags, page, limit, err
+		}
+
+		var tag string
+		if key == types.TxHeightKey {
+			tag = fmt.Sprintf("%s=%s", key, value)
+		} else {
+			tag = fmt.Sprintf("%s='%s'", key, value)
+		}
+		tags = append(tags, tag)
+	}
+
+	pageStr := r.FormValue("page")
+	if pageStr == "" {
+		page = DefaultPage
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if page <= 0 {
+			return tags, page, limit, errors.New("page must greater than 0")
+		}
+	}
+
+	limitStr := r.FormValue("limit")
+	if limitStr == "" {
+		limit = DefaultLimit
+	} else {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if limit <= 0 {
+			return tags, page, limit, errors.New("limit must greater than 0")
+		}
+	}
+
+	return tags, page, limit, nil
 }

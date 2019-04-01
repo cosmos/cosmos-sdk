@@ -45,7 +45,7 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			result, err := getValidators(cliCtx, height)
+			result, err := GetValidators(cliCtx, height)
 			if err != nil {
 				return err
 			}
@@ -113,7 +113,7 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 	}, nil
 }
 
-func getValidators(cliCtx context.CLIContext, height *int64) (ResultValidatorsOutput, error) {
+func GetValidators(cliCtx context.CLIContext, height *int64) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
@@ -170,7 +170,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := getValidators(cliCtx, &height)
+		output, err := GetValidators(cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -188,7 +188,7 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		output, err := getValidators(cliCtx, &height)
+		output, err := GetValidators(cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

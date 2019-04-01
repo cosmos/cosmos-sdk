@@ -367,14 +367,19 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
-          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+          GAIAD_VERSION=''
+          if [ "${CIRCLE_BRANCH}" = "master" ]; then
             GAIAD_VERSION="stable"
-          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+          elif [ "${CIRCLE_BRANCH}" = "develop" ]; then
             GAIAD_VERSION="develop"
           fi
-          docker build -t tendermint/gaia:$GAIAD_VERSION .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaia:$GAIAD_VERSION
+          if [ -z "${GAIAD_VERSION}" ]; then
+            docker build .
+          else
+            docker build -t tendermint/gaia:$GAIAD_VERSION .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push tendermint/gaia:$GAIAD_VERSION
+          fi
 
   docker_tagged:
     <<: *linux_defaults
@@ -394,11 +399,6 @@ workflows:
   test-suite:
     jobs:
       - docker_image:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
           requires:
             - setup_dependencies
       - docker_tagged:

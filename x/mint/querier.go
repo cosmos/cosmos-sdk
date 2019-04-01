@@ -29,7 +29,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryAnnualProvisions(ctx, k)
 
 		default:
-			return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown auth query endpoint: %s", path[0]))
+			return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown minting query endpoint: %s", path[0]))
 		}
 	}
 }

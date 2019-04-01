@@ -39,7 +39,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 
 // GetTxCmd returns the transaction commands for the minting module.
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
-	slashingTxCmd := &cobra.Command{
+	mintTxCmd := &cobra.Command{
 		Use:   slashing.ModuleName,
 		Short: "Minting transaction subcommands",
 	}

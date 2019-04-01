@@ -44,5 +44,5 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 		Short: "Minting transaction subcommands",
 	}
 
-	return slashingTxCmd
+	return mintTxCmd
 }

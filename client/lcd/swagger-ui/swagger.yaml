@@ -1691,6 +1691,54 @@ paths:
                 type: string
         500:
           description: Internal Server Error
+  /minting/parameters:
+    get:
+      summary: Minting module parameters
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            properties:
+              mint_denom:
+                type: string
+              inflation_rate_change:
+                type: string
+              inflation_max:
+                type: string
+              inflation_min:
+                type: string
+              goal_bonded:
+                type: string
+              blocks_per_year:
+                type: integer
+        500:
+          description: Internal Server Error
+  /minting/inflation:
+    get:
+      summary: Current minting inflation value
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: string
+        500:
+          description: Internal Server Error
+  /minting/annual-provisions:
+    get:
+      summary: Current minting annual provisions value
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: string
+        500:
+          description: Internal Server Error
 definitions:
   CheckTxResult:
     type: object

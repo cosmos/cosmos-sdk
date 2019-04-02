@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -67,7 +68,7 @@ type TxResponse struct {
 	Height    int64           `json:"height"`
 	TxHash    string          `json:"txhash"`
 	Code      uint32          `json:"code,omitempty"`
-	Data      []byte          `json:"data,omitempty"`
+	Data      string          `json:"data,omitempty"`
 	RawLog    string          `json:"raw_log,omitempty"`
 	Logs      ABCIMessageLogs `json:"logs,omitempty"`
 	Info      string          `json:"info,omitempty"`
@@ -90,7 +91,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
 		Code:      res.TxResult.Code,
-		Data:      res.TxResult.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
 		RawLog:    res.TxResult.Log,
 		Logs:      parsedLogs,
 		Info:      res.TxResult.Info,
@@ -127,7 +128,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Height:    res.Height,
 		TxHash:    txHash,
 		Code:      res.CheckTx.Code,
-		Data:      res.CheckTx.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
 		RawLog:    res.CheckTx.Log,
 		Logs:      parsedLogs,
 		Info:      res.CheckTx.Info,
@@ -154,7 +155,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Height:    res.Height,
 		TxHash:    txHash,
 		Code:      res.DeliverTx.Code,
-		Data:      res.DeliverTx.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
 		RawLog:    res.DeliverTx.Log,
 		Logs:      parsedLogs,
 		Info:      res.DeliverTx.Info,
@@ -175,7 +176,7 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 
 	return TxResponse{
 		Code:   res.Code,
-		Data:   res.Data.Bytes(),
+		Data:   res.Data.String(),
 		RawLog: res.Log,
 		Logs:   parsedLogs,
 		TxHash: res.Hash.String(),
@@ -198,8 +199,8 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Code: %d\n", r.Code))
 	}
 
-	if r.Data != nil {
-		sb.WriteString(fmt.Sprintf("  Data: %s\n", string(r.Data)))
+	if r.Data != "" {
+		sb.WriteString(fmt.Sprintf("  Data: %s\n", r.Data))
 	}
 
 	if r.RawLog != "" {

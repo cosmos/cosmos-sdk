@@ -36,7 +36,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	}
 
 	// cannot be unjailed if not jailed
-	if !validator.GetJailed() {
+	if !validator.IsJailed() {
 		return ErrValidatorNotJailed(k.codespace).Result()
 	}
 

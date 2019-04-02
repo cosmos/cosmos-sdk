@@ -108,7 +108,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
-	if !validator.GetJailed() {
+	if !validator.IsJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
 	}
 
@@ -172,7 +172,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
-		if validator != nil && !validator.GetJailed() {
+		if validator != nil && !validator.IsJailed() {
 
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",

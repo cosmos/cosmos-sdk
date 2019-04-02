@@ -158,9 +158,14 @@ func PrintUnsignedStdTx(
 		return
 	}
 
-	json, err := cliCtx.Codec.MarshalJSON(stdTx)
+	var json []byte
+	if viper.GetBool(client.FlagIndentResponse) {
+		json, err = cliCtx.Codec.MarshalJSONIndent(stdTx, "", "  ")
+	} else {
+		json, err = cliCtx.Codec.MarshalJSON(stdTx)
+	}
 	if err == nil {
-		fmt.Fprintf(cliCtx.Output, "%s\n", json)
+		_, _ = fmt.Fprintf(cliCtx.Output, "%s\n", json)
 	}
 
 	return

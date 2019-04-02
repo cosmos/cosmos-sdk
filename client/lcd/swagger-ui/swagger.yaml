@@ -322,6 +322,39 @@ paths:
           description: The tx was malformated
         500:
           description: Server internal error
+  /txs/decode:
+    post:
+      tags:
+        - ICS0
+      summary: Decode a transaction from the Amino wire format
+      description: Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: tx
+          description: The tx to decode
+          required: true
+          schema:
+            type: object
+            properties:
+              tx:
+                type: string
+                example: SvBiXe4KPqijYZoKFFHEzJ8c2HPAfv2EFUcIhx0yPagwEhTy0vPA+GGhCEslKXa4Af0uB+mfShoMCgVzdGFrZRIDMTAwEgQQwJoM
+      responses:
+        200:
+          description: The tx was successfully decoded
+          schema:
+            type: object
+            properties:
+              tx:
+                $ref: "#/definitions/StdTx"
+        400:
+          description: The tx was malformated
+        500:
+          description: Server internal error
   /bank/balances/{address}:
     get:
       summary: Get the account balances

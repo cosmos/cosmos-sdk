@@ -75,8 +75,7 @@ func (tx txDecodeRespTx) String() string {
 func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
-		Short: "Decode amino byte string to transactions generated offline",
-		Long:  `Decode ......`,
+		Short: "Decode an amino-encoded transaction string",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(codec)

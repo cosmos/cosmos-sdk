@@ -56,7 +56,7 @@ Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/launch/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/launch/master/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
 Note we use the `latest` directory in the [launch repo](https://github.com/cosmos/launch) which contains details for the mainnet like the latest version and the genesis file. 

@@ -1,6 +1,6 @@
-# Cosmos Hub Documentation
+# Gaia Documentation
 
-Welcome to the documentation for the **Cosmos Hub applicaiton: `gaia`**. 
+Welcome to the `Gaia` docs. `Gaia` is the current name of the Cosmos SDK application for the Cosmos Hub.
 
 ## Join the Cosmos Hub Mainnet
 

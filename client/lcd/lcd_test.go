@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/mint"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -1004,4 +1006,30 @@ func TestDistributionFlow(t *testing.T) {
 	// Withdraw delegator's rewards
 	resultTx = doWithdrawDelegatorAllRewards(t, port, seed, name1, pw, addr, fees)
 	require.Equal(t, uint32(0), resultTx.Code)
+}
+
+func TestMintingQueries(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	res, body := Request(t, port, "GET", "/minting/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params mint.Params
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &params))
+
+	res, body = Request(t, port, "GET", "/minting/inflation", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var inflation sdk.Dec
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &inflation))
+
+	res, body = Request(t, port, "GET", "/minting/annual-provisions", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var annualProvisions sdk.Dec
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &annualProvisions))
 }

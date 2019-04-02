@@ -327,6 +327,26 @@ You can get the current slashing parameters via:
 gaiacli query slashing params
 ```
 
+### Minting
+
+You can query for the minting/inflation parameters via:
+
+```bash
+gaiacli query minting params
+```
+
+To query for the current inflation value:
+
+```bash
+gaiacli query minting inflation
+```
+
+To query for the current annual provisions value:
+
+```bash
+gaiacli query minting annual-provisions
+```
+
 ### Staking
 
 #### Set up a Validator

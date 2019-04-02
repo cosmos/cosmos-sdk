@@ -34,7 +34,7 @@ The `chain_id` is a unique identifier for your chain. It helps differentiate bet
 
 Next, the genesis file defines consensus parameters. Consensus parameters regroup all the parameters that are related to the consensus layer, which is `Tendermint` in the case of `gaia`. Let us look at these parameters:
 
-- `block_size`
+- `block`
     + `max_bytes`: Maximum number of bytes per block. 
     + `max_gas`: Gas limit per block. Each transaction included in the block will consume some gas. The total gas used by transactions included in a block cannot exceed this limit.
 - `evidence`

@@ -63,13 +63,13 @@ paths:
                     properties:
                       p2p:
                         type: string
-                        example: 7
+                        example: "7"
                       block:
                         type: string
-                        example: 10
+                        example: "10"
                       app:
                         type: string
-                        example: 0
+                        example: "0"
                   network:
                     type: string
                     example: gaia-2
@@ -620,6 +620,7 @@ paths:
         required: false
         schema:
           type: string
+          example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
       - in: query
         name: validator_from
         description: Bech32 ValAddress of SrcValidator

@@ -1015,19 +1015,19 @@ paths:
             type: object
             properties:
               max_evidence_age:
-                type: integer
+                type: string
               signed_blocks_window:
-                type: integer
+                type: string
               min_signed_per_window:
-                type: integer
+                type: string
               double_sign_unbond_duration:
-                type: integer
+                type: string
               downtime_unbond_duration:
-                type: integer
+                type: string
               slash_fraction_double_sign:
-                type: integer
+                type: string
               slash_fraction_downtime:
-                type: integer
+                type: string
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -2147,7 +2147,7 @@ definitions:
     type: object
     properties:
       proposal_id:
-        type: integer
+        type: string
       title:
         type: string
       description:
@@ -2170,7 +2170,7 @@ definitions:
     type: object
     properties:
       proposal_id:
-        type: integer
+        type: string
       proposer:
         type: string
   Deposit:
@@ -2181,7 +2181,7 @@ definitions:
         items:
           $ref: "#/definitions/Coin"
       proposal_id:
-        type: integer
+        type: string
       depositor:
         $ref: "#/definitions/Address"
   TallyResult:
@@ -2205,7 +2205,7 @@ definitions:
       voter:
         type: string
       proposal_id:
-        type: integer
+        type: string
       option:
         type: string
   Validator:

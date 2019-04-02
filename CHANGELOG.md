@@ -6,7 +6,7 @@
 
 #### Gaia
 
-* [\#3999](https://github.com/cosmos/cosmos-sdk/issues/3999) Fix distribution delegation for zero height export bug
+* [\#3999](https://github.com/cosmos/cosmos-sdk/pull/3999) Fix distribution delegation for zero height export bug
 
 ## 0.33.0
 

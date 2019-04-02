@@ -1,6 +1,6 @@
 ## Install Gaia
 
-This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the latest testnet as either a [Full Node](./join-testnet.md#run-a-full-node) or a [Validator](./validators/validator-setup.md).
+This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the mainnet as either a [Full Node](./join-mainnet.md) or a [Validator](./validators/validator-setup.md).
 
 ### Install Go
 
@@ -11,6 +11,7 @@ mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
 echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
 echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ::: tip
@@ -22,6 +23,10 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 Next, let's install the latest version of Gaia. Here we'll use the `master` branch, which contains the latest stable release.
 If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
+
+::: warning
+For the mainnet, make sure your version if greather than `v0.33.0`
+::: 
 
 ```bash
 mkdir -p $GOPATH/src/github.com/cosmos
@@ -43,11 +48,11 @@ $ gaiacli version --long
 `gaiacli` for instance should output something similar to:
 
 ```
-cosmos-sdk: 0.31.2-10-g1fba7308
-git commit: 1fba7308fa226e971964cd6baad9527d4b51d9fc
-vendor hash: 1aec7edfad9888a967b3e9063e42f66b28f447e6
+cosmos-sdk: 0.33.0
+git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
+vendor hash: 5db0df3e24cf10545c84f462a24ddc61882aa58f
 build tags: netgo ledger
-go version go1.11.5 linux/amd64
+go version go1.12 linux/amd64
 ```
 
 ##### Build Tags
@@ -61,36 +66,9 @@ Build tags indicate special features that have been enabled in the binary.
 
 ### Install binary distribution via snap (Linux only)
 
-Gaia can be installed on various GNU/Linux distributions from the [Snapcraft.io](https://snapcraft.io/gaia) store:
-
-```bash
-$ sudo snap install gaia
-```
-
-Development builds are available through the `edge` channel:
-
-```bash
-$ sudo snap install --edge gaia
-```
-
-::: tip
-At the time of writing, only the following [architectures are supported](https://build.snapcraft.io/user/cosmos/cosmos-sdk): `amd64` `i386` `arm64` `armhf` `ppc64el` `s390x`.
-:::
-
-`snap` installs Gaia binaries as `gaia.gaiad` and `gaia.gaiacli`. It is recommended to create commands aliases for the user's convenience once the package is installed:
-
-```
-$ sudo snap alias gaia.gaiad gaiad
-$ sudo snap alias gaia.gaiacli gaiacli
-```
-
-::: warning
-Note that the binaries provided by the snap package save their data into **$HOME/snap/gaia/** instead of **$HOME**.
-:::
-
-Please refer to [Snap documentation](https://docs.snapcraft.io/installing-snapd/6735) for specific information on how to install `snap` on your distribution.
+**Do not use snap at this time to install the binaries for production until we have a reproduceable binary system.**
 
 
 ### Next
 
-Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)
+Now you can [join the mainnet](./join-mainnet.md), [the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

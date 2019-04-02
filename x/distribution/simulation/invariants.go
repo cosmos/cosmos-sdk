@@ -59,24 +59,30 @@ func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant 
 
 		var remaining sdk.DecCoins
 
+		valDelegationAddrs := make(map[string][]sdk.AccAddress)
+		for _, del := range sk.GetAllSDKDelegations(ctx) {
+			valAddr := del.GetValidatorAddr().String()
+			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
+		}
+
 		// iterate over all validators
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
 			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-			// TODO fetch delegations just for the validator, requires sdk.ValidatorSet change
-			// iterate over all current delegations, withdraw rewards
-			dels := sk.GetAllSDKDelegations(ctx)
-			for _, delegation := range dels {
-				if delegation.GetValidatorAddr().String() == val.GetOperator().String() {
-					err := k.WithdrawDelegationRewards(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
-					if err != nil {
+
+			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
+			if ok {
+				for _, delAddr := range delegationAddrs {
+					if err := k.WithdrawDelegationRewards(ctx, delAddr, val.GetOperator()); err != nil {
 						panic(err)
 					}
 				}
 			}
+
 			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 			if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
 				return true
 			}
+
 			return false
 		})
 

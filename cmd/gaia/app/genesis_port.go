@@ -1,82 +1,88 @@
 package app
 
-
 import (
-	"time"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+// GenesisFile defines the Gaia genesis format
 type GenesisFile struct {
-	GenesisTime time.Time `json:"genesis_time"`
-	ChainID string `json:"chain_id"` 
-	ConsensusParams tmtypes.ConsensusParams `json:"consensus_params"`
-	AppHash string `json:"app_hash"`
-	AppState GenesisState `json:"app_state"`
+	GenesisTime     time.Time                `json:"genesis_time"`
+	ChainID         string                   `json:"chain_id"`
+	ConsensusParams *tmtypes.ConsensusParams `json:"consensus_params"`
+	AppHash         string                   `json:"app_hash"`
+	AppState        GenesisState             `json:"app_state"`
 }
 
 // NewGenFileFromTmGenDoc unmarshals a tendermint GenesisDoc and creates a GenesisFile from it
-func NewGenFileFromTmGenDoc(genDoc tmtypes.GenesisDoc) (GenesisFile, error){
-	
+func NewGenFileFromTmGenDoc(genDoc *tmtypes.GenesisDoc) (GenesisFile, error) {
+
 	var appState GenesisState
 	err := json.Unmarshal(genDoc.AppHash, &appState)
 	if err != nil {
-		return nil, err
-	} 
-	
+		return GenesisFile{}, err
+	}
+
 	return GenesisFile{
-		GenesisTime: genDoc.GenesisTime,
-		ChainID: genDoc.ChainID,
+		GenesisTime:     genDoc.GenesisTime,
+		ChainID:         genDoc.ChainID,
 		ConsensusParams: genDoc.ConsensusParams,
-		AppHash: genDoc.AppHash.String(),
-		AppState: appState
+		AppHash:         genDoc.AppHash.String(),
+		AppState:        appState,
 	}, nil
 }
 
-func (genFile *GenesisFile) applyLatestChanges() {
-		// proposal #1 updates
-		*genFile.AppState.MintData.Params.BlocksPerYear = 4855015
+// applyLatestChanges for software upgrade. Nees to be updated on every state export.
+func (genFile GenesisFile) applyLatestChanges() GenesisFile {
+	// proposal #1 updates
+	genFile.AppState.MintData.Params.BlocksPerYear = 4855015
 
-		// proposal #2 updates
-		*genFile.ConsensusParams.Block.BlockMaxGas = 200000
-		*genFile.ConsensusParams.Block.BlockMaxBytes = 2000000
-	
-		// enable transfers
-		*genFile.AppState.BankData.SendEnabled = true
-		*genFile.AppState.DistrData.WithdrawAddrEnabled = true
+	// proposal #2 updates
+	genFile.ConsensusParams.Block.MaxGas = 200000
+	genFile.ConsensusParams.Block.MaxBytes = 2000000
+
+	// enable transfers
+	genFile.AppState.BankData.SendEnabled = true
+	genFile.AppState.DistrData.WithdrawAddrEnabled = true
+
+	return genFile
 }
 
-func GetUpdatedGenesis(cdc *codec.Codec, oldGenFilename, chainID string, startTime time.Time)
-(GenesisFile, error) {
-	genDoc, err := tmtypes.GenesisDocFromJSON(genDocPath)
+// GetUpdatedGenesis creates a tendermint genesis doc, updates latests release
+// changes and validates correctness of the new genesis state
+func GetUpdatedGenesis(
+	cdc *codec.Codec,
+	oldGenesisPath, chainID string,
+	startTime time.Time,
+) (GenesisFile, error) {
+	genDoc, err := tmtypes.GenesisDocFromFile(oldGenesisPath)
 	if err != nil {
-		return err
+		return GenesisFile{}, err
 	}
 
 	err = genDoc.ValidateAndComplete()
 	if err != nil {
-		return err
+		return GenesisFile{}, err
 	}
 
 	genesis, err := NewGenFileFromTmGenDoc(genDoc)
 	if err != nil {
-		return err
+		return GenesisFile{}, err
 	}
 
-	genesis.ChainID = strings.Trim(chainID)
+	genesis.ChainID = strings.Trim(chainID, " ")
 	genesis.GenesisTime = startTime
 
-	genesis.applyLatestChanges()
+	genesis = genesis.applyLatestChanges()
 
 	err = GaiaValidateGenesisState(genesis.AppState)
 	if err != nil {
-		return err
+		return GenesisFile{}, err
 	}
 
-	
-
+	return genesis, nil
 }

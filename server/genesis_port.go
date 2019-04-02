@@ -3,13 +3,14 @@ package server
 // DONTCOVER
 
 import (
-	"os/exec"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-
-	"github.com/tendermint/tendermint/libs/cli"
-
+	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,17 +24,18 @@ func GenesisPortCmd(ctx *Context, cdc *codec.Codec) *cobra.Command {
 
 $ gaiad genesis-port cosmoshub-1 2019-02-11T12:00:00Z > new_genesis.json
 `),
-		Args: cobra.ExactArgs(3)
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			oldGenFilename := args[0]
 			newChainID := args[1]
 			genesisTimeStr := args[2]
 
-			genesisTime, err := sdk.ParseTimeBytes((byte[]{genesisTimeStr}))
+			bz := []byte(genesisTimeStr)
+			genesisTime, err := sdk.ParseTimeBytes(bz)
 			if err != nil {
 				return err
 			}
-			
+
 			if ext := filepath.Ext(oldGenFilename); ext != ".json" {
 				return fmt.Errorf("%s is not a JSON file", oldGenFilename)
 			}
@@ -41,19 +43,19 @@ $ gaiad genesis-port cosmoshub-1 2019-02-11T12:00:00Z > new_genesis.json
 			if _, err = os.Stat(oldGenFilename); err != nil {
 				return err
 			}
-			
-			genesis, err := GetUpdatedGenesis(cdc, oldGenFilename, newChainID, genesisTime)
+
+			genesis, err := gapp.GetUpdatedGenesis(cdc, oldGenFilename, newChainID, genesisTime)
 			if err != nil {
 				return err
 			}
 
-			genesisJSON, err := cdc.MarshalJSONIndent(genesis)
+			genesisJSON, err := cdc.MarshalJSONIndent(genesis, "", "  ")
 			if err != nil {
 				return err
 			}
 			fmt.Println(string(genesisJSON))
 			return nil
-		}
+		},
 	}
 	return cmd
 }

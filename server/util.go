@@ -152,6 +152,7 @@ func AddCommands(
 		client.LineBreak,
 		tendermintCmd,
 		ExportCmd(ctx, cdc, appExport),
+		GenesisPortCmd(ctx, cdc),
 		client.LineBreak,
 		version.VersionCmd,
 	)

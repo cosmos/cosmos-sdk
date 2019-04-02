@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	amino "github.com/tendermint/go-amino"
 	"github.com/cosmos/cosmos-sdk/codec"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -33,74 +32,51 @@ func NewGenFileFromTmGenDoc(genDoc tmtypes.GenesisDoc) (GenesisFile, error){
 		GenesisTime: genDoc.GenesisTime,
 		ChainID: genDoc.ChainID,
 		ConsensusParams: genDoc.ConsensusParams,
-		AppHash: genDoc.AppHash.String()
+		AppHash: genDoc.AppHash.String(),
 		AppState: appState
 	}, nil
 }
 
-func main(oldGenFilename, newGenFilename, chainID string, startTime time.Time, indent bool) error {
-	if ext := filepath.Ext(oldGenFilename); ext != ".json" {
-		return fmt.Errorf("%s is not a JSON file", oldGenFilename)
-	}
-	if ext = filepath.Ext(newGenFilename); ext != ".json" {
-		newGenFilename = fmt.Sprintf("%s.json", newGenFilename)
-	}
+func (genFile *GenesisFile) applyLatestChanges() {
+		// proposal #1 updates
+		*genFile.AppState.MintData.Params.BlocksPerYear = 4855015
 
-	oldGenesisDir := filepath.Dir(oldGenFilename)
-	newGenFilename = filepath.Join(oldGenesisDir, gnewGenFilenamee)
+		// proposal #2 updates
+		*genFile.ConsensusParams.Block.BlockMaxGas = 200000
+		*genFile.ConsensusParams.Block.BlockMaxBytes = 2000000
+	
+		// enable transfers
+		*genFile.AppState.BankData.SendEnabled = true
+		*genFile.AppState.DistrData.WithdrawAddrEnabled = true
+}
 
+func GetUpdatedGenesis(cdc *codec.Codec, oldGenFilename, chainID string, startTime time.Time)
+(GenesisFile, error) {
 	genDoc, err := tmtypes.GenesisDocFromJSON(genDocPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = genDoc.ValidateAndComplete()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	genesis, err := NewGenFileFromTmGenDoc(genDoc)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	genesis.ChainID = strings.Trim(chainID)
 	genesis.GenesisTime = startTime
 
-	// proposal #1 updates
-	genesis.AppState.MintData.Params.BlocksPerYear = 4855015
-
-	// proposal #2 updates
-	genesis.ConsensusParams.Block.BlockMaxGas = 200000
-	genesis.ConsensusParams.Block.BlockMaxBytes = 2000000
-
-	// enable transfers
-	genesis.AppState.BankData.SendEnabled = true
-	genesis.AppState.DistrData.WithdrawAddrEnabled = true
+	genesis.applyLatestChanges()
 
 	err = GaiaValidateGenesisState(genesis.AppState)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	var genesisJSON []byte
-	if (indent) {
-		genesisJSON, err = amino.MarshalJSONIndent(genesis)
-	} else {
-		genesisJSON, err = amino.MarshalJSON(genesis)
-	}
+	
 
-	if err != nil {
-		panic(err)
-	}
-
-	err = ioutil.WriteFile(newGenFilename, genesisJSON)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(
-		"Successfully wrote genesis file for %s in path: %d",
-		newGenFilename
-	)
 }

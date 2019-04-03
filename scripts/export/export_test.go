@@ -17,6 +17,17 @@ var (
 	genesisTime = "2019-02-11T12:00:00Z"
 )
 
+func defaultGenesisDoc(chainID string) (tmtypes.GenesisDoc, error) {
+	genDoc := tmtypes.GenesisDoc{
+		ChainID: chainID,
+	}
+	err := (&genDoc).ValidateAndComplete()
+	if err != nil {
+		return genDoc, err
+	}
+	return genDoc, nil
+}
+
 func TestNewGenesisFile(t *testing.T) {
 	cdc := app.MakeCodec()
 	genDoc, err := defaultGenesisDoc(chainID)

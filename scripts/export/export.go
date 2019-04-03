@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	app "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -47,11 +46,8 @@ func NewGenesisFile(cdc *codec.Codec, path string) (GenesisFile, error) {
 	}, nil
 }
 
-// ValidateInputs validates each of the parameters used by
-func ValidateInputs(path, chainID, genesisTime string) error {
-	if chainID = strings.Trim(chainID, " "); chainID == "" {
-		return fmt.Errorf("chain-id cannot be blank")
-	}
+// validateBasic validates each of the arguments passed to the script
+func ValidateBasic(path, genesisTime string) error {
 	_, err := time.Parse(time.RFC3339, genesisTime)
 	if err != nil {
 		return err
@@ -79,15 +75,4 @@ func importGenesis(path string) (genDoc *tmtypes.GenesisDoc, err error) {
 		return
 	}
 	return
-}
-
-func defaultGenesisDoc(chainID string) (tmtypes.GenesisDoc, error) {
-	genDoc := tmtypes.GenesisDoc{
-		ChainID: chainID,
-	}
-	err := (&genDoc).ValidateAndComplete()
-	if err != nil {
-		return genDoc, err
-	}
-	return genDoc, nil
 }

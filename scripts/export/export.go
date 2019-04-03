@@ -48,6 +48,14 @@ func NewGenesisFile(cdc *codec.Codec, path string) (GenesisFile, error) {
 
 // validateBasic validates each of the arguments passed to the script
 func ValidateBasic(path, genesisTime string) error {
+	if path == "" {
+		return fmt.Errorf("path to genesis file required")
+	}
+
+	if genesisTime == "" {
+		return fmt.Errorf("genesis start time required")
+	}
+
 	_, err := time.Parse(time.RFC3339, genesisTime)
 	if err != nil {
 		return err

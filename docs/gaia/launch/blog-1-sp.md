@@ -136,7 +136,7 @@ autenticación de 2 factores y tenga en cuenta los métodos de recuperación uti
 más importantes. Las cuentas sin protección como el correo electrónico, los medios sociales, tu cuenta de GitHub, el Foro 
 Cosmos y cualquier otra cosa en el medio podrían dar a un atacante oportunidades de ganar terreno en tu vida en línea. Si 
 aún no lo ha hecho, empiece a utilizar inmediatamente una aplicación de autenticación o una hardware key dondequiera que 
-manejes tus tokens.  Esta es una manera simple, efectiva y comprobada para reducir el riesgo de robo de cuenta.
+manejes tus criptomonedas.  Esta es una manera simple, efectiva y comprobada para reducir el riesgo de robo de cuenta.
 
 - Sea escéptico respecto a los consejos técnicos, especialmente si provienen de personas que no conoce en los foros y en los 
 canales de chat grupal. Familiarícese con los comandos importantes, especialmente aquellos que le ayudarán a llevar a cabo 

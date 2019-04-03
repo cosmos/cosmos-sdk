@@ -58,7 +58,7 @@ eliminar cualquier _bug_.
 Game of Stakes (GoS),[el primer concurso de redes de prueba adversarias de su tipo](https://blog.cosmos.network/announcing-incentivized-testnet-game-efe64e0956f6), 
 se lanzó en diciembre de 2018 para poner a prueba los incentivos económicos y los estratos sociales de un blockchain asegurado exclusivamente
 por Proof-of-Stake. Hasta la fecha, la cadena de bloques de GoS ha tenido _hard-forks_ con éxito en tres ocasiones.
-Tan pronto como el módulo GoS concluya, se utilizarán los [criterios de puntuación](https://github.com/cosmos/game-of-stakes/blob/master/README.md#scoring) para determinar 
+Tan pronto cuando GoS concluya, se utilizarán los [criterios de puntuación](https://github.com/cosmos/game-of-stakes/blob/master/README.md#scoring) para determinar a
 los ganadores. Estos serán anunciados después de la finalización del juego.
 
 ### 2 Transacciones para el Genesis recopiladas

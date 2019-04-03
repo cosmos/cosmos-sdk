@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -26,8 +28,9 @@ var (
 	progName   string
 	verboseLog *log.Logger
 
-	entriesDir     string
-	verboseLogging bool
+	entriesDir      string
+	verboseLogging  bool
+	interactiveMode bool
 
 	// sections name-title map
 	sections = map[string]string{
@@ -44,22 +47,91 @@ var (
 		"sdk":        "SDK",
 		"tendermint": "Tendermint",
 	}
+
+	// RootCmd represents the base command when called without any subcommands
+	RootCmd = &cobra.Command{
+		Use:   "sdkch",
+		Short: "\nMaintain unreleased changelog entries in a modular fashion.",
+	}
+
+	// command to add a pending log entry
+	AddCmd = &cobra.Command{
+		Use:   "add [section] [stanza] [message]",
+		Short: "Add an entry file.",
+		Long: `
+Add an entry file. If message is empty, start the editor to edit the message.
+
+    Sections             Stanzas
+         ---                 ---
+    breaking                gaia
+    features             gaiacli
+improvements            gaiarest
+    bugfixes                 sdk
+                      tendermint`,
+		Args: cobra.MaximumNArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+
+			if interactiveMode {
+				addEntryFileFromConsoleInput()
+				return
+			}
+
+			if len(args) < 2 {
+				log.Println("must include at least 2 arguments when not in interactive mode")
+				return
+			}
+			sectionDir, stanzaDir := args[0], args[1]
+			validateSectionStanzaDirs(sectionDir, stanzaDir)
+			if len(args) == 3 {
+				addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(args[2]))
+				return
+			}
+			addEntryFile(sectionDir, stanzaDir)
+		},
+	}
+
+	// command to generate the changelog
+	GenerateCmd = &cobra.Command{
+		Use:   "generate",
+		Short: "Generate a changelog in Markdown format and print it to STDOUT. version defaults to UNRELEASED.",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			version := "UNRELEASED"
+			if flag.NArg() > 1 {
+				version = strings.Join(flag.Args()[1:], " ")
+			}
+			generateChangelog(version)
+		},
+	}
+
+	// command to delete empty sub-directories recursively
+	PruneCmd = &cobra.Command{
+		Use:   "prune",
+		Short: "Delete empty sub-directories recursively.",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			pruneEmptyDirectories()
+		},
+	}
 )
 
 func init() {
-	progName = filepath.Base(os.Args[0])
+	RootCmd.AddCommand(AddCmd)
+	RootCmd.AddCommand(GenerateCmd)
+	RootCmd.AddCommand(PruneCmd)
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	flag.StringVar(&entriesDir, "d", filepath.Join(cwd, entriesDirName), "entry files directory")
-	flag.BoolVar(&verboseLogging, "v", false, "enable verbose logging")
-	flag.Usage = printUsage
-
+	AddCmd.Flags().BoolVarP(&interactiveMode, "interactive", "i", false, "get the section/stanza/message with interactive CLI prompts")
+	RootCmd.PersistentFlags().BoolVarP(&verboseLogging, "verbose-logging", "v", false, "enable verbose logging")
+	RootCmd.PersistentFlags().StringVarP(&entriesDir, "entries-dir", "d", filepath.Join(cwd, entriesDirName), "entry files directory")
 }
 
 func main() {
+
 	logPrefix := fmt.Sprintf("%s: ", filepath.Base(progName))
 	log.SetFlags(0)
 	log.SetPrefix(logPrefix)
@@ -70,43 +142,9 @@ func main() {
 		verboseLog.SetPrefix(logPrefix)
 	}
 
-	if flag.NArg() < 1 {
-		errInsufficientArgs()
-	}
-
-	cmd := flag.Arg(0)
-	switch cmd {
-
-	case "add":
-		if flag.NArg() < 3 {
-			errInsufficientArgs()
-		}
-		if flag.NArg() > 4 {
-			errTooManyArgs()
-		}
-		sectionDir, stanzaDir := flag.Arg(1), flag.Arg(2)
-		validateSectionStanzaDirs(sectionDir, stanzaDir)
-		if flag.NArg() == 4 {
-			addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(flag.Arg(3)))
-			return
-		}
-		addEntryFile(sectionDir, stanzaDir)
-
-	case "add-interactive":
-		addEntryFileFromConsoleInput()
-
-	case "generate":
-		version := "UNRELEASED"
-		if flag.NArg() > 1 {
-			version = strings.Join(flag.Args()[1:], " ")
-		}
-		generateChangelog(version)
-
-	case "prune":
-		pruneEmptyDirectories()
-
-	default:
-		unknownCommand(cmd)
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
@@ -158,10 +196,10 @@ func addEntryFile(sectionDir, stanzaDir string) {
 	writeEntryFile(filename, bs)
 }
 
-var filenameInvalidChars = regexp.MustCompile(`[^a-zA-Z0-9-_]`)
-
 func generateFileName(line string) string {
 	var chunks []string
+
+	filenameInvalidChars := regexp.MustCompile(`[^a-zA-Z0-9-_]`)
 	subsWithInvalidCharsRemoved := strings.Split(filenameInvalidChars.ReplaceAllString(line, " "), " ")
 	for _, sub := range subsWithInvalidCharsRemoved {
 		sub = strings.TrimSpace(sub)
@@ -364,46 +402,6 @@ func mustPruneDirIfEmpty(path string) {
 		}
 		log.Println(path, "removed")
 	}
-}
-
-func printUsage() {
-	usageText := fmt.Sprintf(`usage: %s [-d directory] [-v] command
-
-Maintain unreleased changelog entries in a modular fashion.
-
-Commands:
-    add [section] [stanza] [message]  Add an entry file. If message is empty, start 
-                                      the editor to edit the message.
-    generate [version]                Generate a changelog in Markdown format and print
-                                      it to STDOUT. version defaults to UNRELEASED.
-    prune                             Delete empty sub-directories recursively.
-
-    Sections             Stanzas
-         ---                 ---
-    breaking                gaia
-    features             gaiacli
-improvements            gaiarest
-    bugfixes                 sdk
-                      tendermint
-`, progName)
-	fmt.Fprintf(os.Stderr, "%s\nFlags:\n", usageText)
-	flag.PrintDefaults()
-}
-
-func errInsufficientArgs() {
-	log.Println("insufficient arguments")
-	printUsage()
-	os.Exit(1)
-}
-
-func errTooManyArgs() {
-	log.Println("too many arguments")
-	printUsage()
-	os.Exit(1)
-}
-
-func unknownCommand(cmd string) {
-	log.Fatalf("unknown command -- '%s'\nTry '%s -help' for more information.", cmd, progName)
 }
 
 // DONTCOVER

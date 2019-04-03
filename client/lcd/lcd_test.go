@@ -319,6 +319,47 @@ func TestEncodeTx(t *testing.T) {
 	require.Equal(t, memo, decodedTx.Memo)
 }
 
+func TestDecodeTx(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "2", 1, false, false, fees)
+	var tx auth.StdTx
+	_ = cdc.UnmarshalJSON([]byte(body), &tx)
+
+	encodeReq := clienttx.EncodeReq{Tx: tx}
+	encodedJSON, _ := cdc.MarshalJSON(encodeReq)
+	res, body = Request(t, port, "POST", "/txs/encode", encodedJSON)
+
+	// Make sure it came back ok, and that we can encode it back to the transaction
+	// 200 response.
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	encodeResp := struct {
+		Tx string `json:"tx"`
+	}{}
+
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &encodeResp))
+
+	decodeReq := clienttx.DecodeReq{Tx: encodeResp.Tx}
+	encodedJSON, _ = cdc.MarshalJSON(decodeReq)
+	res, body = Request(t, port, "POST", "/txs/decode", encodedJSON)
+
+	// Make sure it came back ok, and that we can decode it back to the transaction
+	// 200 response.
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	decodeResp := struct {
+		Tx auth.StdTx `json:"tx"`
+	}{}
+
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &decodeResp))
+
+	// check that the transaction decodes as expected
+	require.Equal(t, memo, decodeResp.Tx.Memo)
+}
+
 func TestTxs(t *testing.T) {
 	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)

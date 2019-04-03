@@ -875,6 +875,45 @@ func TestGaiaCLIEncode(t *testing.T) {
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 
+func TestGaiaCLIDecode(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	// Build a testing transaction and write it to disk
+	barAddr := f.KeyAddress(keyBar)
+	keyAddr := f.KeyAddress(keyFoo)
+
+	sendTokens := sdk.TokensFromTendermintPower(10)
+	success, stdout, stderr := f.TxSend(keyAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only", "--memo", "deadbeef")
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write it to disk
+	jsonTxFile := WriteToNewTempFile(t, stdout)
+	defer os.Remove(jsonTxFile.Name())
+
+	// Run the encode command, and trim the extras from the stdout capture
+	success, base64Encoded, _ := f.TxEncode(jsonTxFile.Name())
+	require.True(t, success)
+	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
+
+	// Run the decode command
+	success, stdout, stderr = f.TxDecode(trimmedBase64)
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Check that the transaction decodes as epxceted
+	var decodedTx auth.StdTx
+	cdc := app.MakeCodec()
+	unsignedTx := "{\"type\": \"auth/StdTx\",\"value\": " + stdout + "}"
+	require.Nil(t, cdc.UnmarshalJSON([]byte(unsignedTx), &decodedTx))
+	require.Equal(t, "deadbeef", decodedTx.Memo)
+}
+
 func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

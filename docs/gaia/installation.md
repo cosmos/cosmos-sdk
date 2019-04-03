@@ -25,7 +25,7 @@ If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
 
 ::: warning
-For the mainnet, make sure your version if greather than `v0.33.0`
+For the mainnet, make sure your version if greater than `v0.33.0`
 ::: 
 
 ```bash

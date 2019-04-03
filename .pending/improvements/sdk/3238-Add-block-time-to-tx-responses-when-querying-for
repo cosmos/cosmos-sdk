@@ -1,2 +1,0 @@
-#3238 Add block time to tx responses when querying for
-txs by tags or hash.

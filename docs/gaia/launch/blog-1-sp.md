@@ -96,7 +96,7 @@ anteriormente. No proporciones nunca tus 12 palabras secretas a ningún administ
 El lanzamiento de cualquier _blockchain_ público es un momento increíblemente emocionante, y definitivamente es uno que 
 los actores maliciosos pueden tratar de aprovechar para su propio beneficio personal. La [ingeniería social](https://en.wikipedia.org/wiki/Social_engineering_%28security%29) ha 
 existido aproximadamente desde que los seres humanos han estado en el planeta, y en la era técnica, suele adoptar la forma 
-de [phishing](https://ssd.eff.org/en/module/how-avoid-phishing-attacks) o [spearphishing](https://en.wikipedia.org/wiki/Phishing#Spear_phishing). Ambos ataques son formas de engaño muy exitosas que son responsables de más del 95% de las 
+de [_phishing_](https://ssd.eff.org/en/module/how-avoid-phishing-attacks) o [_spearphishing_](https://en.wikipedia.org/wiki/Phishing#Spear_phishing). Ambos ataques son formas de engaño muy exitosas que son responsables de más del 95% de las 
 infracciones de seguridad de las cuentas, y no sólo se producen a través del correo electrónico: en la actualidad, se 
 producen intentos de phishing oportunistas y selectivos [en cualquier lugar en el que haya una bandeja de entrada](https://www.umass.edu/it/security/phishing-fraudulent-emails-text-messages-phone-calls). 
 No importa si está usando Signal, Telegram, SMS, Twitter, o simplemente revisando sus DMs en foros o redes sociales, los 

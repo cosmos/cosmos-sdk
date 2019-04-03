@@ -118,7 +118,7 @@ engañarán para que utilices una versión maliciosamente modificada del softwar
 
 - No compartas sus 12 palabras secretas con nadie. La única persona que debería conocerlas eres tú. Esto es especialmente importante 
 si alguna vez alguien se te acerca para ofrecer servicios de custodia para sus Atoms. P ara evitar perder el control de sus 
-tokens, debe almacenarlos fuera de línea para minimizar el riesgo de robo y tener una fuerte estrategia de copia de seguridad 
+criptomonedas, debes almacenarlos fuera de línea (en las denominadas billetera frías) para minimizar el riesgo de robo y tener una fuerte estrategia de copia de seguridad 
 en marcha. Y nunca, nunca, nunca los comparta con nadie más.
 
 - Sea escéptico ante adjuntos inesperados o correos electrónicos que le pidan que visite un sitio web sospechoso o 

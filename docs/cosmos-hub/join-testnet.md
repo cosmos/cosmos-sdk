@@ -10,7 +10,7 @@ of the Cosmos-SDK to use and details about the genesis file.
 **You need to [install gaia](./installation.md) before you go further**
 :::
 
-## Starting a new Node
+## Starting a New Node
 
 > NOTE: If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
@@ -21,7 +21,7 @@ To start a new node, the mainnet instructions apply:
 
 The only difference is the SDK version and genesis file. See the [testnet repo](https://github.com/cosmos/testnets) for information on testnets, including the correct version of the Cosmos-SDK to use and details about the genesis file.
 
-## Upgrading your Node
+## Upgrading Your Node
 
 These instructions are for full nodes that have ran on previous versions of and would like to upgrade to the latest testnet.
 

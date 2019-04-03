@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.1
+
+### Bug Fixes
+
+#### Gaia
+
+* [\#3999](https://github.com/cosmos/cosmos-sdk/pull/3999) Fix distribution delegation for zero height export bug
+
 ## 0.33.0
 
 BREAKING CHANGES

@@ -9,8 +9,8 @@ Install `go` by following the [official docs](https://golang.org/doc/install). R
 ```bash
 mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export GOBIN=\$GOPATH/bin" >> ~/.bash_profile
-echo "export PATH=\$PATH:\$GOBIN" >> ~/.bash_profile
+echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
+echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
@@ -25,7 +25,7 @@ If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
 
 ::: warning
-For the mainnet, make sure your version if greater than `v0.33.0`
+For the mainnet, make sure your version if greather than `v0.33.0`
 ::: 
 
 ```bash

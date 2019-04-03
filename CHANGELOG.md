@@ -88,8 +88,9 @@
 * [\#3937](https://github.com/cosmos/cosmos-sdk/issues/3937) Implement community pool querier.
 * [\#3940](https://github.com/cosmos/cosmos-sdk/issues/3940) Codespace should be lowercase.
 * [\#3986](https://github.com/cosmos/cosmos-sdk/issues/3986) Update the Stringer implementation of the Proposal type.
-* \[\#926](https://github.com/cosmos/cosmos-sdk/issues/926) circuit breaker high level explanation
-* Fixed various linters warnings in the context of the gometalinter -> golangci-lint migration [\#3896](https://github.com/cosmos/cosmos-sdk/issues/3896).
+* [\#926](https://github.com/cosmos/cosmos-sdk/issues/926) circuit breaker high level explanation
+* [\#3896](https://github.com/cosmos/cosmos-sdk/issues/3896) Fixed various linters warnings in the context of the gometalinter -> golangci-lint migration
+* [\#3916](https://github.com/cosmos/cosmos-sdk/issues/3916) Hex encode data in tx responses
 
 ### Bug Fixes
 

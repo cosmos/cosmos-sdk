@@ -10,6 +10,10 @@ func main() {
 	cdc := app.MakeCodec()
 
 	args := flags.Args()
+	if len(args) != 3 {
+		panic(fmt.Errorf("please provide path, chain-id and genesis time"))
+	}
+	
 	pathToGenesis := args[0]
 	chainID := args[1]
 	genesisTime := args[2]

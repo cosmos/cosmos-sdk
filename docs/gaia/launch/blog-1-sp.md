@@ -99,7 +99,7 @@ existido aproximadamente desde que los seres humanos han estado en el planeta, y
 de [_phishing_](https://ssd.eff.org/en/module/how-avoid-phishing-attacks) o [_spearphishing_](https://en.wikipedia.org/wiki/Phishing#Spear_phishing). Ambos ataques son formas de engaño muy exitosas que son responsables de más del 95% de las 
 infracciones de seguridad de las cuentas, y no sólo se producen a través del correo electrónico: en la actualidad, se 
 producen intentos de phishing oportunistas y selectivos [en cualquier lugar en el que haya una bandeja de entrada](https://www.umass.edu/it/security/phishing-fraudulent-emails-text-messages-phone-calls). 
-No importa si está usando Signal, Telegram, SMS, Twitter, o simplemente revisando sus DMs en foros o redes sociales, los 
+No importa si está usando Signal, Telegram, SMS, Twitter, o simplemente revisando sus mensajes directos en foros o redes sociales, los 
 atacantes tienen una [plétora de oportunidades](https://jia.sipa.columbia.edu/weaponization-social-media-spear-phishing-and-cyberattacks-democracy) para entrar en su vida digital en un esfuerzo por separarlo de la 
 información valiosa y de los activos que tiene en su poder. definitivamente no quieren perder.
 

@@ -1,4 +1,4 @@
-# Gaia client
+# Gaia Client
 
 ## Gaia CLI
 
@@ -97,7 +97,7 @@ Note that this is the Tendermint signing key, _not_ the operator key you will us
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
 
-#### Generate multisig public keys
+#### Generate Multisig Public Keys
 
 You can generate and print a multisig public key by typing:
 
@@ -156,7 +156,7 @@ gaiacli tx send ... --gas-prices=0.025uatom
 
 The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org). The faucet needs the `cosmos` from the account you wish to use for staking.
 
-#### Query Account balance
+#### Query Account Balance
 
 After receiving tokens to your address, you can view your account's balance by typing:
 
@@ -243,7 +243,7 @@ gaiacli tx broadcast --node=<node> signedSendTx.json
 
 ### Query Transactions
 
-#### Matching a set of tags
+#### Matching a Set of Tags
 
 You can use the transaction search command to query for transactions that match a specific set of `tags`, which are added on every transaction.
 
@@ -280,7 +280,7 @@ You can find a list of available `tags` on each of the SDK modules:
 - [Bank tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/bank/keeper.go#L193-L206)
 :::
 
-#### Matching a transaction's hash
+#### Matching a Transaction's Hash
 
 You can also query a single transaction by its hash using the following command:
 
@@ -505,7 +505,7 @@ Some considerations about the voting process:
 
 For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
 
-#### Create a Governance proposal
+#### Create a Governance Proposal
 
 In order to create a governance proposal, you must submit an initial deposit along with the proposal details:
 
@@ -523,7 +523,7 @@ gaiacli tx gov submit-proposal \
   --chain-id=<chain_id>
 ```
 
-##### Query proposals
+##### Query Proposals
 
 Once created, you can now query information of the proposal:
 
@@ -545,7 +545,7 @@ To query for the proposer of a given governance proposal:
 gaiacli query gov proposer <proposal_id>
 ```
 
-#### Increase deposit
+#### Increase Deposit
 
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (initial value: `512000000uatom`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
@@ -557,7 +557,7 @@ gaiacli tx gov deposit <proposal_id> "10000000uatom" \
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
-##### Query deposits
+##### Query Deposits
 
 Once a new proposal is created, you can query all the deposits submitted to it:
 
@@ -571,7 +571,7 @@ You can also query a deposit submitted by a specific address:
 gaiacli query gov deposit <proposal_id> <depositor_address>
 ```
 
-#### Vote on a proposal
+#### Vote on a Proposal
 
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
@@ -581,7 +581,7 @@ gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
   --chain-id=<chain_id>
 ```
 
-##### Query votes
+##### Query Votes
 
 Check the vote with the option you just submitted:
 
@@ -603,7 +603,7 @@ To check the current tally of a given proposal you can use the `tally` command:
 gaiacli query gov tally <proposal_id>
 ```
 
-#### Query governance parameters
+#### Query Governance Parameters
 
 To check the current governance parameters run:
 
@@ -621,7 +621,7 @@ gaiacli query gov param deposit
 
 ### Fee Distribution
 
-#### Query distribution parameters
+#### Query Distribution Parameters
 
 To check the current distribution parameters, run:
 
@@ -629,7 +629,7 @@ To check the current distribution parameters, run:
 gaiacli query distr params
 ```
 
-#### Query outstanding rewards
+#### Query Outstanding Rewards
 
 To check the current outstanding (un-withdrawn) rewards, run:
 
@@ -637,7 +637,7 @@ To check the current outstanding (un-withdrawn) rewards, run:
 gaiacli query distr outstanding-rewards
 ```
 
-#### Query validator commission
+#### Query Validator Commission
 
 To check the current outstanding commission for a validator, run:
 
@@ -645,7 +645,7 @@ To check the current outstanding commission for a validator, run:
 gaiacli query distr commission <validator_address>
 ```
 
-#### Query validator slashes
+#### Query Validator Slashes
 
 To check historical slashes for a validator, run:
 
@@ -653,7 +653,7 @@ To check historical slashes for a validator, run:
 gaiacli query distr slashes <validator_address> <start_height> <end_height>
 ```
 
-#### Query delegator rewards
+#### Query Delegator Rewards
 
 To check current rewards for a delegation (were they to be withdrawn), run:
 
@@ -661,7 +661,7 @@ To check current rewards for a delegation (were they to be withdrawn), run:
 gaiacli query distr rewards <delegator_address> <validator_address>
 ```
 
-#### Query all delegator rewards
+#### Query All Delegator Rewards
 
 To check all current rewards for a delegation (were they to be withdrawn), run:
 
@@ -669,7 +669,7 @@ To check all current rewards for a delegation (were they to be withdrawn), run:
 gaiacli query distr rewards <delegator_address>
 ```
 
-### Multisig transactions
+### Multisig Transactions
 
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing
 a transaction from a multisig account involve cooperation among the parties involved. A multisig
@@ -761,7 +761,7 @@ The transaction can now be sent to the node:
 gaiacli tx broadcast signedTx.json
 ```
 
-## Shells completion scripts
+## Shells Completion Scripts
 
 Completion scripts for popular UNIX shell interpreters such as `Bash` and `Zsh`
 can be generated through the `completion` command, which is available for both

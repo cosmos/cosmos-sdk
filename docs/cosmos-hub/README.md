@@ -12,11 +12,11 @@ Welcome to the documentation of the **Cosmos Hub application: `gaia`**.
 
 - [Join the testnet](./join-testnet.md)
 
-## Setup your own `gaia` testnet
+## Setup Your Own `gaia` Testnet
 
 - [Setup your own `gaia` testnet](./deploy-testnet.md)
 
-## Additional resources
+## Additional Resources
 
 - [Intro to validators](./validators/overview.md)
 - [Validator FAQ](./validators/validator-faq.md)

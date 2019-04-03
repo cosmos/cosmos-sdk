@@ -81,7 +81,7 @@ You can also ask for peers on the [Validators Riot Room](https://riot.im/app/#/r
 
 For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/tendermint-core/using-tendermint.md#peers).
 
-## A note on gas and fees
+## A Note on Gas and Fees
 
 ::: warning
 On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1.000.000uatom`

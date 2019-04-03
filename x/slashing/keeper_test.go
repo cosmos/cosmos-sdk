@@ -51,7 +51,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// should be jailed
-	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
+	require.True(t, sk.Validator(ctx, operatorAddr).IsJailed())
 
 	// tokens should be decreased
 	newTokens := sk.Validator(ctx, operatorAddr).GetTokens()

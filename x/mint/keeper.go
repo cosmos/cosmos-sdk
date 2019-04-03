@@ -8,6 +8,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+const (
+	// ModuleName is the name of the module
+	ModuleName = "minting"
+
+	// default paramspace for params keeper
+	DefaultParamspace = "mint"
+
+	// StoreKey is the default store key for mint
+	StoreKey = "mint"
+
+	// QuerierRoute is the querier route for the minting store.
+	QuerierRoute = StoreKey
+)
+
 // keeper of the staking store
 type Keeper struct {
 	storeKey   sdk.StoreKey
@@ -46,14 +60,6 @@ func ParamKeyTable() params.KeyTable {
 		ParamStoreKeyParams, Params{},
 	)
 }
-
-const (
-	// default paramspace for params keeper
-	DefaultParamspace = "mint"
-
-	// StoreKey is the default store key for mint
-	StoreKey = "mint"
-)
 
 //______________________________________________________________________
 

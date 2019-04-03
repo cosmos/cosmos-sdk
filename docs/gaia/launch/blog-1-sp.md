@@ -6,7 +6,7 @@ primavera de 2017, se completó la [recaudación de fondos de Cosmos](https://fu
 meses del 2019, la [última version](https://github.com/cosmos/cosmos-sdk/releases) del _software_  contiene todas las funcionalidades requeridas en la red principal. El lanzamiento del blockchain principal del ecosistema,  el Cosmos Hub, se acerca. 
 ¿Qué significa esto para los poseedores de Atoms?
 
-Si eres poseedor de Atoms, podrás delegar Atoms en los validadores de la red principal y votar sobre las propuestas de 
+Si eres poseedor de Atoms, podrás delegarlos a los validadores de la red principal y votar sobre las propuestas de 
 gobernanza. De hecho, el éxito futuro de la red depende de que lo haga de forma responsable. Sin embargo, aún no podrás 
 transferir Atoms. Las transferencias se desactivarán a nivel de protocolo hasta que se ejecute un hard-fork para habilitarlas.
 

@@ -30,7 +30,7 @@ base "TAL CUAL" sin garantías ni condiciones de ningún tipo, y toda responsabi
 de Tendermint por daños y perjuicios que surjan en relación con el software está excluida. ¡Por favor procede con precaución!
 
 Si buscas más información sobre la delegación y quieres hablar con la gente que está desarrollando Cosmos, únete a la reunión 
-virtual del 14 de febrero, en la que se te explicarán paso a paso las instrucciones para delegar Atoms en el lanzamiento.
+virtual del 14 de febrero, en la que se explicarán paso a paso las instrucciones para delegar Atoms en el lanzamiento.
 
 Regístrese aquí: [gotowebinar.com/register/](https://register.gotowebinar.com/register/5028753165739687691)
 

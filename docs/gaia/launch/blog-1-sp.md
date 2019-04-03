@@ -76,7 +76,7 @@ de Cosmos habrá oficialmente realizado su lanzamiento.
 
 ## Canales Oficiales de comunicacion de Cosmos
 
-Estas son las cuentas oficiales que comunicarán los detalles del lanzamiento:
+Estas son las cuentas oficiales por las que se comunicarán los detalles del lanzamiento:
 
 - [Cosmos Network](https://twitter.com/cosmos)
 - [Cosmos GitHub](https://github.com/cosmos)

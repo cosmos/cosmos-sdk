@@ -50,7 +50,7 @@ Los últimos cambios importantes del Cosmos-SDK están incluidos en el [v0.31.0 
 Una vez que se complete este candidato de lanzamiento, el equipo de la Cosmos-SDK realizará internamente  
 una diligencia debida de seguridad suficiente previa al lanzamiento.
 
-Inmediatamente después del lanzamiento de Cosmos-SDK v0.31.0, se lanzará una red de pruebas de Gaia en un esfuerzo por 
+Inmediatamente después del lanzamiento de la version 0.31.0 de la Cosmos-SDK, se lanzará una _testnet_ de Gaia con el fin de
 eliminar cualquier error difícil de encontrar.
 
 ### 3 Game of Stakes Completado

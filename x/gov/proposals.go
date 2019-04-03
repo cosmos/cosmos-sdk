@@ -13,7 +13,7 @@ import (
 // Proposal is a struct used by gov module internally
 // embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
-	proposal.Content `json:"content"` // Proposal content interface
+	proposal.Content `json:"proposal_content"` // Proposal content interface
 
 	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
 
@@ -30,8 +30,8 @@ type Proposal struct {
 
 func NewProposal(content proposal.Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
-		Content:    content,
-		ProposalID: id,
+		Content:          content,
+		ProposalID:       id,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
 		TotalDeposit:     sdk.NewCoins(),

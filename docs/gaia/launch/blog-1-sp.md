@@ -1,6 +1,5 @@
 # Cosmos Hub para iniciar Mainnet
 
-## Dependencias previas al lanzamiento y cómo reclamar sus Atoms con seguridad
 
 En el verano de 2016, se publicó el [Cosmos whitepaper](https://cosmos.network/resources/whitepaper). En la 
 primavera de 2017, se completó la [recaudación de fondos de Cosmos](https://fundraiser.cosmos.network/). En los primeros 

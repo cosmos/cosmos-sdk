@@ -127,7 +127,7 @@ un [sitio comprometido](https://blog.malwarebytes.com/cybercrime/2013/02/tools-o
 capacidad de recuperación frente a las últimas tácticas de _phishing_ basadas en correo electrónico[aquí](https://phishingquiz.withgoogle.com/).
 
 - Haz su debida diligencia antes de comprar Atoms. Los Atoms no serán transferibles en el momento del lanzamiento, por lo 
-que no pueden ser comprados o vendidos hasta que un hard-fork lo permita. Cuando sean transferibles, asegúrese de que ha 
+que no pueden ser comprados o vendidos hasta que un _hard-fork_ lo permita. Cuando sean transferibles, asegúrate de que haz
 investigado al vendedor o intercambiador para confirmar que los Atoms provienen de una fuente confiable.
 
 - Ni el equipo de Tendermint ni la Fundación Interchain venderán Atoms, así que si ves mensajes en los medios sociales o 

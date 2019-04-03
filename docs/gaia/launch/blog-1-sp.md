@@ -121,7 +121,7 @@ si alguna vez alguien se te acerca para ofrecer servicios de custodia para sus A
 criptomonedas, debes almacenarlos fuera de línea (en las denominadas billetera frías) para minimizar el riesgo de robo y tener una fuerte estrategia de copia de seguridad 
 en marcha. Y nunca, nunca, nunca los compartas con nadie más.
 
-- Sea escéptico ante adjuntos inesperados o correos electrónicos que le pidan que visite un sitio web sospechoso o 
+- Sé escéptico ante adjuntos inesperados o correos electrónicos que te pidan que visites un sitio web sospechoso o 
 desconocido en el contexto de cadenas de bloques o cryptocurrency. Un atacante puede intentar atraerlo a 
 un [sitio comprometido](https://blog.malwarebytes.com/cybercrime/2013/02/tools-of-the-trade-exploit-kits/) diseñado para robar información confidencial de su equipo. Si eres usuario de Gmail, prueba tu 
 capacidad de recuperación frente a las últimas tácticas de phishing basadas en correo electrónico[aquí](https://phishingquiz.withgoogle.com/).

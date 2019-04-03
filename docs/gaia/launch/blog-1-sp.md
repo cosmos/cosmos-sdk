@@ -44,7 +44,7 @@ A principios de enero, la Cosmos-SDK se sometió a la primera de una serie de ev
 dos empresas de auditoría de seguridad diferentes han evaluado varias partes de la SDK y actualmente se está llevando a cabo una 
 tercera auditoría.
 
-### 4 Cosmos SDK Suspensión de Funciones
+### 4 Cosmos SDK Congelamiento de funcionalidades extra
 
 Los últimos cambios importantes del Cosmos-SDK están incluidos en el [v0.31.0 launch RC](https://github.com/cosmos/cosmos-sdk/projects/27). 
 Una vez que se complete este candidato de lanzamiento, el equipo de la Cosmos-SDK realizará internamente  

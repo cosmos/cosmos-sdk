@@ -87,7 +87,7 @@ no deben ser tratados como noticias oficiales de Cosmos.
 
 Si tiene dudas o confusión sobre los próximos pasos a seguir y no está seguro sobre fuentes de información confiables, 
 no haga nada durante el período inicial y espere una actualización a través de los tres canales de comunicación mencionados 
-anteriormente. No proporcione nunca sus 12 palabras a ningún administrador, sitio web o software no oficial.
+anteriormente. No proporciones nunca tus 12 palabras secretas a ningún administrador, sitio web o _software_ no oficial.
 
 **Nunca le pediremos su clave privada o sus palabras de recuperación.**
 

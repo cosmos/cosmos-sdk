@@ -1,4 +1,4 @@
-# Subkeys ADR
+# Subkeys Proposal Spec
 
 ## Abstract
 
@@ -19,6 +19,7 @@ type SubKeyMetadata struct {
   PermissionedRoutes   []string
   DailyFeeAllowance    sdk.Coins
   DailyFeeUsed         sdk.Coins
+  Revoked              bool
 }
 ```
 
@@ -56,9 +57,12 @@ if stdSig.PubKeyIndex == 0 {
 }
 ```
 
-In the AnteHandler, if a transaction comes from a SubKey, it verifies the msg route is permitted.
+In the AnteHandler, if a transaction comes from a SubKey, it verifies that the SubKey has not been revoked and that the msg route is permitted
 
 ```
+if acc.SubKeys[stdSig.PubKeyIndex - 1].Revoked {
+  return ErrNotPermitted
+}
 if msg.Route not in subKeyMetadata.PermissionedRoutes {
   return ErrNotPermitted
 }
@@ -122,6 +126,7 @@ acc.SubKeys := append(acc.SubKeys, SubKeyMetadata{
   PermissionedRoutes   msg.PermissionedRoutes
   DailyFeeAllowance    msg.DailyFeeAllowance
   DailyFeeUsed         sdk.Coins{}
+  Revoked              false
 })
 
 accountKeeper.SetAccount(acc)
@@ -153,4 +158,29 @@ acc.SubKeys[msg.SubKeyIndex - 1].DailyFeeAllowance = msg.DailyFeeAllowance
 accountKeeper.SetAccount(acc)
 ```
 
-We do not allow for the deletion of a SubKey, because removing it from state would mess up the indexing of subkeys. Instead, if you wish to revoke a SubKey, set its DailyFeeAllowance to 0.
+Finally, to revoke SubKeys, we add a `MsgRevokeSubKey`
+
+```golang
+type MsgMsgUpdateSubKeyAllowance struct {
+  Address              sdk.AccAddress
+  SubKeyIndex          uint
+}
+```
+
+The handler of this message will revoke the SubKey at the index of `SubKeyIndex` in the account for `Address`.
+
+```
+if SubKeyIndex == 0 {
+  return Err
+}
+
+acc := accountKeeper.GetAccount(msg.Address)
+
+acc.SubKeys[msg.SubKeyIndex - 1].Revoked = true
+
+accountKeeper.SetAccount(acc)
+```
+
+We do not delete the SubKey from state, because removing it from state would mess up the indexing of subkeys.
+We also do not provide a mechanism to unrevoke a SubKey.  If you wish to unrevoke a specific SubKey, you can
+recreate a SubKey with the same `crypto.PubKey` and permissions at a new SubKey index.

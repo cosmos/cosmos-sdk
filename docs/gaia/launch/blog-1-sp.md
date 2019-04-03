@@ -148,7 +148,7 @@ son fuentes de información oficial o de noticias sobre Cosmos.
 visualmente en bloques de 4 carácteres a la vez puede ser la diferencia entre enviarlas al lugar correcto o enviarlas al 
 olvido.
 
-*Si aparece un acuerdo que [suena demasiado bueno para ser cierto][good], o aparece un mensaje pidiendo información que 
+*Si aparece un acuerdo que [suena demasiado bueno para ser cierto][https://www.psychologytoday.com/us/blog/mind-in-the-machine/201712/how-fear-is-being-used-manipulate-cryptocurrency-markets], o aparece un mensaje pidiéndote información que 
 nunca, nunca, nunca debe ser compartida con otra persona, siempre puede esforzarse por verificarla antes de comprometerse 
 con ella navegando a un sitio web o canal de comunicación oficial de Cosmos por su cuenta. Nadie de Cosmos, el equipo de 
 Tendermint o la Fundación Interchain enviarán alguna vez un email pidiéndole sus 12 palabras para compartirlas con nosotros, 

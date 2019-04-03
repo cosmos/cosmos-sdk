@@ -111,7 +111,7 @@ técnicos para reducir o eliminar el riesgo de robo de claves o credenciales.
 
 **Estas son algunas de las reglas de participación que debes tener en cuenta cuando te prepares para el lanzamiento de Cosmos Mainnet:**
 
-- Descarga software directamente de fuentes oficiales, y asegúrate de que siempre estás usando la última y más segura versión 
+- Descarga _software_ directamente de fuentes oficiales, y asegúrate de que siempre estás usando la última y más segura versión 
 de gaiacli cuando estés haciendo algo que incluya tus 12 palabras. Las últimas versiones de Tendermint, el Cosmos-SDK y gaiacli 
 siempre estarán disponibles en nuestros repositorios oficiales de GitHub, y descargándolas desde allí se garantiza que no te 
 engañarán para que utilices una versión maliciosamente modificada del software.

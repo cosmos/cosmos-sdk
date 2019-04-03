@@ -385,8 +385,8 @@ func TestPoolParamsQuery(t *testing.T) {
 	pool := getStakingPool(t, port)
 
 	initialPool := staking.InitialPool()
-	tokens := sdk.TokensFromTendermintPower(100)
-	freeTokens := sdk.TokensFromTendermintPower(50)
+	tokens := sdk.TokensFromConsensusPower(100)
+	freeTokens := sdk.TokensFromConsensusPower(50)
 	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(tokens)
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)           // Delegate tx on GaiaAppGenState
 	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens) // freeTokensPerAcc = 50 on GaiaAppGenState
@@ -440,7 +440,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, 2, len(valPubKeys))
 	require.Equal(t, 2, len(operAddrs))
 
-	amt := sdk.TokensFromTendermintPower(60)
+	amt := sdk.TokensFromConsensusPower(60)
 	amtDec := amt.ToDec()
 	validator := getValidator(t, port, operAddrs[0])
 
@@ -448,7 +448,7 @@ func TestBonding(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create bond TX
-	delTokens := sdk.TokensFromTendermintPower(60)
+	delTokens := sdk.TokensFromConsensusPower(60)
 	resultTx := doDelegate(t, port, name1, pw, addr, operAddrs[0], delTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -490,7 +490,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddress)
 
 	// testing unbonding
-	unbondingTokens := sdk.TokensFromTendermintPower(30)
+	unbondingTokens := sdk.TokensFromConsensusPower(30)
 	resultTx = doUndelegate(t, port, name1, pw, addr, operAddrs[0], unbondingTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -520,7 +520,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, delTokens.QuoRaw(2), ubd.Entries[0].Balance)
 
 	// test redelegation
-	rdTokens := sdk.TokensFromTendermintPower(30)
+	rdTokens := sdk.TokensFromConsensusPower(30)
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], rdTokens, fees)
 	require.Equal(t, uint32(0), resultTx.Code)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -603,7 +603,7 @@ func TestSubmitProposal(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create SubmitProposal TX
-	proposalTokens := sdk.TokensFromTendermintPower(5)
+	proposalTokens := sdk.TokensFromConsensusPower(5)
 	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, proposalTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -638,7 +638,7 @@ func TestDeposit(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create SubmitProposal TX
-	proposalTokens := sdk.TokensFromTendermintPower(5)
+	proposalTokens := sdk.TokensFromConsensusPower(5)
 	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, proposalTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -660,7 +660,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
-	depositTokens := sdk.TokensFromTendermintPower(5)
+	depositTokens := sdk.TokensFromConsensusPower(5)
 	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, depositTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -675,7 +675,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	// query proposal
-	totalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	totalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
 	proposal = getProposal(t, port, proposalID)
 	require.True(t, proposal.TotalDeposit.IsEqual(totalCoins))
 
@@ -695,7 +695,7 @@ func TestVote(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create SubmitProposal TX
-	proposalTokens := sdk.TokensFromTendermintPower(10)
+	proposalTokens := sdk.TokensFromConsensusPower(10)
 	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, proposalTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -741,7 +741,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, sdk.ZeroInt(), tally.Yes, "tally should be 0 as the address is not bonded")
 
 	// create bond TX
-	delTokens := sdk.TokensFromTendermintPower(60)
+	delTokens := sdk.TokensFromConsensusPower(60)
 	resultTx = doDelegate(t, port, name1, pw, addr, operAddrs[0], delTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -844,7 +844,7 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, deposit, deposits[0])
 
 	// increasing the amount of the deposit should update the existing one
-	depositTokens := sdk.TokensFromTendermintPower(1)
+	depositTokens := sdk.TokensFromConsensusPower(1)
 	resultTx = doDeposit(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID1, depositTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -955,7 +955,7 @@ func TestDistributionFlow(t *testing.T) {
 	require.Equal(t, valDistInfo.OperatorAddress.String(), sdk.AccAddress(valAddr).String())
 
 	// Delegate some coins
-	delTokens := sdk.TokensFromTendermintPower(60)
+	delTokens := sdk.TokensFromConsensusPower(60)
 	resultTx := doDelegate(t, port, name1, pw, addr, valAddr, delTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 	require.Equal(t, uint32(0), resultTx.Code)

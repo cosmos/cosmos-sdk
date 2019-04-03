@@ -243,7 +243,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 			pubKey = ed25519.GenPrivKey().PubKey()
 			power = 1
 		}
-		startTokens := sdk.TokensFromTendermintPower(power)
+		startTokens := sdk.TokensFromConsensusPower(power)
 
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
@@ -268,7 +268,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accTokens := sdk.TokensFromTendermintPower(150)
+		accTokens := sdk.TokensFromConsensusPower(150)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
@@ -283,7 +283,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accTokens := sdk.TokensFromTendermintPower(100)
+		accTokens := sdk.TokensFromConsensusPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)

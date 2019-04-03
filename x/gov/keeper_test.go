@@ -93,13 +93,13 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
-	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	expTokens := sdk.TokensFromTendermintPower(42)
+	expTokens := sdk.TokensFromConsensusPower(42)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
 	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 

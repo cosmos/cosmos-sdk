@@ -27,7 +27,7 @@ import (
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
+	freeTokensPerAcc = sdk.TokensFromConsensusPower(150)
 	defaultBondDenom = sdk.DefaultBondDenom
 )
 

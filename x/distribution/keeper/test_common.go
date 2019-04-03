@@ -86,7 +86,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
 	Keeper, staking.Keeper, DummyFeeCollectionKeeper, params.Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromConsensusPower(initPower)
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)

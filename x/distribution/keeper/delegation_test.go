@@ -69,7 +69,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
-	valTokens := sdk.TokensFromTendermintPower(valPower)
+	valTokens := sdk.TokensFromConsensusPower(valPower)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	got := sh(ctx, msg)
@@ -107,7 +107,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := sdk.TokensFromTendermintPower(10)
+	initial := sdk.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, initial.ToDec()}}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -131,7 +131,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// create validator with 50% commission
 	power := int64(100)
-	valTokens := sdk.TokensFromTendermintPower(power)
+	valTokens := sdk.TokensFromConsensusPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
@@ -169,7 +169,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := sdk.TokensFromTendermintPower(10)
+	initial := sdk.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, initial.ToDec()}}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -262,13 +262,13 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	balancePower := int64(1000)
-	balanceTokens := sdk.TokensFromTendermintPower(balancePower)
+	balanceTokens := sdk.TokensFromConsensusPower(balancePower)
 	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, balancePower)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
 	power := int64(100)
-	valTokens := sdk.TokensFromTendermintPower(power)
+	valTokens := sdk.TokensFromConsensusPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(
 		valOpAddr1, valConsPk1,
@@ -294,7 +294,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	val := sk.Validator(ctx, valOpAddr1)
 
 	// allocate some rewards
-	initial := sdk.TokensFromTendermintPower(10)
+	initial := sdk.TokensFromConsensusPower(10)
 	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
 
 	k.AllocateTokensToValidator(ctx, val, tokens)
@@ -332,7 +332,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	// create validator with 50% commission
 	power := int64(100)
-	valTokens := sdk.TokensFromTendermintPower(power)
+	valTokens := sdk.TokensFromConsensusPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
@@ -361,7 +361,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := sdk.TokensFromTendermintPower(10).ToDec()
+	initial := sdk.TokensFromConsensusPower(10).ToDec()
 	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, initial}}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -400,7 +400,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	power := int64(100)
-	valTokens := sdk.TokensFromTendermintPower(power)
+	valTokens := sdk.TokensFromConsensusPower(power)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
@@ -416,7 +416,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
 	// allocate some rewards
-	initial := sdk.TokensFromTendermintPower(30).ToDec()
+	initial := sdk.TokensFromConsensusPower(30).ToDec()
 	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, initial}}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -426,7 +426,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// second delegation
-	delTokens := sdk.TokensFromTendermintPower(100)
+	delTokens := sdk.TokensFromConsensusPower(100)
 	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1,
 		sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	require.True(t, sh(ctx, msg2).IsOK())

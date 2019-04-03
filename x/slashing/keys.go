@@ -28,7 +28,7 @@ var (
 	AddrPubkeyRelationKey           = []byte{0x04} // Prefix for address-pubkey relation
 )
 
-// stored by *Tendermint* address (not operator address)
+// stored by *Consensus* address (not operator address)
 func GetValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKey, v.Bytes()...)
 }
@@ -42,24 +42,24 @@ func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	return sdk.ConsAddress(addr)
 }
 
-// stored by *Tendermint* address (not operator address)
+// stored by *Consensus* address (not operator address)
 func GetValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorMissedBlockBitArrayKey, v.Bytes()...)
 }
 
-// stored by *Tendermint* address (not operator address)
+// stored by *Consensus* address (not operator address)
 func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
 	return append(GetValidatorMissedBlockBitArrayPrefixKey(v), b...)
 }
 
-// stored by *Tendermint* address (not operator address)
+// stored by *Consensus* address (not operator address)
 func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 	return append(ValidatorSlashingPeriodKey, v.Bytes()...)
 }
 
-// stored by *Tendermint* address (not operator address) followed by start height
+// stored by *Consensus* address (not operator address) followed by start height
 func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
 	// this needs to be height + ValidatorUpdateDelay because the slashing period for genesis validators starts at height -ValidatorUpdateDelay

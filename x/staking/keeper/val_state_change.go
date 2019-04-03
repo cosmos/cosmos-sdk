@@ -49,7 +49,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		if validator.PotentialTendermintPower() == 0 {
+		if validator.PotentialConsensusPower() == 0 {
 			break
 		}
 
@@ -71,7 +71,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		// calculate the new power bytes
-		newPower := validator.TendermintPower()
+		newPower := validator.ConsensusPower()
 		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(newPower)
 
 		// update the validator set if power has changed

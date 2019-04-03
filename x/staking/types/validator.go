@@ -269,7 +269,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.TendermintPower(),
+		Power:  v.ConsensusPower(),
 	}
 }
 
@@ -449,18 +449,18 @@ func (v Validator) BondedTokens() sdk.Int {
 	return sdk.ZeroInt()
 }
 
-// get the Tendermint Power
+// get the consensus-engine power
 // a reduction of 10^6 from validator tokens is applied
-func (v Validator) TendermintPower() int64 {
+func (v Validator) ConsensusPower() int64 {
 	if v.Status == sdk.Bonded {
-		return v.PotentialTendermintPower()
+		return v.PotentialConsensusPower()
 	}
 	return 0
 }
 
-// potential Tendermint power
-func (v Validator) PotentialTendermintPower() int64 {
-	return sdk.TokensToTendermintPower(v.Tokens)
+// potential consensus-engine power
+func (v Validator) PotentialConsensusPower() int64 {
+	return sdk.TokensToConsensusPower(v.Tokens)
 }
 
 // ensure fulfills the sdk validator types
@@ -475,7 +475,7 @@ func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
-func (v Validator) GetTendermintPower() int64     { return v.TendermintPower() }
+func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }

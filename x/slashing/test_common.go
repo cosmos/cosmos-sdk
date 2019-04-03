@@ -36,7 +36,7 @@ var (
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
 	}
-	initCoins = sdk.TokensFromTendermintPower(200)
+	initCoins = sdk.TokensFromConsensusPower(200)
 )
 
 func createTestCodec() *codec.Codec {

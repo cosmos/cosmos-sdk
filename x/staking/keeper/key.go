@@ -71,14 +71,11 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // nolint: unparam
 func getValidatorPowerRank(validator types.Validator) []byte {
 
-	potentialPower := validator.Tokens
+	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)
+	consensusPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(consensusPowerBytes[:], uint64(consensusPower))
 
-	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
-	tendermintPower := potentialPower.Int64()
-	tendermintPowerBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
-
-	powerBytes := tendermintPowerBytes
+	powerBytes := consensusPowerBytes
 	powerBytesLen := len(powerBytes) // 8
 
 	// key is of format prefix || powerbytes || addrBytes

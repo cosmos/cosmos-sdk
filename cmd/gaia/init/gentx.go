@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	defaultTokens                  = sdk.TokensFromTendermintPower(100)
+	defaultTokens                  = sdk.TokensFromConsensusPower(100)
 	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"

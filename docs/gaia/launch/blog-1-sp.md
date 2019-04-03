@@ -66,7 +66,7 @@ los ganadores. Estos serán anunciados después de la finalización del juego.
 La Fundación Interchain publicará una recomendación para la asignación de Atoms en el génesis. Esto incluirá asignaciones 
 para los participantes de la recaudación de fondos de Cosmos, los primeros contribuyentes y los ganadores del Game of Stakes. 
 Cualquier persona con una asignación recomendada tendrá la oportunidad de presentar una _gentx_ (transacción génesis), el cual es requerida para 
-convertirse en validador de genesis. El resultado final de la asignación recomendada y la colección de gentxs es 
+convertirse en validador en el génesis de la red. El resultado final de la asignación recomendada y la colección de _gentxs_ es 
 un [archivo de génesis](https://forum.cosmos.network/t/genesis-files-network-starts-vs-upgrades/1464) final.
 
 ### 1 Lanzamiento del Cosmos Hub en Mainnet

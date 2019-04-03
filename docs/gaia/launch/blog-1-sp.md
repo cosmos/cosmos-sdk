@@ -13,7 +13,7 @@ transferir Atoms. Las transferencias se desactivarán a nivel de protocolo hasta
 Quienes posean Atoms deben seguir cuidadosamente las instrucciones para poder delegar de forma segura. Por favor, 
 lee primero toda la guía para familiarizarse con la [línea de comandos](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md)
 
-El proceso descrito en la guía es actualmente la única forma verificada y segura de delegar Atoms en el lanzamiento. Esto se debe a que 
+El proceso descrito en la guía es actualmente la única forma segura y auditada de delegar Atoms en el lanzamiento. Esto se debe a que 
 la herramienta gaiacli utilizada en la guía es el único software de cartera que está siendo sometido a auditorías de seguridad 
 por parte de terceros en este momento. Ningún otro proveedor de carteras ha iniciado aún las auditorías de seguridad.
 

@@ -17,7 +17,7 @@ El proceso descrito en la guía es actualmente la única forma segura y auditada
 la herramienta gaiacli utilizada en la guía es el único software de cartera que está siendo sometido a auditorías de seguridad 
 por parte de terceros en este momento. Ningún otro proveedor de carteras ha iniciado aún las auditorías de seguridad.
 
-Recuerde que delegar Atoms implica un riesgo significativo. Una vez delegados a un validador, los Atoms son fijados por un 
+Recuerde que delegar Atoms implica un riesgo significativo. Una vez delegados a un validador, los Atoms son bloqueados por un 
 período de tiempo durante el cual no pueden ser recuperados. Si el validador se comporta mal durante este tiempo, algunos o 
 todos los Atoms delegados pueden ser destruidos. Es su responsabilidad realizar la debida diligencia con los validadores antes 
 de delegar!

@@ -55,7 +55,7 @@ func main() {
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
-	rootCmd.Flags().BoolVar(&assertInvariantsBlockly, flagAssertInvariantsBlockly,
+	rootCmd.PersistentFlags().BoolVar(&assertInvariantsBlockly, flagAssertInvariantsBlockly,
 		false, "Assert registered invariants on a blockly basis")
 	err := executor.Execute()
 	if err != nil {

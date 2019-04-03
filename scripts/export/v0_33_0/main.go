@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/scripts/export"
 )
 
+// Command: go run main.go [path_to_old_genesis.json] [chain-id] [genesis-start-time] > [path_to_new_genesis.json]
 func main() {
 	cdc := app.MakeCodec()
 

@@ -40,7 +40,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.31.0-dev0"
+  revision = "v0.31.0-dev0-fix0"
 
 [[constraint]]
   name = "github.com/cosmos/ledger-cosmos-go"

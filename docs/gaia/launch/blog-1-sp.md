@@ -27,7 +27,7 @@ y errores. Las herramientas existentes requieren conocimientos técnicos avanzad
 de la Fundación Interchain y/o del equipo de Tendermint (ver también la sección de riesgos en [Interchain Cosmos Contribution Terms](https://github.com/cosmos/cosmos/blob/master/fundraiser/Interchain%20Cosmos%20Contribution%20Terms%20-%20FINAL.pdf)). 
 Cualquier uso de este software de código abierto [con licencia Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) se hace bajo su propio riesgo y sobre una 
 base "TAL CUAL" sin garantías ni condiciones de ningún tipo, y toda responsabilidad de la Fundación Interchain y/o del equipo 
-de Tendermint por daños y perjuicios. que surjan en relación con el software. Por favor, haz ejercicio extremo de precaución!
+de Tendermint por daños y perjuicios que surjan en relación con el software está excluida. ¡Por favor procede con precaución!
 
 Si buscas más información sobre la delegación y quieres hablar con la gente que está desarrollando Cosmos, únete a la reunión 
 virtual del 14 de febrero, en la que se te explicarán paso a paso las instrucciones para delegar Atoms en el lanzamiento.

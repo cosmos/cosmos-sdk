@@ -46,7 +46,7 @@ tercera auditoría.
 
 ### 4 Cosmos SDK Suspensión de Funciones
 
-Los cambios finales en la ruptura del Cosmos-SDK están incluidos en el [v0.31.0 launch RC](https://github.com/cosmos/cosmos-sdk/projects/27). 
+Los últimos cambios importantes del Cosmos-SDK están incluidos en el [v0.31.0 launch RC](https://github.com/cosmos/cosmos-sdk/projects/27). 
 Una vez que se complete este RC, el equipo de Cosmos-SDK participará en una ronda de búsqueda interna de errores para garantizar 
 una diligencia debida de seguridad suficiente previa al lanzamiento.
 

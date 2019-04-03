@@ -4,7 +4,7 @@
 
 En el verano de 2016, se publicó el [Cosmos whitepaper](https://cosmos.network/resources/whitepaper). En la 
 primavera de 2017, se completó la [recaudación de fondos de Cosmos](https://fundraiser.cosmos.network/). En los primeros 
-meses de 2019, el software está [completo](https://github.com/cosmos/cosmos-sdk/releases). El lanzamiento del Hub del Cosmos se acerca. 
+meses del 2019, la [última version](https://github.com/cosmos/cosmos-sdk/releases) del _software_  contiene todas las funcionalidades requeridas en la red principal. El lanzamiento del blockchain principal del ecosistema,  el Cosmos Hub, se acerca. 
 ¿Qué significa esto para los poseedores de átomos?
 
 Si eres poseedor de Atoms, podrás delegar Atoms en los validadores de la red principal y votar sobre las propuestas de 

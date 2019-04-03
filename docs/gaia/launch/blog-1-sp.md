@@ -107,7 +107,7 @@ Aunque la perspectiva de tener que tratar con un actor malicioso que conspira co
 muchas cosas que puedes hacer para protegerte de todo tipo de esquemas de ingeniería social. En cuanto a la preparación para 
 el lanzamiento de la red principal de Cosmos, esto debería requerir entrenar tus instintos para tener éxito, detectar y evitar los riesgos de 
 seguridad, al seleccionar recursos que sirvan como fuente de verdad para verificar la información, y pasar por algunos pasos 
-técnicos para  reducir o eliminar el riesgo de robo de claves o credenciales.
+técnicos para reducir o eliminar el riesgo de robo de claves o credenciales.
 
 **Estas son algunas de las reglas de participación que debes tener en cuenta cuando te prepares para el lanzamiento de Cosmos Mainnet:**
 

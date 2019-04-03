@@ -41,8 +41,8 @@ In the `StdSignature` type we need to add a new field called `PubKeyIndex` which
 ```golang
 // StdSignature represents a sig
 type StdSignature struct {
-  PubKey        crypto.PubKey    `json:"pub_key"` // optional
-  Signature     []byte           `json:"signature"`
+  PubKey        crypto.PubKey
+  Signature     []byte
   PubKeyIndex   uint
 }
 ```

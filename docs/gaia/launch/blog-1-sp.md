@@ -51,7 +51,7 @@ Una vez que se complete este candidato de lanzamiento, el equipo de la Cosmos-SD
 una diligencia debida de seguridad suficiente previa al lanzamiento.
 
 Inmediatamente después del lanzamiento de la version 0.31.0 de la Cosmos-SDK, se lanzará una _testnet_ de Gaia con el fin de
-eliminar cualquier error difícil de encontrar.
+eliminar cualquier _bug_.
 
 ### 3 Game of Stakes Completado
 

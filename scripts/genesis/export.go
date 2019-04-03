@@ -50,7 +50,7 @@ func NewGenesisFile(cdc *codec.Codec, path string) (GenesisFile, error) {
 // ValidateInputs validates each of the parameters used by
 func ValidateInputs(path, chainID, genesisTime string) error {
 	if chainID = strings.Trim(chainID, " "); chainID == "" {
-		return fmt.Errorf("chain-d cannot be blank")
+		return fmt.Errorf("chain-id cannot be blank")
 	}
 	_, err := time.Parse(time.RFC3339, genesisTime)
 	if err != nil {

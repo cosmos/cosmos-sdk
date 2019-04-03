@@ -1,19 +1,22 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"strings"
+
 	app "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/scripts/genesis/export"
+	"github.com/cosmos/cosmos-sdk/scripts/export"
 )
 
 func main() {
 	cdc := app.MakeCodec()
 
-	args := flags.Args()
+	args := os.Args[1:]
 	if len(args) != 3 {
 		panic(fmt.Errorf("please provide path, chain-id and genesis time"))
 	}
-	
+
 	pathToGenesis := args[0]
 	chainID := args[1]
 	genesisTime := args[2]
@@ -29,7 +32,7 @@ func main() {
 	}
 
 	genesis.ChainID = strings.Trim(chainID, " ")
-	genesis.GenesisTime = startTime
+	genesis.GenesisTime = genesisTime
 
 	// proposal #1 updates
 	genesis.AppState.MintData.Params.BlocksPerYear = 4855015
@@ -44,12 +47,12 @@ func main() {
 
 	err = app.GaiaValidateGenesisState(genesis.AppState)
 	if err != nil {
-		return panic(err)
+		panic(err)
 	}
 
 	genesisJSON, err := cdc.MarshalJSONIndent(genesis, "", "  ")
 	if err != nil {
-		return panic(err)
+		panic(err)
 	}
 	fmt.Println(string(genesisJSON))
 }

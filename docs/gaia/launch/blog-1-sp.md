@@ -41,7 +41,7 @@ Para seguir el progreso del lanzamiento de mainnet, por favor, añádalo a sus f
 ### 5 Cosmos-SDK Auditorías de seguridad ✔
 
 A principios de enero, el Cosmos-SDK se sometió a la primera de una serie de evaluaciones de seguridad de terceros programadas para el primer trimestre de 2019. Esta auditoría se llevó a cabo durante un período de dos semanas y media. Hasta la fecha, 
-dos empresas de auditoría de seguridad diferentes han evaluado varias partes del Cosmos-SDK y se está llevando a cabo una 
+dos empresas de auditoría de seguridad diferentes han evaluado varias partes de la SDK y actualmente se está llevando a cabo una 
 tercera auditoría.
 
 ### 4 Cosmos SDK Suspensión de Funciones

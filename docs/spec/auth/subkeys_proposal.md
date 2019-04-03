@@ -57,7 +57,7 @@ if stdSig.PubKeyIndex == 0 {
 }
 ```
 
-In the AnteHandler, if a transaction comes from a SubKey, it verifies that the SubKey has not been revoked and that the msg route is permitted
+In the AnteHandler, if a transaction comes from a SubKey, it verifies that the SubKey has not been revoked and it is permitted to use the msg routes it is trying to sign over.
 
 ```
 if acc.SubKeys[stdSig.PubKeyIndex - 1].Revoked {

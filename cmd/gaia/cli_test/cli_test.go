@@ -907,11 +907,11 @@ func TestGaiaCLIDecode(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// Check that the transaction decodes as epxceted
-	var decodedTx auth.StdTx
+	var stdTx auth.StdTx
 	cdc := app.MakeCodec()
-	unsignedTx := "{\"type\": \"auth/StdTx\",\"value\": " + stdout + "}"
-	require.Nil(t, cdc.UnmarshalJSON([]byte(unsignedTx), &decodedTx))
-	require.Equal(t, "deadbeef", decodedTx.Memo)
+	jsonTx := "{\"type\": \"auth/StdTx\",\"value\": " + stdout + "}"
+	require.Nil(t, cdc.UnmarshalJSON([]byte(jsonTx), &stdTx))
+	require.Equal(t, "deadbeef", stdTx.Memo)
 }
 
 func TestGaiaCLIMultisignSortSignatures(t *testing.T) {

@@ -71,7 +71,7 @@ un [archivo de génesis](https://forum.cosmos.network/t/genesis-files-network-st
 
 ### 1 Lanzamiento del Cosmos Hub en Mainnet
 
-Una vez que un archivo de génesis es aprobado por la comunidad, y +⅔ del poder de voto se pone en línea, la red principal 
+Una vez que el archivo de génesis es aprobado por la comunidad, y +⅔ del poder de voto se pone en línea, la red principal 
 de Cosmos estará en vivo.
 
 ## Canales Oficiales de comunicacion de Cosmos

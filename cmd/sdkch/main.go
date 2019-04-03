@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,24 +68,25 @@ improvements            gaiarest
     bugfixes                 sdk
                       tendermint`,
 		Args: cobra.MaximumNArgs(3),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if interactiveMode {
-				addEntryFileFromConsoleInput()
-				return
+				return addEntryFileFromConsoleInput()
 			}
 
 			if len(args) < 2 {
 				log.Println("must include at least 2 arguments when not in interactive mode")
-				return
+				return nil
 			}
 			sectionDir, stanzaDir := args[0], args[1]
-			validateSectionStanzaDirs(sectionDir, stanzaDir)
-			if len(args) == 3 {
-				addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(args[2]))
-				return
+			err := validateSectionStanzaDirs(sectionDir, stanzaDir)
+			if err != nil {
+				return err
 			}
-			addEntryFile(sectionDir, stanzaDir)
+			if len(args) == 3 {
+				return addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(args[2]))
+			}
+			return addEntryFile(sectionDir, stanzaDir)
 		},
 	}
 
@@ -95,12 +95,12 @@ improvements            gaiarest
 		Use:   "generate",
 		Short: "Generate a changelog in Markdown format and print it to STDOUT. version defaults to UNRELEASED.",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			version := "UNRELEASED"
 			if flag.NArg() > 1 {
 				version = strings.Join(flag.Args()[1:], " ")
 			}
-			generateChangelog(version)
+			return generateChangelog(version)
 		},
 	}
 
@@ -109,8 +109,8 @@ improvements            gaiarest
 		Use:   "prune",
 		Short: "Delete empty sub-directories recursively.",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			pruneEmptyDirectories()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return pruneEmptyDirectories()
 		},
 	}
 )
@@ -148,52 +148,54 @@ func main() {
 	}
 }
 
-func addEntryFileFromConsoleInput() {
+func addEntryFileFromConsoleInput() error {
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Please enter the section (either: \"breaking\", \"features\", \"improvements\", \"bugfixes\")")
 	sectionDir, _ := reader.ReadString('\n')
 	sectionDir = strings.TrimSpace(sectionDir)
 	if _, ok := sections[sectionDir]; !ok {
-		log.Fatalln("invalid section, please try again")
+		return errors.New("invalid section, please try again")
 	}
 
 	fmt.Println("Please enter the stanza (either: \"gaia\", \"gaiacli\", \"gaiarest\", \"sdk\", \"tendermint\")")
 	stanzaDir, _ := reader.ReadString('\n')
 	stanzaDir = strings.TrimSpace(stanzaDir)
 	if _, ok := stanzas[stanzaDir]; !ok {
-		log.Fatalln("invalid stanza, please try again")
+		return errors.New("invalid stanza, please try again")
 	}
 
 	fmt.Println("Please enter the changelog message (or press enter to write in  default $EDITOR)")
 	message, _ := reader.ReadString('\n')
 	message = strings.TrimSpace(message)
 	if message == "" {
-		addEntryFile(sectionDir, stanzaDir)
-		return
+		return addEntryFile(sectionDir, stanzaDir)
 	}
 
-	addSinglelineEntryFile(sectionDir, stanzaDir, message)
+	return addSinglelineEntryFile(sectionDir, stanzaDir, message)
 }
 
-func addSinglelineEntryFile(sectionDir, stanzaDir, message string) {
+func addSinglelineEntryFile(sectionDir, stanzaDir, message string) error {
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
 		generateFileName(message),
 	)
 
-	writeEntryFile(filename, []byte(message))
+	return writeEntryFile(filename, []byte(message))
 }
 
-func addEntryFile(sectionDir, stanzaDir string) {
-	bs := readUserInputFromEditor()
+func addEntryFile(sectionDir, stanzaDir string) error {
+	bs, err := readUserInputFromEditor()
+	if err != nil {
+		return err
+	}
 	firstLine := strings.TrimSpace(strings.Split(string(bs), "\n")[0])
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
 		generateFileName(firstLine),
 	)
 
-	writeEntryFile(filename, bs)
+	return writeEntryFile(filename, bs)
 }
 
 func generateFileName(line string) string {
@@ -209,17 +211,21 @@ func generateFileName(line string) string {
 	}
 
 	ret := strings.Join(chunks, "-")
-	return ret[:int(math.Min(float64(len(ret)), float64(maxEntryFilenameLength)))]
+
+	if len(ret) > maxEntryFilenameLength {
+		return ret[:maxEntryFilenameLength]
+	}
+	return ret
 }
 
-func directoryContents(dirPath string) []os.FileInfo {
+func directoryContents(dirPath string) ([]os.FileInfo, error) {
 	contents, err := ioutil.ReadDir(dirPath)
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatalf("couldn't read directory %s: %v", dirPath, err)
+		return nil, fmt.Errorf("couldn't read directory %s: %v", dirPath, err)
 	}
 
 	if len(contents) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	// Filter out hidden files
@@ -233,16 +239,19 @@ func directoryContents(dirPath string) []os.FileInfo {
 		contents[i] = nil
 	}
 
-	return newContents
+	return newContents, nil
 }
 
-func generateChangelog(version string) {
+func generateChangelog(version string) error {
 	fmt.Printf("# %s\n\n", version)
 	for sectionDir, sectionTitle := range sections {
 		sectionTitlePrinted := false
 		for stanzaDir, stanzaTitle := range stanzas {
 			path := filepath.Join(entriesDir, sectionDir, stanzaDir)
-			files := directoryContents(path)
+			files, err := directoryContents(path)
+			if err != nil {
+				return err
+			}
 			if len(files) == 0 {
 				continue
 			}
@@ -257,22 +266,27 @@ func generateChangelog(version string) {
 				verboseLog.Println("processing", f.Name())
 				filename := filepath.Join(path, f.Name())
 				if err := indentAndPrintFile(filename); err != nil {
-					log.Fatal(err)
+					return err
 				}
 			}
 
 			fmt.Println()
 		}
 	}
+	return nil
 }
 
-func pruneEmptyDirectories() {
+func pruneEmptyDirectories() error {
 	for sectionDir := range sections {
 		for stanzaDir := range stanzas {
-			mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+			err := mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+			if err != nil {
+				return err
+			}
 		}
-		mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
+		return mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
 	}
+	return nil
 }
 
 // nolint: errcheck
@@ -307,45 +321,47 @@ func indentAndPrintFile(filename string) error {
 }
 
 // nolint: errcheck
-func writeEntryFile(filename string, bs []byte) {
+func writeEntryFile(filename string, bs []byte) error {
 	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	outFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer outFile.Close()
 
 	if _, err := outFile.Write(bs); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Printf("Unreleased changelog entry written to: %s\n", filename)
 	log.Println("To modify this entry please edit or delete the above file directly.")
+	return nil
 }
 
-func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
+func validateSectionStanzaDirs(sectionDir, stanzaDir string) error {
 	if _, ok := sections[sectionDir]; !ok {
-		log.Fatalf("invalid section -- %s", sectionDir)
+		return fmt.Errorf("invalid section -- %s", sectionDir)
 	}
 	if _, ok := stanzas[stanzaDir]; !ok {
-		log.Fatalf("invalid stanza -- %s", stanzaDir)
+		return fmt.Errorf("invalid stanza -- %s", stanzaDir)
 	}
+	return nil
 }
 
 // nolint: errcheck
-func readUserInputFromEditor() []byte {
+func readUserInputFromEditor() ([]byte, error) {
 	tempfilename, err := launchUserEditor()
 	if err != nil {
-		log.Fatalf("couldn't open an editor: %v", err)
+		return []byte{}, fmt.Errorf("couldn't open an editor: %v", err)
 	}
 	defer os.Remove(tempfilename)
 	bs, err := ioutil.ReadFile(tempfilename)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return []byte{}, fmt.Errorf("error: %v", err)
 	}
-	return bs
+	return bs, nil
 }
 
 // nolint: errcheck
@@ -392,16 +408,22 @@ func launchUserEditor() (string, error) {
 	return tempfilename, nil
 }
 
-func mustPruneDirIfEmpty(path string) {
-	if contents := directoryContents(path); len(contents) == 0 {
-		if err := os.Remove(path); err != nil {
-			if !os.IsNotExist(err) {
-				log.Fatal(err)
-			}
-			return
-		}
-		log.Println(path, "removed")
+func mustPruneDirIfEmpty(path string) error {
+	contents, err := directoryContents(path)
+	if err != nil {
+		return err
 	}
+	if len(contents) != 0 {
+		return nil
+	}
+	if err := os.Remove(path); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}
+	log.Println(path, "removed")
+	return nil
 }
 
 // DONTCOVER

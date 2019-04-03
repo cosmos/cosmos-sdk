@@ -122,7 +122,7 @@ criptomonedas, debes almacenarlos fuera de línea (en las denominadas billetera 
 en marcha. Y nunca, nunca, nunca los compartas con nadie más.
 
 - Sé escéptico ante adjuntos inesperados o correos electrónicos que te pidan que visites un sitio web sospechoso o 
-desconocido en el contexto de cadenas de bloques o cryptocurrency. Un atacante puede intentar atraerlo a 
+desconocido en el contexto de blockchain o criptomonedas. Un atacante puede intentar atraerte a 
 un [sitio comprometido](https://blog.malwarebytes.com/cybercrime/2013/02/tools-of-the-trade-exploit-kits/) diseñado para robar información confidencial de su equipo. Si eres usuario de Gmail, prueba tu 
 capacidad de recuperación frente a las últimas tácticas de phishing basadas en correo electrónico[aquí](https://phishingquiz.withgoogle.com/).
 

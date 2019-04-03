@@ -128,7 +128,7 @@ capacidad de recuperación frente a las últimas tácticas de _phishing_ basadas
 
 - Haz su debida diligencia antes de comprar Atoms. Los Atoms no serán transferibles en el momento del lanzamiento, por lo 
 que no pueden ser comprados o vendidos hasta que un _hard-fork_ lo permita. Cuando sean transferibles, asegúrate de que haz
-investigado al vendedor o intercambiador para confirmar que los Atoms provienen de una fuente confiable.
+investigado al vendedor o casa de cambio para confirmar que los Atoms provienen de una fuente confiable.
 
 - Ni el equipo de Tendermint ni la Fundación Interchain venderán Atoms, así que si ves mensajes en los medios sociales o 
 correos electrónicos que anuncian una venta simbólica de nosotros, no son reales y deben ser evitados.  Habilite la 

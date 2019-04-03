@@ -116,7 +116,7 @@ de `gaiacli` cuando estés haciendo algo que incluya tus 12 palabras. Las últim
 siempre estarán disponibles en nuestros repositorios oficiales de GitHub, y descargándolas desde allí se garantiza que no te 
 engañarán para que utilices una versión maliciosamente modificada del software.
 
-- No comparta sus 12 palabras con nadie. La única persona que debería conocerlos es usted. Esto es especialmente importante 
+- No compartas sus 12 palabras secretas con nadie. La única persona que debería conocerlas eres tú. Esto es especialmente importante 
 si alguna vez alguien se le acerca para ofrecerle servicios de custodia para sus Atoms: para evitar perder el control de sus 
 tokens, debe almacenarlos fuera de línea para minimizar el riesgo de robo y tener una fuerte estrategia de copia de seguridad 
 en marcha. Y nunca, nunca, nunca los comparta con nadie más.

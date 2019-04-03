@@ -82,8 +82,8 @@
 * [\#3828](https://github.com/cosmos/cosmos-sdk/issues/3828) New sdkch tool to maintain changelogs
 * [\#3864](https://github.com/cosmos/cosmos-sdk/issues/3864) Make Coins.IsAllGTE() more consistent.
 * [\#3907](https://github.com/cosmos/cosmos-sdk/issues/3907): dep -> go mod migration
-  - Drop dep in favor of go modules.
-  - Upgrade to Go 1.12.1.
+  * Drop dep in favor of go modules.
+  * Upgrade to Go 1.12.1.
 * [\#3917](https://github.com/cosmos/cosmos-sdk/issues/3917) Allow arbitrary decreases to validator commission rates.
 * [\#3937](https://github.com/cosmos/cosmos-sdk/issues/3937) Implement community pool querier.
 * [\#3940](https://github.com/cosmos/cosmos-sdk/issues/3940) Codespace should be lowercase.
@@ -114,6 +114,14 @@
   either the truncated coins or the change coins.
 * [\#3915](https://github.com/cosmos/cosmos-sdk/issues/3915) Remove ';' delimiting support from ParseDecCoins
 * [\#3977](https://github.com/cosmos/cosmos-sdk/issues/3977) Fix docker image build
+
+## 0.33.1
+
+### Bug Fixes
+
+#### Gaia
+
+* [\#3999](https://github.com/cosmos/cosmos-sdk/pull/3999) Fix distribution delegation for zero height export bug
 
 ## 0.33.0
 

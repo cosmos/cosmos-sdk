@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.2
+
+### Improvements
+
+#### Tendermint
+
+* Upgrade Tendermint to `v0.31.0-dev0-fix0` which includes critical security fixes.
+
 ## 0.33.1
 
 ### Bug Fixes

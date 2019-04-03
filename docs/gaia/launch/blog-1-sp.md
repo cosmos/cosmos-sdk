@@ -10,7 +10,7 @@ Si eres poseedor de Atoms, podrás delegarlos a los validadores de la red princi
 gobernanza. De hecho, el éxito futuro de la red depende de que lo haga de forma responsable. Sin embargo, aún no podrás 
 transferir Atoms. Las transferencias se desactivarán a nivel de protocolo hasta que se ejecute un hard-fork para habilitarlas.
 
-Los poseedores de Atoms deben seguir cuidadosamente las directrices para poder delegar Atoms de forma segura. Por favor, 
+Quienes posean Atoms deben seguir cuidadosamente las instrucciones para poder delegar de forma segura. Por favor, 
 lea primero toda la guía para familiarizarse antes de hacer nada: [Guía CLI](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/gaia/delegator-guide-cli.md)
 
 El proceso descrito en la guía es actualmente la única forma verificada y segura de delegar Atoms en el lanzamiento. Esto se debe a que 

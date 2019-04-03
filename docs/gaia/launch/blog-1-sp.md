@@ -101,7 +101,7 @@ infracciones de seguridad de las cuentas, y no sólo se producen a través del c
 producen intentos de phishing oportunistas y selectivos [en cualquier lugar en el que haya una bandeja de entrada](https://www.umass.edu/it/security/phishing-fraudulent-emails-text-messages-phone-calls). 
 No importa si está usando Signal, Telegram, SMS, Twitter, o simplemente revisando sus mensajes directos en foros o redes sociales, los 
 atacantes tienen una multiplicidad de [opciones y oportunidadades](https://jia.sipa.columbia.edu/weaponization-social-media-spear-phishing-and-cyberattacks-democracy) para entrar en su vida digital en un esfuerzo por separarlo de la 
-información valiosa y de los activos que tiene en su poder. definitivamente no quieren perder.
+información valiosa y de los activos que tiene en su poder que definitivamente no quieren perder.
 
 Aunque la perspectiva de tener que tratar con un actor malicioso que conspira contra ti puede parecer desalentadora, hay 
 muchas cosas que puedes hacer para protegerte de todo tipo de esquemas de ingeniería social. En cuanto a la preparación para 

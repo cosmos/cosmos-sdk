@@ -150,7 +150,7 @@ olvido.
 
 *Si aparece un acuerdo que [suena demasiado bueno para ser cierto][https://www.psychologytoday.com/us/blog/mind-in-the-machine/201712/how-fear-is-being-used-manipulate-cryptocurrency-markets], o aparece un mensaje pidiéndote información que 
 nunca, nunca, nunca debe ser compartida con otra persona, siempre puedes verificarla antes de comprometerte 
-con ella navegando a un sitio web o canal de comunicación oficial de Cosmos por su cuenta. Nadie de Cosmos, el equipo de 
+con ella al visitar un sitio web o canal de comunicación oficial de Cosmos por su cuenta. Nadie de Cosmos, el equipo de 
 Tendermint o la Fundación Interchain enviarán alguna vez un email pidiéndole sus 12 palabras para compartirlas con nosotros, 
 y siempre usaremos nuestro blog oficial, Twitter y GitHub para comunicar noticias importantes directamente a la comunidad 
 del Cosmos.*

@@ -93,7 +93,7 @@ anteriormente. No proporciones nunca tus 12 palabras secretas a ningún administ
 
 ## Manténgase seguro (y protegido) para el lanzamiento de la Mainnet
 
-El lanzamiento de cualquier cadena de bloques pública es un momento increíblemente emocionante, y definitivamente es uno que 
+El lanzamiento de cualquier _blockchain_ público es un momento increíblemente emocionante, y definitivamente es uno que 
 los actores maliciosos pueden tratar de aprovechar para su propio beneficio personal. La [ingeniería social](https://en.wikipedia.org/wiki/Social_engineering_%28security%29) ha 
 existido aproximadamente desde que los seres humanos han estado en el planeta, y en la era técnica, suele adoptar la forma 
 de [phishing](https://ssd.eff.org/en/module/how-avoid-phishing-attacks) o [spearphishing](https://en.wikipedia.org/wiki/Phishing#Spear_phishing). Ambos ataques son formas de engaño muy exitosas que son responsables de más del 95% de las 

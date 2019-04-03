@@ -36,7 +36,7 @@ Regístrese aquí: [gotowebinar.com/register/](https://register.gotowebinar.com/
 
 ## Hitos restantes para el lanzamiento
 
-Para seguir el progreso del lanzamiento de mainnet, por favor, añádalo a sus favoritos: [cosmos.network/launch](https://cosmos.network/launch)
+Sigue en el [sitio web oficial](https://cosmos.network/launch), para seguir el progreso del lanzamiento de la red principal.
 
 ### 5 Cosmos-SDK Auditorías de seguridad ✔
 

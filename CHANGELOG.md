@@ -115,6 +115,14 @@
 * [\#3915](https://github.com/cosmos/cosmos-sdk/issues/3915) Remove ';' delimiting support from ParseDecCoins
 * [\#3977](https://github.com/cosmos/cosmos-sdk/issues/3977) Fix docker image build
 
+## 0.33.2
+
+### Improvements
+
+#### Tendermint
+
+* Upgrade Tendermint to `v0.31.0-dev0-fix0` which includes critical security fixes.
+
 ## 0.33.1
 
 ### Bug Fixes

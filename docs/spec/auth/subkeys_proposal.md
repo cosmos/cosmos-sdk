@@ -47,7 +47,7 @@ type StdSignature struct {
 }
 ```
 
-If a `StdSignature.PubKeyIndex` is 0, this means that the account's "master" PubKey should be used to verify the signature.  If the `StdSignature.PubKeyIndex` is `> 0`, it verifies the signature using the corresponding **1-indexed** SubKey in the SubKeyAccount.SubKeys slice.  Note, the SubKeys slice is 1-indexed rather than 0-indexed because the 0 index is used to refer to the master PubKey.  See pseudocode below:
+If a `StdSignature.PubKeyIndex` is 0, this means that the account's "master" PubKey (the `SubKeyAccount.PubKey`) should be used to verify the signature.  If the `StdSignature.PubKeyIndex` is `> 0`, it verifies the signature using the corresponding **1-indexed** SubKey in the `SubKeyAccount.SubKeys` slice.  Note, the SubKeys slice is 1-indexed rather than 0-indexed because the 0 index is used to refer to the master PubKey.  See pseudocode below:
 
 ```
 if stdSig.PubKeyIndex == 0 {

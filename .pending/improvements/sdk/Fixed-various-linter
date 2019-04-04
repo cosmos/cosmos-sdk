@@ -1,1 +1,0 @@
-Fixed various linters warnings in the context of the gometalinter -> golangci-lint migration #3896.

@@ -3,23 +3,26 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	app "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/scripts/export"
 )
 
-const chainID = "cosmoshub-2"
-
-// Command: go run main.go --path=<path_to_old_genesis.json> --start-time=<genesis-start-time> > [path_to_new_genesis.json
+// Command:
+// go run main.go \
+// --chain-id=<chain_id> --path=<path_to_old_genesis.json> --start-time=<genesis-start-time> \
+// > [path_to_new_genesis.json
 func main() {
 	cdc := app.MakeCodec()
 
+	chainID := flag.String("chain-id", "", "cosmoshub-n")
 	pathToGenesis := flag.String("path", "", "./genesis.json")
 	genesisTime := flag.String("start-time", "", "2019-02-11T12:00:00Z")
 
 	flag.Parse()
 
-	err := export.ValidateBasic(*pathToGenesis, *genesisTime)
+	err := export.ValidateBasic(*chainID, *pathToGenesis, *genesisTime)
 	if err != nil {
 		panic(err)
 	}
@@ -29,8 +32,8 @@ func main() {
 		panic(err)
 	}
 
-	genesis.ChainID = chainID
-	genesis.GenesisTime = *genesisTime
+	genesis.ChainID = strings.TrimSpace(*chainID)
+	genesis.GenesisTime = strings.TrimSpace(*genesisTime)
 
 	// proposal #1 updates
 	genesis.AppState.MintData.Params.BlocksPerYear = 4855015

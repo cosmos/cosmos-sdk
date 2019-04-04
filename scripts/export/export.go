@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	app "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -47,12 +48,16 @@ func NewGenesisFile(cdc *codec.Codec, path string) (GenesisFile, error) {
 }
 
 // validateBasic validates each of the arguments passed to the script
-func ValidateBasic(path, genesisTime string) error {
-	if path == "" {
+func ValidateBasic(chainID, path, genesisTime string) error {
+	if strings.TrimSpace(chainID) == "" {
+		return fmt.Errorf("chain-id required")
+	}
+
+	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("path to genesis file required")
 	}
 
-	if genesisTime == "" {
+	if strings.TrimSpace(genesisTime) == "" {
 		return fmt.Errorf("genesis start time required")
 	}
 

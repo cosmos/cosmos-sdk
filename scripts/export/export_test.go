@@ -46,24 +46,28 @@ func TestNewGenesisFile(t *testing.T) {
 }
 
 func TestValidateBasic(t *testing.T) {
+	// no chain-id
+	err := ValidateBasic("", path, genesisTime)
+	require.Error(t, err)
+
 	// no start time
-	err := ValidateBasic(path, "")
+	err = ValidateBasic(chainID, path, "")
 	require.Error(t, err)
 
 	// no path
-	err = ValidateBasic("", genesisTime)
+	err = ValidateBasic(chainID, "", genesisTime)
 	require.Error(t, err)
 
 	// not a valid time
-	err = ValidateBasic(path, "not a timestamp")
+	err = ValidateBasic(chainID, path, "not a timestamp")
 	require.Error(t, err)
 
 	// not a JSON file
-	err = ValidateBasic("genesis.txt", genesisTime)
+	err = ValidateBasic(chainID, "genesis.txt", genesisTime)
 	require.Error(t, err)
 
 	// file doesn't exist
-	err = ValidateBasic(path, genesisTime)
+	err = ValidateBasic(chainID, path, genesisTime)
 	require.Error(t, err)
 
 	// success
@@ -75,7 +79,7 @@ func TestValidateBasic(t *testing.T) {
 	err = ioutil.WriteFile(path, output, 0644)
 	require.NoError(t, err)
 
-	err = ValidateBasic(path, genesisTime)
+	err = ValidateBasic(chainID, path, genesisTime)
 	require.NoError(t, err)
 
 	os.Remove(path)

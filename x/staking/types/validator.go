@@ -467,7 +467,7 @@ func (v Validator) PotentialTendermintPower() int64 {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetJailed() bool               { return v.Jailed }
+func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }

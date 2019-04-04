@@ -51,19 +51,19 @@ func TestRevocation(t *testing.T) {
 	// initial state
 	val, found := keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetJailed())
+	require.False(t, val.IsJailed())
 
 	// test jail
 	keeper.Jail(ctx, consAddr)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.True(t, val.GetJailed())
+	require.True(t, val.IsJailed())
 
 	// test unjail
 	keeper.Unjail(ctx, consAddr)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetJailed())
+	require.False(t, val.IsJailed())
 }
 
 // tests slashUnbondingDelegation

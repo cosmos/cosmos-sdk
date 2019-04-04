@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -67,7 +68,7 @@ type TxResponse struct {
 	Height    int64           `json:"height"`
 	TxHash    string          `json:"txhash"`
 	Code      uint32          `json:"code,omitempty"`
-	Data      []byte          `json:"data,omitempty"`
+	Data      string          `json:"data,omitempty"`
 	RawLog    string          `json:"raw_log,omitempty"`
 	Logs      ABCIMessageLogs `json:"logs,omitempty"`
 	Info      string          `json:"info,omitempty"`
@@ -76,10 +77,11 @@ type TxResponse struct {
 	Tags      StringTags      `json:"tags,omitempty"`
 	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
+	Timestamp string          `json:"timestamp,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
+func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxResponse {
 	if res == nil {
 		return TxResponse{}
 	}
@@ -90,7 +92,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
 		Code:      res.TxResult.Code,
-		Data:      res.TxResult.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
 		RawLog:    res.TxResult.Log,
 		Logs:      parsedLogs,
 		Info:      res.TxResult.Info,
@@ -98,6 +100,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 		GasUsed:   res.TxResult.GasUsed,
 		Tags:      TagsToStringTags(res.TxResult.Tags),
 		Tx:        tx,
+		Timestamp: timestamp,
 	}
 }
 
@@ -127,7 +130,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Height:    res.Height,
 		TxHash:    txHash,
 		Code:      res.CheckTx.Code,
-		Data:      res.CheckTx.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
 		RawLog:    res.CheckTx.Log,
 		Logs:      parsedLogs,
 		Info:      res.CheckTx.Info,
@@ -154,7 +157,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Height:    res.Height,
 		TxHash:    txHash,
 		Code:      res.DeliverTx.Code,
-		Data:      res.DeliverTx.Data,
+		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
 		RawLog:    res.DeliverTx.Log,
 		Logs:      parsedLogs,
 		Info:      res.DeliverTx.Info,
@@ -175,7 +178,7 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 
 	return TxResponse{
 		Code:   res.Code,
-		Data:   res.Data.Bytes(),
+		Data:   res.Data.String(),
 		RawLog: res.Log,
 		Logs:   parsedLogs,
 		TxHash: res.Hash.String(),
@@ -198,8 +201,8 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Code: %d\n", r.Code))
 	}
 
-	if r.Data != nil {
-		sb.WriteString(fmt.Sprintf("  Data: %s\n", string(r.Data)))
+	if r.Data != "" {
+		sb.WriteString(fmt.Sprintf("  Data: %s\n", r.Data))
 	}
 
 	if r.RawLog != "" {
@@ -228,6 +231,10 @@ func (r TxResponse) String() string {
 
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
+	}
+
+	if r.Timestamp != "" {
+		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
 	}
 
 	return strings.TrimSpace(sb.String())

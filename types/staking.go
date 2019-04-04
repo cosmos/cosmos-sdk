@@ -61,7 +61,7 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetJailed() bool                                // whether the validator is jailed
+	IsJailed() bool                                 // whether the validator is jailed
 	GetMoniker() string                             // moniker of the validator
 	GetStatus() BondStatus                          // status of the validator
 	GetOperator() ValAddress                        // operator address to receive/return validators coins

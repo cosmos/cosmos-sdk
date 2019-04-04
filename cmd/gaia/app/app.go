@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -290,19 +291,22 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	if len(genesisState.GenTxs) > 0 {
-		for _, genTx := range genesisState.GenTxs {
-			var tx auth.StdTx
-			app.cdc.MustUnmarshalJSON(genTx, &tx)
-			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
-			res := app.BaseApp.DeliverTx(bz)
-			if !res.IsOK() {
-				panic(res.Log)
-			}
-		}
-
-		validators = app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		validators = app.deliverGenTxs(ctx, genesisState.GenTxs)
 	}
 	return validators
+}
+
+func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage) []abci.ValidatorUpdate {
+	for _, genTx := range genTxs {
+		var tx auth.StdTx
+		app.cdc.MustUnmarshalJSON(genTx, &tx)
+		bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
+		res := app.BaseApp.DeliverTx(bz)
+		if !res.IsOK() {
+			panic(res.Log)
+		}
+	}
+	return app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 }
 
 // custom logic for gaia initialization

@@ -26,6 +26,8 @@ type ModuleClients interface {
 //// genesis
 //DefaultGenesisState() json.RawMessage
 //ValidateGenesis(json.RawMessage) error
+
+//// these two may come in a special order and thus must be sorted during the init
 //ProcessGenesis(sdk.Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
 //ExportGenesis(sdk.Context) json.RawMessage
 //}

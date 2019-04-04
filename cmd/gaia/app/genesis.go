@@ -46,8 +46,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
-	bankData bank.GenesisState,
-	stakingData staking.GenesisState, mintData mint.GenesisState,
+	bankData bank.GenesisState, stakingData staking.GenesisState, mintData mint.GenesisState,
 	distrData distr.GenesisState, govData gov.GenesisState, crisisData crisis.GenesisState,
 	slashingData slashing.GenesisState) GenesisState {
 
@@ -121,32 +120,20 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 
 // convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() auth.Account {
-	bacc := &auth.BaseAccount{
-		Address:       ga.Address,
-		Coins:         ga.Coins.Sort(),
-		AccountNumber: ga.AccountNumber,
-		Sequence:      ga.Sequence,
-	}
+
+	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(),
+		nil, ga.AccountNumber, ga.Sequence)
 
 	if !ga.OriginalVesting.IsZero() {
-		baseVestingAcc := &auth.BaseVestingAccount{
-			BaseAccount:      bacc,
-			OriginalVesting:  ga.OriginalVesting,
-			DelegatedFree:    ga.DelegatedFree,
-			DelegatedVesting: ga.DelegatedVesting,
-			EndTime:          ga.EndTime,
-		}
+		baseVestingAcc := auth.NewBaseVestingAccount(bacc, ga.OriginalVesting,
+			ga.DelegatedFree, ga.DelegatedVesting, ga.EndTime)
 
-		if ga.StartTime != 0 && ga.EndTime != 0 {
-			return &auth.ContinuousVestingAccount{
-				BaseVestingAccount: baseVestingAcc,
-				StartTime:          ga.StartTime,
-			}
-		} else if ga.EndTime != 0 {
-			return &auth.DelayedVestingAccount{
-				BaseVestingAccount: baseVestingAcc,
-			}
-		} else {
+		switch {
+		case ga.StartTime != 0 && ga.EndTime != 0:
+			return NewContinuousVestingAccount(baseVestingAcc, ga.StartTime, ga.EndTime) // XXX XXX XXX XXX confirm ga.EndTime missing was a bug
+		case ga.EndTime != 0:
+			return NewDelayedVestingAccount(baseVestingAcc, ga.EndTime) // XXX same!
+		default:
 			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}
 	}

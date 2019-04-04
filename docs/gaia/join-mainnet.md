@@ -56,7 +56,7 @@ Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/launch/master/genesis.json > $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/launch/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
 Note we use the `latest` directory in the [launch repo](https://github.com/cosmos/launch) which contains details for the mainnet like the latest version and the genesis file. 
@@ -90,7 +90,7 @@ On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1.000.000ua
 Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
 
 ```
-fees = gas * gasPrices
+fees = ceil(gas * gasPrices)
 ```
 
 The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
@@ -146,6 +146,36 @@ If you plan to start a new network from the exported state, export with the `--f
 ```bash
 gaiad export --height [height] --for-zero-height > [filename].json
 ```
+
+## Verify Mainnet 
+
+Help to prevent a catastrophe by running invariants on each block on your full
+node. In essence, by running invariants you ensure that the state of mainnet is
+the correct expected state. One vital invariant check is that no atoms are
+being created or destroyed outside of expected protocol, however there are many
+other invariant checks each unique to their respective module. Because invariant checks 
+are computationally expensive, they are not enabled by default. To run a node with 
+these checks start your node with the assert-invariants-blockly flag:
+
+```bash
+gaiad start --assert-invariants-blockly
+```
+
+If an invariant is broken on your node, your node will panic and prompt you to send
+a transaction which will halt mainnet. For example the provided message may look like: 
+
+```bash
+invariant broken:
+    loose token invariance:
+        pool.NotBondedTokens: 100
+        sum of account tokens: 101
+    CRITICAL please submit the following transaction:
+        gaiacli tx crisis invariant-broken staking supply
+
+```
+
+When submitting a invariant-broken transaction, transaction fee tokens are not
+deducted as the blockchain will halt (aka. this is a free transaction). 
 
 ## Upgrade to Validator Node
 

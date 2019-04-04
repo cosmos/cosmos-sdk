@@ -58,12 +58,11 @@ You can confirm that you are in the validator set by using a third party explore
 ## Participate in genesis as a validator
 
 ::: warning
-This section only concerns validators that want to be in the genesis
-file of the Cosmos Hub mainnet. If the mainnet is already live, skip this section.
+The genesis ceremony for the Cosmos Hub mainnet is closed. Please skip to the next section.
 :::
 
 If you want to participate in genesis as a validator, you need to justify that
-you have some atoms at genesis, create one (or multiple) transactions to bond these atoms to your validator address, and include this transaction in the genesis file.
+you have some stake at genesis, create one (or multiple) transactions to bond this stake to your validator address, and include this transaction in the genesis file.
 
 Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
@@ -178,7 +177,7 @@ If you got jailed for downtime, you can get your voting power back to your valid
 gaiad start
 ```
 
-Wait for your full node to catch up to the latest block. Next, run the following command. Then, you can [unjail your validator](#unjail-validator)
+Wait for your full node to catch up to the latest block. Then, you can [unjail your validator](#unjail-validator)
 
 Lastly, check your validator again to see if your voting power is back.
 

@@ -1,0 +1,2 @@
+#4020 Fix queryDelegationRewards by returning an error
+when the validator or delegation do not exist.

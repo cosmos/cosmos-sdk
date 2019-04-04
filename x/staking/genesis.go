@@ -146,6 +146,8 @@ func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisVali
 
 // ValidateGenesis validates the provided staking genesis state to ensure the
 // expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
+// TODO: No validators are both bonded and jailed (#2088)
+// TODO: Error if there is a duplicate validator (#1708)
 func ValidateGenesis(data types.GenesisState) error {
 	err := validateGenesisStateValidators(data.Validators)
 	if err != nil {

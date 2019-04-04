@@ -27,7 +27,8 @@ import (
 
 const (
 	appName = "GaiaApp"
-	// DefaultKeyPass contains the default key password for genesis transactions
+
+	// DefaultKeyPass is the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
 )
 
@@ -58,7 +59,7 @@ type GaiaApp struct {
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 
-	// Manage getting and setting accounts
+	// keepers
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
@@ -97,17 +98,18 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
-
-	// define the accountKeeper
+	// add keepers
+	app.paramsKeeper = params.NewKeeper(
+		app.cdc,
+		app.keyParams,
+		app.tkeyParams,
+	)
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
 		app.keyAccount,
 		app.paramsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
-
-	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(
 		app.accountKeeper,
 		app.paramsKeeper.Subspace(bank.DefaultParamspace),
@@ -183,9 +185,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		AddRoute(mint.QuerierRoute, mint.NewQuerier(app.mintKeeper))
 
 	// initialize BaseApp
-	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams,
-		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
+	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint,
+		app.keyDistr, app.keySlashing, app.keyGov, app.keyFeeCollection,
+		app.keyParams, app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
 	)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
@@ -241,8 +243,8 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates, endBlockerTags := staking.EndBlocker(ctx, app.stakingKeeper)
-	tags = append(tags, endBlockerTags...)
+	validatorUpdates, stakingTags := staking.EndBlocker(ctx, app.stakingKeeper)
+	tags = append(tags, stakingTags...)
 
 	if app.assertInvariantsBlockly {
 		app.assertRuntimeInvariants()
@@ -290,10 +292,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	if len(genesisState.GenTxs) > 0 {
 		for _, genTx := range genesisState.GenTxs {
 			var tx auth.StdTx
-			err = app.cdc.UnmarshalJSON(genTx, &tx)
-			if err != nil {
-				panic(err)
-			}
+			app.cdc.MustUnmarshalJSON(genTx, &tx)
 			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
 			res := app.BaseApp.DeliverTx(bz)
 			if !res.IsOK() {
@@ -308,22 +307,16 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 
 // custom logic for gaia initialization
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.AppStateBytes
-	// TODO is this now the whole genesis file?
 
 	var genesisState GenesisState
-	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
-	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
-	}
-
+	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)
 
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+			panic(fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
 				len(req.Validators), len(validators)))
 		}
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
@@ -346,61 +339,4 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 // load a particular height
 func (app *GaiaApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
-}
-
-// ______________________________________________________________________________________________
-
-var _ sdk.StakingHooks = StakingHooks{}
-
-// StakingHooks contains combined distribution and slashing hooks needed for the
-// staking module.
-type StakingHooks struct {
-	dh distr.Hooks
-	sh slashing.Hooks
-}
-
-func NewStakingHooks(dh distr.Hooks, sh slashing.Hooks) StakingHooks {
-	return StakingHooks{dh, sh}
-}
-
-// nolint
-func (h StakingHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorCreated(ctx, valAddr)
-	h.sh.AfterValidatorCreated(ctx, valAddr)
-}
-func (h StakingHooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.dh.BeforeValidatorModified(ctx, valAddr)
-	h.sh.BeforeValidatorModified(ctx, valAddr)
-}
-func (h StakingHooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorRemoved(ctx, consAddr, valAddr)
-	h.sh.AfterValidatorRemoved(ctx, consAddr, valAddr)
-}
-func (h StakingHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorBonded(ctx, consAddr, valAddr)
-	h.sh.AfterValidatorBonded(ctx, consAddr, valAddr)
-}
-func (h StakingHooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
-	h.sh.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
-}
-func (h StakingHooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	h.dh.BeforeDelegationCreated(ctx, delAddr, valAddr)
-	h.sh.BeforeDelegationCreated(ctx, delAddr, valAddr)
-}
-func (h StakingHooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	h.dh.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
-	h.sh.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
-}
-func (h StakingHooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	h.dh.BeforeDelegationRemoved(ctx, delAddr, valAddr)
-	h.sh.BeforeDelegationRemoved(ctx, delAddr, valAddr)
-}
-func (h StakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterDelegationModified(ctx, delAddr, valAddr)
-	h.sh.AfterDelegationModified(ctx, delAddr, valAddr)
-}
-func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	h.dh.BeforeValidatorSlashed(ctx, valAddr, fraction)
-	h.sh.BeforeValidatorSlashed(ctx, valAddr, fraction)
 }

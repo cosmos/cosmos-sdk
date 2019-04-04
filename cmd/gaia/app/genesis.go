@@ -219,8 +219,6 @@ func NewDefaultGenesisState() GenesisState {
 }
 
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
-// TODO: No validators are both bonded and jailed (#2088)
-// TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
 func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
@@ -295,6 +293,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 // GaiaAppGenState but with JSON
 func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	appState json.RawMessage, err error) {
+
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
 	if err != nil {
@@ -405,13 +404,9 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins := sdk.Coins{
+	accAuth.Coins = sdk.NewCoins(
 		sdk.NewCoin("footoken", sdk.NewInt(1000)),
 		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
-	}
-
-	coins.Sort()
-
-	accAuth.Coins = coins
+	)
 	return NewGenesisAccount(&accAuth)
 }

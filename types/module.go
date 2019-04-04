@@ -1,10 +1,7 @@
 package types
 
 import (
-	"encoding/json"
-
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // ModuleClients helps modules provide a standard interface for exporting client functionality
@@ -13,9 +10,22 @@ type ModuleClients interface {
 	GetTxCmd() *cobra.Command
 }
 
-// ModuleGenesis is the standard form for module genesis functions
-type ModuleGenesis interface {
-	Preprocess(sdk.Context) ([]abci.ValidatorUpdate, error)
-	ValidateInput() error
-	ExportGenesis(sdk.Context) json.RawMessage
-}
+//// AppModule is the standard form for an application module
+//type AppModule interface {
+
+//// registers
+//RegisterCodec(*codec.Codec)
+//RegisterInvariants(CrisisKeeper)
+
+//// routes
+//MessageRoute()
+//NewMessageHandler()
+//QuerierRoute()
+//NewQuerierHandler()
+
+//// genesis
+//DefaultGenesisState() json.RawMessage
+//ValidateGenesis(json.RawMessage) error
+//ProcessGenesis(sdk.Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
+//ExportGenesis(sdk.Context) json.RawMessage
+//}

@@ -1,6 +1,7 @@
 package subspace
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -90,37 +91,31 @@ func concatKeys(key, subkey []byte) (res []byte) {
 }
 
 // Get parameter from store
-func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) error {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
-	err := s.cdc.UnmarshalJSON(bz, ptr)
-	if err != nil {
-		panic(err)
-	}
+	return s.cdc.UnmarshalJSON(bz, ptr)
 }
 
 // GetIfExists do not modify ptr if the stored parameter is nil
-func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) error {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
-		return
+		return errors.New("store key does not exist")
 	}
-	err := s.cdc.UnmarshalJSON(bz, ptr)
-	if err != nil {
-		panic(err)
-	}
+	return s.cdc.UnmarshalJSON(bz, ptr)
 }
 
 // GetWithSubkey returns a parameter with a given key and a subkey.
-func (s Subspace) GetWithSubkey(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.Get(ctx, concatKeys(key, subkey), ptr)
+func (s Subspace) GetWithSubkey(ctx sdk.Context, key, subkey []byte, ptr interface{}) error {
+	return s.Get(ctx, concatKeys(key, subkey), ptr)
 }
 
 // GetWithSubkeyIfExists  returns a parameter with a given key and a subkey but does not
 // modify ptr if the stored parameter is nil.
-func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.GetIfExists(ctx, concatKeys(key, subkey), ptr)
+func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key, subkey []byte, ptr interface{}) error {
+	return s.GetIfExists(ctx, concatKeys(key, subkey), ptr)
 }
 
 // Get raw bytes of parameter from store
@@ -141,10 +136,10 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 	return tstore.Has(key)
 }
 
-func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
+func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic("Parameter not registered")
+		return errors.New("Parameter not registered")
 	}
 
 	ty := attr.ty
@@ -154,51 +149,61 @@ func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
 	}
 
 	if pty != ty {
-		panic("Type mismatch with registered table")
+		return errors.New("Type mismatch with registered table")
 	}
+	return nil
 }
 
 // Set stores the parameter. It returns error if stored parameter has different type from input.
 // It also set to the transient store to record change.
-func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
+func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) error {
 	store := s.kvStore(ctx)
 
-	s.checkType(store, key, param)
+	if err := s.checkType(store, key, param); err != nil {
+		return err
+	}
 
 	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	store.Set(key, bz)
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
-
+	return nil
 }
 
 // SetWithSubkey set a parameter with a key and subkey
 // Checks parameter type only over the key
-func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
+func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) error {
 	store := s.kvStore(ctx)
 
-	s.checkType(store, key, param)
+	if err := s.checkType(store, key, param); err != nil {
+		return err
+	}
 
 	newkey := concatKeys(key, subkey)
 
 	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	store.Set(newkey, bz)
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(newkey, []byte{})
+	return nil
 }
 
 // Get to ParamSet
 func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.ParamSetPairs() {
-		s.Get(ctx, pair.Key, pair.Value)
+		err := s.Get(ctx, pair.Key, pair.Value)
+		if err != nil {
+			// TODO: return error - needs rewrite interfaces
+			// and handle error on the caller side
+		}
 	}
 }
 
@@ -210,7 +215,11 @@ func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 		// since SetStruct is meant to be used in InitGenesis
 		// so this method will not be called frequently
 		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
-		s.Set(ctx, pair.Key, v)
+		err := s.Set(ctx, pair.Key, v)
+		if err != nil {
+			// TODO: return error - needs rewrite interfaces
+			// and handle error on the caller side
+		}
 	}
 }
 
@@ -225,8 +234,8 @@ type ReadOnlySubspace struct {
 }
 
 // Exposes Get
-func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
-	ros.s.Get(ctx, key, ptr)
+func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) error {
+	return ros.s.Get(ctx, key, ptr)
 }
 
 // Exposes GetRaw

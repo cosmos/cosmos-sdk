@@ -5,11 +5,17 @@ import (
 )
 
 // Inflate every block, update inflation parameters once per hour
-func BeginBlocker(ctx sdk.Context, k Keeper) {
+func BeginBlocker(ctx sdk.Context, k Keeper) error {
 
 	// fetch stored minter & params
-	minter := k.GetMinter(ctx)
-	params := k.GetParams(ctx)
+	minter, err := k.GetMinter(ctx)
+	if err != nil {
+		return err
+	}
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
 
 	// recalculate inflation rate
 	totalSupply := k.sk.TotalTokens(ctx)
@@ -22,5 +28,6 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	mintedCoin := minter.BlockProvision(params)
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
 	k.sk.InflateSupply(ctx, mintedCoin.Amount)
+	return nil
 
 }

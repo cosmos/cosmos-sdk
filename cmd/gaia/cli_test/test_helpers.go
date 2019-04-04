@@ -3,6 +3,7 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -177,7 +178,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiad init -o --home=%s %s", f.GDHome, moniker)
-	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 
 	var chainID string
 	var initRes map[string]json.RawMessage
@@ -200,13 +201,13 @@ func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, fl
 // GenTx is gaiad gentx
 func (f *Fixtures) GenTx(name string, flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiad gentx --name=%s --home=%s --home-client=%s", name, f.GDHome, f.GCLIHome)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // CollectGenTxs is gaiad collect-gentxs
 func (f *Fixtures) CollectGenTxs(flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiad collect-gentxs --home=%s", f.GDHome)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // GDStart runs gaiad start with the appropriate flags and returns a process
@@ -245,19 +246,19 @@ func (f *Fixtures) KeysDelete(name string, flags ...string) {
 // KeysAdd is gaiacli keys add
 func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli keys add --home=%s %s", f.GCLIHome, name)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // KeysAddRecover prepares gaiacli keys add --recover
 func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
 }
 
 // KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
 func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli keys add --home=%s --recover %s --account %d --index %d", f.GCLIHome, name, account, index)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
 }
 
 // KeysShow is gaiacli keys show
@@ -293,7 +294,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 func (f *Fixtures) txSendWithConfirm(
@@ -301,25 +302,25 @@ func (f *Fixtures) txSendWithConfirm(
 ) (bool, string, string) {
 
 	cmd := fmt.Sprintf("../../../build/gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, client.DefaultKeyPass)
 }
 
 // TxSign is gaiacli tx sign
 func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx sign %v --from=%s %v", f.Flags(), signer, fileName)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxBroadcast is gaiacli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx broadcast %v %v", f.Flags(), fileName)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxEncode is gaiacli tx encode
 func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx encode %v %v", f.Flags(), fileName)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxMultisign is gaiacli tx multisign
@@ -341,13 +342,13 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
 	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxStakingUnbond is gaiacli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx staking unbond %s %v --from=%s %v", validator, shares, from, f.Flags())
-	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWrite(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 //___________________________________________________________________________________
@@ -357,19 +358,19 @@ func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress
 func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx gov submit-proposal %v --from=%s --type=%s", f.Flags(), from, typ)
 	cmd += fmt.Sprintf(" --title=%s --description=%s --deposit=%s", title, description, deposit)
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxGovDeposit is gaiacli tx gov deposit
 func (f *Fixtures) TxGovDeposit(proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx gov deposit %d %s --from=%s %v", proposalID, amount, from, f.Flags())
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxGovVote is gaiacli tx gov vote
 func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli tx gov vote %d %s --from=%s %v", proposalID, option, from, f.Flags())
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 //___________________________________________________________________________________

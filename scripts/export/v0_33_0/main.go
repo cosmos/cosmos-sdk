@@ -36,8 +36,8 @@ func main() {
 	genesis.AppState.MintData.Params.BlocksPerYear = 4855015
 
 	// proposal #2 updates
-	genesis.ConsensusParams.Block.MaxGas = 200000
-	genesis.ConsensusParams.Block.MaxBytes = 2000000
+	genesis.ConsensusParams.Block.MaxGas = 2000000
+	genesis.ConsensusParams.Block.MaxBytes = 200000
 
 	// enable transfers
 	genesis.AppState.BankData.SendEnabled = true

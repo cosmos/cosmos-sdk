@@ -45,6 +45,42 @@ func TestNewGenesisFile(t *testing.T) {
 	os.Remove(path)
 }
 
+func TestValidateBasic(t *testing.T) {
+	// no start time
+	err := ValidateBasic(path, "")
+	require.Error(t, err)
+
+	// no path
+	err = ValidateBasic("", genesisTime)
+	require.Error(t, err)
+
+	// not a valid time
+	err = ValidateBasic(path, "not a timestamp")
+	require.Error(t, err)
+
+	// not a JSON file
+	err = ValidateBasic("genesis.txt", genesisTime)
+	require.Error(t, err)
+
+	// file doesn't exist
+	err = ValidateBasic(path, genesisTime)
+	require.Error(t, err)
+
+	// success
+	genesis := tmtypes.GenesisDoc{ChainID: chainID}
+
+	output, err := json.Marshal(genesis)
+	require.NoError(t, err)
+
+	err = ioutil.WriteFile(path, output, 0644)
+	require.NoError(t, err)
+
+	err = ValidateBasic(path, genesisTime)
+	require.NoError(t, err)
+
+	os.Remove(path)
+}
+
 func TestDefaultGenesisDoc(t *testing.T) {
 	expectedGenDoc := tmtypes.GenesisDoc{ChainID: chainID}
 	genDoc, err := defaultGenesisDoc(chainID)

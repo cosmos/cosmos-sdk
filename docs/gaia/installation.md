@@ -61,7 +61,7 @@ go version go1.12 linux/amd64
 Build tags indicate special features that have been enabled in the binary.
 
 | Build Tag | Description                                     |
-| --------- | ----------------------------------------------- |
+|-----------|-------------------------------------------------|
 | netgo     | Name resolution will use pure Go code           |
 | ledger    | Ledger devices are supported (hardware wallets) |
 

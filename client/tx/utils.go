@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 // SearchTxs performs a search for transactions for a given set of tags via

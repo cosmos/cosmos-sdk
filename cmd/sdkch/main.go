@@ -198,8 +198,8 @@ func generateChangelog(version string) {
 }
 
 func pruneEmptyDirectories() {
-	for sectionDir, _ := range sections {
-		for stanzaDir, _ := range stanzas {
+	for sectionDir := range sections {
+		for stanzaDir := range stanzas {
 			mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
 		}
 		mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))

@@ -27,14 +27,14 @@ genesis = json.loads(raw)
 # update genesis with breaking changes
 genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
 del genesis['consensus_params']['block_size']
-genesis['consensus_params']['block']['time_iota_ms'] = 1000 # default tm value
+genesis['consensus_params']['block']['time_iota_ms'] = '1000' # default tm value
 
 # proposal #1 updates
-genesis['app_state']['mint']['params']['blocks_per_year'] = 4855015
+genesis['app_state']['mint']['params']['blocks_per_year'] = '4855015'
 
 # proposal #2 updates
-genesis['consensus_params']['block']['max_gas'] = 2000000
-genesis['consensus_params']['block']['max_bytes'] = 200000
+genesis['consensus_params']['block']['max_gas'] = '2000000'
+genesis['consensus_params']['block']['max_bytes'] = '200000'
 
 # enable transfers
 genesis['app_state']['bank']['send_enabled'] = True

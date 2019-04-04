@@ -114,6 +114,8 @@
   either the truncated coins or the change coins.
 * [\#3915](https://github.com/cosmos/cosmos-sdk/issues/3915) Remove ';' delimiting support from ParseDecCoins
 * [\#3977](https://github.com/cosmos/cosmos-sdk/issues/3977) Fix docker image build
+* [\#4020](https://github.com/cosmos/cosmos-sdk/issues/4020) Fix queryDelegationRewards by returning an error
+when the validator or delegation do not exist.
 
 ## 0.33.2
 

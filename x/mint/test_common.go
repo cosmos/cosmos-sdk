@@ -10,6 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 type testInput struct {
@@ -68,7 +69,8 @@ func newTestInput(t *testing.T) testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 
-	mintKeeper.SetParams(ctx, DefaultParams())
+	err = mintKeeper.SetParams(ctx, DefaultParams())
+	require.Nil(t, err)
 	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
 
 	return testInput{ctx, cdc, mintKeeper}

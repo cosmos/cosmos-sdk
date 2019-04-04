@@ -10,7 +10,7 @@ import (
 )
 
 // slashing begin block functionality
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Tags {
+func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (sdk.Tags, error) {
 
 	// Iterate over all the validators which *should* have signed this block
 	// store whether or not they have actually signed it and slash/unbond any
@@ -27,9 +27,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Ta
 		case tmtypes.ABCIEvidenceTypeDuplicateVote:
 			sk.handleDoubleSign(ctx, evidence.Validator.Address, evidence.Height, evidence.Time, evidence.Validator.Power)
 		default:
-			ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("ignored unknown evidence type: %s", evidence.Type))
+			return sdk.EmptyTags(), fmt.Errorf("ignored unknown evidence type: %s", evidence.Type)
 		}
 	}
 
-	return sdk.EmptyTags()
+	return sdk.EmptyTags(), nil
 }

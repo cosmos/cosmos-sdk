@@ -538,6 +538,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	var err error
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -572,7 +573,10 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		res, err = app.beginBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -874,12 +878,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	var err error
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		res, err = app.endBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return

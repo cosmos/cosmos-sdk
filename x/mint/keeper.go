@@ -1,6 +1,8 @@
 package mint
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -62,11 +64,12 @@ func ParamKeyTable() params.KeyTable {
 //______________________________________________________________________
 
 // get the minter
-func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
+func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter, err error) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(minterKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		err = errors.New("Stored fee pool should not have been nil")
+		return
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &minter)
 	return
@@ -82,13 +85,13 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 //______________________________________________________________________
 
 // get inflation params from the global param store
-func (k Keeper) GetParams(ctx sdk.Context) Params {
+func (k Keeper) GetParams(ctx sdk.Context) (Params, error) {
 	var params Params
-	k.paramSpace.Get(ctx, ParamStoreKeyParams, &params)
-	return params
+	err := k.paramSpace.Get(ctx, ParamStoreKeyParams, &params)
+	return params, err
 }
 
 // set inflation params from the global param store
-func (k Keeper) SetParams(ctx sdk.Context, params Params) {
-	k.paramSpace.Set(ctx, ParamStoreKeyParams, &params)
+func (k Keeper) SetParams(ctx sdk.Context, params Params) error {
+	return k.paramSpace.Set(ctx, ParamStoreKeyParams, &params)
 }

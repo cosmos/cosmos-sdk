@@ -31,6 +31,8 @@ var (
 	defaultBondDenom = sdk.DefaultBondDenom
 )
 
+// XXX should use map for all module data
+
 // State to Unmarshal
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`

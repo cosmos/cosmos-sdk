@@ -88,20 +88,35 @@ func DefaultParams() Params {
 
 // MaxEvidenceAge - max age for evidence
 func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
-	k.paramspace.Get(ctx, KeyMaxEvidenceAge, &res)
+	err := k.paramspace.Get(ctx, KeyMaxEvidenceAge, &res)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	return
 }
 
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
-	k.paramspace.Get(ctx, KeySignedBlocksWindow, &res)
+	err := k.paramspace.Get(ctx, KeySignedBlocksWindow, &res)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	return
 }
 
 // Downtime slashing threshold
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
-	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
+	err := k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 
 	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
@@ -111,19 +126,34 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 
 // Downtime unbond duration
 func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
-	k.paramspace.Get(ctx, KeyDowntimeJailDuration, &res)
+	err := k.paramspace.Get(ctx, KeyDowntimeJailDuration, &res)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	return
 }
 
 // SlashFractionDoubleSign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
-	k.paramspace.Get(ctx, KeySlashFractionDoubleSign, &res)
+	err := k.paramspace.Get(ctx, KeySlashFractionDoubleSign, &res)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	return
 }
 
 // SlashFractionDowntime
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
-	k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
+	err := k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
+	if err != nil {
+		// TODO: return error - needs rewrite interfaces
+		// and handle error on the caller side
+		// check PR #3782
+	}
 	return
 }
 

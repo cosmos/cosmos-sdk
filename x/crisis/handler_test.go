@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/stretchr/testify/require"
 )
 
 var (

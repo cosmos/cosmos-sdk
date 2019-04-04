@@ -1,11 +1,12 @@
 package clientpackage
 
 import (
+	"github.com/spf13/cobra"
+	"github.com/tendermint/go-amino"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/go-amino"
 )
 
 // ModuleClient exports all CLI client functionality from the minting module.

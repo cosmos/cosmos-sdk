@@ -8,12 +8,12 @@ import (
 )
 
 // register all distribution invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper, stk types.StakingKeeper) {
-	c.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
+func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, stk types.StakingKeeper) {
+	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
-	c.RegisterRoute(types.ModuleName, "can-withdraw",
+	ir.RegisterRoute(types.ModuleName, "can-withdraw",
 		CanWithdrawInvariant(k, stk))
-	c.RegisterRoute(types.ModuleName, "reference-count",
+	ir.RegisterRoute(types.ModuleName, "reference-count",
 		ReferenceCountInvariant(k, stk))
 }
 

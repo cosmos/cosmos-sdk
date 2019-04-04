@@ -8,3 +8,8 @@ type Invariant func(ctx Context) error
 
 // group of Invarient
 type Invariants []Invariant
+
+// expected interface for routing invariants
+type InvariantRouter interface {
+	RegisterRoute(moduleName, route string, invar sdk.Invariant)
+}

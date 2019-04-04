@@ -77,6 +77,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 
 		resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteRedelegation,
+			tags.Category, tags.TxCategory,
 			tags.Delegator, dvvTriplet.DelegatorAddress.String(),
 			tags.SrcValidator, dvvTriplet.ValidatorSrcAddress.String(),
 			tags.DstValidator, dvvTriplet.ValidatorDstAddress.String(),
@@ -142,14 +143,15 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.DstValidator, msg.ValidatorAddress.String(),
 		tags.Moniker, msg.Description.Moniker,
 		tags.Identity, msg.Description.Identity,
 	)
 
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -192,14 +194,14 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	k.SetValidator(ctx, validator)
 
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
 		tags.DstValidator, msg.ValidatorAddress.String(),
 		tags.Moniker, description.Moniker,
 		tags.Identity, description.Identity,
 	)
 
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -218,13 +220,14 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return err.Result()
 	}
 
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.Delegator, msg.DelegatorAddress.String(),
 		tags.DstValidator, msg.ValidatorAddress.String(),
 	)
 
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -242,13 +245,14 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	}
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.Delegator, msg.DelegatorAddress.String(),
 		tags.SrcValidator, msg.ValidatorAddress.String(),
 		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
-	return sdk.Result{Data: finishTime, Tags: tags}
+	return sdk.Result{Data: finishTime, Tags: resTags}
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
@@ -268,6 +272,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.Delegator, msg.DelegatorAddress.String(),
 		tags.SrcValidator, msg.ValidatorSrcAddress.String(),
 		tags.DstValidator, msg.ValidatorDstAddress.String(),

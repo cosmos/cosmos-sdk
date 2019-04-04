@@ -207,7 +207,17 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	ctx, _ = ctx.CacheContext()
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
+	if val == nil {
+		// TODO: Should use ErrNoValidatorFound from staking/types
+		return nil, sdk.ErrInternal(fmt.Sprintf("validator %s does not exist", params.ValidatorAddress))
+	}
+
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
+	if del == nil {
+		// TODO: Should use ErrNoDelegation from staking/types
+		return nil, sdk.ErrInternal("delegation does not exist")
+	}
+
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 

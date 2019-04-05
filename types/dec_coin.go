@@ -366,7 +366,7 @@ func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
 		}
 
 		if !quotient.IsZero() {
-			res.Add(DecCoins{quotient})
+			res = res.Add(DecCoins{quotient})
 		}
 	}
 

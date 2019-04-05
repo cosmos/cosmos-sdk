@@ -43,9 +43,7 @@ func TestQueryParams(t *testing.T) {
 	err := input.cdc.UnmarshalJSON(res, &params)
 	require.NoError(t, err)
 
-	parm, err := input.mintKeeper.GetParams(input.ctx)
-	require.NoError(t, err)
-	require.Equal(t, parm, params)
+	require.Equal(t, input.mintKeeper.GetParams(input.ctx), params)
 }
 
 func TestQueryInflation(t *testing.T) {
@@ -59,9 +57,7 @@ func TestQueryInflation(t *testing.T) {
 	err := input.cdc.UnmarshalJSON(res, &inflation)
 	require.NoError(t, err)
 
-	parm, err := input.mintKeeper.GetMinter(input.ctx)
-	require.NoError(t, err)
-	require.Equal(t, parm.Inflation, inflation)
+	require.Equal(t, input.mintKeeper.GetMinter(input.ctx).Inflation, inflation)
 }
 
 func TestQueryAnnualProvisions(t *testing.T) {
@@ -75,7 +71,5 @@ func TestQueryAnnualProvisions(t *testing.T) {
 	err := input.cdc.UnmarshalJSON(res, &annualProvisions)
 	require.NoError(t, err)
 
-	parm, err := input.mintKeeper.GetMinter(input.ctx)
-	require.NoError(t, err)
-	require.Equal(t, parm.AnnualProvisions, annualProvisions)
+	require.Equal(t, input.mintKeeper.GetMinter(input.ctx).AnnualProvisions, annualProvisions)
 }

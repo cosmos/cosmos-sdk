@@ -291,7 +291,7 @@ func TestDecCoinsTruncateDecimal(t *testing.T) {
 	}
 }
 
-func TestQuoDecTruncate(t *testing.T) {
+func TestDecCoinsQuoDecTruncate(t *testing.T) {
 	x := MustNewDecFromStr("1.00")
 	y := MustNewDecFromStr("10000000000000000000.00")
 

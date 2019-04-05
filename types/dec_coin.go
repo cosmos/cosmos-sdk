@@ -338,21 +338,33 @@ func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 	return res
 }
 
-// divide all the coins by a decimal
+// QuoDec divides all the decimal coins by a decimal. It panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal coin")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Quo(d),
 		}
-		res[i] = quotient
+
+		if !quotient.IsZero() {
+			res = res.Add(DecCoins{quotient})
+		}
 	}
+
 	return res
 }
 
 // QuoDecTruncate divides all the decimal coins by a decimal, truncating. It
 // panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
 	if d.IsZero() {
 		panic("invalid zero decimal coin")

@@ -20,42 +20,26 @@ func ParamKeyTable() params.KeyTable {
 
 // UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
-	if err := k.paramstore.Get(ctx, types.KeyUnbondingTime, &res); err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	k.paramstore.Get(ctx, types.KeyUnbondingTime, &res)
 	return
 }
 
 // MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
-	if err := k.paramstore.Get(ctx, types.KeyMaxValidators, &res); err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	k.paramstore.Get(ctx, types.KeyMaxValidators, &res)
 	return
 }
 
 // MaxEntries - Maximum number of simultaneous unbonding
 // delegations or redelegations (per pair/trio)
 func (k Keeper) MaxEntries(ctx sdk.Context) (res uint16) {
-	if err := k.paramstore.Get(ctx, types.KeyMaxEntries, &res); err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	k.paramstore.Get(ctx, types.KeyMaxEntries, &res)
 	return
 }
 
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
-	if err := k.paramstore.Get(ctx, types.KeyBondDenom, &res); err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
 	return
 }
 

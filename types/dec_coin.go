@@ -331,7 +331,7 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 	if d.IsZero() {
-		panic("invalid zero decimal coin")
+		panic("invalid zero decimal")
 	}
 
 	var res DecCoins
@@ -354,7 +354,7 @@ func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDec(d Dec) DecCoins {
 	if d.IsZero() {
-		panic("invalid zero decimal coin")
+		panic("invalid zero decimal")
 	}
 
 	var res DecCoins
@@ -378,7 +378,7 @@ func (coins DecCoins) QuoDec(d Dec) DecCoins {
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
 	if d.IsZero() {
-		panic("invalid zero decimal coin")
+		panic("invalid zero decimal")
 	}
 
 	var res DecCoins

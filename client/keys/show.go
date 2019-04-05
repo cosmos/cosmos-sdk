@@ -3,6 +3,7 @@ package keys
 import (
 	"errors"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/cosmos/cosmos-sdk/crypto"

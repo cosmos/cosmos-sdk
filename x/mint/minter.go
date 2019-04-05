@@ -6,22 +6,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Minter represents the minting state
+// Minter represents the minting state.
 type Minter struct {
 	Inflation        sdk.Dec `json:"inflation"`         // current annual inflation rate
 	AnnualProvisions sdk.Dec `json:"annual_provisions"` // current annual expected provisions
 }
 
-// Create a new minter object
+// NewMinter returns a new Minter object with the given inflation and annual
+// provisions values.
 func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
-
 	return Minter{
 		Inflation:        inflation,
 		AnnualProvisions: annualProvisions,
 	}
 }
 
-// minter object for a new chain
+// InitialMinter returns an initial Minter object with a given inflation value.
 func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
 		inflation,
@@ -29,8 +29,8 @@ func InitialMinter(inflation sdk.Dec) Minter {
 	)
 }
 
-// default initial minter object for a new chain
-// which uses an inflation rate of 13%
+// DefaultInitialMinter returns a default initial Minter object for a new chain
+// which uses an inflation rate of 13%.
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
 		sdk.NewDecWithPrec(13, 2),
@@ -45,10 +45,8 @@ func validateMinter(minter Minter) error {
 	return nil
 }
 
-// get the new inflation rate for the next hour
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
-	inflation sdk.Dec) {
-
+// NextInflationRate returns the new inflation rate for the next hour.
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
@@ -61,8 +59,8 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 		Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
 
-	// increase the new annual inflation for this next cycle
-	inflation = m.Inflation.Add(inflationRateChange)
+	// adjust the new annual inflation for this next cycle
+	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}
@@ -73,14 +71,14 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	return inflation
 }
 
-// calculate the annual provisions based on current total supply and inflation rate
-func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Int) (
-	provisions sdk.Dec) {
-
+// NextAnnualProvisions returns the annual provisions based on current total
+// supply and inflation rate.
+func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 	return m.Inflation.MulInt(totalSupply)
 }
 
-// get the provisions for a block based on the annual provisions rate
+// BlockProvision returns the provisions for a block based on the annual
+// provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
 	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())

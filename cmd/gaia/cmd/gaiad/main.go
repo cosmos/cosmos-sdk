@@ -22,6 +22,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// gaiad custom flags
+const flagAssertInvariantsBlockly = "assert-invariants-blockly"
+
+var assertInvariantsBlockly bool
+
 func main() {
 	cdc := app.MakeCodec()
 
@@ -50,6 +55,8 @@ func main() {
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
+	rootCmd.PersistentFlags().BoolVar(&assertInvariantsBlockly, flagAssertInvariantsBlockly,
+		false, "Assert registered invariants on a blockly basis")
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870
@@ -59,7 +66,7 @@ func main() {
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
 	return app.NewGaiaApp(
-		logger, db, traceStore, true,
+		logger, db, traceStore, true, assertInvariantsBlockly,
 		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 	)
@@ -68,14 +75,15 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+
 	if height != -1 {
-		gApp := app.NewGaiaApp(logger, db, traceStore, false)
+		gApp := app.NewGaiaApp(logger, db, traceStore, false, false)
 		err := gApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
 		return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
-	gApp := app.NewGaiaApp(logger, db, traceStore, true)
+	gApp := app.NewGaiaApp(logger, db, traceStore, true, false)
 	return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

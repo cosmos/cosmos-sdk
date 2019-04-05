@@ -42,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -198,7 +199,7 @@ func InitClientHome(t *testing.T, dir string) string {
 // TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
-// and initAddrs are the accounts to initialize with some steak tokens. It
+// and initAddrs are the accounts to initialize with some stake tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
 	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
@@ -220,14 +221,14 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true)
+	app := gapp.NewGaiaApp(logger, db, nil, true, false)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
 	require.Nil(t, err)
 	genDoc.Validators = nil
-	genDoc.SaveAs(genesisFile)
+	require.NoError(t, genDoc.SaveAs(genesisFile))
 	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
@@ -299,6 +300,9 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
 
+	// initialize crisis data
+	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+
 	// double check inflation is set according to the minting boolean flag
 	if minting {
 		require.Equal(t, sdk.MustNewDecFromStr("15000.0"),
@@ -337,7 +341,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	cleanup = func() {
 		logger.Debug("cleaning up LCD initialization")
-		node.Stop()
+		node.Stop() //nolint:errcheck
 		node.Wait()
 		lcd.Close()
 	}
@@ -390,11 +394,11 @@ func startTM(
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
 	registerRoutes(rs)
-	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
+	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger)
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger, tmrpc.DefaultConfig()) //nolint:errcheck
 	return listener, nil
 }
 
@@ -408,6 +412,7 @@ func registerRoutes(rs *RestServer) {
 	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	mintrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a
@@ -559,7 +564,7 @@ func getKeys(t *testing.T, port string) []keys.KeyOutput {
 
 // POST /keys Create a new account locally
 func doKeysPost(t *testing.T, port, name, password, mnemonic string, account int, index int) keys.KeyOutput {
-	pk := clientkeys.AddNewKey{name, password, mnemonic, account, index}
+	pk := clientkeys.NewAddNewKey(name, password, mnemonic, account, index)
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
@@ -585,7 +590,7 @@ func getKeysSeed(t *testing.T, port string) string {
 
 // POST /keys/{name}/recove Recover a account from a seed
 func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, mnemonic string, account uint32, index uint32) {
-	pk := clientkeys.RecoverKey{recoverPassword, mnemonic, int(account), int(index)}
+	pk := clientkeys.NewRecoverKey(recoverPassword, mnemonic, int(account), int(index))
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
 
@@ -613,7 +618,7 @@ func getKey(t *testing.T, port, name string) keys.KeyOutput {
 
 // PUT /keys/{name} Update the password for this account in the KMS
 func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail bool) {
-	kr := clientkeys.UpdateKeyReq{oldPassword, newPassword}
+	kr := clientkeys.NewUpdateKeyReq(oldPassword, newPassword)
 	req, err := cdc.MarshalJSON(kr)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)
@@ -627,7 +632,7 @@ func updateKey(t *testing.T, port, name, oldPassword, newPassword string, fail b
 
 // DELETE /keys/{name} Remove an account
 func deleteKey(t *testing.T, port, name, password string) {
-	dk := clientkeys.DeleteKeyReq{password}
+	dk := clientkeys.NewDeleteKeyReq(password)
 	req, err := cdc.MarshalJSON(dk)
 	require.NoError(t, err)
 	keyEndpoint := fmt.Sprintf("/keys/%s", name)
@@ -651,7 +656,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, tx auth.StdTx) (*http.Response, string) {
-	txReq := clienttx.BroadcastReq{Tx: tx, Return: "block"}
+	txReq := clienttx.BroadcastReq{Tx: tx, Mode: "block"}
 
 	req, err := cdc.MarshalJSON(txReq)
 	require.Nil(t, err)
@@ -668,7 +673,7 @@ func doTransfer(
 	resp, body, recvAddr := doTransferWithGas(
 		t, port, seed, name, memo, pwd, addr, "", 1.0, false, true, fees,
 	)
-	require.Equal(t, http.StatusOK, resp.StatusCode, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	var txResp sdk.TxResponse
 	err := cdc.UnmarshalJSON([]byte(body), &txResp)
@@ -815,11 +820,11 @@ func doDelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgDelegationsInput{
+	msg := stakingrest.DelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		Delegation:       sdk.NewCoin(sdk.DefaultBondDenom, amount),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -839,13 +844,6 @@ func doDelegate(
 	return txResp
 }
 
-type msgDelegationsInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	Delegation       sdk.Coin       `json:"delegation"`
-}
-
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(
 	t *testing.T, port, name, pwd string, delAddr sdk.AccAddress,
@@ -859,11 +857,11 @@ func doUndelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgUndelegateInput{
+	msg := stakingrest.UndelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		SharesAmount:     amount.ToDec(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -882,13 +880,6 @@ func doUndelegate(
 	return txResp
 }
 
-type msgUndelegateInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	SharesAmount     sdk.Dec        `json:"shares"`
-}
-
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(
 	t *testing.T, port, name, pwd string, delAddr sdk.AccAddress, valSrcAddr,
@@ -902,12 +893,12 @@ func doBeginRedelegation(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := stakingrest.MsgBeginRedelegateInput{
+	msg := stakingrest.RedelegateRequest{
 		BaseReq:             baseReq,
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,
 		ValidatorDstAddress: valDstAddr,
-		SharesAmount:        amount.ToDec(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -924,14 +915,6 @@ func doBeginRedelegation(
 	require.NoError(t, err)
 
 	return txResp
-}
-
-type msgBeginRedelegateInput struct {
-	BaseReq             rest.BaseReq   `json:"base_req"`
-	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
-	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
-	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
-	SharesAmount        sdk.Dec        `json:"shares"`
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator
@@ -1408,6 +1391,21 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var signingInfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
+	require.Nil(t, err)
+
+	return signingInfo
+}
+
+// ----------------------------------------------------------------------
+// ICS 23 - SlashingList
+// ----------------------------------------------------------------------
+// GET /slashing/signing_infos Get sign info of all validators with pagination
+func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", "/slashing/signing_infos?page=1&limit=1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var signingInfo []slashing.ValidatorSigningInfo
 	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
 	require.Nil(t, err)
 

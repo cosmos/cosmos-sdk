@@ -22,7 +22,7 @@ func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(sdk.Coins{}, DefaultParams())
+	return NewGenesisState(sdk.NewCoins(), DefaultParams())
 }
 
 // InitGenesis - Init store state from genesis data

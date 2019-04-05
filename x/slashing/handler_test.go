@@ -51,10 +51,11 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
 
-	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.OneDec())
+	unbondAmt := sdk.NewCoin(sk.GetParams(ctx).BondDenom, sdk.OneInt())
+	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
 	got = staking.NewHandler(sk)(ctx, undelegateMsg)
 
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
@@ -92,10 +93,10 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-	unbondShares := bondAmount.ToDec()
+	unbondAmt := sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, bondAmount)
 
 	// unbond validator total self-delegations (which should jail the validator)
-	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondShares)
+	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
 	got = staking.NewHandler(stakingKeeper)(ctx, msgUndelegate)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
 
@@ -105,7 +106,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// verify validator still exists and is jailed
 	validator, found := stakingKeeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.True(t, validator.GetJailed())
+	require.True(t, validator.IsJailed())
 
 	// verify the validator cannot unjail itself
 	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))

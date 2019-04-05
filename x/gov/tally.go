@@ -49,7 +49,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	})
 
 	// iterate over all the votes
-	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
+	votesIterator := keeper.GetVotes(ctx, proposal.ProposalID)
 	defer votesIterator.Close()
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}

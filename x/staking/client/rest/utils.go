@@ -6,8 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,70 +26,15 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]sdk.TxResponse, error) {
-	page := 0
-	perPage := 100
-	prove := !cliCtx.TrustNode
-	query := fmt.Sprintf("%s='%s' AND %s='%s'", tags.Action, tag, tags.Delegator, delegatorAddr)
-	res, err := node.TxSearch(query, prove, page, perPage)
-	if err != nil {
-		return nil, err
+func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]sdk.TxResponse, error) {
+	page := 1
+	limit := 100
+	tags := []string{
+		fmt.Sprintf("%s='%s'", tags.Action, tag),
+		fmt.Sprintf("%s='%s'", tags.Delegator, delegatorAddr),
 	}
 
-	if prove {
-		for _, txData := range res.Txs {
-			err := tx.ValidateTxResult(cliCtx, txData)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return tx.FormatTxResults(cdc, res.Txs)
-}
-
-func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32srcValidator := vars["srcValidatorAddr"]
-		bech32dstValidator := vars["dstValidatorAddr"]
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		srcValidatorAddr, err := sdk.ValAddressFromBech32(bech32srcValidator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		dstValidatorAddr, err := sdk.ValAddressFromBech32(bech32dstValidator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		params := staking.QueryRedelegationParams{
-			DelegatorAddr:    delegatorAddr,
-			SrcValidatorAddr: srcValidatorAddr,
-			DstValidatorAddr: dstValidatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		res, err := cliCtx.QueryWithData(endpoint, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
-	}
+	return tx.SearchTxs(cliCtx, cdc, tags, page, limit)
 }
 
 func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {

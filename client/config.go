@@ -18,14 +18,11 @@ const (
 	flagGet = "get"
 )
 
-var configDefaults map[string]string
-
-func init() {
-	configDefaults = map[string]string{
-		"chain-id": "",
-		"output":   "text",
-		"node":     "tcp://localhost:26657",
-	}
+var configDefaults = map[string]string{
+	"chain-id":       "",
+	"output":         "text",
+	"node":           "tcp://localhost:26657",
+	"broadcast-mode": "sync",
 }
 
 // ConfigCmd returns a CLI command to interactively create a
@@ -56,13 +53,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("wrong number of arguments")
 	}
 
-	// Load configuration
+	// load configuration
 	tree, err := loadConfigFile(cfgFile)
 	if err != nil {
 		return err
 	}
 
-	// Print the config and exit
+	// print the config and exit
 	if len(args) == 0 {
 		s, err := tree.ToTomlString()
 		if err != nil {
@@ -73,45 +70,54 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	key := args[0]
-	// Get value action
+
+	// get config value for a given key
 	if getAction {
 		switch key {
 		case "trace", "trust-node", "indent":
 			fmt.Println(tree.GetDefault(key, false).(bool))
+
 		default:
 			if defaultValue, ok := configDefaults[key]; ok {
 				fmt.Println(tree.GetDefault(key, defaultValue).(string))
 				return nil
 			}
+
 			return errUnknownConfigKey(key)
 		}
+
 		return nil
 	}
 
-	// Set value action
 	if len(args) != 2 {
 		return fmt.Errorf("wrong number of arguments")
 	}
+
 	value := args[1]
+
+	// set config value for a given key
 	switch key {
-	case "chain-id", "output", "node":
+	case "chain-id", "output", "node", "broadcast-mode":
 		tree.Set(key, value)
+
 	case "trace", "trust-node", "indent":
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err
 		}
+
 		tree.Set(key, boolVal)
+
 	default:
 		return errUnknownConfigKey(key)
 	}
 
-	// Save configuration to disk
+	// save configuration to disk
 	if err := saveConfigFile(cfgFile, tree); err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stderr, "configuration saved to %s\n", cfgFile)
 
+	fmt.Fprintf(os.Stderr, "configuration saved to %s\n", cfgFile)
 	return nil
 }
 
@@ -144,7 +150,7 @@ func loadConfigFile(cfgFile string) (*toml.Tree, error) {
 }
 
 func saveConfigFile(cfgFile string, tree *toml.Tree) error {
-	fp, err := os.OpenFile(cfgFile, os.O_WRONLY|os.O_CREATE, 0644)
+	fp, err := os.OpenFile(cfgFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}

@@ -211,7 +211,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdk.Coins{}
+		return sdk.NewCoins()
 	}
 	return acc.GetCoins()
 }
@@ -255,7 +255,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 		return nil, nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	oldCoins, spendableCoins := sdk.Coins{}, sdk.Coins{}
+	oldCoins, spendableCoins := sdk.NewCoins(), sdk.NewCoins()
 
 	acc := getAccount(ctx, ak, addr)
 	if acc != nil {

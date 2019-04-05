@@ -237,9 +237,16 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAd
 
 // set accumulated commission for a validator
 func (k Keeper) SetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAddress, commission types.ValidatorAccumulatedCommission) {
+	var bz []byte
+
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(commission)
-	store.Set(GetValidatorAccumulatedCommissionKey(val), b)
+	if commission.IsZero() {
+		bz = k.cdc.MustMarshalBinaryLengthPrefixed(types.InitialValidatorAccumulatedCommission())
+	} else {
+		bz = k.cdc.MustMarshalBinaryLengthPrefixed(commission)
+	}
+
+	store.Set(GetValidatorAccumulatedCommissionKey(val), bz)
 }
 
 // delete accumulated commission for a validator

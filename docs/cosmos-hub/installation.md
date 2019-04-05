@@ -15,7 +15,7 @@ source ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.11.5+** is required for the Cosmos SDK.
+**Go 1.12.1+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries
@@ -25,7 +25,7 @@ If necessary, make sure you `git checkout` the correct
 [released version](https://github.com/cosmos/cosmos-sdk/releases).
 
 ::: warning
-For the mainnet, make sure your version if greather than `v0.33.0`
+For the mainnet, make sure your version if greater than `v0.33.0`
 ::: 
 
 ```bash
@@ -66,7 +66,7 @@ Build tags indicate special features that have been enabled in the binary.
 
 ### Install binary distribution via snap (Linux only)
 
-**Do not use snap at this time to install the binaries for production until we have a reproduceable binary system.**
+**Do not use snap at this time to install the binaries for production until we have a reproducible binary system.**
 
 
 ### Next

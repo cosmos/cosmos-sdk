@@ -44,7 +44,7 @@ type CLIContext struct {
 	AccountStore  string
 	TrustNode     bool
 	UseLedger     bool
-	Async         bool
+	BroadcastMode string
 	PrintResponse bool
 	Verifier      tmlite.Verifier
 	VerifierHome  string
@@ -67,7 +67,8 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName, err := GetFromFields(from)
+	genOnly := viper.GetBool(client.FlagGenerateOnly)
+	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -89,11 +90,11 @@ func NewCLIContext() CLIContext {
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
-		Async:         viper.GetBool(client.FlagAsync),
+		BroadcastMode: viper.GetString(client.FlagBroadcastMode),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),
-		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
+		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
@@ -247,6 +248,13 @@ func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
 	return ctx
 }
 
+// WithBroadcastMode returns a copy of the context with an updated broadcast
+// mode.
+func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
+	ctx.BroadcastMode = mode
+	return ctx
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors
@@ -259,7 +267,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	case "json":
 		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
 		} else {
 			out, err = ctx.Codec.MarshalJSON(toPrint)
 		}
@@ -274,10 +282,20 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 }
 
 // GetFromFields returns a from account address and Keybase name given either
-// an address or key name.
-func GetFromFields(from string) (sdk.AccAddress, string, error) {
+// an address or key name. If genOnly is true, only a valid Bech32 cosmos
+// address is returned.
+func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
+	}
+
+	if genOnly {
+		addr, err := sdk.AccAddressFromBech32(from)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return addr, "", nil
 	}
 
 	keybase, err := keys.NewKeyBaseFromHomeFlag()

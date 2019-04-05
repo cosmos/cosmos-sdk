@@ -9,42 +9,45 @@ import (
 )
 
 // allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
+func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
+	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
+
 	logger := ctx.Logger().With("module", "x/distribution")
 
-	// fetch collected fees & fee pool
+	// fetch and clear the collected fees for distribution, since this is
+	// called in BeginBlock, collected fees will be from the previous block
+	// (and distributed to the previous proposer)
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
-	feePool := k.GetFeePool(ctx)
-
-	// clear collected fees, which will now be distributed
 	k.feeCollectionKeeper.ClearCollectedFees(ctx)
 
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	if totalPower == 0 {
+	feePool := k.GetFeePool(ctx)
+	if totalPreviousPower == 0 {
 		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected)
 		k.SetFeePool(ctx, feePool)
 		return
 	}
 
 	// calculate fraction votes
-	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
+	previousFractionVotes := sdk.NewDec(sumPreviousPrecommitPower).Quo(sdk.NewDec(totalPreviousPower))
 
-	// calculate proposer reward
+	// calculate previous proposer reward
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
-	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(fractionVotes))
+	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(previousFractionVotes))
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
 
-	// pay proposer
+	// pay previous proposer
 	remaining := feesCollected
-	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
+
 	if proposerValidator != nil {
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = remaining.Sub(proposerReward)
 	} else {
-		// proposer can be unknown if say, the unbonding period is 1 block, so
+		// previous proposer can be unknown if say, the unbonding period is 1 block, so
 		// e.g. a validator undelegates at block X, it's removed entirely by
 		// block X+1's endblock, then X+2 we need to refer to the previous
 		// proposer for X+1, but we've forgotten about them.
@@ -53,7 +56,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 				"This should happen only if the proposer unbonded completely within a single block, "+
 				"which generally should not happen except in exceptional circumstances (or fuzz testing). "+
 				"We recommend you investigate immediately.",
-			proposer.String()))
+			previousProposer.String()))
 	}
 
 	// calculate fraction allocated to validators
@@ -62,14 +65,13 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	for _, vote := range votes {
+	for _, vote := range previousVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPower))
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-		reward = reward.Intersect(remaining)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}

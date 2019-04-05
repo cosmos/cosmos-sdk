@@ -296,6 +296,7 @@ func TestInitChainer(t *testing.T) {
 	// stores are mounted and private members are set - sealing baseapp
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
+	require.Equal(t, int64(0), app.LastBlockHeight())
 
 	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 
@@ -308,6 +309,7 @@ func TestInitChainer(t *testing.T) {
 
 	app.Commit()
 	res = app.Query(query)
+	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, res.Value)
 
 	// reload app
@@ -316,14 +318,17 @@ func TestInitChainer(t *testing.T) {
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
+	require.Equal(t, int64(1), app.LastBlockHeight())
 
 	// ensure we can still query after reloading
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
 
 	// commit and ensure we can still query
-	app.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
+
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
 }
@@ -514,7 +519,6 @@ func TestCheckTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	nTxs := int64(5)
-
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
@@ -536,7 +540,8 @@ func TestCheckTx(t *testing.T) {
 	require.Equal(t, nTxs, storedCounter)
 
 	// If a block is committed, CheckTx state should be reset.
-	app.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
@@ -567,16 +572,22 @@ func TestDeliverTx(t *testing.T) {
 
 	nBlocks := 3
 	txPerHeight := 5
+
 	for blockN := 0; blockN < nBlocks; blockN++ {
-		app.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
+
 			txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
 			require.NoError(t, err)
+
 			res := app.DeliverTx(txBytes)
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 		}
+
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
@@ -610,48 +621,47 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 
 	// run a multi-msg tx
 	// with all msgs the same route
-	{
-		app.BeginBlock(abci.RequestBeginBlock{})
-		tx := newTxCounter(0, 0, 1, 2)
-		txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
-		require.NoError(t, err)
-		res := app.DeliverTx(txBytes)
-		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		store := app.deliverState.ctx.KVStore(capKey1)
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	tx := newTxCounter(0, 0, 1, 2)
+	txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+	res := app.DeliverTx(txBytes)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		// tx counter only incremented once
-		txCounter := getIntFromStore(store, anteKey)
-		require.Equal(t, int64(1), txCounter)
+	store := app.deliverState.ctx.KVStore(capKey1)
 
-		// msg counter incremented three times
-		msgCounter := getIntFromStore(store, deliverKey)
-		require.Equal(t, int64(3), msgCounter)
-	}
+	// tx counter only incremented once
+	txCounter := getIntFromStore(store, anteKey)
+	require.Equal(t, int64(1), txCounter)
+
+	// msg counter incremented three times
+	msgCounter := getIntFromStore(store, deliverKey)
+	require.Equal(t, int64(3), msgCounter)
 
 	// replace the second message with a msgCounter2
-	{
-		tx := newTxCounter(1, 3)
-		tx.Msgs = append(tx.Msgs, msgCounter2{0})
-		tx.Msgs = append(tx.Msgs, msgCounter2{1})
-		txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
-		require.NoError(t, err)
-		res := app.DeliverTx(txBytes)
-		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		store := app.deliverState.ctx.KVStore(capKey1)
+	tx = newTxCounter(1, 3)
+	tx.Msgs = append(tx.Msgs, msgCounter2{0})
+	tx.Msgs = append(tx.Msgs, msgCounter2{1})
+	txBytes, err = codec.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+	res = app.DeliverTx(txBytes)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		// tx counter only incremented once
-		txCounter := getIntFromStore(store, anteKey)
-		require.Equal(t, int64(2), txCounter)
+	store = app.deliverState.ctx.KVStore(capKey1)
 
-		// original counter increments by one
-		// new counter increments by two
-		msgCounter := getIntFromStore(store, deliverKey)
-		require.Equal(t, int64(4), msgCounter)
-		msgCounter2 := getIntFromStore(store, deliverKey2)
-		require.Equal(t, int64(2), msgCounter2)
-	}
+	// tx counter only incremented once
+	txCounter = getIntFromStore(store, anteKey)
+	require.Equal(t, int64(2), txCounter)
+
+	// original counter increments by one
+	// new counter increments by two
+	msgCounter = getIntFromStore(store, deliverKey)
+	require.Equal(t, int64(4), msgCounter)
+	msgCounter2 := getIntFromStore(store, deliverKey2)
+	require.Equal(t, int64(2), msgCounter2)
 }
 
 // Interleave calls to Check and Deliver and ensure
@@ -692,7 +702,8 @@ func TestSimulateTx(t *testing.T) {
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
-		app.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: count}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		tx := newTxCounter(count, count)
 		txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
@@ -737,7 +748,9 @@ func TestRunInvalidTransaction(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
-	app.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// Transaction with no messages
 	{
@@ -847,7 +860,8 @@ func TestTxGasLimits(t *testing.T) {
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
-	app.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	testCases := []struct {
 		tx      *txTest
@@ -932,7 +946,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
-			BlockSize: &abci.BlockSizeParams{
+			Block: &abci.BlockParams{
 				MaxGas: 100,
 			},
 		},
@@ -962,7 +976,8 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		tx := tc.tx
 
 		// reset the block gas
-		app.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
@@ -1005,7 +1020,9 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	app.InitChain(abci.RequestInitChain{})
 	registerTestCodec(cdc)
-	app.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// execute a tx that will fail ante handler execution
 	//
@@ -1105,14 +1122,16 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
-			BlockSize: &abci.BlockSizeParams{
+			Block: &abci.BlockParams{
 				MaxGas: 9,
 			},
 		},
 	})
 
 	app.InitChain(abci.RequestInitChain{})
-	app.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	tx := newTxCounter(5, 0)
 	tx.setFailOnAnte(true)
@@ -1174,7 +1193,9 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a DeliverTx before we commit
-	app.BeginBlock(abci.RequestBeginBlock{})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	resTx = app.Deliver(tx)
 	require.True(t, resTx.IsOK(), fmt.Sprintf("%v", resTx))
 	res = app.Query(query)
@@ -1215,4 +1236,20 @@ func TestP2PQuery(t *testing.T) {
 	}
 	res = app.Query(idQuery)
 	require.Equal(t, uint32(4), res.Code)
+}
+
+func TestGetMaximumBlockGas(t *testing.T) {
+	app := setupBaseApp(t)
+
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
+
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	require.Panics(t, func() { app.getMaximumBlockGas() })
 }

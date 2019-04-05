@@ -47,7 +47,8 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
-	addrs = []sdk.AccAddress{
+	// test addresses
+	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
 	}
@@ -75,13 +76,15 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
-	return CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+
+	ctx, ak, _, dk, sk, fck, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	return ctx, ak, dk, sk, fck
 }
 
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
-	communityTax sdk.Dec) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
+	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
+	Keeper, staking.Keeper, DummyFeeCollectionKeeper, params.Keeper) {
 
 	initCoins := sdk.TokensFromTendermintPower(initPower)
 
@@ -112,15 +115,15 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, addr := range addrs {
+	for _, addr := range TestAddrs {
 		pool := sk.GetPool(ctx)
-		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{
 			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
 		})
 		require.Nil(t, err)
@@ -129,7 +132,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	fck := DummyFeeCollectionKeeper{}
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, fck, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())
@@ -140,7 +143,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountKeeper, keeper, sk, fck
+	return ctx, accountKeeper, bankKeeper, keeper, sk, fck, pk
 }
 
 //__________________________________________________________________________________
@@ -151,6 +154,10 @@ var heldFees sdk.Coins
 var _ types.FeeCollectionKeeper = DummyFeeCollectionKeeper{}
 
 // nolint
+func (fck DummyFeeCollectionKeeper) AddCollectedFees(_ sdk.Context, in sdk.Coins) sdk.Coins {
+	fck.SetCollectedFees(heldFees.Add(in))
+	return heldFees
+}
 func (fck DummyFeeCollectionKeeper) GetCollectedFees(_ sdk.Context) sdk.Coins {
 	return heldFees
 }
@@ -158,5 +165,5 @@ func (fck DummyFeeCollectionKeeper) SetCollectedFees(in sdk.Coins) {
 	heldFees = in
 }
 func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
-	heldFees = sdk.Coins{}
+	heldFees = sdk.NewCoins()
 }

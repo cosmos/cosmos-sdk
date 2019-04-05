@@ -125,14 +125,6 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			return
 		}
 
-		node, err := cliCtx.GetNode()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		// Get values from query
-
 		typesQuery := r.URL.Query().Get("type")
 		trimmedQuery := strings.TrimSpace(typesQuery)
 		if len(trimmedQuery) != 0 {
@@ -167,9 +159,9 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		}
 
 		for _, action := range actions {
-			foundTxs, errQuery := queryTxs(node, cliCtx, cdc, action, delegatorAddr)
+			foundTxs, errQuery := queryTxs(cliCtx, cdc, action, delegatorAddr)
 			if errQuery != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, errQuery.Error())
 			}
 			txs = append(txs, foundTxs...)
 		}

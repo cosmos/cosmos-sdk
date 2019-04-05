@@ -18,7 +18,7 @@ It is being used to build `Gaia`, the first implementation of the Cosmos Hub.
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.11.5+](https://golang.org/dl/)
+**Note**: Requires [Go 1.12.1+](https://golang.org/dl/)
 
 ## Cosmos Hub Mainnet
 

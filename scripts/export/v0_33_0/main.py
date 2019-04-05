@@ -29,6 +29,15 @@ genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
 del genesis['consensus_params']['block_size']
 genesis['consensus_params']['block']['time_iota_ms'] = '1000' # default tm value
 
+
+crisis_data = {
+  'constant_fee': {
+    'amount': '1333000000',  # $5,000 worth of uatoms
+    'denom': 'uatom'
+  }
+}
+genesis['app_state']['crisis'] = crisis_data
+
 # proposal #1 updates
 genesis['app_state']['mint']['params']['blocks_per_year'] = '4855015'
 

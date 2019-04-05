@@ -5,12 +5,13 @@ package rest
 import (
 	"errors"
 	"fmt"
-	"github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -84,15 +84,20 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 
 // allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, tokens sdk.DecCoins) {
-
 	// split tokens between validator and delegators according to commission
-	commission := tokens.MulDec(val.GetCommission())
-	shared := tokens.Sub(commission)
+	var shared sdk.DecCoins
 
-	// update current commission
-	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	currentCommission = currentCommission.Add(commission)
-	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	if !val.GetCommission().IsZero() {
+		commission := tokens.MulDec(val.GetCommission())
+		shared = tokens.Sub(commission)
+
+		// update current commission
+		currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+		currentCommission = currentCommission.Add(commission)
+		k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
+	} else {
+		shared = tokens
+	}
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())

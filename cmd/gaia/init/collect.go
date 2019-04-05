@@ -46,7 +46,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
+			genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := newInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
-			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, genDoc)
+			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, *genDoc)
 			if err != nil {
 				return err
 			}

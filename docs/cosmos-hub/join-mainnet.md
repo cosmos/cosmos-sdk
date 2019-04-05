@@ -56,7 +56,7 @@ Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/launch/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/launch/master/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
 Note we use the `latest` directory in the [launch repo](https://github.com/cosmos/launch) which contains details for the mainnet like the latest version and the genesis file. 
@@ -81,7 +81,7 @@ You can also ask for peers on the [Validators Riot Room](https://riot.im/app/#/r
 
 For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/tendermint-core/using-tendermint.md#peers).
 
-## A note on gas and fees
+## A Note on Gas and Fees
 
 ::: warning
 On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1.000.000uatom`

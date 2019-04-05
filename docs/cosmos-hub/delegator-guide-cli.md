@@ -27,22 +27,22 @@ of any kind.
 
 Please exercise extreme caution!
 
-## Table of contents
+## Table of Contents
 
 - [Installing `gaiacli`](#installing-gaiacli)
 - [Cosmos Accounts](#cosmos-accounts)
-    + [Restoring an account from the fundraiser](#restoring-an-account-from-the-fundraiser)
-    + [Creating an account](#creating-an-account)
-- [Accessing the Cosmos Hub network](#accessing-the-cosmos-hub-network)
-    + [Running your own full-node](#running-your-own-full-node)
-    + [Connecting to a remote full-node](#connecting-to-a-remote-full-node)
-- [Setting up `gaiacli`](#setting-up-gaiacli)
-- [Querying the state](#querying-the-state)
+    + [Restoring an Account from the Fundraiser](#restoring-an-account-from-the-fundraiser)
+    + [Creating an Account](#creating-an-account)
+- [Accessing the Cosmos Hub Network](#accessing-the-cosmos-hub-network)
+    + [Running Your Own Full-Node](#running-your-own-full-node)
+    + [Connecting to a Remote Full-Node](#connecting-to-a-remote-full-node)
+- [Setting Up `gaiacli`](#setting-up-gaiacli)
+- [Querying the State](#querying-the-state)
 - [Sending Transactions](#sending-transactions)
-    + [A note on gas and fees](#a-note-on-gas-and-fees)
-    + [Bonding Atoms and Withdrawing rewards](#bonding-atoms-and-withdrawing-rewards)
+    + [A Note on Gas and Fees](#a-note-on-gas-and-fees)
+    + [Bonding Atoms and Withdrawing Rewards](#bonding-atoms-and-withdrawing-rewards)
     + [Participating in Governance](#participating-in-governance)
-    + [Signing transactions from an offline computer](#signing-transactions-from-an-offline-computer)
+    + [Signing Transactions from an Offline Computer](#signing-transactions-from-an-offline-computer)
 
 ## Installing `gaiacli` 
 
@@ -109,7 +109,7 @@ The funds stored in an account are controlled by the private key. This private k
 
 The address is a public string with a human-readable prefix (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you funds, they send it to your address. It is computationally infeasible to find the private key associated with a given address. 
 
-### Restoring an account from the fundraiser
+### Restoring an Account from the Fundraiser
 
 ::: tip
 *NOTE: This section only concerns fundraiser participants*
@@ -117,7 +117,7 @@ The address is a public string with a human-readable prefix (e.g. `cosmos10snjt8
 
 If you participated in the fundraiser, you should be in possession of a 12-words mnemonic. Newly generated mnemonics use 24 words, but 12-word mnemonics are also compatible with all the Cosmos tools. 
 
-#### On a ledger device
+#### On a Ledger Device
 
 At the core of a ledger device, there is a mnemonic used to generate accounts on multiple blockchains (including the Cosmos Hub). Usually, you will create a new mnemonic when you initialize your ledger device. However, it is possible to tell the ledger device to use a mnemonic provided by the user instead. Let us go ahead and see how you can input the mnemonic you obtained during the fundraiser as the seed of your ledger device. 
 
@@ -138,7 +138,7 @@ Your ledger is now correctly set up with your fundraiser mnemonic! Do not lose t
 
 Next, click [here](#using-a-ledger-device) to learn how to generate an account. 
 
-#### On a computer
+#### On a Computer
 
 ::: warning
 **NOTE: It is more secure to perform this action on an offline computer**
@@ -155,11 +155,11 @@ You will be prompted to input a passphrase that is used to encrypt the private k
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
 
-### Creating an account
+### Creating an Account
 
 To create an account, you just need to have `gaiacli` installed. Before creating it, you need to know where you intend to store and interact with your private keys. The best options are to store them in an offline dedicated computer or a ledger device. Storing them on your regular online computer involves more risk, since anyone who infiltrates your computer through the internet could exfiltrate your private keys and steal your funds.
 
-#### Using a ledger device
+#### Using a Ledger Device
 
 ::: warning
 **Only use Ledger devices that you bought factory new or trust fully**
@@ -185,7 +185,7 @@ gaiacli keys add <yourAccountName> --ledger
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
 
-#### Using a computer 
+#### Using a Computer 
 
 ::: warning
 **NOTE: It is more secure to perform this action on an offline computer**
@@ -225,7 +225,7 @@ gaiacli keys add <yourKeyName> --recover --account 1
 This command will prompt you to input a passphrase as well as your mnemonic. Change the account number to generate a different account. 
 
 
-## Accessing the Cosmos Hub network
+## Accessing the Cosmos Hub Network
 
 In order to query the state and send transactions, you need a way to access the network. To do so, you can either run your own full-node, or connect to someone else's.
 
@@ -233,19 +233,19 @@ In order to query the state and send transactions, you need a way to access the 
 **NOTE: Do not share your mnemonic (12 or 24 words) with anyone. The only person who should ever need to know it is you. This is especially important if you are ever approached via email or direct message by someone requesting that you share your mnemonic for any kind of blockchain services or support. No one from Cosmos, the Tendermint team or the Interchain Foundation will ever send an email that asks for you to share any kind of account credentials or your mnemonic."**.
 ::: 
 
-### Running your own full-node
+### Running Your Own Full-Node
 
 This is the most secure option, but comes with relatively high resource requirements. In order to run your own full-node, you need good bandwidth and at least 1TB of disk space. 
 
 You will find the tutorial on how to install `gaiad` [here](https://cosmos.network/docs/gaia/installation.html), and the guide to run a full-node [here](https://cosmos.network/docs/gaia/join-mainnet.html).
 
-### Connecting to a remote full-node
+### Connecting to a Remote Full-Node
 
 If you do not want or cannot run your own node, you can connect to someone else's full-node. You should pick an operator you trust, because a malicious operator could return  incorrect query results or censor your transactions. However, they will never be able to steal your funds, as your private keys are stored locally on your computer or ledger device. Possible options of full-node operators include validators, wallet providers or exchanges. 
 
 In order to connect to the full-node, you will need an address of the following form: `https://77.87.106.33:26657` (*Note: This is a placeholder*). This address has to be communicated by the full-node operator you choose to trust. You will use this address in the [following section](#setting-up-gaiacli).
 
-## Setting up `gaiacli`
+## Setting Up `gaiacli`
 
 ::: tip
 **Before setting up `gaiacli`, make sure you have set up a way to [access the Cosmos Hub network](#accessing-the-cosmos-hub-network)**
@@ -289,7 +289,7 @@ Finally, let us set the `chain-id` of the blockchain we want to interact with:
 gaiacli config chain-id cosmoshub-1
 ```
 
-## Querying the state
+## Querying the State
 
 ::: tip
 **Before you can bond atoms and withdraw rewards, you need to [set up `gaiacli`](#setting-up-gaiacli)**
@@ -337,10 +337,10 @@ For each command, you can use the `-h` or `--help` flag to get more information.
 ## Sending Transactions
 
 ::: warning
-On Cosmos Hub mainnet, the accepted denom is `uatom` (micro-Atom), where `1atom = 1,000,000uatom`
+On Cosmos Hub mainnet, the accepted denom is `uatom`, where `1atom = 1,000,000uatom`
 :::
 
-### A note on gas and fees
+### A Note on Gas and Fees
 
 Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
 
@@ -358,7 +358,7 @@ The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you h
 For mainnet, the recommended `gas-prices` is `0.025uatom`. 
 ::: 
 
-### Bonding Atoms and Withdrawing rewards
+### Bonding Atoms and Withdrawing Rewards
 
 ::: tip
 **Before you can bond atoms and withdraw rewards, you need to [set up `gaiacli`](#setting-up-gaiacli) and [create an account](#creating-an-account)**
@@ -378,6 +378,14 @@ For mainnet, the recommended `gas-prices` is `0.025uatom`.
 
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
+
+// Redelegate a certain amount of Atoms from a validator to another
+// Can only be used if already bonded to a validator
+// Redelegation takes effect immediately, there is no waiting period to redelegate
+// After a redelegation, no other redelegation can be made from the account for the next 3 weeks
+// ex value for flags: <stcValidatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToRedelegate>=100000000uatom, <gasPrice>=0.025uatom
+
+gaiacli tx staking redelegate <srcValidatorAddress> <destValidatorAddress> <amountToRedelegate> --from <delegatorKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
 
 // Withdraw all rewards
 // ex value for flag: <gasPrice>=0.025uatom
@@ -413,9 +421,9 @@ gaiacli query tx <txHash>
 
 Double check with a block explorer if you interact with the network through a trusted full-node. 
 
-## Participating in governance
+## Participating in Governance
 
-#### Primer on governance
+#### Primer on Governance
 
 The Cosmos Hub has a built-in governance system that lets bonded Atom holders vote on proposals. There are three types of proposal:
 
@@ -429,7 +437,7 @@ Once the `deposit` reaches `minDeposit`, the proposal enters the `voting_period`
 
 At the end of the voting period, the proposal is accepted if there are more than 50% `Yes` votes (excluding `Abstain ` votes) and less than 33.33% of `NoWithVeto` votes (excluding `Abstain` votes).
 
-#### In practice
+#### In Practice
 
 ::: tip
 **Before you can bond atoms and withdraw rewards, you need to [bond Atoms](#bonding-atoms-and-withdrawing-rewards)**
@@ -459,7 +467,7 @@ gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-adjustment 1.5 --
 gaiacli tx gov vote <proposalID> <option> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice> --from <delegatorKeyName>
 ```
 
-### Signing transactions from an offline computer
+### Signing Transactions From an Offline Computer
 
 If you do not have a ledger device and want to interact with your private key on an offline computer, you can use the following procedure. First, generate an unsigned transaction on an **online computer** with the following command (example with a bonding transaction):
 

@@ -55,7 +55,7 @@ When specifying commission parameters, the `commission-max-change-rate` is used 
 
 You can confirm that you are in the validator set by using a third party explorer.
 
-## Participate in genesis as a validator
+## Participate in Genesis as a Validator
 
 ::: warning
 The genesis ceremony for the Cosmos Hub mainnet is closed. Please skip to the next section.

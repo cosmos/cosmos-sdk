@@ -81,6 +81,9 @@ type BaseApp struct {
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
+
+	// height at which to halt the chain and gracefully shutdown
+	haltHeight uint64
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -228,6 +231,10 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
+}
+
+func (app *BaseApp) setHaltHeight(height uint64) {
+	app.haltHeight = height
 }
 
 // Router returns the router of the BaseApp.

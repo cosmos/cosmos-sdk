@@ -23,6 +23,7 @@ const (
 	flagTraceStore     = "trace-store"
 	flagPruning        = "pruning"
 	FlagMinGasPrices   = "minimum-gas-prices"
+	FlagHaltHeight     = "halt-height"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -53,6 +54,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
+	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

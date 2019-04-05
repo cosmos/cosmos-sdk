@@ -60,6 +60,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		}
 
 		resTags.AppendTags(sdk.NewTags(
+			tags.Action, ActionCompleteUnbonding,
 			tags.Delegator, dvPair.DelegatorAddress.String(),
 			tags.SrcValidator, dvPair.ValidatorAddress.String(),
 		))
@@ -75,6 +76,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		}
 
 		resTags.AppendTags(sdk.NewTags(
+			tags.Action, tags.ActionCompleteRedelegation,
 			tags.Delegator, dvvTriplet.DelegatorAddress.String(),
 			tags.SrcValidator, dvvTriplet.ValidatorSrcAddress.String(),
 			tags.DstValidator, dvvTriplet.ValidatorDstAddress.String(),

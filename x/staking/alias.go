@@ -174,6 +174,9 @@ var (
 )
 
 var (
+	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
+	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
+
 	TagAction       = tags.Action
 	TagSrcValidator = tags.SrcValidator
 	TagDstValidator = tags.DstValidator

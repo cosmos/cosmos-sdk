@@ -325,16 +325,27 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 	return res
 }
 
-// multiply all the coins by a decimal, truncating
+// MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
+// panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal coin")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.MulTruncate(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 

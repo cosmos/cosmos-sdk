@@ -25,7 +25,7 @@ echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
 mkdir go
 echo "export GOPATH=$HOME/go" >> ~/.profile
 echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
-
+echo "export GO111MODULE=on" >> ~/.profile
 source ~/.profile
 
 # get the code and move into repo

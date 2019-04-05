@@ -119,7 +119,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f snapcraft-local.yaml
+	rm -rf snapcraft-local.yaml build/
 
 distclean: clean
 	rm -rf vendor/
@@ -267,7 +267,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build install install_debug dist clean distclean \
+.PHONY: install install_debug dist clean distclean \
 draw_deps test test_cli test_unit \
 test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \

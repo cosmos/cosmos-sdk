@@ -60,7 +60,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		}
 
 		resTags.AppendTags(sdk.NewTags(
-			tags.Action, ActionCompleteUnbonding,
+			tags.Action, tags.ActionCompleteUnbonding,
 			tags.Delegator, dvPair.DelegatorAddress.String(),
 			tags.SrcValidator, dvPair.ValidatorAddress.String(),
 		))
@@ -191,12 +191,12 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	k.SetValidator(ctx, validator)
 
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
 		tags.DstValidator, msg.ValidatorAddress.String(),
 	)
 
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -215,13 +215,13 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return err.Result()
 	}
 
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
 		tags.Delegator, msg.DelegatorAddress.String(),
 		tags.DstValidator, msg.ValidatorAddress.String(),
 	)
 
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -239,13 +239,13 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	}
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
 		tags.Delegator, msg.DelegatorAddress.String(),
 		tags.SrcValidator, msg.ValidatorAddress.String(),
 		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
-	return sdk.Result{Data: finishTime, Tags: tags}
+	return sdk.Result{Data: finishTime, Tags: resTags}
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {

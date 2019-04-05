@@ -312,16 +312,26 @@ func (coins DecCoins) IsAnyNegative() bool {
 	return false
 }
 
-// multiply all the coins by a decimal
+// MulDec multiplies all the coins by a decimal. It panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Mul(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 

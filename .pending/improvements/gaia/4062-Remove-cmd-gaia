@@ -1,0 +1,2 @@
+#4062 Remove cmd/gaia/init.LoadGenesisDoc() in favor of
+tendermint types.GenesisDocFromFile().

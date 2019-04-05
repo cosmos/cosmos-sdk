@@ -44,7 +44,6 @@ var (
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
 
 	TagValidator = tags.Validator
-	TagDelegator = tags.Delegator
 
 	NewMsgSetWithdrawAddress          = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward

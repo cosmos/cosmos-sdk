@@ -29,25 +29,15 @@ func DefaultGenesisState() GenesisState {
 // new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
-	if err := keeper.SetParams(ctx, data.Params); err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.SetParams(ctx, data.Params)
 }
 
-// ExportGenesis returns a GenesisState for a given context and keeper. The
-// GenesisState will contain the pool, and validator/delegator distribution info's
-func ExportGenesis(ctx sdk.Context, keeper Keeper) (GenesisState, error) {
-	minter, err := keeper.GetMinter(ctx)
-	if err != nil {
-		return GenesisState{}, err
-	}
-	params, err := keeper.GetParams(ctx)
-	if err != nil {
-		return GenesisState{}, err
-	}
-	return NewGenesisState(minter, params), nil
+// ExportGenesis returns a GenesisState for a given context and keeper.
+func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
+
+	minter := keeper.GetMinter(ctx)
+	params := keeper.GetParams(ctx)
+	return NewGenesisState(minter, params)
 }
 
 // ValidateGenesis validates the provided genesis state to ensure the

@@ -1,5 +1,31 @@
 # Changelog
 
+* [0.34.0](#0340)
+  * [Breaking Changes](#breaking-changes)
+    * [Gaia](#gaia)
+    * [Gaia CLI](#gaia-cli)
+    * [SDK](#sdk)
+    * [Tendermint](#tendermint)
+  * [New features](#new-features)
+    * [SDK](#sdk-1)
+    * [Gaia](#gaia-1)
+    * [Gaia CLI](#gaia-cli-1)
+    * [Gaia REST API](#gaia-rest-api)
+  * [Improvements](#improvements)
+    * [Gaia](#gaia-2)
+    * [Gaia CLI](#gaia-cli-2)
+    * [SDK](#sdk-2)
+  * [Bug Fixes](#bug-fixes)
+    * [Gaia](#gaia-3)
+    * [Gaia CLI](#gaia-cli-3)
+    * [SDK](#sdk-3)
+* [0.33.2](#0332)
+  * [Improvements](#improvements-1)
+    * [Tendermint](#tendermint-1)
+* [0.33.1](#0331)
+  * [Bug Fixes](#bug-fixes-1)
+    * [Gaia](#gaia-4)
+
 ## 0.34.0
 
 ### Breaking Changes
@@ -116,6 +142,8 @@
 * [\#3977](https://github.com/cosmos/cosmos-sdk/issues/3977) Fix docker image build
 * [\#4020](https://github.com/cosmos/cosmos-sdk/issues/4020) Fix queryDelegationRewards by returning an error
 when the validator or delegation do not exist.
+* [\#4050](https://github.com/cosmos/cosmos-sdk/issues/4050) Fix DecCoins APIs
+where rounding or truncation could result in zero decimal coins.
 
 ## 0.33.2
 

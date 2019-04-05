@@ -312,55 +312,93 @@ func (coins DecCoins) IsAnyNegative() bool {
 	return false
 }
 
-// multiply all the coins by a decimal
+// MulDec multiplies all the coins by a decimal.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	var res DecCoins
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Mul(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 
-// multiply all the coins by a decimal, truncating
+// MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
+// panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.MulTruncate(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 
-// divide all the coins by a decimal
+// QuoDec divides all the decimal coins by a decimal. It panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Quo(d),
 		}
-		res[i] = quotient
+
+		if !quotient.IsZero() {
+			res = res.Add(DecCoins{quotient})
+		}
 	}
+
 	return res
 }
 
-// divide all the coins by a decimal, truncating
+// QuoDecTruncate divides all the decimal coins by a decimal, truncating. It
+// panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.QuoTruncate(d),
 		}
-		res[i] = quotient
+
+		if !quotient.IsZero() {
+			res = res.Add(DecCoins{quotient})
+		}
 	}
+
 	return res
 }
 

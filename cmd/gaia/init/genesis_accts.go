@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -58,7 +59,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
 			}
 
-			genDoc, err := LoadGenesisDoc(cdc, genFile)
+			genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 			if err != nil {
 				return err
 			}

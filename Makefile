@@ -124,7 +124,7 @@ clean:
 distclean: clean
 	rm -rf vendor/
 
-cl:
+cl: cmd/sdkch/main.go
 	@go run cmd/sdkch/main.go add -i
 	
 ########################################

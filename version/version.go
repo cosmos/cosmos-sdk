@@ -10,12 +10,14 @@ import (
 var (
 	Commit    = ""
 	Version   = ""
+	GoModHash = ""
 	BuildTags = ""
 )
 
 type versionInfo struct {
 	CosmosSDK string `json:"cosmos_sdk"`
 	GitCommit string `json:"commit"`
+	GoModHash string `json:"gomod_hash"`
 	BuildTags string `json:"build_tags"`
 	GoVersion string `json:"go"`
 }
@@ -23,14 +25,16 @@ type versionInfo struct {
 func (v versionInfo) String() string {
 	return fmt.Sprintf(`cosmos-sdk: %s
 git commit: %s
+gomod hash: %s
 build tags: %s
-%s`, v.CosmosSDK, v.GitCommit, v.BuildTags, v.GoVersion)
+%s`, v.CosmosSDK, v.GitCommit, v.GoModHash, v.BuildTags, v.GoVersion)
 }
 
 func newVersionInfo() versionInfo {
 	return versionInfo{
 		Version,
 		Commit,
+		GoModHash,
 		BuildTags,
 		fmt.Sprintf("go version %s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)}
 }

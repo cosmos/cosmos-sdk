@@ -32,7 +32,6 @@ cd $GOPATH/src/$REPO
 # build & install master
 git checkout $BRANCH
 LEDGER_ENABLED=false make tools
-LEDGER_ENABLED=false make get_vendor_deps
 LEDGER_ENABLED=false make install
 
 source ~/.profile

@@ -49,7 +49,7 @@ func QueryAccountRequestHandlerFn(
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
@@ -88,7 +88,7 @@ func QueryBalancesRequestHandlerFn(
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 

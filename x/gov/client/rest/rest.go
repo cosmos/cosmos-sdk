@@ -310,7 +310,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		if len(strProposalID) == 0 {
 			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 
@@ -321,7 +321,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		if len(bechDepositorAddr) == 0 {
 			err := errors.New("depositor address required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 
@@ -387,7 +387,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 
 		if len(strProposalID) == 0 {
 			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 
@@ -398,7 +398,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 
 		if len(bechVoterAddr) == 0 {
 			err := errors.New("voter address required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 
@@ -464,7 +464,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 
 		if len(strProposalID) == 0 {
 			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 
@@ -579,7 +579,7 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 
 		if len(strProposalID) == 0 {
 			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
 			return
 		}
 

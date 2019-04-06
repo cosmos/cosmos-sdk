@@ -154,7 +154,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
 			actions = append(actions, tags.ActionCompleteRedelegation)
 		default:
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 

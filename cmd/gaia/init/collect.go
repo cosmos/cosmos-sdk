@@ -116,7 +116,7 @@ func genAppStateFromConfig(
 		return
 	}
 
-	err = ExportGenesisFile(genFile, initCfg.ChainID, nil, appState)
+	err = ExportGenesisFile(&genDoc, genFile, initCfg.ChainID, genDoc.Validators, appState)
 	return
 }
 

@@ -114,7 +114,7 @@ func TestCoinSend(t *testing.T) {
 
 	// query empty
 	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
-	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
 	initialBalance := acc.GetCoins()

@@ -17,7 +17,7 @@ var (
 type versionInfo struct {
 	CosmosSDK string `json:"cosmos_sdk"`
 	GitCommit string `json:"commit"`
-	GoModHash string `json:"gomod_hash"`
+	GoSumHash string `json:"gosum_hash"`
 	BuildTags string `json:"build_tags"`
 	GoVersion string `json:"go"`
 }

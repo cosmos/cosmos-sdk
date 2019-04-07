@@ -18,8 +18,7 @@ args = parser.parse_args()
 chain_id = args.chain_id.strip()
 
 if chain_id == '':
-  print('chain-id required')
-  sys.exit(1)
+  sys.exit('chain-id required')
 
 raw = args.exported_genesis.read()
 genesis = json.loads(raw)

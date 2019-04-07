@@ -27,7 +27,7 @@ func (v versionInfo) String() string {
 git commit: %s
 gomod hash: %s
 build tags: %s
-%s`, v.CosmosSDK, v.GitCommit, v.GoModHash, v.BuildTags, v.GoVersion)
+%s`, v.CosmosSDK, v.GitCommit, v.GoSumHash, v.BuildTags, v.GoVersion)
 }
 
 func newVersionInfo() versionInfo {

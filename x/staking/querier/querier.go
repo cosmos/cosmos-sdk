@@ -129,11 +129,10 @@ func NewQueryRedelegationParams(delegatorAddr sdk.AccAddress, srcValidatorAddr s
 }
 
 func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	stakingParams := k.GetParams(ctx)
-	validators := k.GetValidators(ctx, stakingParams.MaxValidators)
+	validators := k.GetAllValidators(ctx)
 
 	res, errRes := codec.MarshalJSONIndent(cdc, validators)
-	if err != nil {
+	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}
 	return res, nil

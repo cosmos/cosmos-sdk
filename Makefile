@@ -48,7 +48,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
 
 ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.GoModHash=$(shell $(GOSUM) go.sum)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
 endif
 
 ifeq ($(WITH_CLEVELDB),yes)

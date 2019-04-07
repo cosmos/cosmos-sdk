@@ -10,7 +10,7 @@ import (
 var (
 	Commit    = ""
 	Version   = ""
-	GoModHash = ""
+	GoSumHash = ""
 	BuildTags = ""
 )
 

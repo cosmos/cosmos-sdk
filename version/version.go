@@ -25,7 +25,7 @@ type versionInfo struct {
 func (v versionInfo) String() string {
 	return fmt.Sprintf(`cosmos-sdk: %s
 git commit: %s
-gomod hash: %s
+go.sum hash: %s
 build tags: %s
 %s`, v.CosmosSDK, v.GitCommit, v.GoSumHash, v.BuildTags, v.GoVersion)
 }

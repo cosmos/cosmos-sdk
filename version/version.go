@@ -34,7 +34,7 @@ func newVersionInfo() versionInfo {
 	return versionInfo{
 		Version,
 		Commit,
-		GoModHash,
+		GoSumHash,
 		BuildTags,
 		fmt.Sprintf("go version %s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)}
 }

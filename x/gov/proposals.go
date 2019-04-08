@@ -13,9 +13,9 @@ import (
 // Proposal is a struct used by gov module internally
 // embedds ProposalContent with additional fields to record the status of the proposal process
 type Proposal struct {
-	proposal.Content `json:"proposal_content"` // Proposal content interface
+	proposal.Content `json:"content"` // Proposal content interface
 
-	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
+	ProposalID uint64 `json:"id"` //  ID of the proposal
 
 	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys

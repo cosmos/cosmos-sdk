@@ -59,7 +59,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 
 		_, page, limit, err := rest.ParseHTTPArgs(r)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusOK, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -76,7 +76,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(validators.Validators) == 0 {
-			w.WriteHeader(http.StatusOK)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 
@@ -95,7 +95,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(signingInfoList) == 0 {
-			w.WriteHeader(http.StatusOK)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 

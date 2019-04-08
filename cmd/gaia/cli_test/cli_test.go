@@ -224,12 +224,15 @@ func TestGaiaCLISend(t *testing.T) {
 	require.True(t, success)
 
 	// Test --generate-only
-	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only=true")
+	success, stdout, stderr := f.TxSend(
+		fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only=true",
+	)
 	require.Empty(t, stderr)
-	msg := unmarshalStdTx(t, stdout)
+	require.True(t, success)
+	msg := unmarshalStdTx(f.T, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	// Check state didn't change
 	fooAcc = f.QueryAccount(fooAddr)

@@ -122,9 +122,6 @@ clean:
 	rm -rf snapcraft-local.yaml build/
 
 
-cl: cmd/sdkch/main.go
-	@go run cmd/sdkch/main.go add -i
-	
 ########################################
 ### Documentation
 

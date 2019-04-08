@@ -226,7 +226,7 @@ func TestGaiaCLISend(t *testing.T) {
 	// Test --generate-only
 	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only=true")
 	require.Empty(t, stderr)
-	msg = unmarshalStdTx(t, stdout)
+	msg := unmarshalStdTx(t, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))

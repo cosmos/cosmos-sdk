@@ -15,7 +15,7 @@ func TestMsgSendRoute(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	var msg = NewMsgSend(addr1, addr2, coins)
 
-	require.Equal(t, msg.Route(), "bank")
+	require.Equal(t, msg.Route(), RouterKey)
 	require.Equal(t, msg.Type(), "send")
 }
 
@@ -80,7 +80,7 @@ func TestMsgMultiSendRoute(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	require.Equal(t, msg.Route(), "bank")
+	require.Equal(t, msg.Route(), RouterKey)
 	require.Equal(t, msg.Type(), "multisend")
 }
 

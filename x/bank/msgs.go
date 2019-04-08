@@ -5,7 +5,7 @@ import (
 )
 
 // RouterKey is they name of the bank module
-const RouterKey = "bank"
+const RouterKey = ModuleName
 
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {

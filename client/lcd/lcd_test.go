@@ -231,7 +231,7 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	var stdTx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &stdTx))
 	require.Equal(t, len(stdTx.Msgs), 1)
-	require.Equal(t, stdTx.GetMsgs()[0].Route(), "bank")
+	require.Equal(t, stdTx.GetMsgs()[0].Route(), bank.RouterKey)
 	require.Equal(t, stdTx.GetMsgs()[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(stdTx.Signatures))
 	require.Equal(t, memo, stdTx.Memo)
@@ -267,7 +267,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	var tx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &tx))
 	require.Equal(t, len(tx.Msgs), 1)
-	require.Equal(t, tx.Msgs[0].Route(), "bank")
+	require.Equal(t, tx.Msgs[0].Route(), bank.RouterKey)
 	require.Equal(t, tx.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(tx.Signatures))
 	require.Equal(t, memo, tx.Memo)

@@ -8,9 +8,6 @@ def process_raw_genesis(genesis, parsed_args):
     genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
     del genesis['consensus_params']['block_size']
 
-    # default tm value
-    genesis['consensus_params']['block']['time_iota_ms'] = '1000'
-
     genesis['app_state']['crisis'] = {
         'constant_fee': {
             'amount': '1333000000',  # ~$5,000 worth of uatoms

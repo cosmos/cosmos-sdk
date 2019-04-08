@@ -36,10 +36,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func queryParams(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to get params", err.Error()))
-	}
+	params := k.GetParams(ctx)
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
 	if err != nil {
@@ -50,10 +47,7 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 }
 
 func queryInflation(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
-	minter, err := k.GetMinter(ctx)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to get params", err.Error()))
-	}
+	minter := k.GetMinter(ctx)
 
 	res, err := codec.MarshalJSONIndent(k.cdc, minter.Inflation)
 	if err != nil {
@@ -64,10 +58,7 @@ func queryInflation(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 }
 
 func queryAnnualProvisions(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
-	minter, err := k.GetMinter(ctx)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to get params", err.Error()))
-	}
+	minter := k.GetMinter(ctx)
 
 	res, err := codec.MarshalJSONIndent(k.cdc, minter.AnnualProvisions)
 	if err != nil {

@@ -42,8 +42,7 @@ func TestBeginBlocker(t *testing.T) {
 			}},
 		},
 	}
-	_, err := BeginBlocker(ctx, req, keeper)
-	require.NoError(t, err)
+	BeginBlocker(ctx, req, keeper)
 
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
@@ -65,8 +64,7 @@ func TestBeginBlocker(t *testing.T) {
 				}},
 			},
 		}
-		_, err := BeginBlocker(ctx, req, keeper)
-		require.NoError(t, err)
+		BeginBlocker(ctx, req, keeper)
 	}
 
 	// for 500 blocks, mark the validator as having not signed
@@ -80,8 +78,7 @@ func TestBeginBlocker(t *testing.T) {
 				}},
 			},
 		}
-		_, err := BeginBlocker(ctx, req, keeper)
-		require.NoError(t, err)
+		BeginBlocker(ctx, req, keeper)
 	}
 
 	// end block

@@ -218,39 +218,30 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (resp abci.ResponseBeginBlock, err error) {
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	// mint new tokens for the previous block
-	err = mint.BeginBlocker(ctx, app.mintKeeper)
-	if err != nil {
-		return resp, err
-	}
+	mint.BeginBlocker(ctx, app.mintKeeper)
 
 	// distribute rewards for the previous block
-	err = distr.BeginBlocker(ctx, req, app.distrKeeper)
-	if err != nil {
-		return resp, err
-	}
+	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
 	// slash anyone who double signed.
 	// NOTE: This should happen after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool,
 	// so as to keep the CanWithdrawInvariant invariant.
 	// TODO: This should really happen at EndBlocker.
-	resp.Tags, err = slashing.BeginBlocker(ctx, req, app.slashingKeeper)
-	return resp, err
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
 }
 
 // application updates every end block
 // nolint: unparam
-func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	tags, err := gov.EndBlocker(ctx, app.govKeeper)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
-	validatorUpdates, stakingTags, err := staking.EndBlocker(ctx, app.stakingKeeper)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	tags := gov.EndBlocker(ctx, app.govKeeper)
+	validatorUpdates, stakingTags := staking.EndBlocker(ctx, app.stakingKeeper)
 	tags = append(tags, stakingTags...)
 
 	if app.assertInvariantsBlockly {
@@ -260,7 +251,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
-	}, nil
+	}
 }
 
 // initialize store from a genesis state

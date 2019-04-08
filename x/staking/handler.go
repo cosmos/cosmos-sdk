@@ -34,7 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags, error) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
 	resTags := sdk.NewTags()
 
 	// Calculate validator set changes.
@@ -83,7 +83,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		))
 	}
 
-	return validatorUpdates, resTags, nil
+	return validatorUpdates, resTags
 }
 
 // These functions assume everything has been authenticated,

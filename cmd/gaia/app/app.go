@@ -157,7 +157,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
 	// modified like below:
 	app.stakingKeeper = *stakingKeeper.SetHooks(
-		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
+		sdk.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
 	// register the crisis routes

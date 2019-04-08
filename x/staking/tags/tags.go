@@ -1,10 +1,10 @@
-// nolint
 package tags
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// staking tags
 var (
 	ActionCompleteUnbonding    = "complete-unbonding"
 	ActionCompleteRedelegation = "complete-redelegation"
@@ -13,7 +13,5 @@ var (
 	SrcValidator = sdk.TagSrcValidator
 	DstValidator = sdk.TagDstValidator
 	Delegator    = sdk.TagDelegator
-	Moniker      = "moniker"
-	Identity     = "identity"
 	EndTime      = "end-time"
 )

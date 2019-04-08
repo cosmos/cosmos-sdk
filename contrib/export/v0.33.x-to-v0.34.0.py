@@ -15,6 +15,9 @@ def process_raw_genesis(genesis, parsed_args):
         },
     }
 
+    # default tm value
+    genesis['consensus_params']['block']['time_iota_ms'] = '1000'
+
     # proposal #1 updates
     genesis['app_state']['mint']['params']['blocks_per_year'] = '4855015'
 

@@ -24,7 +24,7 @@ def process_raw_genesis(genesis, parsed_args):
 
     # enable transfers
     genesis['app_state']['bank']['send_enabled'] = True
-    genesis['app_state']['distr']['withdraw_add_enabled'] = True
+    genesis['app_state']['distr']['withdraw_addr_enabled'] = True
 
     # Set new chain ID and genesis start time
     genesis['chain_id'] = parsed_args.chain_id.strip()

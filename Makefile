@@ -48,7 +48,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
 
 ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(GOSUM) go.sum)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
 endif
 
 ifeq ($(WITH_CLEVELDB),yes)
@@ -121,8 +121,6 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
-distclean: clean
-	rm -rf vendor/
 
 ########################################
 ### Documentation
@@ -264,7 +262,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: install install_debug dist clean distclean \
+.PHONY: install install_debug dist clean \
 draw_deps test test_cli test_unit \
 test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \

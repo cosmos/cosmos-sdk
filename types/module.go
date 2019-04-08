@@ -18,17 +18,17 @@ type ModuleClients interface {
 type AppModule interface {
 
 	// app name
-	Name()
+	Name() string
 
 	// registers
 	RegisterCodec(*codec.Codec)
 	RegisterInvariants(InvariantRouter)
 
 	// routes
-	Route()
-	NewHandler()
-	QuerierRoute()
-	NewQuerierHandler()
+	Route() string
+	NewHandler() sdk.Handler
+	QuerierRoute() string
+	NewQuerierHandler() sdk.Querier
 
 	// genesis
 	DefaultGenesisState() json.RawMessage

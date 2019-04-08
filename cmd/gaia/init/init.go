@@ -89,7 +89,10 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 				}
 			}
 
-			if err = ExportGenesisFile(genDoc, genFile, chainID, nil, appState); err != nil {
+			genDoc.ChainID = chainID
+			genDoc.Validators = nil
+			genDoc.AppState = appState
+			if err = ExportGenesisFile(genDoc, genFile); err != nil {
 				return err
 			}
 

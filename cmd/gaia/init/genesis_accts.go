@@ -79,7 +79,8 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			return ExportGenesisFile(genDoc, genFile, genDoc.ChainID, genDoc.Validators, appStateJSON)
+			genDoc.AppState = appStateJSON
+			return ExportGenesisFile(genDoc, genFile)
 		},
 	}
 

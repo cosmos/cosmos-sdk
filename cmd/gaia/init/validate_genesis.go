@@ -31,8 +31,8 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			//nolint
 			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
 
-			var genDoc types.GenesisDoc
-			if genDoc, err = LoadGenesisDoc(cdc, genesis); err != nil {
+			var genDoc *types.GenesisDoc
+			if genDoc, err = types.GenesisDocFromFile(genesis); err != nil {
 				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 

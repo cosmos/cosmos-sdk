@@ -10,10 +10,10 @@ def process_raw_genesis(genesis, parsed_args):
     genesis['consensus_params']['block']['time_iota_ms'] = '1000' # default tm value
 
     crisis_data = {
-    'constant_fee': {
-        'amount': '1333000000',  # $5,000 worth of uatoms
-        'denom': 'uatom'
-    }
+        'constant_fee': {
+            'amount': '1333000000',  # $5,000 worth of uatoms
+            'denom': 'uatom',
+        },
     }
     genesis['app_state']['crisis'] = crisis_data
 

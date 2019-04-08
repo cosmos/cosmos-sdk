@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -26,8 +27,9 @@ var (
 	progName   string
 	verboseLog *log.Logger
 
-	entriesDir     string
-	verboseLogging bool
+	entriesDir      string
+	verboseLogging  bool
+	interactiveMode bool
 
 	// sections name-title map
 	sections = map[string]string{
@@ -44,22 +46,92 @@ var (
 		"sdk":        "SDK",
 		"tendermint": "Tendermint",
 	}
+
+	// RootCmd represents the base command when called without any subcommands
+	RootCmd = &cobra.Command{
+		Use:   "sdkch",
+		Short: "\nMaintain unreleased changelog entries in a modular fashion.",
+	}
+
+	// command to add a pending log entry
+	AddCmd = &cobra.Command{
+		Use:   "add [section] [stanza] [message]",
+		Short: "Add an entry file.",
+		Long: `
+Add an entry file. If message is empty, start the editor to edit the message.
+
+    Sections             Stanzas
+         ---                 ---
+    breaking                gaia
+    features             gaiacli
+improvements            gaiarest
+    bugfixes                 sdk
+                      tendermint`,
+		Args: cobra.MaximumNArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			if interactiveMode {
+				return addEntryFileFromConsoleInput()
+			}
+
+			if len(args) < 2 {
+				log.Println("must include at least 2 arguments when not in interactive mode")
+				return nil
+			}
+			sectionDir, stanzaDir := args[0], args[1]
+			err := validateSectionStanzaDirs(sectionDir, stanzaDir)
+			if err != nil {
+				return err
+			}
+			if len(args) == 3 {
+				return addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(args[2]))
+			}
+			return addEntryFile(sectionDir, stanzaDir)
+		},
+	}
+
+	// command to generate the changelog
+	GenerateCmd = &cobra.Command{
+		Use:   "generate",
+		Short: "Generate a changelog in Markdown format and print it to STDOUT. version defaults to UNRELEASED.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			version := "UNRELEASED"
+			if flag.NArg() > 1 {
+				version = strings.Join(flag.Args()[1:], " ")
+			}
+			return generateChangelog(version)
+		},
+	}
+
+	// command to delete empty sub-directories recursively
+	PruneCmd = &cobra.Command{
+		Use:   "prune",
+		Short: "Delete empty sub-directories recursively.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return pruneEmptyDirectories()
+		},
+	}
 )
 
 func init() {
-	progName = filepath.Base(os.Args[0])
+	RootCmd.AddCommand(AddCmd)
+	RootCmd.AddCommand(GenerateCmd)
+	RootCmd.AddCommand(PruneCmd)
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	flag.StringVar(&entriesDir, "d", filepath.Join(cwd, entriesDirName), "entry files directory")
-	flag.BoolVar(&verboseLogging, "v", false, "enable verbose logging")
-	flag.Usage = printUsage
-
+	AddCmd.Flags().BoolVarP(&interactiveMode, "interactive", "i", false, "get the section/stanza/message with interactive CLI prompts")
+	RootCmd.PersistentFlags().BoolVarP(&verboseLogging, "verbose-logging", "v", false, "enable verbose logging")
+	RootCmd.PersistentFlags().StringVarP(&entriesDir, "entries-dir", "d", filepath.Join(cwd, entriesDirName), "entry files directory")
 }
 
 func main() {
+
 	logPrefix := fmt.Sprintf("%s: ", filepath.Base(progName))
 	log.SetFlags(0)
 	log.SetPrefix(logPrefix)
@@ -70,67 +142,66 @@ func main() {
 		verboseLog.SetPrefix(logPrefix)
 	}
 
-	if flag.NArg() < 1 {
-		errInsufficientArgs()
-	}
-
-	cmd := flag.Arg(0)
-	switch cmd {
-
-	case "add":
-		if flag.NArg() < 3 {
-			errInsufficientArgs()
-		}
-		if flag.NArg() > 4 {
-			errTooManyArgs()
-		}
-		sectionDir, stanzaDir := flag.Arg(1), flag.Arg(2)
-		validateSectionStanzaDirs(sectionDir, stanzaDir)
-		if flag.NArg() == 4 {
-			addSinglelineEntryFile(sectionDir, stanzaDir, strings.TrimSpace(flag.Arg(3)))
-			return
-		}
-		addEntryFile(sectionDir, stanzaDir)
-
-	case "generate":
-		version := "UNRELEASED"
-		if flag.NArg() > 1 {
-			version = strings.Join(flag.Args()[1:], " ")
-		}
-		generateChangelog(version)
-
-	case "prune":
-		pruneEmptyDirectories()
-
-	default:
-		unknownCommand(cmd)
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
-func addSinglelineEntryFile(sectionDir, stanzaDir, message string) {
+func addEntryFileFromConsoleInput() error {
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Please enter the section (either: \"breaking\", \"features\", \"improvements\", \"bugfixes\")")
+	sectionDir, _ := reader.ReadString('\n')
+	sectionDir = strings.TrimSpace(sectionDir)
+	if _, ok := sections[sectionDir]; !ok {
+		return errors.New("invalid section, please try again")
+	}
+
+	fmt.Println("Please enter the stanza (either: \"gaia\", \"gaiacli\", \"gaiarest\", \"sdk\", \"tendermint\")")
+	stanzaDir, _ := reader.ReadString('\n')
+	stanzaDir = strings.TrimSpace(stanzaDir)
+	if _, ok := stanzas[stanzaDir]; !ok {
+		return errors.New("invalid stanza, please try again")
+	}
+
+	fmt.Println("Please enter the changelog message (or press enter to write in  default $EDITOR)")
+	message, _ := reader.ReadString('\n')
+	message = strings.TrimSpace(message)
+	if message == "" {
+		return addEntryFile(sectionDir, stanzaDir)
+	}
+
+	return addSinglelineEntryFile(sectionDir, stanzaDir, message)
+}
+
+func addSinglelineEntryFile(sectionDir, stanzaDir, message string) error {
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
 		generateFileName(message),
 	)
 
-	writeEntryFile(filename, []byte(message))
+	return writeEntryFile(filename, []byte(message))
 }
 
-func addEntryFile(sectionDir, stanzaDir string) {
-	bs := readUserInput()
+func addEntryFile(sectionDir, stanzaDir string) error {
+	bs, err := readUserInputFromEditor()
+	if err != nil {
+		return err
+	}
 	firstLine := strings.TrimSpace(strings.Split(string(bs), "\n")[0])
 	filename := filepath.Join(
 		filepath.Join(entriesDir, sectionDir, stanzaDir),
 		generateFileName(firstLine),
 	)
 
-	writeEntryFile(filename, bs)
+	return writeEntryFile(filename, bs)
 }
-
-var filenameInvalidChars = regexp.MustCompile(`[^a-zA-Z0-9-_]`)
 
 func generateFileName(line string) string {
 	var chunks []string
+
+	filenameInvalidChars := regexp.MustCompile(`[^a-zA-Z0-9-_]`)
 	subsWithInvalidCharsRemoved := strings.Split(filenameInvalidChars.ReplaceAllString(line, " "), " ")
 	for _, sub := range subsWithInvalidCharsRemoved {
 		sub = strings.TrimSpace(sub)
@@ -140,17 +211,21 @@ func generateFileName(line string) string {
 	}
 
 	ret := strings.Join(chunks, "-")
-	return ret[:int(math.Min(float64(len(ret)), float64(maxEntryFilenameLength)))]
+
+	if len(ret) > maxEntryFilenameLength {
+		return ret[:maxEntryFilenameLength]
+	}
+	return ret
 }
 
-func directoryContents(dirPath string) []os.FileInfo {
+func directoryContents(dirPath string) ([]os.FileInfo, error) {
 	contents, err := ioutil.ReadDir(dirPath)
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatalf("couldn't read directory %s: %v", dirPath, err)
+		return nil, fmt.Errorf("couldn't read directory %s: %v", dirPath, err)
 	}
 
 	if len(contents) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	// Filter out hidden files
@@ -164,16 +239,19 @@ func directoryContents(dirPath string) []os.FileInfo {
 		contents[i] = nil
 	}
 
-	return newContents
+	return newContents, nil
 }
 
-func generateChangelog(version string) {
+func generateChangelog(version string) error {
 	fmt.Printf("# %s\n\n", version)
 	for sectionDir, sectionTitle := range sections {
 		sectionTitlePrinted := false
 		for stanzaDir, stanzaTitle := range stanzas {
 			path := filepath.Join(entriesDir, sectionDir, stanzaDir)
-			files := directoryContents(path)
+			files, err := directoryContents(path)
+			if err != nil {
+				return err
+			}
 			if len(files) == 0 {
 				continue
 			}
@@ -188,22 +266,27 @@ func generateChangelog(version string) {
 				verboseLog.Println("processing", f.Name())
 				filename := filepath.Join(path, f.Name())
 				if err := indentAndPrintFile(filename); err != nil {
-					log.Fatal(err)
+					return err
 				}
 			}
 
 			fmt.Println()
 		}
 	}
+	return nil
 }
 
-func pruneEmptyDirectories() {
+func pruneEmptyDirectories() error {
 	for sectionDir := range sections {
 		for stanzaDir := range stanzas {
-			mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+			err := mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+			if err != nil {
+				return err
+			}
 		}
-		mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
+		return mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir))
 	}
+	return nil
 }
 
 // nolint: errcheck
@@ -238,45 +321,47 @@ func indentAndPrintFile(filename string) error {
 }
 
 // nolint: errcheck
-func writeEntryFile(filename string, bs []byte) {
+func writeEntryFile(filename string, bs []byte) error {
 	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	outFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer outFile.Close()
 
 	if _, err := outFile.Write(bs); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Printf("Unreleased changelog entry written to: %s\n", filename)
 	log.Println("To modify this entry please edit or delete the above file directly.")
+	return nil
 }
 
-func validateSectionStanzaDirs(sectionDir, stanzaDir string) {
+func validateSectionStanzaDirs(sectionDir, stanzaDir string) error {
 	if _, ok := sections[sectionDir]; !ok {
-		log.Fatalf("invalid section -- %s", sectionDir)
+		return fmt.Errorf("invalid section -- %s", sectionDir)
 	}
 	if _, ok := stanzas[stanzaDir]; !ok {
-		log.Fatalf("invalid stanza -- %s", stanzaDir)
+		return fmt.Errorf("invalid stanza -- %s", stanzaDir)
 	}
+	return nil
 }
 
 // nolint: errcheck
-func readUserInput() []byte {
+func readUserInputFromEditor() ([]byte, error) {
 	tempfilename, err := launchUserEditor()
 	if err != nil {
-		log.Fatalf("couldn't open an editor: %v", err)
+		return []byte{}, fmt.Errorf("couldn't open an editor: %v", err)
 	}
 	defer os.Remove(tempfilename)
 	bs, err := ioutil.ReadFile(tempfilename)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return []byte{}, fmt.Errorf("error: %v", err)
 	}
-	return bs
+	return bs, nil
 }
 
 // nolint: errcheck
@@ -317,62 +402,28 @@ func launchUserEditor() (string, error) {
 		return "", err
 	}
 	if fileInfo.Size() == 0 {
-		log.Fatal("aborting due to empty message")
+		return "", errors.New("aborting due to empty message")
 	}
 
 	return tempfilename, nil
 }
 
-func mustPruneDirIfEmpty(path string) {
-	if contents := directoryContents(path); len(contents) == 0 {
-		if err := os.Remove(path); err != nil {
-			if !os.IsNotExist(err) {
-				log.Fatal(err)
-			}
-			return
-		}
-		log.Println(path, "removed")
+func mustPruneDirIfEmpty(path string) error {
+	contents, err := directoryContents(path)
+	if err != nil {
+		return err
 	}
-}
-
-func printUsage() {
-	usageText := fmt.Sprintf(`usage: %s [-d directory] [-v] command
-
-Maintain unreleased changelog entries in a modular fashion.
-
-Commands:
-    add [section] [stanza] [message]  Add an entry file. If message is empty, start 
-                                      the editor to edit the message.
-    generate [version]                Generate a changelog in Markdown format and print
-                                      it to STDOUT. version defaults to UNRELEASED.
-    prune                             Delete empty sub-directories recursively.
-
-    Sections             Stanzas
-         ---                 ---
-    breaking                gaia
-    features             gaiacli
-improvements            gaiarest
-    bugfixes                 sdk
-                      tendermint
-`, progName)
-	fmt.Fprintf(os.Stderr, "%s\nFlags:\n", usageText)
-	flag.PrintDefaults()
-}
-
-func errInsufficientArgs() {
-	log.Println("insufficient arguments")
-	printUsage()
-	os.Exit(1)
-}
-
-func errTooManyArgs() {
-	log.Println("too many arguments")
-	printUsage()
-	os.Exit(1)
-}
-
-func unknownCommand(cmd string) {
-	log.Fatalf("unknown command -- '%s'\nTry '%s -help' for more information.", cmd, progName)
+	if len(contents) != 0 {
+		return nil
+	}
+	if err := os.Remove(path); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}
+	log.Println(path, "removed")
+	return nil
 }
 
 // DONTCOVER

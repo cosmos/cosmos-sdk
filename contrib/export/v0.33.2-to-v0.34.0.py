@@ -7,15 +7,16 @@ def process_raw_genesis(genesis, parsed_args):
     # update genesis with breaking changes
     genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
     del genesis['consensus_params']['block_size']
-    genesis['consensus_params']['block']['time_iota_ms'] = '1000' # default tm value
 
-    crisis_data = {
+    # default tm value
+    genesis['consensus_params']['block']['time_iota_ms'] = '1000'
+
+    genesis['app_state']['crisis'] = {
         'constant_fee': {
-            'amount': '1333000000',  # $5,000 worth of uatoms
+            'amount': '1333000000',  # ~$5,000 worth of uatoms
             'denom': 'uatom',
         },
     }
-    genesis['app_state']['crisis'] = crisis_data
 
     # proposal #1 updates
     genesis['app_state']['mint']['params']['blocks_per_year'] = '4855015'
@@ -28,7 +29,7 @@ def process_raw_genesis(genesis, parsed_args):
     genesis['app_state']['bank']['send_enabled'] = True
     genesis['app_state']['distr']['withdraw_add_enabled'] = True
 
-    # Set new chain ID and genesis start time 
+    # Set new chain ID and genesis start time
     genesis['chain_id'] = parsed_args.chain_id.strip()
     genesis['genesis_time'] = parsed_args.start_time
 
@@ -37,7 +38,7 @@ def process_raw_genesis(genesis, parsed_args):
 
 if __name__ == '__main__':
     parser = lib.init_default_argument_parser(
-        prog_desc='Convert genesis.json from v0.33.2 to v0.34.0',
+        prog_desc='Convert genesis.json from v0.33.x to v0.34.0',
         default_chain_id='cosmoshub-n',
         default_start_time='2019-02-11T12:00:00Z',
     )

@@ -39,3 +39,12 @@ func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 func (k Keeper) Routes() []InvarRoute {
 	return k.routes
 }
+
+// return all the invariants
+func (k Keeper) Invariants() []sdk.Invariant {
+	var invars []sdk.Invariant
+	for _, route := range k.routes {
+		invars = append(invars, route.Invar)
+	}
+	return invars
+}

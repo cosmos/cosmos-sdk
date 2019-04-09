@@ -220,7 +220,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.DstValidator, msg.ValidatorAddress.String(),
 	)
 

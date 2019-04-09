@@ -72,4 +72,21 @@ var (
 	DefaultGenesisState = types.DefaultGenesisState
 	ValidateGenesis     = types.ValidateGenesis
 	InitialFeePool      = types.InitialFeePool
+
+	// Query types
+	QueryParams                      = keeper.QueryParams
+	QueryValidatorOutstandingRewards = keeper.QueryValidatorOutstandingRewards
+	QueryValidatorCommission         = keeper.QueryValidatorCommission
+	QueryValidatorSlashes            = keeper.QueryValidatorSlashes
+	QueryDelegationRewards           = keeper.QueryDelegationRewards
+	QueryDelegatorTotalRewards       = keeper.QueryDelegatorTotalRewards
+	QueryDelegatorValidators         = keeper.QueryDelegatorValidators
+	QueryWithdrawAddr                = keeper.QueryWithdrawAddr
+	QueryCommunityPool               = keeper.QueryCommunityPool
+
+	// Param types
+	ParamCommunityTax        = keeper.ParamCommunityTax
+	ParamBaseProposerReward  = keeper.ParamBaseProposerReward
+	ParamBonusProposerReward = keeper.ParamBonusProposerReward
+	ParamWithdrawAddrEnabled = keeper.ParamWithdrawAddrEnabled
 )

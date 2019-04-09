@@ -92,11 +92,6 @@ func ValidateGenesis(data GenesisState) error {
 			veto.String())
 	}
 
-	if data.DepositParams.MaxDepositPeriod > data.VotingParams.VotingPeriod {
-		return fmt.Errorf("Governance deposit period should be less than or equal to the voting period (%ds), is %ds",
-			data.VotingParams.VotingPeriod, data.DepositParams.MaxDepositPeriod)
-	}
-
 	if !data.DepositParams.MinDeposit.IsValid() {
 		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
 			data.DepositParams.MinDeposit.String())

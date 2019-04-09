@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -14,7 +15,7 @@ const (
 type BaseConfig struct {
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. A transaction's fees must meet the minimum of any denomination
-	// specified in this config (e.g. 0.01photino;0.0001stake).
+	// specified in this config (e.g. 0.25token1;0.0001token2).
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 }
 
@@ -31,9 +32,20 @@ func (c *Config) SetMinGasPrices(gasPrices sdk.DecCoins) {
 // GetMinGasPrices returns the validator's minimum gas prices based on the set
 // configuration.
 func (c *Config) GetMinGasPrices() sdk.DecCoins {
-	gasPrices, err := sdk.ParseDecCoins(c.MinGasPrices)
-	if err != nil {
-		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
+	if c.MinGasPrices == "" {
+		return sdk.DecCoins{}
+	}
+
+	gasPricesStr := strings.Split(c.MinGasPrices, ";")
+	gasPrices := make(sdk.DecCoins, len(gasPricesStr))
+
+	for i, s := range gasPricesStr {
+		gasPrice, err := sdk.ParseDecCoin(s)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse minimum gas price coin (%s): %s", s, err))
+		}
+
+		gasPrices[i] = gasPrice
 	}
 
 	return gasPrices

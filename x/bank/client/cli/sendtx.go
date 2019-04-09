@@ -62,5 +62,9 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-	return client.PostCommands(cmd)[0]
+
+	cmd = client.PostCommands(cmd)[0]
+	cmd.MarkFlagRequired(client.FlagFrom)
+
+	return cmd
 }

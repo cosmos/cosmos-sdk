@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -102,7 +101,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = keys.NewInMemory()
-		encryptPassword = app.DefaultKeyPass
+		encryptPassword = client.DefaultKeyPass
 	} else {
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {

@@ -47,8 +47,8 @@ tools: tools-stamp
 tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/clog
 	touch $@
 
-$(GOBIN)/golangci-lint: contrib/install-golangci-lint.sh $(GOBIN)/gosum
-	bash contrib/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
+$(GOBIN)/golangci-lint: contrib/devtools/install-golangci-lint.sh $(GOBIN)/gosum
+	bash contrib/devtools/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
 $(GOBIN)/statik:
 	$(call go_install,rakyll,statik,v0.1.5)

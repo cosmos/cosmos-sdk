@@ -121,6 +121,7 @@ const (
 )
 
 const (
+	ModuleName            = types.ModuleName
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
 	QuerierRoute          = types.QuerierRoute

@@ -13,12 +13,12 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
 }
 
-// generic sealed codec to be used throughout sdk
-var MsgCdc *codec.Codec
+// generic sealed codec to be used throughout this module
+var ModuleCdc *codec.Codec
 
 func init() {
 	cdc := codec.New()
 	RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	MsgCdc = cdc.Seal()
+	ModuleCdc = cdc.Seal()
 }

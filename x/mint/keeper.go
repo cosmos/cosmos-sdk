@@ -7,14 +7,11 @@ import (
 )
 
 const (
-	// ModuleName is the name of the module
-	ModuleName = "minting"
-
 	// default paramspace for params keeper
-	DefaultParamspace = "mint"
+	DefaultParamspace = ModuleName
 
 	// StoreKey is the default store key for mint
-	StoreKey = "mint"
+	StoreKey = ModuleName
 
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey

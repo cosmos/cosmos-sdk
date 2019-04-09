@@ -68,6 +68,8 @@ type GaiaApp struct {
 	govKeeper           gov.Keeper
 	crisisKeeper        crisis.Keeper
 	paramsKeeper        params.Keeper
+
+	mm sdk.ModuleManager
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -160,9 +162,20 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		sdk.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
+	app.mm = sdk.NewModuleManager(
+		auth.NewAppModule(app.accountKeeper),
+		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
+		crisis.NewAppModule(app.crisisKeeper),
+		distr.NewAppModule(app.distrKeeper),
+		gov.NewAppModule(app.govKeeper),
+		mint.NewAppModule(app.mintKeeper),
+		slashing.NewAppModule(app.slashingKeeper),
+		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+	)
+
 	// register the crisis routes
 	bank.RegisterInvariants(&app.crisisKeeper, app.accountKeeper)
-	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper, app.stakingKeeper)
+	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper)
 	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper)
 
 	// register message routes
@@ -178,8 +191,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		AddRoute(auth.QuerierRoute, auth.NewQuerier(app.accountKeeper)).
 		AddRoute(distr.QuerierRoute, distr.NewQuerier(app.distrKeeper)).
 		AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
-		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
-		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc)).
+		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper)).
+		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper)).
 		AddRoute(mint.QuerierRoute, mint.NewQuerier(app.mintKeeper))
 
 	// initialize BaseApp

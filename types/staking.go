@@ -168,52 +168,52 @@ func NewMultiStakingHooks(hooks ...StakingHooks) MultiStakingHooks {
 }
 
 // nolint
-func (h MultiStakingHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) AfterValidatorCreated(ctx Context, valAddr ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorCreated(ctx, valAddr)
 	}
 }
-func (h MultiStakingHooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) BeforeValidatorModified(ctx Context, valAddr ValAddress) {
 	for i := range h {
 		h[i].BeforeValidatorModified(ctx, valAddr)
 	}
 }
-func (h MultiStakingHooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) AfterValidatorRemoved(ctx Context, consAddr ConsAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorRemoved(ctx, consAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) AfterValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorBonded(ctx, consAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) AfterValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) BeforeDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].BeforeDelegationCreated(ctx, delAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) BeforeDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].BeforeDelegationRemoved(ctx, delAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h MultiStakingHooks) AfterDelegationModified(ctx Context, delAddr AccAddress, valAddr ValAddress) {
 	for i := range h {
 		h[i].AfterDelegationModified(ctx, delAddr, valAddr)
 	}
 }
-func (h MultiStakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+func (h MultiStakingHooks) BeforeValidatorSlashed(ctx Context, valAddr ValAddress, fraction Dec) {
 	for i := range h {
 		h[i].BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}

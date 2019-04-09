@@ -183,8 +183,8 @@ func UnmarshalUBD(cdc *codec.Codec, value []byte) (ubd UnbondingDelegation, err 
 // nolint
 // inefficient but only used in testing
 func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
-	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
-	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)
+	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&d)
+	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&d2)
 	return bytes.Equal(bz1, bz2)
 }
 
@@ -304,8 +304,8 @@ func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) 
 // nolint
 // inefficient but only used in tests
 func (d Redelegation) Equal(d2 Redelegation) bool {
-	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
-	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)
+	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&d)
+	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&d2)
 	return bytes.Equal(bz1, bz2)
 }
 

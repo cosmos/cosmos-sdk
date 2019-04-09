@@ -1,26 +1,30 @@
-package bank
+package staking
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// name of this module
-const ModuleName = "bank"
-
-// app module for bank
+// app module
 type AppModule struct {
-	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	keeper      Keeper
+	fcKeeper    FeeCollectionKeeper
+	distrKeeper DistributionKeeper
+	accKeeper   auth.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
+	distrKeeper types.DistributionKeeper, accKeeper auth.AccountKeeper) AppModule {
+
 	return AppModule{
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
+		keeper:      keeper,
+		fcKeeper:    fcKeeper,
+		distrKeeper: distrKeeper,
+		accKeeper:   accKeeper,
 	}
 }
 
@@ -38,7 +42,7 @@ func (AppModule) RegisterCodec(cdc *codec.Codec) {
 
 // register invariants
 func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, a.accountKeeper)
+	RegisterInvariants(ir, a.keeper, a.fcKeeper, a.distrKeeper, a.accKeeper)
 }
 
 // module message route name
@@ -52,10 +56,14 @@ func (a AppModule) NewHandler() sdk.Handler {
 }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string {
+	return QuerierRoute
+}
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (a AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(a.keeper)
+}
 
 // module begin-block
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
@@ -63,6 +71,7 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, 
 }
 
 // module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags(), nil
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
+	validatorUpdates, tags := EndBlocker(ctx, a.keeper)
+	return validatorUpdates, tags, nil
 }

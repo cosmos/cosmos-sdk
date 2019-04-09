@@ -1,26 +1,23 @@
-package bank
+package crisis
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // name of this module
-const ModuleName = "bank"
+const ModuleName = "crisis"
 
 // app module for bank
 type AppModule struct {
-	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
+		keeper: keeper,
 	}
 }
 
@@ -37,11 +34,9 @@ func (AppModule) RegisterCodec(cdc *codec.Codec) {
 }
 
 // register invariants
-func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, a.accountKeeper)
-}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
-// module message route name
+// module querier route name
 func (AppModule) Route() string {
 	return RouterKey
 }

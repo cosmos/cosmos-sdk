@@ -1,4 +1,4 @@
-package auth
+package mint
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -7,17 +7,17 @@ import (
 )
 
 // name of this module
-const ModuleName = "auth"
+const ModuleName = "mint"
 
-// app module object
+// app module
 type AppModule struct {
-	accountKeeper AccountKeeper
+	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		accountKeeper: accountKeeper,
+		keeper: keeper,
 	}
 }
 
@@ -28,19 +28,17 @@ func (AppModule) Name() string {
 	return ModuleName
 }
 
-// register codec
-func (AppModule) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
-}
+// register app codec
+func (AppModule) RegisterCodec(_ *codec.Codec) {}
 
 // register invariants
-func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (a AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
 // module message route name
 func (AppModule) Route() string { return "" }
 
 // module handler
-func (AppModule) NewHandler() sdk.Handler { return nil }
+func (a AppModule) NewHandler() sdk.Handler { return nil }
 
 // module querier route name
 func (AppModule) QuerierRoute() string {
@@ -49,11 +47,12 @@ func (AppModule) QuerierRoute() string {
 
 // module querier
 func (a AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(a.accountKeeper)
+	return NewQuerier(a.keeper)
 }
 
 // module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
+func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
+	BeginBlocker(ctx, a.keeper)
 	return sdk.EmptyTags(), nil
 }
 

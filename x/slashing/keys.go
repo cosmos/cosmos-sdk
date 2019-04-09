@@ -7,9 +7,6 @@ import (
 )
 
 const (
-	// ModuleName is the name of the module
-	ModuleName = "slashing"
-
 	// StoreKey is the store key string for slashing
 	StoreKey = ModuleName
 

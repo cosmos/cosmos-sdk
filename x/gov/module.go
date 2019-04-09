@@ -1,26 +1,23 @@
-package bank
+package gov
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // name of this module
-const ModuleName = "bank"
+const ModuleName = "gov"
 
-// app module for bank
+// app module
 type AppModule struct {
-	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
+		keeper: keeper,
 	}
 }
 
@@ -37,9 +34,7 @@ func (AppModule) RegisterCodec(cdc *codec.Codec) {
 }
 
 // register invariants
-func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, a.accountKeeper)
-}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
 // module message route name
 func (AppModule) Route() string {
@@ -52,10 +47,14 @@ func (a AppModule) NewHandler() sdk.Handler {
 }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string {
+	return QuerierRoute
+}
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (a AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(a.keeper)
+}
 
 // module begin-block
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
@@ -63,6 +62,7 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, 
 }
 
 // module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags(), nil
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
+	tags := EndBlocker(ctx, a.keeper)
+	return []abci.ValidatorUpdate{}, tags, nil
 }

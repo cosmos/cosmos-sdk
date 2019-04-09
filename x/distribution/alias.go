@@ -30,6 +30,7 @@ type (
 )
 
 const (
+	ModuleName       = types.ModuleName
 	DefaultCodespace = types.DefaultCodespace
 	CodeInvalidInput = types.CodeInvalidInput
 	StoreKey         = types.StoreKey

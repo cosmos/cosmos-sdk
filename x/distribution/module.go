@@ -1,26 +1,20 @@
-package bank
+package distribution
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// name of this module
-const ModuleName = "bank"
-
-// app module for bank
+// app module
 type AppModule struct {
-	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
+		keeper: keeper,
 	}
 }
 
@@ -38,7 +32,7 @@ func (AppModule) RegisterCodec(cdc *codec.Codec) {
 
 // register invariants
 func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, a.accountKeeper)
+	RegisterInvariants(ir, a.keeper)
 }
 
 // module message route name
@@ -52,13 +46,18 @@ func (a AppModule) NewHandler() sdk.Handler {
 }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string {
+	return QuerierRoute
+}
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (a AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(a.keeper)
+}
 
 // module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
+func (a AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (sdk.Tags, error) {
+	BeginBlocker(ctx, req, a.keeper)
 	return sdk.EmptyTags(), nil
 }
 

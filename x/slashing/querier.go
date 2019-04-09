@@ -13,21 +13,21 @@ const (
 )
 
 // NewQuerier creates a new querier for slashing clients.
-func NewQuerier(k Keeper, cdc *codec.Codec) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
 		case QueryParameters:
-			return queryParams(ctx, cdc, k)
+			return queryParams(ctx, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
 		}
 	}
 }
 
-func queryParams(ctx sdk.Context, cdc *codec.Codec, k Keeper) ([]byte, sdk.Error) {
+func queryParams(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(cdc, params)
+	res, err := codec.MarshalJSONIndent(moduleCdc, params)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal JSON", err.Error()))
 	}

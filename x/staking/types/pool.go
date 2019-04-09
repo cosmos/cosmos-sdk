@@ -17,8 +17,8 @@ type Pool struct {
 // nolint
 // TODO: This is slower than comparing struct fields directly
 func (p Pool) Equal(p2 Pool) bool {
-	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
-	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
+	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p)
+	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 

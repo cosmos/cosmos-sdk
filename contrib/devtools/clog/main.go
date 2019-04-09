@@ -49,7 +49,7 @@ var (
 
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
-		Use:   "sdkch",
+		Use:   "clog",
 		Short: "\nMaintain unreleased changelog entries in a modular fashion.",
 	}
 
@@ -381,7 +381,7 @@ func launchUserEditor() (string, error) {
 			"VISUAL or EDITOR variables is set and pointing to a correct editor")
 	}
 
-	tempfile, err := ioutil.TempFile("", "sdkch_*")
+	tempfile, err := ioutil.TempFile("", "clog_*")
 	tempfilename := tempfile.Name()
 	if err != nil {
 		return "", err

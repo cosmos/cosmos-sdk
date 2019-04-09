@@ -61,6 +61,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	k.validatorSet.Unjail(ctx, consAddr)
 
 	tags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.Validator, msg.ValidatorAddr.String(),
 	)
 

@@ -131,7 +131,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		pool := keeper.GetPool(ctx)
 		err := error(nil)
 		if !initCoins.IsZero() {
-			_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+			_, err = ck.AddCoins(ctx, addr, sdk.Coins{
 				{keeper.BondDenom(ctx), initCoins},
 			})
 		}

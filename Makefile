@@ -181,6 +181,12 @@ test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
 	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation
 
+test_sim_benchmark_invariants:
+	@echo "Running simulation invariant benchmarks..."
+	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
+	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
+	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
+
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
@@ -268,5 +274,5 @@ test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
-test_sim_gaia_multi_seed test_sim_gaia_import_export \
+test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \
 go-mod-cache

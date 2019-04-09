@@ -591,7 +591,7 @@ func BenchmarkInvariants(b *testing.B) {
 	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-  for _, cr := range app.crisisKeeper.Routes() {
+	for _, cr := range app.crisisKeeper.Routes() {
 		ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
 
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {

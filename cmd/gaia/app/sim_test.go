@@ -563,3 +563,42 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkInvariants(b *testing.B) {
+	// 1. Setup a simulated Gaia application
+	logger := log.NewNopLogger()
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-invariant-bench")
+	db, _ := sdk.NewLevelDB("simulation", dir)
+
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+
+	app := NewGaiaApp(logger, db, nil, true, false)
+
+	// 2. Run parameterized simulation (w/o invariants)
+	_, err := simulation.SimulateFromSeed(
+		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app), 
+		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean,
+	)
+	if err != nil {
+		fmt.Println(err)
+		b.FailNow()
+	}
+
+	// 3. Benchmark each invariant separately
+	// 
+	// NOTE: We use the crisis keeper as it has all the invariants registered with
+	// their respective metadata which makes it useful for testing/benchmarking.
+  for _, cr := range app.crisisKeeper.Routes()  {
+		ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
+		
+		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
+			if err := cr.Invar(ctx); err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		})	
+	}
+}

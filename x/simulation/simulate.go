@@ -114,7 +114,7 @@ func SimulateFromSeed(
 	logWriter := NewLogWriter(testingMode)
 
 	blockSimulator := createBlockSimulator(
-		testingMode, tb, t, params, eventStats.tally, invariants,
+		testingMode, tb, t, w, params, eventStats.tally, invariants,
 		ops, operationQueue, timeOperationQueue,
 		numBlocks, blockSize, logWriter, lean)
 
@@ -205,16 +205,17 @@ func SimulateFromSeed(
 	}
 
 	if stopEarly {
-		eventStats.Print()
+		eventStats.Print(w)
 		return true, simError
 	}
+
 	fmt.Fprintf(
 		w,
 		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
 		header.Height, header.Time, opCount,
 	)
 
-	eventStats.Print()
+	eventStats.Print(w)
 	return false, nil
 }
 
@@ -225,7 +226,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
 	event func(string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
 	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean bool) blockSimFn {
@@ -237,7 +238,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header) (opCount int) {
 
-		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
+		fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 			header.Height, totalNumBlocks, opCount, blocksize)
 		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
 
@@ -277,7 +278,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 					assertAllInvariants(t, app, invariants, eventStr, logWriter)
 				}
 				if opCount%50 == 0 {
-					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
+					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 						header.Height, totalNumBlocks, opCount, blocksize)
 				}
 			}

@@ -10,9 +10,8 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	cdc := codec.New()
 	ctx, _, _, _, keeper := createTestInput(t, keeperTestParams())
-	querier := NewQuerier(keeper, cdc)
+	querier := NewQuerier(keeper)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -29,7 +28,7 @@ func TestQueryParams(t *testing.T) {
 
 	var params Params
 
-	res, errRes := queryParams(ctx, cdc, keeper)
+	res, errRes := queryParams(ctx, keeper)
 	require.NoError(t, errRes)
 
 	err := cdc.UnmarshalJSON(res, &params)

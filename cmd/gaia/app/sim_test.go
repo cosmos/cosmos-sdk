@@ -293,12 +293,13 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *GaiaApp) []sdk.Invariant {
-	return []sdk.Invariant{
-		simulation.PeriodicInvariant(bank.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
-		simulation.PeriodicInvariant(distr.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
-		simulation.PeriodicInvariant(staking.AllInvariants(app.stakingKeeper, app.feeCollectionKeeper,
-			app.distrKeeper, app.accountKeeper), period, 0),
-	}
+	//return []sdk.Invariant{
+	//simulation.PeriodicInvariant(bank.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
+	//simulation.PeriodicInvariant(distr.AllInvariants(app.distrKeeper), period, 0),
+	//simulation.PeriodicInvariant(staking.AllInvariants(app.stakingKeeper, app.feeCollectionKeeper,
+	//app.distrKeeper, app.accountKeeper), period, 0),
+	//}
+	return app.crisisKeeper.Invariants()
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.

@@ -20,7 +20,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		account := simulation.RandomAcc(r, accs)
 		stored := m.GetAccount(ctx, account.Address)
 		initCoins := stored.GetCoins()
-		opMsg = simulation.NewOperationMsgBasic(ModuleName, "deduct_fee", "", false, nil)
+		opMsg = simulation.NewOperationMsgBasic(auth.ModuleName, "deduct_fee", "", false, nil)
 
 		if len(initCoins) == 0 {
 			return opMsg, nil, nil

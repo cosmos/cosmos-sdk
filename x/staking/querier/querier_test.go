@@ -38,7 +38,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(keeper, cdc)
+	querier := NewQuerier(keeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.NotNil(t, err)
@@ -97,7 +97,7 @@ func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
-	res, err := queryParameters(ctx, cdc, keeper)
+	res, err := queryParameters(ctx, keeper)
 	require.Nil(t, err)
 
 	var params types.Params
@@ -105,7 +105,7 @@ func TestQueryParametersPool(t *testing.T) {
 	require.Nil(t, errRes)
 	require.Equal(t, keeper.GetParams(ctx), params)
 
-	res, err = queryPool(ctx, cdc, keeper)
+	res, err = queryPool(ctx, keeper)
 	require.Nil(t, err)
 
 	var pool types.Pool
@@ -134,7 +134,7 @@ func TestQueryValidators(t *testing.T) {
 	// Query Validators
 	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)
 
-	res, err := queryValidators(ctx, cdc, keeper)
+	res, err := queryValidators(ctx, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.Validator
@@ -153,7 +153,7 @@ func TestQueryValidators(t *testing.T) {
 		Path: "/custom/staking/validator",
 		Data: bz,
 	}
-	res, err = queryValidator(ctx, cdc, query, keeper)
+	res, err = queryValidator(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.Validator
@@ -195,7 +195,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
 
-	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
+	res, err := queryDelegatorValidators(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.Validator
@@ -208,7 +208,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorValidators(ctx, cdc, query, keeper)
+	_, err = queryDelegatorValidators(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query bonded validator
@@ -221,7 +221,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorValidator(ctx, cdc, query, keeper)
+	res, err = queryDelegatorValidator(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.Validator
@@ -233,7 +233,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorValidator(ctx, cdc, query, keeper)
+	_, err = queryDelegatorValidator(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query delegation
@@ -246,7 +246,7 @@ func TestQueryDelegation(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryDelegation(ctx, cdc, query, keeper)
+	res, err = queryDelegation(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var delegationRes types.Delegation
@@ -262,7 +262,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorDelegations(ctx, cdc, query, keeper)
+	res, err = queryDelegatorDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var delegatorDelegations []types.Delegation
@@ -274,7 +274,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegation(ctx, cdc, query, keeper)
+	_, err = queryDelegation(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query validator delegations
@@ -287,7 +287,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryValidatorDelegations(ctx, cdc, query, keeper)
+	res, err = queryValidatorDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var delegationsRes []types.Delegation
@@ -313,7 +313,7 @@ func TestQueryDelegation(t *testing.T) {
 	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
+	res, err = queryUnbondingDelegation(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var unbondRes types.UnbondingDelegation
@@ -325,7 +325,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
+	_, err = queryUnbondingDelegation(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query Delegator Delegations
@@ -335,7 +335,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
+	res, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var delegatorUbds []types.UnbondingDelegation
@@ -346,7 +346,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
+	_, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query redelegation
@@ -365,7 +365,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var redelRes []types.Redelegation
@@ -406,7 +406,7 @@ func TestQueryRedelegations(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err := queryRedelegations(ctx, cdc, query, keeper)
+	res, err := queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var redsRes []types.Redelegation
@@ -425,7 +425,7 @@ func TestQueryRedelegations(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	errRes = cdc.UnmarshalJSON(res, &redsRes)

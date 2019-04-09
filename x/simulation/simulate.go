@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -26,7 +27,7 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 	invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
 
 	time := time.Now().UnixNano()
-	return SimulateFromSeed(t, app, appStateFn, time, ops,
+	return SimulateFromSeed(t, os.Stdout, app, appStateFn, time, ops,
 		invariants, numBlocks, blockSize, commit, lean)
 }
 
@@ -51,19 +52,20 @@ func initChain(
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 // TODO split this monster function up
-func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
+func SimulateFromSeed(
+	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, blockSize int, commit, lean bool) (stopEarly bool, simError error) {
+	numBlocks, blockSize int, commit, lean bool,
+) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
-	fmt.Printf("Starting SimulateFromSeed with randomness "+
-		"created with seed %d\n", int(seed))
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 
 	r := rand.New(rand.NewSource(seed))
 	params := RandomParams(r) // := DefaultParams()
-	fmt.Printf("Randomized simulation params: %+v\n", params)
+	fmt.Fprintf(w, "Randomized simulation params: %+v\n", params)
 
 	genesisTimestamp := RandTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
@@ -94,8 +96,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		receivedSignal := <-c
-		fmt.Printf("\nExiting early due to %s, on block %d, operation %d\n",
-			receivedSignal, header.Height, opCount)
+		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
 		simError = fmt.Errorf("Exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
@@ -123,13 +124,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		// Recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Println("Panic with err\n", r)
+				fmt.Fprintf(w, "panic with err\n", r)
 				stackTrace := string(debug.Stack())
 				fmt.Println(stackTrace)
 				logWriter.PrintLogs()
-				simError = fmt.Errorf(
-					"Simulation halted due to panic on block %d",
-					header.Height)
+				simError = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
 			}
 		}()
 	}
@@ -188,8 +187,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		if header.ProposerAddress == nil {
-			fmt.Printf("\nSimulation stopped early as all validators " +
-				"have been unbonded, there is nobody left propose a block!\n")
+			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
 			stopEarly = true
 			break
 		}
@@ -210,9 +208,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		eventStats.Print()
 		return true, simError
 	}
-	fmt.Printf("\nSimulation complete. Final height (blocks): %d, "+
-		"final time (seconds), : %v, operations ran %d\n",
-		header.Height, header.Time, opCount)
+	fmt.Fprintf(
+		w,
+		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
+		header.Height, header.Time, opCount,
+	)
 
 	eventStats.Print()
 	return false, nil

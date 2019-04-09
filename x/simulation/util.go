@@ -86,7 +86,7 @@ func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sd
 			}
 			return nil
 		}
-		outInvariants := append(outInvariants, outInvariant)
+		outInvariants = append(outInvariants, outInvariant)
 	}
 	return outInvariants
 }

@@ -96,7 +96,7 @@ func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValida
 }
 
 func (msg MsgWithdrawValidatorCommission) Route() string { return ModuleName }
-func (msg MsgWithdrawValidatorCommission) Type() string  { return "withdraw_validator_rewards_all" }
+func (msg MsgWithdrawValidatorCommission) Type() string  { return "withdraw_validator_commission" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {

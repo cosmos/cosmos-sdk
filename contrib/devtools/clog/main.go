@@ -49,16 +49,15 @@ var (
 
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
-		Use:   "sdkch",
-		Short: "\nMaintain unreleased changelog entries in a modular fashion.",
+		Use:   "clog",
+		Short: "Maintain unreleased changelog entries in a modular fashion.",
 	}
 
 	// command to add a pending log entry
 	AddCmd = &cobra.Command{
 		Use:   "add [section] [stanza] [message]",
 		Short: "Add an entry file.",
-		Long: `
-Add an entry file. If message is empty, start the editor to edit the message.
+		Long: `Add an entry file. If message is empty, start the editor to edit the message.
 
     Sections             Stanzas
          ---                 ---
@@ -143,8 +142,7 @@ func main() {
 	}
 
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -381,7 +379,7 @@ func launchUserEditor() (string, error) {
 			"VISUAL or EDITOR variables is set and pointing to a correct editor")
 	}
 
-	tempfile, err := ioutil.TempFile("", "sdkch_*")
+	tempfile, err := ioutil.TempFile("", "clog_*")
 	tempfilename := tempfile.Name()
 	if err != nil {
 		return "", err

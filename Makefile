@@ -62,7 +62,7 @@ BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 all: tools install lint test
 
 # The below include contains the tools target.
-include scripts/Makefile
+include contrib/devtools/Makefile
 
 ########################################
 ### CI

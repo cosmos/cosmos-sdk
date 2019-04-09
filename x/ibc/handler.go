@@ -22,7 +22,7 @@ func NewHandler(ibcm Mapper, ck BankKeeper) sdk.Handler {
 func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg MsgIBCTransfer) sdk.Result {
 	packet := msg.IBCPacket
 
-	_, _, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
+	_, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}

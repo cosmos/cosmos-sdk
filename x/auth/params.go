@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
-const DefaultParamspace = "auth"
+const DefaultParamspace = ModuleName
 
 // Default parameter values
 const (

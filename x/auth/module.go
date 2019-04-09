@@ -1,4 +1,4 @@
-package bank
+package auth
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,7 +6,7 @@ import (
 )
 
 // name of this module
-const ModuleName = "bank"
+const ModuleName = "auth"
 
 // app module for bank
 type AppModule struct {
@@ -25,10 +25,8 @@ func (AppModule) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
 }
 
-// register bank invariants
-func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, a.keeper.ak)
-}
+// placeholder function
+func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
 // route name for handler
 func (AppModule) Route() string {
@@ -41,7 +39,7 @@ func (a AppModule) NewHandler() sdk.Handler {
 }
 
 // nolint placeholder code
-func (AppModule) QuerierRoute() string               { return "" }
-func (AppModule) NewQuerierHandler() sdk.Querier     { return nil }
-func (AppModule) BeginBlock(sdk.Context) error       { return nil }
-func (AppModule) EndBlock(sdk.Context) (Tags, error) { return Tags{}, nil }
+func (AppModule) QuerierRoute() string                 { return "" }
+func (AppModule) NewQuerierHandler() sdk.Querier       { return nil }
+func (AppModule) BeginBlock(_ sdk.Context) error       { return nil }
+func (AppModule) EndBlock(_ sdk.Context) (Tags, error) { return Tags{}, nil }

@@ -30,11 +30,11 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
-	// genesis
-	DefaultGenesisState() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
-	InitGenesis(sdk.Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
-	ExportGenesis(sdk.Context) json.RawMessage
+	//// genesis
+	//DefaultGenesisState() json.RawMessage
+	//ValidateGenesis(json.RawMessage) error
+	//InitGenesis(sdk.Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
+	//ExportGenesis(sdk.Context) json.RawMessage
 
 	BeginBlock(sdk.Context) error
 	EndBlock(sdk.Context) (Tags, error)

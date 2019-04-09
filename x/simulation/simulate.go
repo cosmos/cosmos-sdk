@@ -124,7 +124,7 @@ func SimulateFromSeed(
 		// Recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Fprintf(w, "panic with err\n", r)
+				fmt.Fprintf(w, "panic with err: %v\n", r)
 				stackTrace := string(debug.Stack())
 				fmt.Println(stackTrace)
 				logWriter.PrintLogs()

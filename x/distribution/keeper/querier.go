@@ -241,7 +241,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	// cache-wrap context as to not persist state changes during querying
 	ctx, _ = ctx.CacheContext()
 
-	var totalRewards sdk.DecCoins
+	totalRewards := sdk.DecCoins{}
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,

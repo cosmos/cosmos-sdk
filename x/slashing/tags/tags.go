@@ -6,8 +6,8 @@ import (
 
 // Slashing tags
 var (
-	ActionValidatorUnjailed = "validator-unjailed"
+	TxCategory = "slashing"
 
-	Action    = sdk.TagAction
+	Category  = sdk.TagCategory
 	Validator = "validator"
 )

@@ -2,6 +2,7 @@ package bank
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/tags"
 )
 
 // NewHandler returns a handler for "bank" type messages.
@@ -24,13 +25,19 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	if !k.GetSendEnabled(ctx) {
 		return ErrSendDisabled(k.Codespace()).Result()
 	}
-	tags, err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.FromAddress.String(),
+		tags.Recipient, msg.ToAddress.String(),
+	)
+
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }
 
@@ -40,12 +47,13 @@ func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg MsgMultiSend) sdk.Result 
 	if !k.GetSendEnabled(ctx) {
 		return ErrSendDisabled(k.Codespace()).Result()
 	}
-	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	resTags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
 	}
 
+	resTags = resTags.AppendTag(tags.Category, tags.TxCategory)
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }

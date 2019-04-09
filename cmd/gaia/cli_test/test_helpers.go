@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -98,7 +98,7 @@ func (f Fixtures) GenesisFile() string {
 // GenesisFile returns the application's genesis state
 func (f Fixtures) GenesisState() app.GenesisState {
 	cdc := codec.New()
-	genDoc, err := appInit.LoadGenesisDoc(cdc, f.GenesisFile())
+	genDoc, err := tmtypes.GenesisDocFromFile(f.GenesisFile())
 	require.NoError(f.T, err)
 
 	var appState app.GenesisState

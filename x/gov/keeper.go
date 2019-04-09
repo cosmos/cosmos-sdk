@@ -379,7 +379,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Send coins from depositor's account to DepositedCoinsAccAddr account
 	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	_, err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -423,7 +423,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
@@ -442,7 +442,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// TODO: Find a way to do this without using accounts.
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}

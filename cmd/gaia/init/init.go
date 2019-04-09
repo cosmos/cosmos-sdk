@@ -11,6 +11,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -76,7 +77,22 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 				return err
 			}
 
-			if err = ExportGenesisFile(genFile, chainID, nil, appState); err != nil {
+			genDoc := &types.GenesisDoc{}
+			if _, err := os.Stat(genFile); err != nil {
+				if !os.IsNotExist(err) {
+					return err
+				}
+			} else {
+				genDoc, err = types.GenesisDocFromFile(genFile)
+				if err != nil {
+					return err
+				}
+			}
+
+			genDoc.ChainID = chainID
+			genDoc.Validators = nil
+			genDoc.AppState = appState
+			if err = ExportGenesisFile(genDoc, genFile); err != nil {
 				return err
 			}
 

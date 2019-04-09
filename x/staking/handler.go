@@ -34,7 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags, error) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
 	resTags := sdk.NewTags()
 
 	// Calculate validator set changes.
@@ -60,7 +60,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		}
 
 		resTags.AppendTags(sdk.NewTags(
-			tags.Action, ActionCompleteUnbonding,
+			tags.Action, tags.ActionCompleteUnbonding,
 			tags.Delegator, dvPair.DelegatorAddress.String(),
 			tags.SrcValidator, dvPair.ValidatorAddress.String(),
 		))
@@ -84,7 +84,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 		))
 	}
 
-	return validatorUpdates, resTags, nil
+	return validatorUpdates, resTags
 }
 
 // These functions assume everything has been authenticated,
@@ -146,8 +146,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.DstValidator, msg.ValidatorAddress.String(),
-		tags.Moniker, msg.Description.Moniker,
-		tags.Identity, msg.Description.Identity,
+		tags.Delegator, msg.DelegatorAddress.String(),
 	)
 
 	return sdk.Result{
@@ -196,8 +195,6 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	resTags := sdk.NewTags(
 		tags.DstValidator, msg.ValidatorAddress.String(),
-		tags.Moniker, description.Moniker,
-		tags.Identity, description.Identity,
 	)
 
 	return sdk.Result{

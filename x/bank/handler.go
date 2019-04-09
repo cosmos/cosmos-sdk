@@ -25,12 +25,17 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	if !k.GetSendEnabled(ctx) {
 		return ErrSendDisabled(k.Codespace()).Result()
 	}
-	resTags, err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
-	resTags = resTags.AppendTag(tags.Category, tags.TxCategory)
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.FromAddress.String(),
+		tags.Recipient, msg.ToAddress.String(),
+	)
+
 	return sdk.Result{
 		Tags: resTags,
 	}

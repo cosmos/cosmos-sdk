@@ -108,12 +108,12 @@ func TestKeeper(t *testing.T) {
 	// Test invalid space.Get
 	for i, kv := range kvs {
 		var param bool
-		require.Error(t, space.Get(ctx, []byte(kv.key), &param), "invalid space.Get not error, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "invalid space.Get not panics, tc #%d", i)
 	}
 
 	// Test invalid space.Set
 	for i, kv := range kvs {
-		require.Error(t, space.Set(ctx, []byte(kv.key), true), "invalid space.Set not error, tc #%d", i)
+		require.Panics(t, func() { space.Set(ctx, []byte(kv.key), true) }, "invalid space.Set not panics, tc #%d", i)
 	}
 
 	// Test GetSubspace
@@ -122,12 +122,12 @@ func TestKeeper(t *testing.T) {
 		gspace, ok := keeper.GetSubspace("test")
 		require.True(t, ok, "cannot retrieve subspace, tc #%d", i)
 
-		require.NoError(t, gspace.Get(ctx, []byte(kv.key), &gparam))
-		require.NoError(t, space.Get(ctx, []byte(kv.key), &param))
+		require.NotPanics(t, func() { gspace.Get(ctx, []byte(kv.key), &gparam) })
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) })
 		require.Equal(t, gparam, param, "GetSubspace().Get not equal with space.Get, tc #%d", i)
 
-		require.NoError(t, gspace.Set(ctx, []byte(kv.key), int64(i)))
-		require.NoError(t, space.Get(ctx, []byte(kv.key), &param))
+		require.NotPanics(t, func() { gspace.Set(ctx, []byte(kv.key), int64(i)) })
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) })
 		require.Equal(t, int64(i), param, "GetSubspace().Set not equal with space.Get, tc #%d", i)
 	}
 }
@@ -184,27 +184,27 @@ func TestSubspace(t *testing.T) {
 	// Test space.Set, space.Modified
 	for i, kv := range kvs {
 		require.False(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns true before setting, tc #%d", i)
-		require.NoError(t, space.Set(ctx, []byte(kv.key), kv.param), "space.Set error, tc #%d", i)
+		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
 		require.True(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns false after setting, tc #%d", i)
 	}
 
 	// Test space.Get, space.GetIfExists
 	for i, kv := range kvs {
-		require.Error(t, space.GetIfExists(ctx, []byte("invalid"), kv.ptr), "space.GetIfExists error when no value exists, tc #%d", i)
+		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte("invalid"), kv.ptr) }, "space.GetIfExists panics when no value exists, tc #%d", i)
 		require.Equal(t, kv.zero, indirect(kv.ptr), "space.GetIfExists unmarshalls when no value exists, tc #%d", i)
-		require.Error(t, space.Get(ctx, []byte("invalid"), kv.ptr), "invalid space.Get not error when no value exists, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
 		require.Equal(t, kv.zero, indirect(kv.ptr), "invalid space.Get unmarshalls when no value exists, tc #%d", i)
 
-		require.NoError(t, space.GetIfExists(ctx, []byte(kv.key), kv.ptr), "space.GetIfExists error, tc #%d", i)
+		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte(kv.key), kv.ptr) }, "space.GetIfExists panics, tc #%d", i)
 		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
-		require.NoError(t, space.Get(ctx, []byte(kv.key), kv.ptr), "space.Get error, tc #%d", i)
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), kv.ptr) }, "space.Get panics, tc #%d", i)
 		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 
-		require.Error(t, space.Get(ctx, []byte("invalid"), kv.ptr), "invalid space.Get not error when no value exists, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
 		require.Equal(t, kv.param, indirect(kv.ptr), "invalid space.Get unmarshalls when no value existt, tc #%d", i)
 
-		require.Error(t, space.Get(ctx, []byte(kv.key), nil), "invalid space.Get not error when the pointer is nil, tc #%d", i)
-		require.Error(t, space.Get(ctx, []byte(kv.key), new(invalid)), "invalid space.Get not error when the pointer is different type, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), nil) }, "invalid space.Get not panics when the pointer is nil, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), new(invalid)) }, "invalid space.Get not panics when the pointer is different type, tc #%d", i)
 	}
 
 	// Test store.Get equals space.Get

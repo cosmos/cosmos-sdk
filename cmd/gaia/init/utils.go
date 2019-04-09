@@ -3,11 +3,9 @@ package init
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"time"
 
-	amino "github.com/tendermint/go-amino"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/common"
@@ -22,16 +20,7 @@ import (
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func ExportGenesisFile(
-	genFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage,
-) error {
-
-	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
-		AppState:   appState,
-	}
-
+func ExportGenesisFile(genDoc *types.GenesisDoc, genFile string) error {
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
@@ -86,20 +75,6 @@ func InitializeNodeValidatorFiles(
 	valPubKey = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
 
 	return nodeID, valPubKey, nil
-}
-
-// LoadGenesisDoc reads and unmarshals GenesisDoc from the given file.
-func LoadGenesisDoc(cdc *amino.Codec, genFile string) (genDoc types.GenesisDoc, err error) {
-	genContents, err := ioutil.ReadFile(genFile)
-	if err != nil {
-		return genDoc, err
-	}
-
-	if err := cdc.UnmarshalJSON(genContents, &genDoc); err != nil {
-		return genDoc, err
-	}
-
-	return genDoc, err
 }
 
 func initializeEmptyGenesis(

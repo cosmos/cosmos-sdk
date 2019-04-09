@@ -45,7 +45,7 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck BankKeeper, msg MsgIBC
 	}
 
 	// XXX Check that packet.Coins is valid and positive (nonzero)
-	_, _, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
+	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}

@@ -359,7 +359,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout,app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -483,7 +483,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout,app))
+	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if commit {
 		// for memdb:
@@ -522,7 +522,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout,newApp))
+	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
 
 }
@@ -579,7 +579,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app), 
+		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean,
 	)
 	if err != nil {
@@ -588,17 +588,17 @@ func BenchmarkInvariants(b *testing.B) {
 	}
 
 	// 3. Benchmark each invariant separately
-	// 
+	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-  for _, cr := range app.crisisKeeper.Routes()  {
+  for _, cr := range app.crisisKeeper.Routes() {
 		ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
-		
+
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if err := cr.Invar(ctx); err != nil {
 				fmt.Println(err)
 				b.FailNow()
 			}
-		})	
+		})
 	}
 }

@@ -80,7 +80,7 @@ func QueryDelegatorValidators(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/delegator_validators", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorValidators),
 		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
 	)
 }
@@ -90,7 +90,7 @@ func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/validator_commission", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryValidatorCommission),
 		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
 }

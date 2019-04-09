@@ -293,7 +293,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *GaiaApp) []sdk.Invariant {
-	return simulation.PeriodicInvariant(app.crisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.

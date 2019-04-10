@@ -9,7 +9,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +24,9 @@ var (
 	addr2 = sdk.ValAddress(pk2.Address())
 	addr3 = sdk.ValAddress(pk3.Address())
 
-	emptyAddr   sdk.ValAddress
-	emptyPubkey crypto.PubKey
+	emptyAddr     sdk.ValAddress
+	emptyPubkey   crypto.PubKey
+	testBondDenom = sdk.DefaultBondDenom
 )
 
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
@@ -41,7 +41,7 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		msg := msgs[0].(staking.MsgCreateValidator)
 
 		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddress))
-		acc.Coins = sdk.NewCoins(sdk.NewInt64Coin(defaultBondDenom, 150))
+		acc.Coins = sdk.NewCoins(sdk.NewInt64Coin(testBondDenom, 150))
 		genAccs[i] = NewGenesisAccount(&acc)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply
 	}
@@ -55,7 +55,7 @@ func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
-	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(defaultBondDenom, 150)))
+	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(testBondDenom, 150)))
 	genAcc := NewGenesisAccount(&authAcc)
 	acc := genAcc.ToAccount()
 	require.IsType(t, &auth.BaseAccount{}, acc)
@@ -104,7 +104,7 @@ func TestGaiaAppGenState(t *testing.T) {
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	desc := staking.NewDescription(name, "", "", "")
 	comm := staking.CommissionMsg{}
-	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(defaultBondDenom,
+	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(testBondDenom,
 		50), desc, comm, sdk.OneInt())
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
 }
@@ -145,13 +145,6 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
 	require.Error(t, err)
-}
-
-func TestNewDefaultGenesisAccount(t *testing.T) {
-	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
-	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
-	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
-	require.Equal(t, sdk.TokensFromTendermintPower(150), acc.Coins.AmountOf(defaultBondDenom))
 }
 
 func TestGenesisStateSanitize(t *testing.T) {

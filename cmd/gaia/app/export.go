@@ -59,6 +59,8 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteLis
 }
 
 // prepare for fresh start at zero height
+// NOTE zero height genesis is a temporary feature which will be deprecated
+//      in favour of export at a block height
 func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []string) {
 	applyWhiteList := false
 

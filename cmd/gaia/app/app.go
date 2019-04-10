@@ -222,7 +222,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	// load the initial staking information
 	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
 	if err != nil {
-		panic(err) // TODO find a way to do this w/o panics
+		panic(err)
 	}
 
 	// initialize module-specific stores
@@ -235,7 +235,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 
 	// validate genesis state
 	if err := GaiaValidateGenesisState(genesisState); err != nil {
-		panic(err) // TODO find a way to do this w/o panics
+		panic(err)
 	}
 
 	if len(genesisState.GenTxs) > 0 {
@@ -245,7 +245,8 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	return validators
 }
 
-func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage) []abci.ValidatorUpdate {
+// TODO move this genTx functionality to staking
+func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage, deliverTx func([]byte) abci.ResponseDeliverTx) []abci.ValidatorUpdate {
 	for _, genTx := range genTxs {
 		var tx auth.StdTx
 		app.cdc.MustUnmarshalJSON(genTx, &tx)

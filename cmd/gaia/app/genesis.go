@@ -25,12 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var (
-	// bonded tokens given to genesis validators/accounts
-	freeTokensPerAcc = sdk.TokensFromTendermintPower(150)
-	defaultBondDenom = sdk.DefaultBondDenom
-)
-
 // XXX should use map for all module data
 
 // State to Unmarshal
@@ -145,6 +139,8 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 	return bacc
 }
 
+// XXX move to init unused besides there and in testing
+
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
 func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
@@ -191,6 +187,18 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
+}
+
+// GaiaAppGenState but with JSON
+func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+	appState json.RawMessage, err error) {
+
+	// create the final app state
+	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
+	if err != nil {
+		return nil, err
+	}
+	return codec.MarshalJSONIndent(cdc, genesisState)
 }
 
 // NewDefaultGenesisState generates the default state for gaia.
@@ -279,18 +287,6 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	}
 
 	return nil
-}
-
-// GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
-	appState json.RawMessage, err error) {
-
-	// create the final app state
-	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
-	if err != nil {
-		return nil, err
-	}
-	return codec.MarshalJSONIndent(cdc, genesisState)
 }
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
@@ -391,13 +387,4 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return appGenTxs, persistentPeers, nil
-}
-
-func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
-	accAuth := auth.NewBaseAccountWithAddress(addr)
-	accAuth.Coins = sdk.NewCoins(
-		sdk.NewCoin("footoken", sdk.NewInt(1000)),
-		sdk.NewCoin(defaultBondDenom, freeTokensPerAcc),
-	)
-	return NewGenesisAccount(&accAuth)
 }

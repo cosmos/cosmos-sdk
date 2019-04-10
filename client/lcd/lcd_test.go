@@ -114,7 +114,7 @@ func TestCoinSend(t *testing.T) {
 
 	// query empty
 	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
-	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
 	initialBalance := acc.GetCoins()
@@ -1031,4 +1031,27 @@ func TestMintingQueries(t *testing.T) {
 
 	var annualProvisions sdk.Dec
 	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &annualProvisions))
+}
+
+func TestAccountBalanceQuery(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	require.NoError(t, err)
+	someFakeAddr := sdk.AccAddress(bz)
+
+	// empty account
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Contains(t, body, `"type":"auth/Account"`)
+
+	// empty account balance
+	res, body = Request(t, port, "GET", fmt.Sprintf("/bank/balances/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Contains(t, body, "[]")
+
 }

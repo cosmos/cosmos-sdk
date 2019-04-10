@@ -1,4 +1,4 @@
-# Deploy your own testnet
+# Deploy Your Own Testnet
 
 This document describes 3 ways to setup a network of `gaiad` nodes, each serving a different usecase:
 
@@ -20,7 +20,7 @@ In case you need to use or deploy gaia as a container you could skip the `build`
 
 The same images can be used to build your own docker-compose stack.
 
-## Single-node, local, manual testnet
+## Single-node, Local, Manual Testnet
 
 This guide helps you create a single validator node that runs a network locally for testing and other development related uses.
 
@@ -29,7 +29,7 @@ This guide helps you create a single validator node that runs a network locally 
 - [Install gaia](./installation.md)
 - [Install `jq`](https://stedolan.github.io/jq/download/) (optional)
 
-### Create genesis file and start the network
+### Create Genesis File and Start the Network
 
 ```bash
 # You can run all of these commands from your home directory
@@ -58,7 +58,7 @@ gaiad start
 
 This setup puts all the data for `gaiad` in `~/.gaiad`. You can examine the genesis file you created at `~/.gaiad/config/genesis.json`. With this configuration `gaiacli` is also ready to use and has an account with tokens (both staking and custom).
 
-## Multi-node, local, automated testnet
+## Multi-node, Local, Automated Testnet
 
 From the [networks/local directory](https://github.com/cosmos/cosmos-sdk/tree/develop/networks/local):
 
@@ -83,7 +83,7 @@ make build-linux
 make build-docker-gaiadnode
 ```
 
-### Run your testnet
+### Run Your Testnet
 
 To start a 4 node testnet run:
 
@@ -181,7 +181,7 @@ funds!
 **Note**: Each node's seed is located at `./build/nodeN/gaiacli/key_seed.json` and can be restored to the CLI using the `gaiacli keys add --restore` command
 :::
 
-### Special binaries
+### Special Binaries
 
 If you have multiple binaries with different names, you can specify which one to run with the BINARY environment variable. The path of the binary is relative to the attached volume. For example:
 
@@ -190,7 +190,7 @@ If you have multiple binaries with different names, you can specify which one to
 BINARY=gaiafoo make localnet-start
 ```
 
-## Multi-node, remote, automated testnet
+## Multi-Node, Remote, Automated Testnet
 
 The following should be run from the [networks directory](https://github.com/cosmos/cosmos-sdk/tree/develop/networks).
 
@@ -216,7 +216,7 @@ export SSH_PUBLIC_FILE="$HOME/.ssh/id_rsa.pub"
 
 These will be used by both `terraform` and `ansible`.
 
-### Create a remote network
+### Create a Remote Network
 
 ```
 SERVERS=1 REGION_LIMIT=1 make validators-start
@@ -228,13 +228,13 @@ The testnet name is what's going to be used in --chain-id, while the cluster nam
 ./new-testnet.sh "$TESTNET_NAME" "$CLUSTER_NAME" 1 1
 ```
 
-### Quickly see the /status endpoint
+### Quickly see the /status Endpoint
 
 ```
 make validators-status
 ```
 
-### Delete servers
+### Delete Servers
 
 ```
 make validators-stop

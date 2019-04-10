@@ -129,7 +129,7 @@ func QueryVoteByTxQuery(
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
+		fmt.Sprintf("%s='%s'", tags.Sender, []byte(params.Voter.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -172,7 +172,7 @@ func QueryDepositByTxQuery(
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
+		fmt.Sprintf("%s='%s'", tags.Sender, []byte(params.Depositor.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently

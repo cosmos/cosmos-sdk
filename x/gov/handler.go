@@ -49,7 +49,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	resTags := sdk.NewTags(
 		tags.ProposalID, proposalIDStr,
 		tags.Category, tags.TxCategory,
-		tags.Proposer, msg.Proposer.String(),
+		tags.Sender, msg.Proposer.String(),
 	)
 
 	if votingStarted {
@@ -73,7 +73,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	resTags := sdk.NewTags(
 		tags.ProposalID, proposalIDStr,
 		tags.Category, tags.TxCategory,
-		tags.Depositor, msg.Depositor.String(),
+		tags.Sender, msg.Depositor.String(),
 	)
 
 	if votingStarted {
@@ -97,7 +97,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		Tags: sdk.NewTags(
 			tags.ProposalID, proposalIDStr,
 			tags.Category, tags.TxCategory,
-			tags.Voter, msg.Voter.String(),
+			tags.Sender, msg.Voter.String(),
 		),
 	}
 }

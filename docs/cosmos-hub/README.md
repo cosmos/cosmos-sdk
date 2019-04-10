@@ -1,6 +1,6 @@
-# Gaia Documentation
+# Cosmos Hub Documentation
 
-Welcome to the `Gaia` docs. `Gaia` is the current name of the Cosmos SDK application for the Cosmos Hub.
+Welcome to the documentation of the **Cosmos Hub application: `gaia`**.
 
 ## Join the Cosmos Hub Mainnet
 
@@ -12,11 +12,11 @@ Welcome to the `Gaia` docs. `Gaia` is the current name of the Cosmos SDK applica
 
 - [Join the testnet](./join-testnet.md)
 
-## Setup your own `gaia` testnet
+## Setup Your Own `gaia` Testnet
 
 - [Setup your own `gaia` testnet](./deploy-testnet.md)
 
-## Additional resources
+## Additional Resources
 
 - [Intro to validators](./validators/overview.md)
 - [Validator FAQ](./validators/validator-faq.md)

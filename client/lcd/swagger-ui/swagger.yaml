@@ -236,7 +236,7 @@ paths:
         - in: query
           name: tag
           type: string
-          description: "transaction tags such as 'action=submit-proposal' and 'proposer=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc' which results in the following endpoint: 'GET /txs?action=submit-proposal&proposer=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'"
+          description: "transaction tags such as 'action=submit-proposal' and 'sender=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc' which results in the following endpoint: 'GET /txs?action=submit-proposal&sender=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'"
           required: true
           x-example: 'TODO'
         - in: query

@@ -20,11 +20,16 @@ type StakingKeeper interface {
 
 // expected coin keeper
 type BankKeeper interface {
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 }
 
 // expected fee collection keeper
 type FeeCollectionKeeper interface {
 	GetCollectedFees(ctx sdk.Context) sdk.Coins
 	ClearCollectedFees(ctx sdk.Context)
+}
+
+// expected crisis keeper
+type CrisisKeeper interface {
+	RegisterRoute(moduleName, route string, invar sdk.Invariant)
 }

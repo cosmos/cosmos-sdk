@@ -42,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -220,7 +221,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true)
+	app := gapp.NewGaiaApp(logger, db, nil, true, false)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
@@ -298,6 +299,9 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	}
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
+
+	// initialize crisis data
+	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {
@@ -390,11 +394,11 @@ func startTM(
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
 	registerRoutes(rs)
-	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
+	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger) //nolint:errcheck
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger, tmrpc.DefaultConfig()) //nolint:errcheck
 	return listener, nil
 }
 
@@ -408,6 +412,7 @@ func registerRoutes(rs *RestServer) {
 	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	mintrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a
@@ -651,7 +656,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, tx auth.StdTx) (*http.Response, string) {
-	txReq := clienttx.BroadcastReq{Tx: tx, Return: "block"}
+	txReq := clienttx.BroadcastReq{Tx: tx, Mode: "block"}
 
 	req, err := cdc.MarshalJSON(txReq)
 	require.Nil(t, err)
@@ -690,7 +695,7 @@ func doTransferWithGas(
 	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, client.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -737,7 +742,7 @@ func doTransferWithGasAccAuto(
 	acc := getAccount(t, port, addr)
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, client.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -815,11 +820,11 @@ func doDelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgDelegationsInput{
+	msg := stakingrest.DelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		Delegation:       sdk.NewCoin(sdk.DefaultBondDenom, amount),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -839,13 +844,6 @@ func doDelegate(
 	return txResp
 }
 
-type msgDelegationsInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	Delegation       sdk.Coin       `json:"delegation"`
-}
-
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(
 	t *testing.T, port, name, pwd string, delAddr sdk.AccAddress,
@@ -859,11 +857,11 @@ func doUndelegate(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := msgUndelegateInput{
+	msg := stakingrest.UndelegateRequest{
 		BaseReq:          baseReq,
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		SharesAmount:     amount.ToDec(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -882,13 +880,6 @@ func doUndelegate(
 	return txResp
 }
 
-type msgUndelegateInput struct {
-	BaseReq          rest.BaseReq   `json:"base_req"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
-	ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-	SharesAmount     sdk.Dec        `json:"shares"`
-}
-
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(
 	t *testing.T, port, name, pwd string, delAddr sdk.AccAddress, valSrcAddr,
@@ -902,12 +893,12 @@ func doBeginRedelegation(
 	from := acc.GetAddress().String()
 
 	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
-	msg := stakingrest.MsgBeginRedelegateInput{
+	msg := stakingrest.RedelegateRequest{
 		BaseReq:             baseReq,
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,
 		ValidatorDstAddress: valDstAddr,
-		SharesAmount:        amount.ToDec(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, amount),
 	}
 
 	req, err := cdc.MarshalJSON(msg)
@@ -924,14 +915,6 @@ func doBeginRedelegation(
 	require.NoError(t, err)
 
 	return txResp
-}
-
-type msgBeginRedelegateInput struct {
-	BaseReq             rest.BaseReq   `json:"base_req"`
-	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
-	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
-	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
-	SharesAmount        sdk.Dec        `json:"shares"`
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator
@@ -1408,6 +1391,21 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var signingInfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
+	require.Nil(t, err)
+
+	return signingInfo
+}
+
+// ----------------------------------------------------------------------
+// ICS 23 - SlashingList
+// ----------------------------------------------------------------------
+// GET /slashing/signing_infos Get sign info of all validators with pagination
+func getSigningInfoList(t *testing.T, port string) []slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", "/slashing/signing_infos?page=1&limit=1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var signingInfo []slashing.ValidatorSigningInfo
 	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
 	require.Nil(t, err)
 

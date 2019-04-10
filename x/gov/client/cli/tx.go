@@ -79,14 +79,8 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			// Get from address
+			// Get proposer address
 			from := cliCtx.GetFromAddress()
-
-			// Pull associated account
-			account, err := cliCtx.GetAccount(from)
-			if err != nil {
-				return err
-			}
 
 			// Find deposit amount
 			amount, err := sdk.ParseCoins(proposal.Deposit)
@@ -94,12 +88,8 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			// ensure account has enough coins
-			if !account.GetCoins().IsAllGTE(amount) {
-				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
-			}
-
 			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposal.Type, from, amount)
+
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -147,23 +137,13 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
+			// Get depositor address
 			from := cliCtx.GetFromAddress()
-
-			// Fetch associated account
-			account, err := cliCtx.GetAccount(from)
-			if err != nil {
-				return err
-			}
 
 			// Get amount of coins
 			amount, err := sdk.ParseCoins(args[1])
 			if err != nil {
 				return err
-			}
-
-			// ensure account has enough coins
-			if !account.GetCoins().IsAllGTE(amount) {
-				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			msg := gov.NewMsgDeposit(from, proposalID, amount)

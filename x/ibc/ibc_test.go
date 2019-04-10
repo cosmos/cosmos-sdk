@@ -83,7 +83,7 @@ func newAddress() sdk.AccAddress {
 
 func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
-	coins, _, err := ck.AddCoins(ctx, addr, zero)
+	coins, err := ck.AddCoins(ctx, addr, zero)
 	return coins, err
 }
 
@@ -97,7 +97,7 @@ func TestIBC(t *testing.T) {
 	zero := sdk.Coins(nil)
 	mycoins := sdk.Coins{sdk.NewInt64Coin("mycoin", 10)}
 
-	coins, _, err := input.bk.AddCoins(ctx, src, mycoins)
+	coins, err := input.bk.AddCoins(ctx, src, mycoins)
 	require.Nil(t, err)
 	require.Equal(t, mycoins, coins)
 

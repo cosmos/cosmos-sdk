@@ -6,25 +6,25 @@ The distribution module emits the following events/tags:
 
 ### MsgSetWithdrawAddress
 
-| Key       | Value                     |
-|-----------|---------------------------|
-| delegator | {delegatorAccountAddress} |
-
-### MsgWithdrawDelegatorRewardsAll
-
-| Key       | Value                     |
-|-----------|---------------------------|
-| delegator | {delegatorAccountAddress} |
+| Key         | Value                     |
+|-------------|---------------------------|
+| `action`    | `set_withdraw_address`    |
+| `category`  | `distribution`            |
+| `delegator` | {delegatorAccountAddress} |
 
 ### MsgWithdrawDelegatorReward
 
-| Key              | Value                     |
-|------------------|---------------------------|
-| delegator        | {delegatorAccountAddress} |
-| source-validator | {srcOperatorAddress}      |
+| Key                | Value                       |
+|--------------------|-----------------------------|
+| `action`           | `withdraw_delegator_reward` |
+| `category`         | `distribution`              |
+| `delegator`        | {delegatorAccountAddress}   |
+| `source-validator` | {srcOperatorAddress}        |
 
-### MsgWithdrawValidatorRewardsAll
+### MsgWithdrawValidatorCommission
 
-| Key              | Value                |
-|------------------|----------------------|
-| source-validator | {srcOperatorAddress} |
+| Key                | Value                           |
+|--------------------|---------------------------------|
+| `action`           | `withdraw_validator_commission` |
+| `category`         | `distribution`                  |
+| `source-validator` | {srcOperatorAddress}            |

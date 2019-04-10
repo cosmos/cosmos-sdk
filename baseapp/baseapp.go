@@ -291,11 +291,11 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
 func (app *BaseApp) getMaximumBlockGas() uint64 {
-	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
+	if app.consensusParams == nil || app.consensusParams.Block == nil {
 		return 0
 	}
 
-	maxGas := app.consensusParams.BlockSize.MaxGas
+	maxGas := app.consensusParams.Block.MaxGas
 	switch {
 	case maxGas < -1:
 		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
@@ -661,7 +661,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxlogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -695,7 +695,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
 			idxLog.Success = false
-			idxlogs = append(idxlogs, idxLog)
+			idxLogs = append(idxLogs, idxLog)
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
@@ -703,10 +703,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		}
 
 		idxLog.Success = true
-		idxlogs = append(idxlogs, idxLog)
+		idxLogs = append(idxLogs, idxLog)
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxlogs)
+	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
@@ -719,7 +719,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	return result
 }
 
-// Returns the applicantion's deliverState if app is in runTxModeDeliver,
+// Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -829,7 +829,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one

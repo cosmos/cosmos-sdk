@@ -163,3 +163,28 @@ $ gaiacli query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 		},
 	}
 }
+
+// GetCmdQueryCommunityPool returns the command for fetching community pool info
+func GetCmdQueryCommunityPool(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "community-pool",
+		Args:  cobra.NoArgs,
+		Short: "Query the amount of coins in the community pool",
+		Long: strings.TrimSpace(`Query all coins in the community pool which is under Governance control.
+
+$ gaiacli query distr community-pool
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+			if err != nil {
+				return err
+			}
+
+			var result sdk.DecCoins
+			cdc.MustUnmarshalJSON(res, &result)
+			return cliCtx.PrintOutput(result)
+		},
+	}
+}

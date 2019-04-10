@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
+	"github.com/cosmos/cosmos-sdk/x/params/tags"
 )
 
 func NewHandler(k ProposalKeeper) sdk.Handler {
@@ -21,7 +22,7 @@ func NewHandler(k ProposalKeeper) sdk.Handler {
 
 func handleMsgSubmitProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitProposal) sdk.Result {
 	content := NewProposalChange(msg.Title, msg.Description, msg.Changes)
-	return proposal.HandleSubmit(ctx, k.proposal, content, msg.Proposer, msg.InitialDeposit)
+	return proposal.HandleSubmit(ctx, k.proposal, content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
 }
 
 func NewProposalHandler(k ProposalKeeper) proposal.Handler {

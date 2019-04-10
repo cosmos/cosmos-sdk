@@ -128,6 +128,19 @@ gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 For more information regarding how to generate, sign and broadcast transactions with a
 multi signature account see [Multisig Transactions](#multisig-transactions).
 
+### Tx Broadcasting
+
+When broadcasting transactions, `gaiacli` accepts a `--broadcast-mode` flag. This
+flag can have a value of `sync` (default), `async`, or `block`, where `sync` makes
+the client return a CheckTx response, `async` makes the client return immediately,
+and `block` makes the client wait for the tx to be committed (or timing out).
+
+It is important to note that the `block` mode should **not** be used in most
+circumstances. This is because broadcasting can timeout but the tx may still be
+included in a block. This can result in many undesirable situations. Therefor, it
+is best to use `sync` or `async` and query by tx hash to determine when the tx
+is included in a block.
+
 ### Fees & Gas
 
 Each transaction may either supply fees or gas prices, but not both. 
@@ -314,6 +327,26 @@ You can get the current slashing parameters via:
 gaiacli query slashing params
 ```
 
+### Minting
+
+You can query for the minting/inflation parameters via:
+
+```bash
+gaiacli query minting params
+```
+
+To query for the current inflation value:
+
+```bash
+gaiacli query minting inflation
+```
+
+To query for the current annual provisions value:
+
+```bash
+gaiacli query minting annual-provisions
+```
+
 ### Staking
 
 #### Set up a Validator
@@ -376,12 +409,13 @@ gaiacli query staking delegations <delegator_addr>
 
 #### Unbond Tokens
 
-If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
+If for any reason the validator misbehaves, or you just want to unbond a certain
+amount of tokens, use this following command.
 
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval> \
-  --shares-fraction=0.5 \
+  <validator_addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -414,9 +448,9 @@ A redelegation is a type delegation that allows you to bond illiquid tokens from
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval> \
-  --addr-validator-dest=<account_cosmosval> \
-  --shares-fraction=50 \
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -621,6 +655,14 @@ To check the current distribution parameters, run:
 
 ```bash
 gaiacli query distr params
+```
+
+#### Query distribution Community Pool
+
+To query all coins in the community pool which is under Governance control:
+
+```bash
+gaiacli query distr community-pool
 ```
 
 #### Query outstanding rewards

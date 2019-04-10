@@ -212,14 +212,14 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgDelegate struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Value            sdk.Coin       `json:"value"`
+	Amount           sdk.Coin       `json:"amount"`
 }
 
-func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, value sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		Value:            value,
+		Amount:           amount,
 	}
 }
 
@@ -244,7 +244,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil
@@ -257,17 +257,17 @@ type MsgBeginRedelegate struct {
 	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`
 	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"`
 	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"`
-	SharesAmount        sdk.Dec        `json:"shares_amount"`
+	Amount              sdk.Coin       `json:"amount"`
 }
 
 func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
-	valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) MsgBeginRedelegate {
+	valDstAddr sdk.ValAddress, amount sdk.Coin) MsgBeginRedelegate {
 
 	return MsgBeginRedelegate{
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,
 		ValidatorDstAddress: valDstAddr,
-		SharesAmount:        sharesAmount,
+		Amount:              amount,
 	}
 }
 
@@ -295,7 +295,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorDstAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil
@@ -305,14 +305,14 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 type MsgUndelegate struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	SharesAmount     sdk.Dec        `json:"shares_amount"`
+	Amount           sdk.Coin       `json:"amount"`
 }
 
-func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) MsgUndelegate {
+func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) MsgUndelegate {
 	return MsgUndelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
-		SharesAmount:     sharesAmount,
+		Amount:           amount,
 	}
 }
 
@@ -335,7 +335,7 @@ func (msg MsgUndelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil

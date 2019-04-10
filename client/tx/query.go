@@ -1,14 +1,13 @@
 package tx
 
 import (
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/spf13/viper"
 
@@ -17,14 +16,100 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
+
+const (
+	flagTags  = "tags"
+	flagPage  = "page"
+	flagLimit = "limit"
+)
+
+// ----------------------------------------------------------------------------
+// CLI
+// ----------------------------------------------------------------------------
+
+// SearchTxCmd returns a command to search through tagged transactions.
+func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "txs",
+		Short: "Search for paginated transactions that match a set of tags",
+		Long: strings.TrimSpace(`
+Search for transactions that match the exact given tags where results are paginated.
+
+Example:
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tagsStr := viper.GetString(flagTags)
+			tagsStr = strings.Trim(tagsStr, "'")
+
+			var tags []string
+			if strings.Contains(tagsStr, "&") {
+				tags = strings.Split(tagsStr, "&")
+			} else {
+				tags = append(tags, tagsStr)
+			}
+
+			var tmTags []string
+			for _, tag := range tags {
+				if !strings.Contains(tag, ":") {
+					return fmt.Errorf("%s should be of the format <key>:<value>", tagsStr)
+				} else if strings.Count(tag, ":") > 1 {
+					return fmt.Errorf("%s should only contain one <key>:<value> pair", tagsStr)
+				}
+
+				keyValue := strings.Split(tag, ":")
+				if keyValue[0] == types.TxHeightKey {
+					tag = fmt.Sprintf("%s=%s", keyValue[0], keyValue[1])
+				} else {
+					tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
+				}
+				tmTags = append(tmTags, tag)
+			}
+
+			page := viper.GetInt(flagPage)
+			limit := viper.GetInt(flagLimit)
+
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, limit)
+			if err != nil {
+				return err
+			}
+
+			var output []byte
+			if cliCtx.Indent {
+				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(txs)
+			}
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+			return nil
+		},
+	}
+
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+
+	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
+	cmd.Flags().Uint32(flagPage, rest.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Uint32(flagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.MarkFlagRequired(flagTags)
+
+	return cmd
+}
 
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
-		Short: "Matches this txhash over all committed blocks",
+		Short: "Find a transaction by hash in a committed block.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -46,76 +131,55 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+
 	return cmd
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (out sdk.TxResponse, err error) {
-	hash, err := hex.DecodeString(hashHexStr)
-	if err != nil {
-		return out, err
-	}
-
-	node, err := cliCtx.GetNode()
-	if err != nil {
-		return out, err
-	}
-
-	res, err := node.Tx(hash, !cliCtx.TrustNode)
-	if err != nil {
-		return out, err
-	}
-
-	if !cliCtx.TrustNode {
-		if err = ValidateTxResult(cliCtx, res); err != nil {
-			return out, err
-		}
-	}
-
-	if out, err = formatTxResult(cdc, res); err != nil {
-		return out, err
-	}
-
-	return out, nil
-}
-
-// ValidateTxResult performs transaction verification
-func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
-	if !cliCtx.TrustNode {
-		check, err := cliCtx.Verify(res.Height)
-		if err != nil {
-			return err
-		}
-		err = res.Proof.Validate(check.Header.DataHash)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.TxResponse, error) {
-	tx, err := parseTx(cdc, res.Tx)
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	return sdk.NewResponseResultTx(res, tx), nil
-}
-
-func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
-	var tx auth.StdTx
-
-	err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, nil
-}
-
+// ----------------------------------------------------------------------------
 // REST
+// ----------------------------------------------------------------------------
 
-// QueryTxRequestHandlerFn transaction query REST handler
+// QueryTxsByTagsRequestHandlerFn implements a REST handler that searches for
+// transactions by tags.
+func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			tags        []string
+			txs         []sdk.TxResponse
+			page, limit int
+		)
+
+		err := r.ParseForm()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest,
+				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			return
+		}
+
+		if len(r.Form) == 0 {
+			rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+			return
+		}
+
+		tags, page, limit, err = rest.ParseHTTPArgs(r)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+	}
+}
+
+// QueryTxRequestHandlerFn implements a REST handler that queries a transaction
+// by hash in a committed block.
 func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

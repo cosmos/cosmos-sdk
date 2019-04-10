@@ -37,7 +37,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return errors.ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
 	}
 
-	return proposal.HandleSubmit(ctx, keeper, content, msg.Proposer, msg.InitialDeposit)
+	return proposal.HandleSubmit(ctx, keeper, content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
@@ -47,9 +47,11 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	}
 
 	proposalIDStr := fmt.Sprintf("%d", msg.ProposalID)
+
 	resTags := sdk.NewTags(
-		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDStr,
+		tags.Category, tags.TxCategory,
+		tags.Depositor, msg.Depositor.String(),
 	)
 
 	if votingStarted {
@@ -67,10 +69,13 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return err.Result()
 	}
 
+	proposalIDStr := fmt.Sprintf("%d", msg.ProposalID)
+
 	return sdk.Result{
 		Tags: sdk.NewTags(
+			tags.ProposalID, proposalIDStr,
+			tags.Category, tags.TxCategory,
 			tags.Voter, msg.Voter.String(),
-			tags.ProposalID, fmt.Sprintf("%d", msg.ProposalID),
 		),
 	}
 }

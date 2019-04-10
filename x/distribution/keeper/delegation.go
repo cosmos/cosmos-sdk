@@ -22,7 +22,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	stake := validator.ShareTokensTruncated(delegation.GetShares())
+	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
@@ -90,7 +90,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// a stake sanity check - recalculated final stake should be less than or equal to current stake
 	// here we cannot use Equals because stake is truncated when multiplied by slash fractions
 	// we could only use equals if we had arbitrary-precision rationals
-	currentStake := val.ShareTokens(del.GetShares())
+	currentStake := val.TokensFromShares(del.GetShares())
 	if stake.GT(currentStake) {
 		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
 			del.GetDelegatorAddr(), stake, currentStake))
@@ -140,7 +140,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// add coins to user account
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 			return err
 		}
 	}

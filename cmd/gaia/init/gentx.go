@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -47,6 +48,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gentx",
 		Short: "Generate a genesis tx carrying a self delegation",
+		Args:  cobra.NoArgs,
 		Long: fmt.Sprintf(`This command is an alias of the 'gaiad tx create-validator' command'.
 
 It creates a genesis piece carrying a self delegation with the
@@ -78,7 +80,7 @@ following delegation and commission default parameters:
 					"the tx's memo field will be unset")
 			}
 
-			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
+			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}
@@ -111,8 +113,12 @@ following delegation and commission default parameters:
 				}
 			}
 
+			website := viper.GetString(cli.FlagWebsite)
+			details := viper.GetString(cli.FlagDetails)
+			identity := viper.GetString(cli.FlagIdentity)
+
 			// Set flags for creating gentx
-			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
+			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey, website, details, identity)
 
 			// Fetch the amount of coins staked
 			amount := viper.GetString(cli.FlagAmount)
@@ -126,9 +132,17 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			// Run gaiad tx create-validator
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// XXX: Set the generate-only flag here after the CLI context has
+			// been created. This allows the from name/key to be correctly populated.
+			//
+			// TODO: Consider removing the manual setting of generate-only in
+			// favor of a 'gentx' flag in the create-validator command.
+			viper.Set(client.FlagGenerateOnly, true)
+
+			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
 				return err
@@ -192,6 +206,9 @@ following delegation and commission default parameters:
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
 	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
+	cmd.Flags().String(cli.FlagWebsite, "", "The validator's (optional) website")
+	cmd.Flags().String(cli.FlagDetails, "", "The validator's (optional) details")
+	cmd.Flags().String(cli.FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
@@ -228,16 +245,20 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 	return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
 }
 
-func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
-	valPubKey crypto.PubKey) {
-	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
+func prepareFlagsForTxCreateValidator(
+	config *cfg.Config, nodeID, ip, chainID string, valPubKey crypto.PubKey, website, details, identity string,
+) {
+	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))
 	viper.Set(client.FlagChainID, chainID)
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
-	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
-	viper.Set(cli.FlagIP, ip)                                      // --ip
-	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
-	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
+	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
+	viper.Set(cli.FlagNodeID, nodeID)
+	viper.Set(cli.FlagIP, ip)
+	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
+	viper.Set(cli.FlagMoniker, config.Moniker)
+	viper.Set(cli.FlagWebsite, website)
+	viper.Set(cli.FlagDetails, details)
+	viper.Set(cli.FlagIdentity, identity)
+
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
 	}

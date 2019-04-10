@@ -9,7 +9,8 @@ import (
 
 // HandleSubmit submits content and does initial deposit with provided SubmitForm
 func HandleSubmit(ctx sdk.Context, k Keeper,
-	content Content, proposer sdk.AccAddress, initialDeposit sdk.Coins) sdk.Result {
+	content Content, proposer sdk.AccAddress, initialDeposit sdk.Coins,
+	tagTxCategory string) sdk.Result {
 
 	proposalID, err := k.SubmitProposal(ctx, content)
 	if err != nil {
@@ -25,6 +26,7 @@ func HandleSubmit(ctx sdk.Context, k Keeper,
 	resTags := sdk.NewTags(
 		tags.Proposer, proposer.String(),
 		tags.ProposalID, proposalIDStr,
+		tags.Category, tagTxCategory,
 	)
 
 	if votingStarted {

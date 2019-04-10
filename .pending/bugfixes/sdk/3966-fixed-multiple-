@@ -1,0 +1,2 @@
+#3966 fixed multiple assigns to action tags
+#3793 add delegator tag for MsgCreateValidator and deleted unused moniker and identity tags 

@@ -1,6 +1,6 @@
 # Ledger Nano Support
 
-## A note on HD wallet
+## A Note on HD Wallet
 
 HD Wallets, originally specified in Bitcoin's [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), are a special kind of wallet that let users derive any number of accounts from a single seed. To understand what that means, let us first define some terminology:
 
@@ -54,7 +54,7 @@ The process of derivating accounts from the seed is deterministic. This means th
 
 The funds stored in an account are controlled by the private key. This private key is generated using a one-way function from the mnemonic. If you lose the private key, you can retrieve it using the mnemonic. However, if you lose the mnemonic, you will lose access to all the derived private keys. Likewise, if someone gains access to your mnemonic, they gain access to all the associated accounts. 
 
-## Ledger Support for account keys
+## Ledger Support for Account Keys
 
 At the core of a Ledger device, there is a mnemonic that is used to generate private keys. When you initialize you Ledger, a mnemonic is generated. 
 

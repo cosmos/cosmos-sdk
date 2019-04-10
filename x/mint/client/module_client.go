@@ -1,7 +1,10 @@
 package clientpackage
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
+
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/spf13/cobra"

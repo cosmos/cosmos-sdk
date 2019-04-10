@@ -145,8 +145,8 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.DstValidator, msg.ValidatorAddress.String(),
-		tags.Delegator, msg.DelegatorAddress.String(),
 	)
 
 	return sdk.Result{
@@ -194,7 +194,8 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	k.SetValidator(ctx, validator)
 
 	resTags := sdk.NewTags(
-		tags.DstValidator, msg.ValidatorAddress.String(),
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.ValidatorAddress.String(),
 	)
 
 	return sdk.Result{
@@ -219,7 +220,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.DstValidator, msg.ValidatorAddress.String(),
 	)
 
@@ -244,7 +245,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.SrcValidator, msg.ValidatorAddress.String(),
 		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
@@ -270,7 +271,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.SrcValidator, msg.ValidatorSrcAddress.String(),
 		tags.DstValidator, msg.ValidatorDstAddress.String(),
 		tags.EndTime, completionTime.Format(time.RFC3339),

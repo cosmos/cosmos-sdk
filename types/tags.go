@@ -72,6 +72,7 @@ func MakeTag(k string, v string) Tag {
 const (
 	TagAction       = "action"
 	TagCategory     = "category"
+	TagSender       = "sender"
 	TagSrcValidator = "source-validator"
 	TagDstValidator = "destination-validator"
 	TagDelegator    = "delegator"

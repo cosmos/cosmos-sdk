@@ -4,10 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Crisis module tags
 var (
-	TxCategory = "distribution"
-
-	Validator = sdk.TagSrcValidator
-	Category  = sdk.TagCategory
 	Sender    = sdk.TagSender
+	Invariant = "invariant"
 )

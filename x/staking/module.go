@@ -66,12 +66,12 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
-	return sdk.EmptyTags(), nil
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
+	return sdk.EmptyTags()
 }
 
 // module end-block
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
 	validatorUpdates, tags := EndBlocker(ctx, a.keeper)
-	return validatorUpdates, tags, nil
+	return validatorUpdates, tags
 }

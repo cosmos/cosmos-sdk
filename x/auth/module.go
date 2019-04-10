@@ -53,11 +53,11 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) (sdk.Tags, error) {
-	return sdk.EmptyTags(), nil
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
+	return sdk.EmptyTags()
 }
 
 // module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags, error) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags(), nil
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }

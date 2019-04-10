@@ -34,8 +34,8 @@ type AppModule interface {
 	//InitGenesis(Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
 	//ExportGenesis(Context) json.RawMessage
 
-	BeginBlock(Context, abci.RequestBeginBlock) (Tags, error)
-	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags, error)
+	BeginBlock(Context, abci.RequestBeginBlock) Tags
+	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
 }
 
 // module manananaager
@@ -43,8 +43,8 @@ type ModuleManager struct {
 	Modules            map[string]AppModule
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
-	OrderEndBlockers   []string
 	OrderBeginBlockers []string
+	OrderEndBlockers   []string
 }
 
 // NewModuleManager creates a new ModuleManager object
@@ -59,8 +59,8 @@ func NewModuleManager(modules ...AppModule) ModuleManager {
 		Modules:            moduleMap,
 		OrderInitGenesis:   []string{},
 		OrderExportGenesis: []string{},
-		OrderEndBlockers:   []string{},
 		OrderBeginBlockers: []string{},
+		OrderEndBlockers:   []string{},
 	}
 }
 
@@ -74,14 +74,14 @@ func (mm ModuleManager) SetOrderExportGenesis(moduleNames ...string) {
 	mm.OrderExportGenesis = moduleNames
 }
 
-// set the order of set end-blocker calls
-func (mm ModuleManager) SetOrderEndBlockers(moduleNames ...string) {
-	mm.OrderEndBlockers = moduleNames
-}
-
 // set the order of set begin-blocker calls
 func (mm ModuleManager) SetOrderBeginBlockers(moduleNames ...string) {
 	mm.OrderBeginBlockers = moduleNames
+}
+
+// set the order of set end-blocker calls
+func (mm ModuleManager) SetOrderEndBlockers(moduleNames ...string) {
+	mm.OrderEndBlockers = moduleNames
 }
 
 // register all module codecs
@@ -173,7 +173,7 @@ func (mm ModuleManager) moduleNames() (names []string) {
 //}
 
 // perform begin block functionality for modules
-func (mm ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) (Tags, error) {
+func (mm ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
 	var moduleNames []string
 	if len(mm.OrderBeginBlockers) > 0 {
 		moduleNames = mm.OrderBeginBlockers
@@ -183,17 +183,14 @@ func (mm ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) (Tag
 
 	tags := EmptyTags()
 	for _, moduleName := range moduleNames {
-		moduleTags, err := mm.Modules[moduleName].BeginBlock(ctx, req)
-		if err != nil {
-			return tags, err
-		}
+		moduleTags := mm.Modules[moduleName].BeginBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 	}
-	return tags, nil
+	return tags
 }
 
 // perform end block functionality for modules
-func (mm ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags, error) {
+func (mm ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
 	var moduleNames []string
 	if len(mm.OrderEndBlockers) > 0 {
 		moduleNames = mm.OrderEndBlockers
@@ -204,10 +201,7 @@ func (mm ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.
 	validatorUpdates := []abci.ValidatorUpdate{}
 	tags := EmptyTags()
 	for _, moduleName := range moduleNames {
-		moduleValUpdates, moduleTags, err := mm.Modules[moduleName].EndBlock(ctx, req)
-		if err != nil {
-			return validatorUpdates, tags, err
-		}
+		moduleValUpdates, moduleTags := mm.Modules[moduleName].EndBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 
 		// overwrite validator updates if provided
@@ -215,7 +209,7 @@ func (mm ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.
 			validatorUpdates = moduleValUpdates
 		}
 	}
-	return validatorUpdates, tags, nil
+	return validatorUpdates, tags
 }
 
 // DONTCOVER

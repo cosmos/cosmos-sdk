@@ -101,8 +101,12 @@ func (mm ModuleManager) RegisterInvariants(invarRouter InvariantRouter) {
 // register all module routes and module querier routes
 func (mm ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 	for _, module := range mm.Modules {
-		router.AddRoute(module.Route(), module.NewHandler())
-		queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
+		if module.Route() != "" {
+			router.AddRoute(module.Route(), module.NewHandler())
+		}
+		if module.QuerierRoute() != "" {
+			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
+		}
 	}
 }
 

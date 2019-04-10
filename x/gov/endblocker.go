@@ -53,7 +53,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
 		var tagValue string
-		var logmsg string
+		var logMsg string
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
 			activeProposal.Status = StatusPassed
@@ -62,9 +62,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 			cctx, writeCache := ctx.CacheContext()
 
-			// handler is state mutating logic depending on the proposal content.
-			// handler may mutate the state or not
-			// if handler failes no state mutation happened and the err msg is logged
+			// The handler is state mutating logic depending on the proposal content.
+			// The handler may mutate the state or not
+			// if handler fails no state mutation happened and the err msg is logged.
 			contentErr := handler(cctx, activeProposal.Content)
 			if contentErr == nil {
 				tagValue = tags.ActionProposalPassed

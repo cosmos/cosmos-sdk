@@ -62,7 +62,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 
 	tags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Validator, msg.ValidatorAddr.String(),
+		tags.Sender, msg.ValidatorAddr.String(),
 	)
 
 	return sdk.Result{

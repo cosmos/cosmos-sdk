@@ -6,8 +6,8 @@ The slashing module emits the following events/tags:
 
 ### MsgUnjail
 
-| Key         | Value                      |
-|-------------|----------------------------|
-| `action`    | `unjail`                   |
-| `category`  | `slashing`                 |
-| `validator` | {validatorOperatorAddress} |
+| Key        | Value                      |
+|------------|----------------------------|
+| `action`   | `unjail`                   |
+| `category` | `slashing`                 |
+| `sender`   | {validatorOperatorAddress} |

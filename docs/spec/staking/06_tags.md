@@ -16,19 +16,19 @@ The staking module emits the following events/tags:
 
 ### MsgCreateValidator
 
-| Key                     | Value                |
-|-------------------------|----------------------|
-| `action`                | `create_validator`   |
-| `category`              | `staking`            |
-| `destination-validator` | {dstOperatorAddress} |
+| Key        | Value                |
+|------------|----------------------|
+| `action`   | `create_validator`   |
+| `category` | `staking`            |
+| `sender`   | {dstOperatorAddress} |
 
 ### MsgEditValidator
 
-| Key                     | Value                |
-|-------------------------|----------------------|
-| `action`                | `edit_validator`     |
-| `category`              | `staking`            |
-| `destination-validator` | {dstOperatorAddress} |
+| Key        | Value                |
+|------------|----------------------|
+| `action`   | `edit_validator`     |
+| `category` | `staking`            |
+| `sender`   | {dstOperatorAddress} |
 
 ### MsgDelegate
 
@@ -36,7 +36,7 @@ The staking module emits the following events/tags:
 |-------------------------|---------------------------|
 | `action`                | `delegate`                |
 | `category`              | `staking`                 |
-| `delegator`             | {delegatorAccountAddress} |
+| `sender`                | {delegatorAccountAddress} |
 | `destination-validator` | {dstOperatorAddress}      |
 
 ### MsgBeginRedelegate
@@ -45,7 +45,7 @@ The staking module emits the following events/tags:
 |-------------------------|---------------------------|
 | `action`                | `begin_redelegate`        |
 | `category`              | `staking`                 |
-| `delegator`             | {delegatorAccountAddress} |
+| `sender`                | {delegatorAccountAddress} |
 | `source-validator`      | {srcOperatorAddress}      |
 | `destination-validator` | {dstOperatorAddress}      |
 | `end-time` [0]          | {delegationFinishTime}    |
@@ -58,7 +58,7 @@ The staking module emits the following events/tags:
 |--------------------|---------------------------|
 | `action`           | `begin_unbonding`         |
 | `category`         | `staking`                 |
-| `delegator`        | {delegatorAccountAddress} |
+| `sender`           | {delegatorAccountAddress} |
 | `source-validator` | {srcOperatorAddress}      |
 | `end-time` [0]     | {delegationFinishTime}    |
 

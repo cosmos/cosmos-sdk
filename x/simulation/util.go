@@ -76,7 +76,8 @@ func PeriodicInvariant(invariant sdk.Invariant, period int, offset int) sdk.Inva
 	}
 }
 
-// return an array of PeriodicInvariant
+// PeriodicInvariants  returns an array of wrapped Invariants. Where each
+// invariant function is only executed periodically defined by period and offset.
 func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {

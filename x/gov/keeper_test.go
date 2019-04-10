@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -8,7 +9,10 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 func TestGetSetProposal(t *testing.T) {
@@ -272,4 +276,72 @@ func TestProposalQueues(t *testing.T) {
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
+}
+
+type validProposal struct{}
+
+func (validProposal) GetTitle() string       { return "title" }
+func (validProposal) GetDescription() string { return "description" }
+func (validProposal) ProposalRoute() string  { return "gov" }
+func (validProposal) ProposalType() string   { return "Text" }
+
+type invalidProposalTitle1 struct{ validProposal }
+
+func (invalidProposalTitle1) GetTitle() string { return "" }
+
+type invalidProposalTitle2 struct{ validProposal }
+
+func (invalidProposalTitle2) GetTitle() string { return strings.Repeat("1234567890", 100) }
+
+type invalidProposalDesc1 struct{ validProposal }
+
+func (invalidProposalDesc1) GetDescription() string { return "" }
+
+type invalidProposalDesc2 struct{ validProposal }
+
+func (invalidProposalDesc2) GetDescription() string { return strings.Repeat("1234567890", 1000) }
+
+type invalidProposalRoute struct{ validProposal }
+
+func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
+
+func registerCodec(cdc *codec.Codec) {
+	cdc.RegisterConcrete(validProposal{}, "test/validproposal", nil)
+	cdc.RegisterConcrete(invalidProposalTitle1{}, "test/invalidproposalt1", nil)
+	cdc.RegisterConcrete(invalidProposalTitle2{}, "test/invalidproposalt2", nil)
+	cdc.RegisterConcrete(invalidProposalDesc1{}, "test/invalidproposald1", nil)
+	cdc.RegisterConcrete(invalidProposalDesc2{}, "test/invalidproposald2", nil)
+	cdc.RegisterConcrete(invalidProposalRoute{}, "test/invalidproposalr", nil)
+}
+
+func TestSubmitProposal(t *testing.T) {
+	mapp, keeper, _, _, _, _, _ := GetMockApp(t, 0, GenesisState{}, nil)
+
+	registerCodec(keeper.cdc)
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	mapp.InitChainer(ctx, abci.RequestInitChain{})
+
+	tcs := []struct {
+		content     proposal.Content
+		expectedErr sdk.Error
+	}{
+		{validProposal{}, nil},
+		// Keeper does not check the validity of title and description, no error
+		{invalidProposalTitle1{}, nil},
+		{invalidProposalTitle2{}, nil},
+		{invalidProposalDesc1{}, nil},
+		{invalidProposalDesc2{}, nil},
+		// error only when invalid route
+		{invalidProposalRoute{}, errors.ErrProposalHandlerNotExists(DefaultCodespace, invalidProposalRoute{})},
+	}
+
+	for _, tc := range tcs {
+		_, err := testSubmitProposal(ctx, keeper, tc.content)
+		require.Equal(t, tc.expectedErr, err, "unexpected type of error: %s", err)
+	}
+
 }

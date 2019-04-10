@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -47,15 +45,6 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			from := cliCtx.GetFromAddress()
-			account, err := cliCtx.GetAccount(from)
-			if err != nil {
-				return err
-			}
-
-			// ensure account has enough coins
-			if !account.GetCoins().IsAllGTE(coins) {
-				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
-			}
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := bank.NewMsgSend(from, to, coins)

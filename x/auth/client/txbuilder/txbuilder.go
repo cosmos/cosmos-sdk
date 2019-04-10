@@ -250,7 +250,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 	if bldr.chainID == "" {
 		return auth.StdTx{}, fmt.Errorf("chain ID required but not specified")
 	}
-	
+
 	stdSignature, err := MakeSignature(bldr.keybase, name, passphrase, StdSignMsg{
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,

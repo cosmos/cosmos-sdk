@@ -46,11 +46,6 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		if code == http.StatusNoContent {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
 		rest.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
 	}
 }
@@ -79,7 +74,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(validators.Validators) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 
@@ -98,7 +93,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(signingInfoList) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 
@@ -130,7 +125,7 @@ func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Code
 	}
 
 	if len(res) == 0 {
-		code = http.StatusNoContent
+		code = http.StatusOK
 		return
 	}
 

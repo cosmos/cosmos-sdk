@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
@@ -27,17 +26,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	var content proposal.Content
-	switch msg.ProposalType {
-	case ProposalTypeText:
-		content = NewTextProposal(msg.Title, msg.Description)
-	case ProposalTypeSoftwareUpgrade:
-		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
-	default:
-		return errors.ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
-	}
-
-	return proposal.HandleSubmit(ctx, keeper, content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
+	return proposal.HandleSubmit(ctx, keeper, msg.Content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {

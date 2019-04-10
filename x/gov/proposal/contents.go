@@ -15,13 +15,15 @@ const (
 )
 
 // Checks length of title and description
-func IsValidAbstract(codespace sdk.CodespaceType, title, description string) sdk.Error {
+func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
+	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
 		return errors.ErrInvalidTitle(codespace, "No title present in proposal")
 	}
 	if len(title) > MaxTitleLength {
 		return errors.ErrInvalidTitle(codespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
 	}
+	description := c.GetDescription()
 	if len(description) == 0 {
 		return errors.ErrInvalidDescription(codespace, "No description present in proposal")
 	}
@@ -40,6 +42,8 @@ type Content interface {
 	GetDescription() string
 	ProposalRoute() string
 	ProposalType() string
+	ValidateBasic() sdk.Error
+	String() string
 }
 
 // Handler handles the proposals after it has passed the governance process

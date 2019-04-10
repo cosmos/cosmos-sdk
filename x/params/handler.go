@@ -21,15 +21,14 @@ func NewHandler(k ProposalKeeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitProposal) sdk.Result {
-	content := NewProposalChange(msg.Title, msg.Description, msg.Changes)
-	return proposal.HandleSubmit(ctx, k.proposal, content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
+	return proposal.HandleSubmit(ctx, k.proposal, msg.Content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
 }
 
 func NewProposalHandler(k ProposalKeeper) proposal.Handler {
 	return func(ctx sdk.Context, p proposal.Content) sdk.Error {
 		switch p := p.(type) {
-		case ProposalChange:
-			return handleProposalChange(ctx, k, p)
+		case ChangeProposal:
+			return handleChangeProposal(ctx, k, p)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized gov proposal type: %T", p)
 			return sdk.ErrUnknownRequest(errMsg)
@@ -37,7 +36,7 @@ func NewProposalHandler(k ProposalKeeper) proposal.Handler {
 	}
 }
 
-func handleProposalChange(ctx sdk.Context, k ProposalKeeper, p ProposalChange) sdk.Error {
+func handleChangeProposal(ctx sdk.Context, k ProposalKeeper, p ChangeProposal) sdk.Error {
 	for _, c := range p.Changes {
 		s, ok := k.GetSubspace(c.Space)
 		if !ok {

@@ -75,12 +75,6 @@ func (p Proposals) String() string {
 // ProposalQueue
 type ProposalQueue []uint64
 
-//nolint
-const (
-	ProposalTypeText            string = "Text"
-	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
-)
-
 // ProposalStatus
 
 // Type that represents Proposal Status as a byte

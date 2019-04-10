@@ -21,20 +21,27 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	ProposalType   string         `json:"type"`            //  Type of proposal. One of {PlainTextProposal, SoftwareUpgradeProposal}
+	Content        proposal.Content `json:"content"`
+	InitialDeposit sdk.Coins        `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
+	Proposer       sdk.AccAddress   `json:"proposer"`        //  Address of the proposer
 }
 
 func NewMsgSubmitProposal(title, description, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+	var content proposal.Content
+
+	switch proposalType {
+	case ProposalTypeText:
+		content = NewTextProposal(title, description)
+	case ProposalTypeSoftwareUpgrade:
+		content = NewSoftwareUpgradeProposal(title, description)
+	default:
+		panic("Invalid ProposalType")
+	}
+
 	return MsgSubmitProposal{
-		Title:          title,
-		Description:    description,
+		Content:        content,
 		Proposer:       proposer,
 		InitialDeposit: initialDeposit,
-		ProposalType:   proposalType,
 	}
 }
 
@@ -44,15 +51,16 @@ func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	ty := msg.ProposalType
-	if ty != ProposalTypeText && ty != ProposalTypeSoftwareUpgrade {
-		return errors.ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
+	err := proposal.ValidateMsgBasic(msg.Proposer, msg.InitialDeposit)
+	if err != nil {
+		return err
 	}
-	return proposal.ValidateMsgBasic(msg.Title, msg.Description, msg.Proposer, msg.InitialDeposit)
+
+	return msg.Content.ValidateBasic()
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%s, %v}", msg.Content, msg.InitialDeposit)
 }
 
 // Implements Msg.

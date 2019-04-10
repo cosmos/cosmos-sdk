@@ -2,15 +2,10 @@ package proposal
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/errors"
 )
 
 // Partially implements sdk.Msg
-func ValidateMsgBasic(title, description string, proposer sdk.AccAddress, initialDeposit sdk.Coins) sdk.Error {
-	err := IsValidAbstract(errors.DefaultCodespace, title, description)
-	if err != nil {
-		return err
-	}
+func ValidateMsgBasic(proposer sdk.AccAddress, initialDeposit sdk.Coins) sdk.Error {
 	if proposer.Empty() {
 		return sdk.ErrInvalidAddress(proposer.String())
 	}

@@ -1,6 +1,8 @@
 package params
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
@@ -16,6 +18,14 @@ type Change struct {
 // Constructs new Change
 func NewChange(space string, key, subkey, value []byte) Change {
 	return Change{space, key, subkey, value}
+}
+
+func (c Change) String() string {
+	var subkey string
+	if len(c.Subkey) != 0 {
+		subkey = "(" + string(c.Subkey) + ")"
+	}
+	return fmt.Sprintf("{%s%s := %X} (%s)", string(c.Key), subkey, c.Value, c.Space)
 }
 
 // ValidateChange checks whether the input data is empty or not
@@ -39,25 +49,35 @@ func ValidateChanges(changes []Change) sdk.Error {
 }
 
 // Proposal which contains multiple changes on proposals
-type ProposalChange struct {
+type ChangeProposal struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Changes     []Change `json:"changes"`
 }
 
-// Constructs new ProposalChange
-func NewProposalChange(title string, description string, changes []Change) ProposalChange {
-	return ProposalChange{
+// Constructs new ChangeProposal
+func NewChangeProposal(title string, description string, changes []Change) ChangeProposal {
+	return ChangeProposal{
 		Title:       title,
 		Description: description,
 		Changes:     changes,
 	}
 }
 
-var _ proposal.Content = ProposalChange{}
+var _ proposal.Content = ChangeProposal{}
 
 // nolint - Implements proposal.Content
-func (pc ProposalChange) GetTitle() string       { return pc.Title }
-func (pc ProposalChange) GetDescription() string { return pc.Description }
-func (pc ProposalChange) ProposalRoute() string  { return RouterKey }
-func (pc ProposalChange) ProposalType() string   { return "ParameterChange" }
+func (pc ChangeProposal) GetTitle() string       { return pc.Title }
+func (pc ChangeProposal) GetDescription() string { return pc.Description }
+func (pc ChangeProposal) ProposalRoute() string  { return RouterKey }
+func (pc ChangeProposal) ProposalType() string   { return "ParameterChange" }
+func (pc ChangeProposal) ValidateBasic() sdk.Error {
+	err := proposal.ValidateAbstract(DefaultCodespace, pc)
+	if err != nil {
+		return err
+	}
+	return ValidateChanges(pc.Changes)
+}
+func (pc ChangeProposal) String() string {
+	return fmt.Sprintf("ParameterChangeProposal{%s, %s, %s}", pc.Title, pc.Description, pc.Changes)
+}

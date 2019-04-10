@@ -280,10 +280,12 @@ func TestProposalQueues(t *testing.T) {
 
 type validProposal struct{}
 
-func (validProposal) GetTitle() string       { return "title" }
-func (validProposal) GetDescription() string { return "description" }
-func (validProposal) ProposalRoute() string  { return "gov" }
-func (validProposal) ProposalType() string   { return "Text" }
+func (validProposal) GetTitle() string         { return "title" }
+func (validProposal) GetDescription() string   { return "description" }
+func (validProposal) ProposalRoute() string    { return "gov" }
+func (validProposal) ProposalType() string     { return "Text" }
+func (validProposal) String() string           { return "" }
+func (validProposal) ValidateBasic() sdk.Error { return nil }
 
 type invalidProposalTitle1 struct{ validProposal }
 
@@ -305,6 +307,12 @@ type invalidProposalRoute struct{ validProposal }
 
 func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
+type invalidProposalValidation struct{ validProposal }
+
+func (invalidProposalValidation) ValidateBasic() sdk.Error {
+	return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInternal, "")
+}
+
 func registerCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(validProposal{}, "test/validproposal", nil)
 	cdc.RegisterConcrete(invalidProposalTitle1{}, "test/invalidproposalt1", nil)
@@ -312,6 +320,7 @@ func registerCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(invalidProposalDesc1{}, "test/invalidproposald1", nil)
 	cdc.RegisterConcrete(invalidProposalDesc2{}, "test/invalidproposald2", nil)
 	cdc.RegisterConcrete(invalidProposalRoute{}, "test/invalidproposalr", nil)
+	cdc.RegisterConcrete(invalidProposalValidation{}, "test/invalidproposalv", nil)
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -337,6 +346,8 @@ func TestSubmitProposal(t *testing.T) {
 		{invalidProposalDesc2{}, nil},
 		// error only when invalid route
 		{invalidProposalRoute{}, errors.ErrProposalHandlerNotExists(DefaultCodespace, invalidProposalRoute{})},
+		// Keeper does not call ValidateBasic, msg.ValidateBasic does
+		{invalidProposalValidation{}, nil},
 	}
 
 	for _, tc := range tcs {

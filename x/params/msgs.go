@@ -10,21 +10,17 @@ const RouterKey = "params"
 
 // MsgSubmitProposal submits a proposal to change multiple params
 type MsgSubmitProposal struct {
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	Changes        []Change       `json:"changes"`         // Parameters to be changed
+	Content        proposal.Content `json:"content"`
+	Proposer       sdk.AccAddress   `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins        `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
 }
 
 // Constructs new MsgSubmitProposal
 func NewMsgSubmitProposal(title, description string, changes []Change, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
-		Title:          title,
-		Description:    description,
+		Content:        NewChangeProposal(title, description, changes),
 		Proposer:       proposer,
 		InitialDeposit: initialDeposit,
-		Changes:        changes,
 	}
 }
 
@@ -42,11 +38,11 @@ func (msg MsgSubmitProposal) Type() string {
 
 // Implements sdk.Msg
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	err := proposal.ValidateMsgBasic(msg.Title, msg.Description, msg.Proposer, msg.InitialDeposit)
+	err := proposal.ValidateMsgBasic(msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err
 	}
-	return ValidateChanges(msg.Changes)
+	return msg.Content.ValidateBasic()
 }
 
 // Implements sdk.Msg

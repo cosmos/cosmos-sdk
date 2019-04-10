@@ -36,7 +36,6 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
 		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeSoftwareUpgrade, addrs[0], coinsPos, true},
-		{"Test Proposal", "the purpose of this proposal is to test", "ProposalTypeInvalid", addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
@@ -52,6 +51,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 			require.Error(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
+
+	require.Panics(t, func() { NewMsgSubmitProposal("Test Proposal", "test", "ProposalTypeInvalid", addrs[0], coinsPos) })
 }
 
 func TestMsgDepositGetSignBytes(t *testing.T) {

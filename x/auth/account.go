@@ -378,6 +378,16 @@ type ContinuousVestingAccount struct {
 	StartTime int64 `json:"start_time"` // when the coins start to vest
 }
 
+// NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
+func NewContinuousVestingAccountRaw(baseVestingAccount *BaseVestingAccount,
+	startTime int64) ContinuousVestingAccount {
+
+	return ContinuousVestingAccount{
+		BaseVestingAccount: baseVestingAccount,
+		StartTime:          startTime,
+	}
+}
+
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
 func NewContinuousVestingAccount(
 	baseAcc *BaseAccount, StartTime, EndTime int64,
@@ -486,6 +496,13 @@ var _ VestingAccount = (*DelayedVestingAccount)(nil)
 // locked until a specified time.
 type DelayedVestingAccount struct {
 	*BaseVestingAccount
+}
+
+// NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
+func NewDelayedVestingAccountRaw(baseVestingAccount *BaseVestingAccount) DelayedVestingAccount {
+	return DelayedVestingAccount{
+		BaseVestingAccount: baseVestingAccount,
+	}
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount

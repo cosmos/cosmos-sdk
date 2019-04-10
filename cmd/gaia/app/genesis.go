@@ -134,16 +134,9 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 		switch {
 		case ga.StartTime != 0 && ga.EndTime != 0:
-			// TODO why is ga.EndTime missing?
-			return &auth.ContinuousVestingAccount{
-				BaseVestingAccount: baseVestingAcc,
-				StartTime:          ga.StartTime,
-			}
+			return auth.NewContinuousVestingAccountRaw(baseVestingAcc, ga.StartTime)
 		case ga.EndTime != 0:
-			// TODO why is ga.EndTime missing?
-			return &auth.DelayedVestingAccount{
-				BaseVestingAccount: baseVestingAcc,
-			}
+			return auth.NewDelayedVestingAccountRaw(baseVestingAcc)
 		default:
 			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}

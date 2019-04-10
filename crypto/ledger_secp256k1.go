@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 

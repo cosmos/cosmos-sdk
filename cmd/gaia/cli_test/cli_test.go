@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -222,6 +223,17 @@ func TestGaiaCLISend(t *testing.T) {
 	// Test --dry-run
 	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--dry-run")
 	require.True(t, success)
+
+	// Test --generate-only
+	success, stdout, stderr := f.TxSend(
+		fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only=true",
+	)
+	require.Empty(t, stderr)
+	require.True(t, success)
+	msg := unmarshalStdTx(f.T, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	// Check state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
@@ -992,6 +1004,7 @@ trust-node = true
 
 func TestGaiadCollectGentxs(t *testing.T) {
 	t.Parallel()
+	var customMaxBytes, customMaxGas int64 = 99999999, 1234567
 	f := NewFixtures(t)
 
 	// Initialise temporary directories
@@ -1011,6 +1024,15 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	// Run init
 	f.GDInit(keyFoo)
 
+	// Customise genesis.json
+
+	genFile := f.GenesisFile()
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	genDoc.ConsensusParams.Block.MaxBytes = customMaxBytes
+	genDoc.ConsensusParams.Block.MaxGas = customMaxGas
+	genDoc.SaveAs(genFile)
+
 	// Add account to genesis.json
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
 
@@ -1019,6 +1041,11 @@ func TestGaiadCollectGentxs(t *testing.T) {
 
 	// Collect gentxs from a custom directory
 	f.CollectGenTxs(fmt.Sprintf("--gentx-dir=%s", gentxDir))
+
+	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	require.Equal(t, genDoc.ConsensusParams.Block.MaxBytes, customMaxBytes)
+	require.Equal(t, genDoc.ConsensusParams.Block.MaxGas, customMaxGas)
 
 	f.Cleanup(gentxDir)
 }

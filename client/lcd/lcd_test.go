@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +37,7 @@ const (
 	name2 = "test2"
 	name3 = "test3"
 	memo  = "LCD test tx"
-	pw    = app.DefaultKeyPass
+	pw    = client.DefaultKeyPass
 	altPw = "12345678901"
 )
 

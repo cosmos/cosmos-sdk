@@ -6,7 +6,18 @@ The bank module emits the following events/tags:
 
 ### MsgSend
 
-| Key       | Value                     |
-|-----------|---------------------------|
-| sender    | {senderAccountAddress}    |
-| recipient | {recipientAccountAddress} |
+| Key         | Value                     |
+|-------------|---------------------------|
+| `action`    | `send`                    |
+| `category`  | `bank`                    |
+| `sender`    | {senderAccountAddress}    |
+| `recipient` | {recipientAccountAddress} |
+
+### MsgMultiSend
+
+| Key         | Value                     |
+|-------------|---------------------------|
+| `action`    | `multisend`               |
+| `category`  | `bank`                    |
+| `sender`    | {senderAccountAddress}    |
+| `recipient` | {recipientAccountAddress} |

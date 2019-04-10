@@ -145,6 +145,8 @@
 when the validator or delegation do not exist.
 * [\#4050](https://github.com/cosmos/cosmos-sdk/issues/4050) Fix DecCoins APIs
 where rounding or truncation could result in zero decimal coins.
+* [\#4088](https://github.com/cosmos/cosmos-sdk/issues/4088) Fix `calculateDelegationRewards`
+by accounting for rounding errors when multiplying stake by slashing fractions.
 
 ## 0.33.2
 

@@ -1,11 +1,8 @@
-package supply
+package bank
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "supply"
-
-	// DefaultParamspace for params keeper
-	DefaultParamspace = ModuleName
+	ModuleName = "bank"
 
 	// StoreKey is the default store key for mint
 	StoreKey = ModuleName

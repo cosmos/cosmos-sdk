@@ -48,3 +48,5 @@ func (k Keeper) Invariants() []sdk.Invariant {
 	}
 	return invars
 }
+
+// DONTCOVER

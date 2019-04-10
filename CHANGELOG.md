@@ -90,6 +90,7 @@
   * Add shorthand flags -a and -s for the account and sequence numbers respectively
   * Mark the account and sequence numbers required during "offline" mode
   * Always do an RPC query for account and sequence number during "online" mode
+* [\#4018](https://github.com/cosmos/cosmos-sdk/issues/4018) create genesis port script for release v.0.34.0
 
 #### Gaia CLI
 

@@ -2,10 +2,8 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
-	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -69,7 +67,23 @@ type GaiaApp struct {
 	crisisKeeper        crisis.Keeper
 	paramsKeeper        params.Keeper
 
+	// the module manager
 	mm sdk.ModuleManager
+}
+
+// custom tx codec
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	bank.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
+	distr.RegisterCodec(cdc)
+	slashing.RegisterCodec(cdc)
+	gov.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
+	crisis.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -98,69 +112,37 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
+	// init params keeper and subspaces
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+	authSubspace := app.paramsKeeper.Subspace(auth.DefaultParamspace)
+	bankSubspace := app.paramsKeeper.Subspace(bank.DefaultParamspace)
+	stakingSubspace := app.paramsKeeper.Subspace(staking.DefaultParamspace)
+	mintSubspace := app.paramsKeeper.Subspace(mint.DefaultParamspace)
+	distrSubspace := app.paramsKeeper.Subspace(distr.DefaultParamspace)
+	slashingSubspace := app.paramsKeeper.Subspace(slashing.DefaultParamspace)
+	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
+	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
+
 	// add keepers
-	app.paramsKeeper = params.NewKeeper(
-		app.cdc,
-		app.keyParams,
-		app.tkeyParams,
-	)
-	app.accountKeeper = auth.NewAccountKeeper(
-		app.cdc,
-		app.keyAccount,
-		app.paramsKeeper.Subspace(auth.DefaultParamspace),
-		auth.ProtoBaseAccount,
-	)
-	app.bankKeeper = bank.NewBaseKeeper(
-		app.accountKeeper,
-		app.paramsKeeper.Subspace(bank.DefaultParamspace),
-		bank.DefaultCodespace,
-	)
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
-		app.cdc,
-		app.keyFeeCollection,
-	)
-	stakingKeeper := staking.NewKeeper(
-		app.cdc,
-		app.keyStaking, app.tkeyStaking,
-		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
-		staking.DefaultCodespace,
-	)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
-		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		&stakingKeeper, app.feeCollectionKeeper,
-	)
-	app.distrKeeper = distr.NewKeeper(
-		app.cdc,
-		app.keyDistr,
-		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, &stakingKeeper, app.feeCollectionKeeper,
-		distr.DefaultCodespace,
-	)
-	app.slashingKeeper = slashing.NewKeeper(
-		app.cdc,
-		app.keySlashing,
-		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
-		slashing.DefaultCodespace,
-	)
-	app.govKeeper = gov.NewKeeper(
-		app.cdc,
-		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
-		gov.DefaultCodespace,
-	)
-	app.crisisKeeper = crisis.NewKeeper(
-		app.paramsKeeper.Subspace(crisis.DefaultParamspace),
-		app.distrKeeper,
-		app.bankKeeper,
-		app.feeCollectionKeeper,
-	)
+	app.accountKeeper = auth.NewAccountKeeper(app.cdc, app.keyAccount, authSubspace, auth.ProtoBaseAccount)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper, bankSubspace, bank.DefaultCodespace)
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
+	stakingKeeper := staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking, app.bankKeeper,
+		stakingSubspace, staking.DefaultCodespace)
+	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.feeCollectionKeeper)
+	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, distrSubspace, app.bankKeeper, &stakingKeeper,
+		app.feeCollectionKeeper, distr.DefaultCodespace)
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
+		slashingSubspace, slashing.DefaultCodespace)
+	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper, govSubspace,
+		app.bankKeeper, &stakingKeeper, gov.DefaultCodespace)
+	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, app.distrKeeper, app.bankKeeper, app.feeCollectionKeeper)
 
 	// register the staking hooks
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
 	// modified like below:
 	app.stakingKeeper = *stakingKeeper.SetHooks(
-		sdk.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
-	)
+		sdk.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	app.mm = sdk.NewModuleManager(
 		auth.NewAppModule(app.accountKeeper),
@@ -185,8 +167,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint,
 		app.keyDistr, app.keySlashing, app.keyGov, app.keyFeeCollection,
-		app.keyParams, app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
-	)
+		app.keyParams, app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
@@ -200,21 +181,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	}
 
 	return app
-}
-
-// custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distr.RegisterCodec(cdc)
-	slashing.RegisterCodec(cdc)
-	gov.RegisterCodec(cdc)
-	auth.RegisterCodec(cdc)
-	crisis.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
 }
 
 // application updates every end block
@@ -233,7 +199,6 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	if app.assertInvariantsBlockly {
 		app.assertRuntimeInvariants()
 	}
-
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -241,7 +206,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 }
 
 // initialize store from a genesis state
-func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState, req abci.RequestInitChain) []abci.ValidatorUpdate {
 	genesisState.Sanitize()
 
 	// load the accounts
@@ -276,6 +241,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	if len(genesisState.GenTxs) > 0 {
 		validators = app.deliverGenTxs(ctx, genesisState.GenTxs)
 	}
+
 	return validators
 }
 
@@ -299,22 +265,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)
 
-	// sanity check
-	if len(req.Validators) > 0 {
-		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf(
-				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
-				len(req.Validators), len(validators)))
-		}
-		sort.Sort(abci.ValidatorUpdates(req.Validators))
-		sort.Sort(abci.ValidatorUpdates(validators))
-		for i, val := range validators {
-			if !val.Equal(req.Validators[i]) {
-				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
-			}
-		}
-	}
-
+	// XXX TODO add initChainer stuff here to the module manager
 	// assert runtime invariants
 	app.assertRuntimeInvariants()
 

@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"runtime/debug"
+	"sort"
 	"strings"
 
 	"errors"
@@ -352,6 +353,22 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
+
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(res.Validators) {
+			panic(fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(res.Validators))
+		for i, val := range res.Validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
+	}
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.

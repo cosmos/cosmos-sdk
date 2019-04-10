@@ -14,6 +14,7 @@ func (app *GaiaApp) assertRuntimeInvariants() {
 	app.assertRuntimeInvariantsOnContext(ctx)
 }
 
+// XXX TODO add initChainer stuff here to the module manager
 func (app *GaiaApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
 	start := time.Now()
 	invarRoutes := app.crisisKeeper.Routes()

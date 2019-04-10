@@ -421,6 +421,11 @@ func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 
+// calculate the token worth of provided shares
+func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
+}
+
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {

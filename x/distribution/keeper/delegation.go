@@ -92,8 +92,18 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// we could only use equals if we had arbitrary-precision rationals
 	currentStake := val.TokensFromShares(del.GetShares())
 	if stake.GT(currentStake) {
-		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
-			del.GetDelegatorAddr(), stake, currentStake))
+
+		// rounding error correction factor edge case
+		currentStakeRoundUp := val.TokensFromSharesRoundUp(del.GetShares())
+		if stake.Equal(currentStakeRoundUp) {
+			stake = currentStake
+		} else {
+
+			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
+				"\n\tfinal stake:\t%s"+
+				"\n\tcurrent stake:\t%s",
+				del.GetDelegatorAddr(), stake, currentStake))
+		}
 	}
 
 	// calculate rewards for final period

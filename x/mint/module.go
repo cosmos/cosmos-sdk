@@ -1,7 +1,6 @@
 package mint
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -27,9 +26,6 @@ var _ sdk.AppModule = AppModule{}
 func (AppModule) Name() string {
 	return ModuleName
 }
-
-// register app codec
-func (AppModule) RegisterCodec(_ *codec.Codec) {}
 
 // register invariants
 func (a AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}

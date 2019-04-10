@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -19,7 +18,6 @@ type AppModule interface {
 	Name() string
 
 	// registers
-	RegisterCodec(*codec.Codec)
 	RegisterInvariants(InvariantRouter)
 
 	// routes
@@ -82,13 +80,6 @@ func (mm ModuleManager) SetOrderBeginBlockers(moduleNames ...string) {
 // set the order of set end-blocker calls
 func (mm ModuleManager) SetOrderEndBlockers(moduleNames ...string) {
 	mm.OrderEndBlockers = moduleNames
-}
-
-// register all module codecs
-func (mm ModuleManager) RegisterCodecs(cdc *codec.Codec) {
-	for _, module := range mm.Modules {
-		module.RegisterCodec(cdc)
-	}
 }
 
 // register all module routes and module querier routes

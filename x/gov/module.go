@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -26,11 +25,6 @@ var _ sdk.AppModule = AppModule{}
 // module name
 func (AppModule) Name() string {
 	return ModuleName
-}
-
-// register app codec
-func (AppModule) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
 }
 
 // register invariants

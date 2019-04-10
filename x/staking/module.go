@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -33,11 +32,6 @@ var _ sdk.AppModule = AppModule{}
 // module name
 func (AppModule) Name() string {
 	return ModuleName
-}
-
-// register app codec
-func (AppModule) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
 }
 
 // register invariants

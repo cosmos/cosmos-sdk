@@ -380,9 +380,9 @@ type ContinuousVestingAccount struct {
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(baseVestingAccount *BaseVestingAccount,
-	startTime int64) ContinuousVestingAccount {
+	startTime int64) *ContinuousVestingAccount {
 
-	return ContinuousVestingAccount{
+	return &ContinuousVestingAccount{
 		BaseVestingAccount: baseVestingAccount,
 		StartTime:          startTime,
 	}
@@ -499,8 +499,8 @@ type DelayedVestingAccount struct {
 }
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
-func NewDelayedVestingAccountRaw(baseVestingAccount *BaseVestingAccount) DelayedVestingAccount {
-	return DelayedVestingAccount{
+func NewDelayedVestingAccountRaw(baseVestingAccount *BaseVestingAccount) *DelayedVestingAccount {
+	return &DelayedVestingAccount{
 		BaseVestingAccount: baseVestingAccount,
 	}
 }

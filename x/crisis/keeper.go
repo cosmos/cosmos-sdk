@@ -40,7 +40,7 @@ func (k Keeper) Routes() []InvarRoute {
 	return k.routes
 }
 
-// return all the invariants
+// Invariants returns all the registered Crisis keeper invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
 	var invars []sdk.Invariant
 	for _, route := range k.routes {

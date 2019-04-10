@@ -172,18 +172,15 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		slashing.NewAppModule(app.slashingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 	)
-	app.mm.RegisterInvariants(&app.crisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
-	// Begin Block Execution Order:
-	// 1) mint new tokens for the previous block
-	// 2) distribute rewards for the previous block
-	// 3) slash anyone who double signed.
-	// NOTE: slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool,
-	// so as to keep the CanWithdrawInvariant invariant.
+	// NOTE: during begin block slashing happens after distr.BeginBlocker so
+	// that there is nothing left over in the validator fee pool, so as to keep
+	// the CanWithdrawInvariant invariant.
 	// TODO: slashing should really happen at EndBlocker.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
+	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
+	app.mm.RegisterInvariants(&app.crisisKeeper)
+	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint,
@@ -231,9 +228,7 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates, stakingTags := staking.EndBlocker(ctx, app.stakingKeeper)
-	tags = append(tags, stakingTags...)
+	validatorUpdates, tags := app.mm.EndBlock(ctx, req)
 
 	if app.assertInvariantsBlockly {
 		app.assertRuntimeInvariants()

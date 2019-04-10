@@ -26,7 +26,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	params.RegisterCodec(mapp.Cdc)
 
-	pk := params.NewProposalKeeper(mapp.ParamsKeeper, gk)
+	pk := mapp.ParamsKeeper
 	router.AddRoute(params.RouterKey, params.NewProposalHandler(pk))
 	space := mapp.ParamsKeeper.Subspace("myspace").WithKeyTable(params.NewKeyTable(
 		[]byte("key"), uint64(0),
@@ -48,7 +48,7 @@ func TestProposalFailedEndblocker(t *testing.T) {
 
 	params.RegisterCodec(mapp.Cdc)
 
-	pk := params.NewProposalKeeper(mapp.ParamsKeeper, gk)
+	pk := mapp.ParamsKeeper
 	router.AddRoute(params.RouterKey, params.NewProposalHandler(pk))
 	space := mapp.ParamsKeeper.Subspace("myspace").WithKeyTable(params.NewKeyTable(
 		[]byte("key"), uint64(0),

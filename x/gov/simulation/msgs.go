@@ -106,9 +106,10 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) (msg gov.MsgSubmitProposal, err error) {
 	deposit := randomDeposit(r)
 	msg = gov.NewMsgSubmitProposal(
-		simulation.RandStringOfLength(r, 5),
-		simulation.RandStringOfLength(r, 5),
-		gov.ProposalTypeText,
+		gov.NewTextProposal(
+			simulation.RandStringOfLength(r, 5),
+			simulation.RandStringOfLength(r, 5),
+		),
 		sender.Address,
 		deposit,
 	)

@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -67,18 +66,4 @@ func (k Keeper) GetSubspace(storename string) (Subspace, bool) {
 		return Subspace{}, false
 	}
 	return *space, ok
-}
-
-// Extended keeper which can process parameter change proposals
-type ProposalKeeper struct {
-	Keeper
-
-	proposal proposal.Keeper
-}
-
-func NewProposalKeeper(keeper Keeper, proposal proposal.Keeper) ProposalKeeper {
-	return ProposalKeeper{
-		Keeper:   keeper,
-		proposal: proposal,
-	}
 }

@@ -26,18 +26,7 @@ type MsgSubmitProposal struct {
 	Proposer       sdk.AccAddress   `json:"proposer"`        //  Address of the proposer
 }
 
-func NewMsgSubmitProposal(title, description, proposalType string, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
-	var content proposal.Content
-
-	switch proposalType {
-	case ProposalTypeText:
-		content = NewTextProposal(title, description)
-	case ProposalTypeSoftwareUpgrade:
-		content = NewSoftwareUpgradeProposal(title, description)
-	default:
-		panic("Invalid ProposalType")
-	}
-
+func NewMsgSubmitProposal(content proposal.Content, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Content:        content,
 		Proposer:       proposer,

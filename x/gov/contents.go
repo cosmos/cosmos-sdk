@@ -63,3 +63,14 @@ func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
 func (sup SoftwareUpgradeProposal) String() string {
 	return fmt.Sprintf("SoftwareUpgradeProposal{%s, %s}", sup.Title, sup.Description)
 }
+
+func ContentFromProposalType(title, desc, ty string) proposal.Content {
+	switch ty {
+	case ProposalTypeText:
+		return NewTextProposal(title, desc)
+	case ProposalTypeSoftwareUpgrade:
+		return NewSoftwareUpgradeProposal(title, desc)
+	default:
+		return nil
+	}
+}

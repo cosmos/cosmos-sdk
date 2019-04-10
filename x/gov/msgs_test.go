@@ -44,15 +44,13 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgSubmitProposal(tc.title, tc.description, tc.proposalType, tc.proposerAddr, tc.initialDeposit)
+		msg := newMsgSubmitProposal(tc.title, tc.description, tc.proposalType, tc.proposerAddr, tc.initialDeposit)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
 			require.Error(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
-
-	require.Panics(t, func() { NewMsgSubmitProposal("Test Proposal", "test", "ProposalTypeInvalid", addrs[0], coinsPos) })
 }
 
 func TestMsgDepositGetSignBytes(t *testing.T) {

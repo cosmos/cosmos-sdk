@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
+const RouterKey = "params"
+
 // Struct for single parameter change
 type Change struct {
 	Space  string `json:"space"`

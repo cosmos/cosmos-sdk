@@ -95,7 +95,13 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		// create the message
-		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalType, req.Proposer, req.InitialDeposit)
+
+		content := gov.ContentFromProposalType(req.Title, req.Description, proposalType)
+		if content == nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid proposalType %s", proposalType))
+			return
+		}
+		msg := gov.NewMsgSubmitProposal(content, req.Proposer, req.InitialDeposit)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

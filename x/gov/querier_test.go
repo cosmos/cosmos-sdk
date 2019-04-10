@@ -187,16 +187,16 @@ func testQueries(t *testing.T) {
 	depositParams, _, _ := getQueriedParams(t, ctx, cdc, querier)
 
 	// addrs[0] proposes (and deposits) proposals #1 and #2
-	res := handler(ctx, NewMsgSubmitProposal("title", "description", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
+	res := handler(ctx, newMsgSubmitProposal("title", "description", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
 	var proposalID1 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID1)
 
-	res = handler(ctx, NewMsgSubmitProposal("title", "description", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
+	res = handler(ctx, newMsgSubmitProposal("title", "description", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
 	var proposalID2 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID2)
 
 	// addrs[1] proposes (and deposits) proposals #3
-	res = handler(ctx, NewMsgSubmitProposal("title", "description", ProposalTypeText, addrs[1], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
+	res = handler(ctx, newMsgSubmitProposal("title", "description", ProposalTypeText, addrs[1], sdk.Coins{sdk.NewInt64Coin("dummycoin", 1)}))
 	var proposalID3 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID3)
 

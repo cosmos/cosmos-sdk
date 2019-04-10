@@ -26,7 +26,31 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	return proposal.HandleSubmit(ctx, keeper, msg.Content, msg.Proposer, msg.InitialDeposit, tags.TxCategory)
+	proposalID, err := keeper.SubmitProposal(ctx, msg.Content)
+	if err != nil {
+		return err.Result()
+	}
+	proposalIDStr := fmt.Sprintf("%d", proposalID)
+
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
+	if err != nil {
+		return err.Result()
+	}
+
+	resTags := sdk.NewTags(
+		tags.Proposer, msg.Proposer.String(),
+		tags.ProposalID, proposalIDStr,
+		tags.Category, tags.TxCategory,
+	)
+
+	if votingStarted {
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDStr)
+	}
+
+	return sdk.Result{
+		Data: msgCdc.MustMarshalBinaryLengthPrefixed(proposalID),
+		Tags: resTags,
+	}
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {

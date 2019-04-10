@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/proposal"
 )
 
 var cdc *codec.Codec
@@ -85,13 +84,8 @@ type Proposal struct {
 }
 
 func (p Proposal) Migrate() (res gov.Proposal, err error) {
-	var content proposal.Content
-	switch p.ProposalType {
-	case ProposalTypeText:
-		content = gov.NewTextProposal(p.Title, p.Description)
-	case ProposalTypeSoftwareUpgrade:
-		content = gov.NewSoftwareUpgradeProposal(p.Title, p.Description)
-	default:
+	content := gov.ContentFromProposalType(p.Title, p.Description, p.ProposalType.String())
+	if content == nil {
 		err = fmt.Errorf("invalid proposal kind %v", p.ProposalType)
 		return
 	}

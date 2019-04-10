@@ -99,6 +99,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 		cdc:          cdc,
 		codespace:    codespace,
 	}
+	msgCdc = cdc
 
 	return
 }

@@ -10,8 +10,8 @@ import (
 func NewHandler(k ProposalKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case MsgSubmitParameterChangeProposal:
-			return handleMsgSubmitParameterChangeProposal(ctx, k, msg)
+		case MsgSubmitProposal:
+			return handleMsgSubmitProposal(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized gov msg type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -19,7 +19,7 @@ func NewHandler(k ProposalKeeper) sdk.Handler {
 	}
 }
 
-func handleMsgSubmitParameterChangeProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitParameterChangeProposal) sdk.Result {
+func handleMsgSubmitProposal(ctx sdk.Context, k ProposalKeeper, msg MsgSubmitProposal) sdk.Result {
 	content := NewProposalChange(msg.Title, msg.Description, msg.Changes)
 	return proposal.HandleSubmit(ctx, k.proposal, content, msg.Proposer, msg.InitialDeposit)
 }

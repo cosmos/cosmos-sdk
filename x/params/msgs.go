@@ -8,8 +8,8 @@ import (
 // Router key for params module
 const RouterKey = "params"
 
-// MsgSubmitParameterChangeProposal submits a proposal to change multiple params
-type MsgSubmitParameterChangeProposal struct {
+// MsgSubmitProposal submits a proposal to change multiple params
+type MsgSubmitProposal struct {
 	Title          string         `json:"title"`           //  Title of the proposal
 	Description    string         `json:"description"`     //  Description of the proposal
 	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
@@ -17,9 +17,9 @@ type MsgSubmitParameterChangeProposal struct {
 	Changes        []Change       `json:"changes"`         // Parameters to be changed
 }
 
-// Constructs new MsgSubmitParameterChangeProposal
-func NewMsgSubmitParameterChangeProposal(title, description string, changes []Change, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitParameterChangeProposal {
-	return MsgSubmitParameterChangeProposal{
+// Constructs new MsgSubmitProposal
+func NewMsgSubmitProposal(title, description string, changes []Change, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
 		Proposer:       proposer,
@@ -28,20 +28,20 @@ func NewMsgSubmitParameterChangeProposal(title, description string, changes []Ch
 	}
 }
 
-var _ sdk.Msg = MsgSubmitParameterChangeProposal{}
+var _ sdk.Msg = MsgSubmitProposal{}
 
 // Implements sdk.Msg
-func (msg MsgSubmitParameterChangeProposal) Route() string {
+func (msg MsgSubmitProposal) Route() string {
 	return RouterKey
 }
 
 // Implements sdk.Msg
-func (msg MsgSubmitParameterChangeProposal) Type() string {
+func (msg MsgSubmitProposal) Type() string {
 	return "submit_parameter_change_proposal"
 }
 
 // Implements sdk.Msg
-func (msg MsgSubmitParameterChangeProposal) ValidateBasic() sdk.Error {
+func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	err := proposal.ValidateMsgBasic(msg.Title, msg.Description, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err
@@ -50,12 +50,12 @@ func (msg MsgSubmitParameterChangeProposal) ValidateBasic() sdk.Error {
 }
 
 // Implements sdk.Msg
-func (msg MsgSubmitParameterChangeProposal) GetSignBytes() []byte {
+func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	bz := msgCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // Implements sdk.Msg
-func (msg MsgSubmitParameterChangeProposal) GetSigners() []sdk.AccAddress {
+func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Proposer}
 }

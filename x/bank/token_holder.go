@@ -6,23 +6,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TokenHolder defines the BaseTokenHolder interface
+// TokenHolder defines the interface used for modules that are allowed to hold
+// tokens. This is designed to prevent held tokens to be kept in regular Accounts,
+// as those are only ment for user accounts
+//
+// The bank module keeps track of each of the module's holdings and uses it to
+//
 type TokenHolder interface {
-	HoldingsOf()
-	RequestTokens()
-	RelinquishTokens()
+	HoldingsOf(string) sdk.Int
+	RequestTokens(sdk.Coins) error
+	RelinquishTokens(sdk.Coins) error
 }
 
-// TokenMinter defines the BaseTokenMinter interface
+// TokenMinter defines the interface used for modules that are allowed to mint
+// and hold tokens on their behalf
 type TokenMinter interface {
 	TokenHolder
 
-	MintTokens()
-	BurnTokens()
+	MintedTokensOf(string) sdk.Int
+	Mint(sdk.Coins) error
+	BurnTokens(sdk.Coins) error
 }
 
 //-----------------------------------------------------------------------------
 // BaseTokenHolder
+
+var _ TokenHolder = (*BaseTokenHolder)(nil)
 
 // BaseTokenHolder defines an instance of a module that holds tokens
 type BaseTokenHolder struct {
@@ -78,6 +87,8 @@ func (btk *BaseTokenHolder) setTokenHoldings(amount sdk.Coins) {
 
 //-----------------------------------------------------------------------------
 // BaseTokenMinter
+
+var _ TokenMinter = (*BaseTokenMinter)(nil)
 
 // BaseTokenMinter defines an instance of a module that is allowed to hold and mint tokens
 type BaseTokenMinter struct {

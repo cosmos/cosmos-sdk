@@ -336,11 +336,8 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 //
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	if d.IsZero() {
-		panic("invalid zero decimal")
-	}
-
 	var res DecCoins
+
 	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,

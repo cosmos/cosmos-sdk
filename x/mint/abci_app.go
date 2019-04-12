@@ -12,15 +12,16 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	params := k.GetParams(ctx)
 
 	// recalculate inflation rate
-	totalSupply := k.sk.TotalTokens(ctx)
+	supplier := k.bk.GetSupplier(ctx)
+	atomSupply := supplier.TotalAmountOf(k.sk.BondDenom(ctx))
 	bondedRatio := k.sk.BondedRatio(ctx)
 	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
-	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
+	minter.AnnualProvisions = minter.NextAnnualProvisions(params, atomSupply)
 	k.SetMinter(ctx, minter)
 
 	// mint coins, add to collected fees, update supply
 	mintedCoin := minter.BlockProvision(params)
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
-	k.sk.InflateSupply(ctx, mintedCoin.Amount)
+	k.bk.InflateSupply(ctx, sdk.Coins{mintedCoin})
 
 }

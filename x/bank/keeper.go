@@ -18,6 +18,8 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
+	InflateSupply(ctx sdk.Context, amt sdk.Coins)
+
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
@@ -99,69 +101,8 @@ func (keeper BaseKeeper) InputOutputCoins(
 	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
-// GetTokenHolders returns all the token holders
-func (keeper BaseKeeper) GetTokenHolders(ctx sdk.Context) (
-	tokenHolders []TokenHolder, err error) {
-	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, holderKeyPrefix)
-	defer iterator.Close()
-
-	var tokenHolder TokenHolder
-	for ; iterator.Valid(); iterator.Next() {
-		err = keeper.cdc.UnmarshalBinaryLengthPrefixed(iterator.Value(), &tokenHolder)
-		if err != nil {
-			return
-		}
-		tokenHolders = append(tokenHolders, tokenHolder)
-	}
-	return
-}
-
-// GetTokenHolder returns a token holder instance
-func (keeper BaseKeeper) GetTokenHolder(ctx sdk.Context, moduleName string) (
-	tokenHolder TokenHolder) {
-	store := ctx.KVStore(keeper.storeKey)
-	b := store.Get(GetTokenHolderKey(moduleName))
-	if b == nil {
-		panic(fmt.Sprintf("module %s is not in store", moduleName))
-	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(b, tokenHolder)
-	return
-}
-
-// SetTokenHolder sets a holder to store
-func (keeper BaseKeeper) SetTokenHolder(ctx sdk.Context, tokenHolder TokenHolder) {
-	store := ctx.KVStore(keeper.storeKey)
-	holderKey := GetTokenHolderKey(tokenHolder.Module)
-	b := keeper.cdc.MustMarshalBinaryLengthPrefixed(tokenHolder)
-	store.Set(holderKey, b)
-}
-
-// GetTotalSupply returns the total supply of the network
-func (keeper BaseKeeper) GetTotalSupply(ctx sdk.Context) (totalSupply sdk.Coins) {
-	holders, err := keeper.GetTokenHolders(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, holder := range holders {
-		totalSupply = totalSupply.Add(holder.Holdings)
-	}
-	return
-}
-
-// GetSupplyOf returns a coin's total supply
-func (keeper BaseKeeper) GetSupplyOf(ctx sdk.Context, denom string) (supply sdk.Int) {
-	holders, err := keeper.GetTokenHolders(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, holder := range holders {
-		supply = supply.Add(holder.HoldingsOf(denom))
-	}
-	return
-}
+//------------------ Staking logic ------------------
+// TODO: consider moving out this of bank
 
 // DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both

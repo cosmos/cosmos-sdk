@@ -11,11 +11,14 @@ import (
 // as those are only ment for user accounts
 //
 // The bank module keeps track of each of the module's holdings and uses it to
-//
+// calculate the total supply
 type TokenHolder interface {
-	HoldingsOf(string) sdk.Int
-	RequestTokens(sdk.Coins) error
-	RelinquishTokens(sdk.Coins) error
+	GetModuleName() string
+
+	GetHoldings() sdk.Coins
+	SetHoldings(sdk.Coins)
+
+	GetHoldingsOf(string) sdk.Int
 }
 
 // TokenMinter defines the interface used for modules that are allowed to mint
@@ -23,9 +26,8 @@ type TokenHolder interface {
 type TokenMinter interface {
 	TokenHolder
 
-	MintedTokensOf(string) sdk.Int
-	Mint(sdk.Coins) error
-	BurnTokens(sdk.Coins) error
+	GetMintedTokens() sdk.Coins
+	GetMintedTokensOf(string) sdk.Int
 }
 
 //-----------------------------------------------------------------------------
@@ -47,42 +49,24 @@ func NewBaseTokenHolder(moduleName string, initialHoldings sdk.Coins) BaseTokenH
 	}
 }
 
-// HoldingsOf returns the a total coin denom holdings retained by a module
-func (btk BaseTokenHolder) HoldingsOf(denom string) sdk.Int {
-	return btk.Holdings.AmountOf(denom)
+// GetModuleName returns the the name of the holder's module
+func (bth BaseTokenHolder) GetModuleName() string {
+	return bth.Module
 }
 
-// RequestTokens adds requested tokens to the module's holdings
-func (btk BaseTokenHolder) RequestTokens(amount sdk.Coins) error {
-	if !amount.IsValid() {
-		return fmt.Errorf("invalid requested amount")
-	}
-	// get available supply (not held by a module or account)
-	// availableSupply := keeper.GetCirculatingSupply(ctx) // TODO: move to keeper ?
-	// if !availableSupply.IsAllGTE(amount) {
-	// 	return fmt.Errorf("requested tokens greater than current circulating free supply")
-	// }
-	// TODO: decrease free supply
-	btk.setTokenHoldings(btk.Holdings.Add(amount))
-	return nil
+// GetHoldings returns the a total coin denom holdings retained by a module
+func (bth BaseTokenHolder) GetHoldings() sdk.Coins {
+	return bth.Holdings
 }
 
-// RelinquishTokens hands over a portion of the module's holdings
-func (btk BaseTokenHolder) RelinquishTokens(amount sdk.Coins) error {
-	if !amount.IsValid() {
-		return fmt.Errorf("invalid provided relenquished amount")
-	}
-	if !btk.Holdings.IsAllGTE(amount) {
-		return fmt.Errorf("insufficient token holdings")
-	}
-	btk.setTokenHoldings(btk.Holdings.Sub(amount))
-	//TODO: add to free supply
-	return nil
+// GetHoldings returns the a total coin denom holdings retained by a module
+func (bth *BaseTokenHolder) SetHoldings(amount sdk.Coins) {
+	bth.Holdings = amount
 }
 
-// set new token holdings
-func (btk *BaseTokenHolder) setTokenHoldings(amount sdk.Coins) {
-	btk.Holdings = amount
+// GetHoldingsOf returns the a total coin denom holdings retained by a module
+func (bth BaseTokenHolder) GetHoldingsOf(denom string) sdk.Int {
+	return bth.Holdings.AmountOf(denom)
 }
 
 //-----------------------------------------------------------------------------
@@ -108,8 +92,13 @@ func NewBaseTokenMinter(moduleName string, initialHoldings, initialMintedTokens 
 	}
 }
 
-// MintedTokensOf returns the a total amount minted of specific coin
-func (btm BaseTokenMinter) MintedTokensOf(denom string) sdk.Int {
+// GetMintedTokens returns the a total amount minted of specific coin
+func (btm BaseTokenMinter) GetMintedTokens() sdk.Coins {
+	return btm.MintedTokens
+}
+
+// GetMintedTokensOf returns the a total amount minted of specific coin
+func (btm BaseTokenMinter) GetMintedTokensOf(denom string) sdk.Int {
 	return btm.MintedTokens.AmountOf(denom)
 }
 

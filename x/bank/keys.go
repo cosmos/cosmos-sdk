@@ -12,7 +12,8 @@ const (
 )
 
 var (
-	holderKeyPrefix = []byte{0x00}
+	supplierKey     = []byte{0x00}
+	holderKeyPrefix = []byte{0x01}
 )
 
 // GetTokenHolderKey returns the store key of the given module

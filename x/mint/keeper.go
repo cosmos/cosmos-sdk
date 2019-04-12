@@ -25,12 +25,13 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *codec.Codec
 	paramSpace params.Subspace
+	bk         BankKeeper
 	sk         StakingKeeper
 	fck        FeeCollectionKeeper
 }
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
-	paramSpace params.Subspace, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
+	paramSpace params.Subspace, bk BankKeeper, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{
 		storeKey:   key,
@@ -66,7 +67,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(minterKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		panic("Stored minter should not have been nil")
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &minter)
 	return

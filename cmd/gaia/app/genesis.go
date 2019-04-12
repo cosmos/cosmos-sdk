@@ -168,7 +168,6 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		return genesisState, errors.New("there must be at least one genesis tx")
 	}
 
-	stakingData := genesisState.StakingData
 	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
@@ -187,16 +186,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	for _, acc := range genesisState.Accounts {
-		for _, coin := range acc.Coins {
-			if coin.Denom == genesisState.StakingData.Params.BondDenom {
-				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
-					Add(coin.Amount) // increase the supply
-			}
-		}
-	}
-
-	genesisState.StakingData = stakingData
+	genesisState.BankData.CirculatingSupply = circulatingSupplyFromGenAccounts(genesisState.Accounts)
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
@@ -401,6 +391,15 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return appGenTxs, persistentPeers, nil
+}
+
+// circulatingSupplyFromGenAccounts returns the sum of free coins held by genesis accounts
+func circulatingSupplyFromGenAccounts(genAccounts []GenesisAccount,
+) (supply sdk.Coins) {
+	for _, genAcc := range genAccounts {
+		supply = supply.Add(genAcc.Coins)
+	}
+	return
 }
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {

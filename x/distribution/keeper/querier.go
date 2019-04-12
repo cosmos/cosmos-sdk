@@ -251,21 +251,25 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	// cache-wrap context as to not persist state changes during querying
 	ctx, _ = ctx.CacheContext()
 
-	totalRewards := sdk.DecCoins{}
+	total := sdk.DecCoins{}
+	var delRewards []types.DelegationDelegatorReward
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
 		func(_ int64, del sdk.Delegation) (stop bool) {
-			val := k.stakingKeeper.Validator(ctx, del.GetValidatorAddr())
+			valAddr := del.GetValidatorAddr()
+			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
-			rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+			delReward := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
-			totalRewards = totalRewards.Add(rewards)
+			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
+			total = total.Add(delReward)
 			return false
 		},
 	)
 
-	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
+	bz, err := codec.MarshalJSONIndent(k.cdc,
+		types.NewQueryDelegatorTotalRewardsResponse(delRewards, total))
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

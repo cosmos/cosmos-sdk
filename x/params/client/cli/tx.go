@@ -60,7 +60,7 @@ where proposal.json contains:
 				return err
 			}
 
-			content := params.NewParamChangeProposal(proposal.Title, proposal.Description, proposal.Changes)
+			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes)
 
 			msg := gov.NewMsgSubmitProposal(content, from, amount)
 

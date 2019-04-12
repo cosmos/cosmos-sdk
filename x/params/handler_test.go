@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-func testProposal(changes ...params.Change) params.ChangeProposal {
-	return params.NewChangeProposal(
+func testProposal(changes ...params.Change) params.ParameterChangeProposal {
+	return params.NewParameterChangeProposal(
 		"Test",
 		"description",
 		changes,

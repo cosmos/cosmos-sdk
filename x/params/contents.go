@@ -53,35 +53,35 @@ func ValidateChanges(changes []Change) sdk.Error {
 }
 
 // Proposal which contains multiple changes on proposals
-type ParamChangeProposal struct {
+type ParameterChangeProposal struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Changes     []Change `json:"changes"`
 }
 
-// Constructs new ParamChangeProposal
-func NewParamChangeProposal(title string, description string, changes []Change) ParamChangeProposal {
-	return ParamChangeProposal{
+// Constructs new ParameterChangeProposal
+func NewParameterChangeProposal(title string, description string, changes []Change) ParameterChangeProposal {
+	return ParameterChangeProposal{
 		Title:       title,
 		Description: description,
 		Changes:     changes,
 	}
 }
 
-var _ proposal.Content = ParamChangeProposal{}
+var _ proposal.Content = ParameterChangeProposal{}
 
 // nolint - Implements proposal.Content
-func (pc ParamChangeProposal) GetTitle() string       { return pc.Title }
-func (pc ParamChangeProposal) GetDescription() string { return pc.Description }
-func (pc ParamChangeProposal) ProposalRoute() string  { return RouterKey }
-func (pc ParamChangeProposal) ProposalType() string   { return ProposalTypeChange }
-func (pc ParamChangeProposal) ValidateBasic() sdk.Error {
+func (pc ParameterChangeProposal) GetTitle() string       { return pc.Title }
+func (pc ParameterChangeProposal) GetDescription() string { return pc.Description }
+func (pc ParameterChangeProposal) ProposalRoute() string  { return RouterKey }
+func (pc ParameterChangeProposal) ProposalType() string   { return ProposalTypeChange }
+func (pc ParameterChangeProposal) ValidateBasic() sdk.Error {
 	err := proposal.ValidateAbstract(DefaultCodespace, pc)
 	if err != nil {
 		return err
 	}
 	return ValidateChanges(pc.Changes)
 }
-func (pc ParamChangeProposal) String() string {
-	return fmt.Sprintf("ParameterParamChangeProposal{%s, %s, %s}", pc.Title, pc.Description, pc.Changes)
+func (pc ParameterChangeProposal) String() string {
+	return fmt.Sprintf("ParameterParameterChangeProposal{%s, %s, %s}", pc.Title, pc.Description, pc.Changes)
 }

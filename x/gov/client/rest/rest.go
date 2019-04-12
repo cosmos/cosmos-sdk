@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	goverr "github.com/cosmos/cosmos-sdk/x/gov/errors"
 )
 
 // REST Variable names
@@ -29,7 +30,14 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec,
+	phs ...PropHandler) {
+
+	propsub := r.PathPrefix("/gov/proposals").Subrouter()
+	for _, ph := range phs {
+		propsub.HandleFunc("/"+ph.Name, ph.Handler).Methods("POST")
+	}
+
 	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
@@ -76,6 +84,11 @@ type VoteReq struct {
 	Option  string         `json:"option"` // option from OptionSet chosen by the voter
 }
 
+type PropHandler struct {
+	Name    string
+	Handler func(http.ResponseWriter, *http.Request)
+}
+
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PostProposalReq
@@ -89,18 +102,13 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		proposalType := govClientUtils.NormalizeProposalType(req.ProposalType)
-		if proposalType == "" {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid ProposalType %s", req.ProposalType))
+		if !gov.IsValidProposalType(proposalType) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, goverr.ErrInvalidProposalType(gov.DefaultCodespace, req.ProposalType).Error())
 			return
 		}
 
 		// create the message
-
 		content := gov.ContentFromProposalType(req.Title, req.Description, proposalType)
-		if content == nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid proposalType %s", proposalType))
-			return
-		}
 		msg := gov.NewMsgSubmitProposal(content, req.Proposer, req.InitialDeposit)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

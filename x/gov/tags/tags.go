@@ -6,10 +6,10 @@ import (
 
 // Governance tags
 const (
-	ActionProposalDropped  = "proposal-dropped"
-	ActionProposalPassed   = "proposal-passed"
-	ActionProposalRejected = "proposal-rejected"
-	ActionProposalFailed   = "proposal-failed"
+	ActionProposalDropped  = "proposal-dropped"  // didn't meet min deposit
+	ActionProposalPassed   = "proposal-passed"   // meet vote quorum
+	ActionProposalRejected = "proposal-rejected" // didn't meet vote quorum
+	ActionProposalFailed   = "proposal-failed"   // error on proposal handler
 	TxCategory             = "governance"
 
 	Action            = sdk.TagAction

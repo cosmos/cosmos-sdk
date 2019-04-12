@@ -27,13 +27,13 @@ func handleChangeProposal(ctx sdk.Context, k Keeper, p ChangeProposal) sdk.Error
 		}
 		var err error
 		if len(c.Subkey) == 0 {
-			err = s.SetRaw(ctx, c.Key, c.Value)
+			err = s.SetRaw(ctx, []byte(c.Key), c.Value)
 		} else {
-			err = s.SetRawWithSubkey(ctx, c.Key, c.Subkey, c.Value)
+			err = s.SetRawWithSubkey(ctx, []byte(c.Key), c.Subkey, c.Value)
 		}
 
 		if err != nil {
-			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, err.Error())
+			return ErrSettingParameter(k.codespace, []byte(c.Key), c.Subkey, c.Value, err.Error())
 		}
 	}
 

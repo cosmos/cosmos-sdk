@@ -32,7 +32,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 		[]byte("key"), uint64(0),
 	))
 
-	tp := testProposal(params.NewChange("myspace", []byte("key"), nil, []byte("\"1\"")))
+	tp := testProposal(params.NewChange("myspace", "key", nil, []byte("\"1\"")))
 	resTags := gov.TestProposal(t, mapp, addrs[0], gk, sk, tp)
 
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
@@ -54,7 +54,7 @@ func TestProposalFailedEndblocker(t *testing.T) {
 		[]byte("key"), uint64(0),
 	))
 
-	tp := testProposal(params.NewChange("myspace", []byte("key"), nil, []byte("invalid")))
+	tp := testProposal(params.NewChange("myspace", "key", nil, []byte("invalid")))
 	resTags := gov.TestProposal(t, mapp, addrs[0], gk, sk, tp)
 
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalFailed), resTags[1])

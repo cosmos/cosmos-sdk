@@ -31,6 +31,7 @@ import (
 	gv "github.com/cosmos/cosmos-sdk/x/gov"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
+	params "github.com/cosmos/cosmos-sdk/x/params/client/rest"
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	st "github.com/cosmos/cosmos-sdk/x/staking"
@@ -43,6 +44,7 @@ import (
 	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	mintclient "github.com/cosmos/cosmos-sdk/x/mint/client"
+	paramcmd "github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	slashingclient "github.com/cosmos/cosmos-sdk/x/slashing/client"
 	stakingclient "github.com/cosmos/cosmos-sdk/x/staking/client"
 
@@ -70,7 +72,9 @@ func main() {
 	// Module clients hold cli commnads (tx,query) and lcd routes
 	// TODO: Make the lcd command take a list of ModuleClient
 	mc := []sdk.ModuleClients{
-		govClient.NewModuleClient(gv.StoreKey, cdc),
+		govClient.NewModuleClient(gv.StoreKey, cdc,
+			paramcmd.GetCmdSubmitProposal(cdc),
+		),
 		distClient.NewModuleClient(distcmd.StoreKey, cdc),
 		stakingclient.NewModuleClient(st.StoreKey, cdc),
 		mintclient.NewModuleClient(mint.StoreKey, cdc),
@@ -175,7 +179,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	dist.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distcmd.StoreKey)
 	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, params.PropHandler(rs.CliCtx, rs.Cdc))
 	mintrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 

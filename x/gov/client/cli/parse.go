@@ -10,6 +10,10 @@ import (
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
+func readProposalType() string {
+	return govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
+}
+
 func parseSubmitProposalFlags() (*proposal, error) {
 	proposal := &proposal{}
 	proposalFile := viper.GetString(flagProposal)
@@ -17,7 +21,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 	if proposalFile == "" {
 		proposal.Title = viper.GetString(flagTitle)
 		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Type = readProposalType()
 		proposal.Deposit = viper.GetString(flagDeposit)
 
 		if proposal.Type == "" {

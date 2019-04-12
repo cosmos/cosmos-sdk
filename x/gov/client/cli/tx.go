@@ -88,10 +88,10 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-			if content == nil {
+			if !gov.IsValidProposalType(proposal.Type) {
 				return fmt.Errorf("Invalid proposal type %s", proposal.Type)
 			}
+			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
 			msg := gov.NewMsgSubmitProposal(content, from, amount)
 

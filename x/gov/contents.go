@@ -74,3 +74,7 @@ func ContentFromProposalType(title, desc, ty string) proposal.Content {
 		return nil
 	}
 }
+
+func IsValidProposalType(ty string) bool {
+	return ty == ProposalTypeText || ty == ProposalTypeSoftwareUpgrade
+}

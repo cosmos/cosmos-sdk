@@ -13,10 +13,11 @@ import (
 type ModuleClient struct {
 	storeKey string
 	cdc      *amino.Codec
+	pcmds    []*cobra.Command
 }
 
-func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
-	return ModuleClient{storeKey, cdc}
+func NewModuleClient(storeKey string, cdc *amino.Codec, pcmds ...*cobra.Command) ModuleClient {
+	return ModuleClient{storeKey, cdc, pcmds}
 }
 
 // GetQueryCmd returns the cli query commands for this module
@@ -49,10 +50,15 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 		Short: "Governance transactions subcommands",
 	}
 
+	propcmd := govCli.GetCmdSubmitProposal(mc.cdc)
+	for _, pcmd := range mc.pcmds {
+		propcmd.AddCommand(pcmd)
+	}
+
 	govTxCmd.AddCommand(client.PostCommands(
 		govCli.GetCmdDeposit(mc.storeKey, mc.cdc),
 		govCli.GetCmdVote(mc.storeKey, mc.cdc),
-		govCli.GetCmdSubmitProposal(mc.cdc),
+		propcmd,
 	)...)
 
 	return govTxCmd

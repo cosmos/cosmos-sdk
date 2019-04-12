@@ -9,16 +9,18 @@ import (
 
 const RouterKey = "params"
 
+const ProposalTypeChange = "ParameterChange"
+
 // Struct for single parameter change
 type Change struct {
 	Space  string `json:"space"`
-	Key    []byte `json:"key"`
+	Key    string `json:"key"`
 	Subkey []byte `json:"subkey"`
 	Value  []byte `json:"value"`
 }
 
 // Constructs new Change
-func NewChange(space string, key, subkey, value []byte) Change {
+func NewChange(space, key string, subkey, value []byte) Change {
 	return Change{space, key, subkey, value}
 }
 
@@ -72,7 +74,7 @@ var _ proposal.Content = ChangeProposal{}
 func (pc ChangeProposal) GetTitle() string       { return pc.Title }
 func (pc ChangeProposal) GetDescription() string { return pc.Description }
 func (pc ChangeProposal) ProposalRoute() string  { return RouterKey }
-func (pc ChangeProposal) ProposalType() string   { return "ParameterChange" }
+func (pc ChangeProposal) ProposalType() string   { return ProposalTypeChange }
 func (pc ChangeProposal) ValidateBasic() sdk.Error {
 	err := proposal.ValidateAbstract(DefaultCodespace, pc)
 	if err != nil {

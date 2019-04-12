@@ -24,8 +24,8 @@ type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
+func GetKeyInfo(name string, homeIndex ...string) (keys.Info, error) {
+	keybase, err := NewKeyBaseFromHomeFlag(homeIndex...)
 	if err != nil {
 		return nil, err
 	}

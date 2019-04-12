@@ -58,7 +58,7 @@ type CLIContext struct {
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
-func NewCLIContext() CLIContext {
+func NewCLIContext(homeIndex ...string) CLIContext {
 	var rpc rpcclient.Client
 
 	nodeURI := viper.GetString(client.FlagNode)
@@ -67,7 +67,7 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName, err := GetFromFields(from)
+	fromAddress, fromName, err := GetFromFields(from, homeIndex...)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)

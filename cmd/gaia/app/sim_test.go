@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -61,11 +62,11 @@ func init() {
 }
 
 // helper function for populating input for SimulateFromSeed
-func getSimulateFromSeedInput(tb testing.TB, app *GaiaApp) (
-	testing.TB, *baseapp.BaseApp, simulation.AppStateFn, int64,
+func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *GaiaApp) (
+	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool) {
 
-	return tb, app.BaseApp, appStateFn, seed,
+	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
@@ -318,7 +319,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 	if err != nil {
 		fmt.Println(err)
 		b.Fail()
@@ -353,7 +354,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -387,7 +388,7 @@ func TestGaiaImportExport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if commit {
 		// for memdb:
@@ -477,7 +478,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if commit {
 		// for memdb:
@@ -516,7 +517,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, newApp))
+	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
 
 }
@@ -541,7 +542,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
-				t, app.BaseApp, appStateFn, seed,
+				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
 				[]sdk.Invariant{},
 				50,
@@ -555,5 +556,44 @@ func TestAppStateDeterminism(t *testing.T) {
 		for k := 1; k < numTimesToRunPerSeed; k++ {
 			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
+	}
+}
+
+func BenchmarkInvariants(b *testing.B) {
+	// 1. Setup a simulated Gaia application
+	logger := log.NewNopLogger()
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-invariant-bench")
+	db, _ := sdk.NewLevelDB("simulation", dir)
+
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+
+	app := NewGaiaApp(logger, db, nil, true, false)
+
+	// 2. Run parameterized simulation (w/o invariants)
+	_, err := simulation.SimulateFromSeed(
+		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean,
+	)
+	if err != nil {
+		fmt.Println(err)
+		b.FailNow()
+	}
+
+	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
+
+	// 3. Benchmark each invariant separately
+	//
+	// NOTE: We use the crisis keeper as it has all the invariants registered with
+	// their respective metadata which makes it useful for testing/benchmarking.
+	for _, cr := range app.crisisKeeper.Routes() {
+		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
+			if err := cr.Invar(ctx); err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		})
 	}
 }

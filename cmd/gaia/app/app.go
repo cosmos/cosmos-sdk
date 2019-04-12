@@ -138,8 +138,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
-	var grouter gov.Router
-	app.govKeeper, grouter = gov.NewKeeper(
+	var govRouter gov.Router
+	app.govKeeper, govRouter = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
 		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
@@ -181,7 +181,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc)).
 		AddRoute(mint.QuerierRoute, mint.NewQuerier(app.mintKeeper))
 
-	grouter.
+	govRouter.
 		AddRoute(gov.RouterKey, gov.ProposalHandler).
 		AddRoute(params.RouterKey, params.NewProposalHandler(app.paramsKeeper))
 

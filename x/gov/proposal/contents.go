@@ -18,17 +18,17 @@ const (
 func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
-		return errors.ErrInvalidTitle(codespace, "No title present in proposal")
+		return errors.ErrInvalidTitle(codespace, "proposal title cannot be blank")
 	}
 	if len(title) > MaxTitleLength {
-		return errors.ErrInvalidTitle(codespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
+		return errors.ErrInvalidTitle(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
 	}
 	description := c.GetDescription()
 	if len(description) == 0 {
-		return errors.ErrInvalidDescription(codespace, "No description present in proposal")
+		return errors.ErrInvalidDescription(codespace, "proposal description cannot be blank")
 	}
 	if len(description) > MaxDescriptionLength {
-		return errors.ErrInvalidDescription(codespace, fmt.Sprintf("Proposal description is longer than max length of %d", MaxDescriptionLength))
+		return errors.ErrInvalidDescription(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
 	}
 	return nil
 }

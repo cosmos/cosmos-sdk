@@ -60,12 +60,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
 
-			cctx, writeCache := ctx.CacheContext()
+			cacheCtx, writeCache := ctx.CacheContext()
 
 			// The handler is state mutating logic depending on the proposal content.
 			// The handler may mutate the state or not
 			// if handler fails no state mutation happened and the err msg is logged.
-			contentErr := handler(cctx, activeProposal.Content)
+			contentErr := handler(cacheCtx, activeProposal.Content)
 			if contentErr == nil {
 				tagValue = tags.ActionProposalPassed
 				logMsg = "passed"

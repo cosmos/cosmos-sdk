@@ -49,7 +49,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%s, %v}", msg.Content, msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%s, %v}", msg.Content.String(), msg.InitialDeposit)
 }
 
 // Implements Msg.

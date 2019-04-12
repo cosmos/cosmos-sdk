@@ -53,35 +53,35 @@ func ValidateChanges(changes []Change) sdk.Error {
 }
 
 // Proposal which contains multiple changes on proposals
-type ChangeProposal struct {
+type ParamChangeProposal struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Changes     []Change `json:"changes"`
 }
 
-// Constructs new ChangeProposal
-func NewChangeProposal(title string, description string, changes []Change) ChangeProposal {
-	return ChangeProposal{
+// Constructs new ParamChangeProposal
+func NewParamChangeProposal(title string, description string, changes []Change) ParamChangeProposal {
+	return ParamChangeProposal{
 		Title:       title,
 		Description: description,
 		Changes:     changes,
 	}
 }
 
-var _ proposal.Content = ChangeProposal{}
+var _ proposal.Content = ParamChangeProposal{}
 
 // nolint - Implements proposal.Content
-func (pc ChangeProposal) GetTitle() string       { return pc.Title }
-func (pc ChangeProposal) GetDescription() string { return pc.Description }
-func (pc ChangeProposal) ProposalRoute() string  { return RouterKey }
-func (pc ChangeProposal) ProposalType() string   { return ProposalTypeChange }
-func (pc ChangeProposal) ValidateBasic() sdk.Error {
+func (pc ParamChangeProposal) GetTitle() string       { return pc.Title }
+func (pc ParamChangeProposal) GetDescription() string { return pc.Description }
+func (pc ParamChangeProposal) ProposalRoute() string  { return RouterKey }
+func (pc ParamChangeProposal) ProposalType() string   { return ProposalTypeChange }
+func (pc ParamChangeProposal) ValidateBasic() sdk.Error {
 	err := proposal.ValidateAbstract(DefaultCodespace, pc)
 	if err != nil {
 		return err
 	}
 	return ValidateChanges(pc.Changes)
 }
-func (pc ChangeProposal) String() string {
-	return fmt.Sprintf("ParameterChangeProposal{%s, %s, %s}", pc.Title, pc.Description, pc.Changes)
+func (pc ParamChangeProposal) String() string {
+	return fmt.Sprintf("ParameterParamChangeProposal{%s, %s, %s}", pc.Title, pc.Description, pc.Changes)
 }

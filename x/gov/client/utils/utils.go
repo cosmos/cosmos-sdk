@@ -2,7 +2,6 @@ package utils
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // NormalizeVoteOption - normalize user specified vote option

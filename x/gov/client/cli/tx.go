@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	goverr "github.com/cosmos/cosmos-sdk/x/gov/errors"
 )
 
 const (
@@ -89,7 +90,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			if !gov.IsValidProposalType(proposal.Type) {
-				return fmt.Errorf("Invalid proposal type %s", proposal.Type)
+				return goverr.ErrInvalidProposalType(gov.DefaultCodespace, proposal.Type)
 			}
 			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 

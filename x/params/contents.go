@@ -29,7 +29,7 @@ func (c Change) String() string {
 	if len(c.Subkey) != 0 {
 		subkey = "(" + string(c.Subkey) + ")"
 	}
-	return fmt.Sprintf("{%s%s := %X} (%s)", string(c.Key), subkey, c.Value, c.Space)
+	return fmt.Sprintf("{%s%s := %X} (%s)", c.Key, subkey, c.Value, c.Space)
 }
 
 // ValidateChange checks whether the input data is empty or not

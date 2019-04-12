@@ -275,14 +275,18 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name.
-func GetFromFields(from string) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, homeIndex ...string) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	keybase, err := keys.NewKeyBaseFromHomeFlag(homeIndex...)
 	if err != nil {
 		return nil, "", err
+	}
+
+	if len(homeIndex) > 0 {
+		from = from + homeIndex[0]
 	}
 
 	var info cryptokeys.Info

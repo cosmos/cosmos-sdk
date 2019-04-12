@@ -25,10 +25,6 @@ func NormalizeProposalType(proposalType string) string {
 	switch proposalType {
 	case "Text", "text":
 		return gov.ProposalTypeText
-	// TODO: ParameterChange switching should be removed
-	// after the cli code is refactored
-	case "ParameterChange", "parameter_change":
-		return params.ProposalTypeChange
 	case "SoftwareUpgrade", "software_upgrade":
 		return gov.ProposalTypeSoftwareUpgrade
 	}

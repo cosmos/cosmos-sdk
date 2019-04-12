@@ -46,6 +46,9 @@ const (
 	FlagSSLKeyFile         = "ssl-keyfile"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
+
+	FlagConcurrencyNumber = "concurrency"
+	FlagSendNumber        = "send-number"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -91,6 +94,9 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
+
+		c.Flags().IntP(FlagConcurrencyNumber, "c", 1, "define the number of concurrency ")
+		c.Flags().IntP(FlagSendNumber, "x", 1, "define send number")
 
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(

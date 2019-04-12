@@ -58,7 +58,7 @@ type CLIContext struct {
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
-func NewCLIContext() CLIContext {
+func NewCLIContext(homeIndex ...string) CLIContext {
 	var rpc rpcclient.Client
 
 	nodeURI := viper.GetString(client.FlagNode)
@@ -67,7 +67,7 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName, err := GetFromFields(from)
+	fromAddress, fromName, err := GetFromFields(from, homeIndex...)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -275,14 +275,18 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name.
-func GetFromFields(from string) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, homeIndex ...string) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	keybase, err := keys.NewKeyBaseFromHomeFlag(homeIndex...)
 	if err != nil {
 		return nil, "", err
+	}
+
+	if len(homeIndex) > 0 {
+		from = from + homeIndex[0]
 	}
 
 	var info cryptokeys.Info

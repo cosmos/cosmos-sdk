@@ -24,8 +24,8 @@ type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
+func GetKeyInfo(name string, homeIndex ...string) (keys.Info, error) {
+	keybase, err := NewKeyBaseFromHomeFlag(homeIndex...)
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +37,10 @@ func GetKeyInfo(name string) (keys.Info, error) {
 // the key info for that name if the type is local, it'll fetch input from
 // STDIN. Otherwise, an empty passphrase is returned. An error is returned if
 // the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string) (string, error) {
+func GetPassphrase(name string, homeIndex ...string) (string, error) {
 	var passphrase string
 
-	keyInfo, err := GetKeyInfo(name)
+	keyInfo, err := GetKeyInfo(name, homeIndex...)
 	if err != nil {
 		return passphrase, err
 	}
@@ -73,9 +73,14 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 }
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
-func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
+func NewKeyBaseFromHomeFlag(homeIndex ...string) (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
-	return NewKeyBaseFromDir(rootDir)
+	var suffix string
+	if len(homeIndex) > 0 {
+		suffix = homeIndex[0] // home suffix
+	}
+	return NewKeyBaseFromDir(rootDir + suffix)
+
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.

@@ -29,11 +29,11 @@ func (gr GasEstimateResponse) String() string {
 }
 
 // GenerateOrBroadcastMsgs respects CLI flags and outputs a message
-func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg, offline bool) error {
+func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg, offline bool, homeIndex ...string) error {
 	if cliCtx.GenerateOnly {
 		return PrintUnsignedStdTx(txBldr, cliCtx, msgs, offline)
 	}
-	return CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs)
+	return CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs, homeIndex...)
 }
 
 // CompleteAndBroadcastTxCLI implements a utility function that facilitates
@@ -41,7 +41,7 @@ func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 // QueryContext. It ensures that the account exists, has a proper number and
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
-func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, homeIndex ...string) error {
 	txBldr, err := PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(fromName)
+	passphrase, err := keys.GetPassphrase(fromName, homeIndex...)
 	if err != nil {
 		return err
 	}

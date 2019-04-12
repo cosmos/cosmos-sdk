@@ -54,8 +54,8 @@ func NewTxBuilder(
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
-func NewTxBuilderFromCLI() TxBuilder {
-	kb, err := keys.NewKeyBaseFromHomeFlag()
+func NewTxBuilderFromCLI(homeIndex ...string) TxBuilder {
+	kb, err := keys.NewKeyBaseFromHomeFlag(homeIndex...)
 	if err != nil {
 		panic(err)
 	}

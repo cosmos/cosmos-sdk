@@ -268,8 +268,8 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 		},
 	)
 
-	bz, err := codec.MarshalJSONIndent(k.cdc,
-		types.NewQueryDelegatorTotalRewardsResponse(delRewards, total))
+	totalRewards := types.NewQueryDelegatorTotalRewardsResponse(delRewards, total)
+	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

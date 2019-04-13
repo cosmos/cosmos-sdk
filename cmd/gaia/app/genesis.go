@@ -186,7 +186,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	genesisState.BankData.CirculatingSupply = circulatingSupplyFromGenAccounts(genesisState.Accounts)
+	genesisState.BankData.Supply = supplyFromGenAccounts(genesisState.Accounts)
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
@@ -393,8 +393,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
-// circulatingSupplyFromGenAccounts returns the sum of free coins held by genesis accounts
-func circulatingSupplyFromGenAccounts(genAccounts []GenesisAccount,
+func supplyFromGenAccounts(genAccounts []GenesisAccount,
 ) (supply sdk.Coins) {
 	for _, genAcc := range genAccounts {
 		supply = supply.Add(genAcc.Coins)

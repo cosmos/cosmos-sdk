@@ -18,7 +18,16 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
+	GetSupplier(ctx sdk.Context) Supplier
+	SetSupplier(ctx sdk.Context, supplier Supplier)
 	InflateSupply(ctx sdk.Context, amt sdk.Coins)
+
+	GetTokenHolders(ctx sdk.Context) []TokenHolder
+	GetTokenHolder(ctx sdk.Context, moduleName string) (TokenHolder, error)
+	SetTokenHolder(ctx sdk.Context, tokenHolder TokenHolder)
+
+	RequestTokens(ctx sdk.Context, moduleName string, amount sdk.Coins) error
+	RelinquishTokens(ctx sdk.Context, moduleName string, amount sdk.Coins) error
 
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)

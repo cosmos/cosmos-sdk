@@ -14,6 +14,21 @@ type Supplier struct {
 	TotalSupply       sdk.Coins `json:"total_supply"`       // total supply of the network
 }
 
+// NewSupplier creates a new Supplier instance
+func NewSupplier(circulating, vesting, holders, total sdk.Coins) Supplier {
+	return Supplier{
+		CirculatingSupply: circulating,
+		VestingSupply:     vesting,
+		HoldersSupply:     holders,
+		TotalSupply:       total,
+	}
+}
+
+// DefaultSupplier creates an empty Supplier
+func DefaultSupplier() Supplier {
+	return NewSupplier(sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{})
+}
+
 // CirculatingAmountOf returns the circulating supply of a coin denomination
 func (supplier Supplier) CirculatingAmountOf(denom string) sdk.Int {
 	return supplier.CirculatingSupply.AmountOf(denom)
@@ -34,6 +49,36 @@ func (supplier Supplier) TotalAmountOf(denom string) sdk.Int {
 	return supplier.TotalSupply.AmountOf(denom)
 }
 
+// ValidateBasic validates the Supply coins and returns error if invalid
+func (supplier Supplier) ValidateBasic() sdk.Error {
+	if !supplier.CirculatingSupply.IsValid() {
+		return sdk.ErrInvalidCoins(supplier.CirculatingSupply.String())
+	}
+	if !supplier.VestingSupply.IsValid() {
+		return sdk.ErrInvalidCoins(supplier.VestingSupply.String())
+	}
+	if !supplier.HoldersSupply.IsValid() {
+		return sdk.ErrInvalidCoins(supplier.HoldersSupply.String())
+	}
+	if !supplier.TotalSupply.IsValid() {
+		return sdk.ErrInvalidCoins(supplier.TotalSupply.String())
+	}
+	return nil
+}
+
+// String returns a human readable string representation of a supplier.
+func (supplier Supplier) String() string {
+	return fmt.Sprintf(`Supplier:
+  Circulating Supply:  %s
+  Vesting Supply: %s
+  Holders Supply:  %s
+	Total Supply:  %s`,
+		supplier.CirculatingSupply.String(),
+		supplier.VestingSupply.String(),
+		supplier.HoldersSupply.String(),
+		supplier.TotalSupply.String())
+}
+
 // GetSupplier retrieves the Supplier from store
 func (keeper BaseKeeper) GetSupplier(ctx sdk.Context) (supplier Supplier) {
 	store := ctx.KVStore(keeper.storeKey)
@@ -52,18 +97,25 @@ func (keeper BaseKeeper) SetSupplier(ctx sdk.Context, supplier Supplier) {
 	store.Set(supplierKey, b)
 }
 
+// InflateSupply adds tokens to the circulating supply
+func (keeper BaseKeeper) InflateSupply(ctx sdk.Context, amount sdk.Coins) {
+	supplier := keeper.GetSupplier(ctx)
+	supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
+	keeper.SetSupplier(ctx, supplier)
+}
+
 // GetTokenHolders returns all the token holders
 func (keeper BaseKeeper) GetTokenHolders(ctx sdk.Context) (
-	tokenHolders []TokenHolder, err error) {
+	tokenHolders []TokenHolder) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, holderKeyPrefix)
 	defer iterator.Close()
 
 	var tokenHolder TokenHolder
 	for ; iterator.Valid(); iterator.Next() {
-		err = keeper.cdc.UnmarshalBinaryLengthPrefixed(iterator.Value(), &tokenHolder)
+		err := keeper.cdc.UnmarshalBinaryLengthPrefixed(iterator.Value(), &tokenHolder)
 		if err != nil {
-			return
+			panic(err)
 		}
 		tokenHolders = append(tokenHolders, tokenHolder)
 	}
@@ -91,17 +143,10 @@ func (keeper BaseKeeper) SetTokenHolder(ctx sdk.Context, tokenHolder TokenHolder
 	store.Set(holderKey, b)
 }
 
-// InflateSupply adds tokens to the circulating supply
-func (keeper BaseKeeper) InflateSupply(ctx sdk.Context, amount sdk.Coins) {
-	supplier := keeper.GetSupplier(ctx)
-	supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
-	keeper.SetSupplier(ctx, supplier)
-}
-
 // RequestTokens adds requested tokens to the module's holdings
 func (keeper BaseKeeper) RequestTokens(
 	ctx sdk.Context, moduleName string, amount sdk.Coins,
-) (err error) {
+) error {
 	if !amount.IsValid() {
 		return fmt.Errorf("invalid requested amount")
 	}
@@ -118,7 +163,7 @@ func (keeper BaseKeeper) RequestTokens(
 
 	keeper.SetTokenHolder(ctx, holder)
 	keeper.SetSupplier(ctx, supplier)
-	return
+	return nil
 }
 
 // RelinquishTokens hands over a portion of the module's holdings

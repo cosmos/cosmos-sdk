@@ -12,7 +12,7 @@ The module enables Cosmos-SDK based blockchain to support an on-chain governance
 - **Signal and switch:** If a proposal of type `SoftwareUpgradeProposal` is accepted, validators can signal it and switch once enough validators have signalled.
 - **Claiming deposit:** Users that deposited on proposals can recover their deposits if the proposal was accepted OR if the proposal never entered voting period.
 
-Features that may be added in the future are described in [Future improvements](future_improvements.md)
+Features that may be added in the future are described in [Future improvements](05_future_improvements.md)
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 

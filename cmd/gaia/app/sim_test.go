@@ -570,7 +570,7 @@ func BenchmarkInvariants(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewGaiaApp(logger, db, nil, true, false)
+	app := NewGaiaApp(logger, db, nil, true, 0)
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(

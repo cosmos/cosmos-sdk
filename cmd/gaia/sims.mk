@@ -10,33 +10,33 @@ sim-gaia-nondeterminism:
 sim-gaia-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+	@go test -mod=readonly github.com/cosmos/cosmos-sdk/cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
 		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 sim-gaia-fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+	@go test -mod=readonly github.com/cosmos/cosmos-sdk/cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 sim-gaia-import-export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaImportExport
+	@bash contrib/sim/multisim.sh 50 5 TestGaiaImportExport
 
 sim-gaia-simulation-after-import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
+	@bash contrib/sim/multisim.sh 50 5 TestGaiaSimulationAfterImport
 
 sim-gaia-custom-genesis-multi-seed:
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
+	@bash contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
 
 sim-gaia-multi-seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation
+	@bash contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation
 
 sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
-	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
+	@go test -mod=readonly github.com/cosmos/cosmos-sdk/cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 

@@ -1,8 +1,6 @@
 package bank
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,15 +17,6 @@ type TokenHolder interface {
 	SetHoldings(sdk.Coins)
 
 	GetHoldingsOf(string) sdk.Int
-}
-
-// TokenMinter defines the interface used for modules that are allowed to mint
-// and hold tokens on their behalf
-type TokenMinter interface {
-	TokenHolder
-
-	GetMintedTokens() sdk.Coins
-	GetMintedTokensOf(string) sdk.Int
 }
 
 //-----------------------------------------------------------------------------
@@ -67,65 +56,4 @@ func (bth *BaseTokenHolder) SetHoldings(amount sdk.Coins) {
 // GetHoldingsOf returns the a total coin denom holdings retained by a module
 func (bth BaseTokenHolder) GetHoldingsOf(denom string) sdk.Int {
 	return bth.Holdings.AmountOf(denom)
-}
-
-//-----------------------------------------------------------------------------
-// BaseTokenMinter
-
-var _ TokenMinter = (*BaseTokenMinter)(nil)
-
-// BaseTokenMinter defines an instance of a module that is allowed to hold and mint tokens
-type BaseTokenMinter struct {
-	*BaseTokenHolder
-
-	MintedTokens sdk.Coins `json:"minted_tokens"` // TODO: should this have an allowance ?
-}
-
-// NewBaseTokenMinter creates a new BaseTokenMinter instance
-func NewBaseTokenMinter(moduleName string, initialHoldings, initialMintedTokens sdk.Coins,
-) BaseTokenMinter {
-
-	baseTokenHoler := NewBaseTokenHolder(moduleName, initialHoldings)
-	return BaseTokenMinter{
-		BaseTokenHolder: &baseTokenHoler,
-		MintedTokens:    initialMintedTokens,
-	}
-}
-
-// GetMintedTokens returns the a total amount minted of specific coin
-func (btm BaseTokenMinter) GetMintedTokens() sdk.Coins {
-	return btm.MintedTokens
-}
-
-// GetMintedTokensOf returns the a total amount minted of specific coin
-func (btm BaseTokenMinter) GetMintedTokensOf(denom string) sdk.Int {
-	return btm.MintedTokens.AmountOf(denom)
-}
-
-// Mint creates new tokens and registers them to the module
-func (btm BaseTokenMinter) Mint(amount sdk.Coins) error {
-	if !amount.IsValid() {
-		return fmt.Errorf("invalid provided minting amount")
-	}
-	// TODO: Check for allowance ?
-	btm.setMintedTokens(btm.MintedTokens.Add(amount))
-	return nil
-}
-
-// BurnTokens destroys a portion of the previously minted tokens
-func (btm BaseTokenMinter) BurnTokens(amount sdk.Coins) error {
-	if !amount.IsValid() {
-		return fmt.Errorf("invalid provided burning amount")
-	}
-	if !btm.MintedTokens.IsAllGTE(amount) {
-		return fmt.Errorf("can't burn more tokens than current minted token balance")
-	}
-
-	btm.setMintedTokens(btm.MintedTokens.Sub(amount))
-	return nil
-}
-
-// set new minted tokens
-func (btm *BaseTokenMinter) setMintedTokens(amount sdk.Coins) {
-	btm.MintedTokens = amount
 }

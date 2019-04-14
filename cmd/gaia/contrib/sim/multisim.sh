@@ -16,23 +16,7 @@ echo "Using genesis file $genesis"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
 echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
-is_pid_running() {
-  if [ "$(kill 0 $1 2>&1)" = "" ]; then
-    echo y
-  else
-    echo n
-  fi
-  return 0
-}
-
-killall_jobs() {
-  kill -9 ${pids[@]}
-  # for pid in $(jobs -pr); do
-  # done
-}
-
-#trap 'kill $(jobs -pr)' SIGINT SIGTERM
-trap killall_jobs SIGINT SIGTERM QUIT
+trap 'kill $(jobs -pr)' SIGINT SIGTERM
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
@@ -61,7 +45,6 @@ code=0
 
 i=0
 for pid in ${pids[*]}; do
-  pids=( "${pids[@]/$pid}" )
   wait $pid
   last=$?
   seed=${seeds[${i}]}

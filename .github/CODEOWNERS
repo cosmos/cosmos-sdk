@@ -1,7 +1,4 @@
 # CODEOWNERS: https://help.github.com/articles/about-codeowners/
 
 # Primary repo maintainers
-*       @ebuchman @rigelrozanski @cwgoes
-
-# Precious documentation
-/docs/ @jackzampolin
+*       @ebuchman @rigelrozanski @cwgoes @jackzampolin

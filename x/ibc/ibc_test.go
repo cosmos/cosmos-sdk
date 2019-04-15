@@ -34,6 +34,7 @@ func setupTestInput() testInput {
 
 	ibcKey := sdk.NewKVStoreKey("ibcCapKey")
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
+	keySupply := sdk.NewKVStoreKey(bank.StoreKey)
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
@@ -50,7 +51,7 @@ func setupTestInput() testInput {
 	ak := auth.NewAccountKeeper(
 		cdc, authCapKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount,
 	)
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bk := bank.NewBaseKeeper(cdc, keySupply, ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, auth.DefaultParams())

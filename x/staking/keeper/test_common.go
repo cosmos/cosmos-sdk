@@ -117,6 +117,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	ck := bank.NewBaseKeeper(
+		cdc,
+		sdk.NewKVStoreKey(bank.StoreKey),
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,

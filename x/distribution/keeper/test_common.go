@@ -92,6 +92,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keySupply := sdk.NewKVStoreKey(bank.StoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -115,7 +116,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bankKeeper := bank.NewBaseKeeper(cdc, keySupply, accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())

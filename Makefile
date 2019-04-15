@@ -1,8 +1,9 @@
+#!/usr/bin/make -f
+
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
-CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 LEDGER_ENABLED ?= true
 GOBIN ?= $(GOPATH)/bin
 GOSUM := $(shell which gosum)
@@ -166,20 +167,20 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaImportExport
+	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
+	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed:
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
+	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation
+	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."

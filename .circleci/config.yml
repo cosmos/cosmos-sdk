@@ -196,7 +196,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
-            scripts/multisim.sh 500 50 TestFullGaiaSimulation
+            cmd/gaia/contrib/sim/multisim.sh 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -214,7 +214,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
-            scripts/multisim.sh 50 10 TestFullGaiaSimulation
+            cmd/gaia/contrib/sim/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults

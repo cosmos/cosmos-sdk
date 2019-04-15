@@ -164,7 +164,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// TODO: slashing should really happen at EndBlocker.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
-	app.mm.SetOrderInitGenesis(crisis.ModuleName)
+	app.mm.SetOrderInitGenesis(crisis.ModuleName) // XXX this only is for invariant checks right now
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 

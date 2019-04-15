@@ -157,7 +157,7 @@ $ gaiacli query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			var result sdk.DecCoins
+			var result distr.QueryDelegatorTotalRewardsResponse
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},

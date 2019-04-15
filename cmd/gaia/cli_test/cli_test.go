@@ -447,13 +447,11 @@ func TestGaiaCLIQueryRewards(t *testing.T) {
 	proc := f.GDStart()
 	defer proc.Stop(false)
 
-	f.QueryGovParamDeposit()
-	f.QueryGovParamVoting()
-	f.QueryGovParamTallying()
-
 	fooAddr := f.KeyAddress(keyFoo)
+	rewards := f.QueryRewards(fooAddr)
+	require.Equal(t, 1, len(rewards.Rewards))
 
-	f.QueryRewards(fooAddr)
+	f.Cleanup()
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {

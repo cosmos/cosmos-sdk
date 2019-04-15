@@ -78,6 +78,11 @@ func NewOwner() Owner {
 	return map[Denom][]TokenID{}
 }
 
+// TotalOwnedNFTs gets the total amount of NFTs owned by an account
+func (owner Owner) TotalOwnedNFTs() int {
+	return len(owner)
+}
+
 // Collection of non fungible tokens
 type Collection map[TokenID]NFT
 
@@ -93,4 +98,9 @@ func (collection Collection) GetNFT(denom Denom, id TokenID) (nft NFT, err sdk.E
 		return nft, ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection %s doesn't contain an NFT with TokenID %d", denom, id))
 	}
 	return
+}
+
+// Supply gets the total supply of NFTs of a collection
+func (collection Collection) Supply() int {
+	return len(collection)
 }

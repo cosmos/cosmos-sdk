@@ -20,7 +20,7 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # HaltHeight contains a non-zero height at which a node will gracefully halt
 # and shutdown that can be used to assist upgrades and testing.
-halt-height = "{{ .BaseConfig.HaltHeight }}"
+halt-height = {{ .BaseConfig.HaltHeight }}
 `
 
 var configTemplate *template.Template

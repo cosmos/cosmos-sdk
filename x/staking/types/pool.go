@@ -14,7 +14,7 @@ type Pool struct {
 	BondedTokens    sdk.Int `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
 }
 
-// nolint
+// Equal check if two pool intances are equal
 // TODO: This is slower than comparing struct fields directly
 func (p Pool) Equal(p2 Pool) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
@@ -22,7 +22,7 @@ func (p Pool) Equal(p2 Pool) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-// initial pool for testing
+// InitialPool default pool; used for testing
 func InitialPool() Pool {
 	return Pool{
 		NotBondedTokens: sdk.ZeroInt(),
@@ -30,14 +30,14 @@ func InitialPool() Pool {
 	}
 }
 
-// Sum total of all staking tokens in the pool
-func (p Pool) TokenSupply() sdk.Int {
+// StakingTokenSupply returns the total supply of all staking tokens in the pool
+func (p Pool) StakingTokenSupply() sdk.Int {
 	return p.NotBondedTokens.Add(p.BondedTokens)
 }
 
-// Get the fraction of the staking token which is currently bonded
+// BondedRatio gets the fraction of the staking token which is currently bonded
 func (p Pool) BondedRatio() sdk.Dec {
-	supply := p.TokenSupply()
+	supply := p.StakingTokenSupply()
 	if supply.IsPositive() {
 		return p.BondedTokens.ToDec().QuoInt(supply)
 	}
@@ -67,9 +67,9 @@ func (p Pool) String() string {
 	return fmt.Sprintf(`Pool:
   Loose Tokens:  %s
   Bonded Tokens: %s
-  Token Supply:  %s
+  Staking Token Supply:  %s
   Bonded Ratio:  %v`, p.NotBondedTokens,
-		p.BondedTokens, p.TokenSupply(),
+		p.BondedTokens, p.StakingTokenSupply(),
 		p.BondedRatio())
 }
 

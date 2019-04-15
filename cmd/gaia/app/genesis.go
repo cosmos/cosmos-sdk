@@ -186,9 +186,12 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	circulatingSupply, vestingSupply := supplyFromGenAccounts(genesisState.Accounts)
+	circulatingSupply, vestingSupply, notBondedSupply, bondedSupply :=
+		supplyFromGenAccounts(genesisState.Accounts, genesisState.StakingData.Params.BondDenom)
 	genesisState.BankData.Supplier.CirculatingSupply = circulatingSupply
 	genesisState.BankData.Supplier.VestingSupply = vestingSupply
+	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
+	genesisState.StakingData.Pool.BondedTokens = bondedSupply
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
@@ -395,14 +398,27 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
-// supplyFromGenAccounts calculates the circulating and vesting total supply from
-// the genesis accounts
-func supplyFromGenAccounts(genAccounts []GenesisAccount,
-) (circulatingSupply, vestingSupply sdk.Coins) {
+// supplyFromGenAccounts calculates the circulating, vesting, and stakingToken
+// (bonded and not bonded) total supply from the genesis accounts
+func supplyFromGenAccounts(genAccounts []GenesisAccount, bondDenom string,
+) (
+	circulatingSupply, vestingSupply sdk.Coins,
+	notBondedTokens, bondedTokens sdk.Int,
+) {
 	for _, genAcc := range genAccounts {
+		// circulating amount not subject to vesting (i.e free)
 		circulatingSupply = circulatingSupply.Add(genAcc.Coins)
+
+		// vesting and bonded supply from vesting accounts
 		if genAcc.DelegatedVesting.IsAllPositive() {
 			vestingSupply = vestingSupply.Add(genAcc.OriginalVesting)
+			bondedTokens = bondedTokens.Add(genAcc.DelegatedVesting.AmountOf(bondDenom))
+		}
+
+		// staking pool's not bonded supply
+		notBondedAmount := genAcc.Coins.AmountOf(bondDenom)
+		if notBondedAmount.GT(sdk.ZeroInt()) {
+			notBondedTokens = notBondedTokens.Add(notBondedAmount)
 		}
 	}
 	return

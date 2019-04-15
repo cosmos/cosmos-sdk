@@ -15,6 +15,8 @@ type BankKeeper interface {
 type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
 	BondDenom(ctx sdk.Context) string
+	InflateNotBondedTokenSupply(ctx sdk.Context, amt sdk.Int)
+	StakingTokenSupply(ctx sdk.Context) sdk.Int
 }
 
 // FeeCollectionKeeper defines the expected fee collection keeper

@@ -259,7 +259,7 @@ func (keeper BaseKeeper) UndelegateCoins(
 	return undelegateCoins(ctx, keeper.ak, addr, amt)
 }
 
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------
 // SendKeeper
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
@@ -275,7 +275,7 @@ type SendKeeper interface {
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
 
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------
 // BaseSendKeeper
 
 // BaseSendKeeper only allows transfers between accounts without the possibility of
@@ -330,7 +330,7 @@ func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
 }
 
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------
 // ViewKeeper
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
@@ -382,7 +382,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 	return keeper.codespace
 }
 
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------
 // private functions
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
@@ -532,7 +532,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, ou
 	return allTags, nil
 }
 
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------
 // staking
 
 func delegateCoins(

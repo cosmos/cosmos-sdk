@@ -48,7 +48,7 @@ func (bth BaseTokenHolder) GetHoldings() sdk.Coins {
 	return bth.Holdings
 }
 
-// GetHoldings returns the a total coin denom holdings retained by a module
+// SetHoldings updates the holdings to the provided amount
 func (bth *BaseTokenHolder) SetHoldings(amount sdk.Coins) {
 	bth.Holdings = amount
 }

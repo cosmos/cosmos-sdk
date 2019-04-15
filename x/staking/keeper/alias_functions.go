@@ -94,9 +94,9 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 }
 
 // total staking tokens supply bonded and unbonded
-func (k Keeper) TotalTokens(ctx sdk.Context) sdk.Int {
+func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	pool := k.GetPool(ctx)
-	return pool.TokenSupply()
+	return pool.StakingTokenSupply()
 }
 
 // the fraction of the staking tokens which are currently bonded
@@ -106,7 +106,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 }
 
 // when minting new tokens
-func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
+func (k Keeper) InflateNotBondedTokenSupply(ctx sdk.Context, newTokens sdk.Int) {
 	pool := k.GetPool(ctx)
 	pool.NotBondedTokens = pool.NotBondedTokens.Add(newTokens)
 	k.SetPool(ctx, pool)

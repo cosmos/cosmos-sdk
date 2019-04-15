@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -903,12 +904,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Reset the Check state to the latest committed.
 	//
-	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
-	// Use the header from this latest block.
+	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	defer func() {
+		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
+			app.logger.Info("halting node", "height", app.haltHeight)
+			os.Exit(0)
+		}
+	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

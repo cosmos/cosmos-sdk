@@ -32,6 +32,7 @@ const (
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
+	flagMnemonic    = "mnemonic"
 )
 
 const (
@@ -75,6 +76,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().BoolP(flagYes, "y", false, "Overwrite the existing account without confirmation")
+	cmd.Flags().StringP(flagMnemonic, "m", "", "Mnemonic words")
 
 	return cmd
 }
@@ -198,7 +200,12 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	var mnemonic string
 	var bip39Passphrase string
 
-	if interactive || viper.GetBool(flagRecover) {
+	inputMnemonic := viper.GetString(flagMnemonic)
+    if len(inputMnemonic) > 0 {
+		mnemonic = inputMnemonic
+	}
+	
+	if len(mnemonic) == 0 && (interactive || viper.GetBool(flagRecover)) {
 		bip39Message := "Enter your bip39 mnemonic"
 		if !viper.GetBool(flagRecover) {
 			bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."

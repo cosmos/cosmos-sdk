@@ -31,7 +31,7 @@ func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegator
 	limit := 100
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tag),
-		fmt.Sprintf("%s='%s'", tags.Delegator, delegatorAddr),
+		fmt.Sprintf("%s='%s'", tags.Sender, delegatorAddr),
 	}
 
 	return tx.SearchTxs(cliCtx, cdc, tags, page, limit)

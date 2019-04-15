@@ -6,8 +6,9 @@ The crisis module emits the following events/tags:
 
 ### MsgVerifyInvariance
 
-| Key       | Value               |
-|-----------|---------------------|
-| action    | verify_invariant    |
-| sender    | {message-sender}    |
-| invariant | {invariant-route}   |
+| Key         | Value              |
+|-------------|--------------------|
+| `action`    | `verify_invariant` |
+| `category`  | `crisis`           |
+| `sender`    | {message-sender}   |
+| `invariant` | {invariant-route}  |

@@ -101,7 +101,7 @@ func TestKeeper(t *testing.T) {
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
 
-	_, err2 := bankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	err2 := bankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
 	require.Implements(t, (*sdk.Error)(nil), err2)
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
@@ -165,7 +165,7 @@ func TestSendKeeper(t *testing.T) {
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
 
-	_, err := sendKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	err := sendKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
 	require.Implements(t, (*sdk.Error)(nil), err)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
@@ -178,7 +178,7 @@ func TestSendKeeper(t *testing.T) {
 	// validate coins with invalid denoms or negative values cannot be sent
 	// NOTE: We must use the Coin literal as the constructor does not allow
 	// negative values.
-	_, err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
+	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
 	require.Error(t, err)
 }
 
@@ -226,7 +226,7 @@ func TestVestingAccountSend(t *testing.T) {
 	input.ak.SetAccount(ctx, vacc)
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	_, err := bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	err := bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
 	require.Error(t, err)
 
 	// receive some coins
@@ -235,7 +235,7 @@ func TestVestingAccountSend(t *testing.T) {
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	_, err = bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	err = bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, origCoins, vacc.GetCoins())

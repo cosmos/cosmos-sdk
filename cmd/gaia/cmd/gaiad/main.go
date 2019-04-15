@@ -23,9 +23,9 @@ import (
 )
 
 // gaiad custom flags
-const flagAssertInvariantsBlockly = "assert-invariants-blockly"
+const flagInvCheckPeriod = "inv-check-period"
 
-var assertInvariantsBlockly bool
+var invCheckPeriod uint
 
 func main() {
 	cdc := app.MakeCodec()
@@ -43,6 +43,7 @@ func main() {
 		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
+
 	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
@@ -55,8 +56,8 @@ func main() {
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
-	rootCmd.PersistentFlags().BoolVar(&assertInvariantsBlockly, flagAssertInvariantsBlockly,
-		false, "Assert registered invariants on a blockly basis")
+	rootCmd.PersistentFlags().UintVar(&invCheckPeriod, flagInvCheckPeriod,
+		1, "Assert registered invariants every N blocks")
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870
@@ -66,7 +67,7 @@ func main() {
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
 	return app.NewGaiaApp(
-		logger, db, traceStore, true, assertInvariantsBlockly,
+		logger, db, traceStore, true, invCheckPeriod,
 		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 	)
@@ -77,13 +78,13 @@ func exportAppStateAndTMValidators(
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 
 	if height != -1 {
-		gApp := app.NewGaiaApp(logger, db, traceStore, false, false)
+		gApp := app.NewGaiaApp(logger, db, traceStore, false, uint(1))
 		err := gApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
 		return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
-	gApp := app.NewGaiaApp(logger, db, traceStore, true, false)
+	gApp := app.NewGaiaApp(logger, db, traceStore, true, uint(1))
 	return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

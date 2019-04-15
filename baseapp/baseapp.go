@@ -893,7 +893,13 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Commit implements the ABCI interface.
+// Commit implements the ABCI interface. It will commit all state that exists in
+// the deliver state's multi-store and includes the resulting commit ID in the
+// returned abci.ResponseCommit. Commit will set the check state based on the
+// latest header and reset the deliver state. Also, if a non-zero halt height is
+// defined in config, Commit will execute a deferred function call to check
+// against that height and gracefully halt if it matches the latest committed
+// height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 

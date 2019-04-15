@@ -47,8 +47,8 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 
-	FlagConcurrentNumber  = "concurrent"
-	FlagTxNumber          = "tx-number"
+	FlagConcurrentNumber = "concurrent"
+	FlagTxNumber         = "tx-number"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -97,7 +97,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 
 		c.Flags().Uint64P(FlagConcurrentNumber, "c", 1, "concurrent thread number")
 		c.Flags().Uint64P(FlagTxNumber, "x", 1, "tx number each thread will commit")
-
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",

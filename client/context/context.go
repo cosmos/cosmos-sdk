@@ -280,13 +280,13 @@ func GetFromFields(from string, homeIndex ...string) (sdk.AccAddress, string, er
 		return nil, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag(homeIndex...)
+	keybase, err := keys.NewKeyBaseFromHomeFlag(homeIndex...) //okchainc from address
 	if err != nil {
 		return nil, "", err
 	}
 
 	if len(homeIndex) > 0 {
-		from = from + homeIndex[0]
+		from = from + homeIndex[0] // account name suffix
 	}
 
 	var info cryptokeys.Info

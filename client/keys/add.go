@@ -74,6 +74,8 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().BoolP(flagYes, "y", false, "Overwrite the existing account without confirmation")
+
 	return cmd
 }
 
@@ -108,12 +110,16 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			return err
 		}
 
-		_, err = kb.Get(name)
-		if err == nil {
-			// account exists, ask for user confirmation
-			if response, err2 := client.GetConfirmation(
-				fmt.Sprintf("override the existing name %s", name), buf); err2 != nil || !response {
-				return err2
+		ask := !viper.GetBool(flagYes)
+
+		if ask {
+			_, err = kb.Get(name)
+			if err == nil {
+				// account exists, ask for user confirmation
+				if response, err2 := client.GetConfirmation(
+					fmt.Sprintf("override the existing name %s", name), buf); err2 != nil || !response {
+					return err2
+				}
 			}
 		}
 

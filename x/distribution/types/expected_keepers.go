@@ -1,7 +1,6 @@
 package types
 
-import
-(
+import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -20,7 +19,8 @@ type StakingKeeper interface {
 	IterateValidators(ctx sdk.Context,
 		fn func(index int64, validator sdk.Validator) (stop bool))
 	GetAllSDKDelegations(ctx sdk.Context) []sdk.Delegation
-	GetLastValidators(ctx sdk.Context) (validators []types.Validator) //okdex, for app snapshoot
+
+	GetLastValidators(ctx sdk.Context) (validators []types.Validator)                                 //okdex, for app snapshoot
 	GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) //okdex
 }
 

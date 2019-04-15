@@ -33,6 +33,7 @@ func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 	if cliCtx.GenerateOnly {
 		return PrintUnsignedStdTx(txBldr, cliCtx, msgs, offline)
 	}
+
 	return CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs, homeIndex...)
 }
 

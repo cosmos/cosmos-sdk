@@ -236,6 +236,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 			return err
 		}
 
+		// TODO: Rename config file to server.toml as it's not particular to Gaia
 		gaiaConfigFilePath := filepath.Join(nodeDir, "config/gaiad.toml")
 		srvconfig.WriteConfigFile(gaiaConfigFilePath, gaiaConfig)
 	}

@@ -44,11 +44,11 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 all: tools
 
 tools: tools-stamp
-tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/sdkch
+tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/clog
 	touch $@
 
-$(GOBIN)/golangci-lint: contrib/install-golangci-lint.sh $(GOBIN)/gosum
-	bash contrib/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
+$(GOBIN)/golangci-lint: $(mkfile_dir)/install-golangci-lint.sh $(GOBIN)/gosum
+	bash $(mkfile_dir)/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
 $(GOBIN)/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
@@ -57,13 +57,13 @@ $(GOBIN)/goimports:
 	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
 
 $(GOBIN)/gosum:
-	go install -mod=readonly ./cmd/gosum/
+	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/gosum/
 
-$(GOBIN)/sdkch:
-	go install -mod=readonly ./cmd/sdkch/
+$(GOBIN)/clog:
+	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/clog/
 
 tools-clean:
-	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum sdkch
+	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum clog
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

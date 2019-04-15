@@ -64,13 +64,16 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
-	// iterate through slashes and withdraw with calculated staking for sub-intervals
-	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
-	// slashes which happened in the first block would have been before this delegation existed,
-	// UNLESS they were slashes of a redelegation to this validator which was itself slashed
-	// (from a fault committed by the redelegation source validator) earlier in the same BeginBlock
+	// Iterate through slashes and withdraw with calculated staking for
+	// distribution periods. These period offsets are dependent on *when* slashes
+	// happen - namely, in BeginBlock, after rewards are allocated...
+	// Slashes which happened in the first block would have been before this
+	// delegation existed, UNLESS they were slashes of a redelegation to this
+	// validator which was itself slashed (from a fault committed by the
+	// redelegation source validator) earlier in the same BeginBlock.
 	startingHeight := startingInfo.Height
-	// slashes this block happened after reward allocation, but we have to account for them for the stake sanity check below
+	// Slashes this block happened after reward allocation, but we have to account
+	// for them for the stake sanity check below.
 	endingHeight := uint64(ctx.BlockHeight())
 	if endingHeight > startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
@@ -78,7 +81,9 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
 					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
-					// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+
+					// Note: It is necessary to truncate so we don't allow withdrawing
+					// more rewards than owed.
 					stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
 					startingPeriod = endingPeriod
 				}
@@ -87,18 +92,26 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		)
 	}
 
-	// a stake sanity check - recalculated final stake should be less than or equal to current stake
-	// here we cannot use Equals because stake is truncated when multiplied by slash fractions
-	// we could only use equals if we had arbitrary-precision rationals
+	// A total stake sanity check; Recalculated final stake should be less than or
+	// equal to current stake here. We cannot use Equals because stake is truncated
+	// when multiplied by slash fractions (see above). We could only use equals if
+	// we had arbitrary-precision rationals.
 	currentStake := val.TokensFromShares(del.GetShares())
 	if stake.GT(currentStake) {
-		panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake: %s, %s",
-			del.GetDelegatorAddr(), stake, currentStake))
+		// account for rounding errors due to stake being multiplied by slash fractions
+		currentStakeRoundUp := val.TokensFromSharesRoundUp(del.GetShares())
+		if stake.Equal(currentStakeRoundUp) {
+			stake = currentStake
+		} else {
+			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
+				"\n\tfinal stake:\t%s"+
+				"\n\tcurrent stake:\t%s",
+				del.GetDelegatorAddr(), stake, currentStake))
+		}
 	}
 
 	// calculate rewards for final period
 	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
-
 	return rewards
 }
 
@@ -140,7 +153,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// add coins to user account
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 			return err
 		}
 	}

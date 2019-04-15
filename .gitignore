@@ -7,6 +7,7 @@
 *.swn
 .vscode
 .idea
+*.pyc
 
 # Build
 vendor

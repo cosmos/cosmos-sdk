@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +37,7 @@ const (
 	name2 = "test2"
 	name3 = "test3"
 	memo  = "LCD test tx"
-	pw    = app.DefaultKeyPass
+	pw    = client.DefaultKeyPass
 	altPw = "12345678901"
 )
 
@@ -115,7 +114,7 @@ func TestCoinSend(t *testing.T) {
 
 	// query empty
 	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
-	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
 	initialBalance := acc.GetCoins()
@@ -337,7 +336,7 @@ func TestTxs(t *testing.T) {
 	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Equal(t, emptyTxs, txs)
 
-	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&proposer=%s", addr.String()))
+	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&sender=%s", addr.String()))
 	require.Equal(t, emptyTxs, txs)
 
 	// create tx
@@ -456,7 +455,7 @@ func TestBonding(t *testing.T) {
 
 	// query tx
 	txs := getTransactions(t, port,
-		fmt.Sprintf("action=delegate&delegator=%s", addr),
+		fmt.Sprintf("action=delegate&sender=%s", addr),
 		fmt.Sprintf("destination-validator=%s", operAddrs[0]),
 	)
 	require.Len(t, txs, 1)
@@ -509,7 +508,7 @@ func TestBonding(t *testing.T) {
 
 	// query tx
 	txs = getTransactions(t, port,
-		fmt.Sprintf("action=begin_unbonding&delegator=%s", addr),
+		fmt.Sprintf("action=begin_unbonding&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 	)
 	require.Len(t, txs, 1)
@@ -546,7 +545,7 @@ func TestBonding(t *testing.T) {
 
 	// query tx
 	txs = getTransactions(t, port,
-		fmt.Sprintf("action=begin_redelegate&delegator=%s", addr),
+		fmt.Sprintf("action=begin_redelegate&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 		fmt.Sprintf("destination-validator=%s", operAddrs[1]),
 	)
@@ -674,7 +673,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.Sub(depositTokens), acc.GetCoins().AmountOf(sdk.DefaultBondDenom))
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&depositor=%s", addr))
+	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&sender=%s", addr))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
@@ -735,7 +734,7 @@ func TestVote(t *testing.T) {
 	expectedBalance = coins[0]
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=vote&voter=%s", addr))
+	txs := getTransactions(t, port, fmt.Sprintf("action=vote&sender=%s", addr))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
@@ -1044,4 +1043,27 @@ func TestMintingQueries(t *testing.T) {
 
 	var annualProvisions sdk.Dec
 	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &annualProvisions))
+}
+
+func TestAccountBalanceQuery(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	require.NoError(t, err)
+	someFakeAddr := sdk.AccAddress(bz)
+
+	// empty account
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Contains(t, body, `"type":"auth/Account"`)
+
+	// empty account balance
+	res, body = Request(t, port, "GET", fmt.Sprintf("/bank/balances/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Contains(t, body, "[]")
+
 }

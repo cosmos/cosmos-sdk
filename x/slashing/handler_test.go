@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -120,4 +121,13 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// verify the validator can now unjail itself
 	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
 	require.True(t, got.IsOK(), "expected jailed validator to be able to unjail, got: %v", got)
+}
+
+func TestInvalidMsg(t *testing.T) {
+	k := Keeper{}
+	h := NewHandler(k)
+
+	res := h(sdk.Context{}, sdk.NewTestMsg())
+	require.False(t, res.IsOK())
+	require.True(t, strings.Contains(res.Log, "unrecognized slashing message type"))
 }

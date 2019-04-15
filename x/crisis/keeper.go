@@ -39,3 +39,14 @@ func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 func (k Keeper) Routes() []InvarRoute {
 	return k.routes
 }
+
+// Invariants returns all the registered Crisis keeper invariants.
+func (k Keeper) Invariants() []sdk.Invariant {
+	var invars []sdk.Invariant
+	for _, route := range k.routes {
+		invars = append(invars, route.Invar)
+	}
+	return invars
+}
+
+// DONTCOVER

@@ -9,13 +9,16 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/pelletier/go-toml"
+	toml "github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
 	flagGet = "get"
+
+	// DefaultKeyPass contains the default key password for genesis transactions
+	DefaultKeyPass = "12345678"
 )
 
 var configDefaults = map[string]string{

@@ -1,7 +1,10 @@
 package crisis
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 )
 
 // ModuleName is the module name for this module
@@ -12,12 +15,13 @@ const (
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-
 		switch msg := msg.(type) {
 		case MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
+
 		default:
-			return sdk.ErrTxDecode("invalid message parse in crisis module").Result()
+			errMsg := fmt.Sprintf("unrecognized crisis message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
@@ -26,7 +30,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
-	_, _, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
+	_, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
 	if err != nil {
 		return err.Result()
 	}
@@ -70,11 +74,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		panic(invarianceErr)
 	}
 
-	tags := sdk.NewTags(
-		"sender", msg.Sender.String(),
-		"invariant", msg.InvariantRoute,
+	resTags := sdk.NewTags(
+		tags.Sender, msg.Sender.String(),
+		tags.Invariant, msg.InvariantRoute,
 	)
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }

@@ -40,11 +40,6 @@ func (nft NFT) EditMetadata(name, description, image, tokenURI string) NFT {
 // Denom is a string
 type Denom string
 
-// TrimSpace trims space around a Denom
-func (denom Denom) TrimSpace() Denom {
-	return Denom(strings.TrimSpace(string(denom)))
-}
-
 // TokenID is a uint64
 type TokenID uint64
 
@@ -97,10 +92,5 @@ func (collection Collection) GetNFT(denom Denom, id TokenID) (nft NFT, err sdk.E
 	if !ok {
 		return nft, ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection %s doesn't contain an NFT with TokenID %d", denom, id))
 	}
-	return
-}
-
-// ValidateBasic validates a Collection
-func (collection Collection) ValidateBasic() (err sdk.Error) {
 	return
 }

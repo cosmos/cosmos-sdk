@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/tags"
 )
 
 // NewHandler routes the messages to the handlers
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
 		case MsgTransferNFT:
 			return handleMsgTransferNFT(ctx, msg, k)
@@ -22,7 +22,8 @@ func NewHandler(k Keeper) sdk.Handler {
 		// case MsgBuyNFT:
 		// 	return handleMsgBuyNFT(ctx, msg, k)
 		default:
-			return sdk.ErrTxDecode("invalid message parse in NFT module").Result()
+			errMsg := fmt.Sprintf("unrecognized nft message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
@@ -60,11 +61,11 @@ func handleMsgTransferNFT(ctx sdk.Context, msg MsgTransferNFT, k Keeper,
 	}
 
 	resTags := sdk.NewTags(
-		TagCategory, TxCategory,
-		TagSender, msg.Sender.String(),
-		TagRecipient, msg.Recipient.String(),
-		TagDenom, string(msg.Denom),
-		TagNFTID, uint64(msg.ID),
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Sender.String(),
+		tags.Recipient, msg.Recipient.String(),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, uint64(msg.ID),
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -91,10 +92,10 @@ func handleMsgEditNFTMetadata(ctx sdk.Context, msg MsgEditNFTMetadata, k Keeper,
 	}
 
 	resTags := sdk.NewTags(
-		TagCategory, TxCategory,
-		TagSender, string(msg.Owner),
-		TagDenom, string(msg.Denom),
-		TagNFTID, msg.ID,
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Owner.String(),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, msg.ID,
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -108,7 +109,7 @@ func handleMsgMintNFT(ctx sdk.Context, msg MsgMintNFT, k Keeper,
 	// make sure NFT with that ID and denom doesn't exist
 	exists := k.IsNFT(ctx, msg.Denom, msg.ID)
 	if exists {
-		return ErrInvalidMint(DefaultCodespace, fmt.Sprintf("%s NFT #%d already exists", msg.Denom, msg.ID)).Result()
+		return ErrNFTAlreadyExists(DefaultCodespace, fmt.Sprintf("%s NFT with id %d already exists", msg.Denom, msg.ID)).Result()
 	}
 
 	// make sure collection exists, if not create it
@@ -128,11 +129,11 @@ func handleMsgMintNFT(ctx sdk.Context, msg MsgMintNFT, k Keeper,
 	k.AddToOwner(ctx, msg.Denom, msg.ID, nft)
 
 	resTags := sdk.NewTags(
-		TagCategory, TxCategory,
-		TagSender, msg.Sender.String(),
-		TagRecipient, string(msg.Recipient),
-		TagDenom, string(msg.Denom),
-		TagNFTID, string(msg.ID),
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Sender.String(),
+		tags.Recipient, string(msg.Recipient),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, string(msg.ID),
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -166,10 +167,10 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 	}
 
 	resTags := sdk.NewTags(
-		TagCategory, TxCategory,
-		TagSender, string(msg.Sender),
-		TagDenom, string(msg.Denom),
-		TagNFTID, string(msg.ID),
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Sender.String(),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, string(msg.ID),
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -209,11 +210,11 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 // 	}
 
 // 	resTags := sdk.NewTags(
-// 		TagCategory, TxCategory,
-// 		TagSender, msg.Sender.String(),
-// 		TagOwner, msg.Owner.String(),
-// 		TagDenom, msg.Denom.String(),
-// 		TagNFTID, msg.ID,
+// 		tags.Category, tags.TxCategory,
+// 		tags.Sender, msg.Sender.String(),
+// 		tags.Owner, msg.Owner.String(),
+// 		tags.Denom, msg.Denom.String(),
+// 		tags.NFTID, msg.ID,
 // 	)
 // 	return sdk.Result{
 // 		Tags: resTags,

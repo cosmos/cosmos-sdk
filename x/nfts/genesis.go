@@ -1,8 +1,6 @@
 package nfts
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,16 +41,5 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 // ValidateGenesis performs basic validation of nfts genesis data returning an
 // error for any failed validation criteria.
 func ValidateGenesis(data GenesisState) error {
-	for denom, collection := range data.Collections {
-		var err sdk.Error
-		if strings.TrimSpace(string(denom)) == "" {
-			err = ErrInvalidNFT(DefaultCodespace)
-		} else {
-			err = collection.ValidateBasic()
-		}
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }

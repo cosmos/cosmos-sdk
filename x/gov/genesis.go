@@ -107,6 +107,12 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		// TODO: Handle this with #870
 		panic(err)
 	}
+
+	_, err = k.ck.AddTokenHolder(ctx, ModuleName)
+	if err != nil {
+		panic(err)
+	}
+
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)

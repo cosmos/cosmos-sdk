@@ -5,6 +5,7 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -58,6 +59,9 @@ type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck BankKeeper
 
+	// The reference to the TokenHolder to hold the deposit and burn amounts
+	th bank.TokenHolder
+
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
 
@@ -79,9 +83,10 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
+// CONTRACT: Token Holder needs to be added into the bank keeper before calling
+// this function
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
-
+	paramSpace params.Subspace, ck BankKeeper, tokenHolder bank.TokenHolder, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
@@ -380,9 +385,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Send coins from depositor's account to DepositedCoinsAccAddr account
-	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	// request coins for the governance token holder
+	err := keeper.ck.RequestTokens(ctx, keeper.th.GetModuleName(), depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -411,13 +415,13 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return nil, activatedVotingPeriod
 }
 
-// Gets all the deposits on a specific proposal as an sdk.Iterator
+// GetDeposits Gets all the deposits on a specific proposal as an sdk.Iterator
 func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, KeyDepositsSubspace(proposalID))
 }
 
-// Refunds and deletes all the deposits on a specific proposal
+// RefundDeposits Refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -426,16 +430,21 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		err := keeper.ck.RelinquishTokens(ctx, ModuleName, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err.Error())
+		}
+
+		_, err = keeper.ck.AddCoins(ctx, deposit.Depositor, deposit.Amount)
+		if err != nil {
+			panic(err.Error())
 		}
 
 		store.Delete(depositsIterator.Key())
 	}
 }
 
-// Deletes all the deposits on a specific proposal without refunding them
+// DeleteDeposits Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -444,10 +453,10 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		// TODO: Find a way to do this without using accounts.
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		// Burn deposits; TODO: consider sending to community pool
+		err := keeper.ck.RelinquishTokens(ctx, ModuleName, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err.Error())
 		}
 
 		store.Delete(depositsIterator.Key())

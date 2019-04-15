@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -615,6 +616,21 @@ func (f *Fixtures) QuerySlashingParams() slashing.Params {
 	err := cdc.UnmarshalJSON([]byte(res), &params)
 	require.NoError(f.T, err)
 	return params
+}
+
+//___________________________________________________________________________________
+// query distribution
+
+// QuerySigningInfo returns the signing info for a validator
+func (f *Fixtures) QueryRewards(delAddr sdk.AccAddress, flags ...string) distribution.QueryDelegatorTotalRewardsResponse {
+	cmd := fmt.Sprintf("../../../build/gaiacli query distr rewards %s %s", delAddr, f.Flags())
+	res, errStr := tests.ExecuteT(f.T, cmd, "")
+	require.Empty(f.T, errStr)
+	cdc := app.MakeCodec()
+	var rewards distribution.QueryDelegatorTotalRewardsResponse
+	err := cdc.UnmarshalJSON([]byte(res), &rewards)
+	require.NoError(f.T, err)
+	return rewards
 }
 
 //___________________________________________________________________________________

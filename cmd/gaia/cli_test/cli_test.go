@@ -427,6 +427,35 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	f.Cleanup()
 }
 
+func TestGaiaCLIQueryRewards(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	genesisState := f.GenesisState()
+	inflationMin := sdk.MustNewDecFromStr("10000.0")
+	genesisState.MintData.Minter.Inflation = inflationMin
+	genesisState.MintData.Params.InflationMin = inflationMin
+	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	genFile := filepath.Join(f.GDHome, "config", "genesis.json")
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	cdc := app.MakeCodec()
+	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
+	require.NoError(t, genDoc.SaveAs(genFile))
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	f.QueryGovParamDeposit()
+	f.QueryGovParamVoting()
+	f.QueryGovParamTallying()
+
+	fooAddr := f.KeyAddress(keyFoo)
+
+	f.QueryRewards(fooAddr)
+}
+
 func TestGaiaCLISubmitProposal(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

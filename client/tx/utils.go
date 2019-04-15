@@ -17,7 +17,7 @@ import (
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]sdk.TxResponse, error) {
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) (*sdk.SearchTxsResult, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -64,7 +64,9 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 		return nil, err
 	}
 
-	return txs, nil
+	result := sdk.NewSearchTxsResult(resTxs.TotalCount, len(txs), page, limit, txs)
+
+	return &result, nil
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.

@@ -168,13 +168,13 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 			return
 		}
 
-		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
+		searchResult, err := SearchTxs(cliCtx, cdc, tags, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, searchResult, cliCtx.Indent)
 	}
 }
 

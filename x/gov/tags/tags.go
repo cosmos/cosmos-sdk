@@ -9,12 +9,12 @@ var (
 	ActionProposalDropped  = "proposal-dropped"
 	ActionProposalPassed   = "proposal-passed"
 	ActionProposalRejected = "proposal-rejected"
+	TxCategory             = "governance"
 
 	Action            = sdk.TagAction
-	Proposer          = "proposer"
+	Category          = sdk.TagCategory
+	Sender            = sdk.TagSender
 	ProposalID        = "proposal-id"
 	VotingPeriodStart = "voting-period-start"
-	Depositor         = "depositor"
-	Voter             = "voter"
 	ProposalResult    = "proposal-result"
 )

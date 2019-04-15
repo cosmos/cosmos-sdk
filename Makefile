@@ -1,8 +1,9 @@
+#!/usr/bin/make -f
+
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
-CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 LEDGER_ENABLED ?= true
 GOBIN ?= $(GOPATH)/bin
 GOSUM := $(shell which gosum)
@@ -48,7 +49,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
 
 ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(GOSUM) go.sum)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
 endif
 
 ifeq ($(WITH_CLEVELDB),yes)
@@ -62,7 +63,7 @@ BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 all: tools install lint test
 
 # The below include contains the tools target.
-include scripts/Makefile
+include contrib/devtools/Makefile
 
 ########################################
 ### CI
@@ -121,8 +122,6 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
-distclean: clean
-	rm -rf vendor/
 
 ########################################
 ### Documentation
@@ -168,20 +167,26 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaImportExport
+	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
+	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed:
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
+	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation
+	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation
+
+test_sim_benchmark_invariants:
+	@echo "Running simulation invariant benchmarks..."
+	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
+	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
+	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -264,11 +269,11 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: install install_debug dist clean distclean \
+.PHONY: install install_debug dist clean \
 draw_deps test test_cli test_unit \
 test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
-test_sim_gaia_multi_seed test_sim_gaia_import_export \
+test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \
 go-mod-cache

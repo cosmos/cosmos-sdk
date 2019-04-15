@@ -47,9 +47,9 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		// the query will return empty if there is no data for this account
+		// the query will return empty account if there is no data
 		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, auth.BaseAccount{}, cliCtx.Indent)
 			return
 		}
 
@@ -88,7 +88,7 @@ func QueryBalancesRequestHandlerFn(
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, sdk.Coins{}, cliCtx.Indent)
 			return
 		}
 

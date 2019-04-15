@@ -2,6 +2,7 @@ package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 )
 
 // ModuleName is the module name for this module
@@ -26,7 +27,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
-	_, _, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
+	_, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
 	if err != nil {
 		return err.Result()
 	}
@@ -70,11 +71,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		panic(invarianceErr)
 	}
 
-	tags := sdk.NewTags(
-		"sender", msg.Sender.String(),
-		"invariant", msg.InvariantRoute,
+	resTags := sdk.NewTags(
+		tags.Sender, msg.Sender.String(),
+		tags.Invariant, msg.InvariantRoute,
 	)
 	return sdk.Result{
-		Tags: tags,
+		Tags: resTags,
 	}
 }

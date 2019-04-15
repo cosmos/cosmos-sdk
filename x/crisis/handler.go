@@ -1,6 +1,8 @@
 package crisis
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 )
@@ -10,12 +12,13 @@ const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-
 		switch msg := msg.(type) {
 		case MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
+
 		default:
-			return sdk.ErrTxDecode("invalid message parse in crisis module").Result()
+			errMsg := fmt.Sprintf("unrecognized crisis message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }

@@ -1,9 +1,4 @@
 # CODEOWNERS: https://help.github.com/articles/about-codeowners/
 
 # Primary repo maintainers
-*       @ebuchman @rigelrozanski @cwgoes
-
-# Precious documentation
-/docs/README.md  @zramsay
-/docs/DOCS_README.md  @zramsay
-/docs/.vuepress/  @zramsay
+*       @rigelrozanski @alexanderbez @jackzampolin @alessio

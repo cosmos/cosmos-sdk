@@ -13,12 +13,15 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
+
 		case MsgSubmitProposal:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
+
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
+
 		default:
-			errMsg := fmt.Sprintf("Unrecognized gov msg type: %T", msg)
+			errMsg := fmt.Sprintf("unrecognized gov message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

@@ -1,6 +1,10 @@
 package crisis
 
 import (
+	"encoding/json"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -11,12 +15,14 @@ const ModuleName = "crisis"
 // app module for bank
 type AppModule struct {
 	keeper Keeper
+	logger log.Logger
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, logger log.Logger) AppModule {
 	return AppModule{
 		keeper: keeper,
+		logger: logger,
 	}
 }
 
@@ -46,12 +52,19 @@ func (AppModule) QuerierRoute() string { return "" }
 // module querier
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+// module init-genesis
+func (a AppModule) InitGenesis(ctx sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
+	a.keeper.AssertInvariants(ctx, a.logger)
+	return []abci.ValidatorUpdate{}, nil
+}
+
 // module begin-block
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
 	return sdk.EmptyTags()
 }
 
 // module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+	EndBlocker(ctx, a.keeper, a.logger)
 	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }

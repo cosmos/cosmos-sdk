@@ -27,7 +27,7 @@ func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper, dis
 		distr.CreateTestInputAdvanced(t, false, 10, communityTax)
 
 	paramSpace := paramsKeeper.Subspace(DefaultParamspace)
-	crisisKeeper := NewKeeper(paramSpace, distrKeeper, bankKeeper, feeCollectionKeeper)
+	crisisKeeper := NewKeeper(paramSpace, 1, distrKeeper, bankKeeper, feeCollectionKeeper)
 	constantFee := sdk.NewInt64Coin("stake", 10000000)
 	crisisKeeper.SetConstantFee(ctx, constantFee)
 

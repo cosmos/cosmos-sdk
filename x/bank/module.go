@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -50,6 +52,11 @@ func (AppModule) QuerierRoute() string { return "" }
 
 // module querier
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+
+// module init-genesis
+func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
+	return []abci.ValidatorUpdate{}, nil
+}
 
 // module begin-block
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {

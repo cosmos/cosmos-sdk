@@ -138,7 +138,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		slashingSubspace, slashing.DefaultCodespace)
 	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper, govSubspace,
 		app.bankKeeper, &stakingKeeper, gov.DefaultCodespace)
-	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, app.distrKeeper, app.bankKeeper, app.feeCollectionKeeper)
+	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.distrKeeper,
+		app.bankKeeper, app.feeCollectionKeeper)
 
 	// register the staking hooks
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
@@ -149,7 +150,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.mm = sdk.NewModuleManager(
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		crisis.NewAppModule(app.crisisKeeper),
+		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
 		distr.NewAppModule(app.distrKeeper),
 		gov.NewAppModule(app.govKeeper),
 		mint.NewAppModule(app.mintKeeper),
@@ -163,6 +164,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// TODO: slashing should really happen at EndBlocker.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
+	app.mm.SetOrderInitGenesis(crisis.ModuleName)
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
@@ -187,24 +189,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := app.mm.BeginBlock(ctx, req)
-	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
-	}
+	return app.mm.BeginBlock(ctx, req)
 }
 
 // application updates every end block
-// nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	validatorUpdates, tags := app.mm.EndBlock(ctx, req)
-
-	if app.invCheckPeriod != 0 && ctx.BlockHeight()%int64(app.invCheckPeriod) == 0 {
-		app.assertRuntimeInvariants()
-	}
-	return abci.ResponseEndBlock{
-		ValidatorUpdates: validatorUpdates,
-		Tags:             tags,
-	}
+	return app.mm.EndBlock(ctx, req)
 }
 
 // initialize store from a genesis state
@@ -232,8 +222,8 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
-	crisis.InitGenesis(ctx, app.crisisKeeper, genesisState.CrisisData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
+	crisis.InitGenesis(ctx, app.crisisKeeper, genesisState.CrisisData)
 
 	// validate genesis state
 	if err := GaiaValidateGenesisState(genesisState); err != nil {
@@ -270,9 +260,14 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)
 
-	// XXX TODO add initChainer stuff here to the module manager
-	// assert runtime invariants
-	app.assertRuntimeInvariants()
+	// XXX this is a temporary partial init-genesis implementation to allow for
+	// an invariance check for the crisis module
+	ctx = app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
+	dummyGenesisData := make(map[string]json.RawMessage)
+	_, err := app.mm.InitGenesis(ctx, dummyGenesisData)
+	if err != nil {
+		panic(err)
+	}
 
 	return abci.ResponseInitChain{
 		Validators: validators,

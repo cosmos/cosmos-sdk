@@ -80,7 +80,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []st
 	}
 
 	/* Just to be safe, assert the invariants on current state. */
-	app.assertRuntimeInvariantsOnContext(ctx)
+	app.crisisKeeper.AssertInvariants(ctx, app.Logger())
 
 	/* Handle fee distribution state. */
 

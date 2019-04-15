@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -29,7 +31,7 @@ type AppModule interface {
 	//// genesis
 	//DefaultGenesisState() json.RawMessage
 	//ValidateGenesis(json.RawMessage) error
-	//InitGenesis(Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
+	InitGenesis(Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
 	//ExportGenesis(Context) json.RawMessage
 
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
@@ -128,37 +130,37 @@ func (mm *ModuleManager) moduleNames() (names []string) {
 	return names
 }
 
-//// perform init genesis functionality for modules
-//func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
-//var moduleNames []string
-//if len(OrderInitGenesis) > 0 {
-//moduleNames = OrderInitGenesis
-//} else {
-//moduleNames = moduleNames()
-//}
+// perform init genesis functionality for modules
+func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
+	var moduleNames []string
+	if len(mm.OrderInitGenesis) > 0 {
+		moduleNames = mm.OrderInitGenesis
+	} else {
+		moduleNames = mm.moduleNames()
+	}
 
-//var validatorUpdates []abci.ValidatorUpdate
-//for _, moduleName := range moduleNames {
-//moduleValUpdates, err := mm.Modules[moduleName].InitGenesis(ctx, genesisDate[module.Name()])
-//if err != nil {
-//return []abci.ValidatorUpdate{}, err
-//}
+	var validatorUpdates []abci.ValidatorUpdate
+	for _, moduleName := range moduleNames {
+		moduleValUpdates, err := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
+		if err != nil {
+			return []abci.ValidatorUpdate{}, err
+		}
 
-//// overwrite validator updates if provided
-//if len(moduleValUpdates) > 0 {
-//validatorUpdates = moduleValUpdates
-//}
-//}
-//return validatorUpdates, nil
-//}
+		// overwrite validator updates if provided
+		if len(moduleValUpdates) > 0 {
+			validatorUpdates = moduleValUpdates
+		}
+	}
+	return validatorUpdates, nil
+}
 
 //// perform export genesis functionality for modules
 //func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
 //var moduleNames []string
-//if len(OrderExportGenesis) > 0 {
-//moduleNames = OrderExportGenesis
+//if len(mm.OrderExportGenesis) > 0 {
+//moduleNames = mm.OrderExportGenesis
 //} else {
-//moduleNames = moduleNames()
+//moduleNames = mm.moduleNames()
 //}
 
 //for _, moduleName := range moduleNames {
@@ -168,7 +170,7 @@ func (mm *ModuleManager) moduleNames() (names []string) {
 //}
 
 // perform begin block functionality for modules
-func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
+func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	var moduleNames []string
 	if len(mm.OrderBeginBlockers) > 0 {
 		moduleNames = mm.OrderBeginBlockers
@@ -181,11 +183,14 @@ func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tag
 		moduleTags := mm.Modules[moduleName].BeginBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 	}
-	return tags
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
 }
 
 // perform end block functionality for modules
-func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
+func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	var moduleNames []string
 	if len(mm.OrderEndBlockers) > 0 {
 		moduleNames = mm.OrderEndBlockers
@@ -204,7 +209,11 @@ func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci
 			validatorUpdates = moduleValUpdates
 		}
 	}
-	return validatorUpdates, tags
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+		Tags:             tags,
+	}
 }
 
 // DONTCOVER

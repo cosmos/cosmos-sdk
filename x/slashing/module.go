@@ -1,6 +1,8 @@
 package slashing
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -48,6 +50,11 @@ func (AppModule) QuerierRoute() string {
 // module querier
 func (a AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(a.keeper)
+}
+
+// module init-genesis
+func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
+	return []abci.ValidatorUpdate{}, nil
 }
 
 // module begin-block

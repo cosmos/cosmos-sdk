@@ -3,6 +3,7 @@ package crisis
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -98,4 +99,13 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
 	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
 	require.True(t, res.IsOK())
+}
+
+func TestInvalidMsg(t *testing.T) {
+	k := Keeper{}
+	h := NewHandler(k)
+
+	res := h(sdk.Context{}, sdk.NewTestMsg())
+	require.False(t, res.IsOK())
+	require.True(t, strings.Contains(res.Log, "unrecognized crisis message type"))
 }

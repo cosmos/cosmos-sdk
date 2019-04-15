@@ -359,7 +359,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		if len(req.Validators) != len(res.Validators) {
 			panic(fmt.Errorf(
 				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
-				len(req.Validators), len(validators)))
+				len(req.Validators), len(res.Validators)))
 		}
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(res.Validators))

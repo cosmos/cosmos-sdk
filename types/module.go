@@ -46,14 +46,14 @@ type ModuleManager struct {
 }
 
 // NewModuleManager creates a new ModuleManager object
-func NewModuleManager(modules ...AppModule) ModuleManager {
+func NewModuleManager(modules ...AppModule) *ModuleManager {
 
 	moduleMap := make(map[string]AppModule)
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 	}
 
-	return ModuleManager{
+	return &ModuleManager{
 		Modules:            moduleMap,
 		OrderInitGenesis:   []string{},
 		OrderExportGenesis: []string{},
@@ -63,34 +63,34 @@ func NewModuleManager(modules ...AppModule) ModuleManager {
 }
 
 // set the order of init genesis calls
-func (mm ModuleManager) SetOrderInitGenesis(moduleNames ...string) {
+func (mm *ModuleManager) SetOrderInitGenesis(moduleNames ...string) {
 	mm.OrderInitGenesis = moduleNames
 }
 
 // set the order of export genesis calls
-func (mm ModuleManager) SetOrderExportGenesis(moduleNames ...string) {
+func (mm *ModuleManager) SetOrderExportGenesis(moduleNames ...string) {
 	mm.OrderExportGenesis = moduleNames
 }
 
 // set the order of set begin-blocker calls
-func (mm ModuleManager) SetOrderBeginBlockers(moduleNames ...string) {
+func (mm *ModuleManager) SetOrderBeginBlockers(moduleNames ...string) {
 	mm.OrderBeginBlockers = moduleNames
 }
 
 // set the order of set end-blocker calls
-func (mm ModuleManager) SetOrderEndBlockers(moduleNames ...string) {
+func (mm *ModuleManager) SetOrderEndBlockers(moduleNames ...string) {
 	mm.OrderEndBlockers = moduleNames
 }
 
 // register all module routes and module querier routes
-func (mm ModuleManager) RegisterInvariants(invarRouter InvariantRouter) {
+func (mm *ModuleManager) RegisterInvariants(invarRouter InvariantRouter) {
 	for _, module := range mm.Modules {
 		module.RegisterInvariants(invarRouter)
 	}
 }
 
 // register all module routes and module querier routes
-func (mm ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
+func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 	for _, module := range mm.Modules {
 		if module.Route() != "" {
 			router.AddRoute(module.Route(), module.NewHandler())
@@ -102,7 +102,7 @@ func (mm ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 }
 
 //// validate all genesis information
-//func (mm ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
+//func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 //for _, module := range mm.Modules {
 //err := module.ValidateGenesis(genesisDate[module.Name()])
 //if err != nil {
@@ -113,7 +113,7 @@ func (mm ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 //}
 
 //// default genesis state for modules
-//func (mm ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
+//func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
 //defaultGenesisState := make(map[string]json.RawMessage)
 //for _, module := range mm.Modules {
 //defaultGenesisState[module.Name()] = module.DefaultGenesisState()
@@ -121,7 +121,7 @@ func (mm ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 //return defaultGenesisState
 //}
 
-func (mm ModuleManager) moduleNames() (names []string) {
+func (mm *ModuleManager) moduleNames() (names []string) {
 	for _, module := range mm.Modules {
 		names = append(names, module.Name())
 	}
@@ -129,7 +129,7 @@ func (mm ModuleManager) moduleNames() (names []string) {
 }
 
 //// perform init genesis functionality for modules
-//func (mm ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
+//func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
 //var moduleNames []string
 //if len(OrderInitGenesis) > 0 {
 //moduleNames = OrderInitGenesis
@@ -153,7 +153,7 @@ func (mm ModuleManager) moduleNames() (names []string) {
 //}
 
 //// perform export genesis functionality for modules
-//func (mm ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
+//func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
 //var moduleNames []string
 //if len(OrderExportGenesis) > 0 {
 //moduleNames = OrderExportGenesis
@@ -168,7 +168,7 @@ func (mm ModuleManager) moduleNames() (names []string) {
 //}
 
 // perform begin block functionality for modules
-func (mm ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
+func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
 	var moduleNames []string
 	if len(mm.OrderBeginBlockers) > 0 {
 		moduleNames = mm.OrderBeginBlockers
@@ -185,7 +185,7 @@ func (mm ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags
 }
 
 // perform end block functionality for modules
-func (mm ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
+func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
 	var moduleNames []string
 	if len(mm.OrderEndBlockers) > 0 {
 		moduleNames = mm.OrderEndBlockers

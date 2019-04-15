@@ -68,7 +68,7 @@ type GaiaApp struct {
 	paramsKeeper        params.Keeper
 
 	// the module manager
-	mm sdk.ModuleManager
+	mm *sdk.ModuleManager
 }
 
 // custom tx codec
@@ -208,7 +208,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 }
 
 // initialize store from a genesis state
-func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState, req abci.RequestInitChain) []abci.ValidatorUpdate {
+func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	genesisState.Sanitize()
 
 	// load the accounts
@@ -241,19 +241,21 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	if len(genesisState.GenTxs) > 0 {
-		validators = app.deliverGenTxs(ctx, genesisState.GenTxs)
+		validators = app.deliverGenTxs(ctx, genesisState.GenTxs, app.BaseApp.DeliverTx)
 	}
 
 	return validators
 }
 
+type deliverTxFn func([]byte) abci.ResponseDeliverTx
+
 // TODO move this genTx functionality to staking
-func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage, deliverTx func([]byte) abci.ResponseDeliverTx) []abci.ValidatorUpdate {
+func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage, deliverTx deliverTxFn) []abci.ValidatorUpdate {
 	for _, genTx := range genTxs {
 		var tx auth.StdTx
 		app.cdc.MustUnmarshalJSON(genTx, &tx)
 		bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
-		res := app.BaseApp.DeliverTx(bz)
+		res := deliverTx(bz)
 		if !res.IsOK() {
 			panic(res.Log)
 		}

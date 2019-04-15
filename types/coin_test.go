@@ -34,7 +34,7 @@ func TestIsEqualCoin(t *testing.T) {
 	}{
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), true, false},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false, true},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false, false},
+		{NewInt64Coin("stake", 1), NewInt64Coin("stake", 10), false, false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -276,10 +276,7 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
-	empty := Coins{
-		{"gold", NewInt(0)},
-	}
-	null := Coins{}
+	empty := NewCoins()
 	badSort1 := Coins{
 		{"tree", NewInt(1)},
 		{"gas", NewInt(1)},
@@ -312,7 +309,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
 	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
-	assert.False(t, null.IsAllPositive(), "Expected coins to not be positive: %v", null)
+	assert.False(t, empty.IsAllPositive(), "Expected coins to not be positive: %v", empty)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
 	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
 	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
@@ -331,20 +328,8 @@ func TestCoinsGT(t *testing.T) {
 	assert.True(t, Coins{{testDenom1, one}}.IsAllGT(Coins{}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom1, one}}))
 	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom2, one}}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(Coins{{testDenom2, one}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom2, two}}))
-}
-
-func TestCoinsGTE(t *testing.T) {
-	one := NewInt(1)
-	two := NewInt(2)
-
-	assert.True(t, Coins{}.IsAllGTE(Coins{}))
-	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{}))
-	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, one}}))
-	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, one}}))
-	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, two}}))
 }
 
 func TestCoinsLT(t *testing.T) {
@@ -358,7 +343,7 @@ func TestCoinsLT(t *testing.T) {
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom2, one}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom2, two}}))
 	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(Coins{{testDenom1, two}, {testDenom2, two}}))
 	assert.True(t, Coins{}.IsAllLT(Coins{{testDenom1, one}}))
 }
 
@@ -518,4 +503,74 @@ func TestCoinsIsAnyGTE(t *testing.T) {
 	assert.True(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAnyGTE(Coins{{testDenom1, one}, {testDenom2, one}}))
 	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAnyGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
 	assert.True(t, Coins{{"xxx", one}, {"yyy", one}}.IsAnyGTE(Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+}
+
+func TestCoinsIsAllGT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsAllGT(Coins{}))
+	assert.True(t, Coins{{testDenom1, one}}.IsAllGT(Coins{}))
+	assert.False(t, Coins{}.IsAllGT(Coins{{testDenom1, one}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom1, two}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(Coins{{testDenom1, two}, {testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom1, one}}))
+	assert.True(t, Coins{{testDenom1, two}}.IsAllGT(Coins{{testDenom1, one}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{testDenom2, two}}.IsAllGT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{testDenom2, one}}.IsAllGT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(Coins{{testDenom1, one}, {testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{"xxx", one}, {"yyy", one}}.IsAllGT(Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+}
+
+func TestCoinsIsAllGTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.True(t, Coins{}.IsAllGTE(Coins{}))
+	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom2, two}}))
+	assert.False(t, Coins{}.IsAllGTE(Coins{{testDenom1, one}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, two}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(Coins{{testDenom1, two}, {testDenom2, one}}))
+	assert.True(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, one}}))
+	assert.True(t, Coins{{testDenom1, two}}.IsAllGTE(Coins{{testDenom1, one}}))
+	assert.False(t, Coins{{testDenom1, one}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{testDenom2, two}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{testDenom2, one}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.True(t, Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, one}}))
+	assert.False(t, Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(Coins{{testDenom1, one}, {testDenom2, two}}))
+	assert.False(t, Coins{{"xxx", one}, {"yyy", one}}.IsAllGTE(Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+}
+
+func TestNewCoins(t *testing.T) {
+	tenatom := NewInt64Coin("atom", 10)
+	tenbtc := NewInt64Coin("btc", 10)
+	zeroeth := NewInt64Coin("eth", 0)
+	tests := []struct {
+		name      string
+		coins     Coins
+		want      Coins
+		wantPanic bool
+	}{
+		{"empty args", []Coin{}, Coins{}, false},
+		{"one coin", []Coin{tenatom}, Coins{tenatom}, false},
+		{"sort after create", []Coin{tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"sort and remove zeroes", []Coin{zeroeth, tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
+		{"panic on dups", []Coin{tenatom, tenatom}, Coins{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { NewCoins(tt.coins...) })
+				return
+			}
+			got := NewCoins(tt.coins...)
+			require.True(t, got.IsEqual(tt.want))
+		})
+	}
 }

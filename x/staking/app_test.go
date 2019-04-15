@@ -122,22 +122,28 @@ func TestStakingMsgs(t *testing.T) {
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionMsg, sdk.OneInt(),
 	)
 
-	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+	header := abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mApp, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
-	mApp.BeginBlock(abci.RequestBeginBlock{})
+
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
-	mApp.BeginBlock(abci.RequestBeginBlock{})
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
 	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
-	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
+
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, description, validator.Description)
 
@@ -145,13 +151,15 @@ func TestStakingMsgs(t *testing.T) {
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin})
 	delegateMsg := NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
-	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{delegateMsg}, []uint64{0}, []uint64{0}, true, true, priv2)
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{delegateMsg}, []uint64{1}, []uint64{0}, true, true, priv2)
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
 	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// begin unbonding
-	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondTokens.ToDec())
-	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []uint64{0}, []uint64{1}, true, true, priv2)
+	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
+	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, []uint64{1}, []uint64{1}, true, true, priv2)
 
 	// delegation should exist anymore
 	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), false, sdk.Dec{})

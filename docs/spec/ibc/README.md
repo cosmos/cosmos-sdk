@@ -1,5 +1,7 @@
 # Cosmos Inter-Blockchain Communication (IBC) Protocol
 
+> This specification is outdated and no longer in use. For the latest IBC specifications, please see the [Interchain Standards repository](https://github.com/cosmos/ics).
+
 ## Abstract
 
 This paper specifies the Cosmos Inter-Blockchain Communication (IBC) protocol. The IBC protocol defines a set of semantics for authenticated, strictly-ordered message passing between two blockchains with independent consensus algorithms.  

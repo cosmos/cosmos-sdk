@@ -13,7 +13,10 @@ import (
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
@@ -56,7 +59,10 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
@@ -113,7 +119,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 func TestTickPassedDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
@@ -156,7 +165,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 func TestTickPassedVotingPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
 	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
@@ -196,7 +208,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.True(t, activeQueue.Valid())
 	var activeProposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID)
-	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, activeProposalID).GetStatus())
+	proposal, ok := keeper.GetProposal(ctx, activeProposalID)
+	require.True(t, ok)
+	require.Equal(t, StatusVotingPeriod, proposal.Status)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	depositsIterator.Close()

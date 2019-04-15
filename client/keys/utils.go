@@ -118,8 +118,14 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		printKeyTextHeader()
 		printKeyOutput(ko)
 
-	case "json":
-		out, err := MarshalJSON(ko)
+	case OutputFormatJSON:
+		var out []byte
+		var err error
+		if viper.GetBool(client.FlagIndentResponse) {
+			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
+		} else {
+			out, err = cdc.MarshalJSON(ko)
+		}
 		if err != nil {
 			panic(err)
 		}
@@ -142,11 +148,18 @@ func printInfos(infos []keys.Info) {
 		}
 
 	case OutputFormatJSON:
-		out, err := MarshalJSON(kos)
+		var out []byte
+		var err error
+
+		if viper.GetBool(client.FlagIndentResponse) {
+			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+		} else {
+			out, err = cdc.MarshalJSON(kos)
+		}
+
 		if err != nil {
 			panic(err)
 		}
-
 		fmt.Println(string(out))
 	}
 }

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -114,7 +113,8 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
-// return the decimal coins with trunctated decimals, and return the change
+// TruncateDecimal returns a Coin with a truncated decimal and a DecCoin for the
+// change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
 	change := coin.Amount.Sub(truncated.ToDec())
@@ -171,18 +171,20 @@ func (coins DecCoins) String() string {
 }
 
 // TruncateDecimal returns the coins with truncated decimals and returns the
-// change.
-func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
-	changeSum := DecCoins{}
-	out := make(Coins, len(coins))
-
-	for i, coin := range coins {
+// change. Note, it will not return any zero-amount coins in either the truncated or
+// change coins.
+func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCoins) {
+	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
-		out[i] = truncated
-		changeSum = changeSum.Add(DecCoins{change})
+		if !truncated.IsZero() {
+			truncatedCoins = truncatedCoins.Add(Coins{truncated})
+		}
+		if !change.IsZero() {
+			changeCoins = changeCoins.Add(DecCoins{change})
+		}
 	}
 
-	return out, changeSum
+	return truncatedCoins, changeCoins
 }
 
 // Add adds two sets of DecCoins.
@@ -310,55 +312,90 @@ func (coins DecCoins) IsAnyNegative() bool {
 	return false
 }
 
-// multiply all the coins by a decimal
+// MulDec multiplies all the coins by a decimal.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	var res DecCoins
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Mul(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 
-// multiply all the coins by a decimal, truncating
+// MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
+// panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	var res DecCoins
+
+	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.MulTruncate(d),
 		}
-		res[i] = product
+
+		if !product.IsZero() {
+			res = res.Add(DecCoins{product})
+		}
 	}
+
 	return res
 }
 
-// divide all the coins by a decimal
+// QuoDec divides all the decimal coins by a decimal. It panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDec(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Quo(d),
 		}
-		res[i] = quotient
+
+		if !quotient.IsZero() {
+			res = res.Add(DecCoins{quotient})
+		}
 	}
+
 	return res
 }
 
-// divide all the coins by a decimal, truncating
+// QuoDecTruncate divides all the decimal coins by a decimal, truncating. It
+// panics if d is zero.
+//
+// CONTRACT: No zero coins will be returned.
 func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
-	res := make([]DecCoin, len(coins))
-	for i, coin := range coins {
+	if d.IsZero() {
+		panic("invalid zero decimal")
+	}
+
+	var res DecCoins
+	for _, coin := range coins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.QuoTruncate(d),
 		}
-		res[i] = quotient
+
+		if !quotient.IsZero() {
+			res = res.Add(DecCoins{quotient})
+		}
 	}
+
 	return res
 }
 
@@ -542,21 +579,21 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 // ParseDecCoins will parse out a list of decimal coins separated by commas.
 // If nothing is provided, it returns nil DecCoins. Returned decimal coins are
 // sorted.
-func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
+func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}
 
-	splitRe := regexp.MustCompile(",|;")
-	coinStrs := splitRe.Split(coinsStr, -1)
-	for _, coinStr := range coinStrs {
+	coinStrs := strings.Split(coinsStr, ",")
+	coins := make(DecCoins, len(coinStrs))
+	for i, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
 
-		coins = append(coins, coin)
+		coins[i] = coin
 	}
 
 	// sort coins for determinism

@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.5
+    - image: circleci/golang:1.12.1
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.5"
+    GO_VERSION: "1.12.1"
 
 set_macos_env: &macos_env
   run:
@@ -27,6 +27,7 @@ set_macos_env: &macos_env
       echo 'export GOPATH=$HOME/project' >> $BASH_ENV
       echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
       echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
+      echo 'export GO111MODULE=on'
 
 ############
 #
@@ -35,7 +36,7 @@ set_macos_env: &macos_env
 docs_update: &docs_deploy
   working_directory: ~/repo
   docker:
-    - image: tendermint/docs_deployment
+    - image: tendermintdev/jq_curl
   environment:
     AWS_REGION: us-east-1
 
@@ -44,7 +45,6 @@ deps: &dependencies
     name: dependencies
     command: |
       export PATH="$GOBIN:$PATH"
-      make vendor-deps
 
 jobs:
   setup_dependencies:
@@ -53,6 +53,9 @@ jobs:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: tools
           command: |
@@ -63,7 +66,12 @@ jobs:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
+            make go-mod-cache
             make install
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -78,17 +86,14 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
-      - run:
-          name: Get metalinter
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make devtools-clean
-            make devtools
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_lint
+            make ci-lint
 
   integration_tests:
     <<: *linux_defaults
@@ -98,6 +103,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test cli
           command: |
@@ -112,6 +120,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test individual module simulations
           command: |
@@ -126,6 +137,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test full Gaia simulation
           command: |
@@ -140,6 +154,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -154,6 +171,9 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -168,10 +188,14 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation long
           command: |
             export PATH="$GOBIN:$PATH"
+            export GO111MODULE=on
             scripts/multisim.sh 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
@@ -182,10 +206,14 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test multi-seed Gaia simulation short
           command: |
             export PATH="$GOBIN:$PATH"
+            export GO111MODULE=on
             scripts/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
@@ -197,14 +225,18 @@ jobs:
       - checkout
       - *dependencies
       - run: mkdir -p /tmp/logs
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Run tests
           command: |
             export PATH="$GOBIN:$PATH"
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
+            export GO111MODULE=on
             for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(echo "$pkg" | sed 's|[/.]|_|g')
-              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
+              go test -mod=readonly -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace
@@ -253,7 +285,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
-        GO_VERSION: "1.11.5"
+        GO_VERSION: "1.12.1"
       parallelism: 1
       steps:
         - checkout
@@ -268,7 +300,6 @@ jobs:
               popd
               set -x
               make tools
-              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
@@ -280,7 +311,22 @@ jobs:
       - run:
           name: Trigger website build
           command: |
-            chamber exec cosmos-sdk -- start_website_build
+            curl --silent \
+                 --show-error \
+                 -X POST \
+                 --header "Content-Type: application/json" \
+                 -d "{\"branch\": \"$CIRCLE_BRANCH\"}" \
+                 "https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$WEBSITE_REPO_NAME/build?circle-token=$TENDERBOT_API_TOKEN" > response.json
+
+            RESULT=`jq -r '.status' response.json`
+            MESSAGE=`jq -r '.message' response.json`
+
+            if [[ ${RESULT} == "null" ]] || [[ ${RESULT} -ne "200" ]]; then
+                echo "CircleCI API call failed: $MESSAGE"
+                exit 1
+            else
+                echo "Website build started"
+            fi
 
   macos_ci:
     <<: *macos_defaults
@@ -300,7 +346,6 @@ jobs:
           command: |
             source $BASH_ENV
             make tools
-            make vendor-deps
             make install
       - run:
           name: Integration tests
@@ -322,14 +367,19 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
-          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+          GAIAD_VERSION=''
+          if [ "${CIRCLE_BRANCH}" = "master" ]; then
             GAIAD_VERSION="stable"
-          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+          elif [ "${CIRCLE_BRANCH}" = "develop" ]; then
             GAIAD_VERSION="develop"
           fi
-          docker build -t tendermint/gaia:$GAIAD_VERSION .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaia:$GAIAD_VERSION
+          if [ -z "${GAIAD_VERSION}" ]; then
+            docker build .
+          else
+            docker build -t tendermint/gaia:$GAIAD_VERSION .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push tendermint/gaia:$GAIAD_VERSION
+          fi
 
   docker_tagged:
     <<: *linux_defaults
@@ -349,11 +399,6 @@ workflows:
   test-suite:
     jobs:
       - docker_image:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
           requires:
             - setup_dependencies
       - docker_tagged:
@@ -378,7 +423,12 @@ workflows:
               only:
                 - master
                 - develop
-      - setup_dependencies
+      - setup_dependencies:
+          # filters here are needed to enable this job also for tags
+          filters:
+            tags:
+              only:
+                - /^v.*/
       - lint:
           requires:
             - setup_dependencies

@@ -1,0 +1,17 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - golint
+    - ineffassign
+    - unconvert
+    - misspell
+linters-settings:
+  gocyclo:
+    min-complexity: 11
+  errcheck:
+    ignore: fmt:.*,io/ioutil:^Read.*,github.com/spf13/cobra:MarkFlagRequired,github.com/spf13/viper:BindPFlag
+  golint:
+    min-confidence: 1.1
+run:
+  tests: false

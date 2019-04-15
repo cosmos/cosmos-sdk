@@ -41,7 +41,7 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		msg := msgs[0].(staking.MsgCreateValidator)
 
 		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddress))
-		acc.Coins = sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)}
+		acc.Coins = sdk.NewCoins(sdk.NewInt64Coin(defaultBondDenom, 150))
 		genAccs[i] = NewGenesisAccount(&acc)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply
 	}
@@ -55,7 +55,7 @@ func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
-	authAcc.SetCoins(sdk.Coins{sdk.NewInt64Coin(defaultBondDenom, 150)})
+	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(defaultBondDenom, 150)))
 	genAcc := NewGenesisAccount(&authAcc)
 	acc := genAcc.ToAccount()
 	require.IsType(t, &auth.BaseAccount{}, acc)

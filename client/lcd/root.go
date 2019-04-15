@@ -52,61 +52,27 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 }
 
 // Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, sslHosts string,
-	certFile string, keyFile string, maxOpen int, secure bool) (err error) {
-
+func (rs *RestServer) Start(listenAddr string, maxOpen int) (err error) {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	rs.listener, err = rpcserver.Listen(
-		listenAddr,
-		rpcserver.Config{MaxOpenConnections: maxOpen},
-	)
+	cfg := rpcserver.DefaultConfig()
+	cfg.MaxOpenConnections = maxOpen
+
+	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {
 		return
 	}
-	rs.log.Info(fmt.Sprintf("Starting Gaia Lite REST service (chain-id: %q)...",
-		viper.GetString(client.FlagChainID)))
-
-	// launch rest-server in insecure mode
-	if !secure {
-		return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
-	}
-
-	// handle certificates
-	if certFile != "" {
-		// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
-		if err := validateCertKeyFiles(certFile, keyFile); err != nil {
-			return err
-		}
-
-		//  cert/key pair is provided, read the fingerprint
-		rs.fingerprint, err = fingerprintFromFile(certFile)
-		if err != nil {
-			return err
-		}
-	} else {
-		// if certificate is not supplied, generate a self-signed one
-		certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
-		if err != nil {
-			return err
-		}
-
-		defer func() {
-			os.Remove(certFile)
-			os.Remove(keyFile)
-		}()
-	}
-
-	rs.log.Info(rs.fingerprint)
-	return rpcserver.StartHTTPAndTLSServer(
-		rs.listener,
-		rs.Mux,
-		certFile, keyFile,
-		rs.log,
+	rs.log.Info(
+		fmt.Sprintf(
+			"Starting Gaia Lite REST service (chain-id: %q)...",
+			viper.GetString(client.FlagChainID),
+		),
 	)
+
+	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
 // ServeCommand will start a Gaia Lite REST service as a blocking process. It
@@ -122,13 +88,8 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			registerRoutesFn(rs)
 
 			// Start the rest server and return error if one exists
-			err = rs.Start(
-				viper.GetString(client.FlagListenAddr),
-				viper.GetString(client.FlagSSLHosts),
-				viper.GetString(client.FlagSSLCertFile),
-				viper.GetString(client.FlagSSLKeyFile),
-				viper.GetInt(client.FlagMaxOpenConnections),
-				viper.GetBool(client.FlagTLS))
+			err = rs.Start(viper.GetString(client.FlagListenAddr),
+				viper.GetInt(client.FlagMaxOpenConnections))
 
 			return err
 		},

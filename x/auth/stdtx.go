@@ -141,13 +141,22 @@ func (fee StdFee) Bytes() []byte {
 	// (in the lcd_test, client side its null,
 	// server side its [])
 	if len(fee.Amount) == 0 {
-		fee.Amount = sdk.Coins{}
+		fee.Amount = sdk.NewCoins()
 	}
 	bz, err := msgCdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
 	return bz
+}
+
+// GasPrices returns the gas prices for a StdFee.
+//
+// NOTE: The gas prices returned are not the true gas prices that were
+// originally part of the submitted transaction because the fee is computed
+// as fee = ceil(gasWanted * gasPrices).
+func (fee StdFee) GasPrices() sdk.DecCoins {
+	return sdk.NewDecCoins(fee.Amount).QuoDec(sdk.NewDec(int64(fee.Gas)))
 }
 
 //__________________________________________________________

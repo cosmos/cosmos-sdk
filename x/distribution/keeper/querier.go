@@ -20,6 +20,7 @@ const (
 	QueryDelegatorTotalRewards       = "delegator_total_rewards"
 	QueryDelegatorValidators         = "delegator_validators"
 	QueryWithdrawAddr                = "withdraw_addr"
+	QueryCommunityPool               = "community_pool"
 
 	ParamCommunityTax        = "community_tax"
 	ParamBaseProposerReward  = "base_proposer_reward"
@@ -53,6 +54,9 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 		case QueryWithdrawAddr:
 			return queryDelegatorWithdrawAddress(ctx, path[1:], req, k)
+
+		case QueryCommunityPool:
+			return queryCommunityPool(ctx, path[1:], req, k)
 
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown distr query endpoint")
@@ -203,7 +207,17 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	ctx, _ = ctx.CacheContext()
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
+	if val == nil {
+		// TODO: Should use ErrNoValidatorFound from staking/types
+		return nil, sdk.ErrInternal(fmt.Sprintf("validator %s does not exist", params.ValidatorAddress))
+	}
+
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
+	if del == nil {
+		// TODO: Should use ErrNoDelegation from staking/types
+		return nil, sdk.ErrInternal("delegation does not exist")
+	}
+
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
@@ -312,5 +326,13 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 
+	return bz, nil
+}
+
+func queryCommunityPool(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	bz, err := k.cdc.MarshalJSON(k.GetFeePoolCommunityCoins(ctx))
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
 	return bz, nil
 }

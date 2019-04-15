@@ -1,5 +1,153 @@
 # Changelog
 
+* [0.34.0](#0340)
+  * [Breaking Changes](#breaking-changes)
+    * [Gaia](#gaia)
+    * [Gaia CLI](#gaia-cli)
+    * [SDK](#sdk)
+    * [Tendermint](#tendermint)
+  * [New features](#new-features)
+    * [SDK](#sdk-1)
+    * [Gaia](#gaia-1)
+    * [Gaia CLI](#gaia-cli-1)
+    * [Gaia REST API](#gaia-rest-api)
+  * [Improvements](#improvements)
+    * [Gaia](#gaia-2)
+    * [Gaia CLI](#gaia-cli-2)
+    * [SDK](#sdk-2)
+  * [Bug Fixes](#bug-fixes)
+    * [Gaia](#gaia-3)
+    * [Gaia CLI](#gaia-cli-3)
+    * [SDK](#sdk-3)
+* [0.33.2](#0332)
+  * [Improvements](#improvements-1)
+    * [Tendermint](#tendermint-1)
+* [0.33.1](#0331)
+  * [Bug Fixes](#bug-fixes-1)
+    * [Gaia](#gaia-4)
+
+## 0.34.0
+
+### Breaking Changes
+
+#### Gaia
+
+* [\#3463](https://github.com/cosmos/cosmos-sdk/issues/3463) Revert bank module handler fork (re-enables transfers)
+* [\#3875](https://github.com/cosmos/cosmos-sdk/issues/3875) Replace `async` flag with `--broadcast-mode` flag where the default
+  value is `sync`. The `block` mode should not be used. The REST client now
+  uses `mode` parameter instead of the `return` parameter.
+
+#### Gaia CLI
+
+* [\#3938](https://github.com/cosmos/cosmos-sdk/issues/3938) Remove REST server's SSL support altogether.
+
+#### SDK
+
+* [\#3245](https://github.com/cosmos/cosmos-sdk/issues/3245) Rename validator.GetJailed() to validator.IsJailed()
+* [\#3516](https://github.com/cosmos/cosmos-sdk/issues/3516) Remove concept of shares from staking unbonding and redelegation UX;
+  replaced by direct coin amount.
+
+#### Tendermint
+
+* [\#4029](https://github.com/cosmos/cosmos-sdk/issues/4029) Upgrade Tendermint to v0.31.3
+
+### New features
+
+#### SDK
+
+* [\#2935](https://github.com/cosmos/cosmos-sdk/issues/2935) New module Crisis which can test broken invariant with messages
+* [\#3813](https://github.com/cosmos/cosmos-sdk/issues/3813) New sdk.NewCoins safe constructor to replace bare sdk.Coins{} declarations.
+* [\#3858](https://github.com/cosmos/cosmos-sdk/issues/3858) add website, details and identity to gentx cli command
+* Implement coin conversion and denomination registration utilities
+
+#### Gaia
+
+* [\#2935](https://github.com/cosmos/cosmos-sdk/issues/2935) Optionally assert invariants on a blockly basis using `gaiad --assert-invariants-blockly`
+* [\#3886](https://github.com/cosmos/cosmos-sdk/issues/3886) Implement minting module querier and CLI/REST clients.
+
+#### Gaia CLI
+
+* [\#3937](https://github.com/cosmos/cosmos-sdk/issues/3937) Add command to query community-pool
+
+#### Gaia REST API
+
+* [\#3937](https://github.com/cosmos/cosmos-sdk/issues/3937) Add route to fetch community-pool
+* [\#3949](https://github.com/cosmos/cosmos-sdk/issues/3949) added /slashing/signing_infos to get signing_info for all validators
+
+### Improvements
+
+#### Gaia
+
+* [\#3808](https://github.com/cosmos/cosmos-sdk/issues/3808) `gaiad` and `gaiacli` integration tests use ./build/ binaries.
+* \[\#3819](https://github.com/cosmos/cosmos-sdk/issues/3819) Simulation refactor, log output now stored in ~/.gaiad/simulation/
+  * Simulation moved to its own module (not a part of mock)
+  * Logger type instead of passing function variables everywhere
+  * Logger json output (for reloadable simulation running)
+  * Cleanup bank simulation messages / remove dup code in bank simulation
+  * Simulations saved in `~/.gaiad/simulations/`
+  * "Lean" simulation output option to exclude No-ops and !ok functions (`--SimulationLean` flag)
+* [\#3893](https://github.com/cosmos/cosmos-sdk/issues/3893) Improve `gaiacli tx sign` command
+  * Add shorthand flags -a and -s for the account and sequence numbers respectively
+  * Mark the account and sequence numbers required during "offline" mode
+  * Always do an RPC query for account and sequence number during "online" mode
+* [\#4018](https://github.com/cosmos/cosmos-sdk/issues/4018) create genesis port script for release v.0.34.0
+
+#### Gaia CLI
+
+* [\#3833](https://github.com/cosmos/cosmos-sdk/issues/3833) Modify stake to atom in gaia's doc.
+* [\#3841](https://github.com/cosmos/cosmos-sdk/issues/3841) Add indent to JSON of `gaiacli keys [add|show|list]`
+* [\#3859](https://github.com/cosmos/cosmos-sdk/issues/3859) Add newline to echo of `gaiacli keys ...`
+* [\#3959](https://github.com/cosmos/cosmos-sdk/issues/3959) Improving error messages when signing with ledger devices fails
+
+#### SDK
+
+* [\#3238](https://github.com/cosmos/cosmos-sdk/issues/3238) Add block time to tx responses when querying for
+  txs by tags or hash.
+* \[\#3752](https://github.com/cosmos/cosmos-sdk/issues/3752) Explanatory docs for minting mechanism (`docs/spec/mint/01_concepts.md`)
+* [\#3801](https://github.com/cosmos/cosmos-sdk/issues/3801) `baseapp` safety improvements
+* [\#3820](https://github.com/cosmos/cosmos-sdk/issues/3820) Make Coins.IsAllGT() more robust and consistent.
+* [\#3828](https://github.com/cosmos/cosmos-sdk/issues/3828) New sdkch tool to maintain changelogs
+* [\#3864](https://github.com/cosmos/cosmos-sdk/issues/3864) Make Coins.IsAllGTE() more consistent.
+* [\#3907](https://github.com/cosmos/cosmos-sdk/issues/3907): dep -> go mod migration
+  * Drop dep in favor of go modules.
+  * Upgrade to Go 1.12.1.
+* [\#3917](https://github.com/cosmos/cosmos-sdk/issues/3917) Allow arbitrary decreases to validator commission rates.
+* [\#3937](https://github.com/cosmos/cosmos-sdk/issues/3937) Implement community pool querier.
+* [\#3940](https://github.com/cosmos/cosmos-sdk/issues/3940) Codespace should be lowercase.
+* [\#3986](https://github.com/cosmos/cosmos-sdk/issues/3986) Update the Stringer implementation of the Proposal type.
+* [\#926](https://github.com/cosmos/cosmos-sdk/issues/926) circuit breaker high level explanation
+* [\#3896](https://github.com/cosmos/cosmos-sdk/issues/3896) Fixed various linters warnings in the context of the gometalinter -> golangci-lint migration
+* [\#3916](https://github.com/cosmos/cosmos-sdk/issues/3916) Hex encode data in tx responses
+
+### Bug Fixes
+
+#### Gaia
+
+* [\#3825](https://github.com/cosmos/cosmos-sdk/issues/3825) Validate genesis before running gentx
+* [\#3889](https://github.com/cosmos/cosmos-sdk/issues/3889) When `--generate-only` is provided, the Keybase is not used and as a result
+  the `--from` value must be a valid Bech32 cosmos address.
+* 3974 Fix go env setting in installation.md
+* 3996 Change 'make get_tools' to 'make tools' in DOCS_README.md.
+
+#### Gaia CLI
+
+* [\#3883](https://github.com/cosmos/cosmos-sdk/issues/3883) Remove Height Flag from CLI Queries
+* [\#3899](https://github.com/cosmos/cosmos-sdk/issues/3899) Using 'gaiacli config node' breaks ~/config/config.toml
+
+#### SDK
+
+* [\#3837](https://github.com/cosmos/cosmos-sdk/issues/3837) Fix `WithdrawValidatorCommission` to properly set the validator's remaining commission.
+* [\#3870](https://github.com/cosmos/cosmos-sdk/issues/3870) Fix DecCoins#TruncateDecimal to never return zero coins in
+  either the truncated coins or the change coins.
+* [\#3915](https://github.com/cosmos/cosmos-sdk/issues/3915) Remove ';' delimiting support from ParseDecCoins
+* [\#3977](https://github.com/cosmos/cosmos-sdk/issues/3977) Fix docker image build
+* [\#4020](https://github.com/cosmos/cosmos-sdk/issues/4020) Fix queryDelegationRewards by returning an error
+when the validator or delegation do not exist.
+* [\#4050](https://github.com/cosmos/cosmos-sdk/issues/4050) Fix DecCoins APIs
+where rounding or truncation could result in zero decimal coins.
+* [\#4088](https://github.com/cosmos/cosmos-sdk/issues/4088) Fix `calculateDelegationRewards`
+by accounting for rounding errors when multiplying stake by slashing fractions.
+
 ## 0.33.2
 
 ### Improvements

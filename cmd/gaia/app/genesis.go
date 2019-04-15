@@ -186,7 +186,9 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	genesisState.BankData.Supply = supplyFromGenAccounts(genesisState.Accounts)
+	circulatingSupply, vestingSupply := supplyFromGenAccounts(genesisState.Accounts)
+	genesisState.BankData.Supplier.CirculatingSupply = circulatingSupply
+	genesisState.BankData.Supplier.VestingSupply = vestingSupply
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
@@ -282,7 +284,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	return nil
 }
 
-// GaiaAppGenState but with JSON
+// GaiaAppGenStateJSON GaiaAppGenState but with JSON
 func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	appState json.RawMessage, err error) {
 	// create the final app state
@@ -393,10 +395,15 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
+// supplyFromGenAccounts calculates the circulating and vesting total supply from
+// the genesis accounts
 func supplyFromGenAccounts(genAccounts []GenesisAccount,
-) (supply sdk.Coins) {
+) (circulatingSupply, vestingSupply sdk.Coins) {
 	for _, genAcc := range genAccounts {
-		supply = supply.Add(genAcc.Coins)
+		circulatingSupply = circulatingSupply.Add(genAcc.Coins)
+		if genAcc.DelegatedVesting.IsAllPositive() {
+			vestingSupply = vestingSupply.Add(genAcc.OriginalVesting)
+		}
 	}
 	return
 }

@@ -8,6 +8,8 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterInterface((*TokenHolder)(nil), nil)
+	cdc.RegisterConcrete(&BaseTokenHolder{}, "bank/BaseTokenHolder", nil)
 }
 
 var msgCdc = codec.New()

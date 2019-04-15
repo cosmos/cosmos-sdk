@@ -4,10 +4,10 @@ const (
 	// ModuleName is the name of the module
 	ModuleName = "bank"
 
-	// StoreKey is the default store key for mint
+	// StoreKey is the default store key for supply
 	StoreKey = ModuleName
 
-	// QuerierRoute is the querier route for the suply store.
+	// QuerierRoute is the querier route for the supply store.
 	QuerierRoute = StoreKey
 )
 

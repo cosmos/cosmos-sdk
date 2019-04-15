@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -80,8 +81,19 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 		if !ok {
 			return
 		}
+		var rewards types.QueryDelegatorTotalRewardsResponse
+		if err := cdc.UnmarshalJSON(res, &rewards); err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		bz, err := json.Marshal(rewards)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, bz, cliCtx.Indent)
 	}
 }
 

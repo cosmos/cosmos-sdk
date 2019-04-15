@@ -3,6 +3,7 @@ package lcd
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -1007,7 +1008,7 @@ func TestDistributionFlow(t *testing.T) {
 	var delRewards disttypes.QueryDelegatorTotalRewardsResponse
 	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/rewards", operAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &delRewards), body)
+	require.NoError(t, json.Unmarshal([]byte(body), &delRewards))
 
 	// Query delegator's withdrawal address
 	var withdrawAddr string

@@ -10,7 +10,7 @@ To start a REST server, we need to specify the following parameters:
 | trust-node  | bool      | "false"                 | true     | Whether this LCD is connected to a trusted full node |
 | trust-store | DIRECTORY | "$HOME/.lcd"            | false    | directory for save checkpoints and validator sets    |
 
-For example::
+For example:
 
 ```bash
 gaiacli rest-server --chain-id=test \

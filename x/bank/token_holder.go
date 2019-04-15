@@ -31,8 +31,8 @@ type BaseTokenHolder struct {
 }
 
 // NewBaseTokenHolder creates a new BaseTokenHolder instance
-func NewBaseTokenHolder(moduleName string, initialHoldings sdk.Coins) BaseTokenHolder {
-	return BaseTokenHolder{
+func NewBaseTokenHolder(moduleName string, initialHoldings sdk.Coins) TokenHolder {
+	return &BaseTokenHolder{
 		Module:   moduleName,
 		Holdings: initialHoldings,
 	}

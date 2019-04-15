@@ -81,7 +81,7 @@ func (keeper BaseKeeper) GetSupplier(ctx sdk.Context) (supplier Supplier) {
 }
 
 // SetSupplier sets the Supplier to store
-func (keeper BaseKeeper) SetSupplier(ctx sdk.Context, supplier Supplier) {
+func (keeper BaseKeeper) setSupplier(ctx sdk.Context, supplier Supplier) {
 	store := ctx.KVStore(keeper.storeKey)
 	b := keeper.cdc.MustMarshalBinaryLengthPrefixed(supplier)
 	store.Set(supplierKey, b)
@@ -91,7 +91,7 @@ func (keeper BaseKeeper) SetSupplier(ctx sdk.Context, supplier Supplier) {
 func (keeper BaseKeeper) InflateSupply(ctx sdk.Context, amount sdk.Coins) {
 	supplier := keeper.GetSupplier(ctx)
 	supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
-	keeper.SetSupplier(ctx, supplier)
+	keeper.setSupplier(ctx, supplier)
 }
 
 // GetTokenHolders returns all the token holders
@@ -118,15 +118,29 @@ func (keeper BaseKeeper) GetTokenHolder(ctx sdk.Context, moduleName string) (
 	store := ctx.KVStore(keeper.storeKey)
 	b := store.Get(GetTokenHolderKey(moduleName))
 	if b == nil {
-		err = fmt.Errorf("module %s doesn't exist", moduleName)
+		err = fmt.Errorf("token holder with module %s doesn't exist", moduleName)
 		return
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(b, tokenHolder)
 	return
 }
 
+// AddTokenHolder creates and sets a token holder instance to store
+func (keeper BaseKeeper) AddTokenHolder(ctx sdk.Context, moduleName string) (
+	tokenHolder TokenHolder, err error) {
+	store := ctx.KVStore(keeper.storeKey)
+	if store.Has(GetTokenHolderKey(moduleName)) {
+		err = fmt.Errorf("token holder with module %s already exist", moduleName)
+		return
+	}
+
+	tokenHolder = NewBaseTokenHolder(moduleName, sdk.Coins{})
+	keeper.setTokenHolder(ctx, tokenHolder)
+	return
+}
+
 // SetTokenHolder sets a holder to store
-func (keeper BaseKeeper) SetTokenHolder(ctx sdk.Context, tokenHolder TokenHolder) {
+func (keeper BaseKeeper) setTokenHolder(ctx sdk.Context, tokenHolder TokenHolder) {
 	store := ctx.KVStore(keeper.storeKey)
 	holderKey := GetTokenHolderKey(tokenHolder.GetModuleName())
 	b := keeper.cdc.MustMarshalBinaryLengthPrefixed(tokenHolder)
@@ -136,23 +150,27 @@ func (keeper BaseKeeper) SetTokenHolder(ctx sdk.Context, tokenHolder TokenHolder
 // RequestTokens adds requested tokens to the module's holdings
 func (keeper BaseKeeper) RequestTokens(
 	ctx sdk.Context, moduleName string, amount sdk.Coins,
-) error {
+) sdk.Error {
 	if !amount.IsValid() {
-		return fmt.Errorf("invalid requested amount")
+		return sdk.ErrInvalidCoins("invalid requested amount")
 	}
 
 	holder, err := keeper.GetTokenHolder(ctx, moduleName)
 	if err != nil {
-		return fmt.Errorf("module %s doesn't exist", moduleName)
+		return ErrUnknownTokenHolder(
+			DefaultCodespace,
+			fmt.Sprintf("token holder %s doesn't exist", moduleName),
+		)
 	}
 
+	// update global supply held by token holders
 	supplier := keeper.GetSupplier(ctx)
 	supplier.HoldersSupply = supplier.HoldersSupply.Add(amount)
 
 	holder.SetHoldings(holder.GetHoldings().Add(amount))
 
-	keeper.SetTokenHolder(ctx, holder)
-	keeper.SetSupplier(ctx, supplier)
+	keeper.setTokenHolder(ctx, holder)
+	keeper.setSupplier(ctx, supplier)
 	return nil
 }
 
@@ -161,19 +179,23 @@ func (keeper BaseKeeper) RelinquishTokens(
 	ctx sdk.Context, moduleName string, amount sdk.Coins,
 ) error {
 	if !amount.IsValid() {
-		return fmt.Errorf("invalid provided relenquished amount")
+		return sdk.ErrInvalidCoins("invalid provided relenquished amount")
 	}
 
 	holder, err := keeper.GetTokenHolder(ctx, moduleName)
 	if err != nil {
-		return fmt.Errorf("module %s doesn't exist", moduleName)
+		return ErrUnknownTokenHolder(
+			DefaultCodespace,
+			fmt.Sprintf("token holder %s doesn't exist", moduleName),
+		)
 	}
 
 	newHoldings, ok := holder.GetHoldings().SafeSub(amount)
 	if !ok {
-		return fmt.Errorf("insufficient token holdings")
+		return sdk.ErrInsufficientCoins("insufficient token holdings")
 	}
 
+	// update global supply held by token holders
 	supplier := keeper.GetSupplier(ctx)
 	newHoldersSupply, ok := supplier.HoldersSupply.SafeSub(amount)
 	if !ok {
@@ -183,8 +205,8 @@ func (keeper BaseKeeper) RelinquishTokens(
 
 	holder.SetHoldings(newHoldings)
 
-	keeper.SetTokenHolder(ctx, holder)
-	keeper.SetSupplier(ctx, supplier)
+	keeper.setTokenHolder(ctx, holder)
+	keeper.setSupplier(ctx, supplier)
 	return nil
 }
 

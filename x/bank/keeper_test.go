@@ -20,6 +20,7 @@ import (
 type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
+	key sdk.StoreKey
 	ak  auth.AccountKeeper
 	pk  params.Keeper
 }
@@ -32,6 +33,7 @@ func setupTestInput() testInput {
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
+	keySupply := sdk.NewKVStoreKey("bank")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
@@ -50,13 +52,13 @@ func setupTestInput() testInput {
 
 	ak.SetParams(ctx, auth.DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, pk: pk}
+	return testInput{cdc: cdc, key: keySupply, ctx: ctx, ak: ak, pk: pk}
 }
 
 func TestKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -137,8 +139,8 @@ func TestSendKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
 	paramSpace := input.pk.Subspace(DefaultParamspace)
-	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
-	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, paramSpace, DefaultCodespace)
+	sendKeeper := NewBaseSendKeeper(input.cdc, input.key, input.ak, paramSpace, DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -186,9 +188,9 @@ func TestViewKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
 	paramSpace := input.pk.Subspace(DefaultParamspace)
-	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, paramSpace, DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
-	viewKeeper := NewBaseViewKeeper(input.ak, DefaultCodespace)
+	viewKeeper := NewBaseViewKeeper(input.cdc, input.key, input.ak, DefaultCodespace)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := input.ak.NewAccountWithAddress(ctx, addr)
@@ -215,7 +217,7 @@ func TestVestingAccountSend(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -249,7 +251,7 @@ func TestVestingAccountReceive(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -283,7 +285,7 @@ func TestDelegateCoins(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -320,7 +322,7 @@ func TestUndelegateCoins(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.cdc, input.key, input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))

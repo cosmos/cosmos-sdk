@@ -13,6 +13,7 @@ const (
 
 	CodeSendDisabled         CodeType = 101
 	CodeInvalidInputsOutputs CodeType = 102
+	CodeUnknownTokenHolder   CodeType = 103
 )
 
 // ErrNoInputs is an error
@@ -33,4 +34,12 @@ func ErrInputOutputMismatch(codespace sdk.CodespaceType) sdk.Error {
 // ErrSendDisabled is an error
 func ErrSendDisabled(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeSendDisabled, "send transactions are currently disabled")
+}
+
+// ErrUnknownTokenHolder is an error
+func ErrUnknownTokenHolder(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		return sdk.NewError(codespace, CodeUnknownTokenHolder, msg)
+	}
+	return sdk.NewError(codespace, CodeUnknownTokenHolder, "unknown token holder")
 }

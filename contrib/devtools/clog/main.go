@@ -14,9 +14,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 const (
+	configFileName         = ".clog.yaml"
 	entriesDirName         = ".pending"
 	ghLinkPattern          = `#([0-9]+)`
 	ghLinkExpanded         = `[\#$1](https://github.com/cosmos/cosmos-sdk/issues/$1)`
@@ -24,28 +26,17 @@ const (
 )
 
 var (
-	progName   string
 	verboseLog *log.Logger
 
 	entriesDir      string
 	verboseLogging  bool
 	interactiveMode bool
 
+	config Config
 	// sections name-title map
-	sections = map[string]string{
-		"breaking":     "Breaking Changes",
-		"features":     "New features",
-		"improvements": "Improvements",
-		"bugfixes":     "Bugfixes",
-	}
+	sections map[string]string
 	// stanzas name-title map
-	stanzas = map[string]string{
-		"gaia":       "Gaia",
-		"gaiacli":    "Gaia CLI",
-		"gaiarest":   "Gaia REST API",
-		"sdk":        "SDK",
-		"tendermint": "Tendermint",
-	}
+	stanzas map[string]string
 
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
@@ -57,16 +48,8 @@ var (
 	AddCmd = &cobra.Command{
 		Use:   "add [section] [stanza] [message]",
 		Short: "Add an entry file.",
-		Long: `Add an entry file. If message is empty, start the editor to edit the message.
-
-    Sections             Stanzas
-         ---                 ---
-    breaking                gaia
-    features             gaiacli
-improvements            gaiarest
-    bugfixes                 sdk
-                      tendermint`,
-		Args: cobra.MaximumNArgs(3),
+		Long:  `Add an entry file. If message is empty, start the editor to edit the message.`,
+		Args:  cobra.MaximumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if interactiveMode {
@@ -119,19 +102,23 @@ func init() {
 	RootCmd.AddCommand(GenerateCmd)
 	RootCmd.AddCommand(PruneCmd)
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	cwd := checkGetcwd()
 	AddCmd.Flags().BoolVarP(&interactiveMode, "interactive", "i", false, "get the section/stanza/message with interactive CLI prompts")
 	RootCmd.PersistentFlags().BoolVarP(&verboseLogging, "verbose-logging", "v", false, "enable verbose logging")
 	RootCmd.PersistentFlags().StringVarP(&entriesDir, "entries-dir", "d", filepath.Join(cwd, entriesDirName), "entry files directory")
 }
 
+func checkGetcwd() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cwd
+}
+
 func main() {
 
-	logPrefix := fmt.Sprintf("%s: ", filepath.Base(progName))
+	logPrefix := fmt.Sprintf("%s: ", filepath.Base(os.Args[0]))
 	log.SetFlags(0)
 	log.SetPrefix(logPrefix)
 	flag.Parse()
@@ -141,6 +128,9 @@ func main() {
 		verboseLog.SetPrefix(logPrefix)
 	}
 
+	config = mustFindAndReadConfig(checkGetcwd())
+	sections = config.Sections
+	stanzas = config.Stanzas
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
@@ -425,3 +415,48 @@ func mustPruneDirIfEmpty(path string) error {
 }
 
 // DONTCOVER
+
+type Config struct {
+	Sections map[string]string `yaml:"sections"`
+	Stanzas  map[string]string `yaml:"stanzas"`
+}
+
+func mustFindAndReadConfig(dir string) Config {
+	configFile, err := findConfigFile(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	conf, err := readConfig(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return conf
+}
+
+func readConfig(configFile string) (Config, error) {
+	var conf Config
+	bs, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return conf, err
+	}
+
+	err = yaml.Unmarshal(bs, &conf)
+	return conf, err
+}
+
+func findConfigFile(rootDir string) (string, error) {
+	for {
+		files, err := ioutil.ReadDir(rootDir)
+		if err != nil {
+			return "", err
+		}
+		for _, fp := range files {
+			if fp.Name() == configFileName {
+				return filepath.Join(rootDir, fp.Name()), nil
+			}
+		}
+		if rootDir == filepath.Dir(rootDir) {
+			return "", errors.New("couldn't find configuration file")
+		}
+	}
+}

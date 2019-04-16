@@ -1,0 +1,12 @@
+sections:
+  breaking: Breaking Changes
+  features: New Features
+  improvements: Improvements
+  bugfixes: Bugfixes
+
+stanzas:
+  gaia: Gaia
+  gaiacli: Gaia CLI
+  gaiarest: Gaia REST API
+  sdk: SDK
+  tendermint: Tendermint

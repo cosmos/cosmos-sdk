@@ -16,6 +16,7 @@ const (
 	CodeInvalidNFT        CodeType = 652
 	CodeUnknownNFT        CodeType = 653
 	CodeNFTAlreadyExists  CodeType = 654
+	CodeEmptyMetadata     CodeType = 655
 )
 
 // ErrInvalidCollection is an error
@@ -36,7 +37,7 @@ func ErrInvalidNFT(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidNFT, "invalid NFT")
 }
 
-// ErrNFTAlreadyExists is an error when an invlid NFT is minted
+// ErrNFTAlreadyExists is an error when an invalid NFT is minted
 func ErrNFTAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Error {
 	if msg != "" {
 		return sdk.NewError(codespace, CodeNFTAlreadyExists, msg)
@@ -50,4 +51,9 @@ func ErrUnknownNFT(codespace sdk.CodespaceType, msg string) sdk.Error {
 		return sdk.NewError(codespace, CodeUnknownNFT, msg)
 	}
 	return sdk.NewError(codespace, CodeUnknownNFT, "unknown NFT")
+}
+
+// ErrEmptyMetadata is an error when metadata is empty
+func ErrEmptyMetadata(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeEmptyMetadata, "EditMetadata can't be empty")
 }

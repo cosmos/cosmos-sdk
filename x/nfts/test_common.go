@@ -1,0 +1,196 @@
+package nfts
+
+import (
+	"bytes"
+	"encoding/hex"
+	"strconv"
+	"testing"
+
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+// dummy addresses used for testing
+var (
+	Addrs       = createTestAddrs(500)
+	PKs         = createTestPubKeys(500)
+	emptyAddr   sdk.AccAddress
+	emptyPubkey crypto.PubKey
+
+	addrDels = []sdk.AccAddress{
+		Addrs[0],
+		Addrs[1],
+	}
+	addrVals = []sdk.ValAddress{
+		sdk.ValAddress(Addrs[2]),
+		sdk.ValAddress(Addrs[3]),
+		sdk.ValAddress(Addrs[4]),
+		sdk.ValAddress(Addrs[5]),
+		sdk.ValAddress(Addrs[6]),
+	}
+)
+
+//_______________________________________________________________________________________
+
+// ValEq intended to be used with require/assert:  require.True(ValEq(...))
+func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
+	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
+}
+
+//_______________________________________________________________________________________
+
+// MakeTestCodec create a codec used only for testing
+func MakeTestCodec() *codec.Codec {
+	var cdc = codec.New()
+
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(MsgTransferNFT{}, "test/nfts/TransferNFT", nil)
+	// cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/staking/CreateValidator", nil)
+	// cdc.RegisterConcrete(types.MsgEditValidator{}, "test/staking/EditValidator", nil)
+	// cdc.RegisterConcrete(types.MsgUndelegate{}, "test/staking/Undelegate", nil)
+	// cdc.RegisterConcrete(types.MsgBeginRedelegate{}, "test/staking/BeginRedelegate", nil)
+
+	// Register AppAccount
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	// cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/Account", nil)
+	codec.RegisterCrypto(cdc)
+
+	return cdc
+}
+
+// CreateTestInput is a hodgepodge of all sorts of input required for testing.
+// `initPower` is converted to an amount of tokens.
+// If `initPower` is 0, no addrs get created.
+// func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+
+// 	initCoins := sdk.TokensFromTendermintPower(initPower)
+
+// 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+
+// 	db := dbm.NewMemDB()
+// 	ms := store.NewCommitMultiStore(db)
+// 	// ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
+// 	err := ms.LoadLatestVersion()
+// 	require.Nil(t, err)
+
+// 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "nft-chain"}, isCheckTx, log.NewNopLogger())
+// 	ctx = ctx.WithConsensusParams(
+// 		&abci.ConsensusParams{
+// 			Validator: &abci.ValidatorParams{
+// 				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
+// 			},
+// 		},
+// 	)
+// 	cdc := MakeTestCodec()
+
+// pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+
+// accountKeeper := auth.NewAccountKeeper(
+// 	cdc,    // amino codec
+// 	keyAcc, // target store
+// 	pk.Subspace(auth.DefaultParamspace),
+// 	auth.ProtoBaseAccount, // prototype
+// )
+
+// ck := bank.NewBaseKeeper(
+// 	accountKeeper,
+// 	pk.Subspace(bank.DefaultParamspace),
+// 	bank.DefaultCodespace,
+// )
+
+// keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
+// keeper.SetPool(ctx, types.InitialPool())
+// keeper.SetParams(ctx, types.DefaultParams())
+
+// fill all the addresses with some coins, set the loose pool tokens simultaneously
+// for _, addr := range Addrs {
+// 	pool := keeper.GetPool(ctx)
+// 	err := error(nil)
+// 	if !initCoins.IsZero() {
+// 		_, err = ck.AddCoins(ctx, addr, sdk.Coins{
+// 			{keeper.BondDenom(ctx), initCoins},
+// 		})
+// 	}
+// 	require.Nil(t, err)
+// 	pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
+// 	keeper.SetPool(ctx, pool)
+// }
+
+// return ctx, accountKeeper, keeper
+// }
+
+// NewPubKey makes new pub key
+func NewPubKey(pk string) (res crypto.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	//res, err = crypto.PubKeyFromBytes(pkBytes)
+	var pkEd ed25519.PubKeyEd25519
+	copy(pkEd[:], pkBytes[:])
+	return pkEd
+}
+
+// TestAddr for incode address generation
+func TestAddr(addr string, bech string) sdk.AccAddress {
+
+	res, err := sdk.AccAddressFromHex(addr)
+	if err != nil {
+		panic(err)
+	}
+	bechexpected := res.String()
+	if bech != bechexpected {
+		panic("Bech encoding doesn't match reference")
+	}
+
+	bechres, err := sdk.AccAddressFromBech32(bech)
+	if err != nil {
+		panic(err)
+	}
+	if !bytes.Equal(bechres, res) {
+		panic("Bech decode and hex decode don't match")
+	}
+
+	return res
+}
+
+// nolint: unparam
+func createTestAddrs(numAddrs int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
+	var buffer bytes.Buffer
+
+	// start at 100 so we can make up to 999 test addresses with valid test addresses
+	for i := 100; i < (numAddrs + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
+
+		buffer.WriteString(numString) //adding on final two digits to make addresses unique
+		res, _ := sdk.AccAddressFromHex(buffer.String())
+		bech := res.String()
+		addresses = append(addresses, TestAddr(buffer.String(), bech))
+		buffer.Reset()
+	}
+	return addresses
+}
+
+// nolint: unparam
+func createTestPubKeys(numPubKeys int) []crypto.PubKey {
+	var publicKeys []crypto.PubKey
+	var buffer bytes.Buffer
+
+	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 100; i < (numPubKeys + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
+		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
+		buffer.Reset()
+	}
+	return publicKeys
+}

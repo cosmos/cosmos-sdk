@@ -29,12 +29,35 @@ func NewNFT(owner sdk.AccAddress, tokenURI, description, image, name string,
 }
 
 // EditMetadata edits metadata of an nft
-func (nft NFT) EditMetadata(name, description, image, tokenURI string) NFT {
-	nft.Name = name
-	nft.Description = description
-	nft.Image = image
-	nft.TokenURI = tokenURI
+func (nft NFT) EditMetadata(editName, editDescription, editImage, editTokenURI bool,
+	name, description, image, tokenURI string) NFT {
+	if editName {
+		nft.Name = name
+	}
+	if editDescription {
+		nft.Description = description
+	}
+	if editImage {
+		nft.Image = image
+	}
+	if editTokenURI {
+		nft.TokenURI = tokenURI
+	}
 	return nft
+}
+
+func (nft NFT) String() string {
+	return fmt.Sprintf(`Owner:              %s
+  Name:               %s
+  Description:        %s
+  Image:        			%s
+  TokenURI:   				%s`,
+		nft.Owner,
+		nft.Name,
+		nft.Description,
+		nft.Image,
+		nft.TokenURI,
+	)
 }
 
 // Denom is a string

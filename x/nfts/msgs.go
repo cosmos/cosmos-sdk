@@ -6,6 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+/* ---------------------------------------------------------------------------
+MsgTransferNFT (nfts)
+MsgEditNFTMetadata (nfts)
+MsgMintNFT (mintable-nft)
+MsgBurnNFT (burnable-nft)
+MsgBuyNFT (nft-market)
+--------------------------------------------------------------------------- */
+
 // RouterKey is nfts
 var RouterKey = "nfts"
 
@@ -40,10 +48,9 @@ func (msg MsgTransferNFT) Type() string { return "transfer_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
-	if strings.TrimSpace(string(msg.Denom)) == "" {
+	if string(msg.Denom) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
-
 	if msg.ID.Empty() {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
@@ -53,6 +60,7 @@ func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
 	if msg.Recipient.Empty() {
 		return sdk.ErrInvalidAddress("invalid recipient address")
 	}
+
 	return nil
 }
 
@@ -73,26 +81,36 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
-	Owner       sdk.AccAddress
-	ID          TokenID
-	Denom       Denom
-	Name        string
-	Description string
-	Image       string
-	TokenURI    string
+	Owner           sdk.AccAddress
+	ID              TokenID
+	Denom           Denom
+	EditName        bool
+	EditDescription bool
+	EditImage       bool
+	EditTokenURI    bool
+	Name            string
+	Description     string
+	Image           string
+	TokenURI        string
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
-func NewMsgEditNFTMetadata(owner sdk.AccAddress, id TokenID, denom Denom, tokenURI, description, image, name string,
+func NewMsgEditNFTMetadata(owner sdk.AccAddress, denom Denom, id TokenID,
+	editName, editDescription, editImage, editTokenURI bool,
+	name, description, image, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
-		Owner:       owner,
-		ID:          id,
-		Denom:       denom.TrimSpace(),
-		Name:        strings.TrimSpace(name),
-		Description: strings.TrimSpace(description),
-		Image:       strings.TrimSpace(image),
-		TokenURI:    strings.TrimSpace(tokenURI),
+		Owner:           owner,
+		ID:              id,
+		Denom:           Denom(strings.TrimSpace(string(denom))),
+		EditName:        editName,
+		EditDescription: editDescription,
+		EditImage:       editImage,
+		EditTokenURI:    editTokenURI,
+		Name:            strings.TrimSpace(name),
+		Description:     strings.TrimSpace(description),
+		Image:           strings.TrimSpace(image),
+		TokenURI:        strings.TrimSpace(tokenURI),
 	}
 }
 
@@ -109,6 +127,9 @@ func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
 	}
 	if msg.Owner.Empty() {
 		return sdk.ErrInvalidAddress("invalid owner address")
+	}
+	if !msg.EditName && !msg.EditDescription && !msg.EditImage && !msg.EditTokenURI {
+		return ErrEmptyMetadata(DefaultCodespace)
 	}
 	return nil
 }
@@ -163,7 +184,7 @@ func (msg MsgMintNFT) Type() string { return "mint_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMintNFT) ValidateBasic() sdk.Error {
-	if msg.Denom.TrimSpace() == "" {
+	if strings.TrimSpace(string(msg.Denom)) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -215,7 +236,7 @@ func (msg MsgBurnNFT) Type() string { return "burn_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
-	if msg.Denom.TrimSpace() == "" {
+	if strings.TrimSpace(string(msg.Denom)) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.ID.Empty() {
@@ -268,7 +289,7 @@ func (msg MsgBuyNFT) Type() string { return "buy_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBuyNFT) ValidateBasic() sdk.Error {
-	if msg.Denom.TrimSpace() == "" {
+	if strings.TrimSpace(string(msg.Denom)) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {

@@ -51,7 +51,7 @@ func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Kee
 		}
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResBalance{balance})
+	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResBalance{denom, balance})
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -61,7 +61,12 @@ func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Kee
 
 // QueryResBalance resolves int balance
 type QueryResBalance struct {
-	Balance int `json:"balance"`
+	Denom   Denom `json:"denom"`
+	Balance int   `json:"balance"`
+}
+
+func (p QueryResBalance) String() string {
+	return fmt.Sprintf("%s %d", p.Denom, p.Balance)
 }
 
 func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
@@ -77,7 +82,7 @@ func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keepe
 		return
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResAccount{nft.Owner})
+	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResOwnerOf{nft.Owner})
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -85,9 +90,13 @@ func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keepe
 	return bz, nil
 }
 
-//QueryResAccount resolves sdk.AccAddress owner
-type QueryResAccount struct {
+//QueryResOwnerOf resolves sdk.AccAddress owner
+type QueryResOwnerOf struct {
 	Owner sdk.AccAddress `json:"owner"`
+}
+
+func (q QueryResOwnerOf) String() string {
+	return q.Owner.String()
 }
 
 func queryMetadata(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {

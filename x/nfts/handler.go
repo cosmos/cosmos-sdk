@@ -45,7 +45,10 @@ func handleMsgTransferNFT(ctx sdk.Context, msg MsgTransferNFT, k Keeper,
 	if !found {
 		return ErrInvalidNFT(DefaultCodespace).Result()
 	}
-	owner.RemoveNFT(msg.Denom, msg.ID)
+	err = owner.RemoveNFT(msg.Denom, msg.ID)
+	if err != nil {
+		return err.Result()
+	}
 	k.SetOwner(ctx, nft.Owner, owner)
 
 	// update NFT
@@ -85,7 +88,8 @@ func handleMsgEditNFTMetadata(ctx sdk.Context, msg MsgEditNFTMetadata, k Keeper,
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Owner.String(), msg.ID)).Result()
 	}
 
-	nft = nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	nft = nft.EditMetadata(msg.EditName, msg.EditDescription, msg.EditImage, msg.EditTokenURI,
+		msg.Name, msg.Description, msg.Image, msg.TokenURI)
 	err = k.SetNFT(ctx, msg.Denom, msg.ID, nft)
 	if err != nil {
 		return err.Result()
@@ -157,7 +161,10 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 	if !found {
 		return ErrInvalidNFT(DefaultCodespace).Result()
 	}
-	owner.RemoveNFT(msg.Denom, msg.ID)
+	err = owner.RemoveNFT(msg.Denom, msg.ID)
+	if err != nil {
+		return err.Result()
+	}
 	k.SetOwner(ctx, nft.Owner, owner)
 
 	// remove actual NFT

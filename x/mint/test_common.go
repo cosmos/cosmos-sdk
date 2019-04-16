@@ -56,7 +56,7 @@ func newTestInput(t *testing.T) testInput {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	feeCollectionKeeper := auth.NewFeeCollectionKeeper(cdc, keyFeeCollection)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)

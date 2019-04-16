@@ -17,47 +17,46 @@ const (
 
 // Keeper of the global paramstore
 type Keeper struct {
-	cdc  *codec.Codec
-	key  sdk.StoreKey
-	tkey sdk.StoreKey
-
-	spaces map[string]*Subspace
+	cdc       *codec.Codec
+	key       sdk.StoreKey
+	tkey      sdk.StoreKey
+	codespace sdk.CodespaceType
+	spaces    map[string]*Subspace
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
+func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey, codespace sdk.CodespaceType) (k Keeper) {
 	k = Keeper{
-		cdc:  cdc,
-		key:  key,
-		tkey: tkey,
-
-		spaces: make(map[string]*Subspace),
+		cdc:       cdc,
+		key:       key,
+		tkey:      tkey,
+		codespace: codespace,
+		spaces:    make(map[string]*Subspace),
 	}
 
 	return k
 }
 
 // Allocate subspace used for keepers
-func (k Keeper) Subspace(spacename string) Subspace {
-	_, ok := k.spaces[spacename]
+func (k Keeper) Subspace(s string) Subspace {
+	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
 	}
 
-	if spacename == "" {
+	if s == "" {
 		panic("cannot use empty string for subspace")
 	}
 
-	space := subspace.NewSubspace(k.cdc, k.key, k.tkey, spacename)
-
-	k.spaces[spacename] = &space
+	space := subspace.NewSubspace(k.cdc, k.key, k.tkey, s)
+	k.spaces[s] = &space
 
 	return space
 }
 
 // Get existing substore from keeper
-func (k Keeper) GetSubspace(storename string) (Subspace, bool) {
-	space, ok := k.spaces[storename]
+func (k Keeper) GetSubspace(s string) (Subspace, bool) {
+	space, ok := k.spaces[s]
 	if !ok {
 		return Subspace{}, false
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -97,7 +98,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, params.DefaultCodespace)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(

@@ -17,6 +17,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Config struct {
+	Sections map[string]string `yaml:"sections"`
+	Tags     []string          `yaml:"tags"`
+}
+
 const (
 	configFileName         = ".clog.yaml"
 	entriesDirName         = ".pending"
@@ -27,16 +32,11 @@ const (
 
 var (
 	verboseLog *log.Logger
+	config     Config
 
 	entriesDir      string
 	verboseLogging  bool
 	interactiveMode bool
-
-	config Config
-	// sections name-title map
-	sections map[string]string
-	// stanzas name-title map
-	stanzas map[string]string
 
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
@@ -108,16 +108,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&entriesDir, "entries-dir", "d", filepath.Join(cwd, entriesDirName), "entry files directory")
 }
 
-func checkGetcwd() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return cwd
-}
-
 func main() {
-
 	logPrefix := fmt.Sprintf("%s: ", filepath.Base(os.Args[0]))
 	log.SetFlags(0)
 	log.SetPrefix(logPrefix)
@@ -129,38 +120,42 @@ func main() {
 	}
 
 	config = mustFindAndReadConfig(checkGetcwd())
-	sections = config.Sections
-	stanzas = config.Stanzas
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func addEntryFileFromConsoleInput() error {
-
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Please enter the section (either: \"breaking\", \"features\", \"improvements\", \"bugfixes\")")
+	fmt.Fprintf(os.Stderr, "Please enter the section %v: ", config.Sections)
 	sectionDir, _ := reader.ReadString('\n')
 	sectionDir = strings.TrimSpace(sectionDir)
-	if _, ok := sections[sectionDir]; !ok {
+	if _, ok := config.Sections[sectionDir]; !ok {
 		return errors.New("invalid section, please try again")
 	}
 
-	fmt.Println("Please enter the stanza (either: \"gaia\", \"gaiacli\", \"gaiarest\", \"sdk\", \"tendermint\")")
-	stanzaDir, _ := reader.ReadString('\n')
-	stanzaDir = strings.TrimSpace(stanzaDir)
-	if _, ok := stanzas[stanzaDir]; !ok {
-		return errors.New("invalid stanza, please try again")
+	fmt.Fprintf(os.Stderr, "Please enter the tag %v: ", config.Tags)
+	tag, _ := reader.ReadString('\n')
+	tag = strings.TrimSpace(tag)
+	ok := false
+	for _, t := range config.Tags {
+		if t == tag {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return errors.New("invalid tag, please try again")
 	}
 
-	fmt.Println("Please enter the changelog message (or press enter to write in  default $EDITOR)")
+	fmt.Fprintf(os.Stderr, "Please enter the changelog message (or press enter to write in default $EDITOR)")
 	message, _ := reader.ReadString('\n')
 	message = strings.TrimSpace(message)
 	if message == "" {
-		return addEntryFile(sectionDir, stanzaDir)
+		return addEntryFile(sectionDir, tag)
 	}
 
-	return addSinglelineEntryFile(sectionDir, stanzaDir, message)
+	return addSinglelineEntryFile(sectionDir, tag, message)
 }
 
 func addSinglelineEntryFile(sectionDir, stanzaDir, message string) error {
@@ -232,10 +227,10 @@ func directoryContents(dirPath string) ([]os.FileInfo, error) {
 
 func generateChangelog(version string) error {
 	fmt.Printf("# %s\n\n", version)
-	for sectionDir, sectionTitle := range sections {
+	for sectionDir, sectionTitle := range config.Sections {
 		sectionTitlePrinted := false
-		for stanzaDir, stanzaTitle := range stanzas {
-			path := filepath.Join(entriesDir, sectionDir, stanzaDir)
+		for _, tag := range config.Tags {
+			path := filepath.Join(entriesDir, sectionDir, tag)
 			files, err := directoryContents(path)
 			if err != nil {
 				return err
@@ -249,11 +244,10 @@ func generateChangelog(version string) error {
 				sectionTitlePrinted = true
 			}
 
-			fmt.Printf("### %s\n\n", stanzaTitle)
 			for _, f := range files {
 				verboseLog.Println("processing", f.Name())
 				filename := filepath.Join(path, f.Name())
-				if err := indentAndPrintFile(filename); err != nil {
+				if err := indentAndPrintFile(tag, filename); err != nil {
 					return err
 				}
 			}
@@ -265,9 +259,9 @@ func generateChangelog(version string) error {
 }
 
 func pruneEmptyDirectories() error {
-	for sectionDir := range sections {
-		for stanzaDir := range stanzas {
-			err := mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, stanzaDir))
+	for sectionDir := range config.Sections {
+		for _, tag := range config.Tags {
+			err := mustPruneDirIfEmpty(filepath.Join(entriesDir, sectionDir, tag))
 			if err != nil {
 				return err
 			}
@@ -278,7 +272,7 @@ func pruneEmptyDirectories() error {
 }
 
 // nolint: errcheck
-func indentAndPrintFile(filename string) error {
+func indentAndPrintFile(tag, filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -297,7 +291,7 @@ func indentAndPrintFile(filename string) error {
 
 		linkified := ghLinkRe.ReplaceAllString(line, ghLinkExpanded)
 		if firstLine {
-			fmt.Printf("* %s\n", linkified)
+			fmt.Printf("* (%s) %s\n", tag, linkified)
 			firstLine = false
 			continue
 		}
@@ -328,14 +322,16 @@ func writeEntryFile(filename string, bs []byte) error {
 	return nil
 }
 
-func validateSectionStanzaDirs(sectionDir, stanzaDir string) error {
-	if _, ok := sections[sectionDir]; !ok {
+func validateSectionStanzaDirs(sectionDir, tag string) error {
+	if _, ok := config.Sections[sectionDir]; !ok {
 		return fmt.Errorf("invalid section -- %s", sectionDir)
 	}
-	if _, ok := stanzas[stanzaDir]; !ok {
-		return fmt.Errorf("invalid stanza -- %s", stanzaDir)
+	for _, t := range config.Tags {
+		if t == tag {
+			return nil
+		}
 	}
-	return nil
+	return fmt.Errorf("invalid stanza -- %s", tag)
 }
 
 // nolint: errcheck
@@ -416,9 +412,12 @@ func mustPruneDirIfEmpty(path string) error {
 
 // DONTCOVER
 
-type Config struct {
-	Sections map[string]string `yaml:"sections"`
-	Stanzas  map[string]string `yaml:"stanzas"`
+func checkGetcwd() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cwd
 }
 
 func mustFindAndReadConfig(dir string) Config {

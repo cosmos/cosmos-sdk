@@ -27,6 +27,10 @@ type (
 	QueryValidatorSlashesParams      = keeper.QueryValidatorSlashesParams
 	QueryDelegationRewardsParams     = keeper.QueryDelegationRewardsParams
 	QueryDelegatorWithdrawAddrParams = keeper.QueryDelegatorWithdrawAddrParams
+
+	// querier response types
+	QueryDelegatorTotalRewardsResponse = types.QueryDelegatorTotalRewardsResponse
+	DelegationDelegatorReward          = types.DelegationDelegatorReward
 )
 
 const (

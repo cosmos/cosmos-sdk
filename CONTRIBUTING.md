@@ -18,7 +18,7 @@ contributors, the general procedure for contributing has been established:
        make a comment on the issue to inform the community of your intentions
        to begin work,
      4. follow standard github best practices: fork the repo, branch from the
-       tip of `develop`, make some commits, and submit a PR to `develop`,
+       top of `develop`, make some commits, and submit a PR to `develop`,
      5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code
@@ -32,12 +32,11 @@ taken place in a github issue, that PR runs a high likelihood of being rejected.
 
 Take a peek at our [coding repo](https://github.com/tendermint/coding) for
 overall information on repository workflow and standards. Note, we use `make
-get_dev_tools` and `make update_dev_tools` for installing the linting tools.
+tools` for installing the linting tools.
 
 Other notes:
   - Looking for a good place to start contributing? How about checking out some
-    [good first
-    issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+    [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
   - Please make sure to use `gofmt` before every commit - the easiest way to do
     this is have your editor run it for you upon saving a file. Additionally
     please ensure that your code is lint compliant by running `make lint`
@@ -67,9 +66,9 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
 
-* If your change relates to the core SDK (baseapp, store, ...), please update the docs/gaia folder, the docs/examples folder and possibly the docs/spec folder.
-* If your changes relate specifically to the gaia application (not including modules), please modify the docs/gaia folder.
-* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/gaia and/or docs/examples.
+* If your change relates to the core SDK (baseapp, store, ...), please update the docs/cosmos-hub folder and possibly the docs/spec folder.
+* If your changes relate specifically to the gaia application (not including modules), please modify the docs/cosmos-hub folder.
+* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/cosmos-hub.
 * If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
 
 ## Forking
@@ -85,11 +84,11 @@ For instance, to create a fork and work on a branch of it, I would:
   - Create the fork on github, using the fork button.
   - Go to the original repo checked out locally (i.e. `$GOPATH/src/github.com/cosmos/cosmos-sdk`)
   - `git remote rename origin upstream`
-  - `git remote add origin git@github.com:ebuchman/cosmos-sdk.git`
+  - `git remote add origin git@github.com:rigeyrigerige/cosmos-sdk.git`
 
 Now `origin` refers to my fork and `upstream` refers to the Cosmos-SDK version.
 So I can `git push -u origin master` to update my fork, and make pull requests to Cosmos-SDK from there.
-Of course, replace `ebuchman` with your git handle.
+Of course, replace `rigeyrigerige` with your git handle.
 
 To pull in updates from the origin repo, run
 
@@ -132,7 +131,7 @@ The idea is you should be able to see the
 error message and figure out exactly what failed.
 Here is an example check:
 
-```
+```go
 <some table>
 for tcIndex, tc := range cases {
   <some code>
@@ -140,7 +139,7 @@ for tcIndex, tc := range cases {
       <some code>
 			require.Equal(t, expectedTx[:32], calculatedTx[:32],
 				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
- ```
+```
 
 ## Branching Model and Release
 

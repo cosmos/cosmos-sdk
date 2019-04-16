@@ -107,6 +107,10 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 // NewResponseFormatBroadcastTxCommit returns a TxResponse given a
 // ResultBroadcastTxCommit from tendermint.
 func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	if res == nil {
+		return TxResponse{}
+	}
+
 	if !res.CheckTx.IsOK() {
 		return newTxResponseCheckTx(res)
 	}

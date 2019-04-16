@@ -2100,7 +2100,9 @@ definitions:
       validator_address:
         $ref: "#/definitions/ValidatorAddress"
       reward:
-        $ref: "#/definitions/Coin"
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
   DelegatorTotalRewards:
     type: object
     properties:
@@ -2109,7 +2111,9 @@ definitions:
         items:
           $ref: "#/definitions/DelegationDelegatorReward"
       total:
-        $ref: "#/definitions/Coin"
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
   BaseReq:
     type: object
     properties:

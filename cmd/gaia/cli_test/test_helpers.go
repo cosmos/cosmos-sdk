@@ -66,8 +66,8 @@ type Fixtures struct {
 	ChainID       string
 	RPCAddr       string
 	Port          string
-	GDHome        string
-	GCLIHome      string
+	GaiadHome     string
+	GaiacliHome   string
 	P2PAddr       string
 	T             *testing.T
 }
@@ -94,8 +94,8 @@ func NewFixtures(t *testing.T) *Fixtures {
 		BuildDir:      buildDir,
 		GaiadBinary:   filepath.Join(buildDir, "gaiad"),
 		GaiacliBinary: filepath.Join(buildDir, "gaiacli"),
-		GDHome:        filepath.Join(tmpDir, ".gaiad"),
-		GCLIHome:      filepath.Join(tmpDir, ".gaiacli"),
+		GaiadHome:     filepath.Join(tmpDir, ".gaiad"),
+		GaiacliHome:   filepath.Join(tmpDir, ".gaiacli"),
 		RPCAddr:       servAddr,
 		P2PAddr:       p2pAddr,
 		Port:          port,
@@ -104,7 +104,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 
 // GenesisFile returns the path of the genesis file
 func (f Fixtures) GenesisFile() string {
-	return filepath.Join(f.GDHome, "config", "genesis.json")
+	return filepath.Join(f.GaiadHome, "config", "genesis.json")
 }
 
 // GenesisFile returns the application's genesis state
@@ -164,7 +164,7 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 // Cleanup is meant to be run at the end of a test to clean up an remaining test state
 func (f *Fixtures) Cleanup(dirs ...string) {
-	clean := append(dirs, f.GDHome, f.GCLIHome)
+	clean := append(dirs, f.GaiadHome, f.GaiacliHome)
 	for _, d := range clean {
 		err := os.RemoveAll(d)
 		require.NoError(f.T, err)
@@ -173,7 +173,7 @@ func (f *Fixtures) Cleanup(dirs ...string) {
 
 // Flags returns the flags necessary for making most CLI calls
 func (f *Fixtures) Flags() string {
-	return fmt.Sprintf("--home=%s --node=%s", f.GCLIHome, f.RPCAddr)
+	return fmt.Sprintf("--home=%s --node=%s", f.GaiacliHome, f.RPCAddr)
 }
 
 //___________________________________________________________________________________
@@ -181,16 +181,16 @@ func (f *Fixtures) Flags() string {
 
 // UnsafeResetAll is gaiad unsafe-reset-all
 func (f *Fixtures) UnsafeResetAll(flags ...string) {
-	cmd := fmt.Sprintf("%s --home=%s unsafe-reset-all", f.GaiadBinary, f.GDHome)
+	cmd := fmt.Sprintf("%s --home=%s unsafe-reset-all", f.GaiadBinary, f.GaiadHome)
 	executeWrite(f.T, addFlags(cmd, flags))
-	err := os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
+	err := os.RemoveAll(filepath.Join(f.GaiadHome, "config", "gentx"))
 	require.NoError(f.T, err)
 }
 
 // GDInit is gaiad init
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("%s init -o --home=%s %s", f.GaiadBinary, f.GDHome, moniker)
+	cmd := fmt.Sprintf("%s init -o --home=%s %s", f.GaiadBinary, f.GaiadHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 
 	var chainID string
@@ -207,25 +207,25 @@ func (f *Fixtures) GDInit(moniker string, flags ...string) {
 
 // AddGenesisAccount is gaiad add-genesis-account
 func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, flags ...string) {
-	cmd := fmt.Sprintf("%s add-genesis-account %s %s --home=%s", f.GaiadBinary, address, coins, f.GDHome)
+	cmd := fmt.Sprintf("%s add-genesis-account %s %s --home=%s", f.GaiadBinary, address, coins, f.GaiadHome)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags))
 }
 
 // GenTx is gaiad gentx
 func (f *Fixtures) GenTx(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s gentx --name=%s --home=%s --home-client=%s", f.GaiadBinary, name, f.GDHome, f.GCLIHome)
+	cmd := fmt.Sprintf("%s gentx --name=%s --home=%s --home-client=%s", f.GaiadBinary, name, f.GaiadHome, f.GaiacliHome)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // CollectGenTxs is gaiad collect-gentxs
 func (f *Fixtures) CollectGenTxs(flags ...string) {
-	cmd := fmt.Sprintf("%s collect-gentxs --home=%s", f.GaiadBinary, f.GDHome)
+	cmd := fmt.Sprintf("%s collect-gentxs --home=%s", f.GaiadBinary, f.GaiadHome)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // GDStart runs gaiad start with the appropriate flags and returns a process
 func (f *Fixtures) GDStart(flags ...string) *tests.Process {
-	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GaiadBinary, f.GDHome, f.RPCAddr, f.P2PAddr)
+	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GaiadBinary, f.GaiadHome, f.RPCAddr, f.P2PAddr)
 	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
 	tests.WaitForTMStart(f.Port)
 	tests.WaitForNextNBlocksTM(1, f.Port)
@@ -234,7 +234,7 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 
 // GDTendermint returns the results of gaiad tendermint [query]
 func (f *Fixtures) GDTendermint(query string) string {
-	cmd := fmt.Sprintf("%s tendermint %s --home=%s", f.GaiadBinary, query, f.GDHome)
+	cmd := fmt.Sprintf("%s tendermint %s --home=%s", f.GaiadBinary, query, f.GaiadHome)
 	success, stdout, stderr := executeWriteRetStdStreams(f.T, cmd)
 	require.Empty(f.T, stderr)
 	require.True(f.T, success)
@@ -243,7 +243,7 @@ func (f *Fixtures) GDTendermint(query string) string {
 
 // ValidateGenesis runs gaiad validate-genesis
 func (f *Fixtures) ValidateGenesis() {
-	cmd := fmt.Sprintf("%s validate-genesis --home=%s", f.GaiadBinary, f.GDHome)
+	cmd := fmt.Sprintf("%s validate-genesis --home=%s", f.GaiadBinary, f.GaiadHome)
 	executeWriteCheckErr(f.T, cmd)
 }
 
@@ -252,31 +252,31 @@ func (f *Fixtures) ValidateGenesis() {
 
 // KeysDelete is gaiacli keys delete
 func (f *Fixtures) KeysDelete(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s keys delete --home=%s %s", f.GaiacliBinary, f.GCLIHome, name)
+	cmd := fmt.Sprintf("%s keys delete --home=%s %s", f.GaiacliBinary, f.GaiacliHome, name)
 	executeWrite(f.T, addFlags(cmd, append(append(flags, "-y"), "-f")))
 }
 
 // KeysAdd is gaiacli keys add
 func (f *Fixtures) KeysAdd(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s keys add --home=%s %s", f.GaiacliBinary, f.GCLIHome, name)
+	cmd := fmt.Sprintf("%s keys add --home=%s %s", f.GaiacliBinary, f.GaiacliHome, name)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // KeysAddRecover prepares gaiacli keys add --recover
 func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
-	cmd := fmt.Sprintf("%s keys add --home=%s --recover %s", f.GaiacliBinary, f.GCLIHome, name)
+	cmd := fmt.Sprintf("%s keys add --home=%s --recover %s", f.GaiacliBinary, f.GaiacliHome, name)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
 }
 
 // KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
 func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
-	cmd := fmt.Sprintf("%s keys add --home=%s --recover %s --account %d --index %d", f.GaiacliBinary, f.GCLIHome, name, account, index)
+	cmd := fmt.Sprintf("%s keys add --home=%s --recover %s --account %d --index %d", f.GaiacliBinary, f.GaiacliHome, name, account, index)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
 }
 
 // KeysShow is gaiacli keys show
 func (f *Fixtures) KeysShow(name string, flags ...string) keys.KeyOutput {
-	cmd := fmt.Sprintf("%s keys show --home=%s %s", f.GaiacliBinary, f.GCLIHome, name)
+	cmd := fmt.Sprintf("%s keys show --home=%s %s", f.GaiacliBinary, f.GaiacliHome, name)
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var ko keys.KeyOutput
 	err := clientkeys.UnmarshalJSON([]byte(out), &ko)
@@ -297,7 +297,7 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 
 // CLIConfig is gaiacli config
 func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
-	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.GaiacliBinary, f.GCLIHome, key, value)
+	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.GaiacliBinary, f.GaiacliHome, key, value)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags))
 }
 

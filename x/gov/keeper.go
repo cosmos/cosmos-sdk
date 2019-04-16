@@ -5,7 +5,6 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -56,11 +55,11 @@ type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
 	paramSpace params.Subspace
 
-	// The reference to the CoinKeeper to modify balances
+	// The reference to the BankKeeper to modify balances
 	ck BankKeeper
 
-	// The reference to the TokenHolder to hold the deposit and burn amounts
-	th bank.TokenHolder
+	// The reference to the SupplyKeeper to hold deposits
+	sk SupplyKeeper
 
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
@@ -86,12 +85,13 @@ type Keeper struct {
 // CONTRACT: Token Holder needs to be added into the bank keeper before calling
 // this function
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, ck BankKeeper, tokenHolder bank.TokenHolder, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+	paramSpace params.Subspace, bk BankKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
-		ck:           ck,
+		ck:           bk,
+		sk:           sk,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
@@ -386,7 +386,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// request coins for the governance token holder
-	err := keeper.ck.RequestTokens(ctx, keeper.th.GetModuleName(), depositAmount)
+	err := keeper.sk.RequestTokens(ctx, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -430,14 +430,14 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.ck.RelinquishTokens(ctx, ModuleName, deposit.Amount)
+		err := keeper.sk.RelinquishTokens(ctx, ModuleName, deposit.Amount)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 
 		_, err = keeper.ck.AddCoins(ctx, deposit.Depositor, deposit.Amount)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 
 		store.Delete(depositsIterator.Key())
@@ -454,9 +454,9 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// Burn deposits; TODO: consider sending to community pool
-		err := keeper.ck.RelinquishTokens(ctx, ModuleName, deposit.Amount)
+		err := keeper.sk.RelinquishTokens(ctx, ModuleName, deposit.Amount)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 
 		store.Delete(depositsIterator.Key())

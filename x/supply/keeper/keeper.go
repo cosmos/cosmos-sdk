@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-// Keeper defines the k of the supply store
+// Keeper defines the keeper of the supply store
 type Keeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey

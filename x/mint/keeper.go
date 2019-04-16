@@ -20,26 +20,27 @@ const (
 	QuerierRoute = StoreKey
 )
 
-// keeper of the staking store
+// Keeper defines the keeper of the minting store
 type Keeper struct {
-	storeKey   sdk.StoreKey
-	cdc        *codec.Codec
-	paramSpace params.Subspace
-	bk         BankKeeper
-	sk         StakingKeeper
-	fck        FeeCollectionKeeper
+	storeKey     sdk.StoreKey
+	cdc          *codec.Codec
+	paramSpace   params.Subspace
+	supplyKeeper SupplyKeeper
+	sk           StakingKeeper
+	fck          FeeCollectionKeeper
 }
 
+// NewKeeper creates a new mint Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
-	paramSpace params.Subspace, bk BankKeeper, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
+	paramSpace params.Subspace, supplyKeeper SupplyKeeper, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		paramSpace: paramSpace.WithKeyTable(ParamKeyTable()),
-		bk:         bk,
-		sk:         sk,
-		fck:        fck,
+		storeKey:     key,
+		cdc:          cdc,
+		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
+		supplyKeeper: supplyKeeper,
+		sk:           sk,
+		fck:          fck,
 	}
 	return keeper
 }
@@ -54,7 +55,7 @@ var (
 	ParamStoreKeyParams = []byte("params")
 )
 
-// ParamTable for staking module
+// ParamKeyTable for minting module
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(
 		ParamStoreKeyParams, Params{},

@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var (
@@ -42,14 +43,22 @@ type GenesisState struct {
 	GovData      gov.GenesisState      `json:"gov"`
 	CrisisData   crisis.GenesisState   `json:"crisis"`
 	SlashingData slashing.GenesisState `json:"slashing"`
+	SupplyData   supply.GenesisState   `json:"slashing"`
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
-func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
+// NewGenesisState creates a new Gaia genesis state instance
+func NewGenesisState(
+	accounts []GenesisAccount,
+	authData auth.GenesisState,
 	bankData bank.GenesisState,
-	stakingData staking.GenesisState, mintData mint.GenesisState,
-	distrData distr.GenesisState, govData gov.GenesisState, crisisData crisis.GenesisState,
-	slashingData slashing.GenesisState) GenesisState {
+	stakingData staking.GenesisState,
+	mintData mint.GenesisState,
+	distrData distr.GenesisState,
+	govData gov.GenesisState,
+	crisisData crisis.GenesisState,
+	slashingData slashing.GenesisState,
+	supplyData supply.GenesisState) GenesisState {
 
 	return GenesisState{
 		Accounts:     accounts,
@@ -61,6 +70,7 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 		GovData:      govData,
 		CrisisData:   crisisData,
 		SlashingData: slashingData,
+		SupplyData:   supplyData,
 	}
 }
 
@@ -188,8 +198,8 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 	circulatingSupply, vestingSupply, notBondedSupply, bondedSupply :=
 		supplyFromGenAccounts(genesisState.Accounts, genesisState.StakingData.Params.BondDenom)
-	genesisState.BankData.Supplier.CirculatingSupply = circulatingSupply
-	genesisState.BankData.Supplier.VestingSupply = vestingSupply
+	genesisState.SupplyData.Supplier.CirculatingSupply = circulatingSupply
+	genesisState.SupplyData.Supplier.VestingSupply = vestingSupply
 	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
 	genesisState.StakingData.Pool.BondedTokens = bondedSupply
 	genesisState.GenTxs = appGenTxs
@@ -248,8 +258,11 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := crisis.ValidateGenesis(genesisState.CrisisData); err != nil {
 		return err
 	}
+	if err := slashing.ValidateGenesis(genesisState.SlashingData); err != nil {
+		return err
+	}
 
-	return slashing.ValidateGenesis(genesisState.SlashingData)
+	return supply.ValidateGenesis(genesisState.SupplyData)
 }
 
 // validateGenesisStateAccounts performs validation of genesis accounts. It

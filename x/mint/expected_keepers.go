@@ -2,12 +2,12 @@ package mint
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// BankKeeper defines the expected bank keeper
-type BankKeeper interface {
-	GetSupplier(ctx sdk.Context) bank.Supplier
+// SupplyKeeper defines the expected supply keeper
+type SupplyKeeper interface {
+	GetSupplier(ctx sdk.Context) supply.Supplier
 	InflateSupply(ctx sdk.Context, amt sdk.Coins)
 }
 

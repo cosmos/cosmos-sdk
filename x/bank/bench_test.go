@@ -17,8 +17,6 @@ func getBenchmarkMockApp() (*mock.App, error) {
 
 	RegisterCodec(mapp.Cdc)
 	bankKeeper := NewBaseKeeper(
-		mapp.Cdc,
-		sdk.NewKVStoreKey(StoreKey),
 		mapp.AccountKeeper,
 		mapp.ParamsKeeper.Subspace(DefaultParamspace),
 		DefaultCodespace,

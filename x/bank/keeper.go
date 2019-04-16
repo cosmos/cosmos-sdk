@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/tags"
@@ -34,25 +33,19 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	cdc        *codec.Codec
-	storeKey   sdk.StoreKey
 	ak         auth.AccountKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(
-	cdc *codec.Codec,
-	key sdk.StoreKey,
 	ak auth.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(ParamKeyTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, key, ak, ps, codespace),
-		cdc:            cdc,
-		storeKey:       key,
+		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,
 		paramSpace:     ps,
 	}
@@ -152,25 +145,20 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
 	BaseViewKeeper
-	cdc        *codec.Codec
-	storeKey   sdk.StoreKey
+
 	ak         auth.AccountKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(
-	cdc *codec.Codec,
-	key sdk.StoreKey,
 	ak auth.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(cdc, key, ak, codespace),
-		cdc:            cdc,
-		storeKey:       key,
+		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
 		ak:             ak,
 		paramSpace:     paramSpace,
 	}
@@ -216,22 +204,16 @@ type ViewKeeper interface {
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc       *codec.Codec
-	storeKey  sdk.StoreKey
 	ak        auth.AccountKeeper
 	codespace sdk.CodespaceType
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(
-	cdc *codec.Codec,
-	key sdk.StoreKey,
 	ak auth.AccountKeeper,
 	codespace sdk.CodespaceType,
 ) BaseViewKeeper {
 	return BaseViewKeeper{
-		cdc:       cdc,
-		storeKey:  key,
 		ak:        ak,
 		codespace: codespace,
 	}

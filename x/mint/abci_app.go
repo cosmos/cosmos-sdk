@@ -20,6 +20,6 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	// mint coins, add to collected fees, update supply
 	mintedCoin := minter.BlockProvision(params)
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
-	k.bk.InflateSupply(ctx, sdk.Coins{mintedCoin})
+	k.supplyKeeper.InflateSupply(ctx, sdk.Coins{mintedCoin})
 	k.sk.InflateNotBondedTokenSupply(ctx, mintedCoin.Amount) // TODO: verify invariance with bank bond denom supply
 }

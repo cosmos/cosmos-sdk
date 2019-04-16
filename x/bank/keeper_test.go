@@ -20,7 +20,6 @@ import (
 type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
-	key sdk.StoreKey
 	ak  auth.AccountKeeper
 	pk  params.Keeper
 }
@@ -51,7 +50,7 @@ func setupTestInput() testInput {
 
 	ak.SetParams(ctx, auth.DefaultParams())
 
-	return testInput{ctx: ctx, ak: ak, pk: pk}
+	return testInput{cdc: cdc, ctx: ctx, ak: ak, pk: pk}
 }
 
 func TestKeeper(t *testing.T) {

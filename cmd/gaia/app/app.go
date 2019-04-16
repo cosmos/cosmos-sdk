@@ -64,6 +64,7 @@ type GaiaApp struct {
 	bankKeeper          bank.Keeper
 	stakingKeeper       staking.Keeper
 	slashingKeeper      slashing.Keeper
+	supplyKeeper        supply.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
@@ -114,11 +115,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		app.paramsKeeper.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,
 	)
-	// app.supplyKeeper = supply.NewKeeper(
-	// 	app.accountKeeper,
-	// 	app.paramsKeeper.Subspace(bank.DefaultParamspace),
-	// 	bank.DefaultCodespace,
-	// )
+	app.supplyKeeper = supply.NewKeeper(
+		app.cdc,
+		app.keySupply,
+	)
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
 		app.cdc,
 		app.keyFeeCollection,
@@ -146,6 +146,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
+	// TODO: add holder account for gov module
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
@@ -171,7 +172,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper, app.stakingKeeper)
 	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper)
 
-	// register message routes
+	// register transaction messages routes
 	app.Router().
 		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
@@ -180,6 +181,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 		AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper)).
 		AddRoute(crisis.RouterKey, crisis.NewHandler(app.crisisKeeper))
 
+	// register query routes
 	app.QueryRouter().
 		AddRoute(auth.QuerierRoute, auth.NewQuerier(app.accountKeeper)).
 		AddRoute(distr.QuerierRoute, distr.NewQuerier(app.distrKeeper)).
@@ -287,6 +289,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	crisis.InitGenesis(ctx, app.crisisKeeper, genesisState.CrisisData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
+	supply.InitGenesis(ctx, app.supplyKeeper, genesisState.SupplyData)
 
 	// validate genesis state
 	if err := GaiaValidateGenesisState(genesisState); err != nil {

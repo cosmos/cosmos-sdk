@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -38,6 +39,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 		gov.DefaultGenesisState(),
 		crisis.DefaultGenesisState(),
 		slashing.DefaultGenesisState(),
+		supply.DefaultGenesisState(),
 	)
 
 	stateBytes, err := codec.MarshalJSONIndent(gapp.cdc, genesisState)

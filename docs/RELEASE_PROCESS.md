@@ -1,6 +1,6 @@
 ### `cosmos/cosmos-sdk` Release Process
 
-Unless otherwise stated, all of the following tasks will be undertaken by the release manager/coordinator
+Unless otherwise stated, all of the following tasks will be undertaken by the release manager/coordinator:
 
 - [ ] 1. Decide on release designation (are we doing a patch, or minor version bump)
 - [ ] 2. Ensure that all commits/PRs which are destined for this release are merged to the `master` branch

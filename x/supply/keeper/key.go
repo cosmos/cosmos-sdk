@@ -1,8 +1,8 @@
-package bank
+package keeper
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "bank"
+	ModuleName = "supply"
 
 	// StoreKey is the default store key for supply
 	StoreKey = ModuleName

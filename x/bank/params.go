@@ -5,8 +5,10 @@ import (
 )
 
 const (
+	// ModuleName is the name of the module
+	ModuleName = "bank"
 	// DefaultParamspace for params keeper
-	DefaultParamspace = "bank"
+	DefaultParamspace = ModuleName
 	// DefaultSendEnabled enabled
 	DefaultSendEnabled = true
 )

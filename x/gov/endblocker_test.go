@@ -18,7 +18,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
 
 	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -64,7 +63,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
 
 	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -124,7 +122,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
 
 	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -170,7 +167,6 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(keeper)
 
 	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)

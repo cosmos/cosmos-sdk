@@ -6,6 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// define consts for inflatoin
+const (
+	InflateCirculating = "circulating"
+	InflateVesting     = "vesting"
+	InflateHolders     = "holders"
+)
+
 // Supplier represents the keeps track of the total supply amounts in the network
 type Supplier struct {
 	CirculatingSupply sdk.Coins `json:"circulating_supply"` // supply held by accounts that's not vesting
@@ -27,6 +34,25 @@ func NewSupplier(circulating, vesting, holders, total sdk.Coins) Supplier {
 // DefaultSupplier creates an empty Supplier
 func DefaultSupplier() Supplier {
 	return NewSupplier(sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{})
+}
+
+// Inflate returns the circulating supply of a coin denomination
+func (supplier *Supplier) Inflate(inflationType string, amt sdk.Coins) error {
+	switch inflationType {
+	case InflateCirculating:
+		supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amt)
+		break
+	case InflateHolders:
+		supplier.HoldersSupply = supplier.HoldersSupply.Add(amt)
+		break
+	case InflateVesting:
+		supplier.VestingSupply = supplier.VestingSupply.Add(amt)
+		break
+	default:
+		return fmt.Errorf("invalid type %s", inflationType)
+	}
+	supplier.TotalSupply = supplier.TotalSupply.Add(amt)
+	return nil
 }
 
 // CirculatingAmountOf returns the circulating supply of a coin denomination
@@ -71,6 +97,18 @@ func (supplier Supplier) ValidateBasic() sdk.Error {
 			fmt.Sprintf("invalid total supply: %s", supplier.TotalSupply.String()),
 		)
 	}
+
+	calculatedTotalSupply :=
+		supplier.CirculatingSupply.Add(supplier.VestingSupply).Add(supplier.HoldersSupply)
+
+	if !supplier.TotalSupply.IsEqual(calculatedTotalSupply) {
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("total supply ≠ calculated total supply: %s ≠ %s",
+				supplier.TotalSupply.String(), calculatedTotalSupply,
+			),
+		)
+	}
+
 	return nil
 }
 

@@ -44,6 +44,7 @@ func (k Keeper) SetSupplier(ctx sdk.Context, supplier types.Supplier) {
 func (k Keeper) InflateSupply(ctx sdk.Context, amount sdk.Coins) {
 	supplier := k.GetSupplier(ctx)
 	supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
+	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
 	k.SetSupplier(ctx, supplier)
 }
 
@@ -121,6 +122,7 @@ func (k Keeper) RequestTokens(
 	// update global supply held by token holders
 	supplier := k.GetSupplier(ctx)
 	supplier.HoldersSupply = supplier.HoldersSupply.Add(amount)
+	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
 
 	holder.SetHoldings(holder.GetHoldings().Add(amount))
 
@@ -156,6 +158,13 @@ func (k Keeper) RelinquishTokens(
 	if !ok {
 		panic("total holders supply should be greater than relinquished amount")
 	}
+
+	newTotalSupply, ok := supplier.TotalSupply.SafeSub(amount)
+	if !ok {
+		panic("total holders supply should be greater than relinquished amount")
+	}
+
+	supplier.TotalSupply = newTotalSupply
 	supplier.HoldersSupply = newHoldersSupply
 
 	holder.SetHoldings(newHoldings)

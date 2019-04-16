@@ -7,7 +7,7 @@ import (
 // RegisterCodec registers concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*TokenHolder)(nil), nil)
-	cdc.RegisterConcrete(&BaseTokenHolder{}, "bank/BaseTokenHolder", nil)
+	cdc.RegisterConcrete(&BaseTokenHolder{}, "supply/BaseTokenHolder", nil)
 }
 
 var msgCdc = codec.New()

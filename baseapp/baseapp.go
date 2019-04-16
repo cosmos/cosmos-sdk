@@ -919,7 +919,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	defer func() {
 		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
-			app.logger.Info("halting node", "height", app.haltHeight)
+			app.logger.Info("halting node per configuration", "height", app.haltHeight)
 			os.Exit(0)
 		}
 	}()

@@ -55,5 +55,5 @@ func ValidateGenesis(data GenesisState) error {
 			return fmt.Errorf(err.Error())
 		}
 	}
-
+	return nil
 }

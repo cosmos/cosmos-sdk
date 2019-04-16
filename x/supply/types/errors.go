@@ -11,8 +11,17 @@ type CodeType = sdk.CodeType
 const (
 	DefaultCodespace sdk.CodespaceType = "supply"
 
-	CodeUnknownTokenHolder CodeType = 550
+	CodeInvalidTokenHolder CodeType = 550
+	CodeUnknownTokenHolder CodeType = 551
 )
+
+// ErrInvalidTokenHolder is an error
+func ErrInvalidTokenHolder(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		return sdk.NewError(codespace, CodeInvalidTokenHolder, msg)
+	}
+	return sdk.NewError(codespace, CodeInvalidTokenHolder, "invalid token holder")
+}
 
 // ErrUnknownTokenHolder is an error
 func ErrUnknownTokenHolder(codespace sdk.CodespaceType, msg string) sdk.Error {

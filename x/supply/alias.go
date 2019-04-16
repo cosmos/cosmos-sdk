@@ -14,20 +14,8 @@ type (
 
 // nolint
 var (
-	NewKeeper = keeper.NewKeeper
-
+	NewKeeper         = keeper.NewKeeper
 	GetTokenHolderKey = keeper.GetTokenHolderKey
-	GetSupplier       = keeper.GetSupplier
-	SetSupplier       = keeper.SetSupplier
-	InflateSupply     = keeper.InflateSupply
-	GetTokenHolders   = keeper.GetTokenHolders
-	GetTokenHolder    = keeper.GetTokenHolder
-	AddTokenHolder    = keeper.AddTokenHolder
-	GetTokenHolder    = keeper.GetTokenHolder
-	AddTokenHolder    = keeper.AddTokenHolder
-	SetTokenHolder    = keeper.SetTokenHolder
-	RequestTokens     = keeper.RequestTokens
-	RelinquishTokens  = keeper.RelinquishTokens
 )
 
 // nolint

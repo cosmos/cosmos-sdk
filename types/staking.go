@@ -104,7 +104,6 @@ type ValidatorSet interface {
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
 	TotalBondedTokens(Context) Int                      // total bonded tokens within the validator set
-	TotalTokens(Context) Int                            // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)

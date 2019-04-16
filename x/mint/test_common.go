@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 type testInput struct {
@@ -43,6 +44,7 @@ func newTestInput(t *testing.T) testInput {
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyMint := sdk.NewKVStoreKey(StoreKey)
 
 	ms := store.NewCommitMultiStore(db)
@@ -63,8 +65,10 @@ func newTestInput(t *testing.T) testInput {
 	stakingKeeper := staking.NewKeeper(
 		cdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply)
+
 	mintKeeper := NewKeeper(
-		cdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
+		cdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), supplyKeeper, &stakingKeeper, feeCollectionKeeper,
 	)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))

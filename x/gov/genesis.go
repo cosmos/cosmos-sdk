@@ -108,7 +108,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(err)
 	}
 
-	_, err = k.ck.AddTokenHolder(ctx, ModuleName)
+	_, err = k.sk.AddTokenHolder(ctx, ModuleName)
 	if err != nil {
 		panic(err)
 	}

@@ -80,10 +80,12 @@ func (k Keeper) GetTokenHolder(ctx sdk.Context, moduleName string) (
 
 // AddTokenHolder creates and sets a token holder instance to store
 func (k Keeper) AddTokenHolder(ctx sdk.Context, moduleName string) (
-	tokenHolder types.TokenHolder, err error) {
+	tokenHolder types.TokenHolder, err sdk.Error) {
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(GetTokenHolderKey(moduleName)) {
-		err = fmt.Errorf("token holder with module %s already exist", moduleName)
+		err = types.ErrInvalidTokenHolder(types.DefaultCodespace,
+			fmt.Sprintf("token holder with module %s already exist", moduleName),
+		)
 		return
 	}
 
@@ -130,7 +132,7 @@ func (k Keeper) RequestTokens(
 // RelinquishTokens hands over a portion of the module's holdings
 func (k Keeper) RelinquishTokens(
 	ctx sdk.Context, moduleName string, amount sdk.Coins,
-) error {
+) sdk.Error {
 	if !amount.IsValid() {
 		return sdk.ErrInvalidCoins("invalid provided relenquished amount")
 	}

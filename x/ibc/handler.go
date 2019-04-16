@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,10 +11,12 @@ func NewHandler(ibcm Mapper, ck BankKeeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgIBCTransfer:
 			return handleIBCTransferMsg(ctx, ibcm, ck, msg)
+
 		case MsgIBCReceive:
 			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
+
 		default:
-			errMsg := "Unrecognized IBC Msg type: " + msg.Type()
+			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

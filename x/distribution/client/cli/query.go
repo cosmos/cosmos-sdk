@@ -144,20 +144,25 @@ $ gaiacli query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			var resp []byte
-			var err error
 			if len(args) == 2 {
 				// query for rewards from a particular delegation
-				resp, err = common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
-			} else {
-				// query for delegator total rewards
-				resp, err = common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
+				resp, err := common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
+				if err != nil {
+					return err
+				}
+
+				var result sdk.DecCoins
+				cdc.MustUnmarshalJSON(resp, &result)
+				return cliCtx.PrintOutput(result)
 			}
+
+			// query for delegator total rewards
+			resp, err := common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
 			if err != nil {
 				return err
 			}
 
-			var result sdk.DecCoins
+			var result distr.QueryDelegatorTotalRewardsResponse
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},

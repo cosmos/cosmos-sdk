@@ -40,7 +40,7 @@ type GaiaApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
-	assertInvariantsBlockly bool
+	invCheckPeriod uint
 
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
@@ -70,7 +70,8 @@ type GaiaApp struct {
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, assertInvariantsBlockly bool,
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
+	invCheckPeriod uint,
 	baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 
 	cdc := MakeCodec()
@@ -81,6 +82,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	var app = &GaiaApp{
 		BaseApp:          bApp,
 		cdc:              cdc,
+		invCheckPeriod:   invCheckPeriod,
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
@@ -247,7 +249,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	validatorUpdates, endBlockerTags := staking.EndBlocker(ctx, app.stakingKeeper)
 	tags = append(tags, endBlockerTags...)
 
-	if app.assertInvariantsBlockly {
+	if app.invCheckPeriod != 0 && ctx.BlockHeight()%int64(app.invCheckPeriod) == 0 {
 		app.assertRuntimeInvariants()
 	}
 

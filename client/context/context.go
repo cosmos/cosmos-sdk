@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -292,7 +294,7 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", err
+			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")
 		}
 
 		return addr, "", nil

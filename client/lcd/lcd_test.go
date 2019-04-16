@@ -3,6 +3,7 @@ package lcd
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	dclcommon "github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -610,7 +612,9 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
+	bz, err := hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -645,7 +649,9 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
+	bz, err := hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -702,7 +708,9 @@ func TestVote(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
+	bz, err := hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -803,18 +811,24 @@ func TestProposalsQuery(t *testing.T) {
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID1 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID1)
+	bz, err := hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID2 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID2)
+	bz, err = hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit, fees)
 	var proposalID3 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID3)
+	bz, err = hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
@@ -991,9 +1005,10 @@ func TestDistributionFlow(t *testing.T) {
 	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
 
 	// Query delegator's rewards total
+	var delRewards disttypes.QueryDelegatorTotalRewardsResponse
 	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/rewards", operAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.NoError(t, json.Unmarshal([]byte(body), &delRewards))
 
 	// Query delegator's withdrawal address
 	var withdrawAddr string

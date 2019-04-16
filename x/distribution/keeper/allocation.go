@@ -12,7 +12,7 @@ import (
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
 
-	logger := ctx.Logger().With("module", "x/distribution")
+	logger := k.Logger(ctx)
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block

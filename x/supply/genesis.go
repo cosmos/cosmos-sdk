@@ -47,6 +47,13 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) GenesisState {
 // ValidateGenesis performs basic validation of bank genesis data returning an
 // error for any failed validation criteria.
 func ValidateGenesis(data GenesisState) error {
-	err := data.Supplier.ValidateBasic().Error()
-	return fmt.Errorf(err)
+	if err := data.Supplier.ValidateBasic(); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	for _, holder := range data.ModulesHoldings {
+		if err := holder.ValidateBasic(); err != nil {
+			return fmt.Errorf(err.Error())
+		}
+	}
+
 }

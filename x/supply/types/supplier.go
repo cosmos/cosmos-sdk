@@ -52,16 +52,24 @@ func (supplier Supplier) TotalAmountOf(denom string) sdk.Int {
 // ValidateBasic validates the Supply coins and returns error if invalid
 func (supplier Supplier) ValidateBasic() sdk.Error {
 	if !supplier.CirculatingSupply.IsValid() {
-		return sdk.ErrInvalidCoins(supplier.CirculatingSupply.String())
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid circulating supply: %s", supplier.CirculatingSupply.String()),
+		)
 	}
 	if !supplier.VestingSupply.IsValid() {
-		return sdk.ErrInvalidCoins(supplier.VestingSupply.String())
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid vesting supply: %s", supplier.VestingSupply.String()),
+		)
 	}
 	if !supplier.HoldersSupply.IsValid() {
-		return sdk.ErrInvalidCoins(supplier.HoldersSupply.String())
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid token holders supply: %s", supplier.HoldersSupply.String()),
+		)
 	}
 	if !supplier.TotalSupply.IsValid() {
-		return sdk.ErrInvalidCoins(supplier.TotalSupply.String())
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid total supply: %s", supplier.TotalSupply.String()),
+		)
 	}
 	return nil
 }

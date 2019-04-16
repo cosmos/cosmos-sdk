@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,8 +17,9 @@ type TokenHolder interface {
 
 	GetHoldings() sdk.Coins
 	SetHoldings(sdk.Coins)
-
 	GetHoldingsOf(string) sdk.Int
+
+	ValidateBasic() sdk.Error
 }
 
 //-----------------------------------------------------------------------------
@@ -56,4 +59,14 @@ func (bth *BaseTokenHolder) SetHoldings(amount sdk.Coins) {
 // GetHoldingsOf returns the a total coin denom holdings retained by a module
 func (bth BaseTokenHolder) GetHoldingsOf(denom string) sdk.Int {
 	return bth.Holdings.AmountOf(denom)
+}
+
+// ValidateBasic validates the held coins from a token holder
+func (bth BaseTokenHolder) ValidateBasic() sdk.Error {
+	if !bth.Holdings.IsValid() {
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid token holder %s coins: %s", bth.Module, bth.Holdings.String()),
+		)
+	}
+	return nil
 }

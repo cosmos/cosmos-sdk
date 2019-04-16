@@ -209,14 +209,8 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(
-	ak auth.AccountKeeper,
-	codespace sdk.CodespaceType,
-) BaseViewKeeper {
-	return BaseViewKeeper{
-		ak:        ak,
-		codespace: codespace,
-	}
+func NewBaseViewKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType) BaseViewKeeper {
+	return BaseViewKeeper{ak: ak, codespace: codespace}
 }
 
 // GetCoins returns the coins at the addr.

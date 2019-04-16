@@ -43,7 +43,7 @@ type GenesisState struct {
 	GovData      gov.GenesisState      `json:"gov"`
 	CrisisData   crisis.GenesisState   `json:"crisis"`
 	SlashingData slashing.GenesisState `json:"slashing"`
-	SupplyData   supply.GenesisState   `json:"slashing"`
+	SupplyData   supply.GenesisState   `json:"supply"`
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 

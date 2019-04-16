@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -269,7 +270,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	)
 
 	totalRewards := types.NewQueryDelegatorTotalRewardsResponse(delRewards, total)
-	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
+	bz, err := json.Marshal(totalRewards)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

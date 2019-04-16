@@ -6,7 +6,7 @@
 
 众所周知，基于 cosmos-sdk 的应用程序的存储包含多个子库。 每个子目录由 IAVL 存储实现。 这些子组件由简单的 Merkle 树组成。 创建树时，我们需要从这些子库中提取名字、高度和存储根哈希以构建一组简单的 Merkle 叶节点，然后计算从叶节点到根的哈希。 简单 Merkle 树的根哈希是 AppHash，它将包含在块头中。
 
-![Simple Merkle Tree](./pics/simpleMerkleTree.png)
+![Simple Merkle Tree](../../../../clients/lite/pics/simpleMerkleTree.png)
 
 正如我们在[LCD信任传播](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation)中所讨论的那样，可以通过检查针对可信验证人集的投票权来验证 AppHash。 这里我们只需要建立从 ABCI 状态到 AppHash 的证明。 证据包含两部分：
 
@@ -54,7 +54,7 @@ type KeyExistsProof struct {
 
 存在证据的数据结构如上所示。 构建和验证存在证明的过程如下所示：
 
-![Exist Proof](./pics/existProof.png)
+![Exist Proof](../../../../clients/lite/pics/existProof.png)
 
 构建证明的步骤：
 
@@ -78,11 +78,11 @@ type KeyExistsProof struct {
 
 众所周知，所有 IAVL 叶节点都按每个叶节点的密钥排序。 因此，我们可以在 IAVL 树的整个密钥集中计算出目标密钥的位置。 如下图所示，我们可以找到左键和右键。 如果我们可以证明左键和右键肯定存在，并且它们是相邻的节点，那么目标密钥肯定不存在。
 
-![Absence Proof1](./pics/absence1.png)
+![Absence Proof1](../../../../clients/lite/pics/absence1.png)
 
 如果目标密钥大于最右边的叶节点或小于最左边的叶子节点，则目标密钥肯定不存在。
 
-![Absence Proof2](./pics/absence2.png)![Absence Proof3](./pics/absence3.png)
+![Absence Proof2](../../../../clients/lite/pics/absence2.png)![Absence Proof3](../../../../clients/lite/pics/absence3.png)
 
 ```go
 type proofLeafNode struct {
@@ -128,7 +128,7 @@ type KeyAbsentProof struct {
 
 在验证了 IAVL 证明之后，我们就可以开始验证针对 AppHash 的 substore 证明。 首先，迭代 MultiStoreCommitInfo 并通过证明 StoreName 找到 substore commitID。 验证 commitID 中的哈希是否等于证明根哈希，如果不相等则证明无效。 然后通过 substore name 的哈希对 substore commitInfo 数组进行排序。 最后，使用所有 substore commitInfo 数组构建简单的 Merkle 树，并验证 Merkle 根哈希值是否等于appHash。
 
-![substore proof](./pics/substoreProof.png)
+![substore proof](../../../../clients/lite/pics/substoreProof.png)
 
 ```go
 func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {
@@ -166,13 +166,13 @@ func SimpleHashFromHashes(hashes [][]byte) []byte {
 
 上面的小节中经常提到 appHash，但可信的appHash来自哪里？ 实际上，appHash 存在于区块头中，因此接下来我们需要针对 LCD 可信验证人集验证特定高度的区块头。 验证流程如下所示：
 
-![commit verification](./pics/commitValidation.png)
+![commit verification](../../../../clients/lite/pics/commitValidation.png)
 
 当可信验证人集与区块头不匹配时，我们需要尝试将验证人集更新为此块的高度。 LCD 有一条规则，即每个验证人集的变化不应超过1/3投票权。 如果目标验证人集的投票权变化超过1/3，则与可信验证人集进行比较。 我们必须验证，在目标验证人集之前是否存在隐含的验证人集变更。 只有当所有验证人集变更都遵循这条规则时，才能完成验证人集的更新。
 
 例如：
 
-![Update validator set to height](./pics/updateValidatorToHeight.png)
+![Update validator set to height](../../../../clients/lite/pics/updateValidatorToHeight.png)
 
 * 更新到 10000，失败，变更太大
 * 更新到 5050，失败，变更太大

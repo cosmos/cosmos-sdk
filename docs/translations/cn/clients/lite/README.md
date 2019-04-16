@@ -16,7 +16,7 @@ Cosmos SDK 轻节点（Gaia-lite）分为两个独立的组件。 第一个组�
 
 想要为 Cosmos Hub（或任何其他 zone）构建第三方客户端应用程序的应用程序开发人员，应根据其规范 API 构建。 该API 是多个部分的组合。 所有 zone 都必须暴露ICS0（TendermintAPI）。 除此之外，任何 zone 都可以自由选择模块 API的任意组合，具体取决于状态机使用的模块。 Cosmos Hub最初将支持[ICS0](https://cosmos.network/rpc/#/ICS0) (TendermintAPI)、 [ICS1](https://cosmos.network/rpc/#/ICS1) (KeyAPI)、 [ICS20](https://cosmos.network/rpc/#/ICS20) (TokenAPI)、 [ICS21](https://cosmos.network/rpc/#/ICS21) (StakingAPI)、 [ICS22](https://cosmos.network/rpc/#/ICS22) (GovernanceAPI) 和 [ICS23](https://cosmos.network/rpc/#/ICS23) (SlashingAPI)。
 
-![high-level](./pics/high-level.png)
+![high-level](../../../../clients/lite/pics/high-level.png)
 
 预计所有应用程序仅依赖于 Gaia-lite 运行。 Gaia-lite 是唯一一款围绕 zone API 提供稳定性保证的软件。
 
@@ -49,12 +49,12 @@ Gaia-lite的基本设计理念遵循两个规则：
 
 原始的可信验证人集应该预先放置到其信任库中，通常这个验证人集来自 genesis 文件。 在运行时期间，如果 Gaia-lite 检测到不同的验证人集，它将验证它并将可信的验证人集保存到信任库中。
 
-![validator-set-change](./pics/validatorSetChange.png)
+![validator-set-change](../../../../clients/lite/pics/validatorSetChange.png)
 
 ### 信任传播
 
 从上面的小节中，我们了解了如何获得可信验证器集以及 LCD 如何跟踪验证人集演化。 验证人集是信任的基础，信任可以传播到其他区块链数据，例如块和交易。 传播架构如下所示：
 
-![change-process](./pics/trustPropagate.png)
+![change-process](../../../../clients/lite/pics/trustPropagate.png)
 
 通常，通过可信验证人集，轻客户端可以验证包含所有预提交数据和块头数据的每个提交块。 此时块哈希、数据哈希和应用哈希是可信的。 基于此和默克尔证明，所有交易数据和 ABCI 状态也可以被验证。

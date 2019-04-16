@@ -137,7 +137,7 @@ godocs:
 test: test_unit
 
 test_cli: build
-	@go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
+	@go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test -v
 
 test_ledger:
     # First test with mock

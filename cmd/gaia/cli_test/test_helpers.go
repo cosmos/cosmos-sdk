@@ -623,7 +623,7 @@ func (f *Fixtures) QuerySlashingParams() slashing.Params {
 
 // QuerySigningInfo returns the signing info for a validator
 func (f *Fixtures) QueryRewards(delAddr sdk.AccAddress, flags ...string) distribution.QueryDelegatorTotalRewardsResponse {
-	cmd := fmt.Sprintf("../../../build/gaiacli query distr rewards %s %s", delAddr, f.Flags())
+	cmd := fmt.Sprintf("%s query distr rewards %s %s", f.GaiacliBinary, delAddr, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 	cdc := app.MakeCodec()

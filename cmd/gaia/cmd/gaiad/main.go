@@ -60,7 +60,6 @@ func main() {
 		1, "Assert registered invariants every N blocks")
 	err := executor.Execute()
 	if err != nil {
-		// handle with #870
 		panic(err)
 	}
 }

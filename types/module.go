@@ -28,11 +28,10 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() Querier
 
-	//// genesis
-	//DefaultGenesisState() json.RawMessage
-	//ValidateGenesis(json.RawMessage) error
-	InitGenesis(Context, json.RawMessage) ([]abci.ValidatorUpdate, error)
-	//ExportGenesis(Context) json.RawMessage
+	// genesis
+	InitGenesis(Context, map[string]json.RawMessage) []abci.ValidatorUpdate
+	ValidateGenesis(map[string]json.RawMessage) error
+	ExportGenesis(Context) map[string]json.RawMessage
 
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
 	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
@@ -103,25 +102,25 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 	}
 }
 
-//// validate all genesis information
-//func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
-//for _, module := range mm.Modules {
-//err := module.ValidateGenesis(genesisDate[module.Name()])
-//if err != nil {
-//return err
-//}
-//}
-//return nil
-//}
+// validate all genesis information
+func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
+	for _, module := range mm.Modules {
+		err := module.ValidateGenesis(genesisDate[module.Name()])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-//// default genesis state for modules
-//func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
-//defaultGenesisState := make(map[string]json.RawMessage)
-//for _, module := range mm.Modules {
-//defaultGenesisState[module.Name()] = module.DefaultGenesisState()
-//}
-//return defaultGenesisState
-//}
+// default genesis state for modules
+func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
+	defaultGenesisState := make(map[string]json.RawMessage)
+	for _, module := range mm.Modules {
+		defaultGenesisState[module.Name()] = module.DefaultGenesisState()
+	}
+	return defaultGenesisState
+}
 
 func (mm *ModuleManager) moduleNames() (names []string) {
 	for _, module := range mm.Modules {
@@ -131,7 +130,7 @@ func (mm *ModuleManager) moduleNames() (names []string) {
 }
 
 // perform init genesis functionality for modules
-func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
+func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) []abci.ValidatorUpdate {
 	var moduleNames []string
 	if len(mm.OrderInitGenesis) > 0 {
 		moduleNames = mm.OrderInitGenesis
@@ -141,10 +140,7 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range moduleNames {
-		moduleValUpdates, err := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
-		if err != nil {
-			return []abci.ValidatorUpdate{}, err
-		}
+		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// overwrite validator updates if provided
 		if len(moduleValUpdates) > 0 {
@@ -154,20 +150,20 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 	return validatorUpdates, nil
 }
 
-//// perform export genesis functionality for modules
-//func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
-//var moduleNames []string
-//if len(mm.OrderExportGenesis) > 0 {
-//moduleNames = mm.OrderExportGenesis
-//} else {
-//moduleNames = mm.moduleNames()
-//}
+// perform export genesis functionality for modules
+func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
+	var moduleNames []string
+	if len(mm.OrderExportGenesis) > 0 {
+		moduleNames = mm.OrderExportGenesis
+	} else {
+		moduleNames = mm.moduleNames()
+	}
 
-//for _, moduleName := range moduleNames {
-//mm.Modules[moduleName].ExportGenesis(ctx)
-//}
-//return genesisData
-//}
+	for _, moduleName := range moduleNames {
+		mm.Modules[moduleName].ExportGenesis(ctx)
+	}
+	return genesisData
+}
 
 // perform begin block functionality for modules
 func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {

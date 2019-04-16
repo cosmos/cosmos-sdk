@@ -163,7 +163,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// TODO: slashing should really happen at EndBlocker.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
-	app.mm.SetOrderInitGenesis(crisis.ModuleName) // XXX this only is for invariant checks right now
+	app.mm.SetOrderInitGenesis(distr.ModuleName, staking.ModuleName, auth.ModuleName, bank.ModuleName,
+		slashing.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName)
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
@@ -207,25 +208,11 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
-	// initialize distribution (must happen before staking)
-	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
-
-	// load the initial staking information
-	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
-	if err != nil {
-		panic(err)
-	}
-
-	// initialize module-specific stores
-	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
-	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
-	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
-	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
-	crisis.InitGenesis(ctx, app.crisisKeeper, genesisState.CrisisData)
+	// initialize modules
+	validators := app.mm.InitGenesis(ctx, genesisState.Modules)
 
 	// validate genesis state
-	if err := GaiaValidateGenesisState(genesisState); err != nil {
+	if err := app.GaiaValidateGenesisState(genesisState); err != nil {
 		panic(err)
 	}
 
@@ -234,6 +221,14 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	return validators
+}
+
+// GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
+func (app *GaiaApp) GaiaValidateGenesisState(genesisState GenesisState) error {
+	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
+		return err
+	}
+	return app.mm.ValidateGenesis(genesisState.ModuleGenesis)
 }
 
 type deliverTxFn func([]byte) abci.ResponseDeliverTx
@@ -258,15 +253,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)
-
-	// XXX this is a temporary partial init-genesis implementation to allow for
-	// an invariance check for the crisis module
-	ctx = app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
-	dummyGenesisData := make(map[string]json.RawMessage)
-	_, err := app.mm.InitGenesis(ctx, dummyGenesisData)
-	if err != nil {
-		panic(err)
-	}
 
 	return abci.ResponseInitChain{
 		Validators: validators,

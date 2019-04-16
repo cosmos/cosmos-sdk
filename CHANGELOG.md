@@ -49,7 +49,7 @@
 
 #### Tendermint
 
-* [\#4029](https://github.com/cosmos/cosmos-sdk/issues/4029) Upgrade Tendermint to v0.31.3
+* [\#4107](https://github.com/cosmos/cosmos-sdk/issues/4107) Upgrade Tendermint to v0.31.4
 
 ### New features
 

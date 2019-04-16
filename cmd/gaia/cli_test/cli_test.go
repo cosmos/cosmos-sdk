@@ -436,7 +436,7 @@ func TestGaiaCLIQueryRewards(t *testing.T) {
 	genesisState.MintData.Minter.Inflation = inflationMin
 	genesisState.MintData.Params.InflationMin = inflationMin
 	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
-	genFile := filepath.Join(f.GDHome, "config", "genesis.json")
+	genFile := filepath.Join(f.GaiadHome, "config", "genesis.json")
 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 	require.NoError(t, err)
 	cdc := app.MakeCodec()

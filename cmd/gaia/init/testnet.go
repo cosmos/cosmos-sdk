@@ -237,6 +237,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		}
 
 		// TODO: Rename config file to server.toml as it's not particular to Gaia
+		// (REF: https://github.com/cosmos/cosmos-sdk/issues/4125).
 		gaiaConfigFilePath := filepath.Join(nodeDir, "config/gaiad.toml")
 		srvconfig.WriteConfigFile(gaiaConfigFilePath, gaiaConfig)
 	}

@@ -107,37 +107,26 @@ func addGenesisAccount(
 	acc := auth.NewBaseAccountWithAddress(addr)
 	acc.Coins = coins
 
-	if !vestingAmt.IsZero() {
-		var vacc auth.VestingAccount
-
-		bvacc := &auth.BaseVestingAccount{
-			BaseAccount:     &acc,
-			OriginalVesting: vestingAmt,
-			EndTime:         vestingEnd,
-		}
-
-		if bvacc.OriginalVesting.IsAllGT(acc.Coins) {
-			return appState, fmt.Errorf("vesting amount cannot be greater than total amount")
-		}
-		if vestingStart >= vestingEnd {
-			return appState, fmt.Errorf("vesting start time must before end time")
-		}
-
-		if vestingStart != 0 {
-			vacc = &auth.ContinuousVestingAccount{
-				BaseVestingAccount: bvacc,
-				StartTime:          vestingStart,
-			}
-		} else {
-			vacc = &auth.DelayedVestingAccount{
-				BaseVestingAccount: bvacc,
-			}
-		}
-
-		appState.Accounts = append(appState.Accounts, app.NewGenesisAccountI(vacc))
-	} else {
+	if vestingAmt.IsZero() {
 		appState.Accounts = append(appState.Accounts, app.NewGenesisAccount(&acc))
+		return appState, nil
 	}
 
+	bvacc := NewBaseVestingAccount(&acc, vestingAmt, sdk.NewCoins(), sdk.NewCoins(), vestingEnd)
+	if bvacc.OriginalVesting.IsAllGT(acc.Coins) {
+		return appState, fmt.Errorf("vesting amount cannot be greater than total amount")
+	}
+	if vestingStart >= vestingEnd {
+		return appState, fmt.Errorf("vesting start time must before end time")
+	}
+
+	var vacc auth.VestingAccount
+	if vestingStart != 0 {
+		vacc = NewContinuousVestingAccountRaw(vestingStart, bvacc)
+	} else {
+		vacc = NewDelayedVestingAccountRaw(bvacc)
+	}
+
+	appState.Accounts = append(appState.Accounts, app.NewGenesisAccountI(vacc))
 	return appState, nil
 }

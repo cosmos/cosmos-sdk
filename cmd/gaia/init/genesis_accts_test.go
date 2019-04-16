@@ -29,50 +29,25 @@ func TestAddGenesisAccount(t *testing.T) {
 	}{
 		{
 			"valid account",
-			args{
-				app.GenesisState{},
-				addr1,
-				sdk.NewCoins(),
-				sdk.NewCoins(),
-				0,
-				0,
-			},
+			args{app.GenesisState{}, addr1, sdk.NewCoins(), sdk.NewCoins(), 0, 0},
 			false,
 		},
 		{
 			"dup account",
-			args{
-				app.GenesisState{Accounts: []app.GenesisAccount{{Address: addr1}}},
-				addr1,
-				sdk.NewCoins(),
-				sdk.NewCoins(),
-				0,
-				0,
-			},
+			args{app.GenesisState{Accounts: []app.GenesisAccount{{Address: addr1}}},
+				addr1, sdk.NewCoins(), sdk.NewCoins(), 0, 0},
 			true,
 		},
 		{
 			"invalid vesting amount",
-			args{
-				app.GenesisState{},
-				addr1,
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
-				0,
-				0,
-			},
+			args{app.GenesisState{}, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0},
 			true,
 		},
 		{
 			"invalid vesting times",
-			args{
-				app.GenesisState{},
-				addr1,
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				1654668078,
-				1554668078,
-			},
+			args{app.GenesisState{}, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078},
 			true,
 		},
 	}

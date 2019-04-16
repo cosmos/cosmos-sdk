@@ -35,6 +35,18 @@ type printInfo struct {
 	AppMessage json.RawMessage `json:"app_message"`
 }
 
+func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
+	appMessage json.RawMessage) printInfo {
+
+	return printInfo{
+		Moniker:    moniker,
+		ChainID:    chainID,
+		NodeID:     nodeID,
+		GenTxsDir:  genTxsDir,
+		AppMessage: appMessage,
+	}
+}
+
 func displayInfo(cdc *codec.Codec, info printInfo) error {
 	out, err := codec.MarshalJSONIndent(cdc, info)
 	if err != nil {
@@ -69,11 +81,10 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 
 			config.Moniker = args[0]
 
-			var appState json.RawMessage
 			genFile := config.GenesisFile()
 
-			if appState, err = initializeEmptyGenesis(cdc, genFile, chainID,
-				viper.GetBool(flagOverwrite)); err != nil {
+			appState, err := initializeEmptyGenesis(cdc, genFile, chainID, viper.GetBool(flagOverwrite))
+			if err != nil {
 				return err
 			}
 

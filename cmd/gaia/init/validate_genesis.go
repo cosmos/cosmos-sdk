@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,11 +28,10 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				genesis = args[0]
 			}
 
-			//nolint
 			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
 
-			var genDoc *types.GenesisDoc
-			if genDoc, err = types.GenesisDocFromFile(genesis); err != nil {
+			var genDoc *tmtypes.GenesisDoc
+			if genDoc, err = tmtypes.GenesisDocFromFile(genesis); err != nil {
 				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 

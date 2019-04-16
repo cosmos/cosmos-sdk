@@ -17,12 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-const (
-	flagGenTxDir = "gentx-dir"
-)
+const flagGenTxDir = "gentx-dir"
 
 type initConfig struct {
 	ChainID   string
@@ -30,6 +27,16 @@ type initConfig struct {
 	Name      string
 	NodeID    string
 	ValPubKey crypto.PubKey
+}
+
+func newInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) initConfig {
+	return initConfig{
+		ChainID:   chainID,
+		GenTxsDir: genTxsDir,
+		Name:      name,
+		NodeID:    nodeID,
+		ValPubKey: valPubKey,
+	}
 }
 
 // nolint
@@ -78,32 +85,23 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func genAppStateFromConfig(
-	cdc *codec.Codec, config *cfg.Config, initCfg initConfig, genDoc types.GenesisDoc,
-) (appState json.RawMessage, err error) {
-
-	var (
-		appGenTxs       []auth.StdTx
-		persistentPeers string
-		genTxs          []json.RawMessage
-		jsonRawTx       json.RawMessage
-	)
+func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
+	initCfg initConfig, genDoc types.GenesisDoc) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
-	appGenTxs, persistentPeers, err = app.CollectStdTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc,
-	)
+	appGenTxs, persistentPeers, err := app.CollectStdTxs(
+		cdc, config.Moniker, initCfg.GenTxsDir, genDoc)
 	if err != nil {
-		return
+		return appState, err
 	}
 
-	genTxs = make([]json.RawMessage, len(appGenTxs))
+	genTxs := make([]json.RawMessage, len(appGenTxs))
 	config.P2P.PersistentPeers = persistentPeers
 
 	for i, stdTx := range appGenTxs {
-		jsonRawTx, err = cdc.MarshalJSON(stdTx)
+		jsonRawTx, err := cdc.MarshalJSON(stdTx)
 		if err != nil {
-			return
+			return appState, err
 		}
 		genTxs[i] = jsonRawTx
 	}
@@ -112,34 +110,10 @@ func genAppStateFromConfig(
 
 	appState, err = app.GaiaAppGenStateJSON(cdc, genDoc, genTxs)
 	if err != nil {
-		return
+		return appState, err
 	}
 
 	genDoc.AppState = appState
 	err = ExportGenesisFile(&genDoc, config.GenesisFile())
-	return
-}
-
-func newInitConfig(chainID, genTxsDir, name, nodeID string,
-	valPubKey crypto.PubKey) initConfig {
-
-	return initConfig{
-		ChainID:   chainID,
-		GenTxsDir: genTxsDir,
-		Name:      name,
-		NodeID:    nodeID,
-		ValPubKey: valPubKey,
-	}
-}
-
-func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
-	appMessage json.RawMessage) printInfo {
-
-	return printInfo{
-		Moniker:    moniker,
-		ChainID:    chainID,
-		NodeID:     nodeID,
-		GenTxsDir:  genTxsDir,
-		AppMessage: appMessage,
-	}
+	return appState, err
 }

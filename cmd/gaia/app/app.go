@@ -88,8 +88,7 @@ func MakeCodec() *codec.Codec {
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
 func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint,
-	baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
+	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 
 	cdc := MakeCodec()
 

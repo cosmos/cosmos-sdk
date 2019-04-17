@@ -51,16 +51,18 @@ type ModuleManager struct {
 func NewModuleManager(modules ...AppModule) *ModuleManager {
 
 	moduleMap := make(map[string]AppModule)
+	var modulesStr []string
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
+		modulesStr = append(modulesStr, module.Name())
 	}
 
 	return &ModuleManager{
 		Modules:            moduleMap,
-		OrderInitGenesis:   modules,
-		OrderExportGenesis: modules,
-		OrderBeginBlockers: modules,
-		OrderEndBlockers:   modules,
+		OrderInitGenesis:   modulesStr,
+		OrderExportGenesis: modulesStr,
+		OrderBeginBlockers: modulesStr,
+		OrderEndBlockers:   modulesStr,
 	}
 }
 

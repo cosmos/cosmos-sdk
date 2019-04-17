@@ -42,8 +42,7 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].DelegatorShares = valTokens.ToDec()
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	vals := InitGenesis(ctx, keeper, genesisState)
 
 	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
@@ -98,8 +97,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	}
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	vals := InitGenesis(ctx, keeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

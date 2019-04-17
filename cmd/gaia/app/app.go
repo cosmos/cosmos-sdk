@@ -48,6 +48,7 @@ func init() {
 		gov.AppModuleBasic{},
 		auth.AppModuleBasic{},
 		crisis.AppModuleBasic{},
+		mint.AppModuleBasic{},
 	)
 }
 

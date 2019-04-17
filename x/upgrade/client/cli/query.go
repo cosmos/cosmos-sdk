@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd creates a query sub-command for the upgrade module using cmdName as the name of the sub-command.
-func GetQueryCmd(cmdName string, storeName string, cdc *codec.Codec) *cobra.Command {
+// GetPlanCmd returns the query upgrade plan command
+func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   cmdName,
+		Use:   "plan",
 		Short: "get upgrade plan (if one exists)",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,6 +32,37 @@ func GetQueryCmd(cmdName string, storeName string, cdc *codec.Codec) *cobra.Comm
 				return err
 			}
 			return cliCtx.PrintOutput(plan)
+		},
+	}
+}
+
+// GetHeightCmd returns the height at which a completed upgrade was applied
+func GetHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "height [upgrade-name]",
+		Short: "get the height at which a completed upgrade was applied",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			name := args[0]
+
+			res, err := cliCtx.QueryStore([]byte(upgrade.DoneHeightKey(name)), storeName)
+			if err != nil {
+				return err
+			}
+
+			if len(res) == 0 {
+				return fmt.Errorf("no upgrade found")
+			}
+
+			var height int64
+			err = cdc.UnmarshalBinaryBare(res, &height)
+			if err != nil {
+				return err
+			}
+			fmt.Println(height)
+			return nil
 		},
 	}
 }

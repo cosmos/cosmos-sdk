@@ -2,9 +2,77 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+const (
+	// RouterKey defines the routing key for a ParameterChangeProposal
+	RouterKey = "params"
+
+	// ProposalTypeChange defines the type for a ParameterChangeProposal
+	ProposalTypeChange = "ParameterChange"
+)
+
+// TODO: Finish in subsequent PR
+//// Assert ParameterChangeProposal implements proposal.Content at compile-time
+//var _ proposal.Content = ParameterChangeProposal{}
+
+// ParameterChangeProposal defines a proposal which contains multiple parameter
+// changes.
+type ParameterChangeProposal struct {
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Changes     []ParamChange `json:"changes"`
+}
+
+func NewParameterChangeProposal(title string, description string, changes []ParamChange) ParameterChangeProposal {
+	return ParameterChangeProposal{title, description, changes}
+}
+
+// GetTitle returns the title of a parameter change proposal.
+func (pcp ParameterChangeProposal) GetTitle() string { return pcp.Title }
+
+// GetDescription returns the description of a parameter change proposal.
+func (pcp ParameterChangeProposal) GetDescription() string { return pcp.Description }
+
+// GetDescription returns the routing key of a parameter change proposal.
+func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of a parameter change proposal.
+func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
+
+func (pcp ParameterChangeProposal) ValidateBasic() sdk.Error {
+	// TODO: Finish in subsequent PR
+	//err := proposal.ValidateAbstract(DefaultCodespace, pc)
+	//if err != nil {
+	//	return err
+	//}
+	return ValidateChanges(pcp.Changes)
+}
+
+// String implements the Stringer interface.
+func (pcp ParameterChangeProposal) String() string {
+	var b strings.Builder
+
+	b.WriteString(fmt.Sprintf(`Parameter Change Proposal:
+  Title:       %s
+  Description: %s
+  Changes:
+`, pcp.Title, pcp.Description))
+
+	for _, pc := range pcp.Changes {
+		b.WriteString(fmt.Sprintf(`    Param Change:
+      Subspace: %s
+      Key:      %s
+      Subkey:   %X
+      Value:    %X
+`, pc.Subspace, pc.Key, pc.Subkey, pc.Value))
+	}
+
+	return b.String()
+}
 
 // ParamChange defines a parameter change.
 type ParamChange struct {
@@ -14,18 +82,18 @@ type ParamChange struct {
 	Value    []byte `json:"value"`
 }
 
-func NewParamChange(space, key string, subkey, value []byte) ParamChange {
-	return ParamChange{space, key, subkey, value}
+func NewParamChange(subspace, key string, subkey, value []byte) ParamChange {
+	return ParamChange{subspace, key, subkey, value}
 }
 
 // String implements the Stringer interface.
 func (pc ParamChange) String() string {
-	var subkey string
-	if len(pc.Subkey) != 0 {
-		subkey = fmt.Sprintf("(%s)", pc.Subkey)
-	}
-
-	return fmt.Sprintf("{%s/%s := %X} (%s)", pc.Key, subkey, pc.Value, pc.Subspace)
+	return fmt.Sprintf(`Param Change:
+  Subspace: %s
+  Key:      %s
+  Subkey:   %X
+  Value:    %X
+`, pc.Subspace, pc.Key, pc.Subkey, pc.Value)
 }
 
 // ValidateChange performs basic validation checks over a set of ParamChange. It

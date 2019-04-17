@@ -25,6 +25,7 @@ type (
 	Redelegations           = types.Redelegations
 	Params                  = types.Params
 	Pool                    = types.Pool
+	MultiStakingHooks       = types.MultiStakingHooks
 	MsgCreateValidator      = types.MsgCreateValidator
 	MsgEditValidator        = types.MsgEditValidator
 	MsgDelegate             = types.MsgDelegate
@@ -89,6 +90,7 @@ var (
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
+	NewMultiStakingHooks  = types.NewMultiStakingHooks
 
 	NewMsgCreateValidator = types.NewMsgCreateValidator
 	NewMsgEditValidator   = types.NewMsgEditValidator

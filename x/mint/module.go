@@ -3,6 +3,7 @@ package mint
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -10,15 +11,38 @@ import (
 // name of this module
 const ModuleName = "mint"
 
+// app module basics object
+type AppModuleBasic struct{}
+
+var _ sdk.AppModuleBasic = AppModuleBasic{}
+
+// module name
+func (AppModuleBasic) Name() string {
+	return ModuleName
+}
+
+// module name
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) string {
+	return RegisterCodec(cdc)
+}
+
+// module name
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+}
+
+//___________________________
 // app module
 type AppModule struct {
+	AppModuleBasic
 	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		keeper: keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 
@@ -49,8 +73,8 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // module init-genesis
-func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
+func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 // module validate genesis

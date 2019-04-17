@@ -26,10 +26,10 @@ type SendReq struct {
 	Amount  sdk.Coins    `json:"amount"`
 }
 
-var msgCdc = codec.New()
+var moduleCdc = codec.New()
 
 func init() {
-	bank.RegisterCodec(msgCdc)
+	bank.RegisterCodec(moduleCdc)
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address.

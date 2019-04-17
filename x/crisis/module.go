@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -12,8 +13,30 @@ import (
 // name of this module
 const ModuleName = "crisis"
 
+// app module basics object
+type AppModuleBasic struct{}
+
+var _ sdk.AppModuleBasic = AppModuleBasic{}
+
+// module name
+func (AppModuleBasic) Name() string {
+	return ModuleName
+}
+
+// module name
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) string {
+	return RegisterCodec(cdc)
+}
+
+// module name
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+}
+
+//___________________________
 // app module for bank
 type AppModule struct {
+	AppModuleBasic
 	keeper Keeper
 	logger log.Logger
 }
@@ -21,8 +44,9 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, logger log.Logger) AppModule {
 	return AppModule{
-		keeper: keeper,
-		logger: logger,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
+		logger:         logger,
 	}
 }
 
@@ -53,9 +77,9 @@ func (AppModule) QuerierRoute() string { return "" }
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module init-genesis
-func (a AppModule) InitGenesis(ctx sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
+func (a AppModule) InitGenesis(ctx sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
 	a.keeper.AssertInvariants(ctx, a.logger)
-	return []abci.ValidatorUpdate{}, nil
+	return []abci.ValidatorUpdate{}
 }
 
 // module validate genesis

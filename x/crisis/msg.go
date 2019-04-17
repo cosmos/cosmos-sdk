@@ -34,7 +34,7 @@ func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress { return []sdk.AccAd
 
 // GetSignBytes gets the sign bytes for the msg MsgVerifyInvariant
 func (msg MsgVerifyInvariant) GetSignBytes() []byte {
-	bz := MsgCdc.MustMarshalJSON(msg)
+	bz := moduleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 

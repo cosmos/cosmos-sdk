@@ -80,6 +80,7 @@ var (
 	KeyMaxValidators  = types.KeyMaxValidators
 	KeyBondDenom      = types.KeyBondDenom
 
+	ModuleCdc             = types.ModuleCdc
 	DefaultParams         = types.DefaultParams
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator

@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -13,11 +14,16 @@ type ModuleClients interface {
 	GetTxCmd() *cobra.Command
 }
 
+// AppModule is the standard form for basic non-dependant elements of an application module
+type AppModuleBasic interface {
+	Name() string
+	RegisterCodec(*codec.Codec)
+	DefaultGenesis() json.RawMessage
+}
+
 // AppModule is the standard form for an application module
 type AppModule interface {
-
-	// app name
-	Name() string
+	AppModuleBasic
 
 	// registers
 	RegisterInvariants(InvariantRouter)

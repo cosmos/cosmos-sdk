@@ -4,18 +4,42 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/codec"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// app module basics object
+type AppModuleBasic struct{}
+
+var _ sdk.AppModuleBasic = AppModuleBasic{}
+
+// module name
+func (AppModuleBasic) Name() string {
+	return ModuleName
+}
+
+// module name
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) string {
+	return RegisterCodec(cdc)
+}
+
+// module name
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+}
+
+//___________________________
 // app module
 type AppModule struct {
+	AppModuleBasic
 	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		keeper: keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 
@@ -52,14 +76,14 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // module init-genesis
-func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
+func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 // module validate genesis
 func (AppModule) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := moduleCdc.UnmarshalJSON(bz, &data)
+	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
@@ -69,7 +93,7 @@ func (AppModule) ValidateGenesis(bz json.RawMessage) error {
 // module export genesis
 func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, a.keeper)
-	return moduleCdc.MustMarshalJSON(gs)
+	return ModuleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

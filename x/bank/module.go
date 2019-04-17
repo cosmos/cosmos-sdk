@@ -3,6 +3,7 @@ package bank
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -11,8 +12,30 @@ import (
 // name of this module
 const ModuleName = "bank"
 
-// app module for bank
+// app module basics object
+type AppModuleBasic struct{}
+
+var _ sdk.AppModuleBasic = AppModuleBasic{}
+
+// module name
+func (AppModuleBasic) Name() string {
+	return ModuleName
+}
+
+// module name
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) string {
+	return RegisterCodec(cdc)
+}
+
+// module name
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+}
+
+//___________________________
+// app module
 type AppModule struct {
+	AppModuleBasic
 	keeper        Keeper
 	accountKeeper auth.AccountKeeper
 }
@@ -20,17 +43,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
 	return AppModule{
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
+		accountKeeper:  accountKeeper,
 	}
 }
 
 var _ sdk.AppModule = AppModule{}
-
-// module name
-func (AppModule) Name() string {
-	return ModuleName
-}
 
 // register invariants
 func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
@@ -54,8 +73,8 @@ func (AppModule) QuerierRoute() string { return "" }
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module init-genesis
-func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
-	return []abci.ValidatorUpdate{}, nil
+func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 // module validate genesis

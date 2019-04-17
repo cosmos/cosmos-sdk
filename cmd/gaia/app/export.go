@@ -37,7 +37,6 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteLis
 	genState := NewGenesisState(
 		accounts,
 		app.mm.ExportGenesis(ctx),
-		slashing.ExportGenesis(ctx, app.slashingKeeper),
 	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

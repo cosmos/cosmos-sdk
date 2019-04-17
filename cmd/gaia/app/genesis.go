@@ -12,12 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -28,10 +22,12 @@ type GenesisState struct {
 	GenTxs   []json.RawMessage          `json:"gentxs"`
 }
 
-func NewGenesisState(accounts []GenesisAccount, moduleGenesis map[string]json.RawMessage) GenesisState {
+// NewGenesisState creates a new GenesisState object
+func NewGenesisState(accounts []GenesisAccount, modules map[string]json.RawMessage, genTxs []json.RawMessage) GenesisState {
 	return GenesisState{
-		Accounts:      accounts,
-		ModuleGenesis: moduleGenesis,
+		Accounts: accounts,
+		Modules:  modules,
+		GenTxs:   genTxs,
 	}
 }
 
@@ -179,17 +175,24 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 
 // NewDefaultGenesisState generates the default state for gaia.
 func NewDefaultGenesisState() GenesisState {
+
+	moduleGS := make(map[string]json.RawMessage)
+	for _, mb := range moduleBasics {
+		moduleGS[mb.Name()] = mb.DefaultGenesisState(cdc)
+	}
+
 	return GenesisState{
-		Accounts:     nil,
-		AuthData:     auth.DefaultGenesisState(),
-		BankData:     bank.DefaultGenesisState(),
-		StakingData:  staking.DefaultGenesisState(),
-		MintData:     mint.DefaultGenesisState(),
-		DistrData:    distr.DefaultGenesisState(),
-		GovData:      gov.DefaultGenesisState(),
-		CrisisData:   crisis.DefaultGenesisState(),
-		SlashingData: slashing.DefaultGenesisState(),
-		GenTxs:       nil,
+		Accounts: nil,
+		Modules:  moduleGS,
+		//AuthData:     auth.DefaultGenesisState(),
+		//BankData:     bank.DefaultGenesisState(),
+		//StakingData:  staking.DefaultGenesisState(),
+		//MintData:     mint.DefaultGenesisState(),
+		//DistrData:    distr.DefaultGenesisState(),
+		//GovData:      gov.DefaultGenesisState(),
+		//CrisisData:   crisis.DefaultGenesisState(),
+		//SlashingData: slashing.DefaultGenesisState(),
+		GenTxs: nil,
 	}
 }
 

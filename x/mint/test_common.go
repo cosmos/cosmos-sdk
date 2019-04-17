@@ -27,14 +27,7 @@ type testInput struct {
 	mintKeeper Keeper
 }
 
-func createTestCodec() *codec.Codec {
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
 func newTestInput(t *testing.T) testInput {
-	cdc := createTestCodec()
 	db := dbm.NewMemDB()
 
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
@@ -56,15 +49,15 @@ func newTestInput(t *testing.T) testInput {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
-	feeCollectionKeeper := auth.NewFeeCollectionKeeper(cdc, keyFeeCollection)
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	paramsKeeper := params.NewKeeper(moduleCdc, keyParams, tkeyParams)
+	feeCollectionKeeper := auth.NewFeeCollectionKeeper(moduleCdc, keyFeeCollection)
+	accountKeeper := auth.NewAccountKeeper(moduleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	stakingKeeper := staking.NewKeeper(
-		cdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		moduleCdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 	mintKeeper := NewKeeper(
-		cdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
+		moduleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
 	)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
@@ -72,5 +65,5 @@ func newTestInput(t *testing.T) testInput {
 	mintKeeper.SetParams(ctx, DefaultParams())
 	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
 
-	return testInput{ctx, cdc, mintKeeper}
+	return testInput{ctx, moduleCdc, mintKeeper}
 }

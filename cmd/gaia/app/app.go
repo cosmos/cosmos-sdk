@@ -74,16 +74,35 @@ type GaiaApp struct {
 // custom tx codec
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
-	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distr.RegisterCodec(cdc)
-	slashing.RegisterCodec(cdc)
-	gov.RegisterCodec(cdc)
-	auth.RegisterCodec(cdc)
-	crisis.RegisterCodec(cdc)
+	//bank.RegisterCodec(cdc)
+	//staking.RegisterCodec(cdc)
+	//distr.RegisterCodec(cdc)
+	//slashing.RegisterCodec(cdc)
+	//gov.RegisterCodec(cdc)
+	//auth.RegisterCodec(cdc)
+	//crisis.RegisterCodec(cdc)
+
+	for _, mb := range moduleBasics {
+		mb.RegisterCodec(cdc)
+	}
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc
+}
+
+var moduleBasics []sdk.AppModuleBasics
+
+func init() {
+	moduleBasics := []sdk.AppModuleBasics{
+		bank.AppModuleBasics,
+		staking.AppModuleBasics,
+		distr.AppModuleBasics,
+		slashing.AppModuleBasics,
+		bank.AppModuleBasics,
+		gov.AppModuleBasics,
+		auth.AppModuleBasics,
+		crisis.AppModuleBasics,
+	}
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -147,7 +166,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		staking.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	app.mm = sdk.NewModuleManager(
-		auth.NewAppModule(app.accountKeeper),
+		auth.NewAppModule(app.accountKeeper, app.feeCollectionKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
 		distr.NewAppModule(app.distrKeeper),
@@ -228,7 +247,7 @@ func (app *GaiaApp) GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
-	return app.mm.ValidateGenesis(genesisState.ModuleGenesis)
+	return app.mm.ValidateGenesis(genesisState.Modules)
 }
 
 type deliverTxFn func([]byte) abci.ResponseDeliverTx

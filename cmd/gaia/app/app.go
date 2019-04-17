@@ -24,15 +24,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const (
-	appName = "GaiaApp"
+const appName = "GaiaApp"
+
+var (
+	// default home directories for gaiacli
+	DefaultCLIHome = os.ExpandEnv("$HOME/.gaiacli")
+
+	// default home directories for gaiad
+	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
+
+	// The ModuleBasicManager is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration
+	// and genesis verification.
+	mbm sdk.ModuleBasicManager
 )
 
-// default home directories for expected binaries
-var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaiacli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
-)
+func init() {
+	mbm = sdk.NewModuleBasicManager(
+		bank.AppModuleBasic{},
+		staking.AppModuleBasic{},
+		distr.AppModuleBasic{},
+		slashing.AppModuleBasic{},
+		bank.AppModuleBasic{},
+		gov.AppModuleBasic{},
+		auth.AppModuleBasic{},
+		crisis.AppModuleBasic{},
+	)
+}
 
 // Extended ABCI application
 type GaiaApp struct {
@@ -69,40 +87,6 @@ type GaiaApp struct {
 
 	// the module manager
 	mm *sdk.ModuleManager
-}
-
-// custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	//bank.RegisterCodec(cdc)
-	//staking.RegisterCodec(cdc)
-	//distr.RegisterCodec(cdc)
-	//slashing.RegisterCodec(cdc)
-	//gov.RegisterCodec(cdc)
-	//auth.RegisterCodec(cdc)
-	//crisis.RegisterCodec(cdc)
-
-	for _, mb := range moduleBasics {
-		mb.RegisterCodec(cdc)
-	}
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
-var moduleBasics []sdk.AppModuleBasics
-
-func init() {
-	moduleBasics := []sdk.AppModuleBasics{
-		bank.AppModuleBasics,
-		staking.AppModuleBasics,
-		distr.AppModuleBasics,
-		slashing.AppModuleBasics,
-		bank.AppModuleBasics,
-		gov.AppModuleBasics,
-		auth.AppModuleBasics,
-		crisis.AppModuleBasics,
-	}
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -179,7 +163,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// NOTE: during begin block slashing happens after distr.BeginBlocker so
 	// that there is nothing left over in the validator fee pool, so as to keep
 	// the CanWithdrawInvariant invariant.
-	// TODO: slashing should really happen at EndBlocker.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
 	app.mm.SetOrderInitGenesis(distr.ModuleName, staking.ModuleName, auth.ModuleName, bank.ModuleName,
@@ -202,7 +185,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 			cmn.Exit(err.Error())
 		}
 	}
-
 	return app
 }
 
@@ -231,23 +213,21 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	validators := app.mm.InitGenesis(ctx, genesisState.Modules)
 
 	// validate genesis state
-	if err := app.GaiaValidateGenesisState(genesisState); err != nil {
+	if err := GaiaValidateGenesisState(genesisState); err != nil {
 		panic(err)
 	}
-
 	if len(genesisState.GenTxs) > 0 {
 		validators = app.deliverGenTxs(ctx, genesisState.GenTxs, app.BaseApp.DeliverTx)
 	}
-
 	return validators
 }
 
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
-func (app *GaiaApp) GaiaValidateGenesisState(genesisState GenesisState) error {
+func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
-	return app.mm.ValidateGenesis(genesisState.Modules)
+	return mbm.ValidateGenesis(genesisState.Modules)
 }
 
 type deliverTxFn func([]byte) abci.ResponseDeliverTx
@@ -281,4 +261,14 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 // load a particular height
 func (app *GaiaApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
+}
+
+//_______________________________
+// custom tx codec
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	mbm.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
 }

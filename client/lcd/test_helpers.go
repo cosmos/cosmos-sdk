@@ -37,11 +37,13 @@ import (
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
@@ -281,39 +283,53 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.NoError(t, err)
 
 	// add some tokens to init accounts
+	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
 		accTokens := sdk.TokensFromTendermintPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
+		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	genesisState.Modules[staking.ModuleName] = stakingDataBz
 
+	// mint genesis
+	mintDataBz := genesisState.Modules[mint.ModuleName]
+	var mintData mint.GenesisState
+	cdc.MustUnmarshalJSON(mintDataBz, &mintData)
 	inflationMin := sdk.ZeroDec()
 	if minting {
 		inflationMin = sdk.MustNewDecFromStr("10000.0")
-		genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+		mintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
 	} else {
-		genesisState.MintData.Params.InflationMax = inflationMin
+		mintData.Params.InflationMax = inflationMin
 	}
-	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMin = inflationMin
+	mintData.Minter.Inflation = inflationMin
+	mintData.Params.InflationMin = inflationMin
+	mintDataBz = cdc.MustMarshalJSON(mintData)
+	genesisState.Modules[mint.ModuleName] = mintDataBz
 
 	// initialize crisis data
-	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	crisisDataBz := genesisState.Modules[crisis.ModuleName]
+	var crisisData crisis.GenesisState
+	cdc.MustUnmarshalJSON(crisisDataBz, &crisisData)
+	crisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	crisisDataBz = cdc.MustMarshalJSON(crisisData)
+	genesisState.Modules[crisis.ModuleName] = crisisDataBz
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {
-		require.Equal(t, sdk.MustNewDecFromStr("15000.0"),
-			genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"),
-			genesisState.MintData.Params.InflationMin)
+		require.Equal(t, sdk.MustNewDecFromStr("15000.0"), mintData.Params.InflationMax)
+		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), mintData.Minter.Inflation)
+		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), mintData.Params.InflationMin)
 	} else {
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMin)
+		require.Equal(t, sdk.ZeroDec(), mintData.Params.InflationMax)
+		require.Equal(t, sdk.ZeroDec(), mintData.Minter.Inflation)
+		require.Equal(t, sdk.ZeroDec(), mintData.Params.InflationMin)
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)

@@ -17,7 +17,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -62,7 +62,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
+			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 }
 
 func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
-	initCfg initConfig, genDoc types.GenesisDoc) (appState json.RawMessage, err error) {
+	initCfg initConfig, genDoc tmtypes.GenesisDoc) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectStdTxs(
@@ -140,12 +140,12 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 	// prepare a map of all accounts in genesis state to then validate
 	// against the validators addresses
-	var appState GenesisState
+	var appState app.GenesisState
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
 
-	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
+	addrMap := make(map[string]app.GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
 		acc := appState.Accounts[i]
 		addrMap[acc.Address.String()] = acc

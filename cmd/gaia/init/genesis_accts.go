@@ -112,7 +112,7 @@ func addGenesisAccount(
 		return appState, nil
 	}
 
-	bvacc := NewBaseVestingAccount(&acc, vestingAmt, sdk.NewCoins(), sdk.NewCoins(), vestingEnd)
+	bvacc := auth.NewBaseVestingAccount(&acc, vestingAmt, sdk.NewCoins(), sdk.NewCoins(), vestingEnd)
 	if bvacc.OriginalVesting.IsAllGT(acc.Coins) {
 		return appState, fmt.Errorf("vesting amount cannot be greater than total amount")
 	}
@@ -122,9 +122,9 @@ func addGenesisAccount(
 
 	var vacc auth.VestingAccount
 	if vestingStart != 0 {
-		vacc = NewContinuousVestingAccountRaw(vestingStart, bvacc)
+		vacc = auth.NewContinuousVestingAccountRaw(bvacc, vestingStart)
 	} else {
-		vacc = NewDelayedVestingAccountRaw(bvacc)
+		vacc = auth.NewDelayedVestingAccountRaw(bvacc)
 	}
 
 	appState.Accounts = append(appState.Accounts, app.NewGenesisAccountI(vacc))

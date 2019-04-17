@@ -127,7 +127,10 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		return genesisState, errors.New("there must be at least one genesis tx")
 	}
 
-	stakingData := genesisState.StakingData
+	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
+
 	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
@@ -148,14 +151,15 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 	for _, acc := range genesisState.Accounts {
 		for _, coin := range acc.Coins {
-			if coin.Denom == genesisState.StakingData.Params.BondDenom {
+			if coin.Denom == stakingData.Params.BondDenom {
 				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
 					Add(coin.Amount) // increase the supply
 			}
 		}
 	}
 
-	genesisState.StakingData = stakingData
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	genesisState.Modules[staking.ModuleName] = stakingDataBz
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil
@@ -175,24 +179,10 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 
 // NewDefaultGenesisState generates the default state for gaia.
 func NewDefaultGenesisState() GenesisState {
-
-	moduleGS := make(map[string]json.RawMessage)
-	for _, mb := range moduleBasics {
-		moduleGS[mb.Name()] = mb.DefaultGenesisState(cdc)
-	}
-
 	return GenesisState{
 		Accounts: nil,
-		Modules:  moduleGS,
-		//AuthData:     auth.DefaultGenesisState(),
-		//BankData:     bank.DefaultGenesisState(),
-		//StakingData:  staking.DefaultGenesisState(),
-		//MintData:     mint.DefaultGenesisState(),
-		//DistrData:    distr.DefaultGenesisState(),
-		//GovData:      gov.DefaultGenesisState(),
-		//CrisisData:   crisis.DefaultGenesisState(),
-		//SlashingData: slashing.DefaultGenesisState(),
-		GenTxs: nil,
+		Modules:  mbm.DefaultGenesis(),
+		GenTxs:   nil,
 	}
 }
 

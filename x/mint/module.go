@@ -22,13 +22,21 @@ func (AppModuleBasic) Name() string {
 }
 
 // module name
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) string {
-	return RegisterCodec(cdc)
-}
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
 // module name
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+}
+
+// module validate genesis
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+	var data GenesisState
+	err := moduleCdc.UnmarshalJSON(bz, &data)
+	if err != nil {
+		return err
+	}
+	return ValidateGenesis(data)
 }
 
 //___________________________
@@ -47,11 +55,6 @@ func NewAppModule(keeper Keeper) AppModule {
 }
 
 var _ sdk.AppModule = AppModule{}
-
-// module name
-func (AppModule) Name() string {
-	return ModuleName
-}
 
 // register invariants
 func (a AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
@@ -75,16 +78,6 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 // module init-genesis
 func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
-}
-
-// module validate genesis
-func (AppModule) ValidateGenesis(bz json.RawMessage) error {
-	var data GenesisState
-	err := moduleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
-	}
-	return ValidateGenesis(data)
 }
 
 // module export genesis

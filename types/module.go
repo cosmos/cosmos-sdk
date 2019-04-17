@@ -14,13 +14,51 @@ type ModuleClients interface {
 	GetTxCmd() *cobra.Command
 }
 
+//__________________________________________________________________________________________
 // AppModule is the standard form for basic non-dependant elements of an application module
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
 	DefaultGenesis() json.RawMessage
+	ValidateGenesis(json.RawMessage) error
 }
 
+// collections of AppModuleBasic
+type ModuleBasicManager []AppModuleBasic
+
+func NewModuleBasicManager(modules ...AppModuleBasic) ModuleBasicManager {
+	return modules
+}
+
+// RegisterCodecs registers all module codecs
+func (mbm ModuleBasicManager) RegisterCodec(cdc *codec.Codec) {
+	for _, mb := range mbm {
+		mb.RegisterCodec(cdc)
+	}
+}
+
+// Provided default genesis information for all modules
+func (mbm ModuleBasicManager) DefaultGenesis() map[string]json.RawMessage {
+	genesis := make(map[string]json.RawMessage)
+	for _, mb := range mbm {
+		genesis[mb.Name()] = mb.DefaultGenesis()
+	}
+	return genesis
+}
+
+// Provided default genesis information for all modules
+func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
+	for _, mb := range mbm {
+		if err := mb.ValidateGenesis(genesis[mb.Name()]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//XXX all properties
+
+//_________________________________________________________
 // AppModule is the standard form for an application module
 type AppModule interface {
 	AppModuleBasic
@@ -36,7 +74,6 @@ type AppModule interface {
 
 	// genesis
 	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
-	ValidateGenesis(json.RawMessage) error
 	ExportGenesis(Context) json.RawMessage
 
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
@@ -108,17 +145,6 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
 	}
-}
-
-// validate all genesis information
-func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
-	for _, module := range mm.Modules {
-		err := module.ValidateGenesis(genesisData[module.Name()])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 //// default genesis state for modules

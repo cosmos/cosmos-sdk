@@ -30,6 +30,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -127,7 +128,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			err = accountInGenesis(genesisState, key.GetAddress(), coins)
+			err = accountInGenesis(genesisState, key.GetAddress(), coins, cdc)
 			if err != nil {
 				return err
 			}
@@ -217,9 +218,13 @@ following delegation and commission default parameters:
 	return cmd
 }
 
-func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
+func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 	accountIsInGenesis := false
-	bondDenom := genesisState.StakingData.Params.BondDenom
+
+	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
+	bondDenom := stakingData.Params.BondDenom
 
 	// Check if the account is in genesis
 	for _, acc := range genesisState.Accounts {

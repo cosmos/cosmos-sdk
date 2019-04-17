@@ -24,10 +24,16 @@ type Keeper interface {
 	// upgrade or false if there is none
 	GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 
-	// SetDoShutdowner sets a custom shutdown function for the upgrade module. This shutdown
-	// function will be called during the BeginBlock method when an upgrade is required
-	// instead of panic'ing which is the default behavior
-	SetDoShutdowner(doShutdowner func(ctx sdk.Context, plan Plan))
+	// SetWillUpgrader sets a custom function to be run whenever an upgrade is scheduled. This
+	// can be used to notify the node that an upgrade will be happen in the future so that it
+	// can download any software ahead of time in the background.
+	// It does not indicate that an upgrade is happening now and should just be used for preparation,
+	// not the actual upgrade.
+	SetWillUpgrader(willUpgrader func(ctx sdk.Context, plan Plan))
+
+	// SetOnUpgrader sets a custom function to be called right before the chain halts and the
+	// upgrade needs to be applied. This can be used to initiate an automatic upgrade process.
+	SetOnUpgrader(onUpgrader func(ctx sdk.Context, plan Plan))
 
 	// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
 	// plans are cached in memory so the overhead of this method is trivial.
@@ -37,11 +43,12 @@ type Keeper interface {
 type keeper struct {
 	storeKey        sdk.StoreKey
 	cdc             *codec.Codec
-	doShutdowner    func(sdk.Context, Plan)
 	upgradeHandlers map[string]Handler
 	haveCache       bool
 	haveCachedPlan  bool
 	plan            Plan
+	willUpgrader    func(ctx sdk.Context, plan Plan)
+	onUpgrader      func(ctx sdk.Context, plan Plan)
 }
 
 const (
@@ -60,6 +67,14 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 
 func (keeper *keeper) SetUpgradeHandler(name string, upgradeHandler Handler) {
 	keeper.upgradeHandlers[name] = upgradeHandler
+}
+
+func (keeper *keeper) SetWillUpgrader(willUpgrader func(ctx sdk.Context, plan Plan)) {
+	keeper.willUpgrader = willUpgrader
+}
+
+func (keeper *keeper) SetOnUpgrader(onUpgrader func(ctx sdk.Context, plan Plan)) {
+	keeper.onUpgrader = onUpgrader
 }
 
 func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
@@ -114,10 +129,6 @@ func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 	return plan, true
 }
 
-func (keeper *keeper) SetDoShutdowner(doShutdowner func(ctx sdk.Context, plan Plan)) {
-	keeper.doShutdowner = doShutdowner
-}
-
 func upgradeDoneKey(name string) []byte {
 	return []byte(fmt.Sprintf("done/%s", name))
 }
@@ -131,6 +142,12 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		keeper.haveCachedPlan = found
 		keeper.plan = plan
 		keeper.haveCache = true
+		if found {
+			willUpgrader := keeper.willUpgrader
+			if willUpgrader != nil {
+				willUpgrader(ctx, keeper.plan)
+			}
+		}
 	}
 
 	if !keeper.haveCachedPlan {
@@ -152,12 +169,11 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", keeper.plan.Name, blockHeight, keeper.plan.Info))
-			doShutdowner := keeper.doShutdowner
-			if doShutdowner != nil {
-				doShutdowner(ctx, keeper.plan)
-			} else {
-				panic("UPGRADE REQUIRED!")
+			onUpgrader := keeper.onUpgrader
+			if onUpgrader != nil {
+				onUpgrader(ctx, keeper.plan)
 			}
+			panic("UPGRADE REQUIRED!")
 		}
 	}
 }

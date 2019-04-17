@@ -56,6 +56,22 @@ func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.Validat
 	return []abci.ValidatorUpdate{}, nil
 }
 
+// module validate genesis
+func (AppModule) ValidateGenesis(bz json.RawMessage) error {
+	var data GenesisState
+	err := moduleCdc.UnmarshalJSON(bz, &data)
+	if err != nil {
+		return err
+	}
+	return ValidateGenesis(data)
+}
+
+// module export genesis
+func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	gs := ExportGenesis(ctx, a.keeper)
+	return moduleCdc.MustMarshalJSON(gs)
+}
+
 // module begin-block
 func (a AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
 	BeginBlocker(ctx, req, a.keeper)

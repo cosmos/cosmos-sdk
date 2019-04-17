@@ -29,9 +29,9 @@ type AppModule interface {
 	NewQuerierHandler() Querier
 
 	// genesis
-	InitGenesis(Context, map[string]json.RawMessage) []abci.ValidatorUpdate
-	ValidateGenesis(map[string]json.RawMessage) error
-	ExportGenesis(Context) map[string]json.RawMessage
+	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
+	ValidateGenesis(json.RawMessage) error
+	ExportGenesis(Context) json.RawMessage
 
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
 	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
@@ -50,16 +50,18 @@ type ModuleManager struct {
 func NewModuleManager(modules ...AppModule) *ModuleManager {
 
 	moduleMap := make(map[string]AppModule)
+	var modulesStr []string
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
+		modulesStr = append(modulesStr, module.Name())
 	}
 
 	return &ModuleManager{
 		Modules:            moduleMap,
-		OrderInitGenesis:   modules,
-		OrderExportGenesis: modules,
-		OrderBeginBlockers: modules,
-		OrderEndBlockers:   modules,
+		OrderInitGenesis:   modulesStr,
+		OrderExportGenesis: modulesStr,
+		OrderBeginBlockers: modulesStr,
+		OrderEndBlockers:   modulesStr,
 	}
 }
 
@@ -105,7 +107,7 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 // validate all genesis information
 func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for _, module := range mm.Modules {
-		err := module.ValidateGenesis(genesisDate[module.Name()])
+		err := module.ValidateGenesis(genesisData[module.Name()])
 		if err != nil {
 			return err
 		}
@@ -113,14 +115,14 @@ func (mm *ModuleManager) ValidateGenesis(genesisData map[string]json.RawMessage)
 	return nil
 }
 
-// default genesis state for modules
-func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
-	defaultGenesisState := make(map[string]json.RawMessage)
-	for _, module := range mm.Modules {
-		defaultGenesisState[module.Name()] = module.DefaultGenesisState()
-	}
-	return defaultGenesisState
-}
+//// default genesis state for modules
+//func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
+//defaultGenesisState := make(map[string]json.RawMessage)
+//for _, module := range mm.Modules {
+//defaultGenesisState[module.Name()] = module.DefaultGenesisState()
+//}
+//return defaultGenesisState
+//}
 
 // perform init genesis functionality for modules
 func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) []abci.ValidatorUpdate {
@@ -135,12 +137,12 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 			validatorUpdates = moduleValUpdates
 		}
 	}
-	return validatorUpdates, nil
+	return validatorUpdates
 }
 
 // perform export genesis functionality for modules
 func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
-	moduleNames := mm.moduleNames()
+	moduleNames := mm.OrderExportGenesis
 
 	for _, moduleName := range moduleNames {
 		mm.Modules[moduleName].ExportGenesis(ctx)

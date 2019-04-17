@@ -12,13 +12,16 @@ const ModuleName = "auth"
 
 // app module object
 type AppModule struct {
-	accountKeeper AccountKeeper
+	accountKeeper       AccountKeeper
+	feeCollectionKeeper FeeCollectionKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) AppModule {
+func NewAppModule(accountKeeper AccountKeeper,
+	feeCollectionKeeper FeeCollectionKeeper) AppModule {
 	return AppModule{
-		accountKeeper: accountKeeper,
+		accountKeeper:       accountKeeper,
+		feeCollectionKeeper: feeCollectionKeeper,
 	}
 }
 
@@ -51,6 +54,22 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 // module init-genesis
 func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) ([]abci.ValidatorUpdate, error) {
 	return []abci.ValidatorUpdate{}, nil
+}
+
+// module validate genesis
+func (AppModule) ValidateGenesis(bz json.RawMessage) error {
+	var data GenesisState
+	err := moduleCdc.UnmarshalJSON(bz, &data)
+	if err != nil {
+		return err
+	}
+	return ValidateGenesis(data)
+}
+
+// module export genesis
+func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	gs := ExportGenesis(ctx, a.accountKeeper, a.feeCollectionKeeper)
+	return moduleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

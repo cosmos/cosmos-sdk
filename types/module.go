@@ -57,10 +57,10 @@ func NewModuleManager(modules ...AppModule) *ModuleManager {
 
 	return &ModuleManager{
 		Modules:            moduleMap,
-		OrderInitGenesis:   []string{},
-		OrderExportGenesis: []string{},
-		OrderBeginBlockers: []string{},
-		OrderEndBlockers:   []string{},
+		OrderInitGenesis:   modules,
+		OrderExportGenesis: modules,
+		OrderBeginBlockers: modules,
+		OrderEndBlockers:   modules,
 	}
 }
 
@@ -123,21 +123,9 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 //return defaultGenesisState
 //}
 
-func (mm *ModuleManager) moduleNames() (names []string) {
-	for _, module := range mm.Modules {
-		names = append(names, module.Name())
-	}
-	return names
-}
-
 // perform init genesis functionality for modules
 func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) ([]abci.ValidatorUpdate, error) {
-	var moduleNames []string
-	if len(mm.OrderInitGenesis) > 0 {
-		moduleNames = mm.OrderInitGenesis
-	} else {
-		moduleNames = mm.moduleNames()
-	}
+	moduleNames := mm.OrderInitGenesis
 
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range moduleNames {
@@ -156,12 +144,7 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 
 //// perform export genesis functionality for modules
 //func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
-//var moduleNames []string
-//if len(mm.OrderExportGenesis) > 0 {
-//moduleNames = mm.OrderExportGenesis
-//} else {
-//moduleNames = mm.moduleNames()
-//}
+//moduleNames := mm.OrderExportGenesis
 
 //for _, moduleName := range moduleNames {
 //mm.Modules[moduleName].ExportGenesis(ctx)
@@ -171,12 +154,7 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 
 // perform begin block functionality for modules
 func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	var moduleNames []string
-	if len(mm.OrderBeginBlockers) > 0 {
-		moduleNames = mm.OrderBeginBlockers
-	} else {
-		moduleNames = mm.moduleNames()
-	}
+	moduleNames := mm.OrderBeginBlockers
 
 	tags := EmptyTags()
 	for _, moduleName := range moduleNames {
@@ -191,12 +169,7 @@ func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abc
 
 // perform end block functionality for modules
 func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	var moduleNames []string
-	if len(mm.OrderEndBlockers) > 0 {
-		moduleNames = mm.OrderEndBlockers
-	} else {
-		moduleNames = mm.moduleNames()
-	}
+	moduleNames := mm.OrderEndBlockers
 
 	validatorUpdates := []abci.ValidatorUpdate{}
 	tags := EmptyTags()

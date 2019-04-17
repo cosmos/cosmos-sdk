@@ -120,7 +120,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
 			var (
 				vacc    auth.VestingAccount
-				endTime int
+				endTime int64
 			)
 
 			startTime := genesisTimestamp.Unix()
@@ -128,15 +128,19 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			// Allow for some vesting accounts to vest very quickly while others very
 			// slowly.
 			if r.Intn(100) < 50 {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*24*30)))
+				endTime = int64(randIntBetween(r, int(startTime), int(startTime+(60*60*24*30))))
 			} else {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*12)))
+				endTime = int64(randIntBetween(r, int(startTime), int(startTime+(60*60*12))))
+			}
+
+			if startTime == endTime {
+				endTime += 1
 			}
 
 			if r.Intn(100) < 50 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, int64(endTime))
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, int64(endTime))
+				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
 			gacc = NewGenesisAccountI(vacc)

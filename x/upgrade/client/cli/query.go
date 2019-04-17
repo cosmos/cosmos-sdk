@@ -47,7 +47,7 @@ func GetHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			name := args[0]
 
-			res, err := cliCtx.QueryStore([]byte(upgrade.DoneHeightKey(name)), storeName)
+			res, err := cliCtx.QueryStore(upgrade.DoneHeightKey(name), storeName)
 			if err != nil {
 				return err
 			}

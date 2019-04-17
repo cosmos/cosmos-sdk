@@ -307,7 +307,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx send %s %s %v --from=%s", f.GaiacliBinary, to, amount, f.Flags(), from)
+	cmd := fmt.Sprintf("%s tx send %s %s %s %v", f.GaiacliBinary, from, to, amount, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
@@ -315,7 +315,7 @@ func (f *Fixtures) txSendWithConfirm(
 	from string, to sdk.AccAddress, amount sdk.Coin, confirm string, flags ...string,
 ) (bool, string, string) {
 
-	cmd := fmt.Sprintf("%s tx send %s %s %v --from=%s", f.GaiacliBinary, to, amount, f.Flags(), from)
+	cmd := fmt.Sprintf("%s tx send %s %s %s %v", f.GaiacliBinary, from, to, amount, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), confirm, client.DefaultKeyPass)
 }
 

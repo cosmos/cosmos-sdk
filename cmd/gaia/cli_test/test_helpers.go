@@ -339,8 +339,8 @@ func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, str
 
 // TxDecode is gaiacli tx decode
 func (f *Fixtures) TxDecode(tx string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("../../../build/gaiacli tx decode %s %v", tx, f.Flags())
-	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	cmd := fmt.Sprintf("%s tx decode %s %v", f.GaiacliBinary, tx, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // TxMultisign is gaiacli tx multisign

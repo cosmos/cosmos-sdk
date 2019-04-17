@@ -73,7 +73,7 @@ func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keepe
 	denom := Denom(path[0])
 	uintID, error := strconv.ParseUint(path[1], 10, 64)
 	if error != nil {
-		panic("could not parse TokenId string")
+		panic("could not parse TokenID string")
 	}
 	id := TokenID(uintID)
 
@@ -103,7 +103,7 @@ func queryMetadata(ctx sdk.Context, path []string, req abci.RequestQuery, k Keep
 	denom := Denom(path[0])
 	uintID, error := strconv.ParseUint(path[1], 10, 64)
 	if error != nil {
-		panic("could not parse TokenId string")
+		panic("could not parse TokenID string")
 	}
 	id := TokenID(uintID)
 

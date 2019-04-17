@@ -95,7 +95,7 @@ func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
 		}
 	}
 	store := ctx.KVStore(keeper.storeKey)
-	if store.Has(upgradeDoneKey(plan.Name)) {
+	if store.Has(DoneHeightKey(plan.Name)) {
 		return sdk.ErrUnknownRequest(fmt.Sprintf("Upgrade with name %s has already been completed", plan.Name))
 	}
 	bz := keeper.cdc.MustMarshalBinaryBare(plan)
@@ -129,7 +129,8 @@ func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 	return plan, true
 }
 
-func upgradeDoneKey(name string) []byte {
+// DoneHeightKey returns a key that points to the height at which a past upgrade was applied
+func DoneHeightKey(name string) []byte {
 	return []byte(fmt.Sprintf("done/%s", name))
 }
 
@@ -165,7 +166,8 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 			keeper.ClearUpgradePlan(ctx)
 			// Mark this upgrade name as being done so the name can't be reused accidentally
 			store := ctx.KVStore(keeper.storeKey)
-			store.Set(upgradeDoneKey(keeper.plan.Name), []byte("1"))
+			bz := keeper.cdc.MustMarshalBinaryBare(blockHeight)
+			store.Set(DoneHeightKey(keeper.plan.Name), bz)
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", keeper.plan.Name, blockHeight, keeper.plan.Info))

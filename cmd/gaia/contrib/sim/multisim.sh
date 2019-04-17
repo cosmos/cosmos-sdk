@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ue
+
 go mod download
 
 seeds=(1 2 4 7 9 20 32 123 124 582 1893 2989 3012 4728 37827 981928 87821 891823782 989182 89182391 \
@@ -16,7 +18,17 @@ echo "Using genesis file $genesis"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
 echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
-trap 'kill $(jobs -pr)' SIGINT SIGTERM
+cleanup() {
+  local l_children
+  l_children=$(ps -o pid= --ppid $$)
+  echo "Stopping children ["${l_children}"] ..." >&2
+  kill -SIGSTOP ${l_children} || true
+  echo "Terminating children ["${l_children}"] ..." >&2
+  kill -TERM ${l_children} || true
+  exit 0
+}
+
+trap cleanup SIGINT SIGTERM
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"

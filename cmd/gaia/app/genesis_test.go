@@ -32,8 +32,12 @@ var (
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
 	appState := NewDefaultGenesisState()
-	stakingData := appState.StakingData
 	genAccs := make([]GenesisAccount, len(genTxs))
+
+	cdc := MakeCodec()
+	stakingDataBz := appState.Modules[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 
 	for i, genTx := range genTxs {
 		msgs := genTx.GetMsgs()
@@ -45,6 +49,8 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		genAccs[i] = NewGenesisAccount(&acc)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(sdk.NewInt(150)) // increase the supply
 	}
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	appState.Modules[staking.ModuleName] = stakingDataBz
 
 	// create the final app state
 	appState.Accounts = genAccs
@@ -112,6 +118,7 @@ func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 func TestGaiaGenesisValidation(t *testing.T) {
 	genTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk2)}
 	dupGenTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk1)}
+	cdc := MakeCodec()
 
 	// require duplicate accounts fails validation
 	genesisState := makeGenesisState(t, dupGenTxs)
@@ -133,7 +140,13 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	val1 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #2", "", "", ""))
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
-	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
+
+	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
+	stakingData.Validators = append(stakingData.Validators, val1)
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	genesisState.Modules[staking.ModuleName] = stakingDataBz
 	err = GaiaValidateGenesisState(genesisState)
 	require.Error(t, err)
 
@@ -141,8 +154,12 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	val1.Jailed = false
 	genesisState = makeGenesisState(t, genTxs)
 	val2 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #3", "", "", ""))
-	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
-	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
+	stakingDataBz = genesisState.Modules[staking.ModuleName]
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
+	stakingData.Validators = append(stakingData.Validators, val1)
+	stakingData.Validators = append(stakingData.Validators, val2)
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	genesisState.Modules[staking.ModuleName] = stakingDataBz
 	err = GaiaValidateGenesisState(genesisState)
 	require.Error(t, err)
 }

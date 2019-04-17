@@ -179,11 +179,7 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 
 // NewDefaultGenesisState generates the default state for gaia.
 func NewDefaultGenesisState() GenesisState {
-	return GenesisState{
-		Accounts: nil,
-		Modules:  mbm.DefaultGenesis(),
-		GenTxs:   nil,
-	}
+	return NewGenesisState(nil, mbm.DefaultGenesis(), nil)
 }
 
 // validateGenesisStateAccounts performs validation of genesis accounts. It

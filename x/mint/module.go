@@ -76,7 +76,10 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // module init-genesis
-func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState GenesisState
+	moduleCdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, a.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

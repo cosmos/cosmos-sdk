@@ -93,9 +93,12 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	return genesis.AppState, newAccs, genesis.ChainID
 }
 
+// TODO refactor out random initialization code to the modules
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
 
 	var genesisAccounts []GenesisAccount
+	modulesGenesis := make(map[string]json.RawMessage)
+	cdc := MakeCodec()
 
 	amount := int64(r.Intn(1e12))
 	numInitiallyBonded := int64(r.Intn(250))
@@ -147,72 +150,66 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	authGenesis := auth.GenesisState{
-		Params: auth.Params{
-			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
-			TxSigLimit:             uint64(r.Intn(7) + 1),
-			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
-			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
-			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
-		},
-	}
+	authGenesis := auth.NewGenesisState(
+		nil,
+		auth.NewParams(
+			uint64(randIntBetween(r, 100, 200)),
+			uint64(r.Intn(7)+1),
+			uint64(randIntBetween(r, 5, 15)),
+			uint64(randIntBetween(r, 500, 1000)),
+			uint64(randIntBetween(r, 500, 1000)),
+		),
+	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
+	modulesGenesis[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	modulesGenesis[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second
-	govGenesis := gov.GenesisState{
-		StartingProposalID: uint64(r.Intn(100)),
-		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))},
-			MaxDepositPeriod: vp,
-		},
-		VotingParams: gov.VotingParams{
-			VotingPeriod: vp,
-		},
-		TallyParams: gov.TallyParams{
-			Quorum:    sdk.NewDecWithPrec(334, 3),
-			Threshold: sdk.NewDecWithPrec(5, 1),
-			Veto:      sdk.NewDecWithPrec(334, 3),
-		},
-	}
+	govGenesis := gov.NewGenesisState(
+		uint64(r.Intn(100)),
+		gov.NewDepositParams(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))), vp),
+		gov.NewVotingParams(vp),
+		gov.NewTallyParams(sdk.NewDecWithPrec(334, 3), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(334, 3)),
+	)
+	modulesGenesis[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
-	stakingGenesis := staking.GenesisState{
-		Pool: staking.InitialPool(),
-		Params: staking.Params{
-			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
-			MaxValidators: uint16(r.Intn(250) + 1),
-			BondDenom:     sdk.DefaultBondDenom,
-		},
-	}
+	stakingGenesis := staking.NewGenesisState(
+		staking.InitialPool(),
+		staking.NewParams(time.Duration(randIntBetween(r, 60, 60*60*24*3*2))*time.Second,
+			uint16(r.Intn(250)+1), 7, sdk.DefaultBondDenom),
+		nil,
+		nil,
+	)
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
 
-	slashingGenesis := slashing.GenesisState{
-		Params: slashing.Params{
-			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
-			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
-			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
-			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
-			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
-		},
-	}
+	slashingParams := slashing.NewParams(
+		stakingGenesis.Params.UnbondingTime,
+		int64(randIntBetween(r, 10, 1000)),
+		sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
+		time.Duration(randIntBetween(r, 60, 60*60*24))*time.Second,
+		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50)+1))),
+		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))),
+	)
+	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
-	mintGenesis := mint.GenesisState{
-		Minter: mint.InitialMinter(
+	mintGenesis := mint.NewGenesisState(
+		mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
-		Params: mint.NewParams(
+		mint.NewParams(
 			sdk.DefaultBondDenom,
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),
 			sdk.NewDecWithPrec(67, 2),
 			uint64(60*60*8766/5)),
-	}
+	)
+	modulesGenesis[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
 	var validators []staking.Validator
@@ -234,27 +231,20 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
+	modulesGenesis[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
+	// TODO make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
 		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 	}
+	modulesGenesis[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 
-	genesis := GenesisState{
-		Accounts:     genesisAccounts,
-		AuthData:     authGenesis,
-		BankData:     bankGenesis,
-		StakingData:  stakingGenesis,
-		MintData:     mintGenesis,
-		DistrData:    distrGenesis,
-		SlashingData: slashingGenesis,
-		GovData:      govGenesis,
-	}
-
 	// Marshal genesis
+	genesis := NewGenesisState(genesisAccounts, modulesGenesis, nil)
 	appState, err := MakeCodec().MarshalJSON(genesis)
 	if err != nil {
 		panic(err)

@@ -83,7 +83,10 @@ func (AppModule) QuerierRoute() string { return "" }
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module init-genesis
-func (a AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState GenesisState
+	moduleCdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, a.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

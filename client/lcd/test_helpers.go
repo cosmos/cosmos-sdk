@@ -297,10 +297,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
 	genesisState.Modules[staking.ModuleName] = stakingDataBz
 
-	// mint genesis
-	mintDataBz := genesisState.Modules[mint.ModuleName]
-	var mintData mint.GenesisState
-	cdc.MustUnmarshalJSON(mintDataBz, &mintData)
+	// mint genesis (none set within genesisState)
+	mintData := mint.DefaultGenesisState()
 	inflationMin := sdk.ZeroDec()
 	if minting {
 		inflationMin = sdk.MustNewDecFromStr("10000.0")
@@ -310,7 +308,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	}
 	mintData.Minter.Inflation = inflationMin
 	mintData.Params.InflationMin = inflationMin
-	mintDataBz = cdc.MustMarshalJSON(mintData)
+	mintDataBz := cdc.MustMarshalJSON(mintData)
 	genesisState.Modules[mint.ModuleName] = mintDataBz
 
 	// initialize crisis data

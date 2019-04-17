@@ -14,6 +14,17 @@ type GenesisState struct {
 	MissedBlocks map[string][]MissedBlock        `json:"missed_blocks"`
 }
 
+// NewGenesisState creates a new GenesisState object
+func NewGenesisState(params Params, signingInfos map[string]ValidatorSigningInfo,
+	missedBlocks map[string][]MissedBlock) GenesisState {
+
+	return GenesisState{
+		Params:       params,
+		SigningInfos: signingInfos,
+		MissedBlocks: missedBlocks,
+	}
+}
+
 // MissedBlock
 type MissedBlock struct {
 	Index  int64 `json:"index"`
@@ -66,10 +77,13 @@ func ValidateGenesis(data GenesisState) error {
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, validators []sdk.Validator) {
-	for _, validator := range validators {
-		keeper.addPubkey(ctx, validator.GetConsPubKey())
-	}
+func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper StakingKeeper, data GenesisState) {
+	stakingKeeper.IterateValidators(ctx,
+		func(index int64, validator sdk.Validator) bool {
+			keeper.addPubkey(ctx, validator.GetConsPubKey())
+			return false
+		},
+	)
 
 	for addr, info := range data.SigningInfos {
 		address, err := sdk.ConsAddressFromBech32(addr)

@@ -15,8 +15,8 @@ type GenesisState struct {
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
 	return GenesisState{
-		Params:        params,
 		CollectedFees: collectedFees,
+		Params:        params,
 	}
 }
 

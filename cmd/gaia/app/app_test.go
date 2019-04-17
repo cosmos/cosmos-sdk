@@ -4,20 +4,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -28,17 +20,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 		genaccs[i] = NewGenesisAccount(acc)
 	}
 
-	genesisState := NewGenesisState(
-		genaccs,
-		auth.DefaultGenesisState(),
-		bank.DefaultGenesisState(),
-		staking.DefaultGenesisState(),
-		mint.DefaultGenesisState(),
-		distr.DefaultGenesisState(),
-		gov.DefaultGenesisState(),
-		crisis.DefaultGenesisState(),
-		slashing.DefaultGenesisState(),
-	)
+	genesisState := NewGenesisState(genaccs, mbm.DefaultGenesis(), nil)
 
 	stateBytes, err := codec.MarshalJSONIndent(gapp.cdc, genesisState)
 	if err != nil {

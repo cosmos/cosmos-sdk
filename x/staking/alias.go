@@ -82,6 +82,7 @@ var (
 
 	ModuleCdc             = types.ModuleCdc
 	DefaultParams         = types.DefaultParams
+	NewParams             = types.NewParams
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription

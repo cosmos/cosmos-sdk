@@ -45,7 +45,6 @@ func init() {
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-		bank.AppModuleBasic{},
 		gov.AppModuleBasic{},
 		auth.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -156,7 +155,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		distr.NewAppModule(app.distrKeeper),
 		gov.NewAppModule(app.govKeeper),
 		mint.NewAppModule(app.mintKeeper),
-		slashing.NewAppModule(app.slashingKeeper),
+		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 	)
 

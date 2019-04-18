@@ -144,8 +144,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		app.bankKeeper, app.feeCollectionKeeper)
 
 	// register the staking hooks
-	// NOTE: The stakingKeeper above is passed by reference, so that it can be
-	// modified like below:
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.stakingKeeper = *stakingKeeper.SetHooks(
 		staking.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
@@ -248,7 +247,6 @@ func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage, del
 
 // custom logic for gaia initialization
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)

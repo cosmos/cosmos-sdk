@@ -36,7 +36,7 @@ f_spinner() {
 
 f_cleanup() {
   local l_children
-  l_children=$(ps -o pid= --ppid $$)
+  l_children=$(pgrep -P $$)
   echo "Stopping children ["${l_children}"] ..." >&2
   kill -SIGSTOP ${l_children} || true
   echo "Terminating children ["${l_children}"] ..." >&2

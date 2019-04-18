@@ -34,7 +34,7 @@ f_spinner() {
   done
 }
 
-cleanup() {
+f_cleanup() {
   local l_children
   l_children=$(ps -o pid= --ppid $$)
   echo "Stopping children ["${l_children}"] ..." >&2
@@ -44,7 +44,7 @@ cleanup() {
   exit 0
 }
 
-trap cleanup SIGINT SIGTERM
+trap f_cleanup SIGINT SIGTERM
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
@@ -52,11 +52,11 @@ echo "Using temporary log directory: $tmpdir"
 f_sim() {
   local l_seed
   l_seed=$1
-	echo "Running Gaia simulation with seed $seed. This may take awhile!"
-  file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
+	echo "Running Gaia simulation with seed $l_seed. This may take awhile!"
+  file="$tmpdir/gaia-simulation-seed-$l_seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
   echo "Writing stdout to $file..."
 	go test github.com/cosmos/cosmos-sdk/cmd/gaia/app -run $testname -SimulationEnabled=true -SimulationNumBlocks=$blocks -SimulationGenesis=$genesis \
-    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -SimulationPeriod=$period -v -timeout 24h > $file
+    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$l_seed -SimulationPeriod=$period -v -timeout 24h > $file
 }
 
 echo "Simulation processes spawned, waiting for completion..."

@@ -5,6 +5,7 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -70,6 +71,11 @@ func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
 	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
+
+	// XXX: Set the MsgCdc to the one provided which should have everything
+	// registered. This is because MsgSubmitProposal may contain Content which
+	// is implemented in any module.
+	types.MsgCdc = cdc
 
 	return Keeper{
 		storeKey:     key,

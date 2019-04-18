@@ -347,10 +347,7 @@ paths:
         200:
           description: The tx was successfully decoded
           schema:
-            type: object
-            properties:
-              tx:
-                $ref: "#/definitions/StdTx"
+            $ref: "#/definitions/StdTx"
         400:
           description: The tx was malformated
         500:

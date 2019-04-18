@@ -33,16 +33,24 @@ Here is an example handler for an upgrade named "my-fancy-upgrade":
 This upgrade handler performs the dual function of alerting the upgrade module that the named upgrade has been applied,
 as well as providing the opportunity for the upgraded software to perform any necessary state migrations.
 
-Default and Custom Shutdown Behavior
+Halt Behavior
 
-Before "crashing" the ABCI state machine in the BeginBlocker method, the upgrade module will log an error
+Before halting the ABCI state machine in the BeginBlocker method, the upgrade module will log an error
 that looks like:
 	UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
 where Name are Info are the values of the respective fields on the upgrade Plan.
 
-The default method for "crashing" the state machine is to panic with an error which will stop the state machine
-but usually not exit the process. This behavior can be overridden using the keeper's SetDoShutdowner method. A custom
-shutdown method could perform some other steps such as alerting another running process that an upgrade is needed,
-as well as crashing the program by another method such as os.Exit().
+To perform the actual halt of the blockchain, the upgrade keeper simply panic's which prevents the ABCI state machine
+from proceeding but doesn't actually exit the process. Exiting the process can cause issues for other nodes that start
+to lose connectivity with the exiting nodes, thus this module prefers to just halt but not exit.
+
+Will Upgrade and On Upgrade Callbacks
+
+The upgrade keeper has two methods for setting callbacks - SetWillUpgrader and SetOnUpgrader. The will upgrade
+callback will be called in the BeginBlocker of the first block after an upgrade is scheduled. The on upgrade callback
+will be called in the BeginBlocker at the block where an upgrade is needed right before the state machine is halted.
+The will upgrade callback can be used to notify some external process that an upgrade is needed so that it can
+prepare binaries, etc. The on upgrade callback can notify some external process to actually begin the upgrade process.
+
 */
 package upgrade

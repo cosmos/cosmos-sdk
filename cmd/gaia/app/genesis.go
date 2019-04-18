@@ -98,8 +98,13 @@ type GenesisAccount struct {
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
 	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
+
+	// module account fields
+	Module    string `json:"module"`     // name of the module
+	AllowMint bool   `json:"allow_mint"` // checks for module account type
 }
 
+// NewGenesisAccount creates a GenesisAccount instance from a BaseAccount
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.Address,
@@ -109,6 +114,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
+// NewGenesisAccountI creates a GenesisAccount instance from an Account interface
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
@@ -126,10 +132,20 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 		gacc.EndTime = vacc.GetEndTime()
 	}
 
+	macc, ok := acc.(auth.ModuleAccount)
+	if ok {
+		gacc.Module = macc.GetModuleName()
+		if err := macc.SetCoins(macc.GetCoins()); err == nil {
+			gacc.AllowMint = true
+		} else {
+			gacc.AllowMint = false
+		}
+	}
+
 	return gacc
 }
 
-// convert GenesisAccount to auth.BaseAccount
+// ToAccount converts a GenesisAccount to an Account interface
 func (ga *GenesisAccount) ToAccount() auth.Account {
 	bacc := &auth.BaseAccount{
 		Address:       ga.Address,
@@ -138,6 +154,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 		Sequence:      ga.Sequence,
 	}
 
+	// vesting accounts
 	if !ga.OriginalVesting.IsZero() {
 		baseVestingAcc := &auth.BaseVestingAccount{
 			BaseAccount:      bacc,
@@ -161,10 +178,18 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 		}
 	}
 
+	// module accounts
+	if ga.Module != "" {
+		if ga.AllowMint {
+			return auth.NewModuleMinterAccount(ga.Module)
+		}
+		return auth.NewModuleHolderAccount(ga.Module)
+	}
+
 	return bacc
 }
 
-// Create the core parameters for genesis initialization for gaia
+// GaiaAppGenState creates the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
 func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	genesisState GenesisState, err error) {
@@ -196,14 +221,8 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	circulatingSupply, vestingSupply, notBondedSupply, bondedSupply :=
-		supplyFromGenAccounts(genesisState.Accounts, genesisState.StakingData.Params.BondDenom)
-
-	// update supply
-	genesisState.SupplyData.Supplier.CirculatingSupply = circulatingSupply
-	genesisState.SupplyData.Supplier.VestingSupply = vestingSupply
-	genesisState.SupplyData.Supplier.TotalSupply =
-		genesisState.SupplyData.Supplier.TotalSupply.Add(circulatingSupply).Add(vestingSupply)
+	notBondedSupply, bondedSupply :=
+		updateSupply(genesisState.Accounts, genesisState.StakingData.Params.BondDenom, &genesisState.SupplyData.Supplier)
 
 	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
 	genesisState.StakingData.Pool.BondedTokens = bondedSupply
@@ -417,21 +436,22 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
-// supplyFromGenAccounts calculates the circulating, vesting, and stakingToken
-// (bonded and not bonded) total supply from the genesis accounts
-func supplyFromGenAccounts(genAccounts []GenesisAccount, bondDenom string,
-) (
-	circulatingSupply, vestingSupply sdk.Coins,
-	notBondedTokens, bondedTokens sdk.Int,
-) {
+// updateSupply calculates the circulating, vesting, and staking (bonded and not bonded)
+// total supply from the genesis accounts
+func updateSupply(genAccounts []GenesisAccount, bondDenom string, supplier *supply.Supplier) (notBondedTokens, bondedTokens sdk.Int) {
+
 	for _, genAcc := range genAccounts {
+
 		// circulating amount not subject to vesting (i.e free)
-		circulatingSupply = circulatingSupply.Add(genAcc.Coins)
+		supplier.Inflate(supply.TypeCirculating, genAcc.OriginalVesting)
 
 		// vesting and bonded supply from vesting accounts
-		if genAcc.DelegatedVesting.IsAllPositive() {
-			vestingSupply = vestingSupply.Add(genAcc.OriginalVesting)
-			bondedTokens = bondedTokens.Add(genAcc.DelegatedVesting.AmountOf(bondDenom))
+		if genAcc.OriginalVesting.IsAllPositive() {
+			supplier.Inflate(supply.TypeVesting, genAcc.OriginalVesting)
+
+			if genAcc.DelegatedVesting.IsAllPositive() {
+				bondedTokens = bondedTokens.Add(genAcc.DelegatedVesting.AmountOf(bondDenom))
+			}
 		}
 
 		// staking pool's not bonded supply

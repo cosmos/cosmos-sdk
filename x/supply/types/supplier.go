@@ -37,7 +37,7 @@ func DefaultSupplier() Supplier {
 }
 
 // Inflate adds coins to a given supply type and updates the total supply
-func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) error {
+func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	switch supplyType {
 	case TypeCirculating:
 		supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
@@ -49,7 +49,6 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) error {
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
 	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
-	return nil
 }
 
 // Deflate safe subtracts coins for a given supply and updates the total supply

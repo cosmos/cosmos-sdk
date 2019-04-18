@@ -520,44 +520,51 @@ func (dva *DelayedVestingAccount) GetEndTime() int64 {
 }
 
 //-----------------------------------------------------------------------------
-// Module Holder Account
-
-var _ ModuleAccount = (*ModuleHolderAccount)(nil)
-
-// ModuleHolderAccount defines an account for modules that held coins on a pool
-type ModuleHolderAccount struct {
-	*BaseAccount
-
-	Module string `json:"module"` // name of the module
-}
-
-// NewModuleHolderAccount creates a new BaseTokenHolder instance
-func NewModuleHolderAccount(baseAcc *BaseAccount, moduleName string) *ModuleHolderAccount {
-	return &ModuleHolderAccount{
-		BaseAccount: baseAcc,
-		Module:      moduleName,
-	}
-}
-
-// GetModuleName returns the the name of the holder's module
-func (mha ModuleHolderAccount) GetModuleName() string {
-	return mha.Module
-}
-
-//-----------------------------------------------------------------------------
 // Module Minter Account
 
 var _ ModuleAccount = (*ModuleMinterAccount)(nil)
 
 // ModuleMinterAccount defines an account for modules that held coins on a pool
 type ModuleMinterAccount struct {
-	*ModuleHolderAccount
+	*BaseAccount
+
+	Module string `json:"module"` // name of the module
 }
 
 // NewModuleMinterAccount creates a new BaseTokenHolder instance
-func NewModuleMinterAccount(baseAcc *BaseAccount, moduleName string) *ModuleHolderAccount {
-	return &ModuleHolderAccount{
-		BaseAccount: baseAcc,
+func NewModuleMinterAccount(moduleName string) *ModuleMinterAccount {
+	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+
+	baseAcc := NewBaseAccountWithAddress(moduleAddress)
+	return &ModuleMinterAccount{
+		BaseAccount: &baseAcc,
 		Module:      moduleName,
 	}
+}
+
+// GetModuleName returns the the name of the holder's module
+func (mma ModuleMinterAccount) GetModuleName() string {
+	return mma.Module
+}
+
+//-----------------------------------------------------------------------------
+// Module Holder Account
+
+var _ ModuleAccount = (*ModuleHolderAccount)(nil)
+
+// ModuleHolderAccount defines an account for modules that held coins on a pool
+type ModuleHolderAccount struct {
+	*ModuleMinterAccount
+}
+
+// NewModuleHolderAccount creates a new BaseTokenHolder instance
+func NewModuleHolderAccount(moduleName string) *ModuleHolderAccount {
+	moduleMinterAcc := NewModuleMinterAccount(moduleName)
+
+	return &ModuleHolderAccount{ModuleMinterAccount: moduleMinterAcc}
+}
+
+// SetCoins not supported for ModuleHolderAccount
+func (mha ModuleHolderAccount) SetCoins(coins sdk.Coins) error {
+	return fmt.Errorf("module holders account don't support setting coins")
 }

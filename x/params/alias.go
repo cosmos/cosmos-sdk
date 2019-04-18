@@ -16,9 +16,22 @@ type (
 	ParamSet         = subspace.ParamSet
 	ParamSetPairs    = subspace.ParamSetPairs
 	KeyTable         = subspace.KeyTable
+
+	ParameterChangeProposal = types.ParameterChangeProposal
+	ParamChange             = types.ParamChange
 )
 
 var (
 	NewKeyTable           = subspace.NewKeyTable
 	DefaultTestComponents = subspace.DefaultTestComponents
+
+	NewParamChange             = types.NewParamChange
+	NewParameterChangeProposal = types.NewParameterChangeProposal
+
+	ErrUnknownSubspace  = types.ErrUnknownSubspace
+	ErrSettingParameter = types.ErrSettingParameter
+	ErrEmptyChanges     = types.ErrEmptyChanges
+	ErrEmptySubspace    = types.ErrEmptySubspace
+	ErrEmptyKey         = types.ErrEmptyKey
+	ErrEmptyValue       = types.ErrEmptyValue
 )

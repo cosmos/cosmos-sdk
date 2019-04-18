@@ -323,3 +323,19 @@ func ContentFromProposalType(title, desc, ty string) Content {
 func IsValidProposalType(ty string) bool {
 	return ty == ProposalTypeText || ty == ProposalTypeSoftwareUpgrade
 }
+
+// ProposalHandler implements the Handler interface for governance module-based
+// proposals (ie. TextProposal and SoftwareUpgradeProposal). Since these are
+// merely signaling mechanisms at the moment and do not affect state, it
+// performs a no-op.
+func ProposalHandler(ctx sdk.Context, c Content) sdk.Error {
+	switch c.(type) {
+	case TextProposal, SoftwareUpgradeProposal:
+		// both proposal type do not effect on the state so this is a no-op
+		return nil
+
+	default:
+		errMsg := fmt.Sprintf("unrecognized gov proposal type: %T", c)
+		return sdk.ErrUnknownRequest(errMsg)
+	}
+}

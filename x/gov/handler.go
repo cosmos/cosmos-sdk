@@ -28,27 +28,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	var content ProposalContent
-	switch msg.ProposalType {
-	case ProposalTypeText:
-		content = NewTextProposal(msg.Title, msg.Description)
-	case ProposalTypeSoftwareUpgrade:
-		content = NewSoftwareUpgradeProposal(msg.Title, msg.Description)
-	default:
-		return ErrInvalidProposalType(keeper.codespace, msg.ProposalType).Result()
-	}
-	proposal, err := keeper.SubmitProposal(ctx, content)
-	if err != nil {
-		return err.Result()
-	}
-	proposalID := proposal.ProposalID
-	proposalIDStr := fmt.Sprintf("%d", proposalID)
-
-	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
+	proposal, err := keeper.SubmitProposal(ctx, msg.Content)
 	if err != nil {
 		return err.Result()
 	}
 
+	err, votingStarted := keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	if err != nil {
+		return err.Result()
+	}
+
+	proposalIDStr := fmt.Sprintf("%d", proposal.ProposalID)
 	resTags := sdk.NewTags(
 		tags.ProposalID, proposalIDStr,
 		tags.Category, tags.TxCategory,
@@ -60,7 +50,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	return sdk.Result{
-		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID),
+		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.ProposalID),
 		Tags: resTags,
 	}
 }

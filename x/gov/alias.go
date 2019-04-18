@@ -21,6 +21,10 @@ type (
 	VoteOption = types.VoteOption
 
 	ProposalStatus = types.ProposalStatus
+
+	MsgSubmitProposal = types.MsgSubmitProposal
+	MsgDeposit        = types.MsgDeposit
+	MsgVote           = types.MsgVote
 )
 
 var (
@@ -36,7 +40,8 @@ var (
 	ErrInvalidGenesis          = types.ErrInvalidGenesis
 	ErrNoProposalHandlerExists = types.ErrNoProposalHandlerExists
 
-	NewProposal = types.NewProposal
+	NewProposal     = types.NewProposal
+	ProposalHandler = types.ProposalHandler
 
 	ValidVoteOption     = types.ValidVoteOption
 	ValidProposalStatus = types.ValidProposalStatus

@@ -18,9 +18,25 @@ echo "Using genesis file $genesis"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
 echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
-cleanup() {
+# Symbols prefixes legenda:
+# f_ - function
+# l_ - local symbols
+
+f_spinner() {
+  local l_i l_sp
+  l_i=1
+  l_chars="/-\|"
+  echo -n ' '
+  while true
+  do
+    printf "\b${l_chars:l_i++%${#l_chars}:1}"
+    sleep 1s
+  done
+}
+
+f_cleanup() {
   local l_children
-  l_children=$(ps -o pid= --ppid $$)
+  l_children=$(pgrep -P $$)
   echo "Stopping children ["${l_children}"] ..." >&2
   kill -SIGSTOP ${l_children} || true
   echo "Terminating children ["${l_children}"] ..." >&2
@@ -28,33 +44,37 @@ cleanup() {
   exit 0
 }
 
-trap cleanup SIGINT SIGTERM
+trap f_cleanup SIGINT SIGTERM EXIT
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
 
-sim() {
-  seed=$1
-	echo "Running Gaia simulation with seed $seed. This may take awhile!"
-  file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
+f_sim() {
+  local l_seed
+  l_seed=$1
+	echo "Running Gaia simulation with seed $l_seed. This may take awhile!"
+  file="$tmpdir/gaia-simulation-seed-$l_seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
   echo "Writing stdout to $file..."
 	go test github.com/cosmos/cosmos-sdk/cmd/gaia/app -run $testname -SimulationEnabled=true -SimulationNumBlocks=$blocks -SimulationGenesis=$genesis \
-    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -SimulationPeriod=$period -v -timeout 24h > $file
+    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$l_seed -SimulationPeriod=$period -v -timeout 24h > $file && \
+    echo "Simulation with seed $l_seed OK" || ( code=1 ; echo "Simulation with seed $seed failed!" ) # > $file
 }
+
+echo "Simulation processes spawned, waiting for completion..."
+
+f_spinner &
+
 
 i=0
 pids=()
 for seed in ${seeds[@]}; do
-  sim $seed &
+  f_sim $seed &
   pids[${i}]=$!
   i=$(($i+1))
   sleep 10 # start in order, nicer logs
 done
 
-echo "Simulation processes spawned, waiting for completion..."
-
 code=0
-
 i=0
 for pid in ${pids[*]}; do
   wait $pid

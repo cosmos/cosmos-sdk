@@ -27,7 +27,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(client.GetCommands(
 		cli.GetPlanCmd(mc.storeKey, mc.cdc),
-		cli.GetHeightCmd(mc.storeKey, mc.cdc),
+		cli.GetAppliedHeightCmd(mc.storeKey, mc.cdc),
 	)...)
 
 	return queryCmd

@@ -36,10 +36,10 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	}
 }
 
-// GetHeightCmd returns the height at which a completed upgrade was applied
-func GetHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
+// GetAppliedHeightCmd returns the height at which a completed upgrade was applied
+func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "height [upgrade-name]",
+		Use:   "applied-height [upgrade-name]",
 		Short: "get the height at which a completed upgrade was applied",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

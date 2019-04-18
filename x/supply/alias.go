@@ -1,3 +1,4 @@
+// nolint
 package supply
 
 import (
@@ -5,21 +6,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-// nolint
 type (
-	Keeper      = keeper.Keeper
-	Supplier    = types.Supplier
-	TokenHolder = types.TokenHolder
+	Keeper   = keeper.Keeper
+	Supplier = types.Supplier
 )
 
-// nolint
 var (
-	NewKeeper         = keeper.NewKeeper
-	GetTokenHolderKey = keeper.GetTokenHolderKey
+	NewKeeper = keeper.NewKeeper
 )
 
-// nolint
 const (
-	StoreKey     = keeper.StoreKey
-	QuerierRoute = keeper.QuerierRoute
+	StoreKey = keeper.StoreKey
+	// QuerierRoute = keeper.QuerierRoute
+
+	TypeCirculating = types.TypeCirculating
+	TypeVesting     = types.TypeVesting
+	TypeModules     = types.TypeModules
 )

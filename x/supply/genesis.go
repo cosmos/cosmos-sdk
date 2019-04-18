@@ -10,38 +10,27 @@ import (
 
 // GenesisState is the supply state that must be provided at genesis.
 type GenesisState struct {
-	Supplier        types.Supplier      `json:"supplier"`
-	ModulesHoldings []types.TokenHolder `json:"modules_holdings"`
+	Supplier types.Supplier `json:"supplier"`
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(supplier types.Supplier, holdings []types.TokenHolder,
-) GenesisState {
-	return GenesisState{
-		Supplier:        supplier,
-		ModulesHoldings: holdings,
-	}
+func NewGenesisState(supplier types.Supplier) GenesisState {
+	return GenesisState{Supplier: supplier}
 }
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(types.DefaultSupplier(), []types.TokenHolder{})
+	return NewGenesisState(types.DefaultSupplier())
 }
 
-// InitGenesis sets distribution information for genesis.
+// InitGenesis sets supply information for genesis.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data GenesisState) {
 	k.SetSupplier(ctx, data.Supplier)
-	for _, holder := range data.ModulesHoldings {
-		k.SetTokenHolder(ctx, holder)
-	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) GenesisState {
-	return NewGenesisState(
-		k.GetSupplier(ctx),
-		k.GetTokenHolders(ctx),
-	)
+	return NewGenesisState(k.GetSupplier(ctx))
 }
 
 // ValidateGenesis performs basic validation of bank genesis data returning an
@@ -49,11 +38,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) GenesisState {
 func ValidateGenesis(data GenesisState) error {
 	if err := data.Supplier.ValidateBasic(); err != nil {
 		return fmt.Errorf(err.Error())
-	}
-	for _, holder := range data.ModulesHoldings {
-		if err := holder.ValidateBasic(); err != nil {
-			return fmt.Errorf(err.Error())
-		}
 	}
 	return nil
 }

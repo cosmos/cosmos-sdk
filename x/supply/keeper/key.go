@@ -11,12 +11,4 @@ const (
 	QuerierRoute = StoreKey
 )
 
-var (
-	supplierKey     = []byte{0x00}
-	holderKeyPrefix = []byte{0x01}
-)
-
-// GetTokenHolderKey returns the store key of the given module
-func GetTokenHolderKey(moduleName string) []byte {
-	return append(holderKeyPrefix, []byte(moduleName)...)
-}
+var supplierKey = []byte{0x0}

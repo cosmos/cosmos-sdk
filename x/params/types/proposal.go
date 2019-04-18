@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -15,9 +16,8 @@ const (
 	ProposalTypeChange = "ParameterChange"
 )
 
-// TODO: Finish in subsequent PR
-// Assert ParameterChangeProposal implements proposal.Content at compile-time
-//var _ proposal.Content = ParameterChangeProposal{}
+// Assert ParameterChangeProposal implements govtypes.Content at compile-time
+var _ govtypes.Content = ParameterChangeProposal{}
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter
 // changes.
@@ -44,11 +44,11 @@ func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
 func (pcp ParameterChangeProposal) ValidateBasic() sdk.Error {
-	// TODO: Finish in subsequent PR
-	//err := proposal.ValidateAbstract(DefaultCodespace, pc)
-	//if err != nil {
-	//	return err
-	//}
+	err := govtypes.ValidateAbstract(DefaultCodespace, pcp)
+	if err != nil {
+		return err
+	}
+
 	return ValidateChanges(pcp.Changes)
 }
 

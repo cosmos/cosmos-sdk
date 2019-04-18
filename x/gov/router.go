@@ -30,6 +30,8 @@ func NewRouter() Router {
 	}
 }
 
+// AddRoute adds a governance handler for a given path. It returns the Router
+// so AddRoute calls can be linked.
 func (rtr *router) AddRoute(path string, h Handler) Router {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")

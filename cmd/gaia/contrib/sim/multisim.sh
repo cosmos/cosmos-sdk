@@ -18,6 +18,18 @@ echo "Using genesis file $genesis"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
 echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
+f_spinner() {
+  local l_i l_sp
+  l_i=1
+  l_sp="/-\|"
+  echo -n ' '
+  while true
+  do
+    printf "\b${l_sp:l_i++%${#l_sp}:1}"
+    sleep 1s
+  done
+}
+
 cleanup() {
   local l_children
   l_children=$(ps -o pid= --ppid $$)
@@ -42,6 +54,11 @@ sim() {
     -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -SimulationPeriod=$period -v -timeout 24h > $file
 }
 
+echo "Simulation processes spawned, waiting for completion..."
+
+f_spinner &
+
+
 i=0
 pids=()
 for seed in ${seeds[@]}; do
@@ -51,10 +68,7 @@ for seed in ${seeds[@]}; do
   sleep 10 # start in order, nicer logs
 done
 
-echo "Simulation processes spawned, waiting for completion..."
-
 code=0
-
 i=0
 for pid in ${pids[*]}; do
   wait $pid

@@ -65,6 +65,6 @@ func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, msg)
 }
 
-func ErrProposalHandlerNotExists(codespace sdk.CodespaceType, content interface{}) sdk.Error {
+func ErrNoProposalHandlerExists(codespace sdk.CodespaceType, content interface{}) sdk.Error {
 	return sdk.NewError(codespace, CodeProposalHandlerNotExists, fmt.Sprintf("'%T' does not have a corresponding handler", content))
 }

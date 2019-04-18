@@ -21,9 +21,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp struct {
-		Tx auth.StdTx `json:"tx"`
-	}
+	DecodeResp auth.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -58,7 +56,7 @@ func DecodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 			return
 		}
 
-		response := DecodeResp{Tx: stdTx}
+		response := DecodeResp(stdTx)
 		rest.PostProcessResponse(w, cdc, response, cliCtx.Indent)
 	}
 }

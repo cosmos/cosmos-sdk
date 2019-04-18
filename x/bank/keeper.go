@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/tags"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -34,12 +35,14 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         auth.AccountKeeper
+	sk         SupplyKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(
 	ak auth.AccountKeeper,
+	sk SupplyKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
@@ -47,6 +50,7 @@ func NewBaseKeeper(
 	return BaseKeeper{
 		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,
+		sk:             sk,
 		paramSpace:     ps,
 	}
 }
@@ -105,7 +109,7 @@ func (keeper BaseKeeper) DelegateCoins(
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
-	return delegateCoins(ctx, keeper.ak, addr, amt)
+	return delegateCoins(ctx, keeper.ak, keeper.sk, addr, amt)
 }
 
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
@@ -119,7 +123,7 @@ func (keeper BaseKeeper) UndelegateCoins(
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
-	return undelegateCoins(ctx, keeper.ak, addr, amt)
+	return undelegateCoins(ctx, keeper.ak, keeper.sk, addr, amt)
 }
 
 //-------------------------------------------------------
@@ -382,7 +386,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, ou
 // staking
 
 func delegateCoins(
-	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
+	ctx sdk.Context, ak auth.AccountKeeper, sk SupplyKeeper, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
 
 	if !amt.IsValid() {
@@ -403,11 +407,22 @@ func delegateCoins(
 		)
 	}
 
+	var updateSupplyAmt sdk.Coins
+	vacc, isVestingAccount := acc.(auth.VestingAccount)
+	if isVestingAccount && vacc.GetDelegatedVesting().IsAllPositive() && ctx.BlockHeader().Time.Unix() >= vacc.GetEndTime() {
+		updateSupplyAmt = vacc.GetOriginalVesting()
+	}
+
 	if err := trackDelegation(acc, ctx.BlockHeader().Time, amt); err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
 	}
 
 	setAccount(ctx, ak, acc)
+
+	if isVestingAccount {
+		sk.DeflateSupply(ctx, supply.TypeVesting, updateSupplyAmt)
+		sk.InflateSupply(ctx, supply.TypeCirculating, updateSupplyAmt)
+	}
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionDelegateCoins,
@@ -416,7 +431,7 @@ func delegateCoins(
 }
 
 func undelegateCoins(
-	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
+	ctx sdk.Context, ak auth.AccountKeeper, sk SupplyKeeper, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
 
 	if !amt.IsValid() {
@@ -428,11 +443,22 @@ func undelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
+	var updateSupplyAmt sdk.Coins
+	vacc, isVestingAccount := acc.(auth.VestingAccount)
+	if isVestingAccount && vacc.GetDelegatedVesting().IsAllPositive() && ctx.BlockHeader().Time.Unix() >= vacc.GetEndTime() {
+		updateSupplyAmt = vacc.GetOriginalVesting()
+	}
+
 	if err := trackUndelegation(acc, amt); err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
 	}
 
 	setAccount(ctx, ak, acc)
+
+	if isVestingAccount {
+		sk.DeflateSupply(ctx, supply.TypeVesting, updateSupplyAmt)
+		sk.InflateSupply(ctx, supply.TypeCirculating, updateSupplyAmt)
+	}
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionUndelegateCoins,

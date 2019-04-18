@@ -36,6 +36,18 @@ f_sim() {
   ${l_cmd} > $file || echo -e "Simulation with seed $seed failed!\nTo replicate, run 'go test ./cmd/gaia/app -run $testname -SimulationEnabled=true -SimulationNumBlocks=$blocks -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -v -timeout 24h'"
 }
 
+f_spinner() {
+  local l_i l_sp
+  l_i=1
+  l_sp="/-\|"
+  echo -n ' '
+  while true
+  do
+    printf "\b${l_sp:l_i++%${#l_sp}:1}"
+    sleep 1s
+  done
+}
+
 go mod download >&2
 
 f_echo_stderr "Running multi-seed simulation with seeds ${seeds[@]}"
@@ -59,5 +71,6 @@ done
 
 f_echo_stderr "Simulation processes spawned, waiting for completion..."
 
+f_spinner &
 while read -r line; do sem --will-cite -j+0 "$line" ; done < ${commands_file}
 sem --wait --will-cite

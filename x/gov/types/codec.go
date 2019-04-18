@@ -17,7 +17,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgVote{}, "cosmos-sdk/MsgVote", nil)
 
 	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
 }
 
 // RegisterProposalTypeCodec registers an external proposal content type defined

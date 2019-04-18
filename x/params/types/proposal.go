@@ -16,7 +16,7 @@ const (
 )
 
 // TODO: Finish in subsequent PR
-//// Assert ParameterChangeProposal implements proposal.Content at compile-time
+// Assert ParameterChangeProposal implements proposal.Content at compile-time
 //var _ proposal.Content = ParameterChangeProposal{}
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter

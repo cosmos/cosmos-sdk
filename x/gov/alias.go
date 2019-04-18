@@ -9,6 +9,12 @@ const (
 	StatusVotingPeriod  = types.StatusVotingPeriod
 	StatusPassed        = types.StatusPassed
 	StatusRejected      = types.StatusRejected
+
+	DefaultCodespace  = types.DefaultCodespace
+	DefaultParamspace = types.DefaultParamspace
+	RouterKey         = types.RouterKey
+	StoreKey          = types.StoreKey
+	QuerierRoute      = types.QuerierRoute
 )
 
 type (
@@ -25,6 +31,8 @@ type (
 	MsgSubmitProposal = types.MsgSubmitProposal
 	MsgDeposit        = types.MsgDeposit
 	MsgVote           = types.MsgVote
+
+	TallyResult = types.TallyResult
 )
 
 var (
@@ -45,4 +53,8 @@ var (
 
 	ValidVoteOption     = types.ValidVoteOption
 	ValidProposalStatus = types.ValidProposalStatus
+
+	EmptyTallyResult = types.EmptyTallyResult
+
+	RegisterCodec = types.RegisterCodec
 )

@@ -10,6 +10,11 @@ var (
 	DefaultCodespace = types.DefaultCodespace
 )
 
+const (
+	RouterKey          = types.RouterKey
+	ProposalTypeChange = types.ProposalTypeChange
+)
+
 type (
 	Subspace         = subspace.Subspace
 	ReadOnlySubspace = subspace.ReadOnlySubspace

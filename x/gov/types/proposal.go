@@ -237,3 +237,87 @@ func (tr TallyResult) String() string {
   No:         %s
   NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
 }
+
+// Proposal types
+const (
+	ProposalTypeText            string = "Text"
+	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
+)
+
+// Text Proposal
+type TextProposal struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+func NewTextProposal(title, description string) Content {
+	return TextProposal{title, description}
+}
+
+// Implements Proposal Interface
+var _ Content = TextProposal{}
+
+// nolint
+func (tp TextProposal) GetTitle() string         { return tp.Title }
+func (tp TextProposal) GetDescription() string   { return tp.Description }
+func (tp TextProposal) ProposalRoute() string    { return RouterKey }
+func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
+func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
+
+func (tp TextProposal) String() string {
+	return fmt.Sprintf(`Text Proposal:
+  Title:       %s
+  Description: %s
+`, tp.Title, tp.Description)
+}
+
+// Software Upgrade Proposals
+// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
+// upgrade date, etc.
+type SoftwareUpgradeProposal struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+func NewSoftwareUpgradeProposal(title, description string) Content {
+	return SoftwareUpgradeProposal{title, description}
+}
+
+// Implements Proposal Interface
+var _ Content = SoftwareUpgradeProposal{}
+
+// nolint
+func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
+func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
+	return ValidateAbstract(DefaultCodespace, sup)
+}
+
+func (sup SoftwareUpgradeProposal) String() string {
+	return fmt.Sprintf(`Software Upgrade Proposal:
+  Title:       %s
+  Description: %s
+`, sup.Title, sup.Description)
+}
+
+// ContentFromProposalType returns a Content object based on the proposal type.
+func ContentFromProposalType(title, desc, ty string) Content {
+	switch ty {
+	case ProposalTypeText:
+		return NewTextProposal(title, desc)
+
+	case ProposalTypeSoftwareUpgrade:
+		return NewSoftwareUpgradeProposal(title, desc)
+
+	default:
+		return nil
+	}
+}
+
+// IsValidProposalType returns a boolean determining if the proposal type is
+// valid as defined in the governance module.
+func IsValidProposalType(ty string) bool {
+	return ty == ProposalTypeText || ty == ProposalTypeSoftwareUpgrade
+}

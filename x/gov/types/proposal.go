@@ -111,7 +111,9 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	}
 }
 
-func validProposalStatus(status ProposalStatus) bool {
+// ValidProposalStatus returns true if the proposal status is valid and false
+// otherwise.
+func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||
 		status == StatusVotingPeriod ||
 		status == StatusPassed ||

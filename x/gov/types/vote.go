@@ -74,7 +74,8 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	}
 }
 
-func validVoteOption(option VoteOption) bool {
+// ValidVoteOption returns true if the vote option is valid and false otherwise.
+func ValidVoteOption(option VoteOption) bool {
 	if option == OptionYes ||
 		option == OptionAbstain ||
 		option == OptionNo ||

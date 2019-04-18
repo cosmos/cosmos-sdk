@@ -44,7 +44,7 @@ f_cleanup() {
   exit 0
 }
 
-trap f_cleanup SIGINT SIGTERM
+trap f_cleanup SIGINT SIGTERM EXIT
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
@@ -56,7 +56,8 @@ f_sim() {
   file="$tmpdir/gaia-simulation-seed-$l_seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
   echo "Writing stdout to $file..."
 	go test github.com/cosmos/cosmos-sdk/cmd/gaia/app -run $testname -SimulationEnabled=true -SimulationNumBlocks=$blocks -SimulationGenesis=$genesis \
-    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$l_seed -SimulationPeriod=$period -v -timeout 24h > $file
+    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$l_seed -SimulationPeriod=$period -v -timeout 24h > $file && \
+    echo "Simulation with seed $l_seed OK" || ( code=1 ; echo "Simulation with seed $seed failed!" ) # > $file
 }
 
 echo "Simulation processes spawned, waiting for completion..."

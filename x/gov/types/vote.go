@@ -1,4 +1,4 @@
-package gov
+package types
 
 import (
 	"encoding/json"
@@ -15,10 +15,10 @@ type Vote struct {
 }
 
 func (v Vote) String() string {
-	return fmt.Sprintf("Voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
+	return fmt.Sprintf("voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
 }
 
-// Votes is a collection of Vote
+// Votes is a collection of Vote objects
 type Votes []Vote
 
 func (v Votes) String() string {
@@ -29,56 +29,22 @@ func (v Votes) String() string {
 	return out
 }
 
-// Returns whether 2 votes are equal
+// Equals returns whether two votes are equal.
 func (v Vote) Equals(comp Vote) bool {
-	return v.Voter.Equals(comp.Voter) && v.ProposalID == comp.ProposalID && v.Option == comp.Option
+	return v.Voter.Equals(comp.Voter) &&
+		v.ProposalID == comp.ProposalID &&
+		v.Option == comp.Option
 }
 
-// Returns whether a vote is empty
+// Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
 	return v.Equals(Vote{})
 }
 
-// Deposit
-type Deposit struct {
-	Depositor  sdk.AccAddress `json:"depositor"`   //  Address of the depositor
-	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
-	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
-}
-
-func (d Deposit) String() string {
-	return fmt.Sprintf("Deposit by %s on Proposal %d is for the amount %s",
-		d.Depositor, d.ProposalID, d.Amount)
-}
-
-// Deposits is a collection of depoist
-type Deposits []Deposit
-
-func (d Deposits) String() string {
-	if len(d) == 0 {
-		return "[]"
-	}
-	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
-	for _, dep := range d {
-		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
-	}
-	return out
-}
-
-// Returns whether 2 deposits are equal
-func (d Deposit) Equals(comp Deposit) bool {
-	return d.Depositor.Equals(comp.Depositor) && d.ProposalID == comp.ProposalID && d.Amount.IsEqual(comp.Amount)
-}
-
-// Returns whether a deposit is empty
-func (d Deposit) Empty() bool {
-	return d.Equals(Deposit{})
-}
-
-// Type that represents VoteOption as a byte
+// VoteOption defines a vote option
 type VoteOption byte
 
-//nolint
+// Vote options
 const (
 	OptionEmpty      VoteOption = 0x00
 	OptionYes        VoteOption = 0x01
@@ -87,23 +53,27 @@ const (
 	OptionNoWithVeto VoteOption = 0x04
 )
 
-// String to proposalType byte.  Returns ff if invalid.
+// VoteOptionFromString returns a VoteOption from a string. It returns an error
+// if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {
 	switch str {
 	case "Yes":
 		return OptionYes, nil
+
 	case "Abstain":
 		return OptionAbstain, nil
+
 	case "No":
 		return OptionNo, nil
+
 	case "NoWithVeto":
 		return OptionNoWithVeto, nil
+
 	default:
 		return VoteOption(0xff), fmt.Errorf("'%s' is not a valid vote option", str)
 	}
 }
 
-// Is defined VoteOption
 func validVoteOption(option VoteOption) bool {
 	if option == OptionYes ||
 		option == OptionAbstain ||
@@ -114,23 +84,23 @@ func validVoteOption(option VoteOption) bool {
 	return false
 }
 
-// Marshal needed for protobuf compatibility
+// Marshal needed for protobuf compatibility.
 func (vo VoteOption) Marshal() ([]byte, error) {
 	return []byte{byte(vo)}, nil
 }
 
-// Unmarshal needed for protobuf compatibility
+// Unmarshal needed for protobuf compatibility.
 func (vo *VoteOption) Unmarshal(data []byte) error {
 	*vo = VoteOption(data[0])
 	return nil
 }
 
-// Marshals to JSON using string
+// Marshals to JSON using string.
 func (vo VoteOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(vo.String())
 }
 
-// Unmarshals from JSON assuming Bech32 encoding
+// UnmarshalJSON decodes from JSON assuming Bech32 encoding.
 func (vo *VoteOption) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
@@ -142,11 +112,12 @@ func (vo *VoteOption) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	*vo = bz2
 	return nil
 }
 
-// Turns VoteOption byte to String
+// String implements the Stringer interface.
 func (vo VoteOption) String() string {
 	switch vo {
 	case OptionYes:
@@ -162,7 +133,7 @@ func (vo VoteOption) String() string {
 	}
 }
 
-// For Printf / Sprintf, returns bech32 when using %s
+// Format implements the fmt.Formatter interface.
 // nolint: errcheck
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {

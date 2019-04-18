@@ -18,14 +18,18 @@ echo "Using genesis file $genesis"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
 echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
+# Symbols prefixes legenda:
+# f_ - function
+# l_ - local symbols
+
 f_spinner() {
   local l_i l_sp
   l_i=1
-  l_sp="/-\|"
+  l_chars="/-\|"
   echo -n ' '
   while true
   do
-    printf "\b${l_sp:l_i++%${#l_sp}:1}"
+    printf "\b${l_chars:l_i++%${#l_chars}:1}"
     sleep 1s
   done
 }
@@ -45,8 +49,9 @@ trap cleanup SIGINT SIGTERM
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
 
-sim() {
-  seed=$1
+f_sim() {
+  local l_seed
+  l_seed=$1
 	echo "Running Gaia simulation with seed $seed. This may take awhile!"
   file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
   echo "Writing stdout to $file..."
@@ -62,7 +67,7 @@ f_spinner &
 i=0
 pids=()
 for seed in ${seeds[@]}; do
-  sim $seed &
+  f_sim $seed &
   pids[${i}]=$!
   i=$(($i+1))
   sleep 10 # start in order, nicer logs

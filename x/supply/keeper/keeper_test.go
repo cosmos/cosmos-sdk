@@ -29,7 +29,7 @@ func TestSupplier(t *testing.T) {
 
 	expectedSupplier.CirculatingSupply = expectedSupplier.CirculatingSupply.Add(oneUatom)
 
-	keeper.InflateSupply(ctx, oneUatom)
+	keeper.InflateSupply(ctx, types.TypeCirculating, oneUatom)
 
 	supplier := keeper.GetSupplier(ctx)
 	require.Equal(t, expectedSupplier, supplier)
@@ -55,7 +55,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, Keeper) {
 	)
 
 	cdc := codec.New()
-	types.RegisterCodec(cdc)
 
 	keeper := NewKeeper(cdc, keySupply)
 

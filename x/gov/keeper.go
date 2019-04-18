@@ -6,46 +6,7 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-
-	"github.com/tendermint/tendermint/crypto"
 )
-
-const (
-	// ModuleKey is the name of the module
-	ModuleName = "gov"
-
-	// StoreKey is the store key string for gov
-	StoreKey = ModuleName
-
-	// RouterKey is the message route for gov
-	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
-
-	// Parameter store default namestore
-	DefaultParamspace = ModuleName
-)
-
-// Parameter store key
-var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
-
-	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
-	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
-	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
-)
-
-// Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
-	)
-}
 
 // Governance Keeper
 type Keeper struct {
@@ -58,8 +19,8 @@ type Keeper struct {
 	// The reference to the BankKeeper to modify balances
 	ck BankKeeper
 
-	// The reference to the SupplyKeeper to hold deposits
-	sk SupplyKeeper
+	// The reference to the AccountKeeper to create a module account
+	ak AccountKeeper
 
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
@@ -85,13 +46,13 @@ type Keeper struct {
 // CONTRACT: Token Holder needs to be added into the bank keeper before calling
 // this function
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, bk BankKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+	paramSpace params.Subspace, bk BankKeeper, ak AccountKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           bk,
-		sk:           sk,
+		ak:           ak,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
@@ -385,8 +346,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// request coins for the governance token holder
-	err := keeper.sk.RequestTokens(ctx, ModuleName, depositAmount)
+	// update the governance module account coin pool
+	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
+
+	err := keeper.ck.AddCoins(ctx, moduleAddress, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -424,13 +387,15 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterato
 // RefundDeposits Refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
+	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.sk.RelinquishTokens(ctx, ModuleName, deposit.Amount)
+		// update the governance module account coin pool
+		_, err := keeper.ck.SubtractCoins(ctx, moduleAddress, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -447,14 +412,15 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 // DeleteDeposits Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
+	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		// Burn deposits; TODO: consider sending to community pool
-		err := keeper.sk.RelinquishTokens(ctx, ModuleName, deposit.Amount)
+		// update the governance module account coin pool
+		_, err := keeper.ck.SubtractCoins(ctx, moduleAddress, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

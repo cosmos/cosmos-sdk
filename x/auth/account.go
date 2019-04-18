@@ -60,6 +60,13 @@ type VestingAccount interface {
 	GetDelegatedVesting() sdk.Coins
 }
 
+// ModuleAccount defines an account type for modules that hold tokens
+type ModuleAccount interface {
+	Account
+
+	GetModuleName() string
+}
+
 // AccountDecoder unmarshals account bytes
 // TODO: Think about removing
 type AccountDecoder func(accountBytes []byte) (Account, error)
@@ -510,4 +517,47 @@ func (dva *DelayedVestingAccount) GetStartTime() int64 {
 // GetEndTime returns the time when vesting ends for a delayed vesting account.
 func (dva *DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
+}
+
+//-----------------------------------------------------------------------------
+// Module Holder Account
+
+var _ ModuleAccount = (*ModuleHolderAccount)(nil)
+
+// ModuleHolderAccount defines an account for modules that held coins on a pool
+type ModuleHolderAccount struct {
+	*BaseAccount
+
+	Module string `json:"module"` // name of the module
+}
+
+// NewModuleHolderAccount creates a new BaseTokenHolder instance
+func NewModuleHolderAccount(baseAcc *BaseAccount, moduleName string) *ModuleHolderAccount {
+	return &ModuleHolderAccount{
+		BaseAccount: baseAcc,
+		Module:      moduleName,
+	}
+}
+
+// GetModuleName returns the the name of the holder's module
+func (mha ModuleHolderAccount) GetModuleName() string {
+	return mha.Module
+}
+
+//-----------------------------------------------------------------------------
+// Module Minter Account
+
+var _ ModuleAccount = (*ModuleMinterAccount)(nil)
+
+// ModuleMinterAccount defines an account for modules that held coins on a pool
+type ModuleMinterAccount struct {
+	*ModuleHolderAccount
+}
+
+// NewModuleMinterAccount creates a new BaseTokenHolder instance
+func NewModuleMinterAccount(baseAcc *BaseAccount, moduleName string) *ModuleHolderAccount {
+	return &ModuleHolderAccount{
+		BaseAccount: baseAcc,
+		Module:      moduleName,
+	}
 }

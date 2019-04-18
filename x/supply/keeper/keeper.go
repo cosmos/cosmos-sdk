@@ -13,7 +13,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new supply Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak AccountKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: key,
@@ -39,8 +39,9 @@ func (k Keeper) SetSupplier(ctx sdk.Context, supplier types.Supplier) {
 }
 
 // InflateSupply adds tokens to the circulating supply
-func (k Keeper) InflateSupply(ctx sdk.Context, inflationType string, amount sdk.Coins) {
+func (k Keeper) InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coins) {
 	supplier := k.GetSupplier(ctx)
-	supplier.Inflate(inflationType, amount)
+	supplier.Inflate(supplyType, amount)
+
 	k.SetSupplier(ctx, supplier)
 }

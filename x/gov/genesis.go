@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -108,10 +109,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(err)
 	}
 
-	_, err = k.sk.AddTokenHolder(ctx, ModuleName)
-	if err != nil {
-		panic(err)
-	}
+	// create and set module account
+	baseAcc := auth.NewBaseAccountWithAddress(ModuleAddress)
+	mhAcc := auth.NewModuleHolderAccount(&baseAcc, ModuleName)
+
+	k.ak.SetAccount(ctx, mhAcc)
 
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)

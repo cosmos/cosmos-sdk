@@ -198,10 +198,16 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 	circulatingSupply, vestingSupply, notBondedSupply, bondedSupply :=
 		supplyFromGenAccounts(genesisState.Accounts, genesisState.StakingData.Params.BondDenom)
+
+	// update supply
 	genesisState.SupplyData.Supplier.CirculatingSupply = circulatingSupply
 	genesisState.SupplyData.Supplier.VestingSupply = vestingSupply
+	genesisState.SupplyData.Supplier.TotalSupply =
+		genesisState.SupplyData.Supplier.TotalSupply.Add(circulatingSupply).Add(vestingSupply)
+
 	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
 	genesisState.StakingData.Pool.BondedTokens = bondedSupply
+
 	genesisState.GenTxs = appGenTxs
 
 	return genesisState, nil

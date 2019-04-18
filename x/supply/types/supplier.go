@@ -46,14 +46,14 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) error {
 	case TypeModules:
 		supplier.ModulesSupply = supplier.ModulesSupply.Add(amount)
 	default:
-		return fmt.Errorf("invalid type %s", supplyType)
+		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
 	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
 	return nil
 }
 
-// Deflate safe substracts coins for a given supply and updates the total supply
-func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) error {
+// Deflate safe subtracts coins for a given supply and updates the total supply
+func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 	switch supplyType {
 	case TypeCirculating:
 		newSupply, ok := supplier.CirculatingSupply.SafeSub(amount)
@@ -83,7 +83,7 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) error {
 		}
 		supplier.ModulesSupply = newSupply
 	default:
-		return fmt.Errorf("invalid type %s", supplyType)
+		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
 
 	newSupply, ok := supplier.TotalSupply.SafeSub(amount)
@@ -94,7 +94,6 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) error {
 		))
 	}
 	supplier.TotalSupply = newSupply
-	return nil
 }
 
 // CirculatingAmountOf returns the circulating supply of a coin denomination

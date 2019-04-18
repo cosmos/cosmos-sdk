@@ -56,8 +56,6 @@ func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage
 	return nil
 }
 
-//XXX all properties
-
 //_________________________________________________________
 // AppModule is the standard form for an application module
 type AppModule interface {
@@ -147,21 +145,10 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 	}
 }
 
-//// default genesis state for modules
-//func (mm *ModuleManager) DefaultGenesisState() map[string]json.RawMessage {
-//defaultGenesisState := make(map[string]json.RawMessage)
-//for _, module := range mm.Modules {
-//defaultGenesisState[module.Name()] = module.DefaultGenesisState()
-//}
-//return defaultGenesisState
-//}
-
 // perform init genesis functionality for modules
 func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) []abci.ValidatorUpdate {
-	moduleNames := mm.OrderInitGenesis
-
 	var validatorUpdates []abci.ValidatorUpdate
-	for _, moduleName := range moduleNames {
+	for _, moduleName := range mm.OrderInitGenesis {
 		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// overwrite validator updates if provided
@@ -173,21 +160,18 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 }
 
 // perform export genesis functionality for modules
-func (mm *ModuleManager) ExportGenesis(ctx Context) (genesisData map[string]json.RawMessage) {
-	moduleNames := mm.OrderExportGenesis
-
-	for _, moduleName := range moduleNames {
-		mm.Modules[moduleName].ExportGenesis(ctx)
+func (mm *ModuleManager) ExportGenesis(ctx Context) map[string]json.RawMessage {
+	genesisData := make(map[string]json.RawMessage)
+	for _, moduleName := range mm.OrderExportGenesis {
+		genesisData[moduleName] = mm.Modules[moduleName].ExportGenesis(ctx)
 	}
 	return genesisData
 }
 
 // perform begin block functionality for modules
 func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	moduleNames := mm.OrderBeginBlockers
-
 	tags := EmptyTags()
-	for _, moduleName := range moduleNames {
+	for _, moduleName := range mm.OrderBeginBlockers {
 		moduleTags := mm.Modules[moduleName].BeginBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 	}
@@ -199,11 +183,9 @@ func (mm *ModuleManager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abc
 
 // perform end block functionality for modules
 func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	moduleNames := mm.OrderEndBlockers
-
 	validatorUpdates := []abci.ValidatorUpdate{}
 	tags := EmptyTags()
-	for _, moduleName := range moduleNames {
+	for _, moduleName := range mm.OrderEndBlockers {
 		moduleValUpdates, moduleTags := mm.Modules[moduleName].EndBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 

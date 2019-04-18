@@ -41,14 +41,14 @@ var (
 
 func init() {
 	mbm = sdk.NewModuleBasicManager(
+		auth.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		gov.AppModuleBasic{},
-		auth.AppModuleBasic{},
-		crisis.AppModuleBasic{},
 		mint.AppModuleBasic{},
+		distr.AppModuleBasic{},
+		gov.AppModuleBasic{},
+		crisis.AppModuleBasic{},
+		slashing.AppModuleBasic{},
 	)
 }
 

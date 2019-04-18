@@ -71,11 +71,13 @@ func (p Proposals) String() string {
 	return strings.TrimSpace(out)
 }
 
-// ProposalQueue
-type ProposalQueue []uint64
+type (
+	// ProposalQueue
+	ProposalQueue []uint64
 
-// Type that represents Proposal Status as a byte
-type ProposalStatus byte
+	// ProposalStatus is a type alias that represents a proposal status as a byte
+	ProposalStatus byte
+)
 
 //nolint
 const (

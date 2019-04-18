@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path"
 
@@ -41,9 +40,8 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	var traceWriter io.Writer
 	app, keyMain, keyStaking, stakingKeeper := gaia.NewGaiaAppUNSAFE(
-		logger, db, traceWriter, false, 0, baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))))
+		logger, db, nil, false, 0, baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))))
 
 	// print some info
 	id := app.LastCommitID()

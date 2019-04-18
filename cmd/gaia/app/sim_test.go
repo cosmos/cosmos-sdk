@@ -97,7 +97,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
 
 	var genesisAccounts []GenesisAccount
-	modulesGenesis := make(map[string]json.RawMessage)
+	modulesGenesis := NewDefaultGenesisState().Modules
 	cdc := MakeCodec()
 
 	amount := int64(r.Intn(1e12))
@@ -196,6 +196,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))),
 	)
 	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
+	modulesGenesis[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
 	mintGenesis := mint.NewGenesisState(

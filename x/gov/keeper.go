@@ -56,6 +56,9 @@ type Keeper struct {
 
 	// Reserved codespace
 	codespace sdk.CodespaceType
+
+	// Proposal router
+	router Router
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -63,8 +66,10 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(
+	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
+	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+) Keeper {
 
 	return Keeper{
 		storeKey:     key,
@@ -75,36 +80,33 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
 		codespace:    codespace,
+		router:       rtr,
 	}
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
+func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
 
 // Proposals
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal, sdk.Error) {
+	if !keeper.router.HasRoute(content.ProposalRoute()) {
+		return Proposal{}, ErrNoProposalHandlerExists(keeper.codespace, content)
+	}
+
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
-		return
+		return Proposal{}, err
 	}
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal = Proposal{
-		ProposalContent: content,
-		ProposalID:      proposalID,
-
-		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
-		SubmitTime:       submitTime,
-		DepositEndTime:   submitTime.Add(depositPeriod),
-	}
+	proposal := NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposalID)
-	return
+
+	return proposal, nil
 }
 
 // Get Proposal from store by ProposalID
@@ -175,7 +177,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 			continue
 		}
 
-		if validProposalStatus(status) {
+		if ValidProposalStatus(status) {
 			if proposal.Status != status {
 				continue
 			}
@@ -191,7 +193,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sd
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz != nil {
-		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
+		return ErrInvalidGenesis(keeper.codespace, "initial proposal ID already set")
 	}
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
 	store.Set(KeyNextProposalID, bz)
@@ -213,7 +215,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID uint64, err s
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)
@@ -226,7 +228,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID uint64, 
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	return proposalID, nil
@@ -290,7 +292,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		return ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
-	if !validVoteOption(option) {
+	if !ValidVoteOption(option) {
 		return ErrInvalidVote(keeper.codespace, option)
 	}
 

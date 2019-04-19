@@ -1,4 +1,4 @@
-package nfts
+package nft
 
 import (
 	"bytes"
@@ -50,7 +50,7 @@ func MakeTestCodec() *codec.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(MsgTransferNFT{}, "test/nfts/TransferNFT", nil)
+	cdc.RegisterConcrete(types.MsgTransferNFT{}, "test/nfts/TransferNFT", nil)
 	// cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/staking/CreateValidator", nil)
 	// cdc.RegisterConcrete(types.MsgEditValidator{}, "test/staking/EditValidator", nil)
 	// cdc.RegisterConcrete(types.MsgUndelegate{}, "test/staking/Undelegate", nil)

@@ -1,4 +1,4 @@
-package nfts
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +9,7 @@ type CodeType = sdk.CodeType
 
 // NFT error code
 const (
-	DefaultCodespace sdk.CodespaceType = ModuleName
+	DefaultCodespace sdk.CodespaceType = "nft"
 
 	CodeInvalidCollection CodeType = 650
 	CodeUnknownCollection CodeType = 651

@@ -1,4 +1,4 @@
-package nfts
+package types
 
 import (
 	"fmt"

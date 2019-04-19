@@ -1,4 +1,4 @@
-package nfts
+package nft
 
 import (
 	"testing"

@@ -1,23 +1,25 @@
-package nfts
+package nft
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nfts/tags"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/tags"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 // NewHandler routes the messages to the handlers
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case MsgTransferNFT:
+		case types.MsgTransferNFT:
 			return handleMsgTransferNFT(ctx, msg, k)
-		case MsgEditNFTMetadata:
+		case types.MsgEditNFTMetadata:
 			return handleMsgEditNFTMetadata(ctx, msg, k)
-		case MsgMintNFT:
+		case types.MsgMintNFT:
 			return handleMsgMintNFT(ctx, msg, k)
-		case MsgBurnNFT:
+		case types.MsgBurnNFT:
 			return handleMsgBurnNFT(ctx, msg, k)
 		// case MsgBuyNFT:
 		// 	return handleMsgBuyNFT(ctx, msg, k)
@@ -28,7 +30,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgTransferNFT(ctx sdk.Context, msg MsgTransferNFT, k Keeper,
+func handleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -43,7 +45,7 @@ func handleMsgTransferNFT(ctx sdk.Context, msg MsgTransferNFT, k Keeper,
 	// remove from previous owner
 	owner, found := k.GetOwner(ctx, nft.Owner)
 	if !found {
-		return ErrInvalidNFT(DefaultCodespace).Result()
+		return types.ErrInvalidNFT(keeper.DefaultCodespace).Result()
 	}
 	err = owner.RemoveNFT(msg.Denom, msg.ID)
 	if err != nil {
@@ -75,7 +77,7 @@ func handleMsgTransferNFT(ctx sdk.Context, msg MsgTransferNFT, k Keeper,
 	}
 }
 
-func handleMsgEditNFTMetadata(ctx sdk.Context, msg MsgEditNFTMetadata, k Keeper,
+func handleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -107,23 +109,23 @@ func handleMsgEditNFTMetadata(ctx sdk.Context, msg MsgEditNFTMetadata, k Keeper,
 }
 
 // TODO: move to separate Module?
-func handleMsgMintNFT(ctx sdk.Context, msg MsgMintNFT, k Keeper,
+func handleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	// make sure NFT with that ID and denom doesn't exist
 	exists := k.IsNFT(ctx, msg.Denom, msg.ID)
 	if exists {
-		return ErrNFTAlreadyExists(DefaultCodespace, fmt.Sprintf("%s NFT with id %d already exists", msg.Denom, msg.ID)).Result()
+		return types.ErrNFTAlreadyExists(types.DefaultCodespace, fmt.Sprintf("%s NFT with id %d already exists", msg.Denom, msg.ID)).Result()
 	}
 
 	// make sure collection exists, if not create it
 	_, found := k.GetCollection(ctx, msg.Denom)
 	if !found {
-		k.SetCollection(ctx, msg.Denom, NewCollection())
+		k.SetCollection(ctx, msg.Denom, types.NewCollection())
 	}
 
 	// make new NFT and set it
-	nft := NewNFT(msg.Recipient, msg.TokenURI, msg.Description, msg.Image, msg.Name)
+	nft := types.NewNFT(msg.Recipient, msg.TokenURI, msg.Description, msg.Image, msg.Name)
 	err := k.SetNFT(ctx, msg.Denom, msg.ID, nft)
 	if err != nil {
 		return err.Result()
@@ -144,7 +146,7 @@ func handleMsgMintNFT(ctx sdk.Context, msg MsgMintNFT, k Keeper,
 	}
 }
 
-func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
+func handleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -159,7 +161,7 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 	// remove from owner
 	owner, found := k.GetOwner(ctx, nft.Owner)
 	if !found {
-		return ErrInvalidNFT(DefaultCodespace).Result()
+		return types.ErrInvalidNFT(types.DefaultCodespace).Result()
 	}
 	err = owner.RemoveNFT(msg.Denom, msg.ID)
 	if err != nil {
@@ -184,7 +186,7 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 	}
 }
 
-// func handleMsgBuyNFT(ctx sdk.Context, msg MsgBuyNFT, k Keeper,
+// func handleMsgBuyNFT(ctx sdk.Context, msg types.MsgBuyNFT, k keeper.Keeper,
 // ) sdk.Result {
 
 // 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -211,7 +213,7 @@ func handleMsgBurnNFT(ctx sdk.Context, msg MsgBurnNFT, k Keeper,
 
 // 	// TODO: add to new owners ownership
 
-// 	err = keepr.SetNFT(ctx, nft)
+// 	err = k.SetNFT(ctx, nft)
 // 	if err != nil {
 // 		return err.Result()
 // 	}

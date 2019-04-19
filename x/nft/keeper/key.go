@@ -1,10 +1,13 @@
-package nfts
+package keeper
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
+)
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "nfts"
+	ModuleName = "nft"
 
 	// StoreKey is the default store key for NFT bank
 	StoreKey = ModuleName
@@ -19,7 +22,7 @@ var (
 )
 
 // GetCollectionKey gets the key of a collection
-func GetCollectionKey(denom Denom) []byte {
+func GetCollectionKey(denom types.Denom) []byte {
 	return append(collectionKeyPrefix, []byte(denom)...)
 }
 

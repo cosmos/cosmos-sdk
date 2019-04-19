@@ -1,4 +1,4 @@
-package nfts
+package types
 
 import (
 	"strings"
@@ -14,8 +14,8 @@ MsgBurnNFT (burnable-nft)
 MsgBuyNFT (nft-market)
 --------------------------------------------------------------------------- */
 
-// RouterKey is nfts
-var RouterKey = "nfts"
+// RouterKey is nft
+var RouterKey = "nft"
 
 /* --------------------------------------------------------------------------- */
 // MsgTransferNFT

@@ -1,4 +1,4 @@
-package nfts
+package nft
 
 import (
 	"fmt"
@@ -6,6 +6,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -20,7 +23,7 @@ const (
 )
 
 // NewQuerier is the module level router for state queries
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k keeper.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryBalanceOf:
@@ -35,13 +38,13 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
-	denom := Denom(path[0])
+func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+	denom := types.Denom(path[0])
 	owner := path[1]
 
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return []byte{}, ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("Unknown denom %s", denom))
+		return []byte{}, types.ErrUnknownCollection(keeper.DefaultCodespace, fmt.Sprintf("Unknown denom %s", denom))
 	}
 
 	balance := 0
@@ -51,7 +54,7 @@ func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Kee
 		}
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResBalance{denom, balance})
+	bz, err2 := codec.MarshalJSONIndent(k.Cdc, QueryResBalance{denom, balance})
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -61,28 +64,28 @@ func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Kee
 
 // QueryResBalance resolves int balance
 type QueryResBalance struct {
-	Denom   Denom `json:"denom"`
-	Balance int   `json:"balance"`
+	Denom   types.Denom `json:"denom"`
+	Balance int         `json:"balance"`
 }
 
 func (p QueryResBalance) String() string {
 	return fmt.Sprintf("%s %d", p.Denom, p.Balance)
 }
 
-func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
-	denom := Denom(path[0])
+func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+	denom := types.Denom(path[0])
 	uintID, error := strconv.ParseUint(path[1], 10, 64)
 	if error != nil {
 		panic("could not parse TokenID string")
 	}
-	id := TokenID(uintID)
+	id := types.TokenID(uintID)
 
 	nft, err := k.GetNFT(ctx, denom, id)
 	if err != nil {
 		return
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.cdc, QueryResOwnerOf{nft.Owner})
+	bz, err2 := codec.MarshalJSONIndent(k.Cdc, QueryResOwnerOf{nft.Owner})
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -99,20 +102,20 @@ func (q QueryResOwnerOf) String() string {
 	return q.Owner.String()
 }
 
-func queryMetadata(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
-	denom := Denom(path[0])
+func queryMetadata(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+	denom := types.Denom(path[0])
 	uintID, error := strconv.ParseUint(path[1], 10, 64)
 	if error != nil {
 		panic("could not parse TokenID string")
 	}
-	id := TokenID(uintID)
+	id := types.TokenID(uintID)
 
 	nft, err := k.GetNFT(ctx, denom, id)
 	if err != nil {
 		return
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.cdc, nft)
+	bz, err2 := codec.MarshalJSONIndent(k.Cdc, nft)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}

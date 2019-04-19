@@ -1,4 +1,4 @@
-package nfts
+package keeper
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 // Keeper maintains the link to data storage and exposes getter/setter methods for the various parts of the state machine
@@ -28,18 +29,18 @@ func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) 
 }
 
 // IsNFT returns whether an NFT exists
-func (k Keeper) IsNFT(ctx sdk.Context, denom Denom, id TokenID) (exists bool) {
+func (k Keeper) IsNFT(ctx sdk.Context, denom types.Denom, id types.TokenID) (exists bool) {
 	_, error := k.GetNFT(ctx, denom, id)
 	return error == nil
 }
 
-// GetNFT gets the entire NFT metadata struct for a TokenID
-func (k Keeper) GetNFT(ctx sdk.Context, denom Denom, id TokenID,
-) (nft NFT, err sdk.Error) {
+// GetNFT gets the entire NFT metadata struct for a types.TokenID
+func (k Keeper) GetNFT(ctx sdk.Context, denom types.Denom, id types.TokenID,
+) (nft types.NFT, err sdk.Error) {
 
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return NFT{}, ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+		return types.NFT{}, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
 	nft, err = collection.GetNFT(denom, id)
 	if err != nil {
@@ -49,10 +50,10 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom Denom, id TokenID,
 }
 
 // SetNFT sets an NFT into the store
-func (k Keeper) SetNFT(ctx sdk.Context, denom Denom, id TokenID, nft NFT) (err sdk.Error) {
+func (k Keeper) SetNFT(ctx sdk.Context, denom types.Denom, id types.TokenID, nft types.NFT) (err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
 	collection[id] = nft
 	k.SetCollection(ctx, denom, collection)
@@ -60,10 +61,10 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom Denom, id TokenID, nft NFT) (err s
 }
 
 // BurnNFT deletes an existing NFT from store
-func (k Keeper) BurnNFT(ctx sdk.Context, denom Denom, id TokenID) (err sdk.Error) {
+func (k Keeper) BurnNFT(ctx sdk.Context, denom types.Denom, id types.TokenID) (err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
 	delete(collection, id)
 	k.SetCollection(ctx, denom, collection)
@@ -71,13 +72,13 @@ func (k Keeper) BurnNFT(ctx sdk.Context, denom Denom, id TokenID) (err sdk.Error
 }
 
 // GetCollections returns all the NFTs collections
-func (k Keeper) GetCollections(ctx sdk.Context) (collections map[Denom]Collection) {
+func (k Keeper) GetCollections(ctx sdk.Context) (collections map[types.Denom]types.Collection) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, collectionKeyPrefix)
 	defer iterator.Close()
 
-	var collection Collection
-	var denom Denom
+	var collection types.Collection
+	var denom types.Denom
 	for ; iterator.Valid(); iterator.Next() {
 		err := k.cdc.UnmarshalBinaryLengthPrefixed(iterator.Value(), &collection)
 		if err != nil {
@@ -95,8 +96,8 @@ func (k Keeper) GetCollections(ctx sdk.Context) (collections map[Denom]Collectio
 }
 
 // GetCollection returns a collection of NFTs
-func (k Keeper) GetCollection(ctx sdk.Context, denom Denom,
-) (collection Collection, found bool) {
+func (k Keeper) GetCollection(ctx sdk.Context, denom types.Denom,
+) (collection types.Collection, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(denom))
 	if b == nil {
@@ -107,24 +108,24 @@ func (k Keeper) GetCollection(ctx sdk.Context, denom Denom,
 }
 
 // SetCollection sets the entire collection of a single denom
-func (k Keeper) SetCollection(ctx sdk.Context, denom Denom, collection Collection) {
+func (k Keeper) SetCollection(ctx sdk.Context, denom types.Denom, collection types.Collection) {
 	store := ctx.KVStore(k.storeKey)
 	collectionKey := GetCollectionKey(denom)
 	store.Set(collectionKey, k.cdc.MustMarshalBinaryBare(collection))
 }
 
 // AddToOwner adds an NFT to owner
-func (k Keeper) AddToOwner(ctx sdk.Context, denom Denom, id TokenID, nft NFT) {
+func (k Keeper) AddToOwner(ctx sdk.Context, denom types.Denom, id types.TokenID, nft types.NFT) {
 	owner, found := k.GetOwner(ctx, nft.Owner)
 	if !found {
-		owner = NewOwner()
+		owner = types.NewOwner()
 	}
 	owner[denom] = append(owner[denom], id)
 	k.SetOwner(ctx, nft.Owner, owner)
 }
 
 // SetOwner sets an owner
-func (k Keeper) SetOwner(ctx sdk.Context, address sdk.AccAddress, owner Owner) {
+func (k Keeper) SetOwner(ctx sdk.Context, address sdk.AccAddress, owner types.Owner) {
 	store := ctx.KVStore(k.storeKey)
 	ownerKey := GetOwnerKey(address)
 	store.Set(ownerKey, k.cdc.MustMarshalBinaryBare(owner))
@@ -132,7 +133,7 @@ func (k Keeper) SetOwner(ctx sdk.Context, address sdk.AccAddress, owner Owner) {
 
 // GetOwner returns a owner
 func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress,
-) (owner Owner, found bool) {
+) (owner types.Owner, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetOwnerKey(address))
 	if b == nil {
@@ -143,12 +144,12 @@ func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress,
 }
 
 // GetOwners returns all the NFTs owners
-func (k Keeper) GetOwners(ctx sdk.Context) (owners map[string]Owner) {
+func (k Keeper) GetOwners(ctx sdk.Context) (owners map[string]types.Owner) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ownerKeyPrefix)
 	defer iterator.Close()
 
-	var owner Owner
+	var owner types.Owner
 	var address string
 	for ; iterator.Valid(); iterator.Next() {
 		err := k.cdc.UnmarshalBinaryLengthPrefixed(iterator.Value(), &owner)

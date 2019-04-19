@@ -18,10 +18,12 @@ type Router interface {
 	AddRoute(r string, h Handler) (rtr Router)
 	HasRoute(r string) bool
 	GetRoute(path string) (h Handler)
+	Seal()
 }
 
 type router struct {
 	routes map[string]Handler
+	sealed bool
 }
 
 func NewRouter() Router {
@@ -30,9 +32,22 @@ func NewRouter() Router {
 	}
 }
 
+// Seal seals the router which prohibits any subsequent route handlers to be
+// added. Seal will panic if called more than once.
+func (rtr *router) Seal() {
+	if rtr.sealed {
+		panic("router already sealed")
+	}
+	rtr.sealed = true
+}
+
 // AddRoute adds a governance handler for a given path. It returns the Router
-// so AddRoute calls can be linked.
+// so AddRoute calls can be linked. It will panic if the router is sealed.
 func (rtr *router) AddRoute(path string, h Handler) Router {
+	if rtr.sealed {
+		panic("router sealed; cannot add route handler")
+	}
+
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}

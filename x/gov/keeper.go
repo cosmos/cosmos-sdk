@@ -77,6 +77,8 @@ func NewKeeper(
 	// is implemented in any module.
 	types.MsgCdc = cdc
 
+	rtr.Seal()
+
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,

@@ -54,6 +54,8 @@ var (
 	ValidVoteOption     = types.ValidVoteOption
 	ValidProposalStatus = types.ValidProposalStatus
 
+	ValidateAbstract = types.ValidateAbstract
+
 	EmptyTallyResult = types.EmptyTallyResult
 
 	RegisterCodec = types.RegisterCodec

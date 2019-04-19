@@ -1,4 +1,4 @@
-package gov
+package types
 
 import (
 	"strings"
@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
 var (
@@ -15,6 +14,10 @@ var (
 	coinsZero        = sdk.NewCoins()
 	coinsPosNotAtoms = sdk.NewCoins(sdk.NewInt64Coin("foo", 10000))
 	coinsMulti       = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
+	addrs            = []sdk.AccAddress{
+		sdk.AccAddress("test1"),
+		sdk.AccAddress("test2"),
+	}
 )
 
 func init() {
@@ -23,10 +26,9 @@ func init() {
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgSubmitProposal(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		title, description string
-		proposalType       ProposalKind
+		proposalType       string
 		proposerAddr       sdk.AccAddress
 		initialDeposit     sdk.Coins
 		expectPass         bool
@@ -34,9 +36,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, true},
 		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
 		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeParameterChange, addrs[0], coinsPos, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeSoftwareUpgrade, addrs[0], coinsPos, true},
-		{"Test Proposal", "the purpose of this proposal is to test", 0x05, addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
@@ -45,7 +45,12 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgSubmitProposal(tc.title, tc.description, tc.proposalType, tc.proposerAddr, tc.initialDeposit)
+		msg := NewMsgSubmitProposal(
+			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
+			tc.initialDeposit,
+			tc.proposerAddr,
+		)
+
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -65,7 +70,6 @@ func TestMsgDepositGetSignBytes(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgDeposit(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		proposalID    uint64
 		depositorAddr sdk.AccAddress
@@ -90,7 +94,6 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgVote(t *testing.T) {
-	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.NewCoins())
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress

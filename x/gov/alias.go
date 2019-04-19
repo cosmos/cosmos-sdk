@@ -27,9 +27,10 @@ const (
 )
 
 type (
-	Content  = types.Content
-	Handler  = types.Handler
-	Proposal = types.Proposal
+	Content   = types.Content
+	Handler   = types.Handler
+	Proposal  = types.Proposal
+	Proposals = types.Proposals
 
 	Deposit    = types.Deposit
 	Vote       = types.Vote

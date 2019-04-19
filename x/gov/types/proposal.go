@@ -331,7 +331,7 @@ func IsValidProposalType(ty string) bool {
 func ProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	switch c.(type) {
 	case TextProposal, SoftwareUpgradeProposal:
-		// both proposal type do not effect on the state so this is a no-op
+		// both proposal types do not change state so this performs a no-op
 		return nil
 
 	default:

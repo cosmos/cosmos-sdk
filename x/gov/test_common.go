@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -14,46 +15,62 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (
-	mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress,
-	pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+type testInput struct {
+	mApp     *mock.App
+	keeper   Keeper
+	router   Router
+	sk       staking.Keeper
+	addrs    []sdk.AccAddress
+	pubKeys  []crypto.PubKey
+	privKeys []crypto.PrivKey
+}
 
-	mapp = mock.NewApp()
+func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) testInput {
+	mApp := mock.NewApp()
 
-	staking.RegisterCodec(mapp.Cdc)
-	RegisterCodec(mapp.Cdc)
+	staking.RegisterCodec(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
-	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
+	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
-	pk := mapp.ParamsKeeper
-	ck := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	rtr := NewRouter().AddRoute(RouterKey, ProposalHandler)
 
-	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
-	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
+	pk := mApp.ParamsKeeper
+	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace, rtr)
 
-	mapp.SetEndBlocker(getEndBlocker(keeper))
-	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk, genState))
+	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
+	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
-	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
+	mApp.SetEndBlocker(getEndBlocker(keeper))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, genState))
+
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
 
 	valTokens := sdk.TokensFromTendermintPower(42)
+
+	var (
+		addrs    []sdk.AccAddress
+		pubKeys  []crypto.PubKey
+		privKeys []crypto.PrivKey
+	)
+
 	if genAccs == nil || len(genAccs) == 0 {
 		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
 			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
 	}
 
-	mock.SetGenesis(mapp, genAccs)
+	mock.SetGenesis(mApp, genAccs)
 
-	return mapp, keeper, sk, addrs, pubKeys, privKeys
+	return testInput{mApp, keeper, rtr, sk, addrs, pubKeys, privKeys}
 }
 
 // gov and staking endblocker
@@ -87,20 +104,6 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
-	}
-}
-
-// TODO: Remove once address interface has been implemented (ref: #2186)
-func SortValAddresses(addrs []sdk.ValAddress) {
-	var byteAddrs [][]byte
-	for _, addr := range addrs {
-		byteAddrs = append(byteAddrs, addr.Bytes())
-	}
-
-	SortByteArrays(byteAddrs)
-
-	for i, byteAddr := range byteAddrs {
-		addrs[i] = byteAddr
 	}
 }
 
@@ -147,11 +150,38 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
-func testProposal() TextProposal {
+func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
 
 // checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	return bytes.Equal(msgCdc.MustMarshalBinaryBare(proposalA), msgCdc.MustMarshalBinaryBare(proposalB))
+	return bytes.Equal(types.MsgCdc.MustMarshalBinaryBare(proposalA), types.MsgCdc.MustMarshalBinaryBare(proposalB))
+}
+
+var (
+	pubkeys = []crypto.PubKey{
+		ed25519.GenPrivKey().PubKey(),
+		ed25519.GenPrivKey().PubKey(),
+		ed25519.GenPrivKey().PubKey(),
+	}
+
+	testDescription   = staking.NewDescription("T", "E", "S", "T")
+	testCommissionMsg = staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+)
+
+func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
+
+	for i := 0; i < len(addrs); i++ {
+
+		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valCreateMsg := staking.NewMsgCreateValidator(
+			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			testDescription, testCommissionMsg, sdk.OneInt(),
+		)
+
+		res := stakingHandler(ctx, valCreateMsg)
+		require.True(t, res.IsOK())
+	}
 }

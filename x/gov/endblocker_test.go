@@ -9,28 +9,34 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
-	govHandler := NewHandler(keeper)
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	govHandler := NewHandler(input.keeper)
 
-	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newProposalMsg := NewMsgSubmitProposal(
+		ContentFromProposalType("test", "test", ProposalTypeText),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+		input.addrs[0],
+	)
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -38,45 +44,49 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	EndBlocker(ctx, keeper)
+	EndBlocker(ctx, input.keeper)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
-	govHandler := NewHandler(keeper)
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	govHandler := NewHandler(input.keeper)
 
-	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newProposalMsg := NewMsgSubmitProposal(
+		ContentFromProposalType("test", "test", ProposalTypeText),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+		input.addrs[0],
+	)
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -84,23 +94,28 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2 := NewMsgSubmitProposal("Test2", "test2", ProposalTypeText, addrs[1], sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newProposalMsg2 := NewMsgSubmitProposal(
+		ContentFromProposalType("test2", "test2", ProposalTypeText),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+		input.addrs[0],
+	)
+
 	res = govHandler(ctx, newProposalMsg2)
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	EndBlocker(ctx, keeper)
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	EndBlocker(ctx, input.keeper)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -108,40 +123,44 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	EndBlocker(ctx, keeper)
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	EndBlocker(ctx, input.keeper)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
-	govHandler := NewHandler(keeper)
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	govHandler := NewHandler(input.keeper)
 
-	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	activeQueue := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue := input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newProposalMsg := NewMsgSubmitProposal(
+		ContentFromProposalType("test2", "test2", ProposalTypeText),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+		input.addrs[0],
+	)
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID uint64
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -149,76 +168,114 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
 	res = govHandler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
-	activeQueue = keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10, GenesisState{}, nil)
-	SortAddresses(addrs)
+	input := getMockApp(t, 10, GenesisState{}, nil)
+	SortAddresses(input.addrs)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	keeper.ck.SetSendEnabled(ctx, true)
-	govHandler := NewHandler(keeper)
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	govHandler := NewHandler(input.keeper)
 
-	inactiveQueue := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	activeQueue := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue := input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], proposalCoins)
+	newProposalMsg := NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)}, input.addrs[0])
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID uint64
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, proposalCoins)
 	res = govHandler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(keeper.GetVotingParams(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	activeQueue = keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
+
 	var activeProposalID uint64
-	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID)
-	proposal, ok := keeper.GetProposal(ctx, activeProposalID)
+
+	require.NoError(t, input.keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID))
+	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)
-	depositsIterator := keeper.GetDeposits(ctx, proposalID)
+	depositsIterator := input.keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	depositsIterator.Close()
 	activeQueue.Close()
 
-	EndBlocker(ctx, keeper)
+	EndBlocker(ctx, input.keeper)
 
-	activeQueue = keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
+}
+
+func TestProposalPassedEndblocker(t *testing.T) {
+	input := getMockApp(t, 1, GenesisState{}, nil)
+	SortAddresses(input.addrs)
+
+	handler := NewHandler(input.keeper)
+	stakingHandler := staking.NewHandler(input.sk)
+
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+
+	valAddr := sdk.ValAddress(input.addrs[0])
+
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	staking.EndBlocker(ctx, input.sk)
+
+	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	require.NoError(t, err)
+
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
+	res := handler(ctx, newDepositMsg)
+	require.True(t, res.IsOK())
+
+	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
+	require.NoError(t, err)
+
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
+	resTags := EndBlocker(ctx, input.keeper)
+	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
 }

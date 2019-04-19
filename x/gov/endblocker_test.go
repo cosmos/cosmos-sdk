@@ -200,7 +200,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
-	newProposalMsg := NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)}, input.addrs[0])
+	newProposalMsg := NewMsgSubmitProposal(testProposal(), proposalCoins, input.addrs[0])
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())

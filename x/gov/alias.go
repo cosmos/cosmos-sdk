@@ -15,6 +15,15 @@ const (
 	RouterKey         = types.RouterKey
 	StoreKey          = types.StoreKey
 	QuerierRoute      = types.QuerierRoute
+
+	ProposalTypeText            = types.ProposalTypeText
+	ProposalTypeSoftwareUpgrade = types.ProposalTypeSoftwareUpgrade
+
+	OptionEmpty      = types.OptionEmpty
+	OptionYes        = types.OptionYes
+	OptionAbstain    = types.OptionAbstain
+	OptionNo         = types.OptionNo
+	OptionNoWithVeto = types.OptionNoWithVeto
 )
 
 type (
@@ -26,7 +35,9 @@ type (
 	Vote       = types.Vote
 	VoteOption = types.VoteOption
 
-	ProposalStatus = types.ProposalStatus
+	TextProposal            = types.TextProposal
+	SoftwareUpgradeProposal = types.SoftwareUpgradeProposal
+	ProposalStatus          = types.ProposalStatus
 
 	MsgSubmitProposal = types.MsgSubmitProposal
 	MsgDeposit        = types.MsgDeposit
@@ -48,15 +59,36 @@ var (
 	ErrInvalidGenesis          = types.ErrInvalidGenesis
 	ErrNoProposalHandlerExists = types.ErrNoProposalHandlerExists
 
-	NewProposal     = types.NewProposal
-	ProposalHandler = types.ProposalHandler
-
+	NewProposal         = types.NewProposal
+	ProposalHandler     = types.ProposalHandler
 	ValidVoteOption     = types.ValidVoteOption
 	ValidProposalStatus = types.ValidProposalStatus
 
 	ValidateAbstract = types.ValidateAbstract
-
 	EmptyTallyResult = types.EmptyTallyResult
 
 	RegisterCodec = types.RegisterCodec
+
+	KeyDelimiter                = types.KeyDelimiter
+	KeyNextProposalID           = types.KeyNextProposalID
+	PrefixActiveProposalQueue   = types.PrefixActiveProposalQueue
+	PrefixInactiveProposalQueue = types.PrefixInactiveProposalQueue
+
+	KeyProposal                      = types.KeyProposal
+	KeyDeposit                       = types.KeyDeposit
+	KeyVote                          = types.KeyVote
+	KeyDepositsSubspace              = types.KeyDepositsSubspace
+	KeyVotesSubspace                 = types.KeyVotesSubspace
+	PrefixActiveProposalQueueTime    = types.PrefixActiveProposalQueueTime
+	KeyActiveProposalQueueProposal   = types.KeyActiveProposalQueueProposal
+	PrefixInactiveProposalQueueTime  = types.PrefixInactiveProposalQueueTime
+	KeyInactiveProposalQueueProposal = types.KeyInactiveProposalQueueProposal
+
+	NewMsgSubmitProposal  = types.NewMsgSubmitProposal
+	NewMsgDeposit         = types.NewMsgDeposit
+	NewMsgVote            = types.NewMsgVote
+	NewTextProposal       = types.NewTextProposal
+	NewTallyResultFromMap = types.NewTallyResultFromMap
+
+	ContentFromProposalType = types.ContentFromProposalType
 )

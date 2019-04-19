@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
@@ -50,6 +49,15 @@ func init() {
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 	)
+}
+
+// custom tx codec
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	mbm.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
 }
 
 // Extended ABCI application
@@ -173,7 +181,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint,
 		app.keyDistr, app.keySlashing, app.keyGov, app.keyFeeCollection,
 		app.keyParams, app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
-	app.SetInitChainer(app.initChainer)
+	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.SetEndBlocker(app.EndBlocker)
@@ -197,56 +205,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	return app.mm.EndBlock(ctx, req)
 }
 
-// initialize store from a genesis state
-func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
-	genesisState.Sanitize()
-
-	// load the accounts
-	for _, gacc := range genesisState.Accounts {
-		acc := gacc.ToAccount()
-		acc = app.accountKeeper.NewAccount(ctx, acc) // set account number
-		app.accountKeeper.SetAccount(ctx, acc)
-	}
-
-	// initialize modules
-	validators := app.mm.InitGenesis(ctx, genesisState.Modules)
-
-	// validate genesis state
-	if err := GaiaValidateGenesisState(genesisState); err != nil {
-		panic(err)
-	}
-	if len(genesisState.GenTxs) > 0 {
-		validators = app.deliverGenTxs(ctx, genesisState.GenTxs, app.BaseApp.DeliverTx)
-	}
-	return validators
-}
-
-// GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
-func GaiaValidateGenesisState(genesisState GenesisState) error {
-	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
-		return err
-	}
-	return mbm.ValidateGenesis(genesisState.Modules)
-}
-
-type deliverTxFn func([]byte) abci.ResponseDeliverTx
-
-// TODO move this genTx functionality to staking
-func (app *GaiaApp) deliverGenTxs(ctx sdk.Context, genTxs []json.RawMessage, deliverTx deliverTxFn) []abci.ValidatorUpdate {
-	for _, genTx := range genTxs {
-		var tx auth.StdTx
-		app.cdc.MustUnmarshalJSON(genTx, &tx)
-		bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
-		res := deliverTx(bz)
-		if !res.IsOK() {
-			panic(res.Log)
-		}
-	}
-	return app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-}
-
 // custom logic for gaia initialization
-func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *GaiaApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	validators := app.initFromGenesisState(ctx, genesisState)
@@ -259,14 +219,4 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 // load a particular height
 func (app *GaiaApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
-}
-
-//_______________________________
-// custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	mbm.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
 }

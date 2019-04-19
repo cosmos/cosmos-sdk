@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // gaiad custom flags
@@ -44,12 +44,12 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.ValidateGenesisCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.TestnetFilesCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

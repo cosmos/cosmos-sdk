@@ -12,6 +12,7 @@ import (
 )
 
 // used for debugging by gaia/cmd/gaiadebug
+// NOTE this is not recommended for non-testing code
 func NewGaiaAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
 ) (gapp *GaiaApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {

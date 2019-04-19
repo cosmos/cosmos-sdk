@@ -1,14 +1,9 @@
-package init
-
-// DONTCOVER
+package cli
 
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,7 +11,6 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,9 +22,7 @@ import (
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -218,38 +210,6 @@ following delegation and commission default parameters:
 	return cmd
 }
 
-func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
-	accountIsInGenesis := false
-
-	stakingDataBz := genesisState.Modules[staking.ModuleName]
-	var stakingData staking.GenesisState
-	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
-	bondDenom := stakingData.Params.BondDenom
-
-	// Check if the account is in genesis
-	for _, acc := range genesisState.Accounts {
-		// Ensure that account is in genesis
-		if acc.Address.Equals(key) {
-
-			// Ensure account contains enough funds of default bond denom
-			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
-				return fmt.Errorf(
-					"account %v is in genesis, but it only has %v%v available to stake, not %v%v",
-					key.String(), acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
-				)
-			}
-			accountIsInGenesis = true
-			break
-		}
-	}
-
-	if accountIsInGenesis {
-		return nil
-	}
-
-	return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
-}
-
 func prepareFlagsForTxCreateValidator(
 	config *cfg.Config, nodeID, ip, chainID string, valPubKey crypto.PubKey, website, details, identity string,
 ) {
@@ -284,35 +244,4 @@ func prepareFlagsForTxCreateValidator(
 	}
 }
 
-func makeOutputFilepath(rootDir, nodeID string) (string, error) {
-	writePath := filepath.Join(rootDir, "config", "gentx")
-	if err := common.EnsureDir(writePath, 0700); err != nil {
-		return "", err
-	}
-	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
-}
-
-func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
-	var stdTx auth.StdTx
-	bytes, err := ioutil.ReadAll(r)
-	if err != nil {
-		return stdTx, err
-	}
-	err = cdc.UnmarshalJSON(bytes, &stdTx)
-	return stdTx, err
-}
-
-// nolint: errcheck
-func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
-	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-	json, err := cdc.MarshalJSON(tx)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(outputFile, "%s\n", json)
-	return err
-}
+// DONTCOVER

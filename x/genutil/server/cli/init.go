@@ -1,4 +1,4 @@
-package init
+package cli
 
 import (
 	"encoding/json"

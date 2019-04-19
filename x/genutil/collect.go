@@ -67,10 +67,17 @@ func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 
 	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-	appState, err = app.GaiaAppGenStateJSON(cdc, genDoc, genTxs)
+	// if there are no gen txs to be processed, return the default empty state
+	if len(appGenTxs) == 0 {
+		return appState, errors.New("there must be at least one genesis tx")
+	}
+
+	// create the app state
+	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
 	if err != nil {
 		return appState, err
 	}
+	appState = codec.MarshalJSONIndent(cdc, genesisState)
 
 	genDoc.AppState = appState
 	err = ExportGenesisFile(&genDoc, config.GenesisFile())

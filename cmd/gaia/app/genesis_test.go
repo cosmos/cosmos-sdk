@@ -122,17 +122,17 @@ func TestGaiaGenesisValidation(t *testing.T) {
 
 	// require duplicate accounts fails validation
 	genesisState := makeGenesisState(t, dupGenTxs)
-	err := GaiaValidateGenesisState(genesisState)
+	err := mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
 
 	// require invalid vesting account fails validation (invalid end time)
 	genesisState = makeGenesisState(t, genTxs)
 	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins
-	err = GaiaValidateGenesisState(genesisState)
+	err = mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
 	genesisState.Accounts[0].StartTime = 1548888000
 	genesisState.Accounts[0].EndTime = 1548775410
-	err = GaiaValidateGenesisState(genesisState)
+	err = mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
 
 	// require bonded + jailed validator fails validation
@@ -147,7 +147,7 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	stakingData.Validators = append(stakingData.Validators, val1)
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
 	genesisState.Modules[staking.ModuleName] = stakingDataBz
-	err = GaiaValidateGenesisState(genesisState)
+	err = mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
 
 	// require duplicate validator fails validation
@@ -160,13 +160,13 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	stakingData.Validators = append(stakingData.Validators, val2)
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
 	genesisState.Modules[staking.ModuleName] = stakingDataBz
-	err = GaiaValidateGenesisState(genesisState)
+	err = mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
 }
 
 func TestGenesisStateSanitize(t *testing.T) {
 	genesisState := makeGenesisState(t, nil)
-	require.Nil(t, GaiaValidateGenesisState(genesisState))
+	require.Nil(t, mbm.ValidateGenesis(genesisState.Modules))
 
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc1 := auth.NewBaseAccountWithAddress(addr1)

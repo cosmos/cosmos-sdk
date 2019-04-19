@@ -94,9 +94,11 @@ func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) er
 	return err
 }
 
+type deliverTxfn func([]byte) abci.ResponseDeliverTx
+
 // deliver a genesis transaction
 func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
-	stakingKeeper StakingKeeper, deliverTx func([]byte) abci.ResponseDeliverTx) []abci.ValidatorUpdate {
+	stakingKeeper StakingKeeper, deliverTx deliverTxfn) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
 		var tx auth.StdTx

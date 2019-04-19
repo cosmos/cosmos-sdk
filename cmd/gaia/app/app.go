@@ -167,9 +167,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 	)
 
-	// NOTE: during begin block slashing happens after distr.BeginBlocker so
-	// that there is nothing left over in the validator fee pool, so as to keep
-	// the CanWithdrawInvariant invariant.
+	// During begin block slashing happens after distr.BeginBlocker so that
+	// there is nothing left over in the validator fee pool, so as to keep the
+	// CanWithdrawInvariant invariant.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
 	app.mm.SetOrderInitGenesis(distr.ModuleName, staking.ModuleName, auth.ModuleName, bank.ModuleName,
@@ -177,10 +177,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
-	// initialize BaseApp
+	// initialize stores
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint,
 		app.keyDistr, app.keySlashing, app.keyGov, app.keyFeeCollection,
 		app.keyParams, app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
+
+	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
@@ -195,7 +197,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	return app
 }
 
-// application updates every end block
+// application updates every begin block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
@@ -205,15 +207,11 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	return app.mm.EndBlock(ctx, req)
 }
 
-// custom logic for gaia initialization
+// application update at chain initialization
 func (app *GaiaApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
-	validators := app.initFromGenesisState(ctx, genesisState)
-
-	return abci.ResponseInitChain{
-		Validators: validators,
-	}
+	return app.mm.InitGenesis(ctx, genesisState.Modules)
 }
 
 // load a particular height

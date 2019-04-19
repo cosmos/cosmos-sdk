@@ -146,7 +146,7 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 }
 
 // perform init genesis functionality for modules
-func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) []abci.ValidatorUpdate {
+func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range mm.OrderInitGenesis {
 		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
@@ -156,7 +156,9 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 			validatorUpdates = moduleValUpdates
 		}
 	}
-	return validatorUpdates
+	return abci.ResponseInitChain{
+		Validators: validators,
+	}
 }
 
 // perform export genesis functionality for modules

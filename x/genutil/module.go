@@ -33,8 +33,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-
-    validateGenesisStateAccounts(accs []GenesisAccount)
 	return ValidateGenesis(data)
 }
 

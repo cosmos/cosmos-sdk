@@ -410,7 +410,7 @@ func TestGaiaImportExport(t *testing.T) {
 		panic(err)
 	}
 	ctxB := newApp.NewContext(true, abci.Header{})
-	newApp.initFromGenesisState(ctxB, genesisState)
+	newApp.mm.InitGenesis(ctx, genesisState.Modules)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})

@@ -40,7 +40,8 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("Error unmarshaling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			if err = app.GaiaValidateGenesisState(genstate); err != nil {
+			// XXX get mbm in here
+			if err = mbm.ValidateGenesis(genesisState.Modules); err != nil {
 				return fmt.Errorf("Error validating genesis file %s: %s", genesis, err.Error())
 			}
 

@@ -24,9 +24,21 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	keeper.SetPool(ctx, data.Pool)
+	keeper.SetPool(ctx, data.Pool) // TODO remove pool from genesis data and always calculate?
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
+
+	// XXX fixup
+	// manually set the total supply for staking based on accounts
+	for _, acc := range genesisState.Accounts {
+		for _, coin := range acc.Coins {
+			if coin.Denom == stakingData.Params.BondDenom {
+				// increase the supply
+				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
+					Add(coin.Amount) // increase the supply
+			}
+		}
+	}
 
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)

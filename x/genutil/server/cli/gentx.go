@@ -83,7 +83,8 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			if err = app.GaiaValidateGenesisState(genesisState); err != nil {
+			// XXX get mbm in here
+			if err = mbm.ValidateGenesis(genesisState.Modules); err != nil {
 				return err
 			}
 

@@ -909,8 +909,8 @@ func TestGaiaCLIDecode(t *testing.T) {
 	// Check that the transaction decodes as epxceted
 	var stdTx auth.StdTx
 	cdc := app.MakeCodec()
-	jsonTx := "{\"type\": \"auth/StdTx\",\"value\": " + stdout + "}"
-	require.Nil(t, cdc.UnmarshalJSON([]byte(jsonTx), &stdTx))
+	aminoJson := "{\"type\": \"auth/StdTx\",\"value\": " + stdout + "}"
+	require.Nil(t, cdc.UnmarshalJSON([]byte(aminoJson), &stdTx))
 	require.Equal(t, "deadbeef", stdTx.Memo)
 }
 

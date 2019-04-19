@@ -344,20 +344,19 @@ func TestDecodeTx(t *testing.T) {
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &encodeResp))
 
 	decodeReq := clienttx.DecodeReq{Tx: encodeResp.Tx}
-	encodedJSON, _ = cdc.MarshalJSON(decodeReq)
-	res, body = Request(t, port, "POST", "/txs/decode", encodedJSON)
+	decodedJSON, _ := cdc.MarshalJSON(decodeReq)
+	res, body = Request(t, port, "POST", "/txs/decode", decodedJSON)
 
 	// Make sure it came back ok, and that we can decode it back to the transaction
 	// 200 response.
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	decodeResp := struct {
-		Tx auth.StdTx `json:"tx"`
-	}{}
+	decodeResp := auth.StdTx{}
 
-	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &decodeResp))
+	aminoJson := "{\"type\": \"auth/StdTx\",\"value\": " + body + "}"
+	require.Nil(t, cdc.UnmarshalJSON([]byte(aminoJson), &decodeResp))
 
 	// check that the transaction decodes as expected
-	require.Equal(t, memo, decodeResp.Tx.Memo)
+	require.Equal(t, memo, decodeResp.Memo)
 }
 
 func TestTxs(t *testing.T) {

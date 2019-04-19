@@ -134,7 +134,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if msg.Voter.Empty() {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
-	if !validVoteOption(msg.Option) {
+	if !ValidVoteOption(msg.Option) {
 		return ErrInvalidVote(DefaultCodespace, msg.Option)
 	}
 

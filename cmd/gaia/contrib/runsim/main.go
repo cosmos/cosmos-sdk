@@ -173,7 +173,7 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("Seed %d: FAILED", seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
 		} else {
-			log.Printf("Seed %d: OK", seed)
+			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
 	}
 	log.Printf("[W%d] no seeds left, shutting down", id)

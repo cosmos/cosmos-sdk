@@ -106,11 +106,12 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) (msg gov.MsgSubmitProposal, err error) {
 	deposit := randomDeposit(r)
 	msg = gov.NewMsgSubmitProposal(
-		simulation.RandStringOfLength(r, 5),
-		simulation.RandStringOfLength(r, 5),
-		gov.ProposalTypeText,
-		sender.Address,
+		gov.NewTextProposal(
+			simulation.RandStringOfLength(r, 5),
+			simulation.RandStringOfLength(r, 5),
+		),
 		deposit,
+		sender.Address,
 	)
 	if msg.ValidateBasic() != nil {
 		err = fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())

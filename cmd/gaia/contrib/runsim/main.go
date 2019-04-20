@@ -170,7 +170,7 @@ func worker(id int, seeds <-chan int) {
 	for seed := range seeds {
 		if err := spawnProc(id, seed); err != nil {
 			results <- false
-			log.Printf("Seed %d: FAILED", seed)
+			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
 		} else {
 			log.Printf("[W%d] Seed %d: OK", id, seed)

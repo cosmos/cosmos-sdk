@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// RouterKey defines the routing key for a ParameterChangeProposal
-	RouterKey = "params"
-
 	// ProposalTypeChange defines the type for a ParameterChangeProposal
 	ProposalTypeChange = "ParameterChange"
 )

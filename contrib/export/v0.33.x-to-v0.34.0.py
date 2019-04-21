@@ -16,7 +16,7 @@ def process_raw_genesis(genesis, parsed_args):
     }
 
     # migrate governance state as the internal structure of proposals has changed
-    migrate_gov_data(genesis['gov'])
+    migrate_gov_data(genesis['app_state']['gov'])
 
     # default Tendermint block time (ms)
     genesis['consensus_params']['block']['time_iota_ms'] = '1000'
@@ -60,6 +60,7 @@ def migrate_gov_data(gov_data):
         }
 
         p['proposal_id'] = v['proposal_id']
+        p['proposal_status'] = v['proposal_status']
         p['final_tally_result'] = v['final_tally_result']
         p['submit_time'] = v['submit_time']
         p['deposit_end_time'] = v['deposit_end_time']

@@ -48,6 +48,7 @@ def migrate_gov_data(gov_data):
         del p['type']
         del p['value']
 
+        assert t == 'gov/TextProposal', 'invalid proposal type: {t}'
         assert p == {}, 'expected proposal to be empty after deleting contents'
 
         p['proposal_content'] = {
@@ -55,15 +56,16 @@ def migrate_gov_data(gov_data):
             'value': {
                 'title': v['title'],
                 'description': v['description']
-            },
-            'proposal_id': v['proposal_id'],
-            'final_tally_result': v['final_tally_result'],
-            'submit_time': v['submit_time'],
-            'deposit_end_time': v['deposit_end_time'],
-            'total_deposit': v['total_deposit'],
-            'voting_start_time': v['voting_start_time'],
-            'voting_end_time': v['voting_end_time']
+            }
         }
+
+        p['proposal_id'] = v['proposal_id']
+        p['final_tally_result'] = v['final_tally_result']
+        p['submit_time'] = v['submit_time']
+        p['deposit_end_time'] = v['deposit_end_time']
+        p['total_deposit'] = v['total_deposit']
+        p['voting_start_time'] = v['voting_start_time']
+        p['voting_end_time'] = v['voting_end_time']
 
 
 if __name__ == '__main__':

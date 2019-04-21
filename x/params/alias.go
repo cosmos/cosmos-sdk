@@ -11,7 +11,11 @@ var (
 )
 
 const (
-	RouterKey          = types.RouterKey
+	ModuleName = types.ModuleName
+	RouterKey  = types.RouterKey
+	StoreKey   = types.StoreKey
+	TStoreKey  = types.TStoreKey
+
 	ProposalTypeChange = types.ProposalTypeChange
 )
 

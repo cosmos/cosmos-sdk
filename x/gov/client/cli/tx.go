@@ -18,17 +18,17 @@ import (
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
+// Proposal flags
 const (
-	flagTitle        = "title"
-	flagDescription  = "description"
+	FlagTitle        = "title"
+	FlagDescription  = "description"
 	flagProposalType = "type"
-	flagDeposit      = "deposit"
+	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
-	flagOption       = "option"
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
 	flagNumLimit     = "limit"
-	flagProposal     = "proposal"
+	FlagProposal     = "proposal"
 )
 
 type proposal struct {
@@ -38,11 +38,14 @@ type proposal struct {
 	Deposit     string
 }
 
-var proposalFlags = []string{
-	flagTitle,
-	flagDescription,
+// ProposalFlags defines the core required fields of a proposal. It is used to
+// verify that these values are not provided in conjunction with a JSON proposal
+// file.
+var ProposalFlags = []string{
+	FlagTitle,
+	FlagDescription,
 	flagProposalType,
-	flagDeposit,
+	FlagDeposit,
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
@@ -69,33 +72,26 @@ is equivalent to
 $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			proposal, err := parseSubmitProposalFlags()
-			if err != nil {
-				return err
-			}
-
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			// Get proposer address
-			from := cliCtx.GetFromAddress()
+			proposal, err := parseSubmitProposalFlags()
+			if err != nil {
+				return err
+			}
 
-			// Find deposit amount
 			amount, err := sdk.ParseCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
-			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
+			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
-			err = msg.ValidateBasic()
-			if err != nil {
+			msg := gov.NewMsgSubmitProposal(content, amount, from)
+			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -103,11 +99,11 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 		},
 	}
 
-	cmd.Flags().String(flagTitle, "", "title of proposal")
-	cmd.Flags().String(flagDescription, "", "description of proposal")
+	cmd.Flags().String(FlagTitle, "", "title of proposal")
+	cmd.Flags().String(FlagDescription, "", "description of proposal")
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(flagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }

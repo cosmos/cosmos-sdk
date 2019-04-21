@@ -12,6 +12,7 @@ const (
 
 	DefaultCodespace  = types.DefaultCodespace
 	DefaultParamspace = types.DefaultParamspace
+	ModuleName        = types.ModuleName
 	RouterKey         = types.RouterKey
 	StoreKey          = types.StoreKey
 	QuerierRoute      = types.QuerierRoute
@@ -24,6 +25,10 @@ const (
 	OptionAbstain    = types.OptionAbstain
 	OptionNo         = types.OptionNo
 	OptionNoWithVeto = types.OptionNoWithVeto
+
+	TypeMsgDeposit        = types.TypeMsgDeposit
+	TypeMsgVote           = types.TypeMsgVote
+	TypeMsgSubmitProposal = types.TypeMsgSubmitProposal
 )
 
 type (
@@ -33,7 +38,9 @@ type (
 	Proposals = types.Proposals
 
 	Deposit    = types.Deposit
+	Deposits   = types.Deposits
 	Vote       = types.Vote
+	Votes      = types.Votes
 	VoteOption = types.VoteOption
 
 	TextProposal            = types.TextProposal
@@ -91,5 +98,8 @@ var (
 	NewTextProposal       = types.NewTextProposal
 	NewTallyResultFromMap = types.NewTallyResultFromMap
 
-	ContentFromProposalType = types.ContentFromProposalType
+	ContentFromProposalType  = types.ContentFromProposalType
+	IsValidProposalType      = types.IsValidProposalType
+	VoteOptionFromString     = types.VoteOptionFromString
+	ProposalStatusFromString = types.ProposalStatusFromString
 )

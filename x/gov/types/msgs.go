@@ -41,6 +41,9 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if msg.InitialDeposit.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
+	if IsValidProposalType(msg.Content.ProposalType()) {
+		return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
+	}
 
 	return msg.Content.ValidateBasic()
 }

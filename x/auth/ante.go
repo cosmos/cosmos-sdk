@@ -27,8 +27,9 @@ func init() {
 	copy(simSecp256k1Pubkey[:], bz)
 }
 
-type SignatureVerificationGasConsumer =
-	func (meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
+// SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
+// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey types.
+type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
@@ -258,11 +259,9 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	return pubKey, sdk.Result{}
 }
 
-// consumeSigVerificationGas consumes gas for signature verification based upon
-// the public key type. The cost is fetched from the given params and is matched
+// DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
+// for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
-//
-// TODO: Design a cleaner and flexible way to match concrete public key types.
 func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
 ) sdk.Result {

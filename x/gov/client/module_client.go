@@ -52,7 +52,7 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 
 	cmdSubmitProp := govCli.GetCmdSubmitProposal(mc.cdc)
 	for _, pcmd := range mc.pcmds {
-		cmdSubmitProp.AddCommand(pcmd)
+		cmdSubmitProp.AddCommand(client.PostCommands(pcmd)[0])
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(

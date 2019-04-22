@@ -34,6 +34,8 @@ var (
 	NewKeyTable           = subspace.NewKeyTable
 	DefaultTestComponents = subspace.DefaultTestComponents
 
+	RegisterCodec = types.RegisterCodec
+
 	NewParamChange             = types.NewParamChange
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 

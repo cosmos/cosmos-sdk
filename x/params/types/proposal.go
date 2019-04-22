@@ -16,6 +16,11 @@ const (
 // Assert ParameterChangeProposal implements govtypes.Content at compile-time
 var _ govtypes.Content = ParameterChangeProposal{}
 
+func init() {
+	govtypes.RegisterProposalType(ProposalTypeChange)
+	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
+}
+
 // ParameterChangeProposal defines a proposal which contains multiple parameter
 // changes.
 type ParameterChangeProposal struct {

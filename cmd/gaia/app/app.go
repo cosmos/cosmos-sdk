@@ -215,6 +215,7 @@ func MakeCodec() *codec.Codec {
 	staking.RegisterCodec(cdc)
 	distr.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
+	params.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	crisis.RegisterCodec(cdc)

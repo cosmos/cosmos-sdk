@@ -3,9 +3,8 @@ package gov
 import (
 	"time"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -72,11 +71,6 @@ func NewKeeper(
 	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
-	// XXX: Set the MsgCdc to the one provided which should have everything
-	// registered. This is because MsgSubmitProposal may contain Content which
-	// is implemented in any module.
-	types.MsgCdc = cdc
-
 	rtr.Seal()
 
 	return Keeper{
@@ -100,6 +94,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
 		return Proposal{}, ErrNoProposalHandlerExists(keeper.codespace, content)
 	}
+
+	// TODO: Execute handler with cache context
 
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {

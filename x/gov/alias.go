@@ -101,4 +101,7 @@ var (
 	IsValidProposalType      = types.IsValidProposalType
 	VoteOptionFromString     = types.VoteOptionFromString
 	ProposalStatusFromString = types.ProposalStatusFromString
+
+	RegisterProposalType      = types.RegisterProposalType
+	RegisterProposalTypeCodec = types.RegisterProposalTypeCodec
 )

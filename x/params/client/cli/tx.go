@@ -30,16 +30,21 @@ Example:
 $ gaiacli tx gov submit-proposal paramchange <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:
 {
-  "title": "Test Proposal",
-  "description": "Increase max validator",
+  "title": "Staking Param Change",
+  "description": "Update max validators",
   "changes": [
     {
-	  space: "staking",
-	  key: "MaxValidators",
-	  value: 105
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": "105"
     }
   ],
-  "deposit": "10atom"
+  "deposit": [
+    {
+      "denom": "stake",
+      "amount": "10000"
+    }
+  ]
 }
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {

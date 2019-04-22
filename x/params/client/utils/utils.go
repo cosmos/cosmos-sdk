@@ -12,19 +12,21 @@ import (
 // ParamChangeProposalJSON defines a ParameterChangeProposal with a deposit used
 // to parse  parameter change proposals from a JSON file.
 type ParamChangeProposalJSON struct {
-	params.ParameterChangeProposal
-
-	Deposit sdk.Coins `json:"deposit"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	Changes     []params.ParamChange `json:"changes"`
+	Deposit     sdk.Coins            `json:"deposit"`
 }
 
 // ParamChangeProposalReq defines a parameter change proposal request body.
 type ParamChangeProposalReq struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 
-	params.ParameterChangeProposal
-
-	Proposer sdk.AccAddress `json:"proposer"`
-	Deposit  sdk.Coins      `json:"deposit"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	Changes     []params.ParamChange `json:"changes"`
+	Proposer    sdk.AccAddress       `json:"proposer"`
+	Deposit     sdk.Coins            `json:"deposit"`
 }
 
 // ParseParamChangeProposalJSON reads and parses a ParamChangeProposalJSON from

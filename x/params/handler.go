@@ -26,6 +26,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 		if !ok {
 			return ErrUnknownSubspace(k.codespace, c.Subspace)
 		}
+
 		var err error
 		if len(c.Subkey) == 0 {
 			err = ss.SetRaw(ctx, []byte(c.Key), []byte(c.Value))
@@ -34,7 +35,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 		}
 
 		if err != nil {
-			return ErrSettingParameter(k.codespace, []byte(c.Key), []byte(c.Subkey), []byte(c.Value), err.Error())
+			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, err.Error())
 		}
 	}
 

@@ -1470,9 +1470,7 @@ paths:
         200:
           description: OK
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/Coin"
+            $ref: "#/definitions/DelegatorTotalRewards"
         400:
           description: Invalid delegator address
         500:
@@ -2096,6 +2094,26 @@ definitions:
             $ref: "#/definitions/BlockID"
       block:
         $ref: "#/definitions/Block"
+  DelegationDelegatorReward:
+    type: object
+    properties:
+      validator_address:
+        $ref: "#/definitions/ValidatorAddress"
+      reward:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+  DelegatorTotalRewards:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          $ref: "#/definitions/DelegationDelegatorReward"
+      total:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
   BaseReq:
     type: object
     properties:

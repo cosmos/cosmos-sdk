@@ -123,7 +123,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
 			var (
 				vacc    auth.VestingAccount
-				endTime int
+				endTime int64
 			)
 
 			startTime := genesisTimestamp.Unix()
@@ -131,15 +131,19 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			// Allow for some vesting accounts to vest very quickly while others very
 			// slowly.
 			if r.Intn(100) < 50 {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*24*30)))
+				endTime = int64(simulation.RandIntBetween(r, int(startTime), int(startTime+(60*60*24*30))))
 			} else {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*12)))
+				endTime = int64(simulation.RandIntBetween(r, int(startTime), int(startTime+(60*60*12))))
+			}
+
+			if startTime == endTime {
+				endTime += 1
 			}
 
 			if r.Intn(100) < 50 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, int64(endTime))
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, int64(endTime))
+				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
 			gacc = NewGenesisAccountI(vacc)
@@ -151,13 +155,13 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	}
 
 	authGenesis := auth.NewGenesisState(
-		nil,
+		nil, 
 		auth.NewParams(
-			uint64(randIntBetween(r, 100, 200)),
+			uint64(simulation.RandIntBetween((r, 100, 200)),
 			uint64(r.Intn(7)+1),
-			uint64(randIntBetween(r, 5, 15)),
-			uint64(randIntBetween(r, 500, 1000)),
-			uint64(randIntBetween(r, 500, 1000)),
+			uint64(simulation.RandIntBetween((r, 5, 15)),
+			uint64(simulation.RandIntBetween((r, 500, 1000)),
+			uint64(simulation.RandIntBetween((r, 500, 1000)),
 		),
 	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
@@ -180,7 +184,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	stakingGenesis := staking.NewGenesisState(
 		staking.InitialPool(),
-		staking.NewParams(time.Duration(randIntBetween(r, 60, 60*60*24*3*2))*time.Second,
+		staking.NewParams(time.Duration(simulation.RandIntBetween((r, 60, 60*60*24*3*2))*time.Second,
 			uint16(r.Intn(250)+1), 7, sdk.DefaultBondDenom),
 		nil,
 		nil,
@@ -189,9 +193,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	slashingParams := slashing.NewParams(
 		stakingGenesis.Params.UnbondingTime,
-		int64(randIntBetween(r, 10, 1000)),
+		int64(simulation.RandIntBetween((r, 10, 1000)),
 		sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-		time.Duration(randIntBetween(r, 60, 60*60*24))*time.Second,
+		time.Duration(simulation.RandIntBetween((r, 60, 60*60*24))*time.Second,
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50)+1))),
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))),
 	)
@@ -259,10 +263,6 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
 	}
 	return appStateRandomizedFn(r, accs, genesisTimestamp)
-}
-
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min) + min
 }
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {

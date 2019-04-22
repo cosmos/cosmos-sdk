@@ -60,7 +60,7 @@ func DefaultParams() Params {
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
-		NumKeys:                   r.Intn(250),
+		NumKeys:                   RandIntBetween(r, 2, 250),
 		EvidenceFraction:          r.Float64(),
 		InitialLivenessWeightings: []int{r.Intn(80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,

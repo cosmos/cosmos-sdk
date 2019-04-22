@@ -95,7 +95,14 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 		return Proposal{}, ErrNoProposalHandlerExists(keeper.codespace, content)
 	}
 
-	// TODO: Execute handler with cache context
+	// Execute the proposal content in a cache-wrapped context to validate the
+	// actual parameter changes before the proposal proceeds through the
+	// governance process. State is not persisted.
+	cacheCtx, _ := ctx.CacheContext()
+	handler := keeper.router.GetRoute(content.ProposalRoute())
+	if err := handler(cacheCtx, content); err != nil {
+		return Proposal{}, ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
+	}
 
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {

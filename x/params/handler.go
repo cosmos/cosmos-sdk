@@ -28,13 +28,13 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 		}
 		var err error
 		if len(c.Subkey) == 0 {
-			err = ss.SetRaw(ctx, []byte(c.Key), c.Value)
+			err = ss.SetRaw(ctx, []byte(c.Key), []byte(c.Value))
 		} else {
-			err = ss.SetRawWithSubkey(ctx, []byte(c.Key), c.Subkey, c.Value)
+			err = ss.SetRawWithSubkey(ctx, []byte(c.Key), []byte(c.Subkey), []byte(c.Value))
 		}
 
 		if err != nil {
-			return ErrSettingParameter(k.codespace, []byte(c.Key), c.Subkey, c.Value, err.Error())
+			return ErrSettingParameter(k.codespace, []byte(c.Key), []byte(c.Subkey), []byte(c.Value), err.Error())
 		}
 	}
 

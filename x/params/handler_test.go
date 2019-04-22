@@ -58,7 +58,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 		params.NewKeyTable([]byte("testKey"), uint64(0)),
 	)
 
-	tp := testProposal(params.NewParamChange("testSubspace", "testKey", nil, []byte("\"1\"")))
+	tp := testProposal(params.NewParamChange("testSubspace", "testKey", "", "\"1\""))
 	hdlr := params.NewProposalHandler(input.keeper)
 	require.NoError(t, hdlr(input.ctx, tp))
 
@@ -73,7 +73,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 		params.NewKeyTable([]byte("testKey"), uint64(0)),
 	)
 
-	tp := testProposal(params.NewParamChange("testSubspace", "testKey", nil, []byte("invalid")))
+	tp := testProposal(params.NewParamChange("testSubspace", "testKey", "", "invalidType"))
 	hdlr := params.NewProposalHandler(input.keeper)
 	require.Error(t, hdlr(input.ctx, tp))
 

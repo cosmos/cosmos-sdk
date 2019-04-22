@@ -75,11 +75,11 @@ func (pcp ParameterChangeProposal) String() string {
 type ParamChange struct {
 	Subspace string `json:"subspace"`
 	Key      string `json:"key"`
-	Subkey   []byte `json:"subkey"`
-	Value    []byte `json:"value"`
+	Subkey   string `json:"subkey,omitempty"`
+	Value    string `json:"value"`
 }
 
-func NewParamChange(subspace, key string, subkey, value []byte) ParamChange {
+func NewParamChange(subspace, key, subkey, value string) ParamChange {
 	return ParamChange{subspace, key, subkey, value}
 }
 

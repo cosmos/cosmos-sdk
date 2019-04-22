@@ -14,16 +14,15 @@ import (
 type Proposal struct {
 	Content `json:"content"` // Proposal content interface
 
-	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
+	ProposalID       uint64         `json:"proposal_id"`        //  ID of the proposal
+	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
 
-	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys
-
-	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
+	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
 	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit"`    //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	TotalDeposit   sdk.Coins `json:"total_deposit"`    // Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 

@@ -7,8 +7,8 @@ import (
 )
 
 func TestParameterChangeProposal(t *testing.T) {
-	pc1 := NewParamChange("sub", "foo", nil, []byte("baz"))
-	pc2 := NewParamChange("sub", "bar", []byte("cat"), []byte("dog"))
+	pc1 := NewParamChange("sub", "foo", "", "baz")
+	pc2 := NewParamChange("sub", "bar", "cat", "dog")
 	pcp := NewParameterChangeProposal("test title", "test description", []ParamChange{pc1, pc2})
 
 	require.Equal(t, "test title", pcp.GetTitle())
@@ -17,15 +17,15 @@ func TestParameterChangeProposal(t *testing.T) {
 	require.Equal(t, ProposalTypeChange, pcp.ProposalType())
 	require.Nil(t, pcp.ValidateBasic())
 
-	pc3 := NewParamChange("", "bar", []byte("cat"), []byte("dog"))
+	pc3 := NewParamChange("", "bar", "cat", "dog")
 	pcp = NewParameterChangeProposal("test title", "test description", []ParamChange{pc3})
 	require.Error(t, pcp.ValidateBasic())
 
-	pc4 := NewParamChange("sub", "", []byte("cat"), []byte("dog"))
+	pc4 := NewParamChange("sub", "", "cat", "dog")
 	pcp = NewParameterChangeProposal("test title", "test description", []ParamChange{pc4})
 	require.Error(t, pcp.ValidateBasic())
 
-	pc5 := NewParamChange("sub", "foo", []byte("cat"), nil)
+	pc5 := NewParamChange("sub", "foo", "cat", "")
 	pcp = NewParameterChangeProposal("test title", "test description", []ParamChange{pc5})
 	require.Error(t, pcp.ValidateBasic())
 }

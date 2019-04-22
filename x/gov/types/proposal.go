@@ -304,6 +304,21 @@ func (sup SoftwareUpgradeProposal) String() string {
 `, sup.Title, sup.Description)
 }
 
+var validProposalTypes = map[string]struct{}{
+	ProposalTypeText:            struct{}{},
+	ProposalTypeSoftwareUpgrade: struct{}{},
+}
+
+// RegisterProposalType registers a proposal type. It will panic if the type is
+// already registered.
+func RegisterProposalType(ty string) {
+	if _, ok := validProposalTypes[ty]; ok {
+		panic(fmt.Sprintf("already registered proposal type: %s", ty))
+	}
+
+	validProposalTypes[ty] = struct{}{}
+}
+
 // ContentFromProposalType returns a Content object based on the proposal type.
 func ContentFromProposalType(title, desc, ty string) Content {
 	switch ty {
@@ -319,9 +334,12 @@ func ContentFromProposalType(title, desc, ty string) Content {
 }
 
 // IsValidProposalType returns a boolean determining if the proposal type is
-// valid as defined in the governance module.
+// valid.
+//
+// NOTE: Modules with their own proposal types must register them.
 func IsValidProposalType(ty string) bool {
-	return ty == ProposalTypeText || ty == ProposalTypeSoftwareUpgrade
+	_, ok := validProposalTypes[ty]
+	return ok
 }
 
 // ProposalHandler implements the Handler interface for governance module-based

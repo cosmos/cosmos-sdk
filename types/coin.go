@@ -73,7 +73,7 @@ func (coin *Coin) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	coin.Denom = c.Denom
-	coin.Amount = c.Amount.RoundInt()
+	coin.Amount = NewIntFromBigInt(c.Amount.Int)
 	return nil
 }
 

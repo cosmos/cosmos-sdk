@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -12,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govccli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
@@ -21,14 +19,15 @@ import (
 // change proposal transaction.
 func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "paramchange",
+		Use:   "paramchange [proposal-file]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
 		Long: strings.TrimSpace(`
 Submit a parameter proposal along with an initial deposit. The proposal details
 must be supplied via a JSON file.
 
 Example:
-$ gaiacli tx gov submit-proposal paramchange --proposal="path/to/proposal.json" --from <key_or_address>
+$ gaiacli tx gov submit-proposal paramchange <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:
 {
   "title": "Test Proposal",
@@ -49,7 +48,7 @@ where proposal.json contains:
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			proposal, err := paramscutils.ParseParamChangeProposalJSON(cdc, viper.GetString(govccli.FlagProposal))
+			proposal, err := paramscutils.ParseParamChangeProposalJSON(cdc, args[0])
 			if err != nil {
 				return err
 			}
@@ -65,8 +64,6 @@ where proposal.json contains:
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	cmd.Flags().String(govccli.FlagProposal, "", "The proposal file path (if set, other proposal flags are ignored)")
 
 	return cmd
 }

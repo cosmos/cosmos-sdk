@@ -27,10 +27,13 @@ func init() {
 	copy(simSecp256k1Pubkey[:], bz)
 }
 
+type SignatureVerificationGasConsumer =
+	func (meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -127,7 +130,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 			// check signature, return account with incremented nonce
 			signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
-			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params)
+			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params, sigGasConsumer)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -168,6 +171,7 @@ func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 // a pubkey, set it.
 func processSig(
 	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool, params Params,
+	sigGasConsumer SignatureVerificationGasConsumer,
 ) (updatedAcc Account, res sdk.Result) {
 
 	pubKey, res := ProcessPubKey(acc, sig, simulate)
@@ -188,7 +192,7 @@ func processSig(
 		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
 
-	if res := consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
+	if res := sigGasConsumer(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
 		return nil, res
 	}
 
@@ -259,7 +263,7 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 // by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSigVerificationGas(
+func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
 ) sdk.Result {
 
@@ -295,7 +299,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			consumeSigVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			DefaultSigVerificationGasConsumer(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
 			sigIndex++
 		}
 	}

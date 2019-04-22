@@ -47,7 +47,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
@@ -95,7 +95,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -150,7 +150,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(0)
 
 	// keys and addresses
@@ -205,7 +205,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -280,7 +280,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
@@ -319,7 +319,7 @@ func TestAnteHandlerFees(t *testing.T) {
 func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -358,7 +358,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -405,7 +405,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -480,7 +480,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -594,7 +594,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res := consumeSigVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
+			res := DefaultSigVerificationGasConsumer(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
 
 			if tt.shouldErr {
 				require.False(t, res.IsOK())
@@ -674,7 +674,7 @@ func TestCountSubkeys(t *testing.T) {
 func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak, input.fck, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses

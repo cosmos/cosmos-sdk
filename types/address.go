@@ -99,8 +99,16 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
-	if len(bz) != AddrLen {
-		return nil, errors.New("Incorrect address length")
+	validator := GetConfig().GetAddressValidator()
+	if validator != nil {
+		err = validator(bz)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		if len(bz) != AddrLen {
+			return nil, errors.New("Incorrect address length")
+		}
 	}
 
 	return AccAddress(bz), nil

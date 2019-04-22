@@ -16,13 +16,12 @@ const (
 	CodeAlreadyActiveProposal    sdk.CodeType = 3
 	CodeAlreadyFinishedProposal  sdk.CodeType = 4
 	CodeAddressNotStaked         sdk.CodeType = 5
-	CodeInvalidTitle             sdk.CodeType = 6
-	CodeInvalidDescription       sdk.CodeType = 7
-	CodeInvalidProposalType      sdk.CodeType = 8
-	CodeInvalidVote              sdk.CodeType = 9
-	CodeInvalidGenesis           sdk.CodeType = 10
-	CodeInvalidProposalStatus    sdk.CodeType = 11
-	CodeProposalHandlerNotExists sdk.CodeType = 12
+	CodeInvalidContent           sdk.CodeType = 6
+	CodeInvalidProposalType      sdk.CodeType = 7
+	CodeInvalidVote              sdk.CodeType = 8
+	CodeInvalidGenesis           sdk.CodeType = 9
+	CodeInvalidProposalStatus    sdk.CodeType = 10
+	CodeProposalHandlerNotExists sdk.CodeType = 11
 )
 
 func ErrUnknownProposal(codespace sdk.CodespaceType, proposalID uint64) sdk.Error {
@@ -45,12 +44,8 @@ func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.AccAddress) sd
 	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("address %s is not staked and is thus ineligible to vote", address))
 }
 
-func ErrInvalidTitle(codespace sdk.CodespaceType, errorMsg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidTitle, errorMsg)
-}
-
-func ErrInvalidDescription(codespace sdk.CodespaceType, errorMsg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDescription, errorMsg)
+func ErrInvalidProposalContent(cs sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(cs, CodeInvalidContent, fmt.Sprintf("invalid proposal content: %s", msg))
 }
 
 func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {

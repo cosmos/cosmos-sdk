@@ -35,18 +35,18 @@ type Handler func(ctx sdk.Context, content Content) sdk.Error
 func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
-		return ErrInvalidTitle(codespace, "proposal title cannot be blank")
+		return ErrInvalidProposalContent(codespace, "proposal title cannot be blank")
 	}
 	if len(title) > MaxTitleLength {
-		return ErrInvalidTitle(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
+		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
 	}
 
 	description := c.GetDescription()
 	if len(description) == 0 {
-		return ErrInvalidDescription(codespace, "proposal description cannot be blank")
+		return ErrInvalidProposalContent(codespace, "proposal description cannot be blank")
 	}
 	if len(description) > MaxDescriptionLength {
-		return ErrInvalidDescription(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
+		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
 	}
 
 	return nil

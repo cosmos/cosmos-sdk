@@ -44,7 +44,7 @@ func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return []byte{}, types.ErrUnknownCollection(keeper.DefaultCodespace, fmt.Sprintf("Unknown denom %s", denom))
+		return []byte{}, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("Unknown denom %s", denom))
 	}
 
 	balance := 0

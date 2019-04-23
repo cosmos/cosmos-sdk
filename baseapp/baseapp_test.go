@@ -968,7 +968,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		for j := 0; j < tc.numDelivers; j++ {
 			res := app.Deliver(tx)
 
-			ctx := app.getState(runTxModeDeliver).ctx
+			ctx := app.GetState(RunTxModeDeliver).ctx
 			blockGasUsed := ctx.BlockGasMeter().GasConsumed()
 
 			// check for failed transactions
@@ -1018,7 +1018,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	res := app.DeliverTx(txBytes)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx := app.getState(runTxModeDeliver).ctx
+	ctx := app.GetState(RunTxModeDeliver).ctx
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(store, anteKey))
 
@@ -1033,7 +1033,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	res = app.DeliverTx(txBytes)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.GetState(RunTxModeDeliver).ctx
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
@@ -1048,7 +1048,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	res = app.DeliverTx(txBytes)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.GetState(RunTxModeDeliver).ctx
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(2), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(store, deliverKey))

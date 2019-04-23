@@ -26,15 +26,15 @@ import (
 var mainConsensusParamsKey = []byte("consensus_params")
 
 // Enum mode for app.runTx
-type runTxMode uint8
+type RunTxMode uint8
 
 const (
 	// Check a transaction
-	runTxModeCheck runTxMode = iota
+	RunTxModeCheck RunTxMode = iota
 	// Simulate a transaction
-	runTxModeSimulate runTxMode = iota
+	RunTxModeSimulate RunTxMode = iota
 	// Deliver a transaction
-	runTxModeDeliver runTxMode = iota
+	RunTxModeDeliver RunTxMode = iota
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
@@ -563,7 +563,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeCheck, txBytes, tx)
+		result = app.runTx(RunTxModeCheck, txBytes, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -584,7 +584,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeDeliver, txBytes, tx)
+		result = app.runTx(RunTxModeDeliver, txBytes, tx)
 	}
 
 	return abci.ResponseDeliverTx{
@@ -616,13 +616,13 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	ctx = app.getState(mode).ctx.
+func (app *BaseApp) getContextForTx(mode RunTxMode, txBytes []byte) (ctx sdk.Context) {
+	ctx = app.GetState(mode).ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos).
 		WithConsensusParams(app.consensusParams)
 
-	if mode == runTxModeSimulate {
+	if mode == RunTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
 
@@ -630,7 +630,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode RunTxMode) (result sdk.Result) {
 	idxlogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
@@ -649,7 +649,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		var msgResult sdk.Result
 
 		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
+		if mode != RunTxModeCheck {
 			msgResult = handler(ctx, msg)
 		}
 
@@ -689,10 +689,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	return result
 }
 
-// Returns the applicantion's deliverState if app is in runTxModeDeliver,
+// Returns the applicantion's deliverState if app is in RunTxModeDeliver,
 // otherwise it returns the application's checkstate.
-func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
+func (app *BaseApp) GetState(mode RunTxMode) *state {
+	if mode == RunTxModeCheck || mode == RunTxModeSimulate {
 		return app.checkState
 	}
 
@@ -724,7 +724,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -734,13 +734,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
-	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
+	if mode == RunTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
 		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
 		return
 	}
 
 	var startingGas uint64
-	if mode == runTxModeDeliver {
+	if mode == RunTxModeDeliver {
 		startingGas = ctx.BlockGasMeter().GasConsumed()
 	}
 
@@ -769,7 +769,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// NOTE: This must exist in a separate defer function for the above recovery
 	// to recover from this one.
 	defer func() {
-		if mode == runTxModeDeliver {
+		if mode == RunTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(),
 				"block gas meter",
@@ -799,7 +799,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == RunTxModeSimulate))
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
@@ -820,7 +820,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	if mode == runTxModeCheck {
+	if mode == RunTxModeCheck {
 		return
 	}
 
@@ -830,7 +830,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
 
-	if mode == runTxModeSimulate {
+	if mode == RunTxModeSimulate {
 		return
 	}
 

@@ -552,7 +552,7 @@ implement their own proposal types and handlers (eg. parameter changes), where
 the governance module itself supports `Text` and `SoftwareUpgrade`. Any module
 outside of governance has it's command mounted on top of `submit-proposal`.
 
-To submit a `Text` or `SoftwareUpgrade`:
+To submit a `Text` proposal:
 
 ```bash
 gaiacli tx gov submit-proposal \

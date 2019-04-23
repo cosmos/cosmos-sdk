@@ -63,6 +63,11 @@ func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
 	collectedFees := k.fck.GetCollectedFees(ctx)
 	communityPool, _ := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
+	totalRewards, _ := k.dk.GetTotalRewards(ctx).TruncateDecimal()
 
-	return supplierTotal.Add(bondedSupply).Add(collectedFees).Add(communityPool)
+	return supplierTotal.
+		Add(bondedSupply).
+		Add(collectedFees).
+		Add(communityPool).
+		Add(totalRewards)
 }

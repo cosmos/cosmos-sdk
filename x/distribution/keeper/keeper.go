@@ -96,3 +96,14 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 
 	return nil
 }
+
+// GetTotalRewards returns the total amount of fee distribution rewards held in the store
+func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
+	k.IterateValidatorOutstandingRewards(ctx,
+		func(valAddr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			totalRewards = totalRewards.Add(rewards)
+			return false
+		},
+	)
+	return totalRewards
+}

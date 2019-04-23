@@ -10,6 +10,7 @@ type CrisisKeeper interface {
 // DistributionKeeper defines the expected distribution keeper
 type DistributionKeeper interface {
 	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
+	GetTotalRewards(ctx sdk.Context) sdk.DecCoins
 }
 
 // FeeCollectionKeeper defines the expected fee collection keeper

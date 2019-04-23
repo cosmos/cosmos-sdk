@@ -394,7 +394,7 @@ func (f *Fixtures) TxGovSubmitParamChangeProposal(
 ) (bool, string, string) {
 
 	cmd := fmt.Sprintf(
-		"%s tx gov submit-proposal paramchange %s --from=%s %v",
+		"%s tx gov submit-proposal param-change %s --from=%s %v",
 		f.GaiacliBinary, proposalPath, from, f.Flags(),
 	)
 

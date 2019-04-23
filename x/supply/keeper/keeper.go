@@ -10,13 +10,16 @@ import (
 type Keeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
+
+	sk StakingKeeper
 }
 
 // NewKeeper creates a new supply Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk StakingKeeper) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: key,
+		sk:       sk,
 	}
 }
 
@@ -44,4 +47,14 @@ func (k Keeper) InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 	supplier.Inflate(supplyType, amount)
 
 	k.SetSupplier(ctx, supplier)
+}
+
+// TotalSupply returns the total supply of the network
+//
+// TODO: add unbonded
+func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
+	supplier := k.GetSupplier(ctx)
+	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
+	supplierTotal := supplier.Total()
+	return supplierTotal.Add(bondedSupply)
 }

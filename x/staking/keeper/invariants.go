@@ -5,14 +5,14 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// register all staking invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) {
+// RegisterInvariants registers all staking invariants
+func RegisterInvariants(c types.CrisisKeeper, k Keeper) {
 
+	c.RegisterRoute(types.ModuleName, "bonded-tokens",
+		BondedTokensInvariant(k))
 	c.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
 	c.RegisterRoute(types.ModuleName, "positive-delegation",
@@ -22,12 +22,16 @@ func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKee
 }
 
 // AllInvariants runs all invariants of the staking module.
-func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+func AllInvariants(k Keeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 
-		err := NonNegativePowerInvariant(k)(ctx)
+		err := BondedTokensInvariant(k)(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = NonNegativePowerInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
@@ -40,6 +44,32 @@ func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
 		err = DelegatorSharesInvariant(k)(ctx)
 		if err != nil {
 			return err
+		}
+
+		return nil
+	}
+}
+
+// BondedTokensInvariant checks that the total bonded tokens reflects all bonded tokens in delegations
+func BondedTokensInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+		pool := k.GetPool(ctx)
+
+		bonded := sdk.ZeroDec()
+		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
+			switch validator.GetStatus() {
+			case sdk.Bonded:
+				bonded = bonded.Add(validator.GetBondedTokens().ToDec())
+			}
+
+			return false
+		})
+
+		// Bonded tokens should equal sum of tokens with bonded validators
+		if !pool.BondedTokens.ToDec().Equal(bonded) {
+			return fmt.Errorf("bonded token invariance:\n"+
+				"\tpool.BondedTokens: %v\n"+
+				"\tsum of account tokens: %v", pool.BondedTokens, bonded)
 		}
 
 		return nil

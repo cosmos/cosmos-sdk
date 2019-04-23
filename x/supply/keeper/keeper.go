@@ -11,15 +11,17 @@ type Keeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
 
-	sk StakingKeeper
+	sk  StakingKeeper
+	fck FeeCollectionKeeper
 }
 
 // NewKeeper creates a new supply Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk StakingKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: key,
 		sk:       sk,
+		fck:      fck,
 	}
 }
 
@@ -50,11 +52,13 @@ func (k Keeper) InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 }
 
 // TotalSupply returns the total supply of the network
-//
-// TODO: add unbonded
+// total = circulating + vesting + modules + bonded supply + collected fees + rewards
 func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	supplier := k.GetSupplier(ctx)
+	supplierTotal := supplier.Total() // circulating + vesting + modules
+
 	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
-	supplierTotal := supplier.Total()
-	return supplierTotal.Add(bondedSupply)
+	collectedFees := k.fck.GetCollectedFees(ctx)
+
+	return supplierTotal.Add(bondedSupply).Add(collectedFees)
 }

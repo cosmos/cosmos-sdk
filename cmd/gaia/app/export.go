@@ -9,14 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // export the state of gaia for a genesis file
-func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string) (
-	appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
+) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
@@ -25,20 +24,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteLis
 		app.prepForZeroHeightGenesis(ctx, jailWhiteList)
 	}
 
-	// iterate to get the accounts
-	accounts := []GenesisAccount{}
-	appendAccount := func(acc auth.Account) (stop bool) {
-		account := NewGenesisAccountI(acc)
-		accounts = append(accounts, account)
-		return false
-	}
-	app.accountKeeper.IterateAccounts(ctx, appendAccount)
-
-	genState := NewGenesisState(
-		accounts,
-		app.mm.ExportGenesis(ctx),
-		nil,
-	)
+	genState := app.mm.ExportGenesis(ctx)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err

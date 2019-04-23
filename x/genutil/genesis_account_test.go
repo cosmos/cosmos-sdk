@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// XXX TODO refactor to only taking in the []Account
+// XXX TODO move to auth to test ValidateVestingAccount
 func TestAddGenesisAccount(t *testing.T) {
 	cdc := codec.New()
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())

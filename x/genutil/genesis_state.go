@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking" // XXX XXX
 )
 
 // State to Unmarshal

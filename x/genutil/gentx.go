@@ -32,6 +32,7 @@ var (
 func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 	accountIsInGenesis := false
 
+	// TODO refactor out bond denom to common state area
 	stakingDataBz := genesisState.Modules[staking.ModuleName]
 	var stakingData staking.GenesisState
 	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)

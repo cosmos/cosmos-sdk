@@ -40,14 +40,22 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 // app module
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	accoutKeeper  AccountKeeper
+	stakingKeeper StakingKeeper
+	cdc           *codec.Codec
+	deliverTx     deliverTxfn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(accoutKeeper AccountKeeper, stakingKeeper StakingKeeper,
+	cdc *codec.Codec, deliverTx deliverTxfn) AppModule {
+
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
+		accoutKeeper:   accoutKeeper,
+		stakingKeeper:  stakingKeeper,
+		cdc:            cdc,
+		deliverTx:      deliverTx,
 	}
 }
 
@@ -72,19 +80,17 @@ func (a AppModule) NewQuerierHandler() sdk.Querier { return nil }
 func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, a.keeper, genesisState)
-	return []abci.ValidatorUpdate{}
+	return InitGenesis(ctx, a.cdc, a.accountKeeper, a.stakingKeeper, a.deliverTx, genesisState)
 }
 
 // module export genesis
 func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, a.keeper)
+	gs := ExportGenesis(ctx, a.accountKeeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block
 func (a AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
-	BeginBlocker(ctx, req, a.keeper)
 	return sdk.EmptyTags()
 }
 

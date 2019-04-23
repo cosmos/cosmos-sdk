@@ -1,9 +1,10 @@
 package genutil
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // expected staking keeper
@@ -14,4 +15,5 @@ type StakingKeeper interface {
 type AccountKeeper interface {
 	NewAccount(sdk.Context, auth.Account)
 	SetAccount(sdk.Context, auth.Account)
+	IterateAccounts(ctx sdk.Context, process func(Account) (stop bool))
 }

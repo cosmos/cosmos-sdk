@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -16,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// XXX refactor out app
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -54,31 +51,30 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
+			genAcc := NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd)
+			err := genAcc.Validate()
+			if err != nil {
+				return err
+			}
+
+			// retrieve the app state
 			genFile := config.GenesisFile()
-			if !common.FileExists(genFile) {
-				return fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
-			}
-
-			genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+			appState, genDoc, err := genutil.GenesisStateFromFile(genFile)
 			if err != nil {
 				return err
 			}
 
-			var appState app.GenesisState
-			if err = cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
-				return err
+			// add genesis account to the app state
+			if appState.Accounts.Contains(addr) {
+				return fmt.Errorf("cannot add account at existing address %v", addr)
 			}
-
-			appState, err = addGenesisAccount(cdc, appState, addr, coins, vestingAmt, vestingStart, vestingEnd)
-			if err != nil {
-				return err
-			}
-
+			appState.Accounts = append(appState.Accounts, genAcc)
 			appStateJSON, err := cdc.MarshalJSON(appState)
 			if err != nil {
 				return err
 			}
 
+			// export app state
 			genDoc.AppState = appStateJSON
 			return ExportGenesisFile(genDoc, genFile)
 		},
@@ -89,6 +85,5 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Uint64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Uint64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
-
 	return cmd
 }

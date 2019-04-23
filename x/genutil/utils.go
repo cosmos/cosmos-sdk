@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app" // XXX XXX
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 )
@@ -47,6 +47,35 @@ func ExportGenesisFileWithTime(
 	}
 
 	return genDoc.SaveAs(genFile)
+}
+
+// Create the core parameters for genesis initialization for gaia
+// note that the pubkey input is this machines pubkey
+func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
+) (genesisState app.GenesisState, err error) {
+
+	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
+		return genesisState, err
+	}
+	return genesisState, nil
+}
+
+// Create the core parameters for genesis initialization for gaia
+// note that the pubkey input is this machines pubkey
+func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
+) (genesisState app.GenesisState, genDoc *GenesisDoc, err error) {
+
+	if !common.FileExists(genFile) {
+		return genesisState, genDoc,
+			fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
+	}
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	if err != nil {
+		return genesisState, genDoc, err
+	}
+
+	genesisState, err := GenesisStateFromGenDoc(genDoc)
+	return genesisState, genDoc, err
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.

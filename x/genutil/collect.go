@@ -16,11 +16,11 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app" // XXX XXX
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking" // XXX XXX
 )
 
 const flagGenTxDir = "gentx-dir"
@@ -73,10 +73,11 @@ func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	}
 
 	// create the app state
-	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
+	genesisState, err := GenesisStateFromGenDoc(cdc, genDoc)
 	if err != nil {
 		return appState, err
 	}
+	genesisState.Module[moduleName] = appGenTxs // XXXXXXXXXXXXX XXX fix up
 	appState = codec.MarshalJSONIndent(cdc, genesisState)
 
 	genDoc.AppState = appState

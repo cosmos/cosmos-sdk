@@ -137,7 +137,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			}
 
 			if startTime == endTime {
-				endTime += 1
+				endTime++
 			}
 
 			if r.Intn(100) < 50 {
@@ -155,13 +155,13 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	}
 
 	authGenesis := auth.NewGenesisState(
-		nil, 
+		nil,
 		auth.NewParams(
-			uint64(simulation.RandIntBetween((r, 100, 200)),
+			uint64(simulation.RandIntBetween(r, 100, 200)),
 			uint64(r.Intn(7)+1),
-			uint64(simulation.RandIntBetween((r, 5, 15)),
-			uint64(simulation.RandIntBetween((r, 500, 1000)),
-			uint64(simulation.RandIntBetween((r, 500, 1000)),
+			uint64(simulation.RandIntBetween(r, 5, 15)),
+			uint64(simulation.RandIntBetween(r, 500, 1000)),
+			uint64(simulation.RandIntBetween(r, 500, 1000)),
 		),
 	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
@@ -184,7 +184,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	stakingGenesis := staking.NewGenesisState(
 		staking.InitialPool(),
-		staking.NewParams(time.Duration(simulation.RandIntBetween((r, 60, 60*60*24*3*2))*time.Second,
+		staking.NewParams(time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2))*time.Second,
 			uint16(r.Intn(250)+1), 7, sdk.DefaultBondDenom),
 		nil,
 		nil,
@@ -193,9 +193,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	slashingParams := slashing.NewParams(
 		stakingGenesis.Params.UnbondingTime,
-		int64(simulation.RandIntBetween((r, 10, 1000)),
+		int64(simulation.RandIntBetween(r, 10, 1000)),
 		sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-		time.Duration(simulation.RandIntBetween((r, 60, 60*60*24))*time.Second,
+		time.Duration(simulation.RandIntBetween(r, 60, 60*60*24))*time.Second,
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50)+1))),
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))),
 	)

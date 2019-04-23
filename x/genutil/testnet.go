@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/staking" // XXX XXX
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"

@@ -1,0 +1,3 @@
+#3565 Implement parameter change proposal support.
+Parameter change proposals can be submitted through the CLI
+or a REST endpoint. See docs for further usage.

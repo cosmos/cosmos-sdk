@@ -549,7 +549,7 @@ out the Governance module [specification](./../spec/governance).
 In order to create a governance proposal, you must submit an initial deposit
 along with a title and description. Various modules outside of governance may
 implement their own proposal types and handlers (eg. parameter changes), where
-the governance module itself supports `Text` and `SoftwareUpgrade`. Any module
+the governance module itself supports `Text` proposals. Any module
 outside of governance has it's command mounted on top of `submit-proposal`.
 
 To submit a `Text` proposal:

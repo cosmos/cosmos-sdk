@@ -1179,7 +1179,7 @@ func doSubmitParamChangeProposal(
 	req, err := cdc.MarshalJSON(pr)
 	require.NoError(t, err)
 
-	resp, body := Request(t, port, "POST", "/gov/proposals/paramchange", req)
+	resp, body := Request(t, port, "POST", "/gov/proposals/param_change", req)
 	fmt.Println(resp)
 	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 

@@ -1106,7 +1106,7 @@ paths:
           description: Invalid query parameters
         500:
           description: Internal Server Error
-/gov/proposals/paramchange:
+/gov/proposals/param_change:
   post:
     summary: Generate a parameter change proposal transaction
     description: Generate a parameter change proposal transaction

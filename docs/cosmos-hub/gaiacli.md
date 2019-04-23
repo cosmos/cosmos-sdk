@@ -531,7 +531,7 @@ by `ATOM` holders on the mainnet.
 
 Some considerations about the voting process:
 
-- Voting is done by bonded `Atom` holders on a 1 bonded `Atom` 1 vote basis
+- Voting is done by bonded `ATOM` holders on a 1 bonded `ATOM` 1 vote basis
 - Delegators inherit the vote of their validator if they don't vote
 - Votes are tallied at the end of the voting period (2 weeks on mainnet) where
 each address can vote multiple times to update its `Option` value (paying the transaction fee each time),

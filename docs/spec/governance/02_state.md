@@ -117,8 +117,12 @@ type Content interface {
 
 The `Content` on a proposal is an interface which contains the information about
 the `Proposal` such as the tile, description, and any notable changes. Also, this
-`Content` type can by implemented by any module. Such a type must also implement
-the following `Handler` interface.
+`Content` type can by implemented by any module. The `Content`'s `ProposalRoute`
+returns a string which must be used to route the `Content`'s `Handler` in the
+governance keeper. This allows the governance keeper to execute proposal logic
+implemented by any module. If a proposal passes, the handler is executed. Only
+if the handler is successful does the state get persisted and the proposal finally
+passes. Otherwise, the proposal is rejected.
 
 ```go
 type Handler func(ctx sdk.Context, content Content) sdk.Error

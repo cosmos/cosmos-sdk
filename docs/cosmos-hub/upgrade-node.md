@@ -1,6 +1,14 @@
 # Upgrade Your Node
 
+<<<<<<< HEAD
 This document describes the upgrade procedure of a `gaiad` full-node from a version <current_version> to a version <new_version>.
+=======
+::: warning
+The detailed procedure to upgrade a mainnet node from `cosmoshub-1` to `cosmoshub-2` can be found [here](https://gist.github.com/alexanderbez/5e87886221eb304b9e85ad4b167c99c8). 
+:::
+
+This document describes the upgrade procedure of a `gaiad` full-node to a new version.
+>>>>>>> 0a51d56e902f6629f92470c1d303b6cb293b596b
 
 ## Software Upgrade
 
@@ -23,7 +31,7 @@ Your full node has been cleanly upgraded!
 ## Fetch new genesis 
 
 :::warning 
-If the version <new_version> you are upgrading to is breaking from the previous one, you will have to restart your chain. If it is not breaking, you can skip to [Restart](#restart)
+If the new version you are upgrading to has breaking changes, you will have to restart your chain. If it is not breaking, you can skip to [Restart](#restart)
 :::
 
 The procedure varies depending on the network you want to connect to. 
@@ -68,8 +76,8 @@ If the version <new_version> you are upgrading to is not breaking from the previ
 If you are running a **validator node** on the mainnet, always be careful when doing `gaiad unsafe-reset-all`. You should never use this command if you are not switching `chain-id`.
 :::
 
-::: danger Warning
-Make sure that every node has a unique `priv_validator.json`. Do not copy the `priv_validator.json` from an old node to multiple new nodes. Running two nodes with the same `priv_validator.json` will cause you to double sign.
+::: danger IMPORTANT
+Make sure that every node has a unique `priv_validator.json`. Do not copy the `priv_validator.json` from an old node to multiple new nodes. Running two nodes with the same `priv_validator.json` will cause you to get slashed due to double sign !
 :::
 
 First, remove the outdated files and reset the data. **If you are running a validator node, make sure you understand what you are doing before resetting**. 

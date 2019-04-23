@@ -365,7 +365,7 @@ For mainnet, the recommended `gas-prices` is `0.025uatom`.
 :::
 
 ::: warning
-**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a Ledger Nano S device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
 ::: 
 
 ```bash

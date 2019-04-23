@@ -2,9 +2,14 @@ package keeper
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// CrisisKeeper defunes the expected crisis keeper
+// CrisisKeeper defines the expected crisis keeper
 type CrisisKeeper interface {
 	RegisterRoute(moduleName, route string, invar sdk.Invariant)
+}
+
+// DistributionKeeper defines the expected distribution keeper
+type DistributionKeeper interface {
+	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
 }
 
 // FeeCollectionKeeper defines the expected fee collection keeper

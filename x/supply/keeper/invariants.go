@@ -72,11 +72,13 @@ func SupplyInvariants(k Keeper, ak auth.AccountKeeper) sdk.Invariant {
 		}
 
 		collectedFees := k.fck.GetCollectedFees(ctx)
+		communityPool, _ := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
 
 		expectedTotalSupply := circulatingAmount.
 			Add(vestingAmount).
 			Add(modulesAmount).
-			Add(collectedFees)
+			Add(collectedFees).
+			Add(communityPool)
 
 		realTotalSupply := k.TotalSupply(ctx)
 

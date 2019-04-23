@@ -558,7 +558,7 @@ To submit a `Text` or `SoftwareUpgrade`:
 gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
-  --type=<Text|SoftwareUpgrade> \
+  --type="Text" \
   --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>

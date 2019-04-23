@@ -27,15 +27,15 @@ If you run your own full-node, just use `tcp://localhost:26657` as the address.
 Then, let us set the default value of the `--trust-node` flag:
 
 ```bash
-gaiacli config trust-node false
+gaiacli config trust-node true
 
-// Set to true if you run a light-client node, false otherwise
+// Set to true if you trust the full-node you are connecting to, false otherwise
 ```
 
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
 
 ```bash
-gaiacli config chain-id cosmoshub-1
+gaiacli config chain-id cosmoshub-2
 ```
 
 ### Keys

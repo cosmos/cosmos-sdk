@@ -1,9 +1,5 @@
 # Upgrade Your Node
 
-::: warning
-The detailed procedure to upgrade a mainnet node from `cosmoshub-1` to `cosmoshub-2` can be found [here](https://gist.github.com/alexanderbez/5e87886221eb304b9e85ad4b167c99c8). 
-:::
-
 This document describes the upgrade procedure of a `gaiad` full-node from a version <current_version> to a version <new_version>.
 
 ## Software Upgrade
@@ -29,12 +25,6 @@ Your full node has been cleanly upgraded!
 :::warning 
 If the version <new_version> you are upgrading to is breaking from the previous one, you will have to restart your chain. If it is not breaking, you can skip to [Restart](#restart)
 :::
-
-The first step is to remove your current genesis:
-
-```bash
-rm $HOME/.gaiad/config/addrbook.json $HOME/.gaiad/config/genesis.json
-```
 
 The procedure varies depending on the network you want to connect to. 
 

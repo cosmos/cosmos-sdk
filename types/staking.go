@@ -42,7 +42,7 @@ func BondStatusToString(b BondStatus) string {
 }
 
 // PowerReduction is the amount of staking tokens required for 1 unit of Tendermint power
-var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(0), nil))
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
 func TokensToTendermintPower(tokens Int) int64 {

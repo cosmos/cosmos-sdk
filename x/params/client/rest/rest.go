@@ -18,7 +18,7 @@ import (
 // change REST handler with a given sub-route.
 func ProposalRESTHandler(cliCtx context.CLIContext, cdc *codec.Codec) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
-		SubRoute: "paramchange",
+		SubRoute: "param_change",
 		Handler:  postProposalHandlerFn(cdc, cliCtx),
 	}
 }

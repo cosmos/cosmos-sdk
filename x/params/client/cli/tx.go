@@ -19,7 +19,7 @@ import (
 // change proposal transaction.
 func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "paramchange [proposal-file]",
+		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
 		Long: strings.TrimSpace(`
@@ -27,7 +27,7 @@ Submit a parameter proposal along with an initial deposit. The proposal details
 must be supplied via a JSON file.
 
 Example:
-$ gaiacli tx gov submit-proposal paramchange <path/to/proposal.json> --from=<key_or_address>
+$ gaiacli tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:
 {
   "title": "Staking Param Change",

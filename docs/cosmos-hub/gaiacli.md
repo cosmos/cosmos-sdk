@@ -586,7 +586,7 @@ Where `proposal.json` contains the following:
     {
       "subspace": "staking",
       "key": "MaxValidators",
-      "value": "\"105\""
+      "value": "105"
     }
   ],
   "deposit": [

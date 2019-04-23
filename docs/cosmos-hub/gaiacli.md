@@ -571,7 +571,7 @@ To submit a parameter change proposal, you must provide a proposal file as its
 contents are less friendly to CLI input:
 
 ```bash
-gaiacli tx gov submit-proposal paramchange <path/to/proposal.json> \
+gaiacli tx gov submit-proposal param-change <path/to/proposal.json> \
   --from=<name> \
   --chain-id=<chain_id>
 ```

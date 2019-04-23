@@ -66,6 +66,56 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 	return txs, nil
 }
 
+func SearchTxsAndTotalCount(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]sdk.TxResponse, int, error) {
+	if len(tags) == 0 {
+		return nil, 0, errors.New("must declare at least one tag to search")
+	}
+
+	if page <= 0 {
+		return nil, 0, errors.New("page must greater than 0")
+	}
+
+	if limit <= 0 {
+		return nil, 0, errors.New("limit must greater than 0")
+	}
+
+	// XXX: implement ANY
+	query := strings.Join(tags, " AND ")
+
+	node, err := cliCtx.GetNode()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	prove := !cliCtx.TrustNode
+
+	resTxs, err := node.TxSearch(query, prove, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if prove {
+		for _, tx := range resTxs.Txs {
+			err := ValidateTxResult(cliCtx, tx)
+			if err != nil {
+				return nil, 0, err
+			}
+		}
+	}
+
+	resBlocks, err := getBlocksForTxResults(cliCtx, resTxs.Txs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	txs, err := formatTxResults(cdc, resTxs.Txs, resBlocks)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return txs, resTxs.TotalCount, nil
+}
+
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
 func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]sdk.TxResponse, error) {
 	var err error

@@ -168,13 +168,21 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 			return
 		}
 
-		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
+		txs, totalCount, err := SearchTxsAndTotalCount(cliCtx, cdc, tags, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+		data := struct {
+			TotalCount	int			`json:"totalCount"`
+			Txs			[]sdk.TxResponse		`json:"txs"`
+		}{
+			totalCount,
+			txs,
+		}
+
+		rest.PostProcessResponse(w, cdc, data, cliCtx.Indent)
 	}
 }
 

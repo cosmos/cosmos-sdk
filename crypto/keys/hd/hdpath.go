@@ -130,10 +130,10 @@ func isHardened(field string) bool {
 }
 
 // NewFundraiserParams creates a BIP 44 parameter object from the params:
-// m / 44' / 118' / account' / 0 / address_index
+// m / 44' / 322' / account' / 0 / address_index
 // The fixed parameters (purpose', coin_type', and change) are determined by what was used in the fundraiser.
 func NewFundraiserParams(account uint32, addressIdx uint32) *BIP44Params {
-	return NewParams(44, 118, account, false, addressIdx)
+	return NewParams(44, 322, account, false, addressIdx)
 }
 
 // DerivationPath returns the BIP44 fields as an array.

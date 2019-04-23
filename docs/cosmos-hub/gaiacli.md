@@ -527,7 +527,7 @@ You can also query all of the delegations to a particular validator:
 Governance is the process from which users in the Cosmos Hub can come to consensus
 on software upgrades, parameters of the mainnet or signaling mechanisms through
 text proposals. This is done through voting on proposals, which will be submitted
-by `Atom` holders on the mainnet.
+by `ATOM` holders on the mainnet.
 
 Some considerations about the voting process:
 

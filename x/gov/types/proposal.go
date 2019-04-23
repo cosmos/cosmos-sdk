@@ -345,14 +345,14 @@ func IsValidProposalType(ty string) bool {
 // proposals (ie. TextProposal and SoftwareUpgradeProposal). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(ctx sdk.Context, c Content) sdk.Error {
-	switch c.(type) {
-	case TextProposal, SoftwareUpgradeProposal:
+func ProposalHandler(_ sdk.Context, c Content) sdk.Error {
+	switch c.ProposalType() {
+	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
 		// both proposal types do not change state so this performs a no-op
 		return nil
 
 	default:
-		errMsg := fmt.Sprintf("unrecognized gov proposal type: %T", c)
+		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
 		return sdk.ErrUnknownRequest(errMsg)
 	}
 }

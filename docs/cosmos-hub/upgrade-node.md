@@ -1,14 +1,6 @@
 # Upgrade Your Node
 
-<<<<<<< HEAD
-This document describes the upgrade procedure of a `gaiad` full-node from a version <current_version> to a version <new_version>.
-=======
-::: warning
-The detailed procedure to upgrade a mainnet node from `cosmoshub-1` to `cosmoshub-2` can be found [here](https://gist.github.com/alexanderbez/5e87886221eb304b9e85ad4b167c99c8). 
-:::
-
-This document describes the upgrade procedure of a `gaiad` full-node to a new version.
->>>>>>> 0a51d56e902f6629f92470c1d303b6cb293b596b
+This document describes the upgrade procedure of a `gaiad` full-node to a new version. 
 
 ## Software Upgrade
 
@@ -28,21 +20,19 @@ See the [testnet repo](https://github.com/cosmos/testnets) for details on which 
 
 Your full node has been cleanly upgraded!
 
-## Fetch new genesis 
+## Ugrade Genesis File 
 
 :::warning 
 If the new version you are upgrading to has breaking changes, you will have to restart your chain. If it is not breaking, you can skip to [Restart](#restart)
 :::
 
-The procedure varies depending on the network you want to connect to. 
+To upgrade the genesis file, you can either fetch it from a trusted source or export it locally. 
 
-### Mainnet
+### Fetching from a Trusted Source
 
-Follow the [official upgrade guide](https://gist.github.com/alexanderbez/5e87886221eb304b9e85ad4b167c99c8). 
+If you are joining the mainnet, fetch the genesis from the [mainnet repo](https://github.com/cosmos/launc). If you are joining a public testnet, fetch the genesis from the appropriate testnet in the [testnet repo](https://github.com/cosmos/testnets). Otherwise, fetch it from your trusted source. 
 
-### Public Testnet
-
-If you are joining a new public testnet, fetch the genesis from the appropriate testnet in the [testnet repo](https://github.com/cosmos/testnets). Save the new genesis as `new_genesis.json`. Then replace the old `genesis.json` with `new_genesis.json`
+Save the new genesis as `new_genesis.json`. Then replace the old `genesis.json` with `new_genesis.json`
 
 ```bash
 cd $HOME/.gaiad/config
@@ -50,14 +40,18 @@ cp -f genesis.json new-_enesis.json
 mv new_genesis.json genesis.json
 ```
 
-### Local Testnet
+Then, go to the [reset data](#reset-data) section. 
 
-If you are running your own local testnet, you can either start with a brand new genesis using `gaiad init`, or export the state from you previous network as a new genesis. To do so, use the following command
+### Exporting State to a New Genesis Locally
+
+If you were running a node in the previous version of the network and want to build your new genesis locally from a state of this previous network, use the following command: 
 
 ```bash
 cd $HOME/.gaiad/config
 gaiad export --for-zero-height --height=<export-height> > new_genesis.json
 ```
+
+The command above take a state at a certain height `<export-height>` and turns it into a new genesis file that can be used to start a new network. 
 
 Then, replace the old `genesis.json` with `new_genesis.json`.
 
@@ -65,6 +59,8 @@ Then, replace the old `genesis.json` with `new_genesis.json`.
 cp -f genesis.json new-_enesis.json
 mv new_genesis.json genesis.json
 ```
+
+At this point, you might want to run a script to update the exported genesis into a genesis that is compatible with your new version. For example, the attributes of a the `Account` type changed, a script should query encoded account from the account store, unmarshall them, update their type, re-marhsall and re-store them. You can find an example of such script [here](https://github.com/cosmos/cosmos-sdk/blob/develop/contrib/export/v0.33.x-to-v0.34.0.py).
 
 ## Reset Data
 

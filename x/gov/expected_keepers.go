@@ -3,13 +3,12 @@ package gov
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // AccountKeeper defines the expected account keeper
 type AccountKeeper interface {
-	NewAccount() (ctx sdk.Context, acc auth.Account) auth.Account
-	SetAccount(ctx sdk.Context, acc Account)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.Account
+	SetAccount(ctx sdk.Context, acc auth.Account)
 }
 
 // BankKeeper defines the expected bank keeper

@@ -109,11 +109,12 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(err)
 	}
 
-	// create and set module account
-	baseAcc := auth.NewBaseAccountWithAddress(ModuleAddress)
-	mhAcc := auth.NewModuleHolderAccount(&baseAcc, ModuleName)
-
-	k.ak.SetAccount(ctx, mhAcc)
+	// check if the module account exists and create it if not
+	moduleAcc := k.ak.GetAccount(ctx, ModuleAddress)
+	if moduleAcc == nil {
+		moduleAcc = auth.NewModuleHolderAccount(ModuleName)
+		k.ak.SetAccount(ctx, moduleAcc)
+	}
 
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)

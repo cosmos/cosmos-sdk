@@ -27,7 +27,7 @@ import (
 
 // BIP44Prefix is the parts of the BIP32 HD path that are fixed by what we used during the fundraiser.
 const (
-	BIP44Prefix        = "44'/118'/"
+	BIP44Prefix        = "44'/322'/"
 	FullFundraiserPath = BIP44Prefix + "0'/0/0"
 )
 

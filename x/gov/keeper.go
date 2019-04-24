@@ -1,11 +1,13 @@
 package gov
 
 import (
+	"log"
 	"time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Governance Keeper
@@ -21,6 +23,9 @@ type Keeper struct {
 
 	// The reference to the AccountKeeper to create a module account
 	ak AccountKeeper
+
+	// The reference to the SupplyKeeper to update module and circulating supply
+	supplyKeeper SupplyKeeper
 
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
@@ -46,13 +51,15 @@ type Keeper struct {
 // CONTRACT: Token Holder needs to be added into the bank keeper before calling
 // this function
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
-	paramSpace params.Subspace, bk BankKeeper, ak AccountKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+	paramSpace params.Subspace, bk BankKeeper, ak AccountKeeper,
+	supplyKeeper SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           bk,
 		ak:           ak,
+		supplyKeeper: supplyKeeper,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
@@ -357,6 +364,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return err, false
 	}
 
+	// update the supply
+	keeper.supplyKeeper.InflateSupply(ctx, supply.TypeModules, depositAmount)
+	keeper.supplyKeeper.DeflateSupply(ctx, supply.TypeCirculating, depositAmount)
+
 	// Update proposal
 	proposal.TotalDeposit = proposal.TotalDeposit.Add(depositAmount)
 	keeper.SetProposal(ctx, proposal)
@@ -408,6 +419,10 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
+		// update the supply
+		keeper.supplyKeeper.InflateSupply(ctx, supply.TypeCirculating, deposit.Amount)
+		keeper.supplyKeeper.DeflateSupply(ctx, supply.TypeModules, deposit.Amount)
+
 		store.Delete(depositsIterator.Key())
 	}
 }
@@ -427,6 +442,10 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		if err != nil {
 			panic(err)
 		}
+
+		// update the supply
+		keeper.supplyKeeper.DeflateSupply(ctx, supply.TypeModules, deposit.Amount)
+		keeper.supplyKeeper.DeflateSupply(ctx, supply.TypeTotal, deposit.Amount)
 
 		store.Delete(depositsIterator.Key())
 	}

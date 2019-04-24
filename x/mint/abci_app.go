@@ -3,6 +3,7 @@ package mint
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // BeginBlocker inflates every block and updates inflation parameters once per hour
@@ -18,9 +19,11 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, k.sk.StakingTokenSupply(ctx))
 	k.SetMinter(ctx, minter)
 
-	// mint coins, add to collected fees, update supply
+	// mint coins, add to collected fees, update supply by adding it to the fee collector
 	mintedCoin := minter.BlockProvision(params)
-	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
-	k.supplyKeeper.InflateSupply(ctx, sdk.Coins{mintedCoin})
-	k.sk.InflateNotBondedTokenSupply(ctx, mintedCoin.Amount) // TODO: verify invariance with bank bond denom supply
+	k.fck.AddCollectedFees(ctx, sdk.NewCoins(mintedCoin))
+
+	// // passively keep track of the total and the not bonded supply
+	k.supplyKeeper.InflateSupply(ctx, supply.TypeTotal, sdk.NewCoins(mintedCoin))
+	k.sk.InflateNotBondedTokenSupply(ctx, mintedCoin.Amount)
 }

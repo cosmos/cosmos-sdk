@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -17,6 +18,7 @@ type Keeper struct {
 	bankKeeper          types.BankKeeper
 	stakingKeeper       types.StakingKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
+	supplyKeeper        SupplyKeeper
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -24,7 +26,7 @@ type Keeper struct {
 
 // create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, fck types.FeeCollectionKeeper, supplyKeeper SupplyKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
@@ -32,6 +34,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 		bankKeeper:          ck,
 		stakingKeeper:       sk,
 		feeCollectionKeeper: fck,
+		supplyKeeper:        supplyKeeper,
 		codespace:           codespace,
 	}
 	return keeper
@@ -70,7 +73,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
-
 	return nil
 }
 
@@ -97,6 +99,8 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 			return err
 		}
+
+		k.supplyKeeper.InflateSupply(ctx, supply.TypeCirculating, coins)
 	}
 
 	return nil

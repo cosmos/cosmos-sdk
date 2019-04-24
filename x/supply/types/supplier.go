@@ -6,11 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// define consts for inflation
+// define constants for inflation
 const (
 	TypeCirculating = "circulating"
 	TypeVesting     = "vesting"
 	TypeModules     = "modules"
+	TypeTotal       = "total"
 )
 
 // Supplier represents a struct that passively keeps track of the total supply amounts in the network
@@ -51,11 +52,12 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	case TypeModules:
 		supplier.ModulesSupply = supplier.ModulesSupply.Add(amount)
 
+	case TypeTotal:
+		supplier.TotalSupply = supplier.TotalSupply.Add(amount)
+
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
-
-	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
 }
 
 // Deflate safe subtracts coins for a given supply and updates the total supply
@@ -93,18 +95,19 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 		}
 		supplier.ModulesSupply = newSupply
 
+	case TypeTotal:
+		newSupply, ok := supplier.TotalSupply.SafeSub(amount)
+		if !ok {
+			panic(fmt.Sprintf(
+				"total supply should be greater than given amount: %s < %s",
+				supplier.TotalSupply.String(), amount.String(),
+			))
+		}
+		supplier.TotalSupply = newSupply
+
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
-
-	newSupply, ok := supplier.TotalSupply.SafeSub(amount)
-	if !ok {
-		panic(fmt.Sprintf(
-			"total supply should be greater than given amount: %s < %s",
-			supplier.TotalSupply.String(), amount.String(),
-		))
-	}
-	supplier.TotalSupply = newSupply
 }
 
 // CirculatingAmountOf returns the circulating supply of a coin denomination

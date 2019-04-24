@@ -22,4 +22,5 @@ const (
 	TypeCirculating = types.TypeCirculating
 	TypeVesting     = types.TypeVesting
 	TypeModules     = types.TypeModules
+	TypeTotal       = types.TypeTotal
 )

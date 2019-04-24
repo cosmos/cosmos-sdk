@@ -63,11 +63,12 @@ func (k Keeper) DeflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 }
 
 // TotalSupply returns the total supply of the network. Used only for invariance
-// total supply = circulating + vesting + modules + bonded supply + collected fees + community pool
+// total supply = circulating + vesting + modules + collected fees + community pool
+//
+// NOTE: the staking pool's bonded supply is already considered as it's added to the collected fees on minting
 func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	supplier := k.GetSupplier(ctx)
 
-	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
 	collectedFees := k.fck.GetCollectedFees(ctx)
 	communityPool, remainingCommunityPool := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
 	totalRewards, remainingRewards := k.dk.GetTotalRewards(ctx).TruncateDecimal()
@@ -76,7 +77,6 @@ func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	return supplier.CirculatingSupply.
 		Add(supplier.VestingSupply).
 		Add(supplier.ModulesSupply).
-		Add(bondedSupply).
 		Add(collectedFees).
 		Add(communityPool).
 		Add(totalRewards).

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.2
+
+### Improvements
+
+#### SDK
+
+* [\#4053](https://github.com/cosmos/cosmos-sdk/issues/4053) Add `--inv-check-period`
+flag to gaiad to set period at which invariants checks will run.
+
 ## 0.34.1
 
 ### Bug Fixes

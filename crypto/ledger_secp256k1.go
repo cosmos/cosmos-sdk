@@ -5,11 +5,9 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/pkg/errors"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -28,14 +26,15 @@ type (
 	// dependencies when Ledger support is potentially not enabled.
 	discoverLedgerFn func() (LedgerSECP256K1, error)
 
-	// LedgerSECP256K1 reflects an interface a Ledger API must implement for
-	// the SECP256K1 scheme.
+	// LedgerSECP256K1 reflects an interface a Ledger API must implement for SECP256K1
 	LedgerSECP256K1 interface {
 		Close() error
+		// Returns an uncompressed pubkey
 		GetPublicKeySECP256K1([]uint32) ([]byte, error)
+		// Returns a compressed pubkey and bech32 address (requires user confirmation)
 		GetAddressPubKeySECP256K1([]uint32, string) ([]byte, string, error)
+		// Signs a message (requires user confirmation)
 		SignSECP256K1([]uint32, []byte) ([]byte, error)
-		ShowAddressSECP256K1([]uint32, string) error
 	}
 
 	// PrivKeyLedgerSecp256k1 implements PrivKey, calling the ledger nano we
@@ -84,26 +83,6 @@ func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKe
 	}
 
 	return PrivKeyLedgerSecp256k1{pubKey, path}, addr, nil
-}
-
-// LedgerShowAddress triggers a ledger device to show the corresponding address.
-func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) error {
-	device, err := getLedgerDevice()
-	if err != nil {
-		return err
-	}
-	defer warnIfErrors(device.Close)
-
-	pubKey, err := getPubKeyUnsafe(device, path)
-	if err != nil {
-		return err
-	}
-
-	if pubKey != expectedPubKey {
-		return fmt.Errorf("pubkey does not match, Check this is the same device")
-	}
-
-	return device.ShowAddressSECP256K1(path.DerivationPath(), types.Bech32PrefixAccAddr)
 }
 
 // PubKey returns the cached public key.

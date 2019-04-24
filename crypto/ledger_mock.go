@@ -33,6 +33,8 @@ func (mock LedgerSECP256K1Mock) Close() error {
 	return nil
 }
 
+// GetPublicKeySECP256K1 mocks a ledger device
+// as per the original API, it returns an uncompressed key
 func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) ([]byte, error) {
 	if derivationPath[0] != 44 {
 		return nil, errors.New("Invalid derivation path")
@@ -59,6 +61,8 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 	return answer, nil
 }
 
+// GetAddressPubKeySECP256K1 mocks a ledger device
+// as per the original API, it returns a compressed key and a bech32 address
 func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint32, hrp string) ([]byte, string, error) {
 	pk, err := mock.GetPublicKeySECP256K1(derivationPath)
 	if err != nil {

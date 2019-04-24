@@ -18,22 +18,24 @@ type Supplier struct {
 	CirculatingSupply sdk.Coins `json:"circulating_supply"` // supply held by accounts that's not vesting
 	VestingSupply     sdk.Coins `json:"vesting_supply"`     // locked supply held by vesting accounts
 	ModulesSupply     sdk.Coins `json:"modules_supply"`     // supply held by modules acccounts
+	TotalSupply       sdk.Coins `json:"total_supply"`       // supply held by modules acccounts
 }
 
 // NewSupplier creates a new Supplier instance
-func NewSupplier(circulating, vesting, modules sdk.Coins) Supplier {
+func NewSupplier(circulating, vesting, modules, total sdk.Coins) Supplier {
 
 	return Supplier{
 		CirculatingSupply: circulating,
 		VestingSupply:     vesting,
 		ModulesSupply:     modules,
+		TotalSupply:       total,
 	}
 }
 
 // DefaultSupplier creates an empty Supplier
 func DefaultSupplier() Supplier {
 
-	return NewSupplier(sdk.Coins{}, sdk.Coins{}, sdk.Coins{})
+	return NewSupplier(sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{})
 }
 
 // Inflate adds coins to a given supply type and updates the total supply
@@ -52,6 +54,8 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
+
+	supplier.TotalSupply = supplier.TotalSupply.Add(amount)
 }
 
 // Deflate safe subtracts coins for a given supply and updates the total supply
@@ -92,6 +96,15 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
+
+	newSupply, ok := supplier.TotalSupply.SafeSub(amount)
+	if !ok {
+		panic(fmt.Sprintf(
+			"total supply should be greater than given amount: %s < %s",
+			supplier.TotalSupply.String(), amount.String(),
+		))
+	}
+	supplier.TotalSupply = newSupply
 }
 
 // CirculatingAmountOf returns the circulating supply of a coin denomination
@@ -112,20 +125,10 @@ func (supplier Supplier) ModulesAmountOf(denom string) sdk.Int {
 	return supplier.ModulesSupply.AmountOf(denom)
 }
 
-// Total returns the sum of circulating, vesting and modules supply
-func (supplier Supplier) Total() sdk.Coins {
-
-	return supplier.CirculatingSupply.
-		Add(supplier.VestingSupply).
-		Add(supplier.ModulesSupply)
-}
-
 // TotalAmountOf returns the sum of circulating, vesting and modules supply for a specific coin denomination
 func (supplier Supplier) TotalAmountOf(denom string) sdk.Int {
 
-	return supplier.ModulesAmountOf(denom).
-		Add(supplier.VestingAmountOf(denom)).
-		Add(supplier.ModulesAmountOf(denom))
+	return supplier.TotalSupply.AmountOf(denom)
 }
 
 // ValidateBasic validates the Supply coins and returns error if invalid
@@ -155,8 +158,10 @@ func (supplier Supplier) String() string {
 	return fmt.Sprintf(`Supplier:
   Circulating Supply:  %s
   Vesting Supply: %s
-  Modules Supply:  %s`,
+	Modules Supply:  %s
+	Total Supply:  %s`,
 		supplier.CirculatingSupply.String(),
 		supplier.VestingSupply.String(),
-		supplier.ModulesSupply.String())
+		supplier.ModulesSupply.String(),
+		supplier.TotalSupply.String())
 }

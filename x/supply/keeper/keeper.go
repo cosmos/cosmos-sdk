@@ -46,7 +46,7 @@ func (k Keeper) SetSupplier(ctx sdk.Context, supplier types.Supplier) {
 	store.Set(supplierKey, b)
 }
 
-// InflateSupply adds tokens to the circulating supply
+// InflateSupply adds tokens to the supplier
 func (k Keeper) InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coins) {
 	supplier := k.GetSupplier(ctx)
 	supplier.Inflate(supplyType, amount)
@@ -54,11 +54,18 @@ func (k Keeper) InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 	k.SetSupplier(ctx, supplier)
 }
 
-// TotalSupply returns the total supply of the network
-// total = circulating + vesting + modules + bonded supply + collected fees + community pool
+// DeflateSupply subtracts tokens to the suplier
+func (k Keeper) DeflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coins) {
+	supplier := k.GetSupplier(ctx)
+	supplier.Deflate(supplyType, amount)
+
+	k.SetSupplier(ctx, supplier)
+}
+
+// TotalSupply returns the total supply of the network. Used only for invariance
+// total supply = circulating + vesting + modules + bonded supply + collected fees + community pool
 func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	supplier := k.GetSupplier(ctx)
-	supplierTotal := supplier.Total() // circulating + vesting + modules
 
 	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
 	collectedFees := k.fck.GetCollectedFees(ctx)
@@ -66,7 +73,9 @@ func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
 	totalRewards, remainingRewards := k.dk.GetTotalRewards(ctx).TruncateDecimal()
 
 	remaining, _ := remainingCommunityPool.Add(remainingRewards).TruncateDecimal()
-	return supplierTotal.
+	return supplier.CirculatingSupply.
+		Add(supplier.VestingSupply).
+		Add(supplier.ModulesSupply).
 		Add(bondedSupply).
 		Add(collectedFees).
 		Add(communityPool).

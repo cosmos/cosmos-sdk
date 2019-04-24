@@ -71,21 +71,12 @@ func SupplyInvariants(k Keeper, ak auth.AccountKeeper) sdk.Invariant {
 				"\tsum of modules accounts tokens: %v", supplier.ModulesSupply, modulesAmount)
 		}
 
-		collectedFees := k.fck.GetCollectedFees(ctx)
-		communityPool, _ := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
+		expectedTotalSupply := k.TotalSupply(ctx)
 
-		expectedTotalSupply := circulatingAmount.
-			Add(vestingAmount).
-			Add(modulesAmount).
-			Add(collectedFees).
-			Add(communityPool)
-
-		realTotalSupply := k.TotalSupply(ctx)
-
-		if !realTotalSupply.IsEqual(expectedTotalSupply) {
+		if !supplier.TotalSupply.IsEqual(expectedTotalSupply) {
 			return fmt.Errorf("total supply invariance:\n"+
 				"\texpected total supply: %v\n"+
-				"\treal total supply: %v", expectedTotalSupply, realTotalSupply)
+				"\treal total supply: %v", expectedTotalSupply, supplier.TotalSupply)
 		}
 
 		return nil

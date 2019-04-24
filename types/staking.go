@@ -31,8 +31,8 @@ const (
 	BondStatusBonded    = "Bonded"
 )
 
-// BondStatusToString for pretty prints of Bond Status.
-func BondStatusToString(b BondStatus) string {
+// String implements the Stringer interface for BondStatus.
+func (b BondStatus) String() string {
 	switch b {
 	case 0x00:
 		return BondStatusUnbonded
@@ -41,7 +41,7 @@ func BondStatusToString(b BondStatus) string {
 	case 0x02:
 		return BondStatusBonded
 	default:
-		panic("improper use of BondStatusToString")
+		panic("invalid bond status")
 	}
 }
 

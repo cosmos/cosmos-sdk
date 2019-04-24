@@ -146,7 +146,7 @@ func queryValidators(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 	filteredVals := make([]types.Validator, 0, len(validators))
 
 	for _, val := range validators {
-		if strings.ToLower(sdk.BondStatusToString(val.GetStatus())) == strings.ToLower(params.Status) {
+		if strings.ToLower(val.GetStatus().String()) == strings.ToLower(params.Status) {
 			filteredVals = append(filteredVals, val)
 		}
 	}

@@ -62,7 +62,7 @@ func (k Keeper) DeflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 	k.SetSupplier(ctx, supplier)
 }
 
-// TotalSupply returns the total supply of the network. Used only for invariance
+// TotalSupply returns the total supply of the network. Used only for invariance and genesis initialization
 // total supply = circulating  + modules + collected fees + community pool
 //
 // NOTE: the staking pool's bonded supply is already considered as it's added to the collected fees on minting

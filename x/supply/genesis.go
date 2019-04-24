@@ -9,6 +9,7 @@ import (
 
 // InitGenesis sets supply information for genesis.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data GenesisState) {
+	data.Supplier.TotalSupply = k.TotalSupply(ctx)
 	k.SetSupplier(ctx, data.Supplier)
 }
 

@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // GetCmdQueryParams implements a command to return the current minting
@@ -21,13 +22,13 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryParameters)
+			route := fmt.Sprintf("custom/%s/%s", keeper.QuerierRoute, keeper.QueryParameters)
 			res, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			var params mint.Params
+			var params types.Params
 			if err := cdc.UnmarshalJSON(res, &params); err != nil {
 				return err
 			}
@@ -47,7 +48,7 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryInflation)
+			route := fmt.Sprintf("custom/%s/%s", keeper.QuerierRoute, keeper.QueryInflation)
 			res, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
@@ -73,7 +74,7 @@ func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryAnnualProvisions)
+			route := fmt.Sprintf("custom/%s/%s", keeper.QuerierRoute, keeper.QueryAnnualProvisions)
 			res, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err

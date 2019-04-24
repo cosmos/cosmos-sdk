@@ -41,7 +41,8 @@ func DefaultParams() Params {
 	}
 }
 
-func validateParams(params Params) error {
+// ValidateParams validate the minting module params
+func ValidateParams(params Params) error {
 	if params.GoalBonded.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("mint parameter GoalBonded should be positive, is %s ", params.GoalBonded.String())
 	}

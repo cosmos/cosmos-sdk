@@ -37,7 +37,8 @@ func DefaultInitialMinter() Minter {
 	)
 }
 
-func validateMinter(minter Minter) error {
+// ValidateMinter validates the minter inflation
+func ValidateMinter(minter Minter) error {
 	if minter.Inflation.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
 			minter.Inflation.String())

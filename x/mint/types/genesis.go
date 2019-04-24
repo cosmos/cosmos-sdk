@@ -21,17 +21,3 @@ func DefaultGenesisState() GenesisState {
 		Params: DefaultParams(),
 	}
 }
-
-// ValidateGenesis validates the provided genesis state to ensure the
-// expected invariants holds.
-func ValidateGenesis(data GenesisState) error {
-	err := validateParams(data.Params)
-	if err != nil {
-		return err
-	}
-	err = validateMinter(data.Minter)
-	if err != nil {
-		return err
-	}
-	return nil
-}

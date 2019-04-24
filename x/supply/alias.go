@@ -7,12 +7,15 @@ import (
 )
 
 type (
-	Keeper   = keeper.Keeper
-	Supplier = types.Supplier
+	Keeper       = keeper.Keeper
+	Supplier     = types.Supplier
+	GenesisState = types.GenesisState
 )
 
 var (
-	NewKeeper = keeper.NewKeeper
+	NewKeeper           = keeper.NewKeeper
+	NewGenesisState     = types.NewGenesisState
+	DefaultGenesisState = types.DefaultGenesisState
 )
 
 const (

@@ -2,13 +2,11 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	GetSupplier(ctx sdk.Context) supply.Supplier
-	InflateSupply(ctx sdk.Context, amt sdk.Coins)
+	InflateSupply(ctx sdk.Context, supplyType string, amt sdk.Coins)
 }
 
 // StakingKeeper defines the expected staking keeper

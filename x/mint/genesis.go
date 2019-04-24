@@ -19,3 +19,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	params := k.GetParams(ctx)
 	return types.NewGenesisState(minter, params)
 }
+
+// ValidateGenesis validates the provided genesis state to ensure the
+// expected invariants holds.
+func ValidateGenesis(data types.GenesisState) error {
+	err := types.ValidateParams(data.Params)
+	if err != nil {
+		return err
+	}
+
+	err = types.ValidateMinter(data.Minter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

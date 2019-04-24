@@ -16,6 +16,8 @@ to generate only usage.
 * [\#4135](https://github.com/cosmos/cosmos-sdk/pull/4135) Fix `NewResponseFormatBroadcastTxCommit`
 * [\#4053](https://github.com/cosmos/cosmos-sdk/issues/4053) Add `--inv-check-period`
 flag to gaiad to set period at which invariants checks will run.
+* [\#4099](https://github.com/cosmos/cosmos-sdk/issues/4099) Update the /staking/validators endpoint to support
+status and pagination query flags.
 
 ## 0.34.1
 

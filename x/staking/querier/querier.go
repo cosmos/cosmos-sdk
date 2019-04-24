@@ -2,6 +2,7 @@ package querier
 
 import (
 	"fmt"
+	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -35,7 +36,7 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryValidators:
-			return queryValidators(ctx, cdc, k)
+			return queryValidators(ctx, cdc, req, k)
 		case QueryValidator:
 			return queryValidator(ctx, cdc, req, k)
 		case QueryValidatorDelegations:
@@ -128,14 +129,47 @@ func NewQueryRedelegationParams(delegatorAddr sdk.AccAddress, srcValidatorAddr s
 	}
 }
 
-func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	stakingParams := k.GetParams(ctx)
-	validators := k.GetValidators(ctx, stakingParams.MaxValidators)
+func queryValidators(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) ([]byte, sdk.Error) {
+	var params QueryValidatorsParams
 
-	res, errRes := codec.MarshalJSONIndent(cdc, validators)
+	err := cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
+
+	stakingParams := k.GetParams(ctx)
+	if params.Limit == 0 {
+		params.Limit = int(stakingParams.MaxValidators)
+	}
+
+	validators := k.GetAllValidators(ctx)
+	filteredVals := make([]types.Validator, 0, len(validators))
+
+	for _, val := range validators {
+		if strings.ToLower(val.GetStatus().String()) == strings.ToLower(params.Status) {
+			filteredVals = append(filteredVals, val)
+		}
+	}
+
+	// get pagination bounds
+	start := (params.Page - 1) * params.Limit
+	end := params.Limit + start
+	if end >= len(filteredVals) {
+		end = len(filteredVals)
+	}
+
+	if start >= len(filteredVals) {
+		// page is out of bounds
+		filteredVals = []types.Validator{}
+	} else {
+		filteredVals = filteredVals[start:end]
+	}
+
+	res, err := codec.MarshalJSONIndent(cdc, filteredVals)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
 	return res, nil
 }
 
@@ -353,4 +387,15 @@ func queryParameters(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []by
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}
 	return res, nil
+}
+
+// QueryValidatorsParams defines the params for the following queries:
+// - 'custom/staking/validators'
+type QueryValidatorsParams struct {
+	Page, Limit int
+	Status      string
+}
+
+func NewQueryValidatorsParams(page, limit int, status string) QueryValidatorsParams {
+	return QueryValidatorsParams{page, limit, status}
 }

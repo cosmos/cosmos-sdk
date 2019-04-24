@@ -117,7 +117,7 @@ func (v Validator) String() string {
   Unbonding Completion Time:  %v
   Minimum Self Delegation:    %v
   Commission:                 %s`, v.OperatorAddress, bechConsPubKey,
-		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
+		v.Jailed, v.Status, v.Tokens,
 		v.DelegatorShares, v.Description,
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfDelegation, v.Commission)
 }

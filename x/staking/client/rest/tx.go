@@ -31,35 +31,35 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type (
-	// MsgBeginRedelegateInput defines the properties of a delegation request's body.
-	MsgDelegationsInput struct {
+	// DelegateRequest defines the properties of a delegation request's body.
+	DelegateRequest struct {
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
 		ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-		Delegation       sdk.Coin       `json:"delegation"`
+		Amount           sdk.Coin       `json:"amount"`
 	}
 
-	// MsgBeginRedelegateInput defines the properties of a redelegate request's body.
-	MsgBeginRedelegateInput struct {
+	// RedelegateRequest defines the properties of a redelegate request's body.
+	RedelegateRequest struct {
 		BaseReq             rest.BaseReq   `json:"base_req"`
 		DelegatorAddress    sdk.AccAddress `json:"delegator_address"`     // in bech32
 		ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"` // in bech32
 		ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"` // in bech32
-		SharesAmount        sdk.Dec        `json:"shares"`
+		Amount              sdk.Coin       `json:"amount"`
 	}
 
-	// MsgUndelegateInput defines the properties of a undelegate request's body.
-	MsgUndelegateInput struct {
+	// UndelegateRequest defines the properties of a undelegate request's body.
+	UndelegateRequest struct {
 		BaseReq          rest.BaseReq   `json:"base_req"`
 		DelegatorAddress sdk.AccAddress `json:"delegator_address"` // in bech32
 		ValidatorAddress sdk.ValAddress `json:"validator_address"` // in bech32
-		SharesAmount     sdk.Dec        `json:"shares"`
+		Amount           sdk.Coin       `json:"amount"`
 	}
 )
 
 func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req MsgDelegationsInput
+		var req DelegateRequest
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -70,7 +70,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		msg := staking.NewMsgDelegate(req.DelegatorAddress, req.ValidatorAddress, req.Delegation)
+		msg := staking.NewMsgDelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -93,7 +93,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 
 func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req MsgBeginRedelegateInput
+		var req RedelegateRequest
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -104,7 +104,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddress, req.ValidatorSrcAddress, req.ValidatorDstAddress, req.SharesAmount)
+		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddress, req.ValidatorSrcAddress, req.ValidatorDstAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -127,7 +127,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 
 func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req MsgUndelegateInput
+		var req UndelegateRequest
 
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
@@ -138,7 +138,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		msg := staking.NewMsgUndelegate(req.DelegatorAddress, req.ValidatorAddress, req.SharesAmount)
+		msg := staking.NewMsgUndelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

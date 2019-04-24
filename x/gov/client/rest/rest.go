@@ -266,7 +266,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 
 		// For inactive proposals we must query the txs directly to get the deposits
 		// as they're no longer in state.
-		propStatus := proposal.GetStatus()
+		propStatus := proposal.Status
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 		} else {
@@ -346,7 +346,10 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		var deposit gov.Deposit
-		cdc.UnmarshalJSON(res, &deposit)
+		if err := cdc.UnmarshalJSON(res, &deposit); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		// For an empty deposit, either the proposal does not exist or is inactive in
 		// which case the deposit would be removed from state and should be queried
@@ -420,7 +423,10 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		var vote gov.Vote
-		cdc.UnmarshalJSON(res, &vote)
+		if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		// For an empty vote, either the proposal does not exist or is inactive in
 		// which case the vote would be removed from state and should be queried for
@@ -489,7 +495,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 
 		// For inactive proposals we must query the txs directly to get the votes
 		// as they're no longer in state.
-		propStatus := proposal.GetStatus()
+		propStatus := proposal.Status
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 		} else {

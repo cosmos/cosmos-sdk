@@ -153,15 +153,13 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		Long: strings.TrimSpace(`Redelegate an amount of illiquid staking tokens from one validator to another:
 
-$ gaiacli tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100 --from mykey
+$ gaiacli tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
-
-			// var err error
 
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -174,13 +172,12 @@ $ gaiacli tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 				return err
 			}
 
-			// get the shares amount
-			sharesAmount, err := getShares(args[2], delAddr, valSrcAddr)
+			amount, err := sdk.ParseCoin(args[2])
 			if err != nil {
 				return err
 			}
 
-			msg := staking.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, sharesAmount)
+			msg := staking.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, amount)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
@@ -194,7 +191,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Long: strings.TrimSpace(`Unbond an amount of bonded shares from a validator:
 
-$ gaiacli tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100 --from mykey
+$ gaiacli tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
@@ -208,13 +205,12 @@ $ gaiacli tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			// get the shares amount
-			sharesAmount, err := getShares(args[1], delAddr, valAddr)
+			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
 				return err
 			}
 
-			msg := staking.NewMsgUndelegate(delAddr, valAddr, sharesAmount)
+			msg := staking.NewMsgUndelegate(delAddr, valAddr, amount)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}

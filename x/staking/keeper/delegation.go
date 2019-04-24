@@ -518,7 +518,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// if the delegation is the operator of the validator and undelegating will decrease the validator's self delegation below their minimum
 	// trigger a jail validator
 	if isValidatorOperator && !validator.Jailed &&
-		validator.ShareTokens(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
+		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 
 		k.jailValidator(ctx, validator)
 		validator = k.mustGetValidator(ctx, validator.OperatorAddress)
@@ -725,4 +725,47 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	return nil
+}
+
+// ValidateUnbondAmount validates that a given unbond or redelegation amount is
+// valied based on upon the converted shares. If the amount is valid, the total
+// amount of respective shares is returned, otherwise an error is returned.
+func (k Keeper) ValidateUnbondAmount(
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
+) (shares sdk.Dec, err sdk.Error) {
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return shares, types.ErrNoValidatorFound(k.Codespace())
+	}
+
+	del, found := k.GetDelegation(ctx, delAddr, valAddr)
+	if !found {
+		return shares, types.ErrNoDelegation(k.Codespace())
+	}
+
+	shares, err = validator.SharesFromTokens(amt)
+	if err != nil {
+		return shares, err
+	}
+
+	sharesTruncated, err := validator.SharesFromTokensTruncated(amt)
+	if err != nil {
+		return shares, err
+	}
+
+	delShares := del.GetShares()
+	if sharesTruncated.GT(delShares) {
+		return shares, types.ErrBadSharesAmount(k.Codespace())
+	}
+
+	// Cap the shares at the delegation's shares. Shares being greater could occur
+	// due to rounding, however we don't want to truncate the shares or take the
+	// minimum because we want to allow for the full withdraw of shares from a
+	// delegation.
+	if shares.GT(delShares) {
+		shares = delShares
+	}
+
+	return shares, nil
 }

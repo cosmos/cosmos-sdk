@@ -123,7 +123,7 @@ that proposals are accepted if the proportion of `Yes` votes (excluding
 proportion of `NoWithVeto` votes is inferior to 1/3 (excluding `Abstain` 
 votes).
 
-Proposals can be accepted before the end of the voting period if they meet a special condtion. Namely, if the ratio of `Yes` votes to `InitTotalVotingPower`exceeds 2:3, the proposal will be immediately accepted, even if the `Voting period` is not finished. `InitTotalVotingPower` is the total voting power of all bonded Atom holders at the moment when the vote opens. 
+Proposals can be accepted before the end of the voting period if they meet a special condition. Namely, if the ratio of `Yes` votes to `InitTotalVotingPower`exceeds 2:3, the proposal will be immediately accepted, even if the `Voting period` is not finished. `InitTotalVotingPower` is the total voting power of all bonded Atom holders at the moment when the vote opens. 
 This condition exists so that the network can react quickly in case of urgency.
 
 ### Inheritance
@@ -143,7 +143,7 @@ At present, validators are not punished for failing to vote.
 
 ### Governance address
 
-Later, we may add permissionned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
+Later, we may add permissioned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
 
 ## Software Upgrade
 
@@ -172,4 +172,4 @@ Once a block contains more than 2/3rd *precommits* where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software. 
 
-*Note: Not clear how the flip is handled programatically*
+*Note: Not clear how the flip is handled programmatically*

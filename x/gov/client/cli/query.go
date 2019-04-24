@@ -43,7 +43,7 @@ $ gaiacli query gov proposal 1
 
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
-			return cliCtx.PrintOutput(proposal)
+			return cliCtx.PrintOutput(proposal) // nolint:errcheck
 		},
 	}
 }
@@ -118,7 +118,7 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 				return fmt.Errorf("No matching proposals found")
 			}
 
-			return cliCtx.PrintOutput(matchingProposals)
+			return cliCtx.PrintOutput(matchingProposals) // nolint:errcheck
 		},
 	}
 
@@ -175,17 +175,21 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var vote gov.Vote
-			cdc.UnmarshalJSON(res, &vote)
+			if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+				return err
+			}
 
 			if vote.Empty() {
 				res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
 				if err != nil {
 					return err
 				}
-				cdc.UnmarshalJSON(res, &vote)
+				if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+					return err
+				}
 			}
 
-			return cliCtx.PrintOutput(vote)
+			return cliCtx.PrintOutput(vote) //nolint:errcheck
 		},
 	}
 }
@@ -226,7 +230,7 @@ $ gaiacli query gov votes 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 			} else {
@@ -339,7 +343,7 @@ $ gaiacli query gov deposits 1
 			var proposal gov.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.GetStatus()
+			propStatus := proposal.Status
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 			} else {

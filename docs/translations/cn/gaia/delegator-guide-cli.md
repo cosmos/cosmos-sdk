@@ -399,20 +399,20 @@ fees = gas * gasPrices
 
 ```bash
 // 向指定验证人绑定一定数量的Atom通证
-// 参数设定样例: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToBound>=10000stake, <gasPrice>=0.001stake
+// 参数设定样例: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToBound>=10000000000uatom, <gasPrice>=1000uatom
 
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 
 
 // 提取所有的奖励
-// 参数设定样例: <gasPrice>=0.001stake 
+// 参数设定样例: <gasPrice>=1000uatom
 
 gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 
 
 // 向指定验证人申请解绑一定数量的Atom通证
 // 解绑的通证需要3周后才能完全解绑并可以交易，
-// 参数设定样例: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToUnbound>=10000stake, <gasPrice>=0.001stake
+// 参数设定样例: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <amountToUnbound>=10000000000uatom, <gasPrice>=1000uatom
 
 gaiacli tx staking unbond <validatorAddress> <amountToUnbond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 ```
@@ -469,14 +469,14 @@ Cosmos Hub有一个内建的治理系统，该系统允许抵押通证的持有�
 ```bash
 // 提交一个提案
 // <type>=text/parameter_change/software_upgrade
-// ex value for flag: <gasPrice>=0.0001stake
+// ex value for flag: <gasPrice>=100uatom
 
-gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10stake --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
+gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10000000uatom --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 
 // 增加对提案的抵押
 // Retrieve proposalID from $gaiacli query gov proposals --status deposit_period
 // 通过 $gaiacli query gov proposals --status deposit_period 命令获得 `proposalID` 
-// 参数设定样例: <deposit>=1stake
+// 参数设定样例: <deposit>=1000000uatom
 
 gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 
@@ -495,7 +495,7 @@ gaiacli tx gov vote <proposalID> <option> --gas auto --gas-prices <gasPrice> --f
 
 ```bash
 // 抵押Atom通证
-// 参数设定样例: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
+// 参数设定样例: <amountToBound>=10000000000uatom, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=1000uatom
 
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```

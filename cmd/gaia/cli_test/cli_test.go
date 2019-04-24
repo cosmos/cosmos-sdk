@@ -1,3 +1,5 @@
+// +build cli_test
+
 package clitest
 
 import (
@@ -13,6 +15,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -221,6 +224,17 @@ func TestGaiaCLISend(t *testing.T) {
 	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--dry-run")
 	require.True(t, success)
 
+	// Test --generate-only
+	success, stdout, stderr := f.TxSend(
+		fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only=true",
+	)
+	require.Empty(t, stderr)
+	require.True(t, success)
+	msg := unmarshalStdTx(f.T, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
+
 	// Check state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
 	require.Equal(t, startTokens.Sub(sendTokens), fooAcc.GetCoins().AmountOf(denom))
@@ -361,7 +375,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, sendTokens, barAcc.GetCoins().AmountOf(denom))
 
 	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
+	success, stdout, stderr := f.TxStakingCreateValidator(barAddr.String(), consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
 
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
@@ -394,13 +408,13 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	unbondTokens := sdk.TokensFromTendermintPower(1)
-	success = f.TxStakingUnbond(keyBar, unbondTokens.String(), barVal, "-y")
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(1))
+	success = f.TxStakingUnbond(keyBar, unbondAmt.String(), barVal, "-y")
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure bonded staking is correct
-	remainingTokens := newValTokens.Sub(unbondTokens)
+	remainingTokens := newValTokens.Sub(unbondAmt.Amount)
 	validator = f.QueryStakingValidator(barVal)
 	require.Equal(t, remainingTokens, validator.Tokens)
 
@@ -409,6 +423,33 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
 	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
+
+	f.Cleanup()
+}
+
+func TestGaiaCLIQueryRewards(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	genesisState := f.GenesisState()
+	inflationMin := sdk.MustNewDecFromStr("10000.0")
+	genesisState.MintData.Minter.Inflation = inflationMin
+	genesisState.MintData.Params.InflationMin = inflationMin
+	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	genFile := filepath.Join(f.GaiadHome, "config", "genesis.json")
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	cdc := app.MakeCodec()
+	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
+	require.NoError(t, genDoc.SaveAs(genFile))
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(keyFoo)
+	rewards := f.QueryRewards(fooAddr)
+	require.Equal(t, 1, len(rewards.Rewards))
 
 	f.Cleanup()
 }
@@ -437,7 +478,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	// Test submit generate only for submit proposal
 	proposalTokens := sdk.TokensFromTendermintPower(5)
 	success, stdout, stderr := f.TxGovSubmitProposal(
-		keyFoo, "Text", "Test", "test", sdk.NewCoin(denom, proposalTokens), "--generate-only", "-y")
+		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(denom, proposalTokens), "--generate-only", "-y")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := unmarshalStdTx(t, stdout)
@@ -454,7 +495,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction tags can be queried
-	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("proposer:%s", fooAddr))
+	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure deposit was deducted
@@ -463,12 +504,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure propsal is directly queryable
 	proposal1 := f.QueryGovProposal(1)
-	require.Equal(t, uint64(1), proposal1.GetProposalID())
-	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
 
 	// Ensure query proposals returns properly
 	proposalsQuery = f.QueryGovProposals()
-	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// Query the deposits on the proposal
 	deposit := f.QueryGovDeposit(1, fooAddr)
@@ -476,7 +517,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Test deposit generate only
 	depositTokens := sdk.TokensFromTendermintPower(10)
-	success, stdout, stderr = f.TxGovDeposit(1, keyFoo, sdk.NewCoin(denom, depositTokens), "--generate-only")
+	success, stdout, stderr = f.TxGovDeposit(1, fooAddr.String(), sdk.NewCoin(denom, depositTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -498,7 +539,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(denom))
 
 	// Ensure tags are set on the transaction
-	txs = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("depositor:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("sender:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure account has expected amount of funds
@@ -507,11 +548,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Fetch the proposal and ensure it is now in the voting period
 	proposal1 = f.QueryGovProposal(1)
-	require.Equal(t, uint64(1), proposal1.GetProposalID())
-	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusVotingPeriod, proposal1.Status)
 
 	// Test vote generate only
-	success, stdout, stderr = f.TxGovVote(1, gov.OptionYes, keyFoo, "--generate-only")
+	success, stdout, stderr = f.TxGovVote(1, gov.OptionYes, fooAddr.String(), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -535,7 +576,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	// Ensure tags are applied to voting transaction properly
-	txs = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("voter:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("sender:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure no proposals in deposit period
@@ -544,7 +585,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure the proposal returns as in the voting period
 	proposalsQuery = f.QueryGovProposals("--status=VotingPeriod")
-	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// submit a second test proposal
 	f.TxGovSubmitProposal(keyFoo, "Text", "Apples", "test", sdk.NewCoin(denom, proposalTokens), "-y")
@@ -552,7 +593,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Test limit on proposals query
 	proposalsQuery = f.QueryGovProposals("--limit=1")
-	require.Equal(t, uint64(2), proposalsQuery[0].GetProposalID())
+	require.Equal(t, uint64(2), proposalsQuery[0].ProposalID)
 
 	f.Cleanup()
 }
@@ -618,7 +659,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	// generate sendTx with default gas
-	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
+	success, stdout, stderr := f.TxSend(fooAddr.String(), barAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -669,7 +710,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test generate sendTx with default gas
 	sendTokens := sdk.TokensFromTendermintPower(10)
-	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only")
+	success, stdout, stderr := f.TxSend(fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := unmarshalStdTx(t, stdout)
@@ -678,7 +719,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx with --gas=$amount
-	success, stdout, stderr = f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--gas=100", "--generate-only")
+	success, stdout, stderr = f.TxSend(fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--gas=100", "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -687,7 +728,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
-	success, stdout, stderr = f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--gas=auto", "--generate-only")
+	success, stdout, stderr = f.TxSend(fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--gas=auto", "--generate-only")
 	require.True(t, success)
 	require.NotEmpty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -764,7 +805,7 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Test generate sendTx with multisig
-	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	success, stdout, _ := f.TxSend(fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -808,8 +849,10 @@ func TestGaiaCLIEncode(t *testing.T) {
 
 	// Build a testing transaction and write it to disk
 	barAddr := f.KeyAddress(keyBar)
+	keyAddr := f.KeyAddress(keyFoo)
+
 	sendTokens := sdk.TokensFromTendermintPower(10)
-	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only", "--memo", "deadbeef")
+	success, stdout, stderr := f.TxSend(keyAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only", "--memo", "deadbeef")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -853,7 +896,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test generate sendTx with multisig
-	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	success, stdout, _ := f.TxSend(fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -915,7 +958,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test generate sendTx with multisig
-	success, stdout, stderr := f.TxSend(keyFooBarBaz, bazAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
+	success, stdout, stderr := f.TxSend(fooBarBazAddr.String(), bazAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -963,6 +1006,7 @@ func TestGaiaCLIConfig(t *testing.T) {
 	node := fmt.Sprintf("%s:%s", f.RPCAddr, f.Port)
 
 	// Set available configuration options
+	f.CLIConfig("broadcast-mode", "block")
 	f.CLIConfig("node", node)
 	f.CLIConfig("output", "text")
 	f.CLIConfig("trust-node", "true")
@@ -970,9 +1014,10 @@ func TestGaiaCLIConfig(t *testing.T) {
 	f.CLIConfig("trace", "false")
 	f.CLIConfig("indent", "true")
 
-	config, err := ioutil.ReadFile(path.Join(f.GCLIHome, "config", "config.toml"))
+	config, err := ioutil.ReadFile(path.Join(f.GaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
-	expectedConfig := fmt.Sprintf(`chain-id = "%s"
+	expectedConfig := fmt.Sprintf(`broadcast-mode = "block"
+chain-id = "%s"
 indent = true
 node = "%s"
 output = "text"
@@ -986,6 +1031,7 @@ trust-node = true
 
 func TestGaiadCollectGentxs(t *testing.T) {
 	t.Parallel()
+	var customMaxBytes, customMaxGas int64 = 99999999, 1234567
 	f := NewFixtures(t)
 
 	// Initialise temporary directories
@@ -1005,6 +1051,15 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	// Run init
 	f.GDInit(keyFoo)
 
+	// Customise genesis.json
+
+	genFile := f.GenesisFile()
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	genDoc.ConsensusParams.Block.MaxBytes = customMaxBytes
+	genDoc.ConsensusParams.Block.MaxGas = customMaxGas
+	genDoc.SaveAs(genFile)
+
 	// Add account to genesis.json
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
 
@@ -1013,6 +1068,11 @@ func TestGaiadCollectGentxs(t *testing.T) {
 
 	// Collect gentxs from a custom directory
 	f.CollectGenTxs(fmt.Sprintf("--gentx-dir=%s", gentxDir))
+
+	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	require.Equal(t, genDoc.ConsensusParams.Block.MaxBytes, customMaxBytes)
+	require.Equal(t, genDoc.ConsensusParams.Block.MaxGas, customMaxGas)
 
 	f.Cleanup(gentxDir)
 }

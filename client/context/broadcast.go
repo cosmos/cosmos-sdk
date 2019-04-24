@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,29 +12,36 @@ import (
 // an intermediate structure which is logged if the context has a logger
 // defined.
 func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error) {
-	if ctx.Async {
-		if res, err = ctx.BroadcastTxAsync(txBytes); err != nil {
-			return
-		}
-		return
+	switch ctx.BroadcastMode {
+	case client.BroadcastSync:
+		res, err = ctx.BroadcastTxSync(txBytes)
+
+	case client.BroadcastAsync:
+		res, err = ctx.BroadcastTxAsync(txBytes)
+
+	case client.BroadcastBlock:
+		res, err = ctx.BroadcastTxCommit(txBytes)
+
+	default:
+		return sdk.TxResponse{}, fmt.Errorf("unsupported return type %s; supported types: sync, async, block", ctx.BroadcastMode)
 	}
 
-	if res, err = ctx.BroadcastTxAndAwaitCommit(txBytes); err != nil {
-		return
-	}
-
-	return
+	return res, err
 }
 
-// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
-// and waits for a commit.
-func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (sdk.TxResponse, error) {
+// BroadcastTxCommit broadcasts transaction bytes to a Tendermint node and
+// waits for a commit.
+//
+// NOTE: This should ideally not be used as the request may timeout but the tx
+// may still be included in a block. Use BroadcastTxAsync or BroadcastTxSync
+// instead.
+func (ctx CLIContext) BroadcastTxCommit(txBytes []byte) (sdk.TxResponse, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
 
-	res, err := node.BroadcastTxCommit(tx)
+	res, err := node.BroadcastTxCommit(txBytes)
 	if err != nil {
 		return sdk.NewResponseFormatBroadcastTxCommit(res), err
 	}
@@ -46,35 +54,29 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (sdk.TxResponse, erro
 		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
 	}
 
-	return sdk.NewResponseFormatBroadcastTxCommit(res), err
+	return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 }
 
-// BroadcastTxSync broadcasts transaction bytes to a Tendermint node synchronously.
-func (ctx CLIContext) BroadcastTxSync(tx []byte) (sdk.TxResponse, error) {
+// BroadcastTxSync broadcasts transaction bytes to a Tendermint node
+// synchronously (i.e. returns after CheckTx execution).
+func (ctx CLIContext) BroadcastTxSync(txBytes []byte) (sdk.TxResponse, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
 
-	res, err := node.BroadcastTxSync(tx)
-	if err != nil {
-		return sdk.NewResponseFormatBroadcastTx(res), err
-	}
-
+	res, err := node.BroadcastTxSync(txBytes)
 	return sdk.NewResponseFormatBroadcastTx(res), err
 }
 
-// BroadcastTxAsync broadcasts transaction bytes to a Tendermint node asynchronously.
-func (ctx CLIContext) BroadcastTxAsync(tx []byte) (sdk.TxResponse, error) {
+// BroadcastTxAsync broadcasts transaction bytes to a Tendermint node
+// asynchronously (i.e. returns immediately).
+func (ctx CLIContext) BroadcastTxAsync(txBytes []byte) (sdk.TxResponse, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
 
-	res, err := node.BroadcastTxAsync(tx)
-	if err != nil {
-		return sdk.NewResponseFormatBroadcastTx(res), err
-	}
-
+	res, err := node.BroadcastTxAsync(txBytes)
 	return sdk.NewResponseFormatBroadcastTx(res), err
 }

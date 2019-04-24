@@ -26,7 +26,7 @@ module.exports = {
     sidebar: [
       {
         title: "Overview",
-        collapsable: false,
+        collapsable: true,
         children: [
           "/intro/",
           "/intro/sdk-app-architecture",
@@ -34,25 +34,27 @@ module.exports = {
         ]
       },
       {
-        title: "Gaia",
-        collapsable: false,
+        title: "Cosmos Hub",
+        collapsable: true,
         children: [
-          "/gaia/what-is-gaia",
-          "/gaia/installation",
-          "/gaia/join-testnet",
-          "/gaia/validators/validator-setup",
-          "/gaia/validators/overview",
-          "/gaia/validators/security",
-          "/gaia/validators/validator-faq",
-          "/gaia/delegator-guide-cli",
-          "/gaia/ledger",
-          "/gaia/gaiacli",
-          "/gaia/deploy-testnet"
+          "/cosmos-hub/what-is-gaia",
+          "/cosmos-hub/installation",
+          "/cosmos-hub/join-mainnet",
+          "/cosmos-hub/validators/validator-setup",
+          "/cosmos-hub/validators/overview",
+          "/cosmos-hub/validators/security",
+          "/cosmos-hub/validators/validator-faq",
+          "/cosmos-hub/delegator-guide-cli",
+          "/cosmos-hub/genesis",
+          "/cosmos-hub/ledger",
+          "/cosmos-hub/gaiacli",
+          "/cosmos-hub/join-testnet",
+          "/cosmos-hub/deploy-testnet"
         ]
       },
       {
         title: "Tutorial",
-        collapsable: false,
+        collapsable: true,
         children: [
           "/tutorial/",
           "/tutorial/app-design",
@@ -74,7 +76,7 @@ module.exports = {
       },
       {
         title: "Clients",
-        collapsable: false,
+        collapsable: true,
         children: [
       	  "/clients/",
           "/clients/cli",

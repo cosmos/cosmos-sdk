@@ -95,7 +95,7 @@ then navigate to localhost:8080 in your browser.
 
 ## Build RPC Docs
 
-First, run `make get_tools` from the root of repo, to install the swagger-ui tool.
+First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
 Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/develop/client/lcd/swagger-ui/swagger.yaml)
 

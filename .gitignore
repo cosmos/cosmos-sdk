@@ -7,18 +7,17 @@
 *.swn
 .vscode
 .idea
+*.pyc
 
 # Build
 vendor
-vendor-deps
-.vendor-new
 build
 tools/bin/*
 examples/build/*
 docs/_build
 docs/tutorial
 dist
-devtools-stamp
+tools-stamp
 
 # Data - ideally these don't exist
 baseapp/data/*

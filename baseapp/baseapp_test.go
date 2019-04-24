@@ -946,7 +946,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
-			BlockSize: &abci.BlockSizeParams{
+			Block: &abci.BlockParams{
 				MaxGas: 100,
 			},
 		},
@@ -1122,7 +1122,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
-			BlockSize: &abci.BlockSizeParams{
+			Block: &abci.BlockParams{
 				MaxGas: 9,
 			},
 		},
@@ -1241,15 +1241,15 @@ func TestP2PQuery(t *testing.T) {
 func TestGetMaximumBlockGas(t *testing.T) {
 	app := setupBaseApp(t)
 
-	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 0}})
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas())
 
-	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: -1}})
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas())
 
-	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: 5000000}})
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
 	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
 
-	app.setConsensusParams(&abci.ConsensusParams{BlockSize: &abci.BlockSizeParams{MaxGas: -5000000}})
+	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { app.getMaximumBlockGas() })
 }

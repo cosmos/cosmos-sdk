@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -69,7 +71,17 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 			return err
 		}
 
-		fmt.Fprintf(os.Stderr, "%s\n\n", cliCtx.Codec.MustMarshalJSON(stdSignMsg))
+		var json []byte
+		if viper.GetBool(client.FlagIndentResponse) {
+			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
+		}
+
+		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := client.BufferStdin()
 		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
@@ -92,8 +104,11 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	// broadcast to a Tendermint node
 	res, err := cliCtx.BroadcastTx(txBytes)
-	cliCtx.PrintOutput(res)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return cliCtx.PrintOutput(res)
 }
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the
@@ -108,7 +123,9 @@ func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []s
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error),
+	cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
+
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
 	rawRes, err := queryFunc("/app/simulate", txBytes)
@@ -149,15 +166,17 @@ func PrintUnsignedStdTx(
 	return
 }
 
-// SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
+// SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
+func SignStdTx(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
+	stdTx auth.StdTx, appendSig bool, offline bool,
+) (auth.StdTx, error) {
+
 	var signedStdTx auth.StdTx
 
-	keybase := txBldr.Keybase()
-
-	info, err := keybase.Get(name)
+	info, err := txBldr.Keybase().Get(name)
 	if err != nil {
 		return signedStdTx, err
 	}
@@ -170,8 +189,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	}
 
 	if !offline {
-		txBldr, err = populateAccountFromState(
-			txBldr, cliCtx, sdk.AccAddress(addr))
+		txBldr, err = populateAccountFromState(txBldr, cliCtx, sdk.AccAddress(addr))
 		if err != nil {
 			return signedStdTx, err
 		}
@@ -229,25 +247,21 @@ func ReadStdTxFromFile(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err
 	return
 }
 
-func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress) (authtxb.TxBuilder, error) {
-	if txBldr.AccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(addr)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithAccountNumber(accNum)
+func populateAccountFromState(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
+) (authtxb.TxBuilder, error) {
+
+	accNum, err := cliCtx.GetAccountNumber(addr)
+	if err != nil {
+		return txBldr, err
 	}
 
-	if txBldr.Sequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(addr)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
+	accSeq, err := cliCtx.GetAccountSequence(addr)
+	if err != nil {
+		return txBldr, err
 	}
 
-	return txBldr, nil
+	return txBldr.WithAccountNumber(accNum).WithSequence(accSeq), nil
 }
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.

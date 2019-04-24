@@ -18,9 +18,9 @@ There are three main pieces to consider:
 
 We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
-First, you need to [install the software](../getting-started/installation.md).
+First, you need to [install the software](../cosmos-hub/installation.md).
 
-Then, you can start [running a full-node](../getting-started/join-testnet.md).
+Then, you can start [running a full-node](../cosmos-hub/join-testnet.md).
 
 ### Command-Line interface
 
@@ -34,12 +34,13 @@ To generate a new key (default secp256k1 elliptic curve):
 gaiacli keys add <your_key_name>
 ```
 
-You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 4 informations:
+You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 5 informations:
 
 - `NAME`: Name of your key
+- `TYPE`: Type of your key, always `local`. 
 - `ADDRESS`: Your address. Used to receive funds.
 - `PUBKEY`: Your public key. Useful for validators.
-- `Seed phrase`: 12-words phrase. **Save this seed phrase somewhere safe**. It is used to recover your private key in case you forget the password.
+- `MNEMONIC`: 24-words phrase. **Save this mnemonic somewhere safe**. It is used to recover your private key in case you forget the password.
 
 You can see all your available keys by typing:
 
@@ -62,14 +63,20 @@ gaiacli account <YOUR_ADDRESS>
 Here is the command to send coins via the CLI:
 
 ```bash
-gaiacli send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --from=<key_name> --to=<destination_address>
+gaiacli tx send <destination_address> <amount> \
+    --chain-id=<name_of_testnet_chain> \
+    --from=<key_name>
 ```
 
+Parameters:
+
+- `<destination_address>`: Address of the recipient.
+- `<amount>`: This parameter accepts the format `<value|coinName>`, such as `10faucetToken`.
+
 Flags:
-- `--amount`: This flag accepts the format `<value|coinName>`.
+
 - `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
 - `--from`: Name of the key of the sending account.
-- `--to`: Address of the recipient.
 
 #### Help
 
@@ -88,12 +95,12 @@ The Rest Server acts as an intermediary between the front-end and the full-node.
 To start the Rest server: 
 
 ```bash
-gaiacli advanced rest-server --node=<full_node_address:full_node_port>
+gaiacli rest-server --node=<full_node_address:full_node_port>
 ```
 
 Flags:
 - `--trust-node`: A boolean. If `true`, light-client verification is disabled. If `false`, it is disabled. For service providers, this should be set to `true`. By default, it set to `true`. 
-- `--node`: This is where you indicate the address and the port of your full-node. The format is <full_node_address:full_node_port>. If the full-node is on the same machine, the address should be `tcp://localhost:26657`.
+- `--node`: This is where you indicate the address and the port of your full-node. The format is `<full_node_address:full_node_port>`. If the full-node is on the same machine, the address should be `tcp://localhost:26657`.
 - `--laddr`: This flag allows you to specify the address and port for the Rest Server (default `1317`). You will mostly use this flag only to specify the port, in which case just input "localhost" for the address. The format is <rest_server_address:port>.
 
 
@@ -101,7 +108,7 @@ Flags:
 
 The recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
 
-[`/bank/balance/{account}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
+[`/bank/balance/{address}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
 
 ## Rest API
 
@@ -121,3 +128,69 @@ mechanism for instance.
 In order to generate an unsigned transaction (example with
 [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)),
 you need to use the field `generate_only` in the body of `base_req`.
+
+## Cosmos SDK Transaction Signing
+
+Cosmos SDK transaction signing is a fairly simple process.
+
+Every Cosmos SDK transaction has a canonical JSON representation. The `gaiacli`
+and Stargate REST interfaces provide canonical JSON representations of transactions
+and their "broadcast" functions will provide compact Amino (a protobuf-like wire format)
+encoding translations.
+
+Things to know when signing messages:
+
+The format is as follows
+
+```json
+{
+  "account_number": XXX,
+  "chain_id": XXX,
+  "fee": XXX,
+  "sequence": XXX,
+  "memo": XXX,
+  "msgs": XXX
+}
+```
+
+The signer must supply `"chain_id"`, `"account number"` and `"sequence number"`.
+
+The `"fee"`, `"msgs"` and `"memo"` fields will be supplied by the transaction
+composer interface.
+
+The `"account_number"` and `"sequence"` fields can be queried directly from the
+blockchain or cached locally. Getting these numbers wrong, along with the chainID,
+is a common cause of invalid signature error. You can load the mempool of a full
+node or validator with a sequence of uncommitted transactions with incrementing
+sequence numbers and it will mostly do the correct thing.  
+
+Before signing, all keys are lexicographically sorted and all white space is
+removed from the JSON output.
+
+The signature encoding is the 64-byte concatenation of ECDSArands (i.e. `r || s`),
+where `s` is lexicographically less than its inverse in order to prevent malleability.
+This is like Ethereum, but without the extra byte for PubKey recovery, since
+Tendermint assumes the PubKey is always provided anyway.
+
+Signatures and public key examples in a signed transaction:
+
+``` json
+{
+  "type": "auth/StdTx",
+  "value": {
+    "msg": [...],
+    "signatures": [
+      {
+        "pub_key": {
+          "type": "tendermint/PubKeySecp256k1",
+          "value": XXX
+        },
+        "signature": XXX
+      }
+    ],
+  }
+}
+```
+
+Once signatures are properly generated, insert the JSON into into the generated
+transaction and then use the broadcast endpoint.

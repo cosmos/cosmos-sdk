@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,6 +51,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in the device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 
 	return cmd
 }

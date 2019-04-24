@@ -150,6 +150,15 @@ func (fee StdFee) Bytes() []byte {
 	return bz
 }
 
+// GasPrices returns the gas prices for a StdFee.
+//
+// NOTE: The gas prices returned are not the true gas prices that were
+// originally part of the submitted transaction because the fee is computed
+// as fee = ceil(gasWanted * gasPrices).
+func (fee StdFee) GasPrices() sdk.DecCoins {
+	return sdk.NewDecCoins(fee.Amount).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
 //__________________________________________________________
 
 // StdSignDoc is replay-prevention structure.

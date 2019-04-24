@@ -27,6 +27,10 @@ type (
 	QueryValidatorSlashesParams      = keeper.QueryValidatorSlashesParams
 	QueryDelegationRewardsParams     = keeper.QueryDelegationRewardsParams
 	QueryDelegatorWithdrawAddrParams = keeper.QueryDelegatorWithdrawAddrParams
+
+	// querier response types
+	QueryDelegatorTotalRewardsResponse = types.QueryDelegatorTotalRewardsResponse
+	DelegationDelegatorReward          = types.DelegationDelegatorReward
 )
 
 const (
@@ -44,7 +48,6 @@ var (
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
 
 	TagValidator = tags.Validator
-	TagDelegator = tags.Delegator
 
 	NewMsgSetWithdrawAddress          = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
@@ -59,9 +62,34 @@ var (
 	NewQueryDelegatorParams                   = keeper.NewQueryDelegatorParams
 	NewQueryDelegatorWithdrawAddrParams       = keeper.NewQueryDelegatorWithdrawAddrParams
 	DefaultParamspace                         = keeper.DefaultParamspace
+	RegisterInvariants                        = keeper.RegisterInvariants
+	AllInvariants                             = keeper.AllInvariants
+	NonNegativeOutstandingInvariant           = keeper.NonNegativeOutstandingInvariant
+	CanWithdrawInvariant                      = keeper.CanWithdrawInvariant
+	ReferenceCountInvariant                   = keeper.ReferenceCountInvariant
+	CreateTestInputDefault                    = keeper.CreateTestInputDefault
+	CreateTestInputAdvanced                   = keeper.CreateTestInputAdvanced
+	TestAddrs                                 = keeper.TestAddrs
 
 	RegisterCodec       = types.RegisterCodec
 	DefaultGenesisState = types.DefaultGenesisState
 	ValidateGenesis     = types.ValidateGenesis
 	InitialFeePool      = types.InitialFeePool
+
+	// Query types
+	QueryParams                      = keeper.QueryParams
+	QueryValidatorOutstandingRewards = keeper.QueryValidatorOutstandingRewards
+	QueryValidatorCommission         = keeper.QueryValidatorCommission
+	QueryValidatorSlashes            = keeper.QueryValidatorSlashes
+	QueryDelegationRewards           = keeper.QueryDelegationRewards
+	QueryDelegatorTotalRewards       = keeper.QueryDelegatorTotalRewards
+	QueryDelegatorValidators         = keeper.QueryDelegatorValidators
+	QueryWithdrawAddr                = keeper.QueryWithdrawAddr
+	QueryCommunityPool               = keeper.QueryCommunityPool
+
+	// Param types
+	ParamCommunityTax        = keeper.ParamCommunityTax
+	ParamBaseProposerReward  = keeper.ParamBaseProposerReward
+	ParamBonusProposerReward = keeper.ParamBonusProposerReward
+	ParamWithdrawAddrEnabled = keeper.ParamWithdrawAddrEnabled
 )

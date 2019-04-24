@@ -31,6 +31,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		distCmds.GetCmdQueryValidatorCommission(mc.storeKey, mc.cdc),
 		distCmds.GetCmdQueryValidatorSlashes(mc.storeKey, mc.cdc),
 		distCmds.GetCmdQueryDelegatorRewards(mc.storeKey, mc.cdc),
+		distCmds.GetCmdQueryCommunityPool(mc.storeKey, mc.cdc),
 	)...)
 
 	return distQueryCmd

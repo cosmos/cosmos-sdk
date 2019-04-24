@@ -76,7 +76,7 @@ When a validator wishes to withdraw their transaction fees it must send
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission rewards, as well as any rewards
-earning on their self-delegation. 
+earning on their self-delegation.
 
 ```golang
 type TxWithdrawValidator struct {

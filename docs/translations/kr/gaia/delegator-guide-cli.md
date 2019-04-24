@@ -209,7 +209,7 @@ gaiacli keys add <키 명칭 지정(yourKeyName)> --recover --account 1
 
 이 방법이 가장 안전한 방법이지만, 대량의 리소스를 필요로 합니다. 풀노드를 직접 운영하기 위해서는 우수한 인터넷 대역폭과 최소 1TB 상당의 하드디스크 용량을 필요로 합니다.
 
-[풀노드를 운영하는 절차](https://cosmos.network/docs/gaia/join-testnet.html)와 [`gaiad`를 설치하는 방법](https://cosmos.network/docs/gaia/installation.html)은 첨부된 링크를 확인하세요.
+[풀노드를 운영하는 절차](https://cosmos.network/docs/gaia/join-mainnet.html)와 [`gaiad`를 설치하는 방법](https://cosmos.network/docs/gaia/installation.html)은 첨부된 링크를 확인하세요.
 
 ### 외부 풀노드에 연결하기
 
@@ -297,7 +297,32 @@ gaiacli query
 
 각 명령어에는 `-h` 또는 `--help`를 추가하여 관련 정보를 확인하실 수 있습니다.
 
-## 아톰 위임하기 / 리워드 수령하기
+## 트랜잭션 전송하기
+
+::: warning
+코스모스 메인넷에서는 `uatom` 단위가 표준 단위로 사용됩니다. `1atom = 1,000,000uatom`으로 환산됩니다.
+:::
+
+### 가스와 수수료에 대해서
+
+코스모스 허브 네트워크는 트랜잭션 처리를 위해 트랜잭션 수수료를 부과합니다. 해당 수수료는 트랜잭션을 실행하기 위한 가스로 사용됩니다. 공식은 다음과 같습니다:
+
+
+```
+수수료(Fee) = 가스(Gas) * 가스 값(GasPrices)
+```
+
+위 공식에서 `gas`는 전송하는 트랜잭션에 따라 다릅니다. 다른 형태의 트랜잭션은 각자 다른 `gas`량을 필요로 합니다. `gas` 수량은 트랜잭션이 실행될때 계산됨으로 사전에 정확한 값을 확인할 수 있는 방법은 없습니다. 다만, `gas` 플래그의 값을 `auto`로 설정함으로 예상 값을 추출할 수는 있습니다. 예상 값을 수정하기 위해서는 `--gas-adjustment` (기본 값 `1.0`) 플래그 값을 변경하셔서 트랜잭션이 충분한 가스를 확보할 수 있도록 하십시오.
+
+`gasPrice`는 각 `gas` 유닛의 가격입니다. 각 검증인은 직접 최소 가스 가격인 `min-gas-price`를 설정하며, 트랜잭션의 `gasPrice`가 설정한 `min-gas-price`보다 높을때 트랜잭션을 처리합니다.
+
+트랜잭션 피(`fees`)는 `gas` 수량과 `gasPrice`를 곱한 값입니다. 유저는 3개의 값 중 2개의 값을 입력하게 됩니다. `gasPrice`가 높을수록 트랜잭션이 블록에 포함될 확률이 높아집니다.
+
+::: tip
+메인넷 권장 `gas-prices`는 `0.025uatom` 입니다.
+:::
+
+### 아톰 위임하기 / 리워드 수령하기
 
 ::: warning
 **아톰을 위임하기 전에 [위임자 faq](https://cosmos.network/resources/delegators)를 먼저 확인하시고 위임에 따르는 책임과 위험을 사전에 인지하시기 바랍니다**
@@ -309,7 +334,7 @@ gaiacli query
 
 ```bash
 // 아톰 위임하기 
-// 각 플래그 값 예시: <위임할 수량(amountToBound)> = 10000stake, <검증인의 bech32 주소(bech32AddressOfValidator)> = cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)> = 0.001stake
+// 각 플래그 값 예시: <위임할 수량(amountToBound)> = 10000uatom, <검증인의 bech32 주소(bech32AddressOfValidator)> = cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)> = 0.025uatom
 
 gaiacli tx staking --amount <위임할 수량(amountToBond)> --validator <검증인의 bech32 주소(bech32AddressOfValidator)> --from <위임자 키 명칭(delegatorKeyName)> --gas auto --gas-prices <가스 가격(gasPrice)>
 
@@ -339,21 +364,6 @@ gaiacli query tx <tx 해시값(txHash)>
 
 만약 외부 풀노드를 통해서 블록체인을 사용하신 경우 블록 익스플로러를 통해 트랜잭션을 확인하십시오.
 
-### 가스와 수수료에 대해서
-
-코스모스 허브 네트워크는 트랜잭션 처리를 위해 트랜잭션 수수료를 부과합니다. 해당 수수료는 트랜잭션을 실행하기 위한 가스로 사용됩니다. 공식은 다음과 같습니다:
-
-
-```
-수수료(Fee) = 가스(Gas) * 가스 값(GasPrices)
-```
-
-위 공식에서 `gas`는 전송하는 트랜잭션에 따라 다릅니다. 다른 형태의 트랜잭션은 각자 다른 `gas`량을 필요로 합니다. `gas` 수량은 트랜잭션이 실행될때 계산됨으로 사전에 정확한 값을 확인할 수 있는 방법은 없습니다. 다만, `gas` 플래그의 값을 `auto`로 설정함으로 예상 값을 추출할 수는 있습니다. 예상 값을 수정하기 위해서는 `--gas-adjustment` (기본 값 `1.0`) 플래그 값을 변경하셔서 트랜잭션이 충분한 가스를 확보할 수 있도록 하십시오.
-
-`gasPrice`는 각 `gas` 유닛의 가격입니다. 각 검증인은 직접 최소 가스 가격인 `min-gas-price`를 설정하며, 트랜잭션의 `gasPrice`가 설정한 `min-gas-price`보다 높을때 트랜잭션을 처리합니다.
-
-트랜잭션 피(`fees`)는 `gas` 수량과 `gasPrice`를 곱한 값입니다. 유저는 3개의 값 중 2개의 값을 입력하게 됩니다. `gasPrice`가 높을수록 트랜잭션이 블록에 포함될 확률이 높아집니다.
-
 ## 거버넌스 참가하기
 
 ### 거버넌스에 대해서
@@ -379,13 +389,13 @@ gaiacli query tx <tx 해시값(txHash)>
 ```bash
 // 프로포절 제안하기
 // <프로포절 종류(type)>=text/parameter_change/software_upgrade
-// 플래그 값 예시: <가스 가격(gasPrice)>=0.0001stake
+// 플래그 값 예시: <가스 가격(gasPrice)>=0.025uatom
 
-gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <프로포절 종류(type)> --deposit=10stake --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
+gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <프로포절 종류(type)> --deposit=10000000uatom --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
 
 // 프로포절의 예치금 추가하기
 // 프로포절의 proposalID 조회: $gaiacli query gov proposals --status deposit_period
-// 파라미터 값 예시: <예치금(deposit)>=1stake
+// 파라미터 값 예시: <예치금(deposit)>=10000000uatom
 
 gaiacli tx gov deposit <프로포절 ID(proposalID)> <추가할 예치금(deposit)> --gas auto --gas-prices <가스 가격(gasPrice)> --from <위임자 키 명칭(delegatorKeyName)>
 
@@ -402,7 +412,7 @@ gaiacli tx gov vote <프로포절 ID(proposalID)> <표 선택(option)> --gas aut
 
 ```bash
 // 아톰 본딩하기 
-// 플래그 값 예시: <본딩할 수량(amountToBond)>=10000stake, <위임할 검증인의 bech32 주소(bech32AddressOfValidator)>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)>=0.001stake
+// 플래그 값 예시: <본딩할 수량(amountToBond)>=10000000uatom, <위임할 검증인의 bech32 주소(bech32AddressOfValidator)>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <가스 가격(gasPrice)>=0.025uatom
 
 gaiacli tx staking --amount <본딩할 수량(amountToBond)> --validator <위임할 검증인의 bech32 주소(bech32AddressOfValidator)> --gas auto --gas-prices <가스 가격(gasPrice)> --generate-only > unsignedTX.json
 ```

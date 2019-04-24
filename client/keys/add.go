@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -74,6 +73,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -101,7 +101,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = keys.NewInMemory()
-		encryptPassword = app.DefaultKeyPass
+		encryptPassword = client.DefaultKeyPass
 	} else {
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {

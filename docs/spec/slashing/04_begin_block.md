@@ -84,7 +84,7 @@ single slashing period is capped as described in [overview.md](overview.md) unde
 
 ## Uptime tracking
 
-At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshhold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod`.  Liveness slashes do NOT lead to a tombstombing.
+At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod`.  Liveness slashes do NOT lead to a tombstombing.
 
 ```
 height := block.Height

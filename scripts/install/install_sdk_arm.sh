@@ -4,7 +4,7 @@
 BRANCH=master
 REPO=github.com/cosmos/cosmos-sdk
 
-GO_VERSION=1.11.5
+GO_VERSION=1.12.1
 
 sudo apt-get update -y
 sudo apt-get upgrade -y
@@ -22,7 +22,7 @@ echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
 mkdir go
 echo "export GOPATH=$HOME/go" >> ~/.profile
 echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
-
+echo "export GO111MODULE=on" >> ~/.profile
 source ~/.profile
 
 # get the code and move into repo
@@ -32,7 +32,6 @@ cd $GOPATH/src/$REPO
 # build & install master
 git checkout $BRANCH
 LEDGER_ENABLED=false make tools
-LEDGER_ENABLED=false make get_vendor_deps
 LEDGER_ENABLED=false make install
 
 source ~/.profile

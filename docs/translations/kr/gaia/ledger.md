@@ -24,7 +24,7 @@ NAME:	          TYPE:	  ADDRESS:						                                  PUBKEY:
 
 
 ```bash
-$ gaiacli tx send { .Destination.AccAddr } 10stake --from { .Key.Name } --chain-id=gaia-7000
+$ gaiacli tx send { .Destination.AccAddr } 10000000uatom --from { .Key.Name } --chain-id=gaia-7000
 ```
 
 레저 기기에서 해당 트랜잭션을 검토하신 후 서명이 되었다면 트랜잭션 결과를 레저 기기에서 확인하실 수 있습니다.

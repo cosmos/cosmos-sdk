@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -81,6 +82,9 @@ type BaseApp struct {
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
+
+	// height at which to halt the chain and gracefully shutdown
+	haltHeight uint64
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -230,6 +234,10 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
+func (app *BaseApp) setHaltHeight(height uint64) {
+	app.haltHeight = height
+}
+
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() Router {
 	if app.sealed {
@@ -291,11 +299,11 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
 func (app *BaseApp) getMaximumBlockGas() uint64 {
-	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
+	if app.consensusParams == nil || app.consensusParams.Block == nil {
 		return 0
 	}
 
-	maxGas := app.consensusParams.BlockSize.MaxGas
+	maxGas := app.consensusParams.Block.MaxGas
 	switch {
 	case maxGas < -1:
 		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
@@ -661,7 +669,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxlogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -695,7 +703,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
 			idxLog.Success = false
-			idxlogs = append(idxlogs, idxLog)
+			idxLogs = append(idxLogs, idxLog)
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
@@ -703,10 +711,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		}
 
 		idxLog.Success = true
-		idxlogs = append(idxlogs, idxLog)
+		idxLogs = append(idxLogs, idxLog)
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxlogs)
+	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
@@ -719,7 +727,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	return result
 }
 
-// Returns the applicantion's deliverState if app is in runTxModeDeliver,
+// Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -829,7 +837,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
@@ -885,7 +893,13 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Commit implements the ABCI interface.
+// Commit implements the ABCI interface. It will commit all state that exists in
+// the deliver state's multi-store and includes the resulting commit ID in the
+// returned abci.ResponseCommit. Commit will set the check state based on the
+// latest header and reset the deliver state. Also, if a non-zero halt height is
+// defined in config, Commit will execute a deferred function call to check
+// against that height and gracefully halt if it matches the latest committed
+// height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
@@ -896,12 +910,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Reset the Check state to the latest committed.
 	//
-	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
-	// Use the header from this latest block.
+	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	defer func() {
+		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
+			app.logger.Info("halting node per configuration", "height", app.haltHeight)
+			os.Exit(0)
+		}
+	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

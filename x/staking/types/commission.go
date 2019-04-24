@@ -119,8 +119,7 @@ func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) sdk.Er
 		// new rate cannot be greater than the max rate
 		return ErrCommissionGTMaxRate(DefaultCodespace)
 
-		// TODO: why do we need an absolute value, do we care if the validator decreases their rate rapidly?
-	case newRate.Sub(c.Rate).Abs().GT(c.MaxChangeRate):
+	case newRate.Sub(c.Rate).GT(c.MaxChangeRate):
 		// new rate % points change cannot be greater than the max change rate
 		return ErrCommissionGTMaxChangeRate(DefaultCodespace)
 	}

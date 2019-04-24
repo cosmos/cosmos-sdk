@@ -253,6 +253,65 @@ func TestDecCoinsIntersect(t *testing.T) {
 		require.NoError(t, err, "unexpected parse error in %v", i)
 
 		require.True(t, in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
-		// require.Equal(t, tc.expectedResult, in1.Intersect(in2).String(), "in1.cap(in2) != exr in %v", i)
+	}
+}
+
+func TestDecCoinsTruncateDecimal(t *testing.T) {
+	decCoinA := NewDecCoinFromDec("bar", MustNewDecFromStr("5.41"))
+	decCoinB := NewDecCoinFromDec("foo", MustNewDecFromStr("6.00"))
+
+	testCases := []struct {
+		input          DecCoins
+		truncatedCoins Coins
+		changeCoins    DecCoins
+	}{
+		{DecCoins{}, Coins(nil), DecCoins(nil)},
+		{
+			DecCoins{decCoinA, decCoinB},
+			Coins{NewInt64Coin(decCoinA.Denom, 5), NewInt64Coin(decCoinB.Denom, 6)},
+			DecCoins{NewDecCoinFromDec(decCoinA.Denom, MustNewDecFromStr("0.41"))},
+		},
+		{
+			DecCoins{decCoinB},
+			Coins{NewInt64Coin(decCoinB.Denom, 6)},
+			DecCoins(nil),
+		},
+	}
+
+	for i, tc := range testCases {
+		truncatedCoins, changeCoins := tc.input.TruncateDecimal()
+		require.Equal(
+			t, tc.truncatedCoins, truncatedCoins,
+			"unexpected truncated coins; tc #%d, input: %s", i, tc.input,
+		)
+		require.Equal(
+			t, tc.changeCoins, changeCoins,
+			"unexpected change coins; tc #%d, input: %s", i, tc.input,
+		)
+	}
+}
+
+func TestDecCoinsQuoDecTruncate(t *testing.T) {
+	x := MustNewDecFromStr("1.00")
+	y := MustNewDecFromStr("10000000000000000000.00")
+
+	testCases := []struct {
+		coins  DecCoins
+		input  Dec
+		result DecCoins
+		panics bool
+	}{
+		{DecCoins{}, ZeroDec(), DecCoins(nil), true},
+		{DecCoins{NewDecCoinFromDec("foo", x)}, y, DecCoins(nil), false},
+		{DecCoins{NewInt64DecCoin("foo", 5)}, NewDec(2), DecCoins{NewDecCoinFromDec("foo", MustNewDecFromStr("2.5"))}, false},
+	}
+
+	for i, tc := range testCases {
+		if tc.panics {
+			require.Panics(t, func() { tc.coins.QuoDecTruncate(tc.input) })
+		} else {
+			res := tc.coins.QuoDecTruncate(tc.input)
+			require.Equal(t, tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
+		}
 	}
 }

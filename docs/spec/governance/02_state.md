@@ -55,7 +55,7 @@ type ProposalStatus byte
 
 const (
     ProposalStatusOpen      = 0x1   // Proposal is submitted. Participants can deposit on it but not vote
-    ProposalStatusActive    = 0x2   // MinDeposit is reachhed, participants can vote
+    ProposalStatusActive    = 0x2   // MinDeposit is reached, participants can vote
     ProposalStatusAccepted  = 0x3   // Proposal has been accepted
     ProposalStatusRejected  = 0x4   // Proposal has been rejected
     ProposalStatusClosed   = 0x5   // Proposal never reached MinDeposit
@@ -84,13 +84,11 @@ This type is used in a temp map when tallying
 
 ## Proposals
 
-`Proposals` are an item to be voted on.
+`Proposals` are an item to be voted on. It contains the `ProposalContent` which denotes what this proposal is about, and the other fields, which are the mutable state of the governance process.
 
 ```go
 type Proposal struct {
-  Title                 string              //  Title of the proposal
-  Description           string              //  Description of the proposal
-  Type                  ProposalType        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+  ProposalContent                           // Proposal content interface
   TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
   Deposits              []Deposit           //  List of deposits on the proposal
   SubmitTime            time.Time           //  Time of the block where TxGovSubmitProposal was included
@@ -106,6 +104,17 @@ type Proposal struct {
   NoWithVetoVotes       sdk.Dec
   AbstainVotes          sdk.Dec
 }
+```
+
+`ProposalContent`s are an interface which contains the information about the `Proposal` where it is provided from an external source, including the proposer. Governance process itself does not evaluate about the internal content.
+
+```go
+type ProposalContent interface {
+    GetTitle() string
+    GetDescription() string
+    ProposalType() ProposalKind
+}
+
 ```
 
 We also mention a method to update the tally for a given proposal:

@@ -136,7 +136,7 @@ gaiacli tx send ... --fees=100photino
 또는
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=1uatom
 ```
 
 ### 계정
@@ -330,12 +330,12 @@ gaiacli query staking validator <account_cosmosval(cosmosval 계정)>
 
 #### 토큰 본딩하기
 
-테스트넷의 경우 `atom`이 아닌 `steak`를 위임합니다. 특정 테스트넷 검증인에게 토큰을 본딩하기 위해서는:
+테스트넷의 경우 `atom`이 아닌 `stake`를 위임합니다. 특정 테스트넷 검증인에게 토큰을 본딩하기 위해서는:
 
 
 ```bash
 gaiacli tx staking delegate \
-  --amount=10steak \
+  --amount=10000000uatom \
   --validator=<validator(검증인 주소)> \
   --from=<key_name(트랜잭션을 발생할 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
@@ -353,7 +353,7 @@ gaiacli keys show [name] --bech val
 
 
 ::: tip 참고
-보유하고 있는 `steak` 이상을 사용하지 마세요. `steak`가 더 필요한 경우 [Faucet](https://faucetcosmos.network/)에서 추가로 받으실 수 있습니다!
+보유하고 있는 `stake` 이상을 사용하지 마세요. `stake`가 더 필요한 경우 [Faucet](https://faucetcosmos.network/)에서 추가로 받으실 수 있습니다!
 :::
 
 ##### 위임 조회
@@ -371,19 +371,16 @@ gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 gaiacli query staking delegation <delegator_addr(위임자 코스모스 주소)>
 ```
 
-과거 위임 기록에 대해서는 `--height` 플래그를 추가 하셔서 해당 블록 높이에 대한 기록을 조회하실 수 있습니다.
-
 #### 토큰 언본딩 하기
 
 만약 특정 검증인이 악의적인 행동을 했거나 또는 본인이 개인적인 이유로 일부 토큰을 언본딩을 워하는 경우 다음 명령어를 통해 토큰을 언본딩 할 수 있습니다. 언본딩은 정확한 수량인 `shares-amount`(예시, `12.1`) 또는 언본딩을 원하는 물량의 비율인 `shares-fraction`(예시, `0.25`) 값으로 표현될 수 있습니다.
 
-
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval(검증인 cosmosval 주소)> \
-  --shares-fraction=0.5 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <validator_addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 언본딩은 언본딩 기간이 끝나는 대로 완료됩니다.
@@ -408,19 +405,17 @@ gaiacli query staking unbonding-delegations <account_cosmos(위임자 주소)>
 gaiacli query staking unbonding-delegations-from <account_cosmosval(검증인 cosmosval 주소)>
 ```
 
-과거 언본딩 정보는 `--height` 플래그를 통해서 특정 블록 높이에 대한 언본딩 정보를 조회할 수 있습니다.
-
 #### 재위임(Redelegate) 하기
 
 재위임이란 본딩 되어있는 토큰을 한 검증인으로 부터 다른 검증인으로 옮기는 것입니다:
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval(스테이킹을 취소할 검증인의 cosmosval 주소)> \
-  --addr-validator-dest=<account_cosmosval(스테이킹을 받을 검증인의 cosmosval 주소)> \
-  --shares-fraction=50 \
-  --from=<key_name(트랜잭션을 발생시킬 키/계정 이름)> \
-  --chain-id=<chain_id(체인 아이디)>
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
+  --from=<key_name> \
+  --chain-id=<chain_id>
 ```
 
 위 예시와 같이 재위임될 토큰의 수량은 특정 수량(`shares-amount`) 또는 일정 비율(`shares-fraction`)로 표현될 수 있습니다.
@@ -446,8 +441,6 @@ gaiacli query staking redelegations <account_cosmos(위임자 코스모스 주�
 ```bash
   gaiacli query staking redelegations-from <account_cosmosval(검증인 주소)>
 ```
-
-과거 재위임에 대한 정보는 다른 트랜잭션과 동일하게 `--height` 플래그를 이용하여 특정 블록 높이에 대한 재위임 정보를 확인하실 수 있습니다.
 
 #### 파라미터 조회
 
@@ -515,7 +508,7 @@ gaiacli tx gov submit-proposal \
   --title=<title(프로포절 제목)> \
   --description=<description(프로포절 설명)> \
   --type=<Text/ParameterChange/SoftwareUpgrade(프로포절 타입)> \
-  --deposit=<40steak(예치금 수량)> \
+  --deposit=<40000000uatom(예치금 수량)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```
@@ -544,10 +537,10 @@ gaiacli query gov proposer <proposal_id(프로포절 ID)>
 
 #### 보증금 추가하기
 
-프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 steak`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
+프로포절이 네트워크에 전파되기 위해서는 해당 프로포절의 보증금이 `minDeposit` 값 이상이어야 합니다 (현재 기본 값은 `10 stake`입니다). 만약 사전에 생성한 프로포절이 해당 기준을 충족하지 못하였다면 추후에 보증금을 추가 예치하여 활성화할 수 있습니다. 프로포절의 보증금이 최소 값을 도달하면 해당 프로포절의 투표는 활성화 됩니다:
 
 ```bash
-gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200steak(금액)> \
+gaiacli tx gov deposit <proposal_id(프로포절 ID)> <200000000uatom(금액)> \
   --from=<name(트랜잭션을 발생시킬 키/계정 이름)> \
   --chain-id=<chain_id(체인 아이디)>
 ```
@@ -688,7 +681,7 @@ gaiacli keys show --address p1p2p3
 위 주소를 기반으로 멀티시그 트랜잭션을 생성하는 과정의 첫 단계는 다음과 같습니다:
 
 ```bash
-gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10000000uatom \
   --from=<multisig_address(멀티시그 주소)> \
   --generate-only > unsignedTx.json
 ```

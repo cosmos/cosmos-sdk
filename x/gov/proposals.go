@@ -9,81 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Proposal interface
-type Proposal interface {
-	GetProposalID() uint64
-	SetProposalID(uint64)
+// Proposal is a struct used by gov module internally
+// embedds ProposalContent with additional fields to record the status of the proposal process
+type Proposal struct {
+	ProposalContent `json:"proposal_content"` // Proposal content interface
 
-	GetTitle() string
-	SetTitle(string)
-
-	GetDescription() string
-	SetDescription(string)
-
-	GetProposalType() ProposalKind
-	SetProposalType(ProposalKind)
-
-	GetStatus() ProposalStatus
-	SetStatus(ProposalStatus)
-
-	GetFinalTallyResult() TallyResult
-	SetFinalTallyResult(TallyResult)
-
-	GetSubmitTime() time.Time
-	SetSubmitTime(time.Time)
-
-	GetDepositEndTime() time.Time
-	SetDepositEndTime(time.Time)
-
-	GetTotalDeposit() sdk.Coins
-	SetTotalDeposit(sdk.Coins)
-
-	GetVotingStartTime() time.Time
-	SetVotingStartTime(time.Time)
-
-	GetVotingEndTime() time.Time
-	SetVotingEndTime(time.Time)
-
-	String() string
-}
-
-// Proposals is an array of proposal
-type Proposals []Proposal
-
-func (p Proposals) String() string {
-	out := "ID - (Status) [Type] Title\n"
-	for _, prop := range p {
-		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
-			prop.GetProposalID(), prop.GetStatus(),
-			prop.GetProposalType(), prop.GetTitle())
-	}
-	return strings.TrimSpace(out)
-}
-
-// checks if two proposals are equal
-func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	if proposalA.GetProposalID() == proposalB.GetProposalID() &&
-		proposalA.GetTitle() == proposalB.GetTitle() &&
-		proposalA.GetDescription() == proposalB.GetDescription() &&
-		proposalA.GetProposalType() == proposalB.GetProposalType() &&
-		proposalA.GetStatus() == proposalB.GetStatus() &&
-		proposalA.GetFinalTallyResult().Equals(proposalB.GetFinalTallyResult()) &&
-		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
-		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime()) &&
-		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) &&
-		proposalA.GetVotingEndTime().Equal(proposalB.GetVotingEndTime()) {
-		return true
-	}
-	return false
-}
-
-// Text Proposals
-type TextProposal struct {
-	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
-	Title        string       `json:"title"`         //  Title of the proposal
-	Description  string       `json:"description"`   //  Description of the proposal
-	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
 
 	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys
@@ -96,42 +27,8 @@ type TextProposal struct {
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
-// Implements Proposal Interface
-var _ Proposal = (*TextProposal)(nil)
-
 // nolint
-func (tp TextProposal) GetProposalID() uint64                      { return tp.ProposalID }
-func (tp *TextProposal) SetProposalID(proposalID uint64)           { tp.ProposalID = proposalID }
-func (tp TextProposal) GetTitle() string                           { return tp.Title }
-func (tp *TextProposal) SetTitle(title string)                     { tp.Title = title }
-func (tp TextProposal) GetDescription() string                     { return tp.Description }
-func (tp *TextProposal) SetDescription(description string)         { tp.Description = description }
-func (tp TextProposal) GetProposalType() ProposalKind              { return tp.ProposalType }
-func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
-func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
-func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
-func (tp TextProposal) GetFinalTallyResult() TallyResult           { return tp.FinalTallyResult }
-func (tp *TextProposal) SetFinalTallyResult(tallyResult TallyResult) {
-	tp.FinalTallyResult = tallyResult
-}
-func (tp TextProposal) GetSubmitTime() time.Time            { return tp.SubmitTime }
-func (tp *TextProposal) SetSubmitTime(submitTime time.Time) { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetDepositEndTime() time.Time        { return tp.DepositEndTime }
-func (tp *TextProposal) SetDepositEndTime(depositEndTime time.Time) {
-	tp.DepositEndTime = depositEndTime
-}
-func (tp TextProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
-func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
-func (tp TextProposal) GetVotingStartTime() time.Time           { return tp.VotingStartTime }
-func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
-	tp.VotingStartTime = votingStartTime
-}
-func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
-func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
-	tp.VotingEndTime = votingEndTime
-}
-
-func (tp TextProposal) String() string {
+func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:
   Title:              %s
   Type:               %s
@@ -140,10 +37,75 @@ func (tp TextProposal) String() string {
   Deposit End Time:   %s
   Total Deposit:      %s
   Voting Start Time:  %s
-  Voting End Time:    %s`, tp.ProposalID, tp.Title, tp.ProposalType,
-		tp.Status, tp.SubmitTime, tp.DepositEndTime,
-		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
+  Voting End Time:    %s
+  Description:        %s`,
+		p.ProposalID, p.GetTitle(), p.ProposalType(),
+		p.Status, p.SubmitTime, p.DepositEndTime,
+		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
+	)
 }
+
+// ProposalContent is an interface that has title, description, and proposaltype
+// that the governance module can use to identify them and generate human readable messages
+// ProposalContent can have additional fields, which will handled by ProposalHandlers
+// via type assertion, e.g. parameter change amount in ParameterChangeProposal
+type ProposalContent interface {
+	GetTitle() string
+	GetDescription() string
+	ProposalType() ProposalKind
+}
+
+// Proposals is an array of proposal
+type Proposals []Proposal
+
+// nolint
+func (p Proposals) String() string {
+	out := "ID - (Status) [Type] Title\n"
+	for _, prop := range p {
+		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
+			prop.ProposalID, prop.Status,
+			prop.ProposalType(), prop.GetTitle())
+	}
+	return strings.TrimSpace(out)
+}
+
+// Text Proposals
+type TextProposal struct {
+	Title       string `json:"title"`       //  Title of the proposal
+	Description string `json:"description"` //  Description of the proposal
+}
+
+func NewTextProposal(title, description string) TextProposal {
+	return TextProposal{
+		Title:       title,
+		Description: description,
+	}
+}
+
+// Implements Proposal Interface
+var _ ProposalContent = TextProposal{}
+
+// nolint
+func (tp TextProposal) GetTitle() string           { return tp.Title }
+func (tp TextProposal) GetDescription() string     { return tp.Description }
+func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
+
+// Software Upgrade Proposals
+type SoftwareUpgradeProposal struct {
+	TextProposal
+}
+
+func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradeProposal {
+	return SoftwareUpgradeProposal{
+		TextProposal: NewTextProposal(title, description),
+	}
+}
+
+// Implements Proposal Interface
+var _ ProposalContent = SoftwareUpgradeProposal{}
+
+// nolint
+func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeSoftwareUpgrade }
 
 // ProposalQueue
 type ProposalQueue []uint64

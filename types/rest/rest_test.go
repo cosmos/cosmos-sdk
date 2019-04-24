@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -54,4 +55,56 @@ func TestBaseReqValidateBasic(t *testing.T) {
 			require.Equal(t, tt.want, tt.req.ValidateBasic(tt.w))
 		})
 	}
+}
+
+func TestParseHTTPArgs(t *testing.T) {
+	req0 := mustNewRequest(t, "", "/", nil)
+	req1 := mustNewRequest(t, "", "/?limit=5", nil)
+	req2 := mustNewRequest(t, "", "/?page=5", nil)
+	req3 := mustNewRequest(t, "", "/?page=5&limit=5", nil)
+
+	reqE1 := mustNewRequest(t, "", "/?page=-1", nil)
+	reqE2 := mustNewRequest(t, "", "/?limit=-1", nil)
+	req4 := mustNewRequest(t, "", "/?foo=faa", nil)
+
+	tests := []struct {
+		name  string
+		req   *http.Request
+		w     http.ResponseWriter
+		tags  []string
+		page  int
+		limit int
+		err   bool
+	}{
+		{"no params", req0, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, false},
+		{"Limit", req1, httptest.NewRecorder(), []string{}, DefaultPage, 5, false},
+		{"Page", req2, httptest.NewRecorder(), []string{}, 5, DefaultLimit, false},
+		{"Page and limit", req3, httptest.NewRecorder(), []string{}, 5, 5, false},
+
+		{"error page 0", reqE1, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, true},
+		{"error limit 0", reqE2, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, true},
+
+		{"tags", req4, httptest.NewRecorder(), []string{"foo='faa'"}, DefaultPage, DefaultLimit, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tags, page, limit, err := ParseHTTPArgs(tt.req)
+			if tt.err {
+				require.NotNil(t, err)
+			} else {
+				require.Nil(t, err)
+				require.Equal(t, tt.tags, tags)
+				require.Equal(t, tt.page, page)
+				require.Equal(t, tt.limit, limit)
+			}
+		})
+	}
+}
+
+func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {
+	req, err := http.NewRequest(method, url, body)
+	require.NoError(t, err)
+	err = req.ParseForm()
+	require.NoError(t, err)
+	return req
 }

@@ -106,7 +106,10 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	}
 	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
 	newMultiplicand := sdk.OneDec().Sub(fraction)
-	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
+
+	// using MulTruncate here conservatively increases the slashing amount
+	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.MulTruncate(newMultiplicand))
+
 	if updatedFraction.LT(sdk.ZeroDec()) {
 		panic("negative slash fraction")
 	}

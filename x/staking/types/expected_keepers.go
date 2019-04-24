@@ -18,3 +18,8 @@ type BankKeeper interface {
 	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
+
+// expected crisis keeper
+type CrisisKeeper interface {
+	RegisterRoute(moduleName, route string, invar sdk.Invariant)
+}

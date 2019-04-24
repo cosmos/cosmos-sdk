@@ -1,0 +1,2 @@
+#3981 Add support to gracefully halt a node at a given height
+via the node's `halt-height` config or CLI value.

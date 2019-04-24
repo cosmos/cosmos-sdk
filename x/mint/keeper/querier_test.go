@@ -1,4 +1,4 @@
-package mint
+package keeper
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -35,7 +36,7 @@ func TestNewQuerier(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	input := newTestInput(t)
 
-	var params Params
+	var params types.Params
 
 	res, sdkErr := queryParams(input.ctx, input.mintKeeper)
 	require.NoError(t, sdkErr)

@@ -1,4 +1,4 @@
-package mint
+package types
 
 import (
 	"math/rand"

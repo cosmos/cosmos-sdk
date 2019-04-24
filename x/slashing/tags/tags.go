@@ -8,6 +8,6 @@ import (
 var (
 	TxCategory = "slashing"
 
-	Category  = sdk.TagCategory
-	Validator = "validator"
+	Category = sdk.TagCategory
+	Sender   = sdk.TagSender
 )

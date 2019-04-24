@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/tags"
 )
@@ -11,10 +13,12 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgSend:
 			return handleMsgSend(ctx, k, msg)
+
 		case MsgMultiSend:
 			return handleMsgMultiSend(ctx, k, msg)
+
 		default:
-			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
+			errMsg := fmt.Sprintf("unrecognized bank message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

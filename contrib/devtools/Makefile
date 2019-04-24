@@ -47,8 +47,8 @@ tools: tools-stamp
 tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/clog
 	touch $@
 
-$(GOBIN)/golangci-lint: contrib/devtools/install-golangci-lint.sh $(GOBIN)/gosum
-	bash contrib/devtools/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
+$(GOBIN)/golangci-lint: $(mkfile_dir)/install-golangci-lint.sh $(GOBIN)/gosum
+	bash $(mkfile_dir)/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
 $(GOBIN)/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
@@ -57,10 +57,10 @@ $(GOBIN)/goimports:
 	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
 
 $(GOBIN)/gosum:
-	go install -mod=readonly ./contrib/devtools/gosum/
+	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/gosum/
 
 $(GOBIN)/clog:
-	go install -mod=readonly ./contrib/devtools/clog/
+	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/clog/
 
 tools-clean:
 	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum clog

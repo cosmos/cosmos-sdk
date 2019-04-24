@@ -12,6 +12,7 @@ var (
 
 	Action       = sdk.TagAction
 	Category     = sdk.TagCategory
+	Sender       = sdk.TagSender
 	SrcValidator = sdk.TagSrcValidator
 	DstValidator = sdk.TagDstValidator
 	Delegator    = sdk.TagDelegator

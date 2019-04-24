@@ -13,12 +13,15 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
+
 		case MsgSubmitProposal:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
+
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
+
 		default:
-			errMsg := fmt.Sprintf("Unrecognized gov msg type: %T", msg)
+			errMsg := fmt.Sprintf("unrecognized gov message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
@@ -49,7 +52,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	resTags := sdk.NewTags(
 		tags.ProposalID, proposalIDStr,
 		tags.Category, tags.TxCategory,
-		tags.Proposer, msg.Proposer.String(),
+		tags.Sender, msg.Proposer.String(),
 	)
 
 	if votingStarted {
@@ -73,7 +76,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	resTags := sdk.NewTags(
 		tags.ProposalID, proposalIDStr,
 		tags.Category, tags.TxCategory,
-		tags.Depositor, msg.Depositor.String(),
+		tags.Sender, msg.Depositor.String(),
 	)
 
 	if votingStarted {
@@ -97,7 +100,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		Tags: sdk.NewTags(
 			tags.ProposalID, proposalIDStr,
 			tags.Category, tags.TxCategory,
-			tags.Voter, msg.Voter.String(),
+			tags.Sender, msg.Voter.String(),
 		),
 	}
 }

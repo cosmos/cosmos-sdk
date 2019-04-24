@@ -1,6 +1,8 @@
 package distribution
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
@@ -13,12 +15,16 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgSetWithdrawAddress:
 			return handleMsgModifyWithdrawAddress(ctx, msg, k)
+
 		case types.MsgWithdrawDelegatorReward:
 			return handleMsgWithdrawDelegatorReward(ctx, msg, k)
+
 		case types.MsgWithdrawValidatorCommission:
 			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
+
 		default:
-			return sdk.ErrTxDecode("invalid message parse in distribution module").Result()
+			errMsg := fmt.Sprintf("unrecognized distribution message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
@@ -34,7 +40,7 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAdd
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -50,7 +56,7 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDele
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Delegator, msg.DelegatorAddress.String(),
+		tags.Sender, msg.DelegatorAddress.String(),
 		tags.Validator, msg.ValidatorAddress.String(),
 	)
 	return sdk.Result{
@@ -67,7 +73,7 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
-		tags.Validator, msg.ValidatorAddress.String(),
+		tags.Sender, msg.ValidatorAddress.String(),
 	)
 	return sdk.Result{
 		Tags: resTags,

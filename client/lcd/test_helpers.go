@@ -221,7 +221,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true, false)
+	app := gapp.NewGaiaApp(logger, db, nil, true, 0)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()

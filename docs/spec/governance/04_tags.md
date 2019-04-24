@@ -16,7 +16,7 @@ The governance module emits the following events/tags:
 |---------------------------|--------------------------|
 | `action`                  | `submit_proposal`        |
 | `category`                | `governance`             |
-| `proposer`                | {proposerAccountAddress} |
+| `sender`                  | {proposerAccountAddress} |
 | `proposal-id`             | {proposalID}             |
 | `voting-period-start` [0] | {proposalID}             |
 
@@ -28,7 +28,7 @@ The governance module emits the following events/tags:
 |---------------|-----------------------|
 | `action`      | `vote`                |
 | `category`    | `governance`          |
-| `voter`       | {voterAccountAddress} |
+| `sender`      | {voterAccountAddress} |
 | `proposal-id` | {proposalID}          |
 
 ### MsgDeposit
@@ -37,5 +37,5 @@ The governance module emits the following events/tags:
 |---------------|---------------------------|
 | `action`      | `deposit`                 |
 | `category`    | `governance`              |
-| `depositor`   | {depositorAccountAddress} |
+| `sender`      | {depositorAccountAddress} |
 | `proposal-id` | {proposalID}              |

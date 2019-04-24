@@ -13,10 +13,8 @@ var (
 
 	Action            = sdk.TagAction
 	Category          = sdk.TagCategory
-	Proposer          = "proposer"
+	Sender            = sdk.TagSender
 	ProposalID        = "proposal-id"
 	VotingPeriodStart = "voting-period-start"
-	Depositor         = "depositor"
-	Voter             = "voter"
 	ProposalResult    = "proposal-result"
 )

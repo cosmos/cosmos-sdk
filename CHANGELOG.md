@@ -9,6 +9,14 @@
 * [\#4053](https://github.com/cosmos/cosmos-sdk/issues/4053) Add `--inv-check-period`
 flag to gaiad to set period at which invariants checks will run.
 
+## 0.34.1
+
+### Bug Fixes
+
+#### Gaia
+
+* [#4163](https://github.com/cosmos/cosmos-sdk/pull/4163) Fix v0.33.x export script to port gov data correctly.
+
 ## 0.34.0
 
 ### Breaking Changes

@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -1271,4 +1272,13 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator should be in unbonding state
 	validator, _ = keeper.GetValidator(ctx, valA)
 	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+}
+
+func TestInvalidMsg(t *testing.T) {
+	k := keep.Keeper{}
+	h := NewHandler(k)
+
+	res := h(sdk.Context{}, sdk.NewTestMsg())
+	require.False(t, res.IsOK())
+	require.True(t, strings.Contains(res.Log, "unrecognized staking message type"))
 }

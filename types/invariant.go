@@ -6,5 +6,5 @@ package types
 // The simulator will then halt and print the logs.
 type Invariant func(ctx Context) error
 
-// group of Invarient
+// Invariants defines a group of invariants
 type Invariants []Invariant

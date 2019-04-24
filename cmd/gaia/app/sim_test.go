@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -61,11 +62,11 @@ func init() {
 }
 
 // helper function for populating input for SimulateFromSeed
-func getSimulateFromSeedInput(tb testing.TB, app *GaiaApp) (
-	testing.TB, *baseapp.BaseApp, simulation.AppStateFn, int64,
+func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *GaiaApp) (
+	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool) {
 
-	return tb, app.BaseApp, appStateFn, seed,
+	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
@@ -119,7 +120,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
 			var (
 				vacc    auth.VestingAccount
-				endTime int
+				endTime int64
 			)
 
 			startTime := genesisTimestamp.Unix()
@@ -127,15 +128,19 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			// Allow for some vesting accounts to vest very quickly while others very
 			// slowly.
 			if r.Intn(100) < 50 {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*24*30)))
+				endTime = int64(simulation.RandIntBetween(r, int(startTime), int(startTime+(60*60*24*30))))
 			} else {
-				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*12)))
+				endTime = int64(simulation.RandIntBetween(r, int(startTime), int(startTime+(60*60*12))))
+			}
+
+			if startTime == endTime {
+				endTime += 1
 			}
 
 			if r.Intn(100) < 50 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, int64(endTime))
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, int64(endTime))
+				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
 			gacc = NewGenesisAccountI(vacc)
@@ -148,11 +153,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
+			MaxMemoCharacters:      uint64(simulation.RandIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
-			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
-			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
-			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
+			TxSizeCostPerByte:      uint64(simulation.RandIntBetween(r, 5, 15)),
+			SigVerifyCostED25519:   uint64(simulation.RandIntBetween(r, 500, 1000)),
+			SigVerifyCostSecp256k1: uint64(simulation.RandIntBetween(r, 500, 1000)),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
@@ -182,7 +187,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	stakingGenesis := staking.GenesisState{
 		Pool: staking.InitialPool(),
 		Params: staking.Params{
-			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
+			UnbondingTime: time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250) + 1),
 			BondDenom:     sdk.DefaultBondDenom,
 		},
@@ -192,9 +197,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
 			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
-			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
+			SignedBlocksWindow:      int64(simulation.RandIntBetween(r, 10, 1000)),
 			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
+			DowntimeJailDuration:    time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second,
 			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
 			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
@@ -269,10 +274,6 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min) + min
-}
-
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
@@ -293,12 +294,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *GaiaApp) []sdk.Invariant {
-	return []sdk.Invariant{
-		simulation.PeriodicInvariant(bank.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
-		simulation.PeriodicInvariant(distr.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
-		simulation.PeriodicInvariant(staking.AllInvariants(app.stakingKeeper, app.feeCollectionKeeper,
-			app.distrKeeper, app.accountKeeper), period, 0),
-	}
+	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -319,11 +315,11 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, true, false)
+	app := NewGaiaApp(logger, db, nil, true, 0)
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 	if err != nil {
 		fmt.Println(err)
 		b.Fail()
@@ -354,11 +350,11 @@ func TestFullGaiaSimulation(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, true, false, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -388,11 +384,11 @@ func TestGaiaImportExport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, true, false, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if commit {
 		// for memdb:
@@ -415,7 +411,7 @@ func TestGaiaImportExport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, false, fauxMerkleModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
@@ -478,11 +474,11 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, true, false, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, app))
+	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if commit {
 		// for memdb:
@@ -514,14 +510,14 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, false, fauxMerkleModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, newApp))
+	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
 
 }
@@ -542,11 +538,11 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
-			app := NewGaiaApp(logger, db, nil, true, false)
+			app := NewGaiaApp(logger, db, nil, true, 0)
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
-				t, app.BaseApp, appStateFn, seed,
+				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
 				[]sdk.Invariant{},
 				50,
@@ -560,5 +556,44 @@ func TestAppStateDeterminism(t *testing.T) {
 		for k := 1; k < numTimesToRunPerSeed; k++ {
 			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
+	}
+}
+
+func BenchmarkInvariants(b *testing.B) {
+	// 1. Setup a simulated Gaia application
+	logger := log.NewNopLogger()
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-invariant-bench")
+	db, _ := sdk.NewLevelDB("simulation", dir)
+
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+
+	app := NewGaiaApp(logger, db, nil, true, 0)
+
+	// 2. Run parameterized simulation (w/o invariants)
+	_, err := simulation.SimulateFromSeed(
+		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean,
+	)
+	if err != nil {
+		fmt.Println(err)
+		b.FailNow()
+	}
+
+	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
+
+	// 3. Benchmark each invariant separately
+	//
+	// NOTE: We use the crisis keeper as it has all the invariants registered with
+	// their respective metadata which makes it useful for testing/benchmarking.
+	for _, cr := range app.crisisKeeper.Routes() {
+		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
+			if err := cr.Invar(ctx); err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		})
 	}
 }

@@ -1,0 +1,3 @@
+#3715 Update /distribution/delegators/{delegatorAddr}/rewards GET endpoint
+as per new specs. For a given delegation, the endpoint now returns the
+comprehensive list of validator-reward tuples along with the grand total.

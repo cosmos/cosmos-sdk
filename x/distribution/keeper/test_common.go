@@ -123,7 +123,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
 		pool := sk.GetPool(ctx)
-		_, _, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{
+		_, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{
 			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
 		})
 		require.Nil(t, err)

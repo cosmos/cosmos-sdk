@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -55,7 +56,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
 	got = staking.NewHandler(sk)(ctx, undelegateMsg)
 
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
@@ -106,7 +107,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// verify validator still exists and is jailed
 	validator, found := stakingKeeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.True(t, validator.GetJailed())
+	require.True(t, validator.IsJailed())
 
 	// verify the validator cannot unjail itself
 	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
@@ -120,4 +121,13 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// verify the validator can now unjail itself
 	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
 	require.True(t, got.IsOK(), "expected jailed validator to be able to unjail, got: %v", got)
+}
+
+func TestInvalidMsg(t *testing.T) {
+	k := Keeper{}
+	h := NewHandler(k)
+
+	res := h(sdk.Context{}, sdk.NewTestMsg())
+	require.False(t, res.IsOK())
+	require.True(t, strings.Contains(res.Log, "unrecognized slashing message type"))
 }

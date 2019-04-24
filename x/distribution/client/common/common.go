@@ -11,26 +11,26 @@ import (
 
 // QueryParams actually queries distribution params.
 func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
-	route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
+	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamCommunityTax)
 
 	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBaseProposerReward)
 	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBonusProposerReward)
 	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/withdraw_addr_enabled", queryRoute)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamWithdrawAddrEnabled)
 	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
@@ -50,7 +50,7 @@ func QueryDelegatorTotalRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/delegator_total_rewards", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorTotalRewards),
 		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
 	)
 }
@@ -69,7 +69,7 @@ func QueryDelegationRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/delegation_rewards", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegationRewards),
 		cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
 	)
 }
@@ -80,7 +80,7 @@ func QueryDelegatorValidators(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/delegator_validators", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorValidators),
 		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
 	)
 }
@@ -90,7 +90,7 @@ func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/validator_commission", queryRoute),
+		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryValidatorCommission),
 		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
 }

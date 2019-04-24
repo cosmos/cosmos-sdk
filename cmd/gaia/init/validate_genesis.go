@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
 )
 
 // Validate genesis command takes
@@ -30,8 +31,8 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			//nolint
 			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
 
-			var genDoc types.GenesisDoc
-			if genDoc, err = LoadGenesisDoc(cdc, genesis); err != nil {
+			var genDoc *types.GenesisDoc
+			if genDoc, err = types.GenesisDocFromFile(genesis); err != nil {
 				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 

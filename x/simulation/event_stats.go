@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"io"
 	"sort"
 )
 
@@ -17,14 +18,16 @@ func (es eventStats) tally(eventDesc string) {
 }
 
 // Pretty-print events as a table
-func (es eventStats) Print() {
+func (es eventStats) Print(w io.Writer) {
 	var keys []string
 	for key := range es {
 		keys = append(keys, key)
 	}
+
 	sort.Strings(keys)
-	fmt.Printf("Event statistics: \n")
+	fmt.Fprintf(w, "Event statistics: \n")
+
 	for _, key := range keys {
-		fmt.Printf("  % 60s => %d\n", key, es[key])
+		fmt.Fprintf(w, "  % 60s => %d\n", key, es[key])
 	}
 }

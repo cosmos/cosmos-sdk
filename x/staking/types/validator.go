@@ -421,6 +421,12 @@ func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 
+// TokensFromSharesRoundUp returns the token worth of provided shares, rounded
+// up.
+func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
+}
+
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
@@ -467,7 +473,7 @@ func (v Validator) PotentialTendermintPower() int64 {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetJailed() bool               { return v.Jailed }
+func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }

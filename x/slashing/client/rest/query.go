@@ -2,14 +2,16 @@ package rest
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
@@ -46,11 +48,6 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		if code == http.StatusNoContent {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
 		rest.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
 	}
 }
@@ -79,7 +76,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(validators.Validators) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 
@@ -98,7 +95,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 		}
 
 		if len(signingInfoList) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
 			return
 		}
 
@@ -130,7 +127,7 @@ func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Code
 	}
 
 	if len(res) == 0 {
-		code = http.StatusNoContent
+		code = http.StatusOK
 		return
 	}
 

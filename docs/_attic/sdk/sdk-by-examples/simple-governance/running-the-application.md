@@ -7,7 +7,6 @@ Once you have finallized your application, install it using `go get`. The follow
 ```bash
 go get github.com/<your_username>/cosmos-sdk
 cd $GOPATH/src/github.com/<your_username>/cosmos-sdk
-make get_vendor_deps
 make install
 make install_examples
 ```

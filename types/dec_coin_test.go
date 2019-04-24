@@ -290,3 +290,28 @@ func TestDecCoinsTruncateDecimal(t *testing.T) {
 		)
 	}
 }
+
+func TestDecCoinsQuoDecTruncate(t *testing.T) {
+	x := MustNewDecFromStr("1.00")
+	y := MustNewDecFromStr("10000000000000000000.00")
+
+	testCases := []struct {
+		coins  DecCoins
+		input  Dec
+		result DecCoins
+		panics bool
+	}{
+		{DecCoins{}, ZeroDec(), DecCoins(nil), true},
+		{DecCoins{NewDecCoinFromDec("foo", x)}, y, DecCoins(nil), false},
+		{DecCoins{NewInt64DecCoin("foo", 5)}, NewDec(2), DecCoins{NewDecCoinFromDec("foo", MustNewDecFromStr("2.5"))}, false},
+	}
+
+	for i, tc := range testCases {
+		if tc.panics {
+			require.Panics(t, func() { tc.coins.QuoDecTruncate(tc.input) })
+		} else {
+			res := tc.coins.QuoDecTruncate(tc.input)
+			require.Equal(t, tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
+		}
+	}
+}

@@ -1,11 +1,12 @@
-package clientpackage
+package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
+
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/go-amino"
 )
 
 // ModuleClient exports all CLI client functionality from the minting module.
@@ -26,7 +27,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	}
 
 	mintingQueryCmd.AddCommand(
-		client.GetCommands(
+		sdkclient.GetCommands(
 			cli.GetCmdQueryParams(mc.cdc),
 			cli.GetCmdQueryInflation(mc.cdc),
 			cli.GetCmdQueryAnnualProvisions(mc.cdc),

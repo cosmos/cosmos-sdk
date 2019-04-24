@@ -8,8 +8,8 @@ import (
 )
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (sdk.Tags, error) {
-	logger := ctx.Logger().With("module", "x/gov")
+func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
+	logger := keeper.Logger(ctx)
 	resTags := sdk.NewTags()
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -78,5 +78,5 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (sdk.Tags, error) {
 		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
 
-	return resTags, nil
+	return resTags
 }

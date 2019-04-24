@@ -6,11 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (

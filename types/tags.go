@@ -71,6 +71,8 @@ func MakeTag(k string, v string) Tag {
 // common tags
 var (
 	TagAction       = "action"
+	TagCategory     = "category"
+	TagSender       = "sender"
 	TagSrcValidator = "source-validator"
 	TagDstValidator = "destination-validator"
 	TagDelegator    = "delegator"

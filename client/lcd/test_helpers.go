@@ -221,7 +221,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true, false)
+	app := gapp.NewGaiaApp(logger, db, nil, true, 0)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
@@ -695,7 +695,7 @@ func doTransferWithGas(
 	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, client.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -742,7 +742,7 @@ func doTransferWithGasAccAuto(
 	acc := getAccount(t, port, addr)
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, client.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 

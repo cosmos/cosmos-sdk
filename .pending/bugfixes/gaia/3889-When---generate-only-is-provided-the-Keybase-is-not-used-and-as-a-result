@@ -1,2 +1,0 @@
-#3889 When `--generate-only` is provided, the Keybase is not used and as a result
-the `--from` value must be a valid Bech32 cosmos address.

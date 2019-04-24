@@ -218,23 +218,23 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (resp abci.ResponseBeginBlock, err error) {
-	resp.Tags, err = slashing.BeginBlocker(ctx, req, app.slashingKeeper)
-	return resp, err
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
 }
 
 // application updates every end block
 // nolint: unparam
-func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	validatorUpdates, tags, err := staking.EndBlocker(ctx, app.stakingKeeper)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
-	}, nil
+	}
 }
 
 // custom logic for gaia initialization

@@ -5,6 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // keeper of the staking store
@@ -34,6 +36,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	}
 	return keeper
 }
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/distr") }
 
 // set withdraw address
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) sdk.Error {
@@ -89,7 +94,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
-		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 			return err
 		}
 	}

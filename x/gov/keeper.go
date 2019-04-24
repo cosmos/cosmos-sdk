@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -93,6 +94,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 		codespace:    codespace,
 	}
 }
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
@@ -261,64 +265,34 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Returns the current DepositParams from the global param store
 func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
 	var depositParams DepositParams
-	err := keeper.paramSpace.Get(ctx, ParamStoreKeyDepositParams, &depositParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Get(ctx, ParamStoreKeyDepositParams, &depositParams)
 	return depositParams
 }
 
 // Returns the current VotingParams from the global param store
 func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 	var votingParams VotingParams
-	err := keeper.paramSpace.Get(ctx, ParamStoreKeyVotingParams, &votingParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Get(ctx, ParamStoreKeyVotingParams, &votingParams)
 	return votingParams
 }
 
 // Returns the current TallyParam from the global param store
 func (keeper Keeper) GetTallyParams(ctx sdk.Context) TallyParams {
 	var tallyParams TallyParams
-	err := keeper.paramSpace.Get(ctx, ParamStoreKeyTallyParams, &tallyParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Get(ctx, ParamStoreKeyTallyParams, &tallyParams)
 	return tallyParams
 }
 
 func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams DepositParams) {
-	err := keeper.paramSpace.Set(ctx, ParamStoreKeyDepositParams, &depositParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Set(ctx, ParamStoreKeyDepositParams, &depositParams)
 }
 
 func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams VotingParams) {
-	err := keeper.paramSpace.Set(ctx, ParamStoreKeyVotingParams, &votingParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Set(ctx, ParamStoreKeyVotingParams, &votingParams)
 }
 
 func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
-	err := keeper.paramSpace.Set(ctx, ParamStoreKeyTallyParams, &tallyParams)
-	if err != nil {
-		// TODO: return error - needs rewrite interfaces
-		// and handle error on the caller side
-		// check PR #3782
-	}
+	keeper.paramSpace.Set(ctx, ParamStoreKeyTallyParams, &tallyParams)
 }
 
 // Votes
@@ -412,7 +386,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Send coins from depositor's account to DepositedCoinsAccAddr account
 	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	_, err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -456,7 +430,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
@@ -475,7 +449,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// TODO: Find a way to do this without using accounts.
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}

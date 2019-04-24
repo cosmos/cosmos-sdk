@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -81,6 +82,9 @@ type BaseApp struct {
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
+
+	// height at which to halt the chain and gracefully shutdown
+	haltHeight uint64
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -228,6 +232,10 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
+}
+
+func (app *BaseApp) setHaltHeight(height uint64) {
+	app.haltHeight = height
 }
 
 // Router returns the router of the BaseApp.
@@ -538,7 +546,6 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	var err error
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -573,10 +580,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
-		res, err = app.beginBlocker(app.deliverState.ctx, req)
-		if err != nil {
-			panic(err)
-		}
+		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -878,22 +882,24 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	var err error
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
 	}
 
 	if app.endBlocker != nil {
-		res, err = app.endBlocker(app.deliverState.ctx, req)
-		if err != nil {
-			panic(err)
-		}
+		res = app.endBlocker(app.deliverState.ctx, req)
 	}
 
 	return
 }
 
-// Commit implements the ABCI interface.
+// Commit implements the ABCI interface. It will commit all state that exists in
+// the deliver state's multi-store and includes the resulting commit ID in the
+// returned abci.ResponseCommit. Commit will set the check state based on the
+// latest header and reset the deliver state. Also, if a non-zero halt height is
+// defined in config, Commit will execute a deferred function call to check
+// against that height and gracefully halt if it matches the latest committed
+// height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
@@ -904,12 +910,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Reset the Check state to the latest committed.
 	//
-	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
-	// Use the header from this latest block.
+	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	defer func() {
+		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
+			app.logger.Info("halting node per configuration", "height", app.haltHeight)
+			os.Exit(0)
+		}
+	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

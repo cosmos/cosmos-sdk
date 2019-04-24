@@ -4,13 +4,14 @@ package crypto
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/go-bip39"
-	"github.com/pkg/errors"
+
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"

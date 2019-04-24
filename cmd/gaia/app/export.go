@@ -39,16 +39,12 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteLis
 	}
 	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 
-	mintGenesisState, err := mint.ExportGenesis(ctx, app.mintKeeper)
-	if err != nil {
-		return nil, nil, err
-	}
 	genState := NewGenesisState(
 		accounts,
 		auth.ExportGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper),
 		bank.ExportGenesis(ctx, app.bankKeeper),
 		staking.ExportGenesis(ctx, app.stakingKeeper),
-		mintGenesisState,
+		mint.ExportGenesis(ctx, app.mintKeeper),
 		distr.ExportGenesis(ctx, app.distrKeeper),
 		gov.ExportGenesis(ctx, app.govKeeper),
 		crisis.ExportGenesis(ctx, app.crisisKeeper),

@@ -27,8 +27,6 @@ import (
 
 const (
 	appName = "GaiaApp"
-	// DefaultKeyPass contains the default key password for genesis transactions
-	DefaultKeyPass = "12345678"
 )
 
 // default home directories for expected binaries
@@ -42,7 +40,7 @@ type GaiaApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
-	assertInvariantsBlockly bool
+	invCheckPeriod uint
 
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
@@ -72,7 +70,8 @@ type GaiaApp struct {
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, assertInvariantsBlockly bool,
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
+	invCheckPeriod uint,
 	baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 
 	cdc := MakeCodec()
@@ -83,6 +82,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, 
 	var app = &GaiaApp{
 		BaseApp:          bApp,
 		cdc:              cdc,
+		invCheckPeriod:   invCheckPeriod,
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
@@ -218,49 +218,40 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (resp abci.ResponseBeginBlock, err error) {
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	// mint new tokens for the previous block
-	err = mint.BeginBlocker(ctx, app.mintKeeper)
-	if err != nil {
-		return resp, err
-	}
+	mint.BeginBlocker(ctx, app.mintKeeper)
 
 	// distribute rewards for the previous block
-	err = distr.BeginBlocker(ctx, req, app.distrKeeper)
-	if err != nil {
-		return resp, err
-	}
+	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
 	// slash anyone who double signed.
 	// NOTE: This should happen after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool,
 	// so as to keep the CanWithdrawInvariant invariant.
 	// TODO: This should really happen at EndBlocker.
-	resp.Tags, err = slashing.BeginBlocker(ctx, req, app.slashingKeeper)
-	return resp, err
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
 }
 
 // application updates every end block
 // nolint: unparam
-func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
-	tags, err := gov.EndBlocker(ctx, app.govKeeper)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
-	validatorUpdates, endBlockerTags, err := staking.EndBlocker(ctx, app.stakingKeeper)
-	if err != nil {
-		return abci.ResponseEndBlock{}, err
-	}
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	tags := gov.EndBlocker(ctx, app.govKeeper)
+	validatorUpdates, endBlockerTags := staking.EndBlocker(ctx, app.stakingKeeper)
 	tags = append(tags, endBlockerTags...)
 
-	if app.assertInvariantsBlockly {
+	if app.invCheckPeriod != 0 && ctx.BlockHeight()%int64(app.invCheckPeriod) == 0 {
 		app.assertRuntimeInvariants()
 	}
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
-	}, nil
+	}
 }
 
 // initialize store from a genesis state

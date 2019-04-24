@@ -15,7 +15,7 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr
 	}
 
 	feePool.CommunityPool.Sub(sdk.NewDecCoins(amount))
-	_, _, err := k.bankKeeper.AddCoins(ctx, receiveAddr, amount)
+	_, err := k.bankKeeper.AddCoins(ctx, receiveAddr, amount)
 	if err != nil {
 		return err
 	}

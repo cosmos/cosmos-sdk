@@ -763,7 +763,23 @@ paths:
           description: Internal Server Error
   /staking/validators:
     get:
-      summary: Get all validator candidates
+      summary: Get all validator candidates. By default it returns only the bonded validators.
+      parameters:
+        - in: query
+          name: status
+          type: string
+          description: The validator bond status. Must be either 'bonded', 'unbonded', or 'unbonding'.
+          x-example: bonded
+        - in: query
+          name: page
+          description: The gage number.
+          type: integer
+          x-example: 1
+        - in: query
+          name: limit
+          description: The maximum number of items per page.
+          type: integer
+          x-example: 1
       tags:
         - ICS21
       produces:

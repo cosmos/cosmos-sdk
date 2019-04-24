@@ -14,6 +14,8 @@ to generate only usage.
 #### SDK
 
 * [\#4135](https://github.com/cosmos/cosmos-sdk/pull/4135) Fix `NewResponseFormatBroadcastTxCommit`
+* [\#4053](https://github.com/cosmos/cosmos-sdk/issues/4053) Add `--inv-check-period`
+flag to gaiad to set period at which invariants checks will run.
 
 ## 0.34.1
 

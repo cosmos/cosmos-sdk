@@ -137,7 +137,7 @@ func TestQueryValidators(t *testing.T) {
 	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)
 
 	for i, s := range status {
-		queryValsParams := NewQueryValidatorsParams(1, int(params.MaxValidators), sdk.BondStatusToString(s))
+		queryValsParams := NewQueryValidatorsParams(1, int(params.MaxValidators), s.String())
 		bz, errRes := cdc.MarshalJSON(queryValsParams)
 		require.Nil(t, errRes)
 

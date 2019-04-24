@@ -15,6 +15,14 @@ to generate only usage.
 
 * [\#4135](https://github.com/cosmos/cosmos-sdk/pull/4135) Fix `NewResponseFormatBroadcastTxCommit`
 
+## 0.34.1
+
+### Bug Fixes
+
+#### Gaia
+
+* [#4163](https://github.com/cosmos/cosmos-sdk/pull/4163) Fix v0.33.x export script to port gov data correctly.
+
 ## 0.34.0
 
 ### Breaking Changes

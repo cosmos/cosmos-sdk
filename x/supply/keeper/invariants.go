@@ -34,20 +34,17 @@ func SupplyInvariants(k Keeper, ak auth.AccountKeeper) sdk.Invariant {
 		supplier := k.GetSupplier(ctx)
 
 		var circulatingAmount sdk.Coins
-		var vestingAmount sdk.Coins
 		var modulesAmount sdk.Coins
 
 		ak.IterateAccounts(ctx, func(acc auth.Account) bool {
-			vacc, isVestingAccount := acc.(auth.VestingAccount)
-			if isVestingAccount && vacc.GetDelegatedVesting().IsAllPositive() && ctx.BlockHeader().Time.Unix() >= vacc.GetEndTime() {
-
-				vestingAmount = vestingAmount.Add(vacc.GetOriginalVesting())
-				circulatingAmount = circulatingAmount.Add(vacc.GetCoins())
-			}
 
 			macc, isModuleAccount := acc.(auth.ModuleAccount)
 			if isModuleAccount {
 				modulesAmount = modulesAmount.Add(macc.GetCoins())
+			} else {
+				// basic or vesting accounts
+				// TODO: keep track of vesting amount instead of original vesting
+				circulatingAmount = circulatingAmount.Add(acc.GetCoins())
 			}
 
 			return false
@@ -57,12 +54,6 @@ func SupplyInvariants(k Keeper, ak auth.AccountKeeper) sdk.Invariant {
 			return fmt.Errorf("circulating supply invariance:\n"+
 				"\tsupplier.CirculatingSupply: %v\n"+
 				"\tsum of circulating tokens: %v", supplier.CirculatingSupply, circulatingAmount)
-		}
-
-		if !supplier.VestingSupply.IsEqual(vestingAmount) {
-			return fmt.Errorf("vesting supply invariance:\n"+
-				"\tsupplier.VestingSupply: %v\n"+
-				"\tsum of vesting tokens: %v", supplier.VestingSupply, vestingAmount)
 		}
 
 		if !supplier.ModulesSupply.IsEqual(modulesAmount) {

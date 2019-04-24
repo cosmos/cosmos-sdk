@@ -222,7 +222,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	}
 
 	notBondedSupply, bondedSupply :=
-		updateSupply(genesisState.Accounts, genesisState.StakingData.Params.BondDenom, &genesisState.SupplyData.Supplier)
+		updateSupply(genesisState.Accounts, genDoc.GenesisTime, genesisState.StakingData.Params.BondDenom, &genesisState.SupplyData.Supplier)
 
 	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
 	genesisState.StakingData.Pool.BondedTokens = bondedSupply
@@ -436,25 +436,37 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
-// updateSupply calculates the circulating, vesting, and staking (bonded and not bonded)
-// total supply from the genesis accounts
-func updateSupply(genAccounts []GenesisAccount, bondDenom string, supplier *supply.Supplier) (notBondedTokens, bondedTokens sdk.Int) {
+// updateSupply updates the total, circulating, vesting, modules and staking (bonded and not bonded)
+// supplies from the info provided on genesis accounts
+func updateSupply(genAccounts []GenesisAccount, genesisTime time.Time,
+	bondDenom string, supplier *supply.Supplier) (notBondedTokens, bondedTokens sdk.Int) {
 
 	for _, genAcc := range genAccounts {
 
-		// circulating amount not subject to vesting (i.e free)
-		supplier.Inflate(supply.TypeCirculating, genAcc.OriginalVesting)
+		supplier.Inflate(supply.TypeTotal, genAcc.Coins)
 
-		// vesting and bonded supply from vesting accounts
+		// update initial vesting, circulating and bonded supplies from vesting accounts
 		if genAcc.OriginalVesting.IsAllPositive() {
-			supplier.Inflate(supply.TypeVesting, genAcc.OriginalVesting)
+			if genAcc.EndTime < genesisTime.Unix() {
+				supplier.Inflate(supply.TypeVesting, genAcc.OriginalVesting)
+				supplier.Inflate(supply.TypeCirculating, genAcc.OriginalVesting)
+				supplier.Inflate(supply.TypeTotal, genAcc.OriginalVesting)
+			}
 
 			if genAcc.DelegatedVesting.IsAllPositive() {
 				bondedTokens = bondedTokens.Add(genAcc.DelegatedVesting.AmountOf(bondDenom))
 			}
 		}
 
-		// staking pool's not bonded supply
+		// update modules accounts supply
+		if genAcc.Module != "" {
+			supplier.Inflate(supply.TypeModules, genAcc.Coins)
+		} else {
+			// update circulating supply from basic and vested accounts
+			supplier.Inflate(supply.TypeCirculating, genAcc.Coins)
+		}
+
+		// update staking pool's not bonded supply
 		notBondedAmount := genAcc.Coins.AmountOf(bondDenom)
 		if notBondedAmount.GT(sdk.ZeroInt()) {
 			notBondedTokens = notBondedTokens.Add(notBondedAmount)

@@ -16,20 +16,20 @@ const (
 
 // Supplier represents a struct that passively keeps track of the total supply amounts in the network
 type Supplier struct {
-	CirculatingSupply sdk.Coins `json:"circulating_supply"` // supply held by accounts that's not vesting
-	VestingSupply     sdk.Coins `json:"vesting_supply"`     // locked supply held by vesting accounts
-	ModulesSupply     sdk.Coins `json:"modules_supply"`     // supply held by modules acccounts
-	TotalSupply       sdk.Coins `json:"total_supply"`       // supply held by modules acccounts
+	CirculatingSupply    sdk.Coins `json:"circulating_supply"`     // supply held by accounts that's not vesting
+	InitialVestingSupply sdk.Coins `json:"initial_vesting_supply"` // initial locked supply held by vesting accounts
+	ModulesSupply        sdk.Coins `json:"modules_supply"`         // supply held by modules acccounts
+	TotalSupply          sdk.Coins `json:"total_supply"`           // supply held by modules acccounts
 }
 
 // NewSupplier creates a new Supplier instance
 func NewSupplier(circulating, vesting, modules, total sdk.Coins) Supplier {
 
 	return Supplier{
-		CirculatingSupply: circulating,
-		VestingSupply:     vesting,
-		ModulesSupply:     modules,
-		TotalSupply:       total,
+		CirculatingSupply:    circulating,
+		InitialVestingSupply: vesting,
+		ModulesSupply:        modules,
+		TotalSupply:          total,
 	}
 }
 
@@ -47,7 +47,7 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 		supplier.CirculatingSupply = supplier.CirculatingSupply.Add(amount)
 
 	case TypeVesting:
-		supplier.VestingSupply = supplier.VestingSupply.Add(amount)
+		supplier.InitialVestingSupply = supplier.InitialVestingSupply.Add(amount)
 
 	case TypeModules:
 		supplier.ModulesSupply = supplier.ModulesSupply.Add(amount)
@@ -74,16 +74,6 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 			))
 		}
 		supplier.CirculatingSupply = newSupply
-
-	case TypeVesting:
-		newSupply, ok := supplier.VestingSupply.SafeSub(amount)
-		if !ok {
-			panic(fmt.Sprintf(
-				"vesting supply should be greater than given amount: %s < %s",
-				supplier.VestingSupply.String(), amount.String(),
-			))
-		}
-		supplier.VestingSupply = newSupply
 
 	case TypeModules:
 		newSupply, ok := supplier.ModulesSupply.SafeSub(amount)
@@ -117,9 +107,9 @@ func (supplier Supplier) CirculatingAmountOf(denom string) sdk.Int {
 }
 
 // VestingAmountOf returns the vesting supply of a coin denomination
-func (supplier Supplier) VestingAmountOf(denom string) sdk.Int {
+func (supplier Supplier) InitalVestingAmountOf(denom string) sdk.Int {
 
-	return supplier.VestingSupply.AmountOf(denom)
+	return supplier.InitialVestingSupply.AmountOf(denom)
 }
 
 // ModulesAmountOf returns the total token holders' supply of a coin denomination
@@ -142,9 +132,9 @@ func (supplier Supplier) ValidateBasic() sdk.Error {
 			fmt.Sprintf("invalid circulating supply: %s", supplier.CirculatingSupply.String()),
 		)
 	}
-	if !supplier.VestingSupply.IsValid() {
+	if !supplier.InitialVestingSupply.IsValid() {
 		return sdk.ErrInvalidCoins(
-			fmt.Sprintf("invalid vesting supply: %s", supplier.VestingSupply.String()),
+			fmt.Sprintf("invalid initial vesting supply: %s", supplier.InitialVestingSupply.String()),
 		)
 	}
 	if !supplier.ModulesSupply.IsValid() {
@@ -160,11 +150,11 @@ func (supplier Supplier) ValidateBasic() sdk.Error {
 func (supplier Supplier) String() string {
 	return fmt.Sprintf(`Supplier:
   Circulating Supply:  %s
-  Vesting Supply: %s
+  Initial Vesting Supply: %s
 	Modules Supply:  %s
 	Total Supply:  %s`,
 		supplier.CirculatingSupply.String(),
-		supplier.VestingSupply.String(),
+		supplier.InitialVestingSupply.String(),
 		supplier.ModulesSupply.String(),
 		supplier.TotalSupply.String())
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/tags"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -407,22 +406,11 @@ func delegateCoins(
 		)
 	}
 
-	var updateSupplyAmt sdk.Coins
-	vacc, isVestingAccount := acc.(auth.VestingAccount)
-	if isVestingAccount && vacc.GetDelegatedVesting().IsAllPositive() && ctx.BlockHeader().Time.Unix() >= vacc.GetEndTime() {
-		updateSupplyAmt = vacc.GetOriginalVesting()
-	}
-
 	if err := trackDelegation(acc, ctx.BlockHeader().Time, amt); err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
 	}
 
 	setAccount(ctx, ak, acc)
-
-	if isVestingAccount {
-		sk.DeflateSupply(ctx, supply.TypeVesting, updateSupplyAmt)
-		sk.InflateSupply(ctx, supply.TypeCirculating, updateSupplyAmt)
-	}
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionDelegateCoins,
@@ -443,22 +431,11 @@ func undelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
-	var updateSupplyAmt sdk.Coins
-	vacc, isVestingAccount := acc.(auth.VestingAccount)
-	if isVestingAccount && vacc.GetDelegatedVesting().IsAllPositive() && ctx.BlockHeader().Time.Unix() >= vacc.GetEndTime() {
-		updateSupplyAmt = vacc.GetOriginalVesting()
-	}
-
 	if err := trackUndelegation(acc, amt); err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
 	}
 
 	setAccount(ctx, ak, acc)
-
-	if isVestingAccount {
-		sk.DeflateSupply(ctx, supply.TypeVesting, updateSupplyAmt)
-		sk.InflateSupply(ctx, supply.TypeCirculating, updateSupplyAmt)
-	}
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionUndelegateCoins,

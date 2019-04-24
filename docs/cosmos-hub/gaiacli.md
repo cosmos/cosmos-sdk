@@ -242,6 +242,10 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
+::: tip Note
+The `--generate-only` flag prevents `gaiacli` from accessing the local keybase.
+:::
+
 You can validate the transaction's signatures by typing the following:
 
 ```bash

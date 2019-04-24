@@ -25,6 +25,21 @@
 * [0.33.1](#0331)
   * [Bug Fixes](#bug-fixes-1)
     * [Gaia](#gaia-4)
+    
+## 0.34.2
+
+### Improvements
+
+#### SDK
+
+* [\#4135](https://github.com/cosmos/cosmos-sdk/pull/4135) Add further clarification
+to generate only usage.
+
+### Bug Fixes
+
+#### SDK
+
+* [\#4135](https://github.com/cosmos/cosmos-sdk/pull/4135) Fix `NewResponseFormatBroadcastTxCommit`
 
 ## 0.34.0
 

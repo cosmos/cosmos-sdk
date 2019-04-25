@@ -117,30 +117,30 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		app.paramsKeeper.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,
 	)
-	app.supplyKeeper = supply.NewKeeper(
-		app.cdc,
-		app.keySupply,
-	)
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
-		app.cdc,
-		app.keyFeeCollection,
-	)
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
 		app.keyStaking, app.tkeyStaking,
 		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
 	)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
-		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		app.supplyKeeper, &stakingKeeper, app.feeCollectionKeeper,
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.cdc,
+		app.keyFeeCollection,
+	)
+	app.supplyKeeper = supply.NewKeeper(
+		app.cdc,
+		app.keySupply,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, &stakingKeeper, app.feeCollectionKeeper,
+		app.bankKeeper, &stakingKeeper, app.feeCollectionKeeper, app.supplyKeeper,
 		distr.DefaultCodespace,
+	)
+	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
+		app.paramsKeeper.Subspace(mint.DefaultParamspace),
+		app.supplyKeeper, &stakingKeeper, app.feeCollectionKeeper,
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
@@ -152,7 +152,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		app.cdc,
 		app.keyGov,
 		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace),
-		app.bankKeeper, app.supplyKeeper, &stakingKeeper,
+		app.bankKeeper, app.accountKeeper, app.supplyKeeper, &stakingKeeper,
 		gov.DefaultCodespace,
 	)
 	app.crisisKeeper = crisis.NewKeeper(
@@ -172,7 +172,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// register the crisis routes
 	bank.RegisterInvariants(&app.crisisKeeper, app.accountKeeper)
 	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper, app.stakingKeeper)
-	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper)
+	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper)
+	supply.RegisterInvariants(&app.crisisKeeper, app.supplyKeeper, app.accountKeeper,
+		app.distrKeeper, app.feeCollectionKeeper, app.stakingKeeper)
 
 	// register transaction messages routes
 	app.Router().

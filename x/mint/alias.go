@@ -22,6 +22,7 @@ var (
 )
 
 const (
-	StoreKey     = keeper.StoreKey
-	QuerierRoute = keeper.QuerierRoute
+	StoreKey          = keeper.StoreKey
+	QuerierRoute      = keeper.QuerierRoute
+	DefaultParamspace = keeper.DefaultParamspace
 )

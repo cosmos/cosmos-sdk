@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type testInput struct {
@@ -73,8 +75,8 @@ func newTestInput(t *testing.T) testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 
-	mintKeeper.SetParams(ctx, DefaultParams())
-	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
+	mintKeeper.SetParams(ctx, types.DefaultParams())
+	mintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
 	return testInput{ctx, cdc, mintKeeper}
 }

@@ -10,21 +10,13 @@ import (
 type Keeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
-
-	dk  DistributionKeeper
-	fck FeeCollectionKeeper
-	sk  StakingKeeper
 }
 
 // NewKeeper creates a new supply Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
-	dk DistributionKeeper, fck FeeCollectionKeeper, sk StakingKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: key,
-		dk:       dk,
-		fck:      fck,
-		sk:       sk,
 	}
 }
 
@@ -60,24 +52,4 @@ func (k Keeper) DeflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coi
 	supplier.Deflate(supplyType, amount)
 
 	k.SetSupplier(ctx, supplier)
-}
-
-// TotalSupply returns the total supply of the network. Used only for invariance and genesis initialization
-// total supply = circulating  + modules + collected fees + community pool
-//
-// NOTE: the staking pool's bonded supply is already considered as it's added to the collected fees on minting
-func (k Keeper) TotalSupply(ctx sdk.Context) sdk.Coins {
-	supplier := k.GetSupplier(ctx)
-
-	collectedFees := k.fck.GetCollectedFees(ctx)
-	communityPool, remainingCommunityPool := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
-	totalRewards, remainingRewards := k.dk.GetTotalRewards(ctx).TruncateDecimal()
-
-	remaining, _ := remainingCommunityPool.Add(remainingRewards).TruncateDecimal()
-	return supplier.CirculatingSupply.
-		Add(supplier.ModulesSupply).
-		Add(collectedFees).
-		Add(communityPool).
-		Add(totalRewards).
-		Add(remaining)
 }

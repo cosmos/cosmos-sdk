@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -93,6 +94,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
@@ -104,6 +106,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
@@ -119,6 +122,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
+	supplyKeeper := supply.NewKeeper(cdc, keySupply)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
@@ -132,7 +136,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	fck := DummyFeeCollectionKeeper{}
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, fck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, fck, supplyKeeper, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())

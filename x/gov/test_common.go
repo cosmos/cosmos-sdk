@@ -29,16 +29,18 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	staking.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := mapp.ParamsKeeper
-	ck := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	ak := auth.NewAccountKeeper(mapp.Cdc, keyAccount, mapp.ParamsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bk := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := supply.NewKeeper(mapp.Cdc, keySupply)
-	ds = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, ds, DefaultCodespace)
+	ds = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bk, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), bk, ak, sk, ds, DefaultCodespace)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))

@@ -75,6 +75,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 	}
 
 	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
 		tags.Sender, msg.Sender.String(),
 		tags.Invariant, msg.InvariantRoute,
 	)

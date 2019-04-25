@@ -1,6 +1,14 @@
 package keeper
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
+
+// AccountKeeper defines the expected account keeper
+type AccountKeeper interface {
+	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
+}
 
 // CrisisKeeper defines the expected crisis keeper
 type CrisisKeeper interface {

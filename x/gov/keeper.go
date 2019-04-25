@@ -1,13 +1,13 @@
 package gov
 
 import (
-	"log"
 	"time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Governance Keeper
@@ -359,7 +359,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// update the governance module account coin pool
 	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
 
-	err := keeper.ck.AddCoins(ctx, moduleAddress, depositAmount)
+	_, err := keeper.ck.AddCoins(ctx, moduleAddress, depositAmount)
 	if err != nil {
 		return err, false
 	}

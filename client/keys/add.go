@@ -177,7 +177,6 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	index := uint32(viper.GetInt(flagIndex))
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
-	// We generate key and we're done.
 	if viper.GetBool(client.FlagUseLedger) {
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)

@@ -196,7 +196,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams,
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams, app.keySupply,
 		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
 	)
 	app.SetInitChainer(app.initChainer)

@@ -29,18 +29,16 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	staking.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := mapp.ParamsKeeper
-	ak := auth.NewAccountKeeper(mapp.Cdc, keyAccount, mapp.ParamsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bk := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := supply.NewKeeper(mapp.Cdc, keySupply)
 	ds = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bk, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), bk, ak, sk, ds, DefaultCodespace)
+	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), bk, mapp.AccountKeeper, sk, ds, DefaultCodespace)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
@@ -48,7 +46,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, ds, genState))
 
-	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
+	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov, keySupply))
 
 	valTokens := sdk.TokensFromTendermintPower(42)
 	if genAccs == nil || len(genAccs) == 0 {
@@ -79,6 +77,12 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		stakingGenesis := staking.DefaultGenesisState()
 		tokens := sdk.TokensFromTendermintPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
+
+		supplier := supply.DefaultSupplier()
+		supplier.Inflate(supply.TypeTotal, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+		supplier.Inflate(supply.TypeCirculating, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+
+		keeper.supplyKeeper.SetSupplier(ctx, supplier)
 
 		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {

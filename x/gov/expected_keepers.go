@@ -3,6 +3,7 @@ package gov
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // AccountKeeper defines the expected account keeper
@@ -22,4 +23,5 @@ type BankKeeper interface {
 type SupplyKeeper interface {
 	InflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coins)
 	DeflateSupply(ctx sdk.Context, supplyType string, amount sdk.Coins)
+	SetSupplier(ctx sdk.Context, supplier supply.Supplier) // used for testing
 }

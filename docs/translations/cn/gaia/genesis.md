@@ -284,13 +284,15 @@ gaiad add-genesis-account <account-address> <amount><denom>
   - `voting_period`: 投票期时长（单位**纳秒**）。
 - `tally_params`
   - `quorum`: 提议生效所需的投票数占总抵押数的百分比。
-  - `threshold`: Minimum percentage of votes that need to be `YES` for the result to be valid.
-  - `veto`: Maximum percentage `NO_WITH_VETO` votes for the result to be valid.
-  - `governance_penalty`: Penalty for validators that do not vote on a given proposal.
+  - `threshold`: 提议生效所需 `YES` 票最小百分比。
+  - `veto`: 若提议生效，`NO_WITH_VETO` 票最大百分比.
+  - `governance_penalty`: 对未给特定提案进行投票的验证人的处罚。
 
-### Slashing 
+### 惩罚（Slashing ）
 
 The `slashing` module handles the logic to slash delegators if their validator misbehave. The `slashing` section in genesis looks as follows:
+
+`slashing`模块处理对验证人行为不当的惩罚逻辑。 创世文件中的`slashing`部分如下：
 
 ```json
 "slashing": {
@@ -307,26 +309,26 @@ The `slashing` module handles the logic to slash delegators if their validator m
     }
 ```
 
-Let us break down the parameters:
+让我们来分别解读这些参数：
 
 - `params`
-  - `max_evidence_age`: Maximum age of the evidence in **nanoseconds**.
-  - `signed_blocks_window`: Moving window of blocks to figure out offline validators.
-  - `min_signed_per_window`: Minimum percentage of `precommits`that must be present in the `block window` for the validator to be considered online.
-  - `downtime_jail_duration`: Duration in **nanoseconds** for which a validator is jailed after they get slashed for downtime.
-  - `slash_fraction_double_sign`: Percentage of delegators bonded stake slashed when their validator double signs. 
-  - `slash_fraction_downtime`: Percentage of delegators bonded stake slashed when their validator is down.
-- `signing_infos`: Various infos per validator needed by the `slashing` module. Set to `{}` if genesis was not exported from previous state.
-- `missed_blocks`: Various infos related to missed blocks needed by the `slashing` module. Set to `{}` if genesis was not exported from previous state.
+  - `max_evidence_age`: 证据最长有效期，单位 **纳秒**。
+  - `signed_blocks_window`: 用于识别离线验证人节点的块滑动窗口。
+  - `min_signed_per_window`: 在滑动窗口中预提交的数量少于此值，认为验证人节点离线。
+  - `downtime_jail_duration`: 如果验证人离线时间超过此处设定的**纳秒**数，验证人节点将被关小黑屋。
+  - `slash_fraction_double_sign`: 验证人节点双签时，需缴纳罚金占总委托数量的百分比。
+  - `slash_fraction_downtime`: 验证人节点离线时，需缴纳罚金占总委托数量的百分比。
+- `signing_infos`:`slashing` 模块所需的每个验证人节点的各种信息。如果没有从之前的状态导出，设置为`{}`。
+- `missed_blocks`: `slashing` 模块所需的与丢块相关的各种信息。如果没有从之前的状态导出，设置为`{}`。
 
-### Genesis Transactions
+### 创世交易（Genesis Transactions）
 
-By default, the genesis file do not contain any `gentxs`. A `gentx` is a transaction that bonds staking token present in the genesis file under `accounts` to a validator, essentially creating a validator at genesis. The chain will start as soon as more than 2/3rds of the validators (weighted by voting power) that are the recipient of a valid `gentx` come online after `genesis_time`.
+默认情况下，genesis文件不包含任何`gentxs`。 `gentx`是一种交易，在创世文件中的将`accounts`下的 token 委托给验证人节点，本质上就是在创世时创建验证人。 在`genesis_time`之后，一旦有超过 2/3 的验证人（加权投票）作为有效`gentx`的接收者上线，该链就会启动。
 
-A `gentx` can be added manually to the genesis file, or via the following command:
+可以手动将`gentx`添加到genesis文件，或通过以下命令：
 
 ```bash
 gaiad collect-gentxs
 ```
 
-This command will add all the `gentxs` stored in `~/.gaiad/config/gentx` to the genesis file. In order to create a genesis transaction, click [here](./validators/validator-setup.md#participate-in-genesis-as-a-validator).
+此命令将存储在`~/.gaiad/config/gentx`中的所有`gentxs`添加到genesis文件中。 要创建创世纪交易，请单击[此处](./validators/validator-setup.md#participation-in-genesis-as-a-validator)。

@@ -29,8 +29,7 @@ balance inicial `X` y un tiempo final de adquisición de derechos `T`.
  El propietario de esta cuenta debe poder delegar en validadores y no delegar en ellos; sin embargo, 
 no puede enviar monedas bloqueadas a otras cuentas hasta que dichas monedas hayan sido totalmente transferidas.
 
- Además, una vesting account confiere a todas sus denominaciones de moneda al mismo tiempo
-tasa de interés. Esto puede estar sujeto a cambios.
+Además, una cuenta con derechos adquiridos confiere todas sus denominaciones de monedas con la misma tarifa. Esto puede estar sujeto a cambios.
 
  **Nota**: Una vesting account podría tener algunas monedas con y sin derechos adquiridos. Para
 el soporte de tal característica, el tipo `GenesisAccount` tendrá que ser actualizado para hacer tal distinción.
@@ -194,7 +193,7 @@ func SendCoins(t Time, from Account, to Account, amount Coins) {
 
  ## Delegando
 
- En el caso de una vesting account intente delegar monedas `D`, se realiza lo siguiente:
+ En el caso de una vesting account que intente delegar monedas `D`, se realiza lo siguiente:
 
  1. Verifica `BC >= D > 0`
 2. Calcula `X := min(max(V - DV, 0), D)` (portion of `D` that is vesting)
@@ -232,9 +231,9 @@ func DelegateCoins(t Time, from Account, amount Coins) {
 
  En el caso de una vesting account que intente no delegar las monedas `D`, se realiza lo siguiente:
 
- 1. Verifica `(DV + DF) >= D > 0` (this is simply a sanity check)
-2. Calcula `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
-3. Calcula `Y := D - X` (portion of `D` that should remain vesting)
+ 1. Verifica `(DV + DF) >= D > 0` 
+2. Calcula `X := min(DF, D)` (cantidad de monedas `D` que se debiesen desbloquear, se priorizan monedas ya desbloqueadas)
+3. Calcula `Y := D - X` (cantidad de monedas `D` que debiesen permanecer en vesting)
 4. Establece `DF -= X`
 5. Establece `DV -= Y`
 6. Establece `BC += D`
@@ -287,7 +286,7 @@ está intentando enviar una cantidad que excede la cantidad de la moneda desbloq
  Para inicializar tanto las vesting accounts como las non-vesting accounts, la estructura 
 `GenesisAccount` permite incluir nuevos campos: `Vesting`,`StartTime`, y `EndTime`.  Las cuentas destinadas a       
 ser de tipo `BaseAccount` o cualquier otro tipo de cuentas non-vesting tendrán `Vesting = false`. La lógica de 
-inicialización del génesis (por ejemplo, "initFromGenesisState") tendrá que analizar y devolver las cuentas 
+inicialización del génesis (por ejemplo, `initFromGenesisState`) tendrá que analizar y devolver las cuentas 
 correctas basadas en estos nuevos campos.
 
  ```go
@@ -398,12 +397,12 @@ puede, delegando.
 
  ## Glosario
 
- - OriginalVesting: La cantidad de monedas (por designación) que forman parte inicialmente de una vesting account. 
+ - `OriginalVesting`: La cantidad de monedas (por designación) que forman parte inicialmente de una vesting account. 
 Estas monedas están fijadas en genesis.
-- StartTime: El momento del BFT en el cual una vesting account comienza a percibir derechos.
-- EndTime: El momento del BFT en el que una vesting account está totalmente establecida.
-- DelegatedFree: La cantidad de monedas (por designación) que se delegan de una vesting account y 
+- `StartTime`: El momento del BFT en el cual una vesting account comienza a percibir derechos.
+- `EndTime`: El momento del BFT en el que una vesting account está totalmente establecida.
+- `DelegatedFree`: La cantidad de monedas (por designación) que se delegan de una vesting account y 
 que han sido totalmente otorgados en el momento de la delegación.
-- DelegatedVesting: La cantidad de monedas rastreadas (por designación) que se delegan de una vesting account 
+- `DelegatedVesting`: La cantidad de monedas rastreadas (por designación) que se delegan de una vesting account 
 otorgados en el momento de la delegación.
-- ContinuousVestingAccount: Una implementación de la vesting account que confiere monedas linealmente a lo largo del tiempo.
+- `ContinuousVestingAccount`: Una implementación de la vesting account que confiere monedas linealmente a lo largo del tiempo.

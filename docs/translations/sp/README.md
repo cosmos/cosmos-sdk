@@ -29,7 +29,7 @@ Se está utilizando `Gaia`, para construir la primera implementación del [Hub d
 
  Para conocer el estado más reciente de la testnet, vea el [documento de estado](/cmd/gaia/testnets/STATUS.md)
 
- ## Install
+ ## Instalación
 
  Vea las [instrucciones de instalación](/docs/install.md)
 

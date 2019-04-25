@@ -62,7 +62,14 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
-		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+
+		// okchain
+		output, err := os.OpenFile(filepath.Join(config.RootDir, "okchaind.log"), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+		if err != nil {
+			output = os.Stdout
+		}
+
+		logger := log.NewTMLogger(log.NewSyncWriter(output))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
 			return err

@@ -17,7 +17,7 @@ const (
 	Bonded    BondStatus = 0x02
 
 	// default bond denomination
-	DefaultBondDenom = "stake"
+	DefaultBondDenom = "uatom"
 
 	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied.
 	// For example, if this is 0, the validator set at the end of a block will sign the next block, or

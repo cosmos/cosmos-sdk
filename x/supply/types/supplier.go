@@ -35,8 +35,8 @@ func NewSupplier(circulating, vesting, modules, total sdk.Coins) Supplier {
 
 // DefaultSupplier creates an empty Supplier
 func DefaultSupplier() Supplier {
-
-	return NewSupplier(sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{})
+	zeroBondCoin := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+	return NewSupplier(zeroBondCoin, zeroBondCoin, zeroBondCoin, zeroBondCoin)
 }
 
 // Inflate adds coins to a given supply type and updates the total supply
@@ -60,40 +60,19 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	}
 }
 
-// Deflate safe subtracts coins for a given supply and updates the total supply
+// Deflate subtracts coins for a given supply and updates the total supply
 func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 
 	switch supplyType {
 
 	case TypeCirculating:
-		newSupply, ok := supplier.CirculatingSupply.SafeSub(amount)
-		if !ok {
-			panic(fmt.Sprintf(
-				"circulating supply should be greater than given amount: %s < %s",
-				supplier.CirculatingSupply.String(), amount.String(),
-			))
-		}
-		supplier.CirculatingSupply = newSupply
+		supplier.CirculatingSupply = supplier.CirculatingSupply.Sub(amount)
 
 	case TypeModules:
-		newSupply, ok := supplier.ModulesSupply.SafeSub(amount)
-		if !ok {
-			panic(fmt.Sprintf(
-				"modules supply should be greater than given amount: %s < %s",
-				supplier.ModulesSupply.String(), amount.String(),
-			))
-		}
-		supplier.ModulesSupply = newSupply
+		supplier.ModulesSupply = supplier.ModulesSupply.Sub(amount)
 
 	case TypeTotal:
-		newSupply, ok := supplier.TotalSupply.SafeSub(amount)
-		if !ok {
-			panic(fmt.Sprintf(
-				"total supply should be greater than given amount: %s < %s",
-				supplier.TotalSupply.String(), amount.String(),
-			))
-		}
-		supplier.TotalSupply = newSupply
+		supplier.TotalSupply = supplier.TotalSupply.Sub(amount)
 
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))

@@ -17,8 +17,11 @@ var (
 	NewKeeper  = keeper.NewKeeper
 	NewQuerier = keeper.NewQuerier
 
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
+	NewGenesisState      = types.NewGenesisState
+	DefaultGenesisState  = types.DefaultGenesisState
+	InitialMinter        = types.InitialMinter
+	DefaultInitialMinter = types.DefaultInitialMinter
+	NewParams            = types.NewParams
 )
 
 const (

@@ -25,7 +25,7 @@ func (k Keeper) GetSupplier(ctx sdk.Context) (supplier types.Supplier) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(supplierKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		panic("Stored supplier should not have been nil")
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &supplier)
 	return

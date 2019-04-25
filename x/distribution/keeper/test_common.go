@@ -78,14 +78,14 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, fck, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	ctx, ak, _, dk, sk, fck, _, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
 	return ctx, ak, dk, sk, fck
 }
 
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
-	Keeper, staking.Keeper, DummyFeeCollectionKeeper, params.Keeper) {
+	Keeper, staking.Keeper, DummyFeeCollectionKeeper, SupplyKeeper, params.Keeper) {
 
 	initCoins := sdk.TokensFromTendermintPower(initPower)
 
@@ -122,7 +122,9 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
+
 	supplyKeeper := supply.NewKeeper(cdc, keySupply)
+	supplyKeeper.SetSupplier(ctx, supply.DefaultSupplier())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
@@ -147,7 +149,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountKeeper, bankKeeper, keeper, sk, fck, pk
+	return ctx, accountKeeper, bankKeeper, keeper, sk, fck, supplyKeeper, pk
 }
 
 //__________________________________________________________________________________

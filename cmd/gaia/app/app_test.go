@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -42,6 +43,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 		supply.DefaultGenesisState(),
 	)
 
+	fmt.Println(genesisState.SupplyData)
 	stateBytes, err := codec.MarshalJSONIndent(gapp.cdc, genesisState)
 	if err != nil {
 		return err

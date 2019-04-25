@@ -16,23 +16,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
+var oneUatom = sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()))
+
 func TestSupplier(t *testing.T) {
 	ctx, keeper := CreateTestInput(t, false)
-	oneUatom := sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()))
 
 	require.Panics(t, func() { keeper.GetSupplier(ctx) }, "should panic when supplier is not set")
 
 	expectedSupplier := types.DefaultSupplier()
-	expectedSupplier.TotalSupply = expectedSupplier.CirculatingSupply.Add(oneUatom)
-
 	keeper.SetSupplier(ctx, expectedSupplier)
 
-	expectedSupplier.CirculatingSupply = expectedSupplier.CirculatingSupply.Add(oneUatom)
-
+	// test inflation
+	expectedSupplier.Inflate(types.TypeCirculating, oneUatom)
 	keeper.InflateSupply(ctx, types.TypeCirculating, oneUatom)
 
 	supplier := keeper.GetSupplier(ctx)
-	require.Equal(t, expectedSupplier, supplier)
+	require.Equal(t, expectedSupplier.CirculatingSupply, supplier.CirculatingSupply)
+
+	// test deflation
+	expectedSupplier.Deflate(types.TypeCirculating, oneUatom)
+	keeper.DeflateSupply(ctx, types.TypeCirculating, oneUatom)
+
+	supplier = keeper.GetSupplier(ctx)
+	require.Equal(t, expectedSupplier.CirculatingSupply, supplier.CirculatingSupply)
 }
 
 func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, Keeper) {

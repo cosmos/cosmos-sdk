@@ -16,6 +16,8 @@ var (
 	NewKeeper          = keeper.NewKeeper
 	RegisterInvariants = keeper.RegisterInvariants
 
+	NewSupplier         = types.NewSupplier
+	DefaultSupplier     = types.DefaultSupplier
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
 )

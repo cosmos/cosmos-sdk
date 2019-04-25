@@ -52,7 +52,7 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store.Set(minterKey, b)
 }
 
-// CalculateInflationRate recalculates the inflation rate and anual provisions for a new block
+// CalculateInflationRate recalculates the inflation rate and annual provisions for a new block
 func (k Keeper) CalculateInflationRate(ctx sdk.Context) {
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)

@@ -62,3 +62,20 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	require.True(t, true)
 }
+
+func TestGetTotalRewards(t *testing.T) {
+	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
+
+	valCommission := sdk.DecCoins{
+		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),
+		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
+	}
+
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, valCommission)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr2, valCommission)
+
+	expectedRewards := valCommission.MulDec(sdk.NewDec(2))
+	totalRewards := keeper.GetTotalRewards(ctx)
+
+	require.Equal(t, expectedRewards, totalRewards)
+}

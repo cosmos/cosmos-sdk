@@ -18,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -294,10 +293,9 @@ func TestEncodeTx(t *testing.T) {
 
 	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "2", 1, false, false, fees)
 	var tx auth.StdTx
-	cdc.UnmarshalJSON([]byte(body), &tx)
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &tx))
 
-	req := clienttx.EncodeReq{Tx: tx}
-	encodedJSON, _ := cdc.MarshalJSON(req)
+	encodedJSON, _ := cdc.MarshalJSON(tx)
 	res, body = Request(t, port, "POST", "/txs/encode", encodedJSON)
 
 	// Make sure it came back ok, and that we can decode it back to the transaction

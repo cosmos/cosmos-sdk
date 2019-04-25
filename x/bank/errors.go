@@ -14,7 +14,7 @@ const (
 
 // ErrNoInputs is an error
 func ErrNoInputs(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInputsOutputs, "no inputs to send transacction")
+	return sdk.NewError(codespace, CodeInvalidInputsOutputs, "no inputs to send transaction")
 }
 
 // ErrNoOutputs is an error

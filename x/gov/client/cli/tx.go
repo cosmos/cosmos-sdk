@@ -53,7 +53,7 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
 
-$ gaiacli gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+$ hashgardcli gov submit-proposal --proposal="path/to/proposal.json" --from mykey
 
 where proposal.json contains:
 
@@ -66,7 +66,7 @@ where proposal.json contains:
 
 is equivalent to
 
-$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ hashgardcli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			proposal, err := parseSubmitProposalFlags()
@@ -130,9 +130,9 @@ func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for activing proposal",
 		Long: strings.TrimSpace(`
-Submit a deposit for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Submit a deposit for an acive proposal. You can find the proposal-id by running hashgardcli query gov proposals:
 
-$ gaiacli tx gov deposit 1 10stake --from mykey
+$ hashgardcli gov deposit 1 10gard --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -189,9 +189,9 @@ func GetCmdVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
 		Long: strings.TrimSpace(`
-Submit a vote for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Submit a vote for an acive proposal. You can find the proposal-id by running hashgardcli gov query-proposals:
 
-$ gaiacli tx gov vote 1 yes --from mykey
+$ hashgardcli gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))

@@ -12,10 +12,10 @@ Must specify these options: --chain-id  when --trust-node is false
 你必须选择是否要验证轻客户端的证明。如果你信任要查询的节点，则可以简单地传递`--trust-node=true` -- 否则你需要指定`--chain-id`。
 :::
 
-`gaiacli`是管理Cosmos测试网上的帐户和交易的命令行操作界面。它的配置文件位于`$HOME/.gaiacli/config/config.toml`中，可以手动编辑或通过`gaiacli config`命令编辑：
+`gaiacli`是管理 Cosmos 测试网上的帐户和交易的命令行操作界面。它的配置文件位于`$HOME/.gaiacli/config/config.toml`中，可以手动编辑或通过`gaiacli config`命令编辑：
 
 ```bash
-gaiacli config chain-id cosmoshub-1
+gaiacli config chain-id gaia-9004
 ```
 
 有关命令用法的更多信息，请参阅其帮助信息：`gaiacli config --help`。
@@ -112,26 +112,32 @@ gaiacli keys add --multisig=baz,foo,bar --multisig-threshold=2 multisig_address
 gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 ```
 
-有关如何生成多签帐户，使用其签名和广播多签交易的详细信息，请参阅[多签交易]()
+有关如何生成多签帐户，使用其签名和广播多签交易的详细信息，请参阅[多签交易](#多签交易)
 
-### fee和gas
+### Tx 广播
 
-每笔交易可能会提供fee或gas price，但不能同时提供。大多数用户通常会提供fee，因为这是你将为最终被记入帐本中的交易提供的费用。
+在广播交易时，`gaiacli`接受`--broadcast-mode`标识。 这个标识的值可以是`sync`（默认值）、`async`或`block`，其中`sync`使客户端返回 CheckTx 响应，`async`使客户端立即返回，而`block`使得 客户端等待 tx 被提交（或超时）。
 
-验证人可以配置最低gas price（多币种的），并且在决定它们是否能被包含在区块中的`CheckTx`期间使用改值，其中 `gasPrices >= minGasPrices`。请注意，你的交易必须提供大于或等于验证人要求的任何接受币种的费用。
+值得注意的是，在大多数情况下**不**应该使用`block`模式。 这是因为广播可以超时但是 tx 仍然可能存在在块中，这可能导致很多不良结果。 因此，最好使用`sync`或`async`并通过 tx hash 查询以确定 tx 何时包含在块中。
 
-注意：有了这样的机制，验证人可能会开始在mempool中通过gasPrice来优先处理某些txs，因此提供更高fee或gas price可能会产生更高的tx优先级。
+### Fees 和 Gas
+
+每笔交易可能会提供 fees 或 gas price，但不能同时提供。
+
+验证人可以配置最低 gas price（多币种的），并且在决定它们是否能被包含在区块中的`CheckTx`期间使用改值，其中 `gasPrices >= minGasPrices`。请注意，你的交易必须提供大于或等于验证人要求的任何接受币种的费用。
+
+**注意**：有了这样的机制，验证人可能会开始在 mempool 中通过 gasPrice 来优先处理某些 txs，因此提供更高 fee 或 gas price可能会产生更高的tx优先级。
 
 比如：
 
 ```bash
-gaiacli tx send ... --fees=100photino
+gaiacli tx send ... --fees=50000uatom
 ```
 
 或：
 
 ```bash
-gaiacli tx send ... --gas-prices=0.000001stake
+gaiacli tx send ... --gas-prices=0.025uatom
 ```
 
 
@@ -149,25 +155,25 @@ gaiacli tx send ... --gas-prices=0.000001stake
 gaiacli query account <account_cosmos>
 ```
 
-::: 注意
+::: warning 注意
 当你查询余额为零的帐户时，你将收到以下错误：`No account with address <account_cosmos> was found in the state.` 如果你在节点与区块链完全同步之前就查询，也会发生这种情况。这些都很正常。
 :::
 
-#### 发送token
+#### 发送 token
 
 你可以通过如下命令从一个账户发送资金到另一个账户：
 
 ```bash
 gaiacli tx send <destination_cosmos> 10faucetToken \
   --chain-id=<chain_id> \
-  --from=<key_name> \
+  --from=<key_name> 
 ```
 
-::: 注意
+::: warning 注意
 `--amount`标识接收格式：`--amount=<value|coin_name>`
 :::
 
-::: 注意
+::: tip 注意
 你可能希望通过`--gas`标识限制交易可以消耗的最大燃料。如果你通过`--gas=auto`，将在执行交易前自动估gas。gas估算可能是不准确的，因为状态变化可能发生在模拟结束和交易的实际执行之间，因此在原始估计之上应用调整以确保能够成功地广播交易。可以通过`--gas-adjustment`标识控制调整，其默认值为1.0。
 :::
 
@@ -209,6 +215,10 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
+::: tip 注意
+标识 `--generate-only` 只能在访问本地 keybase 时使用。
+:::
+
 你可以通过下面的命令验证交易的签名：
 
 ```bash
@@ -247,17 +257,18 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
 ```
 
-::: 注意
-action标签始终等于相关message的Type()函数返回的消息类型。
+::: tip 注意
+
+action标签始终等于相关message的`Type()`函数返回的消息类型。
 
 你可以在每个SDK的模块中找到目前的标签列表：
-+ [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
-+ [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/tags/tags.go#L8-L24)
-+ [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/master/x/gov/tags/tags.go#L8-L24)
-+ [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/master/x/slashing/tags/tags.go#L8-L24)
-+ [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/tags/tags.go#L8-L24)
-+ [Bank tags](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/tags.go#L8-L24)
-:::
+- [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/staking/tags/tags.go#L8-L24)
+- [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
+- [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
+- [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
+- [Bank tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/bank/keeper.go#L193-L206)
+  :::
 
 #### 匹配一笔交易的hash
 
@@ -357,12 +368,12 @@ gaiacli query staking delegations <delegator_addr>
 你还可以通过添加`--height`标识来获取先前的委托状态。
 
 #### 解绑token
-如果出于一些原因验证人行为异常，或者你想解绑一定数量的token，请使用以下命令。你可以使用相应的`shares-amount`标识（例如：`12.1`）或`shares-fraction`（例如：`0.25`）来解绑。
+如果出于一些原因验证人行为异常，或者你想解绑一定数量的token，请使用以下命令。
 
 ```bash
 gaiacli tx staking unbond \
-  --validator=<account_cosmosval> \
-  --shares-fraction=0.5 \
+  <validator_addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -397,9 +408,9 @@ gaiacli query staking unbonding-delegations-from <account_cosmosval>
 
 ```bash
 gaiacli tx staking redelegate \
-  --addr-validator-source=<account_cosmosval> \
-  --addr-validator-dest=<account_cosmosval> \
-  --shares-fraction=50 \
+  <src-validator-operator-addr> \
+  <dst-validator-operator-addr> \
+  10atom \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
@@ -492,7 +503,7 @@ gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --deposit=<40steak> \
+  --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -521,10 +532,10 @@ gaiacli query gov proposer <proposal_id>
 
 #### 增加存入金
 
-为了将提案广播到网络，存入的金额必须高于`minDeposit`值（默认值：`10steak`）。如果你之前创建的提案不符合此要求，你仍可以增加存入的总金额以激活它。达到最低存入金后，提案进入投票期：
+为了将提案广播到网络，存入的金额必须高于`minDeposit`值（初始值：`10steak`）。如果你之前创建的提案不符合此要求，你仍可以增加存入的总金额以激活它。达到最低存入金后，提案进入投票期：
 
 ```bash
-gaiacli tx gov deposit <proposal_id> <200steak> \
+gaiacli tx gov deposit <proposal_id> "10000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -548,6 +559,16 @@ gaiacli query gov deposit <proposal_id> <depositor_address>
 #### 投票给一个提案
 
 在提案的存入金达到`MinDeposit`后，投票期将开放。抵押了`Atom`的持有人可以投票：
+
+```bash
+gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
+  --from=<name> \
+  --chain-id=<chain_id>
+```
+
+#### 查询投票
+
+使用您刚才提交的参数检查投票：
 
 ```bash
 gaiacli query gov vote <proposal_id> <voter_address>
@@ -641,23 +662,31 @@ gaiacli query distr rewards <delegator_address>
 
 ```bash
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
-  p2
+  p2 \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
 
 gaiacli keys add \
-  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
-  p3
+  p3 \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t
 
 gaiacli keys add \
-  --multisig-threshold=2
+  p1p2p3 \
+  --multisig-threshold=2 \
   --multisig=p1,p2,p3
-  p1p2p3
 ```
 
 已存储新的多签公钥`p1p2p3`，其地址将用作多签交易的签名者：
 
 ```bash
 gaiacli keys show --address p1p2p3
+```
+
+您还可以通过查看 key 的 JSON 输出或增加`--show-multisig`标识来查看multisig阈值，pubkey构成和相应的权重：
+
+```bash
+gaiacli keys show p1p2p3 -o json
+
+gaiacli keys show p1p2p3 --show-multisig
 ```
 
 创建多签交易的第一步是使用上面创建的多签地址初始化：
@@ -672,13 +701,25 @@ gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10000000uatom \
 
 ```bash
 gaiacli tx sign \
+  unsignedTx.json \
   --multisig=<multisig_address> \
-  --name=p1 \
-  --output-document=p1signature.json \
-  unsignedTx.json
+  --from=p1 \
+  --output-document=p1signature.json 
 ```
 
 生成签名后，`p1`将`unsignedTx.json`和`p1signature.json`都发送到`p2`或`p3`，然后`p2`或`p3`将生成它们各自的签名:
+
+```bash
+gaiacli tx sign \
+  unsignedTx.json \
+  --multisig=<multisig_address> \
+  --from=p2 \
+  --output-document=p2signature.json
+```
+
+`p1p2p3` is a 2-of-3 multisig key, therefore one additional signature is sufficient. Any the key holders can now generate the multisig transaction by combining the required signature files:
+
+p1p2p3` 是 2-of-3 多签key，因此一个的签名就足够了。 现在，任何密钥持有者都可以通过组合所需的签名文件来生成多签交易：
 
 ```bash
 gaiacli tx multisign \
@@ -693,7 +734,7 @@ gaiacli tx multisign \
 gaiacli tx broadcast signedTx.json
 ```
 
-## shell完全脚本
+## shell 自动补全脚本
 
 可以通过完全命令生成主流的UNIX shell解释器（如`Bash`和`Zsh`）的`completion`命令，该命令可用于`gaiad`和`gaiacli`。
 

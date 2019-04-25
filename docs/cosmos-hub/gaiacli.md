@@ -235,7 +235,7 @@ gaiacli tx send <sender_address> <recipient_address> 10faucetToken \
 ```bash
 gaiacli tx sign \
   --chain-id=<chain_id> \
-  --from=<key_name>
+  --from=<key_name> \
   unsignedSendTx.json > signedSendTx.json
 ```
 
@@ -719,7 +719,7 @@ For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each
 by a distinct party, the user holding `p1` would require to import both `p2` and `p3` in order to
 generate the multisig account public key:
 
-```
+```bash
 gaiacli keys add \
   p2 \
   --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
@@ -767,7 +767,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p1 \
-  --output-document=p1signature.json \
+  --output-document=p1signature.json 
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -779,7 +779,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p2 \
-  --output-document=p2signature.json \
+  --output-document=p2signature.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

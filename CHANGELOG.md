@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.3
+
+### Bug Fixes
+
+#### Gaia
+
+* [\#4193](https://github.com/cosmos/cosmos-sdk/pull/4193) Set default invariant
+check period to zero.
+
 ## 0.34.2
 
 ### Improvements

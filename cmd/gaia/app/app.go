@@ -172,7 +172,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	// register the crisis routes
 	bank.RegisterInvariants(&app.crisisKeeper, app.accountKeeper)
 	distr.RegisterInvariants(&app.crisisKeeper, app.distrKeeper, app.stakingKeeper)
-	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper)
+	staking.RegisterInvariants(&app.crisisKeeper, app.stakingKeeper, app.supplyKeeper)
 	supply.RegisterInvariants(&app.crisisKeeper, app.supplyKeeper, app.accountKeeper,
 		app.distrKeeper, app.feeCollectionKeeper, app.stakingKeeper)
 

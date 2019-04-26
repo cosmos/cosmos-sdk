@@ -6,13 +6,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // RegisterInvariants registers all staking invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper) {
+func RegisterInvariants(c types.CrisisKeeper, k Keeper, supplyKeeper supply.Keeper) {
 
 	c.RegisterRoute(types.ModuleName, "bonded-tokens",
-		BondedTokensInvariant(k))
+		BondedTokensInvariant(k, supplyKeeper))
 	c.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
 	c.RegisterRoute(types.ModuleName, "positive-delegation",
@@ -22,11 +23,11 @@ func RegisterInvariants(c types.CrisisKeeper, k Keeper) {
 }
 
 // AllInvariants runs all invariants of the staking module.
-func AllInvariants(k Keeper) sdk.Invariant {
+func AllInvariants(k Keeper, supplyKeeper supply.Keeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 
-		err := BondedTokensInvariant(k)(ctx)
+		err := BondedTokensInvariant(k, supplyKeeper)(ctx)
 		if err != nil {
 			return err
 		}
@@ -51,9 +52,12 @@ func AllInvariants(k Keeper) sdk.Invariant {
 }
 
 // BondedTokensInvariant checks that the total bonded tokens reflects all bonded tokens in delegations
-func BondedTokensInvariant(k Keeper) sdk.Invariant {
+func BondedTokensInvariant(k Keeper, supplyKeeper supply.Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)
+		supplier := supplyKeeper.GetSupplier(ctx)
+
+		bondDenom := k.BondDenom(ctx)
 
 		bonded := sdk.ZeroDec()
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
@@ -70,6 +74,15 @@ func BondedTokensInvariant(k Keeper) sdk.Invariant {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tpool.BondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.BondedTokens, bonded)
+		}
+
+		stakingTokensFromPool := pool.StakingTokenSupply()
+		stakingTokensFromSupplier := supplier.TotalAmountOf(bondDenom)
+
+		if !stakingTokensFromPool.Equal(stakingTokensFromSupplier) {
+			return fmt.Errorf("total bonded token invariance:\n"+
+				"\tpool.StakingTokenSupply: %v\n"+
+				"\tsupplier.Total of bonded denom: %v", stakingTokensFromPool, stakingTokensFromSupplier)
 		}
 
 		return nil

@@ -131,7 +131,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// of the decCoins due to operation order of the distribution mechanism.
 	rewards := rewardsRaw.Intersect(outstanding)
 	if !rewards.IsEqual(rewardsRaw) {
-		logger := ctx.Logger().With("module", "x/distr")
+		logger := k.Logger(ctx)
 		logger.Info(fmt.Sprintf("missing rewards rounding error, delegator %v"+
 			"withdrawing rewards from validator %v, should have received %v, got %v",
 			val.GetOperator(), del.GetDelegatorAddr(), rewardsRaw, rewards))
@@ -153,7 +153,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// add coins to user account
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 			return err
 		}
 	}

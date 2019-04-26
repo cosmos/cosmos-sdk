@@ -48,6 +48,5 @@ cd $GOPATH/src/$REPO
 # build & install master
 git checkout $BRANCH
 gmake tools
-gmake get_vendor_deps
 gmake install
 gmake install_examples

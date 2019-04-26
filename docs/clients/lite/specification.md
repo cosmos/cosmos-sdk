@@ -62,7 +62,7 @@ type KeyExistsProof struct {
 }
 ```
 
-The data structure of exist proof is shown as above. The process to build and verify existance proof
+The data structure of exist proof is shown as above. The process to build and verify existence proof
 is shown as follows:
 
 ![Exist Proof](./pics/existProof.png)

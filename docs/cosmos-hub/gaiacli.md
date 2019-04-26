@@ -201,13 +201,12 @@ When you query an account balance with zero tokens, you will get this error: `No
 The following command could be used to send coins from one account to another:
 
 ```bash
-gaiacli tx send <destination_cosmos> 10faucetToken \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
+gaiacli tx send <sender_key_name_or_address> <recipient_address> 10faucetToken \
+  --chain-id=<chain_id>
 ```
 
 ::: warning Note
-The `--amount` flag accepts the format `--amount=<value|coin_name>`.
+The `amount` argument accepts the format `<value|coin_name>`.
 :::
 
 ::: tip Note
@@ -233,9 +232,8 @@ You can simulate a transaction without actually broadcasting it by appending the
 `--dry-run` flag to the command line:
 
 ```bash
-gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
+gaiacli tx send <sender_key_name_or_address> <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
-  --from=<key_name> \
   --dry-run
 ```
 
@@ -243,9 +241,8 @@ Furthermore, you can build a transaction and print its JSON format to STDOUT by
 appending `--generate-only` to the list of the command line arguments:
 
 ```bash
-gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
+gaiacli tx send <sender_address> <recipient_address> 10faucetToken \
   --chain-id=<chain_id> \
-  --from=<key_name> \
   --generate-only > unsignedSendTx.json
 ```
 
@@ -258,6 +255,7 @@ gaiacli tx sign \
 
 ::: tip Note
 The `--generate-only` flag prevents `gaiacli` from accessing the local keybase.
+Thus when such flag is supplied `<sender_key_name_or_address>` must be an address.
 :::
 
 You can validate the transaction's signatures by typing the following:

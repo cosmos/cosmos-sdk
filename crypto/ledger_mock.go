@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,

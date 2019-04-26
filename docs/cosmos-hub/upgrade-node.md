@@ -60,7 +60,7 @@ cp -f genesis.json new-_enesis.json
 mv new_genesis.json genesis.json
 ```
 
-At this point, you might want to run a script to update the exported genesis into a genesis that is compatible with your new version. For example, the attributes of a the `Account` type changed, a script should query encoded account from the account store, unmarshall them, update their type, re-marhsall and re-store them. You can find an example of such script [here](https://github.com/cosmos/cosmos-sdk/blob/develop/contrib/export/v0.33.x-to-v0.34.0.py).
+At this point, you might want to run a script to update the exported genesis into a genesis that is compatible with your new version. For example, the attributes of a the `Account` type changed, a script should query encoded account from the account store, unmarshall them, update their type, re-marshal and re-store them. You can find an example of such script [here](https://github.com/cosmos/cosmos-sdk/blob/develop/contrib/export/v0.33.x-to-v0.34.0.py).
 
 ## Reset Data
 

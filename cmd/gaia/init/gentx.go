@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -79,7 +80,7 @@ following delegation and commission default parameters:
 					"the tx's memo field will be unset")
 			}
 
-			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
+			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}

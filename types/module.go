@@ -38,7 +38,8 @@ type AppModule interface {
 	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
 }
 
-// module manananaager
+// module manager provides the high level utility for managing and executing
+// operations for a group of modules
 type ModuleManager struct {
 	Modules            map[string]AppModule
 	OrderInitGenesis   []string

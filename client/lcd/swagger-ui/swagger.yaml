@@ -772,7 +772,7 @@ paths:
           x-example: bonded
         - in: query
           name: page
-          description: The gage number.
+          description: The page number.
           type: integer
           x-example: 1
         - in: query

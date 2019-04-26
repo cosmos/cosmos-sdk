@@ -143,8 +143,7 @@ for tcIndex, tc := range cases {
 
 ## Branching Model and Release
 
-User-facing repos should adhere to the branching model: http://nvie.com/posts/a-successful-git-branching-model/.
-That is, these repos should be well versioned, and any merge to master requires a version bump and tagged release.
+User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com/.
 
 Libraries need not follow the model strictly, but would be wise to.
 
@@ -152,37 +151,35 @@ The SDK utilizes [semantic versioning](https://semver.org/).
 
 ### PR Targeting
 
-Ensure that you base and target your PR on the correct branch:
-  - `release/vxx.yy.zz` for a merge into a release candidate
-  - `master` for a merge of a release
-  - `develop` in the usual case
+Ensure that you base and target your PR on the `master` branch.
 
-All feature additions should be targeted against `develop`. Bug fixes for an outstanding release candidate
+All feature additions should be targeted against `master`. Bug fixes for an outstanding release candidate
 should be targeted against the release candidate branch. Release candidate branches themselves should be the
 only pull requests targeted directly against master.
 
 ### Development Procedure:
-  - the latest state of development is on `develop`
-  - `develop` must never fail `make test` or `make test_cli`
-  - `develop` should not fail `make lint`
-  - no --force onto `develop` (except when reverting a broken commit, which should seldom happen)
+  - the latest state of development is on `master`
+  - `master` must never fail `make test` or `make test_cli`
+  - `master` should not fail `make lint`
+  - no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
   - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
-  - before submitting a pull request, begin `git rebase` on top of `develop`
+  - before submitting a pull request, begin `git rebase` on top of `master`
 
 ### Pull Merge Procedure:
-  - ensure pull branch is rebased on develop
+  - ensure pull branch is rebased on `master`
   - run `make test` and `make test_cli` to ensure that all tests pass
   - merge pull request
-  - push master may request that pull requests be rebased on top of `unstable`
 
 ### Release Procedure:
-  - start on `develop`
-  - prepare changelog/release issue
-  - bump versions
-  - push to release-vX.X.X to run CI
-  - merge to master
-  - merge master back to develop
-
+  - start on `master`
+  - bump version
+  - create the release candidate branch `rcN/v*` (please start with `N=1`) (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+  - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
+  - if errors are found during the simulation testing, commit the fixes to `master` and create a new `RC` branch (making sure to increment the `rcN`)
+  - after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch
+  - merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
+  - delete the `RC` branches
+ 
 ### Hotfix Procedure:
   - start on `master`
   - checkout a new branch named hotfix-vX.X.X
@@ -191,6 +188,5 @@ only pull requests targeted directly against master.
     - add a note to CHANGELOG.md
   - bump versions
   - push to hotfix-vX.X.X to run the extended integration tests on the CI
-  - merge hotfix-vX.X.X to master
-  - merge hotfix-vX.X.X to develop
+  - merge hotfix-vX.X.X to `master` and cherry pick the commit to any release branches this applies to
   - delete the hotfix-vX.X.X branch

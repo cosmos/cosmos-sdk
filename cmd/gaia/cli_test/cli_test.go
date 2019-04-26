@@ -25,6 +25,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {
@@ -430,16 +431,22 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 func TestGaiaCLIQueryRewards(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
+	cdc := app.MakeCodec()
 
 	genesisState := f.GenesisState()
 	inflationMin := sdk.MustNewDecFromStr("10000.0")
-	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMin = inflationMin
-	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	var mintData mint.GenesisState
+	cdc.UnmarshalJSON(genesisState.Modules[mint.ModuleName], &mintData)
+	mintData.Minter.Inflation = inflationMin
+	mintData.Params.InflationMin = inflationMin
+	mintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	mintDataBz, err := cdc.MarshalJSON(mintData)
+	require.NoError(t, err)
+	genesisState.Modules[mint.ModuleName] = mintDataBz
+
 	genFile := filepath.Join(f.GaiadHome, "config", "genesis.json")
 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 	require.NoError(t, err)
-	cdc := app.MakeCodec()
 	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
 	require.NoError(t, genDoc.SaveAs(genFile))
 

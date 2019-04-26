@@ -55,7 +55,7 @@ Please exercise extreme caution!
 [**Download the binaries**]
 Not available yet.
 
-[**Install from source**](https://cosmos.network/docs/gaia/installation.html)
+[**Install from source**](https://cosmos.network/docs/cosmos-hub/installation.html)
 
 ::: tip
 `gaiacli` is used from a terminal. To open the terminal, follow these steps:
@@ -237,7 +237,7 @@ In order to query the state and send transactions, you need a way to access the 
 
 This is the most secure option, but comes with relatively high resource requirements. In order to run your own full-node, you need good bandwidth and at least 1TB of disk space. 
 
-You will find the tutorial on how to install `gaiad` [here](https://cosmos.network/docs/gaia/installation.html), and the guide to run a full-node [here](https://cosmos.network/docs/gaia/join-mainnet.html).
+You will find the tutorial on how to install `gaiad` [here](https://cosmos.network/docs/cosmos-hub/installation.html), and the guide to run a full-node [here](https://cosmos.network/docs/cosmos-hub/join-mainnet.html).
 
 ### Connecting to a Remote Full-Node
 
@@ -286,7 +286,7 @@ gaiacli config trust-node false
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
 
 ```bash
-gaiacli config chain-id cosmoshub-1
+gaiacli config chain-id cosmoshub-2
 ```
 
 ## Querying the State
@@ -357,6 +357,24 @@ The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you h
 ::: tip
 For mainnet, the recommended `gas-prices` is `0.025uatom`. 
 ::: 
+
+### Sending Tokens
+
+::: tip
+**Before you can bond atoms and withdraw rewards, you need to [set up `gaiacli`](#setting-up-gaiacli) and [create an account](#creating-an-account)**
+:::
+
+::: warning
+**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a Ledger Nano S device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+::: 
+
+```bash
+// Send a certain amount of tokens to an address
+// Ex value for parameters (do not actually use these values in your tx!!): <to_address>=cosmos16m93fezfiezhvnjajzrfyszml8qm92a0w67ntjhd3d0 <amount>=1000000uatom 
+// Ex value for flags: <gasPrice>=0.025uatom
+
+gaiacli tx send <to_address> <amount> --from <yourKeyName> --gas auto --gas-adjustment 1.5 --gas-prices <gasPrice>
+```
 
 ### Bonding Atoms and Withdrawing Rewards
 
@@ -480,10 +498,10 @@ gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorA
 
 In order to sign, you will also need the `chain-id`, `account-number` and `sequence`. The `chain-id` is a unique identifier for the blockchain on which you are submitting the transaction. The `account-number` is an identifier generated when your account first receives funds. The `sequence` number is used to keep track of the number of transactions you have sent and prevent replay attacks.
 
-Get the chain-id from the genesis file (`cosmoshub-1`), and the two other fields using the account query:
+Get the chain-id from the genesis file (`cosmoshub-2`), and the two other fields using the account query:
 
 ```bash
-gaiacli query account <yourAddress> --chain-id cosmoshub-1
+gaiacli query account <yourAddress> --chain-id cosmoshub-2
 ```
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:
@@ -495,7 +513,7 @@ cat unsignedTx.json
 Now, sign the transaction using the following command. You will need the `chain-id`, `sequence` and `account-number` obtained earlier:
 
 ```bash
-gaiacli tx sign unsignedTx.json --from <delegatorKeyName> --offline --chain-id cosmoshub-1 --sequence <sequence> --account-number <account-number> > signedTx.json
+gaiacli tx sign unsignedTx.json --from <delegatorKeyName> --offline --chain-id cosmoshub-2 --sequence <sequence> --account-number <account-number> > signedTx.json
 ```
 
 Copy `signedTx.json` and transfer it back to the online computer. Finally, use the following command to broadcast the transaction:

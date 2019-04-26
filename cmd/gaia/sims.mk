@@ -3,6 +3,10 @@
 ########################################
 ### Simulations
 
+runsim: $(GOBIN)/runsim
+$(GOBIN)/runsim: contrib/runsim/main.go
+	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
+
 sim-gaia-nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test -mod=readonly ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
@@ -17,22 +21,22 @@ sim-gaia-fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
 	@go test -mod=readonly github.com/cosmos/cosmos-sdk/cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
-sim-gaia-import-export:
+sim-gaia-import-export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash contrib/sim/multisim.sh 50 5 TestGaiaImportExport
+	$(GOBIN)/runsim 50 5 TestGaiaImportExport
 
-sim-gaia-simulation-after-import:
+sim-gaia-simulation-after-import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash contrib/sim/multisim.sh 50 5 TestGaiaSimulationAfterImport
+	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
 
-sim-gaia-custom-genesis-multi-seed:
+sim-gaia-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@bash contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
+	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
 
-sim-gaia-multi-seed:
+sim-gaia-multi-seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation
+	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
 
 sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

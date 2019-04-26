@@ -22,7 +22,7 @@ breaking changes.
 
 ## Cosmos Hub Mainnet
 
-To run a full-node for the mainnet of the Cosmos Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-mainnet.md).
+To run a full-node for the mainnet of the Cosmos Hub, first [install `gaia`](./docs/cosmos-hub/installation.md), then follow [the guide](./docs/cosmos-hub/join-mainnet.md).
 
 For status updates and genesis file, see the
 [launch repo](https://github.com/cosmos/launch).

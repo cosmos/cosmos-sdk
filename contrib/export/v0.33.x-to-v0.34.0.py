@@ -15,7 +15,10 @@ def process_raw_genesis(genesis, parsed_args):
         },
     }
 
-    # default tm value
+    # migrate governance state as the internal structure of proposals has changed
+    migrate_gov_data(genesis['app_state']['gov'])
+
+    # default Tendermint block time (ms)
     genesis['consensus_params']['block']['time_iota_ms'] = '1000'
 
     # proposal #1 updates
@@ -34,6 +37,36 @@ def process_raw_genesis(genesis, parsed_args):
     genesis['genesis_time'] = parsed_args.start_time
 
     return genesis
+
+
+def migrate_gov_data(gov_data):
+    for p in gov_data['proposals']:
+        # get Amino type and value
+        t = p['type']
+        v = p['value']
+
+        del p['type']
+        del p['value']
+
+        assert t == 'gov/TextProposal', 'invalid proposal type: {t}'
+        assert p == {}, 'expected proposal to be empty after deleting contents'
+
+        p['proposal_content'] = {
+            'type': t,
+            'value': {
+                'title': v['title'],
+                'description': v['description']
+            }
+        }
+
+        p['proposal_id'] = v['proposal_id']
+        p['proposal_status'] = v['proposal_status']
+        p['final_tally_result'] = v['final_tally_result']
+        p['submit_time'] = v['submit_time']
+        p['deposit_end_time'] = v['deposit_end_time']
+        p['total_deposit'] = v['total_deposit']
+        p['voting_start_time'] = v['voting_start_time']
+        p['voting_end_time'] = v['voting_end_time']
 
 
 if __name__ == '__main__':

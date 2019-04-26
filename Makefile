@@ -165,28 +165,33 @@ test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
 	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
-test_sim_gaia_import_export:
+test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaImportExport
+	$(GOBIN)/runsim 50 5 TestGaiaImportExport
 
-test_sim_gaia_simulation_after_import:
+test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash cmd/gaia/contrib/sim/multisim.sh 50 5 TestGaiaSimulationAfterImport
+	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
 
-test_sim_gaia_custom_genesis_multi_seed:
+test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
+	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
 
-test_sim_gaia_multi_seed:
+test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash cmd/gaia/contrib/sim/multisim.sh 400 5 TestFullGaiaSimulation
+	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
+
+# Don't move it into tools - this will be gone once gaia has moved into the new repo
+runsim: $(GOBIN)/runsim
+$(GOBIN)/runsim: cmd/gaia/contrib/runsim/main.go
+	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

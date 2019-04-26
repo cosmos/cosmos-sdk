@@ -162,7 +162,6 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 		}
 
 		tags, page, limit, err = rest.ParseHTTPArgs(r)
-
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

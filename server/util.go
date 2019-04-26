@@ -105,7 +105,10 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 	}
 
-	// create a default gaia config file if it does not exist
+	// create a default Gaia config file if it does not exist
+	//
+	// TODO: Rename config file to server.toml as it's not particular to Gaia
+	// (REF: https://github.com/cosmos/cosmos-sdk/issues/4125).
 	gaiaConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
 	if _, err := os.Stat(gaiaConfigFilePath); os.IsNotExist(err) {
 		gaiaConf, _ := config.ParseConfig()

@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -47,12 +46,12 @@ type AppModule struct {
 	keeper      Keeper
 	fcKeeper    FeeCollectionKeeper
 	distrKeeper DistributionKeeper
-	accKeeper   auth.AccountKeeper
+	accKeeper   AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
-	distrKeeper types.DistributionKeeper, accKeeper auth.AccountKeeper) AppModule {
+	distrKeeper types.DistributionKeeper, accKeeper AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -94,7 +93,7 @@ func (a AppModule) NewQuerierHandler() sdk.Querier {
 func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, a.keeper, genesisState)
+	return InitGenesis(ctx, a.keeper, a.accKeeper, genesisState)
 }
 
 // module export genesis

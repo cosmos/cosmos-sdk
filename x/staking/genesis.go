@@ -7,6 +7,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -15,7 +16,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -28,16 +29,19 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
-	// XXX fixup
-	// manually set the total supply for staking based on accounts
-	for _, acc := range genesisState.Accounts {
-		for _, coin := range acc.Coins {
-			if coin.Denom == stakingData.Params.BondDenom {
-				// increase the supply
-				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
-					Add(coin.Amount) // increase the supply
-			}
-		}
+	// manually set the total supply for staking based on accounts if not provided
+	if data.Pool.NotBondedTokens.IsZero() {
+		accountKeeper.IterateAccounts(ctx,
+			func(acc auth.Account) (stop bool) {
+				for _, coin := range acc.GetCoins() {
+					if coin.Denom == data.Params.BondDenom {
+						data.Pool.NotBondedTokens = data.Pool.NotBondedTokens.
+							Add(coin.Amount) // increase the supply
+					}
+				}
+				return false
+			},
+		)
 	}
 
 	for _, validator := range data.Validators {

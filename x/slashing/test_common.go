@@ -77,7 +77,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 
 	genesis.Pool.NotBondedTokens = initCoins.MulRaw(int64(len(addrs)))
 
-	_ = staking.InitGenesis(ctx, sk, genesis)
+	_ = staking.InitGenesis(ctx, sk, accountKeeper, genesis)
 
 	for _, addr := range addrs {
 		_, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{

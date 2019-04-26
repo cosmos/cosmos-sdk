@@ -1,4 +1,4 @@
-package distribution
+package genutil
 
 import (
 	"encoding/json"

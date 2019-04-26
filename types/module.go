@@ -158,7 +158,7 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 		}
 	}
 	return abci.ResponseInitChain{
-		Validators: validators,
+		Validators: validatorUpdates,
 	}
 }
 

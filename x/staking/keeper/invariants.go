@@ -11,7 +11,7 @@ import (
 
 // register all staking invariants
 func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) {
+	d types.DistributionKeeper, am types.AccountKeeper) {
 
 	ir.RegisterRoute(types.ModuleName, "supply",
 		SupplyInvariants(k, f, d, am))
@@ -25,7 +25,7 @@ func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, f types.FeeCollectionK
 
 // AllInvariants runs all invariants of the staking module.
 func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+	d types.DistributionKeeper, am types.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		err := SupplyInvariants(k, f, d, am)(ctx)
@@ -55,7 +55,7 @@ func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
 // SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
 func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+	d types.DistributionKeeper, am types.AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)

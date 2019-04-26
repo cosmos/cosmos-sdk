@@ -12,6 +12,7 @@ type (
 	FeeCollectionKeeper     = types.FeeCollectionKeeper
 	BankKeeper              = types.BankKeeper
 	DistributionKeeper      = types.DistributionKeeper
+	AccountKeeper           = types.AccountKeeper
 	Validator               = types.Validator
 	Validators              = types.Validators
 	Description             = types.Description

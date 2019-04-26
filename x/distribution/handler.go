@@ -41,32 +41,30 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAdd
 }
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) sdk.Result {
-
-	err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
+	rewards, err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
 	if err != nil {
 		return err.Result()
 	}
 
-	tags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddress.String()),
-		tags.Validator, []byte(msg.ValidatorAddress.String()),
-	)
 	return sdk.Result{
-		Tags: tags,
+		Tags: sdk.NewTags(
+			tags.Rewards, rewards.String(),
+			tags.Delegator, []byte(msg.DelegatorAddress.String()),
+			tags.Validator, []byte(msg.ValidatorAddress.String()),
+		),
 	}
 }
 
 func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdrawValidatorCommission, k keeper.Keeper) sdk.Result {
-
-	err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddress)
+	commission, err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddress)
 	if err != nil {
 		return err.Result()
 	}
 
-	tags := sdk.NewTags(
-		tags.Validator, []byte(msg.ValidatorAddress.String()),
-	)
 	return sdk.Result{
-		Tags: tags,
+		Tags: sdk.NewTags(
+			tags.Commission, commission.String(),
+			tags.Validator, []byte(msg.ValidatorAddress.String()),
+		),
 	}
 }

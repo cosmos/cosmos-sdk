@@ -13,6 +13,12 @@ actually work offline.
 
 * [\#4219](https://github.com/cosmos/cosmos-sdk/issues/4219) Return an error when an empty mnemonic is provided during key recovery.
 
+### New features
+
+#### SDK
+
+* [\#3850](https://github.com/cosmos/cosmos-sdk/issues/3850) Add `rewards` and `commission` to distribution tx tags.
+
 ## 0.34.3
 
 ### Bug Fixes

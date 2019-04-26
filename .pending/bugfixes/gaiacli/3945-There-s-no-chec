@@ -1,0 +1,1 @@
+#3945 There's no check for chain-id in TxBuilder.SignStdTx

@@ -58,9 +58,10 @@ type CLIContext struct {
 	SkipConfirm   bool
 }
 
-// NewCLIContext returns a new initialized CLIContext with parameters from the
-// command line using Viper.
-func NewCLIContext() CLIContext {
+// NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
+// command line using Viper. It takes a key name or address and populates the FromName and
+// FromAddress field accordingly.
+func NewCLIContextWithFrom(from string) CLIContext {
 	var rpc rpcclient.Client
 
 	nodeURI := viper.GetString(client.FlagNode)
@@ -68,7 +69,6 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
-	from := viper.GetString(client.FlagFrom)
 	genOnly := viper.GetBool(client.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
@@ -103,6 +103,10 @@ func NewCLIContext() CLIContext {
 		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
 	}
 }
+
+// NewCLIContext returns a new initialized CLIContext with parameters from the
+// command line using Viper.
+func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(client.FlagFrom)) }
 
 func createVerifier() tmlite.Verifier {
 	trustNodeDefined := viper.IsSet(client.FlagTrustNode)

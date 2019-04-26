@@ -7,11 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func Test_runDeleteCmd(t *testing.T) {

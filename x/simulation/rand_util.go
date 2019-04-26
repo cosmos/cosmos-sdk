@@ -72,6 +72,11 @@ func RandTimestamp(r *rand.Rand) time.Time {
 	return time.Unix(unixTime, 0)
 }
 
+// RandIntBetween returns a random int between two numbers inclusively.
+func RandIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min) + min
+}
+
 // Derive a new rand deterministically from a rand.
 // Unlike rand.New(rand.NewSource(seed)), the result is "more random"
 // depending on the source and state of r.

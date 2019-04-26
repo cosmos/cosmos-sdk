@@ -178,8 +178,7 @@ func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 // set of messages. It returns an error if a fee is supplied but cannot be
 // parsed.
 func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
-	chainID := bldr.chainID
-	if chainID == "" {
+	if bldr.chainID == "" {
 		return StdSignMsg{}, fmt.Errorf("chain ID required but not specified")
 	}
 

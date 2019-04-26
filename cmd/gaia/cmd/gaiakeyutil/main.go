@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/bech32"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var bech32Prefixes = []string{

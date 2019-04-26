@@ -18,9 +18,9 @@ There are three main pieces to consider:
 
 We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
-First, you need to [install the software](../getting-started/installation.md).
+First, you need to [install the software](../cosmos-hub/installation.md).
 
-Then, you can start [running a full-node](../getting-started/join-testnet.md).
+Then, you can start [running a full-node](../cosmos-hub/join-testnet.md).
 
 ### Command-Line interface
 
@@ -34,12 +34,13 @@ To generate a new key (default secp256k1 elliptic curve):
 gaiacli keys add <your_key_name>
 ```
 
-You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 4 informations:
+You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 5 informations:
 
 - `NAME`: Name of your key
+- `TYPE`: Type of your key, always `local`. 
 - `ADDRESS`: Your address. Used to receive funds.
 - `PUBKEY`: Your public key. Useful for validators.
-- `Seed phrase`: 12-words phrase. **Save this seed phrase somewhere safe**. It is used to recover your private key in case you forget the password.
+- `MNEMONIC`: 24-words phrase. **Save this mnemonic somewhere safe**. It is used to recover your private key in case you forget the password.
 
 You can see all your available keys by typing:
 
@@ -62,14 +63,20 @@ gaiacli account <YOUR_ADDRESS>
 Here is the command to send coins via the CLI:
 
 ```bash
-gaiacli send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --from=<key_name> --to=<destination_address>
+gaiacli tx send <destination_address> <amount> \
+    --chain-id=<name_of_testnet_chain> \
+    --from=<key_name>
 ```
 
+Parameters:
+
+- `<destination_address>`: Address of the recipient.
+- `<amount>`: This parameter accepts the format `<value|coinName>`, such as `10faucetToken`.
+
 Flags:
-- `--amount`: This flag accepts the format `<value|coinName>`.
+
 - `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
 - `--from`: Name of the key of the sending account.
-- `--to`: Address of the recipient.
 
 #### Help
 
@@ -88,12 +95,12 @@ The Rest Server acts as an intermediary between the front-end and the full-node.
 To start the Rest server: 
 
 ```bash
-gaiacli advanced rest-server --node=<full_node_address:full_node_port>
+gaiacli rest-server --node=<full_node_address:full_node_port>
 ```
 
 Flags:
 - `--trust-node`: A boolean. If `true`, light-client verification is disabled. If `false`, it is disabled. For service providers, this should be set to `true`. By default, it set to `true`. 
-- `--node`: This is where you indicate the address and the port of your full-node. The format is <full_node_address:full_node_port>. If the full-node is on the same machine, the address should be `tcp://localhost:26657`.
+- `--node`: This is where you indicate the address and the port of your full-node. The format is `<full_node_address:full_node_port>`. If the full-node is on the same machine, the address should be `tcp://localhost:26657`.
 - `--laddr`: This flag allows you to specify the address and port for the Rest Server (default `1317`). You will mostly use this flag only to specify the port, in which case just input "localhost" for the address. The format is <rest_server_address:port>.
 
 
@@ -101,7 +108,7 @@ Flags:
 
 The recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
 
-[`/bank/balance/{account}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
+[`/bank/balance/{address}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
 
 ## Rest API
 

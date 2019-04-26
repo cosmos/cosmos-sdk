@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"sort"
@@ -82,6 +83,9 @@ type BaseApp struct {
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
+
+	// height at which to halt the chain and gracefully shutdown
+	haltHeight uint64
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -229,6 +233,10 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
+}
+
+func (app *BaseApp) setHaltHeight(height uint64) {
+	app.haltHeight = height
 }
 
 // Router returns the router of the BaseApp.
@@ -902,7 +910,13 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Commit implements the ABCI interface.
+// Commit implements the ABCI interface. It will commit all state that exists in
+// the deliver state's multi-store and includes the resulting commit ID in the
+// returned abci.ResponseCommit. Commit will set the check state based on the
+// latest header and reset the deliver state. Also, if a non-zero halt height is
+// defined in config, Commit will execute a deferred function call to check
+// against that height and gracefully halt if it matches the latest committed
+// height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
@@ -913,12 +927,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Reset the Check state to the latest committed.
 	//
-	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
-	// Use the header from this latest block.
+	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	defer func() {
+		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
+			app.logger.Info("halting node per configuration", "height", app.haltHeight)
+			os.Exit(0)
+		}
+	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

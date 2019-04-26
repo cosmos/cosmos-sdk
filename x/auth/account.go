@@ -563,8 +563,3 @@ func NewModuleHolderAccount(moduleName string) *ModuleHolderAccount {
 
 	return &ModuleHolderAccount{ModuleMinterAccount: moduleMinterAcc}
 }
-
-// SetCoins not supported for ModuleHolderAccount
-func (mha ModuleHolderAccount) SetCoins(coins sdk.Coins) error {
-	return fmt.Errorf("module holders account don't support setting coins")
-}

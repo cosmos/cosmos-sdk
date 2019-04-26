@@ -79,8 +79,8 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		supplier := supply.DefaultSupplier()
-		supplier.Inflate(supply.TypeTotal, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-		supplier.Inflate(supply.TypeCirculating, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+		supplier.Inflate(supply.TypeTotal, sdk.NewCoins(sdk.NewCoin(stakingGenesis.Params.BondDenom, sdk.NewInt(100000))))
+		supplier.Inflate(supply.TypeCirculating, sdk.NewCoins(sdk.NewCoin(stakingGenesis.Params.BondDenom, sdk.NewInt(100000))))
 
 		keeper.supplyKeeper.SetSupplier(ctx, supplier)
 

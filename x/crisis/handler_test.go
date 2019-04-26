@@ -23,7 +23,7 @@ var (
 func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper, distr.Keeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
-	ctx, accKeeper, bankKeeper, distrKeeper, _, feeCollectionKeeper, paramsKeeper :=
+	ctx, accKeeper, bankKeeper, distrKeeper, _, feeCollectionKeeper, _, paramsKeeper :=
 		distr.CreateTestInputAdvanced(t, false, 10, communityTax)
 
 	paramSpace := paramsKeeper.Subspace(DefaultParamspace)

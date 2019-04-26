@@ -68,7 +68,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
+func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content ProposalContent) (proposal Proposal, err sdk.Error) {
@@ -357,9 +357,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module account coin pool
-	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
-
-	_, err := keeper.ck.AddCoins(ctx, moduleAddress, depositAmount)
+	err := keeper.ck.SendCoins(ctx, depositorAddr, ModuleAddress, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -401,7 +399,6 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterato
 // RefundDeposits Refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
@@ -409,12 +406,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// update the governance module account coin pool
-		_, err := keeper.ck.SubtractCoins(ctx, moduleAddress, deposit.Amount)
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = keeper.ck.AddCoins(ctx, deposit.Depositor, deposit.Amount)
+		err := keeper.ck.SendCoins(ctx, ModuleAddress, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -430,7 +422,6 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 // DeleteDeposits Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	moduleAddress, _ := sdk.AccAddressFromBech32(ModuleName)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
@@ -438,7 +429,8 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// update the governance module account coin pool
-		_, err := keeper.ck.SubtractCoins(ctx, moduleAddress, deposit.Amount)
+		// burn deposit
+		_, err := keeper.ck.SubtractCoins(ctx, ModuleAddress, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

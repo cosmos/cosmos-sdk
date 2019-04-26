@@ -29,7 +29,7 @@ module.exports = {
         collapsable: true,
         children: [
           "/intro/",
-          "/intro/sdk-app-architecture",
+          "/intro/sdk-design",
           "/intro/ocap"
         ]
       },

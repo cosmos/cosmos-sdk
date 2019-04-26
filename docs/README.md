@@ -13,9 +13,9 @@
 
 ## Cosmos Hub 
 
-- [Join the mainnet](./gaia/join-mainnet.md) of the Cosmos Hub.
-- [Join the latest public testnet](./gaia/join-testnet.md) of the Cosmos Hub. 
-- [Start your own `gaia` testnet](./gaia/deploy-testnet.md).
+- [Join the mainnet](./cosmos-hub/join-mainnet.md) of the Cosmos Hub.
+- [Join the latest public testnet](./cosmos-hub/join-testnet.md) of the Cosmos Hub. 
+- [Start your own `gaia` testnet](./cosmos-hub/deploy-testnet.md).
 
 ## Creating a new SDK project
 

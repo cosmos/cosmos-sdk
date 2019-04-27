@@ -13,7 +13,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -29,14 +28,18 @@ var (
 	defaultMinSelfDelegation       = "1"
 )
 
-func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
+func validateAccountInGenesis(appGenesisState ExpectedGenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 	accountIsInGenesis := false
 
 	// TODO refactor out bond denom to common state area
-	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	stakingDataBz := appGenesisState[staking.ModuleName]
 	var stakingData staking.GenesisState
 	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 	bondDenom := stakingData.Params.BondDenom
+
+	genUtilDataBz := appGenesisState[staking.ModuleName]
+	var genesisState GenesisState
+	cdc.MustUnmarshalJSON(genUtilDataBz, &genesisState)
 
 	// Check if the account is in genesis
 	for _, acc := range genesisState.Accounts {
@@ -55,11 +58,11 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 		}
 	}
 
-	if accountIsInGenesis {
-		return nil
+	if !accountIsInGenesis {
+		return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
 	}
 
-	return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
+	return nil
 }
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {

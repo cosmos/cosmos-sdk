@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
+	genutil "github.com/cosmos/cosmos-sdk/x/genutil/server/cli"
 )
 
 // gaiad custom flags
@@ -48,7 +48,7 @@ func main() {
 	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc))
 	rootCmd.AddCommand(genutil.TestnetFilesCmd(ctx, cdc))
 	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc))
-	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc)) // XXX pass in the mbm validate function
 	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 

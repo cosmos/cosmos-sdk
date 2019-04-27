@@ -1,4 +1,4 @@
-package genutil
+package cli
 
 import (
 	"testing"

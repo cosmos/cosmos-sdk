@@ -20,7 +20,7 @@ type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
 	DefaultGenesis() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
+	ValidateGenesis(*codec.Codec, json.RawMessage) error
 }
 
 // collections of AppModuleBasic
@@ -47,9 +47,9 @@ func (mbm ModuleBasicManager) DefaultGenesis() map[string]json.RawMessage {
 }
 
 // Provided default genesis information for all modules
-func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
+func (mbm ModuleBasicManager) ValidateGenesis(cdc *codec.Codec, genesis map[string]json.RawMessage) error {
 	for _, mb := range mbm {
-		if err := mb.ValidateGenesis(genesis[mb.Name()]); err != nil {
+		if err := mb.ValidateGenesis(cdc, genesis[mb.Name()]); err != nil {
 			return err
 		}
 	}

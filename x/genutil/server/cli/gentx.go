@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -57,7 +58,7 @@ following delegation and commission default parameters:
 
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
-			nodeID, valPubKey, err := InitializeNodeValidatorFiles(ctx.Config)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(ctx.Config)
 			if err != nil {
 				return err
 			}
@@ -121,7 +122,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			err = accountInGenesis(genesisState, key.GetAddress(), coins, cdc)
+			err = validateAccountInGenesis(genesisState, key.GetAddress(), coins, cdc)
 			if err != nil {
 				return err
 			}

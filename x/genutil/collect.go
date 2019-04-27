@@ -16,11 +16,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app" // XXX XXX
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking" // XXX XXX
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const flagGenTxDir = "gentx-dir"
@@ -73,12 +72,34 @@ func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	}
 
 	// create the app state
-	genesisState, err := GenesisStateFromGenDoc(cdc, genDoc)
+	appGenesisState, err := GenesisStateFromGenDoc(cdc, genDoc)
 	if err != nil {
 		return appState, err
 	}
-	genesisState.Module[moduleName] = appGenTxs // XXXXXXXXXXXXX XXX fix up
-	appState = codec.MarshalJSONIndent(cdc, genesisState)
+	var genesisState GenesisState
+	cdc.UnmarshalJSON(appGenesisState[moduleName], &genesisState)
+
+	// convert all the GenTxs to JSON
+	var appGenTxsBz []json.RawMessage
+	for _, genTx := range appGenTxs {
+		txBz, err := cdc.MarshalJSON(genTx)
+		if err != nil {
+			return appState, err
+		}
+		appGenTxsBz = append(appGenTxsBz, txBz)
+	}
+
+	genesisState.GenTxs = appGenTxsBz
+	genesisStateBz, err := cdc.MarshalJSON(genesisState)
+	if err != nil {
+		return appState, err
+	}
+
+	appGenesisState[moduleName] = genesisStateBz
+	appState, err = codec.MarshalJSONIndent(cdc, appGenesisState)
+	if err != nil {
+		return appState, err
+	}
 
 	genDoc.AppState = appState
 	err = ExportGenesisFile(&genDoc, config.GenesisFile())
@@ -98,14 +119,18 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 	// prepare a map of all accounts in genesis state to then validate
 	// against the validators addresses
-	var appState app.GenesisState
+	var appState ExpectedAppGenesisState
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
+	var genesisState GenesisState
+	if err := cdc.UnmarshalJSON(appState[moduleName], &genesisState); err != nil {
+		return appGenTxs, persistentPeers, err
+	}
 
-	addrMap := make(map[string]app.GenesisAccount, len(appState.Accounts))
-	for i := 0; i < len(appState.Accounts); i++ {
-		acc := appState.Accounts[i]
+	addrMap := make(map[string]GenesisAccount, len(genesisState.Accounts))
+	for i := 0; i < len(genesisState.Accounts); i++ {
+		acc := genesisState.Accounts[i]
 		addrMap[acc.Address.String()] = acc
 	}
 
@@ -145,6 +170,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"each genesis transaction must provide a single genesis message")
 		}
 
+		// TODO abstract out staking reference here through the expected staking keeper
 		msg := msgs[0].(staking.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
 		delAddr := msg.DelegatorAddress.String()

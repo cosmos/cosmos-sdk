@@ -1,23 +1,27 @@
 package genutil
 
 import (
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func ExportGenesis(accountKeeper AccountKeeper) GenesisState {
+// export genesis for all accounts
+func ExportGenesis(ctx sdk.Context, accountKeeper AccountKeeper) GenesisState {
 
 	// iterate to get the accounts
 	accounts := []GenesisAccount{}
-	app.accountKeeper.IterateAccounts(ctx,
+	accountKeeper.IterateAccounts(ctx,
 		func(acc auth.Account) (stop bool) {
-			account := NewGenesisAccountI(acc)
+			account, err := NewGenesisAccountI(acc)
+			if err != nil {
+				panic(err)
+			}
 			accounts = append(accounts, account)
 			return false
 		},
 	)
 
 	var genesisState GenesisState
-	genesisState.GenesisAccounts = accounts
+	genesisState.Accounts = accounts
 	return genesisState
 }

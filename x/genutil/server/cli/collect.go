@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 const flagGenTxDir = "gentx-dir"
@@ -26,7 +27,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 			name := viper.GetString(client.FlagName)
-			nodeID, valPubKey, err := InitializeNodeValidatorFiles(config)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return err
 			}

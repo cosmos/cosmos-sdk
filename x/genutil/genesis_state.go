@@ -7,8 +7,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking" // XXX XXX
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // State to Unmarshal
@@ -29,14 +30,11 @@ func (gs GenesisState) Sanitize() {
 }
 
 // validate genesis information
-func ValidateGenesis(genesisState GenesisState) error {
+func ValidateGenesis(cdc *codec.Codec, genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
-	if err := validateGenTxs(genesisState.GenTxs); err != nil {
-		return err
-	}
-	return nil
+	return validateGenTxs(cdc, genesisState.GenTxs)
 }
 
 // validateGenesisStateAccounts performs validation of genesis accounts. It
@@ -74,21 +72,21 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 }
 
 // validate GenTx transactions
-func validateGenTxs(genTxs []json.RawMessage) error {
+func validateGenTxs(cdc *codec.Codec, genTxs []json.RawMessage) error {
 	for i, genTx := range genTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
-			return genesisState, err
+			return err
 		}
 
 		msgs := tx.GetMsgs()
 		if len(msgs) != 1 {
-			return genesisState, errors.New(
+			return errors.New(
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
 
 		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
-			return genesisState, fmt.Errorf(
+			return fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)
 		}
 	}

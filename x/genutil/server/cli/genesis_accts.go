@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -51,9 +52,8 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			genAcc := NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd)
-			err := genAcc.Validate()
-			if err != nil {
+			genAcc := genutil.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd)
+			if err := genAcc.Validate(); err != nil {
 				return err
 			}
 
@@ -76,7 +76,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 
 			// export app state
 			genDoc.AppState = appStateJSON
-			return ExportGenesisFile(genDoc, genFile)
+			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
 

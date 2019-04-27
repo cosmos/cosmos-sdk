@@ -200,7 +200,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 }
 
 func initGenFiles(
-	cdc *codec.Codec, chainID string, accs []app.GenesisAccount,
+	cdc *codec.Codec, chainID string, accs []GenesisAccount,
 	genFiles []string, numValidators int,
 ) error {
 

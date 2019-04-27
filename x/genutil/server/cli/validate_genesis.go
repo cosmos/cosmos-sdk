@@ -1,4 +1,4 @@
-package genutil
+package cli
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
+// XXX pass in the validate GenesisFunction
 // Validate genesis command takes
 func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
@@ -35,13 +36,13 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 
-			var genstate app.GenesisState
-			if err = cdc.UnmarshalJSON(genDoc.AppState, &genstate); err != nil {
+			var genState app.GenesisState
+			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
 				return fmt.Errorf("Error unmarshaling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			// XXX get mbm in here
-			if err = mbm.ValidateGenesis(genesisState.Modules); err != nil {
+			// XXX XXX get mbm in here
+			if err = mbm.ValidateGenesis(cdc, genState); err != nil {
 				return fmt.Errorf("Error validating genesis file %s: %s", genesis, err.Error())
 			}
 

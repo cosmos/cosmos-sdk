@@ -70,13 +70,12 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 		Sequence:      acc.GetSequence(),
 	}
 
+	if err := gacc.Validate(); err != nil {
+		return gacc, err
+	}
+
 	vacc, ok := acc.(auth.VestingAccount)
 	if ok {
-		err := ValidateVestingAccount(vacc)
-		if err != nil {
-			return err
-		}
-
 		gacc.OriginalVesting = vacc.GetOriginalVesting()
 		gacc.DelegatedFree = vacc.GetDelegatedFree()
 		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
@@ -115,6 +114,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 //___________________________________
 type GenesisAccounts []GenesisAccount
 
+// genesis accounts contain an address
 func (gaccs GenesisAccounts) Contains(acc sdk.AccAddress) bool {
 	for _, gacc := range gaccs {
 		if gacc.Address.Equals(acc) {

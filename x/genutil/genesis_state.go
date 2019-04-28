@@ -7,14 +7,40 @@ import (
 	"sort"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts []GenesisAccount  `json:"accounts"`
+	Accounts GenesisAccounts   `json:"accounts"`
 	GenTxs   []json.RawMessage `json:"gentxs"`
+}
+
+// get the genutil genesis state from the expected app state
+func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
+	var genesisState GenesisState
+	cdc.MustUnmarshalJSON(appState[moduleName], &genesisState)
+	return genesisState
+}
+
+// set the genutil genesis state within the expected app state
+func SetGenesisStateInAppState(cdc *codec.Codec,
+	appState ExpectedAppGenesisState, genesisState GenesisState) ExpectedAppGenesisState {
+
+	genesisStateBz := cdc.MustMarshalJSON(genesisState)
+	appState[moduleName] = genesisStateBz
+	return appState
+}
+
+// set the genutil genesis state within the expected app state
+func SetAccountsInAppState(cdc *codec.Codec,
+	appState ExpectedAppGenesisState, genesisAccounts GenesisAccounts) ExpectedAppGenesisState {
+
+	genesisState := GetGenesisStateFromAppState(cdc, appState)
+	genesisState.Accounts = genesisAccounts
+	return SetGenesisStateInAppState(cdc, appState, genesisState)
 }
 
 // Sanitize sorts accounts and coin sets.

@@ -65,10 +65,13 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 			}
 
 			// add genesis account to the app state
-			if appState.Accounts.Contains(addr) {
+			genesisState := genutil.GetGenesisStateFromAppState(cdc, appState)
+			if genesisState.Accounts.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %v", addr)
 			}
-			appState.Accounts = append(appState.Accounts, genAcc)
+			genesisState.Accounts = append(genesisState.Accounts, genAcc)
+			appState = genutil.SetGenesisStateInAppState(cdc, appState, genesisState)
+
 			appStateJSON, err := cdc.MarshalJSON(appState)
 			if err != nil {
 				return err

@@ -55,17 +55,7 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 		return appState, err
 	}
 
-	genTxs := make([]json.RawMessage, len(appGenTxs))
 	config.P2P.PersistentPeers = persistentPeers
-
-	for i, stdTx := range appGenTxs {
-		jsonRawTx, err := cdc.MarshalJSON(stdTx)
-		if err != nil {
-			return appState, err
-		}
-		genTxs[i] = jsonRawTx
-	}
-
 	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
 	// if there are no gen txs to be processed, return the default empty state
@@ -78,26 +68,11 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	if err != nil {
 		return appState, err
 	}
-	var genesisState GenesisState
-	cdc.UnmarshalJSON(appGenesisState[moduleName], &genesisState)
 
-	// convert all the GenTxs to JSON
-	var appGenTxsBz []json.RawMessage
-	for _, genTx := range appGenTxs {
-		txBz, err := cdc.MarshalJSON(genTx)
-		if err != nil {
-			return appState, err
-		}
-		appGenTxsBz = append(appGenTxsBz, txBz)
-	}
-
-	genesisState.GenTxs = appGenTxsBz
-	genesisStateBz, err := cdc.MarshalJSON(genesisState)
+	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, appGenesisState, appGenTxs)
 	if err != nil {
 		return appState, err
 	}
-
-	appGenesisState[moduleName] = genesisStateBz
 	appState, err = codec.MarshalJSONIndent(cdc, appGenesisState)
 	if err != nil {
 		return appState, err
@@ -106,6 +81,25 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	genDoc.AppState = appState
 	err = ExportGenesisFile(&genDoc, config.GenesisFile())
 	return appState, err
+}
+
+// Set the genesis transactions int the app genesis state
+func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState ExpectedAppGenesisState,
+	genTxs []auth.StdTx) (ExpectedAppGenesisState, error) {
+
+	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
+	// convert all the GenTxs to JSON
+	var genTxsBz []json.RawMessage
+	for _, genTx := range genTxs {
+		txBz, err := cdc.MarshalJSON(genTx)
+		if err != nil {
+			return appGenesisState, err
+		}
+		genTxsBz = append(genTxsBz, txBz)
+	}
+
+	genesisState.GenTxs = genTxsBz
+	return SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
 }
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
@@ -125,11 +119,8 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
-	var genesisState GenesisState
-	if err := cdc.UnmarshalJSON(appState[moduleName], &genesisState); err != nil {
-		return appGenTxs, persistentPeers, err
-	}
 
+	genesisState := GetGenesisStateFromAppState(cdc, appState)
 	addrMap := make(map[string]GenesisAccount, len(genesisState.Accounts))
 	for i := 0; i < len(genesisState.Accounts); i++ {
 		acc := genesisState.Accounts[i]

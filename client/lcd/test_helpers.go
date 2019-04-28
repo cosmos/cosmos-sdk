@@ -2,7 +2,6 @@ package lcd
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -40,6 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
@@ -231,10 +231,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.Nil(t, err)
 	genDoc.Validators = nil
 	require.NoError(t, genDoc.SaveAs(genesisFile))
-	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
-	var accs []gapp.GenesisAccount
+	var genTxs []auth.StdTx
+	var accs []genutil.GenesisAccount
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
@@ -261,41 +261,45 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
-		txBytes, err := cdc.MarshalJSON(tx)
-		require.Nil(t, err)
 
-		genTxs = append(genTxs, txBytes)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		genTxs = append(genTxs, tx)
+
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
 		accTokens := sdk.TokensFromTendermintPower(150)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
+		accs = append(accs, genutil.NewGenesisAccount(&accAuth))
 	}
 
 	appGenState := gapp.NewDefaultGenesisState()
-	appGenState.Accounts = accs
+	genesisState, err := genutil.GenesisStateFromGenDoc(cdc, *genDoc)
+	require.NoError(t, err)
+
 	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
 	require.NoError(t, err)
-	genesisState, err := gapp.GaiaAppGenState(cdc, *genDoc, genTxs)
+	genesisState, err = genutil.SetGenTxsInAppGenesisState(cdc, genesisState, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts
-	stakingDataBz := genesisState.Modules[staking.ModuleName]
+	stakingDataBz := genesisState[staking.ModuleName]
 	var stakingData staking.GenesisState
 	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
 		accTokens := sdk.TokensFromTendermintPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		acc := gapp.NewGenesisAccount(&accAuth)
-		genesisState.Accounts = append(genesisState.Accounts, acc)
+		acc := genutil.NewGenesisAccount(&accAuth)
+		accs = append(accs, acc)
+
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
+	genesisState = genutil.SetAccountsInAppState(cdc, genesisState, accs)
+
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
-	genesisState.Modules[staking.ModuleName] = stakingDataBz
+	genesisState[staking.ModuleName] = stakingDataBz
 
 	// mint genesis (none set within genesisState)
 	mintData := mint.DefaultGenesisState()
@@ -309,15 +313,15 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	mintData.Minter.Inflation = inflationMin
 	mintData.Params.InflationMin = inflationMin
 	mintDataBz := cdc.MustMarshalJSON(mintData)
-	genesisState.Modules[mint.ModuleName] = mintDataBz
+	genesisState[mint.ModuleName] = mintDataBz
 
 	// initialize crisis data
-	crisisDataBz := genesisState.Modules[crisis.ModuleName]
+	crisisDataBz := genesisState[crisis.ModuleName]
 	var crisisData crisis.GenesisState
 	cdc.MustUnmarshalJSON(crisisDataBz, &crisisData)
 	crisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 	crisisDataBz = cdc.MustMarshalJSON(crisisData)
-	genesisState.Modules[crisis.ModuleName] = crisisDataBz
+	genesisState[crisis.ModuleName] = crisisDataBz
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {

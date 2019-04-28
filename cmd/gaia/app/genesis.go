@@ -221,12 +221,11 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	notBondedSupply, bondedSupply :=
+	notBondedSupply :=
 		updateSupplyFromGenAccounts(genesisState.Accounts, genDoc.GenesisTime,
 			genesisState.StakingData, &genesisState.SupplyData.Supplier)
 
 	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
-	genesisState.StakingData.Pool.BondedTokens = bondedSupply
 
 	genesisState.GenTxs = appGenTxs
 
@@ -440,7 +439,8 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 // updateSupplyFromGenAccounts updates the total, circulating, vesting, modules and staking (bonded and not bonded)
 // supplies from the info provided on genesis accounts
 func updateSupplyFromGenAccounts(genAccounts []GenesisAccount, genesisTime time.Time,
-	stakingData staking.GenesisState, supplier *supply.Supplier) (notBondedTokens, bondedTokens sdk.Int) {
+	stakingData staking.GenesisState, supplier *supply.Supplier) (notBondedTokens sdk.Int) {
+	notBondedTokens = stakingData.Pool.NotBondedTokens
 
 	for _, genAcc := range genAccounts {
 		// update initial vesting, circulating and bonded supplies from vesting accounts
@@ -459,17 +459,14 @@ func updateSupplyFromGenAccounts(genAccounts []GenesisAccount, genesisTime time.
 		}
 
 		// update staking pool's not bonded supply
-		notBondedAmount := genAcc.Coins.AmountOf(stakingData.Params.BondDenom)
-		if notBondedAmount.GT(sdk.ZeroInt()) {
-			notBondedTokens = notBondedTokens.Add(notBondedAmount)
-		}
+		notBondedTokens = notBondedTokens.Add(genAcc.Coins.AmountOf(stakingData.Params.BondDenom))
 
 		supplier.Inflate(supply.TypeTotal, genAcc.Coins)
 	}
 
 	// add bonded tokens to total supply
-	bondedSupply := sdk.NewCoins(sdk.NewCoin(stakingData.Params.BondDenom, stakingData.Pool.BondedTokens))
-	supplier.Inflate(supply.TypeTotal, bondedSupply)
+	bondedTokens := sdk.NewCoins(sdk.NewCoin(stakingData.Params.BondDenom, stakingData.Pool.BondedTokens))
+	supplier.Inflate(supply.TypeTotal, bondedTokens)
 	return
 }
 

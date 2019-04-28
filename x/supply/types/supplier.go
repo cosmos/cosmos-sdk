@@ -35,11 +35,11 @@ func NewSupplier(circulating, vesting, modules, total sdk.Coins) Supplier {
 
 // DefaultSupplier creates an empty Supplier
 func DefaultSupplier() Supplier {
-	zeroBondCoin := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
-	return NewSupplier(zeroBondCoin, zeroBondCoin, zeroBondCoin, zeroBondCoin)
+	coins := sdk.NewCoins()
+	return NewSupplier(coins, coins, coins, coins)
 }
 
-// Inflate adds coins to a given supply type and updates the total supply
+// Inflate adds coins to a given supply type
 func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	switch supplyType {
 
@@ -60,7 +60,7 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 	}
 }
 
-// Deflate subtracts coins for a given supply and updates the total supply
+// Deflate subtracts coins for a given supply
 func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 
 	switch supplyType {
@@ -85,7 +85,7 @@ func (supplier Supplier) CirculatingAmountOf(denom string) sdk.Int {
 	return supplier.CirculatingSupply.AmountOf(denom)
 }
 
-// VestingAmountOf returns the vesting supply of a coin denomination
+// InitalVestingAmountOf returns the vesting supply of a coin denomination
 func (supplier Supplier) InitalVestingAmountOf(denom string) sdk.Int {
 
 	return supplier.InitialVestingSupply.AmountOf(denom)
@@ -119,6 +119,12 @@ func (supplier Supplier) ValidateBasic() sdk.Error {
 	if !supplier.ModulesSupply.IsValid() {
 		return sdk.ErrInvalidCoins(
 			fmt.Sprintf("invalid token holders supply: %s", supplier.ModulesSupply.String()),
+		)
+	}
+
+	if !supplier.TotalSupply.IsValid() {
+		return sdk.ErrInvalidCoins(
+			fmt.Sprintf("invalid total supply: %s", supplier.ModulesSupply.String()),
 		)
 	}
 

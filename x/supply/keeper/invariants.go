@@ -12,8 +12,13 @@ func RegisterInvariants(ck CrisisKeeper, k Keeper, accountKeeper AccountKeeper,
 	distributionKeeper DistributionKeeper, feeCollectionKeeper FeeCollectionKeeper,
 	stakingKeeper StakingKeeper) {
 	ck.RegisterRoute(
-		ModuleName, "supply",
-		SupplyInvariants(k, accountKeeper, distributionKeeper, feeCollectionKeeper, stakingKeeper))
+		ModuleName, "supplier",
+		SupplierInvariants(k, accountKeeper),
+	)
+	ck.RegisterRoute(
+		ModuleName, "total-supply",
+		TotalSupplyInvariant(k, distributionKeeper, feeCollectionKeeper, stakingKeeper),
+	)
 }
 
 // AllInvariants runs all invariants of the staking module.
@@ -21,7 +26,12 @@ func AllInvariants(k Keeper, accountKeeper AccountKeeper, distributionKeeper Dis
 	feeCollectionKeeper FeeCollectionKeeper, stakingKeeper StakingKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
-		err := SupplyInvariants(k, accountKeeper, distributionKeeper, feeCollectionKeeper, stakingKeeper)(ctx)
+		err := SupplierInvariants(k, accountKeeper)(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = TotalSupplyInvariant(k, distributionKeeper, feeCollectionKeeper, stakingKeeper)(ctx)
 		if err != nil {
 			return err
 		}
@@ -30,10 +40,8 @@ func AllInvariants(k Keeper, accountKeeper AccountKeeper, distributionKeeper Dis
 	}
 }
 
-// SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
-func SupplyInvariants(k Keeper,
-	accountKeeper AccountKeeper, distributionKeeper DistributionKeeper,
-	feeCollectionKeeper FeeCollectionKeeper, stakingKeeper StakingKeeper) sdk.Invariant {
+// SupplierInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
+func SupplierInvariants(k Keeper, accountKeeper AccountKeeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
 		supplier := k.GetSupplier(ctx)
@@ -78,6 +86,17 @@ func SupplyInvariants(k Keeper,
 				"\tsum of vesting tokens: %v", supplier.InitialVestingSupply, initialVestingAmount)
 		}
 
+		return nil
+	}
+}
+
+// TotalSupplyInvariant checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
+func TotalSupplyInvariant(k Keeper, distributionKeeper DistributionKeeper,
+	feeCollectionKeeper FeeCollectionKeeper, stakingKeeper StakingKeeper) sdk.Invariant {
+
+	return func(ctx sdk.Context) error {
+		supplier := k.GetSupplier(ctx)
+
 		bondedSupply := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), stakingKeeper.TotalBondedTokens(ctx)))
 		collectedFees := feeCollectionKeeper.GetCollectedFees(ctx)
 		communityPool, remainingCommunityPool := distributionKeeper.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
@@ -85,7 +104,7 @@ func SupplyInvariants(k Keeper,
 
 		remaining, _ := remainingCommunityPool.Add(remainingRewards).TruncateDecimal()
 
-		expectedTotalSupply := supplier.CirculatingSupply.
+		realTotalSupply := supplier.CirculatingSupply.
 			Add(supplier.ModulesSupply).
 			Add(bondedSupply).
 			Add(collectedFees).
@@ -93,10 +112,10 @@ func SupplyInvariants(k Keeper,
 			Add(totalRewards).
 			Add(remaining)
 
-		if !supplier.TotalSupply.IsEqual(expectedTotalSupply) {
+		if !supplier.TotalSupply.IsEqual(realTotalSupply) {
 			return fmt.Errorf("total supply invariance:\n"+
-				"\texpected total supply: %v\n"+
-				"\treal total supply: %v", expectedTotalSupply, supplier.TotalSupply)
+				"\tsupplier.TotalSupply: %v\n"+
+				"\tcalculated total supply: %v", supplier.TotalSupply, realTotalSupply)
 		}
 
 		return nil

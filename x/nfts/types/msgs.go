@@ -14,7 +14,7 @@ MsgBurnNFT (burnable-nft)
 MsgBuyNFT (nft-market)
 --------------------------------------------------------------------------- */
 
-// RouterKey is nft
+// RouterKey is nfts
 var RouterKey = "nfts"
 
 /* --------------------------------------------------------------------------- */
@@ -25,12 +25,12 @@ var RouterKey = "nfts"
 type MsgTransferNFT struct {
 	Sender    sdk.AccAddress
 	Recipient sdk.AccAddress
-	Denom     Denom
-	ID        TokenID
+	Denom     string
+	ID        uint64
 }
 
 // NewMsgTransferNFT is a constructor function for MsgSetName
-func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom Denom, id TokenID,
+func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom string, id uint64,
 ) MsgTransferNFT {
 	return MsgTransferNFT{
 		Sender:    sender,
@@ -50,9 +50,6 @@ func (msg MsgTransferNFT) Type() string { return "transfer_nft" }
 func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
 	if string(msg.Denom) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
-	}
-	if msg.ID.Empty() {
-		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -82,8 +79,8 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
 	Owner           sdk.AccAddress
-	ID              TokenID
-	Denom           Denom
+	ID              uint64
+	Denom           string
 	EditName        bool
 	EditDescription bool
 	EditImage       bool
@@ -95,14 +92,14 @@ type MsgEditNFTMetadata struct {
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
-func NewMsgEditNFTMetadata(owner sdk.AccAddress, denom Denom, id TokenID,
+func NewMsgEditNFTMetadata(owner sdk.AccAddress, denom string, id uint64,
 	editName, editDescription, editImage, editTokenURI bool,
 	name, description, image, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
 		Owner:           owner,
 		ID:              id,
-		Denom:           Denom(strings.TrimSpace(string(denom))),
+		Denom:           denom,
 		EditName:        editName,
 		EditDescription: editDescription,
 		EditImage:       editImage,
@@ -122,14 +119,11 @@ func (msg MsgEditNFTMetadata) Type() string { return "edit_metadata" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
-	if msg.ID.Empty() {
-		return ErrInvalidNFT(DefaultCodespace)
-	}
 	if msg.Owner.Empty() {
 		return sdk.ErrInvalidAddress("invalid owner address")
 	}
 	if !msg.EditName && !msg.EditDescription && !msg.EditImage && !msg.EditTokenURI {
-		return ErrEmptyMetadata(DefaultCodespace)
+		return ErrEmptyMetadata(DefaultCodespace, "")
 	}
 	return nil
 }
@@ -153,8 +147,8 @@ func (msg MsgEditNFTMetadata) GetSigners() []sdk.AccAddress {
 type MsgMintNFT struct {
 	Sender      sdk.AccAddress
 	Recipient   sdk.AccAddress
-	ID          TokenID
-	Denom       Denom
+	ID          uint64
+	Denom       string
 	Name        string
 	Description string
 	Image       string
@@ -162,7 +156,7 @@ type MsgMintNFT struct {
 }
 
 // NewMsgMintNFT is a constructor function for MsgMintNFT
-func NewMsgMintNFT(sender, recipient sdk.AccAddress, id TokenID, denom Denom, name string, description string, image string, tokenURI string,
+func NewMsgMintNFT(sender, recipient sdk.AccAddress, id uint64, denom, name, description, image, tokenURI string,
 ) MsgMintNFT {
 	return MsgMintNFT{
 		Sender:      sender,
@@ -190,9 +184,6 @@ func (msg MsgMintNFT) ValidateBasic() sdk.Error {
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
 	}
-	if msg.ID.Empty() {
-		return ErrInvalidNFT(DefaultCodespace)
-	}
 	return nil
 }
 
@@ -214,12 +205,12 @@ func (msg MsgMintNFT) GetSigners() []sdk.AccAddress {
 // MsgBurnNFT defines a BurnNFT message
 type MsgBurnNFT struct {
 	Sender sdk.AccAddress
-	ID     TokenID
-	Denom  Denom
+	ID     uint64
+	Denom  string
 }
 
 // NewMsgBurnNFT is a constructor function for MsgBurnNFT
-func NewMsgBurnNFT(sender sdk.AccAddress, id TokenID, denom Denom,
+func NewMsgBurnNFT(sender sdk.AccAddress, id uint64, denom string,
 ) MsgBurnNFT {
 	return MsgBurnNFT{
 		Sender: sender,
@@ -238,9 +229,6 @@ func (msg MsgBurnNFT) Type() string { return "burn_nft" }
 func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
 	if strings.TrimSpace(string(msg.Denom)) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
-	}
-	if msg.ID.Empty() {
-		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -267,12 +255,12 @@ func (msg MsgBurnNFT) GetSigners() []sdk.AccAddress {
 type MsgBuyNFT struct {
 	Sender sdk.AccAddress
 	Amount sdk.Coins
-	Denom  Denom
-	ID     TokenID
+	Denom  string
+	ID     uint64
 }
 
 // NewMsgBuyNFT is a constructor function for MsgBuyNFT
-func NewMsgBuyNFT(sender, owner sdk.AccAddress, denom Denom, id TokenID,
+func NewMsgBuyNFT(sender, owner sdk.AccAddress, denom string, id uint64,
 ) MsgBuyNFT {
 	return MsgBuyNFT{
 		Sender: sender,
@@ -297,9 +285,6 @@ func (msg MsgBuyNFT) ValidateBasic() sdk.Error {
 	}
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins("invalid amount provided")
-	}
-	if msg.ID.Empty() {
-		return ErrInvalidNFT(DefaultCodespace)
 	}
 	return nil
 }

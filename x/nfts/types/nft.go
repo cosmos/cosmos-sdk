@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,17 +10,19 @@ import (
 
 // NFT non fungible token definition
 type NFT struct {
-	Owner       sdk.AccAddress `json:"owner"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Image       string         `json:"image"`
-	TokenURI    string         `json:"token_uri"`
+	ID          uint64         `json:"-"`           // id of the token; not exported to clients
+	Owner       sdk.AccAddress `json:"owner"`       // account address that owns the NFT
+	Name        string         `json:"name"`        // name of the token
+	Description string         `json:"description"` // unique description of the NFT
+	Image       string         `json:"image"`       // image path
+	TokenURI    string         `json:"token_uri"`   // optional extra data available fo querying
 }
 
-// NewNFT creates a new NFT
-func NewNFT(owner sdk.AccAddress, tokenURI, description, image, name string,
+// NewNFT creates a new NFT instance
+func NewNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, name string,
 ) NFT {
 	return NFT{
+		ID:          ID,
 		Owner:       owner,
 		Name:        strings.TrimSpace(name),
 		Description: strings.TrimSpace(description),
@@ -48,11 +51,13 @@ func (nft NFT) EditMetadata(editName, editDescription, editImage, editTokenURI b
 
 func (nft NFT) String() string {
 	return fmt.Sprintf(`
+	ID: 					%d
 	Owner:        %s
   Name:         %s
   Description:  %s
   Image:        %s
-  TokenURI:   	%s`,
+	TokenURI:   	%s`,
+		nft.ID,
 		nft.Owner,
 		nft.Name,
 		nft.Description,
@@ -61,70 +66,87 @@ func (nft NFT) String() string {
 	)
 }
 
-// Denom is a string
-type Denom string
+// ----------------------------------------------------------------------------
+// NFTs
 
-// TokenID is a uint64
-type TokenID uint64
+// NFTs define a list of NFTs
+type NFTs []NFT
 
-// Empty detects whether a TokenID is empty
-func (id *TokenID) Empty() bool {
-	return id == nil
+// NewNFTs creates a new set of NFTs
+func NewNFTs(nfts ...NFT) NFTs {
+	if len(nfts) == 0 {
+		return NFTs{}
+	}
+	return NFTs(nfts)
 }
 
-// Owner of non fungible tokens
-type Owner map[Denom][]TokenID
+// Add appends two sets of NFTs
+func (nfts *NFTs) Add(nftsB NFTs) {
+	(*nfts) = append((*nfts), nftsB...)
+}
 
-// RemoveNFT removes a NFT TokenID from an owner mapping
-func (owner Owner) RemoveNFT(denom Denom, id TokenID) (err sdk.Error) {
+// Delete deletes NFTs from the set
+func (nfts *NFTs) Delete(ids ...uint64) error {
+	newNFTs, err = removeNFT(*nfts, ids)
+	if err != nil {
+		return err
+	}
+	(*nfts) = newNFTs
+	return nil
+}
 
-	// find the index of the NFT as i
-	i := 0
-	for _, _id := range owner[denom] {
-		if _id == id {
-			break
-		}
-		i++
+// String follows stringer interface
+func (nfts NFTs) String() string {
+	if len(nfts) == 0 {
+		return ""
 	}
 
-	// NFT Not Found (i will equal len of the array if break was never called)
-	if i == len(owner[denom]) {
-		return ErrInvalidNFT(DefaultCodespace)
+	out := ""
+	for _, nft := range nfts {
+		out += fmt.Sprintf("%v\n", nft.String())
+	}
+	return out[:len(out)-1]
+}
+
+// Empty returns true if there are no NFTs and false otherwise.
+func (nfts NFTs) Empty() bool {
+	return len(nfts) == 0
+}
+
+// removeNFT removes NFTs from the set matching the given ids
+func removeNFT(nfts NFTs, ids []uint64) NFTs, error {
+	// TODO: do this efficciently
+	return nfts, nil
+}
+
+// ----------------------------------------------------------------------------
+// Encoding
+
+// NFTJSON is the exported NFT format for clients
+type NFTJSON map[uint64]NFT
+
+// MarshalJSON for NFTs
+func (nfts NFTs) MarshalJSON() ([]byte, error) {
+	nftJSON := make(NFTJSON)
+
+	for _, nft := range nfts {
+		nftJSON[nft.ID] = nft
 	}
 
-	// remove the ID from the slice
-	owner[denom] = append(owner[denom][:i], owner[denom][i+1:]...)
-	return
+	return json.Marshal(nftJSON)
 }
 
-// NewOwner returns a new empty owner
-func NewOwner() Owner {
-	return map[Denom][]TokenID{}
-}
+// UnmarshalJSON for NFTs
+func (nfts *NFTs) UnmarshalJSON(b []byte) error {
+	nftJSON := make(NFTJSON)
 
-// TotalOwnedNFTs gets the total amount of NFTs owned by an account
-func (owner Owner) TotalOwnedNFTs() int {
-	return len(owner)
-}
-
-// Collection of non fungible tokens
-type Collection map[TokenID]NFT
-
-// NewCollection creates a new NFT Collection
-func NewCollection() Collection {
-	return make(map[TokenID]NFT)
-}
-
-// GetNFT gets a NFT from the collection
-func (collection Collection) GetNFT(denom Denom, id TokenID) (nft NFT, err sdk.Error) {
-	nft, ok := collection[id]
-	if !ok {
-		return nft, ErrUnknownCollection(DefaultCodespace, fmt.Sprintf("collection %s doesn't contain an NFT with TokenID %d", denom, id))
+	if err := json.Unmarshal(b, &nftJSON); err != nil {
+		return err
 	}
-	return
-}
 
-// Supply gets the total supply of NFTs of a collection
-func (collection Collection) Supply() int {
-	return len(collection)
+	for id, nft := range nftJSON {
+		(*nfts) = append((*nfts), NewNFT(id, nft.Owner, nft.TokenURI, nft.Description, nft.Image, nft.Name))
+	}
+
+	return nil
 }

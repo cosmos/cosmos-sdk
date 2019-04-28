@@ -33,10 +33,7 @@ func ErrUnknownCollection(codespace sdk.CodespaceType, msg string) sdk.Error {
 }
 
 // ErrInvalidNFT is an error
-func ErrInvalidNFT(codespace sdk.CodespaceType, msg string) sdk.Error {
-	if msg != "" {
-		return sdk.NewError(codespace, CodeInvalidNFT, msg)
-	}
+func ErrInvalidNFT(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidNFT, "invalid NFT")
 }
 

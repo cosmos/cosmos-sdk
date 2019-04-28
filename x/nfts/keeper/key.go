@@ -2,7 +2,6 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 )
 
 const (
@@ -16,17 +15,36 @@ const (
 	QuerierRoute = StoreKey
 )
 
+// keys
 var (
-	collectionKeyPrefix = []byte{0x00}
-	ownerKeyPrefix      = []byte{0x01}
+	CollectionsKeyPrefix = []byte{0x00} // key for NFT collections
+	OwnersNFTsKeyPrefix  = []byte{0x01} // key for balance of NFTs held by an address
 )
 
+// TODO: NFTs are stored as follows
+// 0x00<denom_bytes><nft_id_bytes><NFT>
+// 0x01<address_bytes><denom_bytes><nft_id_bytes><NFT>
+
 // GetCollectionKey gets the key of a collection
-func GetCollectionKey(denom types.Denom) []byte {
-	return append(collectionKeyPrefix, []byte(denom)...)
+func GetCollectionKey(denom string) []byte {
+	return append(CollectionsKeyPrefix, []byte(denom)...)
 }
 
-// GetOwnerKey gets the key of a collection
-func GetOwnerKey(address sdk.AccAddress) []byte {
-	return append(ownerKeyPrefix, address.Bytes()...)
+// GetOwnersNFTsAddress gets an address from a owners collection key
+func GetOwnersNFTsAddress(key []byte) (address sdk.AccAddress) {
+	address = key[1:]
+	if len(address) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.AccAddress(address)
+}
+
+// GetOwnerNFTsKey gets the key of the NFTs owned by an account address
+func GetOwnerNFTsKey(address sdk.AccAddress) []byte {
+	return append(OwnersNFTsKeyPrefix, address.Bytes()...)
+}
+
+// GetOwnerNFTKey gets the key of a NFT owned by an account address
+func GetOwnerNFTKey(address sdk.AccAddress, denom string) []byte {
+	return append(GetOwnerNFTsKey(address), []byte(denom)...)
 }

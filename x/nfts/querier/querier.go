@@ -1,6 +1,7 @@
 package querier
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -90,7 +91,8 @@ func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Requ
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	// TODO: return len of collection
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, int64(len(collection.Supply)))
 	return bz, nil
 }
 
@@ -106,7 +108,7 @@ func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Req
 
 	if params.Denom == "" {
 		// TODO: return array of collections
-		// collections := k.GetAddressCollections(ctx, params.Owner)
+		// collections := k.GetOwnerCollections(ctx, params.Owner)
 		// bz, err := cdc.MarshalJSONIndent(cdc, collections)
 		// if err != nil {
 		// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
@@ -159,7 +161,7 @@ func queryNFT(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Request
 
 	nft, err := k.GetNFT(ctx, params.Denom, params.TokenID)
 	if err != nil {
-		return nil, types.ErrInvalidNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%d from collection %s", params.TokenID, params.Denom))
+		return nil, types.ErrUnknownNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%d from collection %s", params.TokenID, params.Denom))
 	}
 
 	bz, err := codec.MarshalJSONIndent(cdc, nft)

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/99designs/keyring"
 
 	bip39 "github.com/cosmos/go-bip39"
 
@@ -77,12 +78,24 @@ type dbKeybase struct {
 	db dbm.DB
 }
 
+type keyringKeybase struct {
+	db keyring.Keyring
+}
+
 // newDbKeybase creates a new keybase instance using the passed DB for reading and writing keys.
 func newDbKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
 		db: db,
 	}
 }
+
+func newKeyringKeybase(db keyring.Keyring)Keybase{
+	return keyringKeybase{
+		db: db,
+	}
+}
+
+
 
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
@@ -434,6 +447,16 @@ func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase
 	return info
 }
 
+func (kb keyringKeybase) writeLocalKey (name string, priv tmcrypto.PrivKey, passphrase string) Info {
+	//encrypt private key using keyring
+	pub := priv.PubKey()
+	info := newLocalInfo(name, pub, string(priv.Bytes()))
+	kb.writeInfo(name, info)
+	return info
+
+}
+
+
 func (kb dbKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(name, info)
@@ -460,6 +483,22 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
+
+func (kb keyringKeybase) writeInfo (name string, info Info){
+	//write the info by key
+	key := infoKey(name)
+	serializedInfo := writeInfo(info)
+	err := kb.db.Set(keyring.Item{
+		Key: key,
+		Data: serializedInfo,
+	})
+
+	if err != nil{
+		panic(err)
+	}
+	}
+
+
 
 func addrKey(address types.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))

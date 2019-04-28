@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
+// TODO abstract genesis account pattern
 // GenesisAccount is a struct for account initialization used exclusively during genesis
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`

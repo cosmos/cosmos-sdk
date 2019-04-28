@@ -17,7 +17,7 @@ var _ sdk.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return moduleName
 }
 
 // module name
@@ -27,32 +27,32 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
 
 // module validate genesis
-func (AppModuleBasic) ValidateGenesis(cdc *codec.Codec, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
+	err := moduleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
-	return ValidateGenesis(cdc, data)
+	return ValidateGenesis(data)
 }
 
 //___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic
-	accoutKeeper  AccountKeeper
+	accountKeeper AccountKeeper
 	stakingKeeper StakingKeeper
 	cdc           *codec.Codec
 	deliverTx     deliverTxfn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accoutKeeper AccountKeeper, stakingKeeper StakingKeeper,
+func NewAppModule(accountKeeper AccountKeeper, stakingKeeper StakingKeeper,
 	cdc *codec.Codec, deliverTx deliverTxfn) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		accoutKeeper:   accoutKeeper,
+		accountKeeper:  accountKeeper,
 		stakingKeeper:  stakingKeeper,
 		cdc:            cdc,
 		deliverTx:      deliverTx,
@@ -79,14 +79,14 @@ func (a AppModule) NewQuerierHandler() sdk.Querier { return nil }
 // module init-genesis
 func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
+	moduleCdc.MustUnmarshalJSON(data, &genesisState)
 	return InitGenesis(ctx, a.cdc, a.accountKeeper, a.stakingKeeper, a.deliverTx, genesisState)
 }
 
 // module export genesis
 func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, a.accountKeeper)
-	return ModuleCdc.MustMarshalJSON(gs)
+	return moduleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

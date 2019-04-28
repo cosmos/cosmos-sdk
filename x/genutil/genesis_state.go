@@ -7,7 +7,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -30,11 +29,11 @@ func (gs GenesisState) Sanitize() {
 }
 
 // validate genesis information
-func ValidateGenesis(cdc *codec.Codec, genesisState GenesisState) error {
+func ValidateGenesis(genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
-	return validateGenTxs(cdc, genesisState.GenTxs)
+	return validateGenTxs(genesisState.GenTxs)
 }
 
 // validateGenesisStateAccounts performs validation of genesis accounts. It
@@ -72,10 +71,10 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 }
 
 // validate GenTx transactions
-func validateGenTxs(cdc *codec.Codec, genTxs []json.RawMessage) error {
+func validateGenTxs(genTxs []json.RawMessage) error {
 	for i, genTx := range genTxs {
 		var tx auth.StdTx
-		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
+		if err := moduleCdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return err
 		}
 

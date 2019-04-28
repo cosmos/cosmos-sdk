@@ -9,36 +9,31 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/codec"
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const nodeDirPerm = 0755
 
-func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
-	var chainID string
+// XXX TODO
+func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
+	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
+	nodeCLIHome, startingIPAddress string, numValidators int) error {
 
-	outDir := viper.GetString(flagOutputDir)
-	numValidators := viper.GetInt(flagNumValidators)
-
-	chainID = viper.GetString(client.FlagChainID)
 	if chainID == "" {
 		chainID = "chain-" + cmn.RandStr(6)
 	}
@@ -48,48 +43,46 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	gaiaConfig := srvconfig.DefaultConfig()
-	gaiaConfig.MinGasPrices = viper.GetString(server.FlagMinGasPrices)
+	gaiaConfig.MinGasPrices = minGasPrices
 
 	var (
-		accs     []app.GenesisAccount
+		accs     []GenesisAccount
 		genFiles []string
 	)
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < numValidators; i++ {
-		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(flagNodeDirPrefix), i)
-		nodeDaemonHomeName := viper.GetString(flagNodeDaemonHome)
-		nodeCliHomeName := viper.GetString(flagNodeCliHome)
-		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
-		clientDir := filepath.Join(outDir, nodeDirName, nodeCliHomeName)
-		gentxsDir := filepath.Join(outDir, "gentxs")
+		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
+		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
+		clientDir := filepath.Join(outputDir, nodeDirName, nodeCLIHome)
+		gentxsDir := filepath.Join(outputDir, "gentxs")
 
 		config.SetRoot(nodeDir)
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		err = os.MkdirAll(clientDir, nodeDirPerm)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		monikers = append(monikers, nodeDirName)
 		config.Moniker = nodeDirName
 
-		ip, err := getIP(i, viper.GetString(flagStartingIPAddress))
+		ip, err := getIP(i, startingIPAddress)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		nodeIDs[i], valPubKeys[i], err = InitializeNodeValidatorFiles(config)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -115,7 +108,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 		addr, secret, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, keyPass, true)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -134,7 +127,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 		accTokens := sdk.TokensFromTendermintPower(1000)
 		accStakingTokens := sdk.TokensFromTendermintPower(500)
-		accs = append(accs, app.GenesisAccount{
+		accs = append(accs, GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
@@ -160,20 +153,20 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, client.DefaultKeyPass, tx, false)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		txBytes, err := cdc.MarshalJSON(signedTx)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		// gather gentxs folder
 		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes)
 		if err != nil {
-			_ = os.RemoveAll(outDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -183,13 +176,13 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		srvconfig.WriteConfigFile(gaiaConfigFilePath, gaiaConfig)
 	}
 
-	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
+	if err := initGenFiles(cdc, mbm, chainID, accs, genFiles, numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
-		outDir, viper.GetString(flagNodeDirPrefix), viper.GetString(flagNodeDaemonHome),
+		cdc, config, chainID, monikers, nodeIDs, valPubKeys,
+		numValidators, outputDir, nodeDirPrefix, nodeDaemonHome,
 	)
 	if err != nil {
 		return err
@@ -199,13 +192,16 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	return nil
 }
 
-func initGenFiles(
-	cdc *codec.Codec, chainID string, accs []GenesisAccount,
-	genFiles []string, numValidators int,
-) error {
+func initGenFiles(cdc *codec.Codec, mbm sdk.ModuleBasicManager, chainID string,
+	accs []GenesisAccount, genFiles []string, numValidators int) error {
 
-	appGenState := app.NewDefaultGenesisState()
-	appGenState.Accounts = accs
+	appGenState := mbm.DefaultGenesis()
+
+	// set accounts
+	var genesisState GenesisState
+	cdc.MustUnmarshalJSON(appGenState[moduleName], &genesisState)
+	genesisState.Accounts = accs
+	appGenState[moduleName] = cdc.MustMarshalJSON(genesisState)
 
 	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
 	if err != nil {
@@ -231,7 +227,7 @@ func initGenFiles(
 func collectGenFiles(
 	cdc *codec.Codec, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
-	numValidators int, outDir, nodeDirPrefix, nodeDaemonHomeName string,
+	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 ) error {
 
 	var appState json.RawMessage
@@ -239,22 +235,22 @@ func collectGenFiles(
 
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
-		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
-		gentxsDir := filepath.Join(outDir, "gentxs")
+		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
+		gentxsDir := filepath.Join(outputDir, "gentxs")
 		moniker := monikers[i]
 		config.Moniker = nodeDirName
 
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := newInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		initCfg := NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
 
 		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := genAppStateFromConfig(cdc, config, initCfg, *genDoc)
+		nodeAppState, err := GenAppStateFromConfig(cdc, config, initCfg, *genDoc)
 		if err != nil {
 			return err
 		}

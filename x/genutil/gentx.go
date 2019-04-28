@@ -28,7 +28,8 @@ var (
 	defaultMinSelfDelegation       = "1"
 )
 
-func validateAccountInGenesis(appGenesisState ExpectedGenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
+// XXX TODO
+func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 	accountIsInGenesis := false
 
 	// TODO refactor out bond denom to common state area
@@ -65,7 +66,8 @@ func validateAccountInGenesis(appGenesisState ExpectedGenesisState, key sdk.AccA
 	return nil
 }
 
-func makeOutputFilepath(rootDir, nodeID string) (string, error) {
+// XXX TODO
+func MakeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
 	if err := common.EnsureDir(writePath, 0700); err != nil {
 		return "", err
@@ -73,7 +75,8 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
-func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
+// XXX TODO
+func ReadUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 	var stdTx auth.StdTx
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -83,13 +86,13 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 	return stdTx, err
 }
 
-// nolint: errcheck
-func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
+// XXX TODO
+func WriteSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	defer outputFile.Close()
 	if err != nil {
 		return err
 	}
-	defer outputFile.Close()
 	json, err := cdc.MarshalJSON(tx)
 	if err != nil {
 		return err

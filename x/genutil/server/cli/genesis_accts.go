@@ -59,7 +59,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 
 			// retrieve the app state
 			genFile := config.GenesisFile()
-			appState, genDoc, err := genutil.GenesisStateFromFile(genFile)
+			appState, genDoc, err := genutil.GenesisStateFromGenFile(cdc, genFile)
 			if err != nil {
 				return err
 			}

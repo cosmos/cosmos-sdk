@@ -35,11 +35,11 @@ var (
 	// The ModuleBasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
-	mbm sdk.ModuleBasicManager
+	BasicGaiaApp sdk.ModuleBasicManager
 )
 
 func init() {
-	mbm = sdk.NewModuleBasicManager(
+	BasicGaiaApp = sdk.NewModuleBasicManager(
 		auth.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
@@ -54,7 +54,7 @@ func init() {
 // custom tx codec
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
-	mbm.RegisterCodec(cdc)
+	BasicGaiaApp.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc

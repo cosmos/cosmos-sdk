@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 const (
@@ -59,7 +61,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: golint
+func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command { // nolint: golint
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -74,7 +76,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
 
-			nodeID, _, err := InitializeNodeValidatorFiles(config)
+			nodeID, _, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return err
 			}
@@ -83,7 +85,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 
 			genFile := config.GenesisFile()
 
-			appState, err := initializeEmptyGenesis(cdc, genFile, chainID, viper.GetBool(flagOverwrite))
+			appState, err := genutil.InitializeEmptyGenesis(mbm, cdc, genFile, chainID, viper.GetBool(flagOverwrite))
 			if err != nil {
 				return err
 			}
@@ -103,7 +105,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command { // nolint: 
 			genDoc.ChainID = chainID
 			genDoc.Validators = nil
 			genDoc.AppState = appState
-			if err = ExportGenesisFile(genDoc, genFile); err != nil {
+			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
 				return err
 			}
 

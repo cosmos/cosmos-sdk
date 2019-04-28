@@ -16,15 +16,10 @@ type StakingKeeper interface {
 
 // expected account keeper
 type AccountKeeper interface {
-	NewAccount(sdk.Context, auth.Account)
+	NewAccount(sdk.Context, auth.Account) auth.Account
 	SetAccount(sdk.Context, auth.Account)
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 
 // The expected format of app genesis state
 type ExpectedAppGenesisState map[string]json.RawMessage
-
-// expected cosmos app
-type CosmosApp interface {
-	NewDefaultGenesisState() ExpectedAppGenesisState
-}

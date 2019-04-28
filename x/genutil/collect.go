@@ -24,7 +24,8 @@ import (
 
 const flagGenTxDir = "gentx-dir"
 
-type initConfig struct {
+// common config options for init
+type InitConfig struct {
 	ChainID   string
 	GenTxsDir string
 	Name      string
@@ -32,8 +33,9 @@ type initConfig struct {
 	ValPubKey crypto.PubKey
 }
 
-func newInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) initConfig {
-	return initConfig{
+// XXX TODO
+func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) InitConfig {
+	return InitConfig{
 		ChainID:   chainID,
 		GenTxsDir: genTxsDir,
 		Name:      name,
@@ -42,9 +44,9 @@ func newInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.Pub
 	}
 }
 
-//
-func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
-	initCfg initConfig, genDoc tmtypes.GenesisDoc) (appState json.RawMessage, err error) {
+// XXX TODO
+func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
+	initCfg InitConfig, genDoc tmtypes.GenesisDoc) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectStdTxs(

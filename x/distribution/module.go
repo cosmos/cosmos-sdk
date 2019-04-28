@@ -29,7 +29,7 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 }
 
 // module validate genesis
-func (AppModuleBasic) ValidateGenesis(_ *codec.Codec, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {

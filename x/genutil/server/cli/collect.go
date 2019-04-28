@@ -43,9 +43,9 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 
 			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
-			initCfg := newInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
+			initCfg := genutil.NewInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
-			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, *genDoc)
+			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc)
 			if err != nil {
 				return err
 			}

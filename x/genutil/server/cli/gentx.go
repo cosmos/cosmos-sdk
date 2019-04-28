@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -38,7 +38,9 @@ var (
 
 // GenTxCmd builds the gaiad gentx command.
 // nolint: errcheck
-func GenTxCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
+func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
+	defaultNodeHome, defaultCLIHome string) *cobra.Command {
+
 	cmd := &cobra.Command{
 		Use:   "gentx",
 		Short: "Generate a genesis tx carrying a self delegation",
@@ -79,13 +81,12 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			genesisState := app.GenesisState{}
+			var genesisState genutil.ExpectedAppGenesisState
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
 				return err
 			}
 
-			// XXX get mbm in here
-			if err = mbm.ValidateGenesis(genesisState.Modules); err != nil {
+			if err = mbm.ValidateGenesis(genesisState); err != nil {
 				return err
 			}
 
@@ -122,7 +123,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			err = validateAccountInGenesis(genesisState, key.GetAddress(), coins, cdc)
+			err = genutil.ValidateAccountInGenesis(genesisState, key.GetAddress(), coins, cdc)
 			if err != nil {
 				return err
 			}
@@ -162,7 +163,7 @@ following delegation and commission default parameters:
 			}
 
 			// read the transaction
-			stdTx, err := readUnsignedGenTxFile(cdc, w)
+			stdTx, err := genutil.ReadUnsignedGenTxFile(cdc, w)
 			if err != nil {
 				return err
 			}
@@ -176,13 +177,13 @@ following delegation and commission default parameters:
 			// Fetch output file name
 			outputDocument := viper.GetString(client.FlagOutputDocument)
 			if outputDocument == "" {
-				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
+				outputDocument, err = genutil.MakeOutputFilepath(config.RootDir, nodeID)
 				if err != nil {
 					return err
 				}
 			}
 
-			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
+			if err := genutil.WriteSignedGenTx(cdc, outputDocument, signedTx); err != nil {
 				return err
 			}
 
@@ -194,8 +195,8 @@ following delegation and commission default parameters:
 
 	ip, _ := server.ExternalIP()
 
-	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
-	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
+	cmd.Flags().String(tmcli.HomeFlag, defaultNodeHome, "node's home directory")
+	cmd.Flags().String(flagClientHome, defaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")

@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -73,7 +74,7 @@ func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
 		return genesisState, genDoc, err
 	}
 
-	genesisState, err = GenesisStateFromGenDoc(genDoc)
+	genesisState, err = GenesisStateFromGenDoc(cdc, *genDoc)
 	return genesisState, genDoc, err
 }
 
@@ -104,12 +105,13 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 	return nodeID, valPubKey, nil
 }
 
-func initializeEmptyGenesis(app CosmosApp, cdc *codec.Codec, genFile, chainID string, overwrite bool,
-) (appState json.RawMessage, err error) {
+// XXX TODO
+func InitializeEmptyGenesis(mbm sdk.ModuleBasicManager, cdc *codec.Codec,
+	genFile, chainID string, overwrite bool) (appState json.RawMessage, err error) {
 
 	if !overwrite && common.FileExists(genFile) {
 		return nil, fmt.Errorf("genesis.json file already exists: %v", genFile)
 	}
 
-	return codec.MarshalJSONIndent(cdc, app.NewDefaultGenesisState())
+	return codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
 }

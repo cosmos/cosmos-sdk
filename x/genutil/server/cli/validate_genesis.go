@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-// XXX pass in the validate GenesisFunction
 // Validate genesis command takes
-func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
+func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
@@ -36,13 +36,12 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 
-			var genState app.GenesisState
+			var genState genutil.ExpectedAppGenesisState
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
 				return fmt.Errorf("Error unmarshaling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			// XXX XXX get mbm in here
-			if err = mbm.ValidateGenesis(cdc, genState); err != nil {
+			if err = mbm.ValidateGenesis(genState); err != nil {
 				return fmt.Errorf("Error validating genesis file %s: %s", genesis, err.Error())
 			}
 

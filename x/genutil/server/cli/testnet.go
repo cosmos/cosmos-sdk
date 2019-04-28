@@ -8,8 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/server"
 )
@@ -19,12 +21,12 @@ var (
 	flagNumValidators     = "v"
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
-	flagNodeCliHome       = "node-cli-home"
+	flagNodeCLIHome       = "node-cli-home"
 	flagStartingIPAddress = "starting-ip-address"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
+func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -39,7 +41,18 @@ Example:
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			return initTestnet(config, cdc)
+
+			outputDir := viper.GetString(flagOutputDir)
+			chainID := viper.GetString(client.FlagChainID)
+			minGasPrices := viper.GetString(server.FlagMinGasPrices)
+			nodeDirPrefix := viper.GetString(flagNodeDirPrefix)
+			nodeDaemonHome := viper.GetString(flagNodeDaemonHome)
+			nodeCLIHome := viper.GetString(flagNodeCLIHome)
+			startingIPAddress := viper.GetString(flagStartingIPAddress)
+			numValidators := viper.GetInt(flagNumValidators)
+
+			return genutil.InitTestnet(config, cdc, mbm, outputDir, chainID, minGasPrices, nodeDirPrefix,
+				nodeDaemonHome, nodeCLIHome, startingIPAddress, numValidators)
 		},
 	}
 
@@ -51,7 +64,7 @@ Example:
 		"Prefix the directory name for each node with (node results in node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "gaiad",
 		"Home directory of the node's daemon configuration")
-	cmd.Flags().String(flagNodeCliHome, "gaiacli",
+	cmd.Flags().String(flagNodeCLIHome, "gaiacli",
 		"Home directory of the node's cli configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")

@@ -44,12 +44,12 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc))
-	rootCmd.AddCommand(genutil.TestnetFilesCmd(ctx, cdc))
-	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc))
-	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc)) // XXX pass in the mbm validate function
-	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.TestnetFilesCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc, app.BasicGaiaApp, app.DefaultNodeHome, app.DefaultCLIHome))
+	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

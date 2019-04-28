@@ -25,19 +25,23 @@ const (
 	// Constant as this should not change without a hard fork.
 	// TODO: Link to some Tendermint docs, this is very unobvious.
 	ValidatorUpdateDelay int64 = 1
+
+	BondStatusUnbonded  = "Unbonded"
+	BondStatusUnbonding = "Unbonding"
+	BondStatusBonded    = "Bonded"
 )
 
-//BondStatusToString for pretty prints of Bond Status
-func BondStatusToString(b BondStatus) string {
+// String implements the Stringer interface for BondStatus.
+func (b BondStatus) String() string {
 	switch b {
 	case 0x00:
-		return "Unbonded"
+		return BondStatusUnbonded
 	case 0x01:
-		return "Unbonding"
+		return BondStatusUnbonding
 	case 0x02:
-		return "Bonded"
+		return BondStatusBonded
 	default:
-		panic("improper use of BondStatusToString")
+		panic("invalid bond status")
 	}
 }
 

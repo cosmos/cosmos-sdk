@@ -36,6 +36,7 @@ type (
 	QueryValidatorParams    = querier.QueryValidatorParams
 	QueryBondsParams        = querier.QueryBondsParams
 	QueryRedelegationParams = querier.QueryRedelegationParams
+	QueryValidatorsParams   = querier.QueryValidatorsParams
 )
 
 var (
@@ -97,10 +98,11 @@ var (
 	NewMsgUndelegate      = types.NewMsgUndelegate
 	NewMsgBeginRedelegate = types.NewMsgBeginRedelegate
 
-	NewQuerier              = querier.NewQuerier
-	NewQueryDelegatorParams = querier.NewQueryDelegatorParams
-	NewQueryValidatorParams = querier.NewQueryValidatorParams
-	NewQueryBondsParams     = querier.NewQueryBondsParams
+	NewQuerier               = querier.NewQuerier
+	NewQueryDelegatorParams  = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams  = querier.NewQueryValidatorParams
+	NewQueryBondsParams      = querier.NewQueryBondsParams
+	NewQueryValidatorsParams = querier.NewQueryValidatorsParams
 )
 
 const (

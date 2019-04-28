@@ -2,27 +2,41 @@
 
 ## Gaia CLI
 
-::: tip Note
-If you receive this error message:
+`gaiacli` is the tool that enables you to interact with the node that runs on the Cosmos Hub network, whether you run it yourself or not. Let us set it up properly. In order to install it, follow the [installation procedure](./installation.md).
+
+### Setting up gaiacli 
+
+The main command used to set up `gaiacli` is the following:
 
 ```bash
-Must specify these options: --chain-id  when --trust-node is false
+gaiacli config <flag> <value>
 ```
 
-you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
-:::
+It allows you to set a default value for each given flag. 
 
-`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets.
-Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
-by hand or via the `gaiacli config` command:
+First, set up the address of the full-node you want to connect to:
 
 ```bash
-gaiacli config chain-id gaia-9004
+gaiacli config node <host>:<port
+
+// example: gaiacli config node https://77.87.106.33:26657
 ```
 
-For more information on the command usage, refer to its help screen: `gaiacli config --help`.
+If you run your own full-node, just use `tcp://localhost:26657` as the address. 
 
-Here is a list of useful `gaiacli` commands, including usage examples.
+Then, let us set the default value of the `--trust-node` flag:
+
+```bash
+gaiacli config trust-node true
+
+// Set to true if you trust the full-node you are connecting to, false otherwise
+```
+
+Finally, let us set the `chain-id` of the blockchain we want to interact with:
+
+```bash
+gaiacli config chain-id cosmoshub-2
+```
 
 ### Keys
 
@@ -241,6 +255,10 @@ gaiacli tx sign \
   --from=<key_name>
   unsignedSendTx.json > signedSendTx.json
 ```
+
+::: tip Note
+The `--generate-only` flag prevents `gaiacli` from accessing the local keybase.
+:::
 
 You can validate the transaction's signatures by typing the following:
 

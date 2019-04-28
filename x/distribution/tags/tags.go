@@ -6,6 +6,9 @@ import (
 )
 
 var (
+	TxCategory = "distribution"
+
 	Validator = sdk.TagSrcValidator
-	Delegator = sdk.TagDelegator
+	Category  = sdk.TagCategory
+	Sender    = sdk.TagSender
 )

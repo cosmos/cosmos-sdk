@@ -46,7 +46,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 			accAddr := sdk.AccAddress(valAddr)
 			withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
-			if _, _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+			if _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
 				panic(err)
 			}
 		}

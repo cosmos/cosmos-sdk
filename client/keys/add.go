@@ -33,11 +33,6 @@ const (
 	flagNoSort      = "nosort"
 )
 
-const (
-	maxValidAccountValue = int(0x80000000 - 1)
-	maxValidIndexalue    = int(0x80000000 - 1)
-)
-
 func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
@@ -200,6 +195,11 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		if !bip39.IsMnemonicValid(mnemonic) {
+			_, _ = fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
+			return nil
+		}
 	}
 
 	if len(mnemonic) == 0 {
@@ -213,11 +213,6 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
-		return nil
 	}
 
 	// override bip39 passphrase

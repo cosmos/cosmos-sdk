@@ -252,12 +252,12 @@ func (r TxResponse) Empty() bool {
 
 // SearchTxsResult defines a structure for querying txs pageable
 type SearchTxsResult struct {
-	TotalCount int          `json:"total_count"`
-	Count      int          `json:"count"`
-	PageNumber int          `json:"page_number"`
-	PageCount  int          `json:"page_count"`
-	Limit      int          `json:"limit"`
-	Txs        []TxResponse `json:"txs"`
+	TotalCount int          `json:"total_count"` // Count of all txs
+	Count      int          `json:"count"`       // Count of txs in current page
+	PageNumber int          `json:"page_number"` // Index of current page, start from 1
+	PageCount  int          `json:"page_count"`  // Count of all pages
+	Limit      int          `json:"limit"`       // Max count txs per page
+	Txs        []TxResponse `json:"txs"`         // List of txs in current page
 }
 
 func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) SearchTxsResult {

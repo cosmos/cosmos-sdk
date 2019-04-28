@@ -1,4 +1,4 @@
-package nft
+package nfts
 
 import (
 	"bytes"

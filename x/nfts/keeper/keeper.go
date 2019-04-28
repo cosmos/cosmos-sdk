@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 )
 
 // Keeper maintains the link to data storage and exposes getter/setter methods for the various parts of the state machine

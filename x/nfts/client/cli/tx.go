@@ -15,9 +15,9 @@ import (
 // GetCmdTransferNFT is the CLI command for sending a TransferNFT transaction
 func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "transfer-nft [recipient] [denom] [tokenID]",
+		Use:   "transfer [sender] [recipient] [denom] [tokenID]",
 		Short: "transfer a token of some denom with some tokenID to some recipient",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 
@@ -50,7 +50,7 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 // GetCmdEditNFTMetadata is the CLI command for a EditNFTMetadata transaction
 func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "edit-nft-metadata [denom] [tokenID]",
+		Use:   "edit-metadata [denom] [tokenID]",
 		Short: "transfer a token of some denom with some tokenID to some recipient",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -102,7 +102,7 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 // GetCmdMintNFT is the CLI command for a MintNFT transaction
 func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mint-nft [recipient] [denom] [tokenID]",
+		Use:   "mint [recipient] [denom] [tokenID]",
 		Short: "mints a token of some denom with some tokenID to some recipient",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -151,7 +151,7 @@ func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 // GetCmdBurnNFT is the CLI command for sending a BurnNFT transaction
 func GetCmdBurnNFT(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "burn-nft [denom] [tokenID]",
+		Use:   "burn [denom] [tokenID]",
 		Short: "burn a token of some denom with some tokenID",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

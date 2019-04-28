@@ -12,21 +12,26 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 	// Get the total supply of a collection
 	r.HandleFunc(
-		"/nft/supply/{denom}", supplyNFTHandler(cdc, cliCtx, queryRoute),
+		"/nfts/supply/{denom}", supplyNFTHandler(cdc, cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Get the collections of NFTs owned by an address
 	r.HandleFunc(
-		"/nft/balance/{delegatorAddr}", getNFTsBalanceHandler(cdc, cliCtx, queryRoute),
+		"/nfts/balance/{delegatorAddr}", getNFTsBalanceHandler(cdc, cliCtx, queryRoute),
+	).Methods("GET")
+
+	// Get the NFTs owned by an address from a given collection
+	r.HandleFunc(
+		"/nfts/balance/{delegatorAddr}/collection/{denom}", getNFTsBalanceHandler(cdc, cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Get all the NFT from a given collection
 	r.HandleFunc(
-		"/nft/{denom}", getCollectionHandler(cdc, cliCtx, queryRoute),
+		"/nfts/collection/{denom}", getCollectionHandler(cdc, cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Query a single NFT
 	r.HandleFunc(
-		"/nft/{denom}/{id}", getNFTHandler(cdc, cliCtx, queryRoute),
+		"/nfts/collection/{denom}/nft/{id}", getNFTHandler(cdc, cliCtx, queryRoute),
 	).Methods("GET")
 }

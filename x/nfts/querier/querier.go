@@ -1,4 +1,4 @@
-package nft
+package querier
 
 import (
 	"fmt"
@@ -6,32 +6,32 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // query endpoints supported by the nft Querier
 const (
-	// QueryDenoms      = "denoms"
-	// QueryTotalSupply = "totalSupply"
-	// QueryIDs         = "ids"
-	QueryBalanceOf = "balanceOf"
-	QueryOwnerOf   = "ownerOf"
-	QueryMetadata  = "metadata"
+	QuerySupply     = "supply"
+	QueryBalance    = "balance"
+	QueryCollection = "collection"
+	QueryNFT        = "nft"
 )
 
 // NewQuerier is the module level router for state queries
 func NewQuerier(k keeper.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case QueryBalanceOf:
-			return queryBalanceOf(ctx, path[1:], req, k)
-		case QueryOwnerOf:
-			return queryOwnerOf(ctx, path[1:], req, k)
-		case QueryMetadata:
-			return queryMetadata(ctx, path[1:], req, k)
+		case QuerySupply:
+			return querySupply(ctx, path[1:], req, k)
+		case QueryBalance:
+			return queryBalance(ctx, path[1:], req, k)
+		case QueryCollection:
+			return queryCollection(ctx, path[1:], req, k)
+		case QueryNFT:
+			return querNFT(ctx, path[1:], req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown nft query endpoint")
 		}

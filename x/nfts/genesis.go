@@ -1,9 +1,9 @@
-package nft
+package nfts
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 )
 
 // GenesisState is the bank state that must be provided at genesis.

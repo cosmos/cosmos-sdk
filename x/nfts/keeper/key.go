@@ -2,12 +2,12 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 )
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "nft"
+	ModuleName = "nfts"
 
 	// StoreKey is the default store key for NFT bank
 	StoreKey = ModuleName

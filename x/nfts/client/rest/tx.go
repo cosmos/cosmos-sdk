@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 
 	"github.com/gorilla/mux"
 )
@@ -20,23 +20,23 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 	// Transfer an NFT to an address
 	r.HandleFunc(
-		"/nft/transfer", transferNFTHandler(cdc, cliCtx),
+		"/nfts/transfer", transferNFTHandler(cdc, cliCtx),
 	).Methods("POST")
-
-	// Update an NFT metadata
-	r.HandleFunc(
-		"/nft/{denom}/{id}/metadata", editNFTMetadataHandler(cdc, cliCtx),
-	).Methods("PUT")
 
 	// Mint an NFT
 	r.HandleFunc(
-		"/nft/{denom}", mintNFTHandler(cdc, cliCtx),
+		"/nfts/collection/{denom}", mintNFTHandler(cdc, cliCtx),
 	).Methods("POST")
 
 	// Burn an NFT
 	r.HandleFunc(
-		"/nft/{denom}/{id}", burnNFTHandler(cdc, cliCtx),
+		"/nfts/collection/{denom}/nft/{id}", burnNFTHandler(cdc, cliCtx),
 	).Methods("DELETE")
+
+	// Update an NFT metadata
+	r.HandleFunc(
+		"/nfts/collection/{denom}/nft/{id}/metadata", editNFTMetadataHandler(cdc, cliCtx),
+	).Methods("PUT")
 }
 
 func metadataHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HandlerFunc {

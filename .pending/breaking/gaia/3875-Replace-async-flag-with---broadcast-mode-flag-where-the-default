@@ -1,3 +1,0 @@
-#3875 Replace `async` flag with `--broadcast-mode` flag where the default
-value is `sync`. The `block` mode should not be used. The REST client now
-uses `mode` parameter instead of the `return` parameter.

@@ -763,7 +763,23 @@ paths:
           description: Internal Server Error
   /staking/validators:
     get:
-      summary: Get all validator candidates
+      summary: Get all validator candidates. By default it returns only the bonded validators.
+      parameters:
+        - in: query
+          name: status
+          type: string
+          description: The validator bond status. Must be either 'bonded', 'unbonded', or 'unbonding'.
+          x-example: bonded
+        - in: query
+          name: page
+          description: The page number.
+          type: integer
+          x-example: 1
+        - in: query
+          name: limit
+          description: The maximum number of items per page.
+          type: integer
+          x-example: 1
       tags:
         - ICS21
       produces:
@@ -1470,9 +1486,7 @@ paths:
         200:
           description: OK
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/Coin"
+            $ref: "#/definitions/DelegatorTotalRewards"
         400:
           description: Invalid delegator address
         500:
@@ -2096,6 +2110,26 @@ definitions:
             $ref: "#/definitions/BlockID"
       block:
         $ref: "#/definitions/Block"
+  DelegationDelegatorReward:
+    type: object
+    properties:
+      validator_address:
+        $ref: "#/definitions/ValidatorAddress"
+      reward:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+  DelegatorTotalRewards:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          $ref: "#/definitions/DelegationDelegatorReward"
+      total:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
   BaseReq:
     type: object
     properties:

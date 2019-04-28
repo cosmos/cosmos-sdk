@@ -117,7 +117,7 @@ func (v Validator) String() string {
   Unbonding Completion Time:  %v
   Minimum Self Delegation:    %v
   Commission:                 %s`, v.OperatorAddress, bechConsPubKey,
-		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
+		v.Jailed, v.Status, v.Tokens,
 		v.DelegatorShares, v.Description,
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfDelegation, v.Commission)
 }
@@ -419,6 +419,12 @@ func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
 // calculate the token worth of provided shares, truncated
 func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+}
+
+// TokensFromSharesRoundUp returns the token worth of provided shares, rounded
+// up.
+func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
 }
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It

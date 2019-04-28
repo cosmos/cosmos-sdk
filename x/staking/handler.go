@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -19,16 +20,22 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgCreateValidator:
 			return handleMsgCreateValidator(ctx, msg, k)
+
 		case types.MsgEditValidator:
 			return handleMsgEditValidator(ctx, msg, k)
+
 		case types.MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
+
 		case types.MsgBeginRedelegate:
 			return handleMsgBeginRedelegate(ctx, msg, k)
+
 		case types.MsgUndelegate:
 			return handleMsgUndelegate(ctx, msg, k)
+
 		default:
-			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
+			errMsg := fmt.Sprintf("unrecognized staking message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }

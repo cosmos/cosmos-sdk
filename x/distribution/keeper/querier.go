@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -207,7 +208,17 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	ctx, _ = ctx.CacheContext()
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
+	if val == nil {
+		// TODO: Should use ErrNoValidatorFound from staking/types
+		return nil, sdk.ErrInternal(fmt.Sprintf("validator %s does not exist", params.ValidatorAddress))
+	}
+
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
+	if del == nil {
+		// TODO: Should use ErrNoDelegation from staking/types
+		return nil, sdk.ErrInternal("delegation does not exist")
+	}
+
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
@@ -241,21 +252,25 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	// cache-wrap context as to not persist state changes during querying
 	ctx, _ = ctx.CacheContext()
 
-	totalRewards := sdk.DecCoins{}
+	total := sdk.DecCoins{}
+	var delRewards []types.DelegationDelegatorReward
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
 		func(_ int64, del sdk.Delegation) (stop bool) {
-			val := k.stakingKeeper.Validator(ctx, del.GetValidatorAddr())
+			valAddr := del.GetValidatorAddr()
+			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
-			rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+			delReward := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
-			totalRewards = totalRewards.Add(rewards)
+			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
+			total = total.Add(delReward)
 			return false
 		},
 	)
 
-	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
+	totalRewards := types.NewQueryDelegatorTotalRewardsResponse(delRewards, total)
+	bz, err := json.Marshal(totalRewards)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

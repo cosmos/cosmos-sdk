@@ -1,6 +1,8 @@
 package slashing
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/tags"
 )
@@ -11,8 +13,10 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgUnjail:
 			return handleMsgUnjail(ctx, msg, k)
+
 		default:
-			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
+			errMsg := fmt.Sprintf("unrecognized slashing message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }

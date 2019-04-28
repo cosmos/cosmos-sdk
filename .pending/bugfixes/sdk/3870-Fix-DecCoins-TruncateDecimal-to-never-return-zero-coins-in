@@ -1,2 +1,0 @@
-#3870 Fix DecCoins#TruncateDecimal to never return zero coins in
-either the truncated coins or the change coins.

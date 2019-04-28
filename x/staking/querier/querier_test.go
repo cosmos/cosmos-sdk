@@ -1,6 +1,7 @@
 package querier
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -43,9 +44,6 @@ func TestNewQuerier(t *testing.T) {
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.NotNil(t, err)
 	require.Nil(t, bz)
-
-	_, err = querier(ctx, []string{"validators"}, query)
-	require.Nil(t, err)
 
 	_, err = querier(ctx, []string{"pool"}, query)
 	require.Nil(t, err)
@@ -121,28 +119,44 @@ func TestQueryValidators(t *testing.T) {
 	params := keeper.GetParams(ctx)
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
-	var validators [2]types.Validator
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
+	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		validators[i], pool = validators[i].UpdateStatus(pool, status[i])
 	}
+
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidator(ctx, validators[0])
 	keeper.SetValidator(ctx, validators[1])
+	keeper.SetValidator(ctx, validators[2])
 
 	// Query Validators
 	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)
 
-	res, err := queryValidators(ctx, cdc, keeper)
-	require.Nil(t, err)
+	for i, s := range status {
+		queryValsParams := NewQueryValidatorsParams(1, int(params.MaxValidators), s.String())
+		bz, errRes := cdc.MarshalJSON(queryValsParams)
+		require.Nil(t, errRes)
 
-	var validatorsResp []types.Validator
-	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
-	require.Nil(t, errRes)
+		req := abci.RequestQuery{
+			Path: fmt.Sprintf("/custom/%s/%s", types.QuerierRoute, QueryValidators),
+			Data: bz,
+		}
 
-	require.Equal(t, len(queriedValidators), len(validatorsResp))
-	require.ElementsMatch(t, queriedValidators, validatorsResp)
+		res, err := queryValidators(ctx, cdc, req, keeper)
+		require.Nil(t, err)
+
+		var validatorsResp []types.Validator
+		errRes = cdc.UnmarshalJSON(res, &validatorsResp)
+		require.Nil(t, errRes)
+
+		require.Equal(t, 1, len(validatorsResp))
+		require.ElementsMatch(t, validators[i].OperatorAddress, validatorsResp[0].OperatorAddress)
+
+	}
 
 	// Query each validator
 	queryParams := NewQueryValidatorParams(addrVal1)
@@ -153,7 +167,7 @@ func TestQueryValidators(t *testing.T) {
 		Path: "/custom/staking/validator",
 		Data: bz,
 	}
-	res, err = queryValidator(ctx, cdc, query, keeper)
+	res, err := queryValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.Validator

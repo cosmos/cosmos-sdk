@@ -1,0 +1,2 @@
+#3978 Return ErrUnknownRequest in message handlers for unknown
+or invalid routed messages.

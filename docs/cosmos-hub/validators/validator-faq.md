@@ -161,7 +161,7 @@ Yes, they will. If governance decides so, validators of the Cosmos hub may be re
 Each member of a validator's staking pool earns different types of revenue:
 
 * **Block rewards:** Native tokens of applications run by validators (e.g. Atoms on the Cosmos Hub) are inflated to produce block provisions. These provisions exist to incentivize Atom holders to bond their stake, as non-bonded Atom will be diluted over time.
-* **Transaction fees:** The Cosmos Hub maintains a whitelist of token that are accepted as fee payment. The initial fee token is tha `atom`.
+* **Transaction fees:** The Cosmos Hub maintains a whitelist of token that are accepted as fee payment. The initial fee token is the `atom`.
 
 This total revenue is divided among validators' staking pools according to each validator's weight. Then, within each validator's staking pool the revenue is divided among delegators in proportion to each delegator's stake. A commission on delegators' revenue is applied by the validator before it is distributed.
 

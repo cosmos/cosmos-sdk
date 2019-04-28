@@ -12,7 +12,7 @@ The [Cosmos Hub](../what-is-gaia.md) is based on [Tendermint](https://tendermint
 
 ### What is 'staking'?
 
-The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that the weight of validators is determined by the amount of staking tokens (Atoms) bonded as collateral. These Atoms can be seld-delegated directly by the validator or delegated to them by other Atom holders.
+The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that the weight of validators is determined by the amount of staking tokens (Atoms) bonded as collateral. These Atoms can be self-delegated directly by the validator or delegated to them by other Atom holders.
 
 Any user in the system can declare their intention to become a validator by sending a `create-validator` transaction. From there, they become validator candidates.
 
@@ -225,7 +225,7 @@ If a validator misbehaves, their delegated stake will be partially slashed. Ther
 
 ### Do validators need to self-delegate Atoms?
 
-Yes, they do need to seld-delegate at least `1 atom`. Even though there is no obligation for validators to self-delegate more than `1 atom`, delegators should want their validator to have more self-delegated Atoms in their staking pool. In other words, validators should have skin in the game.
+Yes, they do need to self-delegate at least `1 atom`. Even though there is no obligation for validators to self-delegate more than `1 atom`, delegators should want their validator to have more self-delegated Atoms in their staking pool. In other words, validators should have skin in the game.
 
 In order for delegators to have some guarantee about how much skin-in-the-game their validator has, the latter can signal a minimum amount of self-delegated Atoms. If a validator's self-delegation goes below the limit that it predefined, this validator and all of its delegators will unbond.
 

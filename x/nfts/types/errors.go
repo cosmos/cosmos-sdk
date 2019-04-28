@@ -9,7 +9,7 @@ type CodeType = sdk.CodeType
 
 // NFT error code
 const (
-	DefaultCodespace sdk.CodespaceType = "nft"
+	DefaultCodespace sdk.CodespaceType = "nfts"
 
 	CodeInvalidCollection CodeType = 650
 	CodeUnknownCollection CodeType = 651
@@ -33,7 +33,10 @@ func ErrUnknownCollection(codespace sdk.CodespaceType, msg string) sdk.Error {
 }
 
 // ErrInvalidNFT is an error
-func ErrInvalidNFT(codespace sdk.CodespaceType) sdk.Error {
+func ErrInvalidNFT(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		return sdk.NewError(codespace, CodeInvalidNFT, msg)
+	}
 	return sdk.NewError(codespace, CodeInvalidNFT, "invalid NFT")
 }
 
@@ -54,6 +57,9 @@ func ErrUnknownNFT(codespace sdk.CodespaceType, msg string) sdk.Error {
 }
 
 // ErrEmptyMetadata is an error when metadata is empty
-func ErrEmptyMetadata(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeEmptyMetadata, "EditMetadata can't be empty")
+func ErrEmptyMetadata(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		return sdk.NewError(codespace, CodeEmptyMetadata, msg)
+	}
+	return sdk.NewError(codespace, CodeEmptyMetadata, "NFT metadata can't be empty")
 }

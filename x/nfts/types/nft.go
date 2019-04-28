@@ -47,11 +47,12 @@ func (nft NFT) EditMetadata(editName, editDescription, editImage, editTokenURI b
 }
 
 func (nft NFT) String() string {
-	return fmt.Sprintf(`Owner:              %s
-  Name:               %s
-  Description:        %s
-  Image:        			%s
-  TokenURI:   				%s`,
+	return fmt.Sprintf(`
+	Owner:        %s
+  Name:         %s
+  Description:  %s
+  Image:        %s
+  TokenURI:   	%s`,
 		nft.Owner,
 		nft.Name,
 		nft.Description,

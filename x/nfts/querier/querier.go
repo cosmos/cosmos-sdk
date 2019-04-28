@@ -2,7 +2,6 @@ package querier
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// query endpoints supported by the nft Querier
+// query endpoints supported by the NFT Querier
 const (
 	QuerySupply     = "supply"
 	QueryBalance    = "balance"
@@ -20,103 +19,151 @@ const (
 	QueryNFT        = "nft"
 )
 
+// QueryColectionParams defines the params for queries:
+// - 'custom/nfts/supply'
+// - 'custom/nfts/collection'
+type QueryColectionParams struct {
+	Denom types.Denom
+}
+
+// NewQueryColectionParams creates a new instance of QuerySupplyParams
+func NewQueryColectionParams(denom string) QueryColectionParams {
+	return QueryColectionParams{Denom: types.Denom(denom)}
+}
+
+// QueryBalanceParams params for query 'custom/nfts/balance'
+type QueryBalanceParams struct {
+	Denom types.Denom
+	Owner sdk.AccAddress
+}
+
+// NewQueryBalanceParams creates a new instance of QuerySupplyParams
+func NewQueryBalanceParams(denom string, owner sdk.AccAddress) QueryBalanceParams {
+	return QueryBalanceParams{
+		Denom: types.Denom(denom),
+		Owner: owner,
+	}
+}
+
+// QueryNFTParams params for query 'custom/nfts/nft'
+type QueryNFTParams struct {
+	Denom   types.Denom
+	TokenID types.TokenID
+}
+
+// NewQueryNFTParams creates a new instance of QueryNFTParams
+func NewQueryNFTParams(denom string, id uint) QueryNFTParams {
+	return QueryNFTParams{
+		Denom:   types.Denom(denom),
+		TokenID: types.TokenID(id),
+	}
+}
+
 // NewQuerier is the module level router for state queries
-func NewQuerier(k keeper.Keeper) sdk.Querier {
+func NewQuerier(k keeper.Keeper, cdc *codec.Codec) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QuerySupply:
-			return querySupply(ctx, path[1:], req, k)
+			return querySupply(ctx, cdc, path[1:], req, k)
 		case QueryBalance:
-			return queryBalance(ctx, path[1:], req, k)
+			return queryBalance(ctx, cdc, path[1:], req, k)
 		case QueryCollection:
-			return queryCollection(ctx, path[1:], req, k)
+			return queryCollection(ctx, cdc, path[1:], req, k)
 		case QueryNFT:
-			return querNFT(ctx, path[1:], req, k)
+			return queryNFT(ctx, cdc, path[1:], req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown nft query endpoint")
 		}
 	}
 }
 
-func queryBalanceOf(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	denom := types.Denom(path[0])
-	owner := path[1]
+func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
-	collection, found := k.GetCollection(ctx, denom)
+	var params QueryColectionParams
+	err := cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+
+	collection, found := k.GetCollection(ctx, params.Denom)
 	if !found {
-		return []byte{}, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("Unknown denom %s", denom))
+		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	balance := 0
-	for _, v := range collection {
-		if v.Owner.String() == owner {
-			balance++
-		}
+	// TODO: return len of collection
+	return bz, nil
+}
+
+func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+
+	var params QueryBalanceParams
+	err := cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.Cdc, QueryResBalance{denom, balance})
-	if err2 != nil {
-		panic("could not marshal result to JSON")
+	// TODO: get collections of NFTs held by address
+
+	if params.Denom == "" {
+		// TODO: return array of collections
+		// collections := k.GetAddressCollections(ctx, params.Owner)
+		// bz, err := cdc.MarshalJSONIndent(cdc, collections)
+		// if err != nil {
+		// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		// }
+		// return bz, nil
+	}
+	// TODO: return a single collection
+
+	collection, found := k.GetCollection(ctx, params.Denom)
+	if !found {
+		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
+	}
+
+	bz, err := cdc.MarshalJSONIndent(cdc, collection)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 
 	return bz, nil
 }
 
-// QueryResBalance resolves int balance
-type QueryResBalance struct {
-	Denom   types.Denom `json:"denom"`
-	Balance int         `json:"balance"`
-}
+func queryCollection(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
-func (p QueryResBalance) String() string {
-	return fmt.Sprintf("%s %d", p.Denom, p.Balance)
-}
-
-func queryOwnerOf(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	denom := types.Denom(path[0])
-	uintID, error := strconv.ParseUint(path[1], 10, 64)
-	if error != nil {
-		panic("could not parse TokenID string")
-	}
-	id := types.TokenID(uintID)
-
-	nft, err := k.GetNFT(ctx, denom, id)
+	var params QueryColectionParams
+	err := cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.Cdc, QueryResOwnerOf{nft.Owner})
-	if err2 != nil {
-		panic("could not marshal result to JSON")
+	collection, found := k.GetCollection(ctx, params.Denom)
+	if !found {
+		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
+	}
+
+	bz, err := cdc.MarshalJSONIndent(cdc, collection)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 
 	return bz, nil
 }
 
-//QueryResOwnerOf resolves sdk.AccAddress owner
-type QueryResOwnerOf struct {
-	Owner sdk.AccAddress `json:"owner"`
-}
+func queryNFT(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
-func (q QueryResOwnerOf) String() string {
-	return q.Owner.String()
-}
-
-func queryMetadata(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	denom := types.Denom(path[0])
-	uintID, error := strconv.ParseUint(path[1], 10, 64)
-	if error != nil {
-		panic("could not parse TokenID string")
-	}
-	id := types.TokenID(uintID)
-
-	nft, err := k.GetNFT(ctx, denom, id)
+	var params QueryNFTParams
+	err := cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	bz, err2 := codec.MarshalJSONIndent(k.Cdc, nft)
-	if err2 != nil {
+	nft, err := k.GetNFT(ctx, params.Denom, params.TokenID)
+	if err != nil {
+		return nil, types.ErrInvalidNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%d from collection %s", params.TokenID, params.Denom))
+	}
+
+	bz, err := codec.MarshalJSONIndent(cdc, nft)
+	if err != nil {
 		panic("could not marshal result to JSON")
 	}
 

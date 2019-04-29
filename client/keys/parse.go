@@ -23,7 +23,7 @@ var bech32Prefixes = []string{
 func parseKeyStringCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "parse <hex-or-bech32-address>",
-		Short: "Parse key hex or bech32 strings and show relevant information",
+		Short: "Parse key hex or bech32 address and show relevant information",
 		Long: "Convert and print to stdout key addresses and fingerprints from hexadecimal into" +
 			" bech32 cosmos prefixed format and vice versa.",
 		Args: cobra.ExactArgs(1),

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"strings"
 	"time"
 
@@ -268,21 +269,20 @@ func DefaultSigVerificationGasConsumer(
 
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
 
-	switch {
-	case strings.Contains(pubkeyType, "ed25519"):
+	switch pubkey := pubkey.(type) {
+	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return sdk.ErrInvalidPubKey("ED25519 public keys are unsupported").Result()
 
-	case strings.Contains(pubkeyType, "secp256k1"):
+	case secp256k1.PubKeySecp256k1:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return sdk.Result{}
 
-	case strings.Contains(pubkeyType, "multisigthreshold"):
+	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
-		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
-		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
+		consumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return sdk.Result{}
 
 	default:

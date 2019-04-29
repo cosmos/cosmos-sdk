@@ -11,7 +11,7 @@ type Config struct {
 	sealed              bool
 	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
-	addressValidator    func([]byte) error
+	addressVerifier     func([]byte) error
 }
 
 var (
@@ -74,10 +74,11 @@ func (config *Config) SetTxEncoder(encoder TxEncoder) {
 	config.txEncoder = encoder
 }
 
-// SetAddressValidator build the Config with the address validator used to validate account addresses
-func (config *Config) SetAddressValidator(addressValidator func([]byte) error) {
+// SetAddressVerifier builds the Config with the provided function for verifying that addresses
+// have the correct format
+func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.assertNotSealed()
-	config.addressValidator = addressValidator
+	config.addressVerifier = addressVerifier
 }
 
 // Seal seals the config such that the config state could not be modified further
@@ -124,7 +125,7 @@ func (config *Config) GetTxEncoder() TxEncoder {
 	return config.txEncoder
 }
 
-// GetAddressValidator returns function to validate account addresses
-func (config *Config) GetAddressValidator() func([]byte) error {
-	return config.addressValidator
+// GetAddressVerifier returns the function to verify that addresses have the correct format
+func (config *Config) GetAddressVerifier() func([]byte) error {
+	return config.addressVerifier
 }

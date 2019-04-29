@@ -81,7 +81,6 @@ else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux: go.sum
@@ -94,7 +93,6 @@ install: go.sum check-ledger update_gaia_lite_docs
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
 install_debug: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug

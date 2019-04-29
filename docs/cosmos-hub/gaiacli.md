@@ -535,7 +535,7 @@ Some considerations about the voting process:
 - Delegators inherit the vote of their validator if they don't vote
 - Votes are tallied at the end of the voting period (2 weeks on mainnet) where
 each address can vote multiple times to update its `Option` value (paying the transaction fee each time),
-only the last casted vote will count as valid
+only the most recently cast vote will count as valid
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
  - At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2`
  and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`, otherwise it is

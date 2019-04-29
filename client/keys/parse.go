@@ -42,7 +42,7 @@ func runFromBech32(bech32str string) bool {
 	if err != nil {
 		return false
 	}
-	fmt.Printf("Human readible part: %v\nBytes (hex): %X\n", hrp, bz)
+	fmt.Printf("Human readable part: %v\nBytes (hex): %X\n", hrp, bz)
 	return true
 }
 

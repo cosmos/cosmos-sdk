@@ -1982,7 +1982,7 @@ definitions:
             type: array
             items:
               $ref: "#/definitions/KVPair"
-  TxQueryWithPage:
+  PaginatedQueryTxs:
     type: object
     properties:
       total_count:

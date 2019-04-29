@@ -116,7 +116,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) erro
 	}
 
 	if pubKey != expectedPubKey {
-		return fmt.Errorf("pubkey does not match, Check this is the same device")
+		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
 	pubKey2, _, err := getPubKeyAddrSafe(device, path, types.Bech32PrefixAccAddr)

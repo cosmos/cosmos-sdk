@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: create interface for buyable NFT
+
 // NFT non fungible token definition
 type NFT struct {
 	ID          uint64         `json:"id,omitempty"` // id of the token; not exported to clients
@@ -69,6 +71,7 @@ func (nft NFT) String() string {
 
 // ----------------------------------------------------------------------------
 // NFTs
+// TODO: create interface and types for mintable NFTs
 
 // NFTs define a list of NFTs
 type NFTs []NFT

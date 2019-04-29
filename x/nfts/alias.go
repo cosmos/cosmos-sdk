@@ -7,10 +7,17 @@ import (
 )
 
 type (
-	Keeper       = keeper.Keeper
-	NFT          = types.NFT
-	Collection   = types.Collection
-	GenesisState = types.GenesisState
+	Keeper             = keeper.Keeper
+	NFT                = types.NFT
+	NFTs               = types.NFTs
+	Collection         = types.Collection
+	Collections        = types.Collections
+	GenesisState       = types.GenesisState
+	MsgTransferNFT     = types.MsgTransferNFT
+	MsgEditNFTMetadata = types.MsgEditNFTMetadata
+	MsgMintNFT         = types.MsgMintNFT
+	MsgBurnNFT         = types.MsgBurnNFT
+	MsgBuyNFT          = types.MsgBuyNFT
 )
 
 var (
@@ -18,6 +25,10 @@ var (
 	RegisterInvariants = keeper.RegisterInvariants
 
 	NewNFT              = types.NewNFT
+	NewNFTs             = types.NewNFTs
+	NewCollection       = types.NewCollection
+	NewCollections      = types.NewCollections
+	EmptyCollection     = types.EmptyCollection
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
 )

@@ -52,7 +52,7 @@ type (
 // NewPrivKeyLedgerSecp256k1Unsafe will generate a new key and store the public key for later use.
 //
 // This function is marked as unsafe as it will retrieve a pubkey without user verification
-// It can only be used to verify pubkey but never to create new accounts/keys in that case,
+// It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeyLedgerSecp256k1
 func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	device, err := getLedgerDevice()

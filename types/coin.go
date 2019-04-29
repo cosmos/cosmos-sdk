@@ -583,7 +583,17 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
-	return NewCoin(denomStr, amount), nil
+	coin = NewCoin(denomStr, amount)
+
+	// convert native coin to min unit
+	if _, ok := GetDenomUnit(denomStr); ok {
+		coin, err = ConvertCoin(coin, "agard")
+		if err != nil {
+			return Coin{}, err
+		}
+	}
+
+	return coin, nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.

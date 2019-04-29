@@ -38,7 +38,6 @@ func TestPublicKeyUnsafe(t *testing.T) {
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
-	fmt.Printf("PK: %x\n", priv.PubKey().Bytes())
 	fmt.Printf("AA: %x\n", priv.PubKey().Address())
 	addr := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",

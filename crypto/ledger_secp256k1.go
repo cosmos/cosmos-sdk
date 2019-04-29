@@ -250,7 +250,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 	return compressedPublicKey, nil
 }
 
-// getPubKeyAddr reads the pubkey and the address from a ledger device
+// getPubKeyAddr reads the pubkey and the address from a ledger device.
 // This function is marked as Safe as it will require user confirmation and
 // account and index will be shown in the device
 //

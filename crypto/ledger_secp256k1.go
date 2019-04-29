@@ -259,7 +259,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) (tmcrypto.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
-		return nil, "", fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
+		return nil, "", fmt.Errorf("address %s rejected", addr)
 	}
 
 	// re-serialize in the 33-byte compressed format

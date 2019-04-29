@@ -106,7 +106,7 @@ func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string,
 	return newDbKeybase(db).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
 }
 
-func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (info Info, err error) {
+func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err

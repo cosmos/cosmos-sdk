@@ -1,8 +1,8 @@
-# Gaia的创世状态
+# Gaia 创世状态（Genesis State）
 
-`GenesisState`是Gaia的创世状态，由账户，不同模块的状态和例如创世交易这样的数据组成。每个模块可以指定自己的`GenesisState`，还有每个模块可以指定对创世状态的验证，导入和导出。
+Gaia 创世状态`GenesisState`由账户、各种模块状态和元数据组成，例如创世交易。 每个模块可以指定自己的`GenesisState`。 此外，每个模块可以指定自己的创世状态有效性验证、导入和导出功能。
 
-Gaia的创世状态有如下定义:
+Gaia 创世状态定义如下：
 
 ```go
 type GenesisState struct {
@@ -18,11 +18,11 @@ type GenesisState struct {
 }
 ```
 
-在gaia的ABCI接口`initChainer`的定义中`initFromGenesisState`被调用，它在内部调用每个模块的`InitGenesis`，提供各自的`GenesisState`作为参数
+在 Gaia 的 ABCI`initChainer`定义中调用`initFromGenesisState`，它在内部调用每个模块的`InitGenesis`，提供它自己的`GenesisState`作为参数。
 
-## 账户
+## 账户（Accounts）
 
-`GenesisState`中的创世账户有如下定义:
+ `GenesisState` 中的创世账户定义如下：
 
 ```go
 type GenesisAccount struct {
@@ -40,9 +40,8 @@ type GenesisAccount struct {
 }
 ```
 
-每个账户必须有一个合理的并唯一的account number，还要有sequence number和address。
+除序列号（nonce）和地址外，每个帐户还必须具有有效且唯一的账户编号。
 
-账户也可以是锁定账户，必须提供必要的锁定信息。锁定账户必须提供一个最小的`OriginalVesting`和`EndTime`。如果`StartTime`也提供了，这个账户将会被当做一个连续的锁定账户，将按照预定的时间线锁定代币。提供的`StartTime`必须小于`EndTime`，但可以是将来的某个时间。换句话说，`StartTime`不必小于创世时间。当一条新链从一个新状态（不是到处的）生成时，`OriginalVesting` 必须要小于`Coins`
+账户也可能锁仓，此时他们必须提供必要的锁仓信息，锁仓帐户必须至少提供`OriginalVesting`和`EndTime`。如果还提供了`StartTime`，则该帐户将被视为“连续”锁仓帐户，其中按预定义的时间表锁仓 coins。 提供的`StartTime`必须小于`EndTime`，但可能是未来的时间。 换句话说，它不必等于创世时间。 在从新状态（未导出）开始的新链中，`OriginalVesting`必须小于或等于`Coins`。
 
 <!-- TODO: Remaining modules and components in GenesisState -->
-

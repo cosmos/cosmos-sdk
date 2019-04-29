@@ -537,9 +537,10 @@ Some considerations about the voting process:
 each address can vote multiple times to update its `Option` value (paying the transaction fee each time),
 only the most recently cast vote will count as valid
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
- - At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2`
- and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`, otherwise it is
- rejected
+- At the end of the voting period, a proposal is accepted iff:
+  - `(YesVotes / (YesVotes+NoVotes+NoWithVetoVotes)) > 1/2`
+  - `(NoWithVetoVotes / (YesVotes+NoVotes+NoWithVetoVotes)) < 1/3`
+  - `((YesVotes+NoVotes+NoWithVetoVotes) / totalBondedStake) >= quorum`
 
 For more information about the governance process and how it works, please check
 out the Governance module [specification](./../spec/governance).

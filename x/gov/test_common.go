@@ -43,16 +43,17 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
+	valTokens := sdk.TokensFromTendermintPower(42)
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
+	if genAccs == nil || len(genAccs) == 0 {
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, coins)
+	}
+	accountsSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, coins.AmountOf(sdk.DefaultBondDenom).MulRaw(42)))
+
 	mapp.SetEndBlocker(getEndBlocker(keeper))
-	mapp.SetInitChainer(getInitChainer(mapp, keeper, ds, genState))
+	mapp.SetInitChainer(getInitChainer(mapp, keeper, ds, genState, accountsSupply))
 
 	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov, keySupply))
-
-	valTokens := sdk.TokensFromTendermintPower(42)
-	if genAccs == nil || len(genAccs) == 0 {
-		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
-			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
-	}
 
 	mock.SetGenesis(mapp, genAccs)
 
@@ -70,7 +71,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState, accountsSupply sdk.Coins) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
@@ -79,8 +80,9 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		supplier := supply.DefaultSupplier()
-		supplier.Inflate(supply.TypeTotal, sdk.NewCoins(sdk.NewCoin(stakingGenesis.Params.BondDenom, sdk.NewInt(100000))))
-		supplier.Inflate(supply.TypeCirculating, sdk.NewCoins(sdk.NewCoin(stakingGenesis.Params.BondDenom, sdk.NewInt(100000))))
+		notBondedSupply := sdk.NewCoins(sdk.NewCoin(stakingGenesis.Params.BondDenom, sdk.NewInt(100000)))
+		supplier.Inflate(supply.TypeTotal, notBondedSupply.Add(accountsSupply))
+		supplier.Inflate(supply.TypeCirculating, notBondedSupply.Add(accountsSupply))
 
 		keeper.supplyKeeper.SetSupplier(ctx, supplier)
 

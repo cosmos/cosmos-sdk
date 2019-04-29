@@ -227,7 +227,7 @@ func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byt
 // getPubKeyUnsafe reads the pubkey from a ledger device
 //
 // This function is marked as unsafe as it will retrieve a pubkey without user verification
-// It can only be used to verify pubkey but never to create new accounts/keys in that case,
+// It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to getPubKeyAddrSafe
 //
 // since this involves IO, it may return an error, which is not exposed

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nfts/types"
@@ -12,7 +11,7 @@ import (
 
 // Keeper maintains the link to data storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
-	bk bank.Keeper
+	bk BankKeeper
 
 	storeKey sdk.StoreKey // Unexposed key to access store from sdk.Context
 
@@ -20,7 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates new instances of the nft Keeper
-func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(coinKeeper BankKeeper, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{
 		bk:       coinKeeper,
 		storeKey: storeKey,
@@ -62,15 +61,17 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom string, id uint64, nft types.NFT) 
 }
 
 // BurnNFT deletes an existing NFT from store
-func (k Keeper) BurnNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {
-	collection, found := k.GetCollection(ctx, denom)
-	if !found {
-		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
-	}
-	delete(collection, id)
-	k.SetCollection(ctx, denom, collection)
-	return
-}
+//
+// CONTRACT: can only be burned by the owner of the NFT
+// func (k Keeper) BurnNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {\
+// 	collection, found := k.GetCollection(ctx, denom)
+// 	if !found {
+// 		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+// 	}
+// 	delete(collection, id)
+// 	k.SetCollection(ctx, denom, collection)
+// 	return
+// }
 
 // IterateCollections iterates over collections and performs a function
 func (k Keeper) IterateCollections(ctx sdk.Context, handler func(collection types.Collection) (stop bool)) {
@@ -105,7 +106,7 @@ func (k Keeper) GetCollection(ctx sdk.Context, denom string,
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(denom))
 	if b == nil {
-		return nil, false
+		return collection, false
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collection)
 	return collection, true
@@ -118,14 +119,18 @@ func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Co
 	store.Set(collectionKey, k.cdc.MustMarshalBinaryBare(collection))
 }
 
-// IterateNFTsOwners iterates over owners of NFTs and performs a function
-func (k Keeper) IterateNFTsOwners(ctx sdk.Context, handler func(owner sdk.AccAddress) (stop bool)) {
+// IterateNFTBalances iterates over the owners' balances of NFTs and performs a function
+func (k Keeper) IterateNFTBalances(ctx sdk.Context, handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, OwnersNFTsKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, NFTBalancesKeyPrefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		owner := sdk.AccAddress(iterator.Value())
-		if handler(owner) {
+		var collection types.Collection
+
+		owner := GetNFTBalancesAddress(iterator.Key())
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &collection)
+
+		if handler(owner, collection) {
 			break
 		}
 	}

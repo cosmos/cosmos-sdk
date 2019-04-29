@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,12 +11,12 @@ import (
 
 // NFT non fungible token definition
 type NFT struct {
-	ID          uint64         `json:"-"`           // id of the token; not exported to clients
-	Owner       sdk.AccAddress `json:"owner"`       // account address that owns the NFT
-	Name        string         `json:"name"`        // name of the token
-	Description string         `json:"description"` // unique description of the NFT
-	Image       string         `json:"image"`       // image path
-	TokenURI    string         `json:"token_uri"`   // optional extra data available fo querying
+	ID          uint64         `json:"id,omitempty"` // id of the token; not exported to clients
+	Owner       sdk.AccAddress `json:"owner"`        // account address that owns the NFT
+	Name        string         `json:"name"`         // name of the token
+	Description string         `json:"description"`  // unique description of the NFT
+	Image       string         `json:"image"`        // image path
+	TokenURI    string         `json:"token_uri"`    // optional extra data available fo querying
 }
 
 // NewNFT creates a new NFT instance
@@ -87,7 +88,7 @@ func (nfts *NFTs) Add(nftsB NFTs) {
 
 // Delete deletes NFTs from the set
 func (nfts *NFTs) Delete(ids ...uint64) error {
-	newNFTs, err = removeNFT(*nfts, ids)
+	newNFTs, err := removeNFT(*nfts, ids)
 	if err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func (nfts NFTs) Empty() bool {
 }
 
 // removeNFT removes NFTs from the set matching the given ids
-func removeNFT(nfts NFTs, ids []uint64) NFTs, error {
+func removeNFT(nfts NFTs, ids []uint64) (NFTs, error) {
 	// TODO: do this efficciently
 	return nfts, nil
 }
@@ -130,7 +131,11 @@ func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	nftJSON := make(NFTJSON)
 
 	for _, nft := range nfts {
-		nftJSON[nft.ID] = nft
+		id := nft.ID
+		// set the pointer of the ID to nil
+		ptr := reflect.ValueOf(nft.ID).Elem()
+		ptr.Set(reflect.Zero(ptr.Type()))
+		nftJSON[id] = nft
 	}
 
 	return json.Marshal(nftJSON)

@@ -2,41 +2,46 @@ package nfts
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nfts/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nfts/types"
 )
+
+// OwnerNFTs used for import / export user NFT balances via genesis JSON
+type OwnerNFTs struct {
+	Owner   sdk.AccAddress `json:"owner"`
+	Balance []Collection   `json:"balance"`
+}
 
 // GenesisState is the bank state that must be provided at genesis.
 type GenesisState struct {
-	Collections map[types.Denom]types.Collection `json:"collections"`
-	Owners      map[string]types.Owner           `json:"owners"`
+	Collections []Collection `json:"collections"`
+	Balances    []OwnerNFTs  `json:"balances"`
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(collections map[types.Denom]types.Collection, owners map[string]types.Owner) GenesisState {
+func NewGenesisState(collections []Collection, balances []OwnerNFTs) GenesisState {
 	return GenesisState{
 		Collections: collections,
-		Owners:      owners,
+		Balances:    balances,
 	}
 }
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(map[types.Denom]types.Collection{}, map[string]types.Owner{})
+	return NewGenesisState([]Collection{}, []OwnerNFTs{})
 }
 
 // InitGenesis sets distribution information for genesis.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, data GenesisState) {
-	for denom, collection := range data.Collections {
-		k.SetCollection(ctx, denom, collection)
-		for id, nft := range collection {
-			k.AddToOwner(ctx, denom, id, nft)
-		}
+func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
+	for _, collection := range data.Collections {
+		k.SetCollection(ctx, collection.Denom, collection)
+	}
+
+	for _, balance := range data.Balance {
+		k.SetOwnerBalance(ctx, balance.Owner, balance)
 	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) GenesisState {
+func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	return NewGenesisState(k.GetCollections(ctx), k.GetOwners(ctx))
 }
 

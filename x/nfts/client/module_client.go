@@ -23,7 +23,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group nameservice queries under a subcommand
 	nftQueryCmd := &cobra.Command{
-		Use:   "nft",
+		Use:   "nfts",
 		Short: "Querying commands for the NFT module",
 	}
 
@@ -39,7 +39,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	nftTxCmd := &cobra.Command{
-		Use:   "nft",
+		Use:   "nfts",
 		Short: "Non-FungibleToken transactions subcommands",
 	}
 

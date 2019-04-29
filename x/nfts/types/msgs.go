@@ -30,12 +30,11 @@ type MsgTransferNFT struct {
 }
 
 // NewMsgTransferNFT is a constructor function for MsgSetName
-func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom string, id uint64,
-) MsgTransferNFT {
+func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom string, id uint64) MsgTransferNFT {
 	return MsgTransferNFT{
 		Sender:    sender,
 		Recipient: recipient,
-		Denom:     denom,
+		Denom:     strings.TrimSpace(denom),
 		ID:        id,
 	}
 }
@@ -48,7 +47,7 @@ func (msg MsgTransferNFT) Type() string { return "transfer_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
-	if string(msg.Denom) == "" {
+	if msg.Denom == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -92,14 +91,14 @@ type MsgEditNFTMetadata struct {
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
-func NewMsgEditNFTMetadata(owner sdk.AccAddress, denom string, id uint64,
+func NewMsgEditNFTMetadata(owner sdk.AccAddress, id uint64,
 	editName, editDescription, editImage, editTokenURI bool,
-	name, description, image, tokenURI string,
+	denom, name, description, image, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
 		Owner:           owner,
 		ID:              id,
-		Denom:           denom,
+		Denom:           strings.TrimSpace(denom),
 		EditName:        editName,
 		EditDescription: editDescription,
 		EditImage:       editImage,
@@ -156,17 +155,16 @@ type MsgMintNFT struct {
 }
 
 // NewMsgMintNFT is a constructor function for MsgMintNFT
-func NewMsgMintNFT(sender, recipient sdk.AccAddress, id uint64, denom, name, description, image, tokenURI string,
-) MsgMintNFT {
+func NewMsgMintNFT(sender, recipient sdk.AccAddress, id uint64, denom, name, description, image, tokenURI string) MsgMintNFT {
 	return MsgMintNFT{
 		Sender:      sender,
 		Recipient:   recipient,
 		ID:          id,
-		Denom:       denom,
-		Name:        name,
-		Description: description,
-		Image:       image,
-		TokenURI:    tokenURI,
+		Denom:       strings.TrimSpace(denom),
+		Name:        strings.TrimSpace(name),
+		Description: strings.TrimSpace(description),
+		Image:       strings.TrimSpace(image),
+		TokenURI:    strings.TrimSpace(tokenURI),
 	}
 }
 
@@ -178,7 +176,7 @@ func (msg MsgMintNFT) Type() string { return "mint_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMintNFT) ValidateBasic() sdk.Error {
-	if strings.TrimSpace(string(msg.Denom)) == "" {
+	if msg.Denom == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -210,12 +208,11 @@ type MsgBurnNFT struct {
 }
 
 // NewMsgBurnNFT is a constructor function for MsgBurnNFT
-func NewMsgBurnNFT(sender sdk.AccAddress, id uint64, denom string,
-) MsgBurnNFT {
+func NewMsgBurnNFT(sender sdk.AccAddress, id uint64, denom string) MsgBurnNFT {
 	return MsgBurnNFT{
 		Sender: sender,
 		ID:     id,
-		Denom:  denom,
+		Denom:  strings.TrimSpace(denom),
 	}
 }
 
@@ -227,7 +224,7 @@ func (msg MsgBurnNFT) Type() string { return "burn_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
-	if strings.TrimSpace(string(msg.Denom)) == "" {
+	if msg.Denom == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -260,11 +257,10 @@ type MsgBuyNFT struct {
 }
 
 // NewMsgBuyNFT is a constructor function for MsgBuyNFT
-func NewMsgBuyNFT(sender, owner sdk.AccAddress, denom string, id uint64,
-) MsgBuyNFT {
+func NewMsgBuyNFT(sender, owner sdk.AccAddress, denom string, id uint64) MsgBuyNFT {
 	return MsgBuyNFT{
 		Sender: sender,
-		Denom:  denom,
+		Denom:  strings.TrimSpace(denom),
 		ID:     id,
 	}
 }
@@ -277,7 +273,7 @@ func (msg MsgBuyNFT) Type() string { return "buy_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBuyNFT) ValidateBasic() sdk.Error {
-	if strings.TrimSpace(string(msg.Denom)) == "" {
+	if msg.Denom == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {

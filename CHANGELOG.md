@@ -4,8 +4,14 @@
 
 ### Bug Fixes
 
+#### SDK
+
 * [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
 actually work offline. 
+
+#### Gaia
+
+* [\#4219](https://github.com/cosmos/cosmos-sdk/issues/4219) Return an error when an empty mnemonic is provided during key recovery.
 
 ## 0.34.3
 

@@ -254,7 +254,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 // This function is marked as Safe as it will require user confirmation and
 // account and index will be shown in the device
 //
-// since this involves IO, it may return an error, which is not exposed
+// Since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
 func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) (tmcrypto.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)

@@ -756,3 +756,57 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		)
 	}
 }
+
+// Test custom SignatureVerificationGasConsumer
+func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
+	// setup
+	input := setupTestInput()
+	// setup an ante handler that only accepts PubKeyEd25519
+	anteHandler := NewAnteHandler(input.ak, input.fck, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
+		switch pubkey := pubkey.(type) {
+		case ed25519.PubKeyEd25519:
+			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+			return sdk.Result{}
+		default:
+			return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %T", pubkey)).Result()
+		}
+	})
+	ctx := input.ctx.WithBlockHeight(1)
+
+	// verify that an secp256k1 account gets rejected
+	priv1, _, addr1 := keyPubAddr()
+	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
+	_ = acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	input.ak.SetAccount(ctx, acc1)
+	var tx sdk.Tx
+	msg := newTestMsg(addr1)
+	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	fee := newStdFee()
+	msgs := []sdk.Msg{msg}
+	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
+
+	// verify that an ed25519 account gets accepted
+	priv2 := ed25519.GenPrivKey()
+	pub2 := priv2.PubKey()
+	addr2 := sdk.AccAddress(pub2.Address())
+	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
+	_ = acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	input.ak.SetAccount(ctx, acc2)
+	msg = newTestMsg(addr2)
+	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
+	fee = newStdFee()
+	msgs = []sdk.Msg{msg}
+	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	checkValidTx(t, anteHandler, ctx, tx, false)
+
+	//require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+	//require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
+	//
+	//acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	//input.ak.SetAccount(ctx, acc1)
+	//checkValidTx(t, anteHandler, ctx, tx, false)
+	//
+	//require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+	//require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
+}

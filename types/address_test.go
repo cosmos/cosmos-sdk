@@ -1,7 +1,9 @@
 package types_test
 
 import (
+	"bytes"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -289,4 +291,27 @@ func TestAddressInterface(t *testing.T) {
 		}
 	}
 
+}
+
+func TestCustomAddressVerifier(t *testing.T) {
+	// Create a 10 byte address
+	addr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	bech := addr.String()
+	// Verifiy that the default logic rejects this 10 byte address
+	_, err := types.AccAddressFromBech32(bech)
+	require.NotNil(t, err)
+
+	// Set a custom address verifier that accepts 10 or 20 byte addresses
+	types.GetConfig().SetAddressVerifier(func(bz []byte) error {
+		n := len(bz)
+		if n == 10 || n == types.AddrLen {
+			return nil
+		}
+		return fmt.Errorf("incorrect address length %d", n)
+	})
+
+	// Verifiy that the custom logic accepts this 10 byte address
+	addr2, err := types.AccAddressFromBech32(bech)
+	require.Nil(t, err)
+	require.True(t, bytes.Equal(addr, addr2), "addresses not equal")
 }

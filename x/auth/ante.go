@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"strings"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -266,9 +265,6 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
 ) sdk.Result {
-
-	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
-
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -286,7 +282,7 @@ func DefaultSigVerificationGasConsumer(
 		return sdk.Result{}
 
 	default:
-		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %s", pubkeyType)).Result()
+		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %T", pubkey)).Result()
 	}
 }
 

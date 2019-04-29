@@ -51,14 +51,11 @@ func TestGaiaCLIKeysAddRecover(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
 
-	invalidPrompt := "Mnemonic is not valid"
+	exitSuccess, _, _ := f.KeysAddRecover("empty-mnemonic", "")
+	require.False(t, exitSuccess)
 
-	exitSuccess, _, stderr := f.KeysAddRecover("empty-mnemonic", "")
-	require.Contains(t, stderr, invalidPrompt)
-
-	exitSuccess, _, stderr = f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
+	exitSuccess, _, _ = f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
 	require.True(t, exitSuccess)
-	require.NotContains(t, stderr, invalidPrompt)
 	require.Equal(t, "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4", f.KeyAddress("test-recover").String())
 }
 

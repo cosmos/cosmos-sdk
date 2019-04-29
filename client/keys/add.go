@@ -197,8 +197,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
-			_, _ = fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
-			return nil
+			return errors.New("invalid mnemonic")
 		}
 	}
 

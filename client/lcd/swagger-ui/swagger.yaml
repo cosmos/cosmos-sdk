@@ -253,7 +253,7 @@ paths:
         200:
           description: All txs matching the provided tags
           schema:
-            $ref: "#/definitions/TxQueryWithPage"
+            $ref: "#/definitions/PaginatedQueryTxs"
         400:
           description: Invalid search tags
         500:

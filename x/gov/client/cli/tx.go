@@ -87,7 +87,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			from := cliCtx.GetFromAddress()
+			fromAddr := cliCtx.GetFromAddress()
 			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
 			msg := gov.NewMsgSubmitProposal(content, amount, from)

@@ -9,7 +9,11 @@ import (
 	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
-// ModuleClient exports all client functionality from this module
+// ModuleClient exports all client functionality from the governance module. The
+// governance ModuleClient is slightly different from other ModuleClients in that
+// it contains a slice of "proposal" child commands. These commands are respective
+// to proposal type handlers that are implemented in other modules but are mounted
+// under the governance CLI (eg. parameter change proposals).
 type ModuleClient struct {
 	storeKey string
 	cdc      *amino.Codec

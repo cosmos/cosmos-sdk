@@ -60,9 +60,9 @@ proposal:
 
 Other modules may expand upon the governance module by implementing their own
 proposal types and handlers. These types are registered and processed through the
-governance module (eg. `ParamChangeProposal`). However, the actual implementation
-and state modifications that may result from the passing of these proposals are
-handled in each respective module.
+governance module (eg. `ParamChangeProposal`), which then execute the respective
+module's proposal handler when a proposal passes. This custom handler may perform
+arbitrary state changes.
 
 ## Vote
 

@@ -6,11 +6,6 @@ import (
 	"os"
 	"sort"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -97,7 +97,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, params.DefaultCodespace)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
@@ -140,11 +140,17 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
+
+	govRouter := gov.NewRouter()
+	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
+		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper))
+
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
 		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
 		gov.DefaultCodespace,
+		govRouter,
 	)
 	app.crisisKeeper = crisis.NewKeeper(
 		app.paramsKeeper.Subspace(crisis.DefaultParamspace),
@@ -209,6 +215,7 @@ func MakeCodec() *codec.Codec {
 	staking.RegisterCodec(cdc)
 	distr.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
+	params.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	crisis.RegisterCodec(cdc)

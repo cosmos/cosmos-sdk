@@ -602,6 +602,67 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	f.Cleanup()
 }
 
+func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(keyFoo)
+	fooAcc := f.QueryAccount(fooAddr)
+	startTokens := sdk.TokensFromTendermintPower(50)
+	require.Equal(t, startTokens, fooAcc.GetCoins().AmountOf(sdk.DefaultBondDenom))
+
+	// write proposal to file
+	proposalTokens := sdk.TokensFromTendermintPower(5)
+	proposal := fmt.Sprintf(`{
+  "title": "Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": "105"
+    }
+  ],
+  "deposit": [
+    {
+      "denom": "stake",
+      "amount": "%s"
+    }
+  ]
+}
+`, proposalTokens.String())
+
+	proposalFile := WriteToNewTempFile(t, proposal)
+
+	// create the param change proposal
+	f.TxGovSubmitParamChangeProposal(keyFoo, proposalFile.Name(), sdk.NewCoin(denom, proposalTokens), "-y")
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// ensure transaction tags can be queried
+	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txs, 1)
+
+	// ensure deposit was deducted
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, startTokens.Sub(proposalTokens).String(), fooAcc.GetCoins().AmountOf(sdk.DefaultBondDenom).String())
+
+	// ensure proposal is directly queryable
+	proposal1 := f.QueryGovProposal(1)
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
+
+	// ensure correct query proposals result
+	proposalsQuery := f.QueryGovProposals()
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+
+	// ensure the correct deposit amount on the proposal
+	deposit := f.QueryGovDeposit(1, fooAddr)
+	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(denom))
+}
+
 func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

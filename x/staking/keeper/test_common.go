@@ -107,7 +107,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 	cdc := MakeTestCodec()
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 
 	accountKeeper := auth.NewAccountKeeper(
 		cdc,    // amino codec

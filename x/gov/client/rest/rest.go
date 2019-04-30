@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 // REST Variable names
@@ -28,8 +27,20 @@ const (
 	RestNumLimit       = "limit"
 )
 
+// ProposalRESTHandler defines a REST handler implemented in another module. The
+// sub-route is mounted on the governance REST handler.
+type ProposalRESTHandler struct {
+	SubRoute string
+	Handler  func(http.ResponseWriter, *http.Request)
+}
+
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, phs ...ProposalRESTHandler) {
+	propSubRtr := r.PathPrefix("/gov/proposals").Subrouter()
+	for _, ph := range phs {
+		propSubRtr.HandleFunc(fmt.Sprintf("/%s", ph.SubRoute), ph.Handler).Methods("POST")
+	}
+
 	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
@@ -88,14 +99,10 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		proposalType, err := gov.ProposalTypeFromString(govClientUtils.NormalizeProposalType(req.ProposalType))
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		proposalType := gcutils.NormalizeProposalType(req.ProposalType)
+		content := gov.ContentFromProposalType(req.Title, req.Description, proposalType)
 
-		// create the message
-		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalType, req.Proposer, req.InitialDeposit)
+		msg := gov.NewMsgSubmitProposal(content, req.InitialDeposit, req.Proposer)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -168,7 +175,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		voteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(req.Option))
+		voteOption, err := gov.VoteOptionFromString(gcutils.NormalizeVoteOption(req.Option))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -540,7 +547,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		}
 
 		if len(strProposalStatus) != 0 {
-			proposalStatus, err := gov.ProposalStatusFromString(govClientUtils.NormalizeProposalStatus(strProposalStatus))
+			proposalStatus, err := gov.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
 			if err != nil {
 				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return

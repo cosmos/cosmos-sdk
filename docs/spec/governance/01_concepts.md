@@ -58,6 +58,11 @@ proposal:
   `PlainTextProposals`, but actual software upgrades must be performed via 
   `SoftwareUpgradeProposals`.
 
+Other modules may expand upon the governance module by implementing their own
+proposal types and handlers. These types are registered and processed through the
+governance module (eg. `ParamChangeProposal`), which then execute the respective
+module's proposal handler when a proposal passes. This custom handler may perform
+arbitrary state changes.
 
 ## Vote
 

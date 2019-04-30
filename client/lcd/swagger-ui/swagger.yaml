@@ -1122,6 +1122,49 @@ paths:
           description: Invalid query parameters
         500:
           description: Internal Server Error
+/gov/proposals/param_change:
+  post:
+    summary: Generate a parameter change proposal transaction
+    description: Generate a parameter change proposal transaction
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    tags:
+      - ICS22
+    parameters:
+      - description: The parameter change proposal body that contains all parameter changes
+        name: post_proposal_body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            title:
+              type: string
+            description:
+              type: string
+            proposer:
+              $ref: "#/definitions/Address"
+            deposit:
+              type: array
+              items:
+                $ref: "#/definitions/Coin"
+            changes:
+              type: array
+              items:
+                $ref: "#/definitions/ParamChange"
+    responses:
+      200:
+        description: The transaction was succesfully generated
+        schema:
+          $ref: "#/definitions/StdTx"
+      400:
+        description: Invalid proposal body
+      500:
+        description: Internal Server Error
   /gov/proposals/{proposalId}:
     get:
       summary: Query a proposal
@@ -2367,3 +2410,17 @@ definitions:
         type: string
       missed_blocks_counter:
         type: string
+  ParamChange:
+    type: object
+      subspace:
+        type: string
+        description: The parameter module subspace
+      key:
+        type: string
+        description: The parameter key
+      subkey:
+        type: string
+        description: An optional parameter subkey
+      value:
+        type: string
+        description: The new parameter value

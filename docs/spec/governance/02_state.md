@@ -84,8 +84,8 @@ This type is used in a temp map when tallying
 
 ## Proposals
 
-`Proposals` are an item to be voted on. It contains the `Content` which denotes
-what this proposal is about, and the other fields, which are the mutable state of
+`Proposal` objects are used to account votes and generally track the proposal's state. They contain `Content` which denotes
+what this proposal is about, and other fields, which are the mutable state of
 the governance process.
 
 ```go

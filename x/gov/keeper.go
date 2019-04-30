@@ -71,6 +71,9 @@ func NewKeeper(
 	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
+	// It is vital to seal the governance proposal router here as to not allow
+	// further handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
 	rtr.Seal()
 
 	return Keeper{

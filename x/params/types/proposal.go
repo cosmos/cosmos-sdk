@@ -29,7 +29,7 @@ type ParameterChangeProposal struct {
 	Changes     []ParamChange `json:"changes"`
 }
 
-func NewParameterChangeProposal(title string, description string, changes []ParamChange) ParameterChangeProposal {
+func NewParameterChangeProposal(title, description string, changes []ParamChange) ParameterChangeProposal {
 	return ParameterChangeProposal{title, description, changes}
 }
 

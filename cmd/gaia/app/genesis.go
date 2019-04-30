@@ -100,8 +100,7 @@ type GenesisAccount struct {
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 
 	// module account fields
-	Module    string `json:"module"`     // name of the module
-	AllowMint bool   `json:"allow_mint"` // checks for module account type
+	Module string `json:"module"` // name of the module
 }
 
 // NewGenesisAccount creates a GenesisAccount instance from a BaseAccount
@@ -135,11 +134,6 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	macc, ok := acc.(auth.ModuleAccount)
 	if ok {
 		gacc.Module = macc.GetModuleName()
-		if err := macc.SetCoins(macc.GetCoins()); err == nil {
-			gacc.AllowMint = true
-		} else {
-			gacc.AllowMint = false
-		}
 	}
 
 	return gacc
@@ -180,9 +174,6 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.Module != "" {
-		if ga.AllowMint {
-			return auth.NewModuleMinterAccount(ga.Module)
-		}
 		return auth.NewModuleHolderAccount(ga.Module)
 	}
 
@@ -221,11 +212,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		}
 	}
 
-	notBondedSupply :=
-		updateSupplyFromGenAccounts(genesisState.Accounts, genDoc.GenesisTime,
-			genesisState.StakingData, &genesisState.SupplyData.Supplier)
-
-	genesisState.StakingData.Pool.NotBondedTokens = notBondedSupply
+	genesisState = updateSupply(genesisState, genDoc.GenesisTime)
 
 	genesisState.GenTxs = appGenTxs
 
@@ -436,13 +423,16 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	return appGenTxs, persistentPeers, nil
 }
 
-// updateSupplyFromGenAccounts updates the total, circulating, vesting, modules and staking (bonded and not bonded)
+// updateSupply updates the total, circulating, vesting, modules and staking (bonded and not bonded)
 // supplies from the info provided on genesis accounts
-func updateSupplyFromGenAccounts(genAccounts []GenesisAccount, genesisTime time.Time,
-	stakingData staking.GenesisState, supplier *supply.Supplier) (notBondedTokens sdk.Int) {
-	notBondedTokens = stakingData.Pool.NotBondedTokens
+func updateSupply(genesisState GenesisState, genesisTime time.Time) GenesisState {
+	var total, totalRewards sdk.Coins
+	var remainingRewards sdk.DecCoins
 
-	for _, genAcc := range genAccounts {
+	notBondedTokens := genesisState.StakingData.Pool.NotBondedTokens
+	supplier := &genesisState.SupplyData.Supplier
+
+	for _, genAcc := range genesisState.Accounts {
 		// update initial vesting, circulating and bonded supplies from vesting accounts
 		if genAcc.OriginalVesting.IsAllPositive() {
 			if genesisTime.Unix() < genAcc.EndTime {
@@ -459,15 +449,43 @@ func updateSupplyFromGenAccounts(genAccounts []GenesisAccount, genesisTime time.
 		}
 
 		// update staking pool's not bonded supply
-		notBondedTokens = notBondedTokens.Add(genAcc.Coins.AmountOf(stakingData.Params.BondDenom))
+		notBondedTokens = notBondedTokens.Add(genAcc.Coins.AmountOf(genesisState.StakingData.Params.BondDenom))
 
-		supplier.Inflate(supply.TypeTotal, genAcc.Coins)
+		total = total.Add(genAcc.Coins)
 	}
 
-	// add bonded tokens to total supply
-	bondedTokens := sdk.NewCoins(sdk.NewCoin(stakingData.Params.BondDenom, stakingData.Pool.BondedTokens))
-	supplier.Inflate(supply.TypeTotal, bondedTokens)
-	return
+	genesisState.StakingData.Pool.NotBondedTokens = notBondedTokens
+
+	// update total supply
+	bondedTokens := sdk.NewCoins(sdk.NewCoin(genesisState.StakingData.Params.BondDenom, genesisState.StakingData.Pool.BondedTokens))
+	collectedFees := genesisState.AuthData.CollectedFees
+	communityPool, remainingCommunityPool := genesisState.DistrData.FeePool.CommunityPool.TruncateDecimal()
+
+	for _, outstandingReward := range genesisState.DistrData.OutstandingRewards {
+		reward, remainder := outstandingReward.OutstandingRewards.TruncateDecimal()
+		totalRewards = totalRewards.Add(reward)
+		remainingRewards = remainingRewards.Add(remainder)
+	}
+
+	remaining, _ := remainingCommunityPool.Add(remainingRewards).TruncateDecimal()
+
+	supplier.TotalSupply = total.
+		Add(bondedTokens).
+		Add(collectedFees).
+		Add(communityPool).
+		Add(totalRewards).
+		Add(remaining)
+
+	// fmt.Printf(`
+	// total: %s
+	// bondedTokens: %s
+	// collectedFees: %s
+	// communityPool: %s
+	// totalRewards: %s
+	// remaining: %s
+	// `, total, bondedTokens, collectedFees, communityPool, totalRewards, remaining)
+
+	return genesisState
 }
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {

@@ -286,8 +286,11 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accTokens := sdk.TokensFromTendermintPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
+
 		genesisState.Accounts = append(genesisState.Accounts, acc)
 		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
+		genesisState.SupplyData.Supplier.TotalSupply = genesisState.SupplyData.Supplier.TotalSupply.Add(accAuth.Coins)
+		genesisState.SupplyData.Supplier.TotalSupply = genesisState.SupplyData.Supplier.CirculatingSupply.Add(accAuth.Coins)
 	}
 
 	inflationMin := sdk.ZeroDec()

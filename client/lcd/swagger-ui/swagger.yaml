@@ -1122,6 +1122,51 @@ paths:
           description: Invalid query parameters
         500:
           description: Internal Server Error
+  /gov/proposals/param_change:
+    post:
+      summary: Generate a parameter change proposal transaction
+      description: Generate a parameter change proposal transaction
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - ICS22
+      parameters:
+        - description: The parameter change proposal body that contains all parameter changes
+          name: post_proposal_body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              title:
+                type: string
+                x-example: 'Param Change'
+              description:
+                type: string
+                x-example: 'Update max validators'
+              proposer:
+                $ref: "#/definitions/Address"
+              deposit:
+                type: array
+                items:
+                  $ref: "#/definitions/Coin"
+              changes:
+                type: array
+                items:
+                  $ref: "#/definitions/ParamChange"
+      responses:
+        200:
+          description: The transaction was succesfully generated
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid proposal body
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}:
     get:
       summary: Query a proposal
@@ -1976,23 +2021,6 @@ definitions:
           sequence:
             type: string
             example: "0"
-  KeyOutput:
-    type: object
-    properties:
-      name:
-        type: string
-        example: Main Account
-      address:
-        type: string
-        example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
-      pub_key:
-        type: string
-        example: "cosmospub1addwnpepqtqc88gfdxyzcdm2eqr3tnlnxnelyqehy8k95qzgwdz5zccdft9rq5q7wj2"
-      type:
-        type: string
-        example: local
-      seed:
-        type: string
   BlockID:
     type: object
     properties:
@@ -2011,7 +2039,7 @@ definitions:
     properties:
       chain_id:
         type: string
-        example: gaia-2
+        example: cosmoshub-2
       height:
         type: number
         example: 1
@@ -2367,3 +2395,18 @@ definitions:
         type: string
       missed_blocks_counter:
         type: string
+  ParamChange:
+    type: object
+    properties:
+      subspace:
+        type: string
+        example: "staking"
+      key:
+        type: string
+        example: "MaxValidators"
+      subkey:
+        type: string
+        example: ""
+      value:
+        type: string
+        example: "105"

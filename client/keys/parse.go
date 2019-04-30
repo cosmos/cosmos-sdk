@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/bech32"
@@ -28,13 +29,19 @@ func parseKeyStringCommand() *cobra.Command {
 hexadecimal into bech32 cosmos prefixed format and vice versa.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			if !(runFromBech32(args[0]) || runFromHex(args[0])) {
-				return errors.New("couldn't find valid bech32 nor hex data")
-			}
-			return nil
-		},
+		RunE: parseKey,
 	}
+}
+
+func parseKey(_ *cobra.Command, args []string) error {
+	addr := strings.TrimSpace(args[0])
+	if len(addr) == 0 {
+		return errors.New("couldn't parse empty input")
+	}
+	if !(runFromBech32(addr) || runFromHex(addr)) {
+		return errors.New("couldn't find valid bech32 nor hex data")
+	}
+	return nil
 }
 
 // print info from bech32

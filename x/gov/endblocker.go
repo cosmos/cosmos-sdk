@@ -52,10 +52,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		}
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
-		var (
-			tagValue string
-			logMsg   string
-		)
+		var tagValue, logMsg string
 
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)

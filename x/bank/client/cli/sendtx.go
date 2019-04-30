@@ -31,11 +31,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
-
-			to, err := sdk.AccAddressFromBech32(args[0])
+			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.34.4
+
+### Bug Fixes
+
+* [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
+actually work offline. 
+
 ## 0.34.3
 
 ### Bug Fixes

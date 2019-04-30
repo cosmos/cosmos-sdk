@@ -166,7 +166,7 @@ For pseudocode purposes, here are the two function we will use to read or write 
   To process a finished proposal, the application tallies the votes, computes the
   votes of each validator and checks if every validator in the validator set has
   voted. If the proposal is accepted, deposits are refunded. Finally, the proposal
-  content handler is executed.
+  content `Handler` is executed.
 
 And the pseudocode for the `ProposalProcessingQueue`:
 

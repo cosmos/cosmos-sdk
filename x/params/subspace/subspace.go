@@ -1,6 +1,7 @@
 package subspace
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -176,6 +177,30 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
+// SetRaw stores raw parameter bytes. It returns error if the stored parameter
+// has a different type from the input. It also sets to the transient store to
+// record change.
+func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
+	attr, ok := s.table.m[string(key)]
+	if !ok {
+		panic("Parameter not registered")
+	}
+
+	ty := attr.ty
+	dest := reflect.New(ty).Interface()
+	err := s.cdc.UnmarshalJSON(param, dest)
+	if err != nil {
+		return err
+	}
+
+	store := s.kvStore(ctx)
+	store.Set(key, param)
+	tStore := s.transientStore(ctx)
+	tStore.Set(key, []byte{})
+
+	return nil
+}
+
 // SetWithSubkey set a parameter with a key and subkey
 // Checks parameter type only over the key
 func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
@@ -193,6 +218,31 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(newkey, []byte{})
+}
+
+// SetRawWithSubkey stores raw parameter bytes  with a key and subkey. It checks
+// the parameter type only over the key.
+func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
+	concatkey := concatKeys(key, subkey)
+
+	attr, ok := s.table.m[string(concatkey)]
+	if !ok {
+		return errors.New("parameter not registered")
+	}
+
+	ty := attr.ty
+	dest := reflect.New(ty).Interface()
+	err := s.cdc.UnmarshalJSON(param, &dest)
+	if err != nil {
+		return err
+	}
+
+	store := s.kvStore(ctx)
+	store.Set(concatkey, param)
+	tStore := s.transientStore(ctx)
+	tStore.Set(concatkey, []byte{})
+
+	return nil
 }
 
 // Get to ParamSet

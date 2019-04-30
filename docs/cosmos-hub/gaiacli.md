@@ -536,36 +536,99 @@ You can also query all of the delegations to a particular validator:
 
 ### Governance
 
-Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
+Governance is the process from which users in the Cosmos Hub can come to consensus
+on software upgrades, parameters of the mainnet or signaling mechanisms through
+text proposals. This is done through voting on proposals, which will be submitted
+by `ATOM` holders on the mainnet.
 
 Some considerations about the voting process:
 
-- Voting is done by bonded `Atom` holders on a 1 bonded `Atom` 1 vote basis
+- Voting is done by bonded `ATOM` holders on a 1 bonded `ATOM` 1 vote basis
 - Delegators inherit the vote of their validator if they don't vote
-- **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**
-- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times to update its `Option` value (paying the transaction fee each time), only the last casted vote will count as valid
+- Votes are tallied at the end of the voting period (2 weeks on mainnet) where
+each address can vote multiple times to update its `Option` value (paying the transaction fee each time),
+only the most recently cast vote will count as valid
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
-  At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
+- At the end of the voting period, a proposal is accepted iff:
+  - `(YesVotes / (YesVotes+NoVotes+NoWithVetoVotes)) > 1/2`
+  - `(NoWithVetoVotes / (YesVotes+NoVotes+NoWithVetoVotes)) < 1/3`
+  - `((YesVotes+NoVotes+NoWithVetoVotes) / totalBondedStake) >= quorum`
 
-For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
+For more information about the governance process and how it works, please check
+out the Governance module [specification](./../spec/governance).
 
 #### Create a Governance Proposal
 
-In order to create a governance proposal, you must submit an initial deposit along with the proposal details:
+In order to create a governance proposal, you must submit an initial deposit
+along with a title and description. Various modules outside of governance may
+implement their own proposal types and handlers (eg. parameter changes), where
+the governance module itself supports `Text` proposals. Any module
+outside of governance has it's command mounted on top of `submit-proposal`.
 
-- `title`: Title of the proposal
-- `description`: Description of the proposal
-- `type`: Type of proposal. Must be of value _Text_ (types _SoftwareUpgrade_ and _ParameterChange_ not supported yet).
+To submit a `Text` proposal:
 
 ```bash
 gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
-  --type=<Text/ParameterChange/SoftwareUpgrade> \
+  --type="Text" \
   --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
+
+You may also provide the proposal directly through the `--proposal` flag which
+points to a JSON file containing the proposal.
+
+To submit a parameter change proposal, you must provide a proposal file as its
+contents are less friendly to CLI input:
+
+```bash
+gaiacli tx gov submit-proposal param-change <path/to/proposal.json> \
+  --from=<name> \
+  --chain-id=<chain_id>
+```
+
+Where `proposal.json` contains the following:
+
+```json
+{
+  "title": "Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": "105"
+    }
+  ],
+  "deposit": [
+    {
+      "denom": "stake",
+      "amount": "10000000"
+    }
+  ]
+}
+```
+
+::: danger Warning
+
+Currently parameter changes are _evaluated_ but not _validated_, so it is very important
+that any `value` change is valid (ie. correct type and within bounds) for its
+respective parameter, eg. `MaxValidators` should be an integer and not a decimal.
+
+Proper vetting of a parameter change proposal should prevent this from happening
+(no deposits should occur during the governance process), but it should be noted
+regardless. 
+
+:::
+
+::: tip Note
+
+The `SoftwareUpgrade` is currently not supported as it's not implemented and
+currently does not differ from the semantics of a `Text` proposal.
+
+:::
 
 ##### Query Proposals
 

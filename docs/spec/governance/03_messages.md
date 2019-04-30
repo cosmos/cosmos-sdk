@@ -7,12 +7,14 @@ transaction.
 
 ```go
 type TxGovSubmitProposal struct {
-  Title           string        //  Title of the proposal
-  Description     string        //  Description of the proposal
-  Type            ProposalType  //  Type of proposal
-  InitialDeposit  sdk.Coins     //  Initial deposit paid by sender. Must be strictly positive.
+	Content        Content
+	InitialDeposit sdk.Coins
+	Proposer       sdk.AccAddress
 }
 ```
+
+The `Content` of a `TxGovSubmitProposal` message must have an appropriate router
+set in the governance module.
 
 **State modifications:**
 * Generate new `proposalID`

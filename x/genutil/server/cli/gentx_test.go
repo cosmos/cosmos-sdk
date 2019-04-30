@@ -50,7 +50,10 @@ func Test_prepareFlagsForTxCreateValidator(t *testing.T) {
 	}
 
 	runTest := func(t *testing.T, tt testcase, params extraParams) {
-		prepareFlagsForTxCreateValidator(tt.args.config, tt.args.nodeID, tt.args.ip, tt.args.chainID, tt.args.valPubKey, tt.args.website, tt.args.details, tt.args.identity)
+		prepareFlagsForTxCreateValidator(tt.args.config, tt.args.nodeID,
+			tt.args.ip, tt.args.chainID, tt.args.valPubKey, tt.args.website,
+			tt.args.details, tt.args.identity)
+
 		require.Equal(t, tt.args.website, viper.GetString(cli.FlagWebsite))
 		require.Equal(t, tt.args.details, viper.GetString(cli.FlagDetails))
 		require.Equal(t, tt.args.identity, viper.GetString(cli.FlagIdentity))
@@ -66,7 +69,13 @@ func Test_prepareFlagsForTxCreateValidator(t *testing.T) {
 		{"Optional parameters fed", args{ctx.Config, "X", "0.0.0.0", "chainId", valPubKey, "cosmos.network", "details", "identity"}},
 	}
 
-	defaultParams := extraParams{defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation}
+	defaultParams := extraParams{
+		defaultAmount,
+		defaultCommissionRate,
+		defaultCommissionMaxRate,
+		defaultCommissionMaxChangeRate,
+		defaultMinSelfDelegation,
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) { runTest(t, tt, defaultParams) })

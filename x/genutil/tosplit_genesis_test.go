@@ -1,4 +1,4 @@
-package app
+package genutil
 
 import (
 	"encoding/json"

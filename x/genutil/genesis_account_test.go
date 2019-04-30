@@ -1,64 +1,46 @@
 package genutil
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// XXX TODO move to auth to test ValidateVestingAccount
-func TestAddGenesisAccount(t *testing.T) {
+func TestGenesisAccountValidate(t *testing.T) {
 	cdc := codec.New()
-	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	type args struct {
-		appState     app.GenesisState
-		addr         sdk.AccAddress
-		coins        sdk.Coins
-		vestingAmt   sdk.Coins
-		vestingStart int64
-		vestingEnd   int64
-	}
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name   string
+		acc    GenesisAccount
+		expErr error
 	}{
 		{
 			"valid account",
-			args{app.GenesisState{}, addr1, sdk.NewCoins(), sdk.NewCoins(), 0, 0},
-			false,
-		},
-		{
-			"dup account",
-			args{app.GenesisState{Accounts: []app.GenesisAccount{{Address: addr1}}},
-				addr1, sdk.NewCoins(), sdk.NewCoins(), 0, 0},
-			true,
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0),
+			nil,
 		},
 		{
 			"invalid vesting amount",
-			args{app.GenesisState{}, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0},
-			true,
+			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0),
+			errors.New("vesting amount cannot be greater than total amount"),
 		},
 		{
 			"invalid vesting times",
-			args{app.GenesisState{}, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078},
-			true,
+			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078),
+			errors.New("vesting start-time cannot be before end-time"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := addGenesisAccount(
-				cdc, tt.args.appState, tt.args.addr, tt.args.coins,
-				tt.args.vestingAmt, tt.args.vestingStart, tt.args.vestingEnd,
-			)
-			require.Equal(t, tt.wantErr, (err != nil))
+			err := tt.acc.Validate()
+			require.Equal(t, tt.expErr)
 		})
 	}
 }

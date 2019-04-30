@@ -27,6 +27,7 @@ import (
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -70,7 +71,9 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *GaiaApp) (
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
-func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
+
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
 	bytes, err := ioutil.ReadFile(genesisFile)
@@ -94,9 +97,10 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 }
 
 // TODO refactor out random initialization code to the modules
-func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
 
-	var genesisAccounts []GenesisAccount
+	var genesisAccounts []genutil.GenesisAccount
 	modulesGenesis := NewDefaultGenesisState().Modules
 	cdc := MakeCodec()
 
@@ -258,7 +262,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	return appState, accs, "simulation"
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
+
 	if genesisFile != "" {
 		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
 	}

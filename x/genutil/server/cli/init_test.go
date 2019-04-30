@@ -19,7 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
+
+var testMbm = sdk.NewModuleBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
 	defer server.SetupViper(t)()
@@ -31,7 +35,7 @@ func TestInitCmd(t *testing.T) {
 
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	cmd := InitCmd(ctx, cdc, mbm)
+	cmd := InitCmd(ctx, cdc, testMbm)
 
 	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
 }
@@ -59,7 +63,7 @@ func TestEmptyState(t *testing.T) {
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
 
-	cmd := InitCmd(ctx, cdc)
+	cmd := InitCmd(ctx, cdc, testMbm)
 	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
 
 	old := os.Stdout
@@ -101,7 +105,7 @@ func TestStartStandAlone(t *testing.T) {
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	initCmd := InitCmd(ctx, cdc)
+	initCmd := InitCmd(ctx, cdc, testMbm)
 	require.NoError(t, initCmd.RunE(nil, []string{"gaianode-test"}))
 
 	app, err := mock.NewApp(home, logger)
@@ -130,7 +134,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	viper.Set(client.FlagName, "moniker")
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	nodeID, valPubKey, err := InitializeNodeValidatorFiles(cfg)
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))

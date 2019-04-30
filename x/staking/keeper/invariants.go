@@ -77,7 +77,7 @@ func BondedTokensInvariant(k Keeper, supplyKeeper supply.Keeper) sdk.Invariant {
 		}
 
 		stakingTokensFromPool := pool.StakingTokenSupply()
-		stakingTokensFromSupplier := supplier.TotalAmountOf(bondDenom)
+		stakingTokensFromSupplier := supplier.TotalSupply.AmountOf(bondDenom)
 
 		if !stakingTokensFromPool.Equal(stakingTokensFromSupplier) {
 			return fmt.Errorf("total bonded token invariance:\n"+

@@ -11,7 +11,6 @@ const (
 	TypeCirculating = "circulating"
 	TypeVesting     = "vesting"
 	TypeModules     = "modules"
-	TypeLiquid      = "liquid"
 	TypeTotal       = "total"
 )
 
@@ -20,18 +19,16 @@ type Supplier struct {
 	CirculatingSupply    sdk.Coins `json:"circulating_supply"`     // supply held by accounts that's not vesting; circulating = total - vesting
 	InitialVestingSupply sdk.Coins `json:"initial_vesting_supply"` // initial locked supply held by vesting accounts
 	ModulesSupply        sdk.Coins `json:"modules_supply"`         // supply held by modules acccounts
-	LiquidSupply         sdk.Coins `json:"liquid_supply"`          // sum of account spendable coins at a given time
 	TotalSupply          sdk.Coins `json:"total_supply"`           // total supply of tokens on the chain
 }
 
 // NewSupplier creates a new Supplier instance
-func NewSupplier(circulating, vesting, modules, liquid, total sdk.Coins) Supplier {
+func NewSupplier(circulating, vesting, modules, total sdk.Coins) Supplier {
 
 	return Supplier{
 		CirculatingSupply:    circulating,
 		InitialVestingSupply: vesting,
 		ModulesSupply:        modules,
-		LiquidSupply:         liquid,
 		TotalSupply:          total,
 	}
 }
@@ -39,7 +36,7 @@ func NewSupplier(circulating, vesting, modules, liquid, total sdk.Coins) Supplie
 // DefaultSupplier creates an empty Supplier
 func DefaultSupplier() Supplier {
 	coins := sdk.NewCoins()
-	return NewSupplier(coins, coins, coins, coins, coins)
+	return NewSupplier(coins, coins, coins, coins)
 }
 
 // Inflate adds coins to a given supply type
@@ -54,9 +51,6 @@ func (supplier *Supplier) Inflate(supplyType string, amount sdk.Coins) {
 
 	case TypeModules:
 		supplier.ModulesSupply = supplier.ModulesSupply.Add(amount)
-
-	case TypeLiquid:
-		supplier.LiquidSupply = supplier.LiquidSupply.Add(amount)
 
 	case TypeTotal:
 		supplier.TotalSupply = supplier.TotalSupply.Add(amount)
@@ -77,45 +71,12 @@ func (supplier *Supplier) Deflate(supplyType string, amount sdk.Coins) {
 	case TypeModules:
 		supplier.ModulesSupply = supplier.ModulesSupply.Sub(amount)
 
-	case TypeLiquid:
-		supplier.LiquidSupply = supplier.LiquidSupply.Sub(amount)
-
 	case TypeTotal:
 		supplier.TotalSupply = supplier.TotalSupply.Sub(amount)
 
 	default:
 		panic(fmt.Errorf("invalid type %s", supplyType))
 	}
-}
-
-// CirculatingAmountOf returns the circulating supply of a coin denomination
-func (supplier Supplier) CirculatingAmountOf(denom string) sdk.Int {
-
-	return supplier.CirculatingSupply.AmountOf(denom)
-}
-
-// InitalVestingAmountOf returns the vesting supply of a coin denomination
-func (supplier Supplier) InitalVestingAmountOf(denom string) sdk.Int {
-
-	return supplier.InitialVestingSupply.AmountOf(denom)
-}
-
-// ModulesAmountOf returns the total token holders' supply of a coin denomination
-func (supplier Supplier) ModulesAmountOf(denom string) sdk.Int {
-
-	return supplier.ModulesSupply.AmountOf(denom)
-}
-
-// LiquidAmountOf returns the liquid supply of a coin denomination
-func (supplier Supplier) LiquidAmountOf(denom string) sdk.Int {
-
-	return supplier.LiquidSupply.AmountOf(denom)
-}
-
-// TotalAmountOf returns the sum of circulating, vesting and modules supply for a specific coin denomination
-func (supplier Supplier) TotalAmountOf(denom string) sdk.Int {
-
-	return supplier.TotalSupply.AmountOf(denom)
 }
 
 // ValidateBasic validates the Supply coins and returns error if invalid
@@ -136,11 +97,6 @@ func (supplier Supplier) ValidateBasic() sdk.Error {
 			fmt.Sprintf("invalid token holders supply: %s", supplier.ModulesSupply.String()),
 		)
 	}
-	if !supplier.LiquidSupply.IsValid() {
-		return sdk.ErrInvalidCoins(
-			fmt.Sprintf("invalid liquid supply: %s", supplier.LiquidSupply.String()),
-		)
-	}
 	if !supplier.TotalSupply.IsValid() {
 		return sdk.ErrInvalidCoins(
 			fmt.Sprintf("invalid total supply: %s", supplier.ModulesSupply.String()),
@@ -156,11 +112,9 @@ func (supplier Supplier) String() string {
   Circulating Supply:     %s
   Initial Vesting Supply: %s
 	Modules Supply:         %s
-	Liquid Supply:          %s
 	Total Supply:           %s`,
 		supplier.CirculatingSupply.String(),
 		supplier.InitialVestingSupply.String(),
 		supplier.ModulesSupply.String(),
-		supplier.LiquidSupply.String(),
 		supplier.TotalSupply.String())
 }

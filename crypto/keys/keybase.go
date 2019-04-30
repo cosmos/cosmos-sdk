@@ -137,18 +137,19 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (Info, error) {
+func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
 	hdPath := hd.NewFundraiserParams(account, index)
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath)
+	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err
 	}
 	pub := priv.PubKey()
 
+	// Note: Once Cosmos App v1.3.1 is compulsory, it could be possible to check that pubkey and addr match
 	return kb.writeLedgerKey(name, pub, *hdPath), nil
 }
 
@@ -246,7 +247,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 
 	case ledgerInfo:
 		linfo := info.(ledgerInfo)
-		priv, err = crypto.NewPrivKeyLedgerSecp256k1(linfo.Path)
+		priv, err = crypto.NewPrivKeyLedgerSecp256k1Unsafe(linfo.Path)
 		if err != nil {
 			return
 		}

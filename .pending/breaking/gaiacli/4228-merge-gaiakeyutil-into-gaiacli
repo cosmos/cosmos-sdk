@@ -1,2 +1,2 @@
 #4228 Merge gaiakeyutil functionality into gaiacli keys.
-In fact, drop `gaiakeyutil` in favor of new `gaiacli keys parse` command. Syntax and semantic are preserved.
+Drop `gaiakeyutil` in favor of new `gaiacli keys parse` command. Syntax and semantic are preserved.

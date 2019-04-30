@@ -216,7 +216,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
         stateWriter, err := proposal.Handler()
         if err != nil
             // proposal passed but failed during state execution
-            proposal.CurrentStatus = ProposalStatusRejected
+            proposal.CurrentStatus = ProposalStatusFailed
          else
             // proposal pass and state is persisted
             proposal.CurrentStatus = ProposalStatusAccepted

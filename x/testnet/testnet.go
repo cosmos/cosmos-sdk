@@ -1,4 +1,4 @@
-package genutil
+package testnet
 
 // DONTCOVER
 
@@ -22,6 +22,7 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -29,7 +30,7 @@ import (
 
 const nodeDirPerm = 0755
 
-// XXX TODO
+// Initialize the testnet
 func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress string, numValidators int) error {
@@ -46,7 +47,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 	gaiaConfig.MinGasPrices = minGasPrices
 
 	var (
-		accs     []GenesisAccount
+		accs     []genutil.GenesisAccount
 		genFiles []string
 	)
 
@@ -80,7 +81,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 			return err
 		}
 
-		nodeIDs[i], valPubKeys[i], err = InitializeNodeValidatorFiles(config)
+		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(config)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
@@ -127,7 +128,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 
 		accTokens := sdk.TokensFromTendermintPower(1000)
 		accStakingTokens := sdk.TokensFromTendermintPower(500)
-		accs = append(accs, GenesisAccount{
+		accs = append(accs, genutil.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
@@ -193,16 +194,10 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 }
 
 func initGenFiles(cdc *codec.Codec, mbm sdk.ModuleBasicManager, chainID string,
-	accs []GenesisAccount, genFiles []string, numValidators int) error {
+	accs []genutil.GenesisAccount, genFiles []string, numValidators int) error {
 
 	appGenState := mbm.DefaultGenesis()
-
-	// set accounts
-	var genesisState GenesisState
-	cdc.MustUnmarshalJSON(appGenState[moduleName], &genesisState)
-	genesisState.Accounts = accs
-	appGenState[moduleName] = cdc.MustMarshalJSON(genesisState)
-
+	genutil.SetAccountsInAppState(cdc, appGenState, accs)
 	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
 	if err != nil {
 		return err
@@ -220,15 +215,13 @@ func initGenFiles(cdc *codec.Codec, mbm sdk.ModuleBasicManager, chainID string,
 			return err
 		}
 	}
-
 	return nil
 }
 
 func collectGenFiles(
 	cdc *codec.Codec, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
-	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
-) error {
+	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string) error {
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
@@ -243,14 +236,14 @@ func collectGenFiles(
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		initCfg := genutil.NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
 
 		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := GenAppStateFromConfig(cdc, config, initCfg, *genDoc)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc)
 		if err != nil {
 			return err
 		}
@@ -263,7 +256,7 @@ func collectGenFiles(
 		genFile := config.GenesisFile()
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		err = ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime)
+		err = genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime)
 		if err != nil {
 			return err
 		}
@@ -272,25 +265,28 @@ func collectGenFiles(
 	return nil
 }
 
-func getIP(i int, startingIPAddr string) (string, error) {
-	var (
-		ip  string
-		err error
-	)
-
+func getIP(i int, startingIPAddr string) (ip string, err error) {
 	if len(startingIPAddr) == 0 {
 		ip, err = server.ExternalIP()
 		if err != nil {
 			return "", err
 		}
-	} else {
-		ip, err = calculateIP(startingIPAddr, i)
-		if err != nil {
-			return "", err
-		}
+		return ip, nil
+	}
+	return calculateIP(startingIPAddr, i)
+}
+
+func calculateIP(ip string, i int) (string, error) {
+	ipv4 := net.ParseIP(ip).To4()
+	if ipv4 == nil {
+		return "", fmt.Errorf("%v: non ipv4 address", ip)
 	}
 
-	return ip, nil
+	for j := 0; j < i; j++ {
+		ipv4[3]++
+	}
+
+	return ipv4.String(), nil
 }
 
 func writeFile(name string, dir string, contents []byte) error {
@@ -308,17 +304,4 @@ func writeFile(name string, dir string, contents []byte) error {
 	}
 
 	return nil
-}
-
-func calculateIP(ip string, i int) (string, error) {
-	ipv4 := net.ParseIP(ip).To4()
-	if ipv4 == nil {
-		return "", fmt.Errorf("%v: non ipv4 address", ip)
-	}
-
-	for j := 0; j < i; j++ {
-		ipv4[3]++
-	}
-
-	return ipv4.String(), nil
 }

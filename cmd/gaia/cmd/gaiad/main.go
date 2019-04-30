@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutil "github.com/cosmos/cosmos-sdk/x/genutil/server/cli"
+	"github.com/cosmos/cosmos-sdk/x/testnet"
 )
 
 // gaiad custom flags
@@ -46,10 +47,10 @@ func main() {
 
 	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc))
-	rootCmd.AddCommand(genutil.TestnetFilesCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc, app.BasicGaiaApp, app.DefaultNodeHome, app.DefaultCLIHome))
 	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc))
 	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

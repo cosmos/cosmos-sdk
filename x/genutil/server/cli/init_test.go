@@ -31,7 +31,7 @@ func TestInitCmd(t *testing.T) {
 
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	cmd := InitCmd(ctx, cdc)
+	cmd := InitCmd(ctx, cdc, mbm)
 
 	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
 }

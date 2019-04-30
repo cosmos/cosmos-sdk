@@ -55,34 +55,35 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 }
 
 // withdraw rewards from a delegation
-func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 	val := k.stakingKeeper.Validator(ctx, valAddr)
 	if val == nil {
-		return types.ErrNoValidatorDistInfo(k.codespace)
+		return nil, types.ErrNoValidatorDistInfo(k.codespace)
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if del == nil {
-		return types.ErrNoDelegationDistInfo(k.codespace)
+		return nil, types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
 	// withdraw rewards
-	if err := k.withdrawDelegationRewards(ctx, val, del); err != nil {
-		return err
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+	if err != nil {
+		return nil, err
 	}
 
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
-	return nil
+
+	return rewards, nil
 }
 
 // withdraw validator commission
-func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Error {
-
+func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 	// fetch validator accumulated commission
 	commission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if commission.IsZero() {
-		return types.ErrNoValidatorCommission(k.codespace)
+		return nil, types.ErrNoValidatorCommission(k.codespace)
 	}
 
 	coins, remainder := commission.TruncateDecimal()
@@ -97,13 +98,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
 		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
-			return err
+			return nil, err
 		}
 
 		k.supplyKeeper.InflateSupply(ctx, supply.TypeCirculating, coins)
 	}
 
-	return nil
+	return coins, nil
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store

@@ -24,9 +24,9 @@ Please refer to the official english version of the documentation for the latest
 
 - ToDo
 
-### [`gaia`](../gaia/)
+### [`cosmos-hub`](../cosmos-hub/)
 
-- Synced until commit [9e7440a9](https://github.com/cosmos/cosmos-sdk/commit/9e7440a92c14187b05a3064864899f708a507d82)
+- Synced until commit [36dcd7b7](https://github.com/cosmos/cosmos-sdk/commit/36dcd7b7ad94cf59a8471506e10b937507d1dfa5)
 
 ### [`intro`](../intro/)
 

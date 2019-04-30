@@ -45,7 +45,7 @@ type ABCIMessageLogs []ABCIMessageLog
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
-	MsgIndex int    `json:"msg_index"`
+	MsgIndex uint16 `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 }
@@ -229,16 +229,16 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
 	}
 
-	if len(r.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
-	}
-
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
 	}
 
 	if r.Timestamp != "" {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
+	}
+
+	if len(r.Tags) > 0 {
+		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
 	}
 
 	return strings.TrimSpace(sb.String())

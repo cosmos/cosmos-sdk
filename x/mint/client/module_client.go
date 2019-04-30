@@ -1,15 +1,13 @@
 package client
 
 import (
-	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
-
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	"github.com/spf13/cobra"
+	"github.com/tendermint/go-amino"
 )
 
-// ModuleClient exports all CLI client functionality from the minting module.
 type ModuleClient struct {
 	storeKey string
 	cdc      *amino.Codec

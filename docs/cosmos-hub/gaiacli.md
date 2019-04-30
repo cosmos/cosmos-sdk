@@ -2,27 +2,41 @@
 
 ## Gaia CLI
 
-::: tip Note
-If you receive this error message:
+`gaiacli` is the tool that enables you to interact with the node that runs on the Cosmos Hub network, whether you run it yourself or not. Let us set it up properly. In order to install it, follow the [installation procedure](./installation.md).
+
+### Setting up gaiacli 
+
+The main command used to set up `gaiacli` is the following:
 
 ```bash
-Must specify these options: --chain-id  when --trust-node is false
+gaiacli config <flag> <value>
 ```
 
-you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
-:::
+It allows you to set a default value for each given flag. 
 
-`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets.
-Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
-by hand or via the `gaiacli config` command:
+First, set up the address of the full-node you want to connect to:
 
 ```bash
-gaiacli config chain-id gaia-9004
+gaiacli config node <host>:<port
+
+// example: gaiacli config node https://77.87.106.33:26657
 ```
 
-For more information on the command usage, refer to its help screen: `gaiacli config --help`.
+If you run your own full-node, just use `tcp://localhost:26657` as the address. 
 
-Here is a list of useful `gaiacli` commands, including usage examples.
+Then, let us set the default value of the `--trust-node` flag:
+
+```bash
+gaiacli config trust-node true
+
+// Set to true if you trust the full-node you are connecting to, false otherwise
+```
+
+Finally, let us set the `chain-id` of the blockchain we want to interact with:
+
+```bash
+gaiacli config chain-id cosmoshub-2
+```
 
 ### Keys
 
@@ -235,7 +249,7 @@ gaiacli tx send <sender_address> <recipient_address> 10faucetToken \
 ```bash
 gaiacli tx sign \
   --chain-id=<chain_id> \
-  --from=<key_name>
+  --from=<key_name> \
   unsignedSendTx.json > signedSendTx.json
 ```
 
@@ -719,7 +733,7 @@ For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each
 by a distinct party, the user holding `p1` would require to import both `p2` and `p3` in order to
 generate the multisig account public key:
 
-```
+```bash
 gaiacli keys add \
   p2 \
   --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
@@ -767,7 +781,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p1 \
-  --output-document=p1signature.json \
+  --output-document=p1signature.json 
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -779,7 +793,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p2 \
-  --output-document=p2signature.json \
+  --output-document=p2signature.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

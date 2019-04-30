@@ -6,6 +6,8 @@ Information on how to join the mainnet (`genesis.json` file and seeds) is held [
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](../join-mainnet.md) guide.
 
+If you plan to use a KMS (key management system), you should go through these steps first: [Using a KMS](kms/kms.md).
+
 ## What is a Validator?
 
 [Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
@@ -159,7 +161,7 @@ Your validator is active if the following command returns anything:
 gaiacli query tendermint-validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
-You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
+You should now see your validator in one of the Cosmos Hub explorers. You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
 
 ::: warning Note
 To be in the validator set, you need to have more total voting power than the 100th validator.

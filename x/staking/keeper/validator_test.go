@@ -162,9 +162,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 		assert.Equal(
 			t, status, val.GetStatus(),
-			fmt.Sprintf("expected validator at index %v to have status: %s",
-				valIdx,
-				sdk.BondStatusToString(status)))
+			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
+		)
 	}
 }
 

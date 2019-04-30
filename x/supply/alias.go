@@ -24,10 +24,10 @@ var (
 
 const (
 	StoreKey = keeper.StoreKey
-	// QuerierRoute = keeper.QuerierRoute
 
 	TypeCirculating = types.TypeCirculating
 	TypeVesting     = types.TypeVesting
 	TypeModules     = types.TypeModules
+	TypeLiquid      = types.TypeLiquid
 	TypeTotal       = types.TypeTotal
 )

@@ -53,11 +53,12 @@ type ProposalStatus byte
 
 
 const (
-    ProposalStatusOpen      = 0x1   // Proposal is submitted. Participants can deposit on it but not vote
-    ProposalStatusActive    = 0x2   // MinDeposit is reached, participants can vote
-    ProposalStatusAccepted  = 0x3   // Proposal has been accepted
-    ProposalStatusRejected  = 0x4   // Proposal has been rejected
-    ProposalStatusClosed   = 0x5   // Proposal never reached MinDeposit
+	StatusNil           ProposalStatus = 0x00
+    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
+    StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
+    StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
+    StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
+    StatusFailed        ProposalStatus = 0x05  // Proposal passed but failed execution
 )
 ```
 

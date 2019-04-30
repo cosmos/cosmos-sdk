@@ -14,7 +14,7 @@ import (
 type Proposal struct {
 	Content `json:"content"` // Proposal content interface
 
-	ProposalID       uint64         `json:"id"`        //  ID of the proposal
+	ProposalID       uint64         `json:"id"`                 //  ID of the proposal
 	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
 	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
 
@@ -85,6 +85,7 @@ const (
 	StatusVotingPeriod  ProposalStatus = 0x02
 	StatusPassed        ProposalStatus = 0x03
 	StatusRejected      ProposalStatus = 0x04
+	StatusFailed        ProposalStatus = 0x05
 )
 
 // ProposalStatusToString turns a string into a ProposalStatus
@@ -102,6 +103,9 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	case "Rejected":
 		return StatusRejected, nil
 
+	case "Failed":
+		return StatusFailed, nil
+
 	case "":
 		return StatusNil, nil
 
@@ -116,7 +120,8 @@ func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||
 		status == StatusVotingPeriod ||
 		status == StatusPassed ||
-		status == StatusRejected {
+		status == StatusRejected ||
+		status == StatusFailed {
 		return true
 	}
 	return false
@@ -169,6 +174,9 @@ func (status ProposalStatus) String() string {
 
 	case StatusRejected:
 		return "Rejected"
+
+	case StatusFailed:
+		return "Failed"
 
 	default:
 		return ""

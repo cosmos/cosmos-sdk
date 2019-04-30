@@ -9,6 +9,7 @@ const (
 	StatusVotingPeriod  = types.StatusVotingPeriod
 	StatusPassed        = types.StatusPassed
 	StatusRejected      = types.StatusRejected
+	StatusFailed        = types.StatusFailed
 
 	DefaultCodespace  = types.DefaultCodespace
 	DefaultParamspace = types.DefaultParamspace

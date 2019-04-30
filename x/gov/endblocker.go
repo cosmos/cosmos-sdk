@@ -59,7 +59,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
-			activeProposal.Status = StatusPassed
 
 			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
 			cacheCtx, writeCache := ctx.CacheContext()
@@ -69,23 +68,27 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			// is written and the error message is logged.
 			err := handler(cacheCtx, activeProposal.Content)
 			if err == nil {
+				activeProposal.Status = StatusPassed
 				tagValue = tags.ActionProposalPassed
 				logMsg = "passed"
 
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
-				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
+				activeProposal.Status = StatusFailed
 				tagValue = tags.ActionProposalFailed
+				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
 			}
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+
 			activeProposal.Status = StatusRejected
 			tagValue = tags.ActionProposalRejected
 			logMsg = "rejected"
 		}
 
 		activeProposal.FinalTallyResult = tallyResults
+
 		keeper.SetProposal(ctx, activeProposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.VotingEndTime, activeProposal.ProposalID)
 

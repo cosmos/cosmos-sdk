@@ -26,6 +26,14 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 Submit a parameter proposal along with an initial deposit. The proposal details
 must be supplied via a JSON file.
 
+IMPORTANT: Currently parameter changes are evaluated but not validated, so it is
+very important that any "value" change is valid (ie. correct type and within bounds)
+for its respective parameter, eg. "MaxValidators" should be an integer and not a decimal.
+
+Proper vetting of a parameter change proposal should prevent this from happening
+(no deposits should occur during the governance process), but it should be noted
+regardless. 
+
 Example:
 $ gaiacli tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:

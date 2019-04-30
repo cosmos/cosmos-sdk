@@ -26,9 +26,6 @@ type Keeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
-//-----------------------------------------------------------------------------
-// BaseKeeper
-
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
 type BaseKeeper struct {
 	BaseSendKeeper
@@ -38,8 +35,7 @@ type BaseKeeper struct {
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(
-	ak auth.AccountKeeper,
+func NewBaseKeeper(ak auth.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
@@ -92,9 +88,6 @@ func (keeper BaseKeeper) InputOutputCoins(
 	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
-//------------------ Staking logic ------------------
-// TODO: consider moving out this of bank
-
 // DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
@@ -122,9 +115,6 @@ func (keeper BaseKeeper) UndelegateCoins(
 	return undelegateCoins(ctx, keeper.ak, addr, amt)
 }
 
-//-------------------------------------------------------
-// SendKeeper
-
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
@@ -138,9 +128,6 @@ type SendKeeper interface {
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
 
-//-------------------------------------------------------
-// BaseSendKeeper
-
 // BaseSendKeeper only allows transfers between accounts without the possibility of
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
@@ -151,11 +138,8 @@ type BaseSendKeeper struct {
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(
-	ak auth.AccountKeeper,
-	paramSpace params.Subspace,
-	codespace sdk.CodespaceType,
-) BaseSendKeeper {
+func NewBaseSendKeeper(ak auth.AccountKeeper,
+	paramSpace params.Subspace, codespace sdk.CodespaceType) BaseSendKeeper {
 
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
@@ -187,9 +171,6 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
 }
-
-//-------------------------------------------------------
-// ViewKeeper
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
@@ -227,9 +208,6 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 	return keeper.codespace
 }
-
-//-------------------------------------------------------
-// private functions
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
@@ -377,9 +355,6 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, ou
 
 	return allTags, nil
 }
-
-//-------------------------------------------------------
-// staking
 
 func delegateCoins(
 	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,

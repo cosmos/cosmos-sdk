@@ -7,8 +7,46 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 )
+
+const (
+	// ModuleKey is the name of the module
+	ModuleName = "gov"
+
+	// StoreKey is the store key string for gov
+	StoreKey = ModuleName
+
+	// RouterKey is the message route for gov
+	RouterKey = ModuleName
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = ModuleName
+
+	// Parameter store default namestore
+	DefaultParamspace = ModuleName
+)
+
+// Parameter store key
+var (
+	ParamStoreKeyDepositParams = []byte("depositparams")
+	ParamStoreKeyVotingParams  = []byte("votingparams")
+	ParamStoreKeyTallyParams   = []byte("tallyparams")
+
+	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
+	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
+	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
+)
+
+// Key declaration for parameters
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
+		ParamStoreKeyDepositParams, DepositParams{},
+		ParamStoreKeyVotingParams, VotingParams{},
+		ParamStoreKeyTallyParams, TallyParams{},
+	)
+}
 
 // Governance Keeper
 type Keeper struct {
@@ -48,8 +86,6 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-// CONTRACT: Token Holder needs to be added into the bank keeper before calling
-// this function
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
 	paramSpace params.Subspace, bk BankKeeper, ak AccountKeeper,
 	supplyKeeper SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
@@ -390,13 +426,13 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return nil, activatedVotingPeriod
 }
 
-// GetDeposits Gets all the deposits on a specific proposal as an sdk.Iterator
+// Gets all the deposits on a specific proposal as an sdk.Iterator
 func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, KeyDepositsSubspace(proposalID))
 }
 
-// RefundDeposits Refunds and deletes all the deposits on a specific proposal
+// Refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -419,7 +455,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	}
 }
 
-// DeleteDeposits Deletes all the deposits on a specific proposal without refunding them
+// Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -428,8 +464,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		// update the governance module account coin pool
-		// burn deposit
+		// update the governance module account coin pool and burn deposit
 		_, err := keeper.ck.SubtractCoins(ctx, ModuleAddress, deposit.Amount)
 		if err != nil {
 			panic(err)

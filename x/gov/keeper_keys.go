@@ -5,34 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-)
-
-const (
-	// ModuleKey is the name of the module
-	ModuleName = "gov"
-
-	// StoreKey is the store key string for gov
-	StoreKey = ModuleName
-
-	// RouterKey is the message route for gov
-	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
-
-	// Parameter store default namestore
-	DefaultParamspace = ModuleName
-)
-
-// Parameter store key
-var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Key for getting a the next available proposalID from the store
@@ -104,13 +78,4 @@ func KeyInactiveProposalQueueProposal(endTime time.Time, proposalID uint64) []by
 		sdk.FormatTimeBytes(endTime),
 		sdk.Uint64ToBigEndian(proposalID),
 	}, KeyDelimiter)
-}
-
-// Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
-	)
 }

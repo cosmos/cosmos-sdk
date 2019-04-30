@@ -4,15 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// CodeType definition
-type CodeType = sdk.CodeType
-
 // Bank errors reserve 100 ~ 199.
 const (
-	DefaultCodespace sdk.CodespaceType = ModuleName
+	DefaultCodespace sdk.CodespaceType = "bank"
 
-	CodeSendDisabled         CodeType = 101
-	CodeInvalidInputsOutputs CodeType = 102
+	CodeSendDisabled         sdk.CodeType = 101
+	CodeInvalidInputsOutputs sdk.CodeType = 102
 )
 
 // ErrNoInputs is an error

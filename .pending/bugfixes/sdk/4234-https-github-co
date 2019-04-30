@@ -1,0 +1,2 @@
+[#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
+actually work offline.

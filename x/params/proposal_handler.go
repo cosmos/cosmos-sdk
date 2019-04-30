@@ -7,7 +7,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func NewProposalHandler(k Keeper) govtypes.Handler {
+func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
 		switch c := content.(type) {
 		case ParameterChangeProposal:

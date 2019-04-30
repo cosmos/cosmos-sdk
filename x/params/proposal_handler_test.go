@@ -77,7 +77,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	)
 
 	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "", "1"))
-	hdlr := params.NewProposalHandler(input.keeper)
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	var param uint16
@@ -92,7 +92,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 	)
 
 	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "", "invalidType"))
-	hdlr := params.NewProposalHandler(input.keeper)
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.Error(t, hdlr(input.ctx, tp))
 
 	require.False(t, ss.Has(input.ctx, []byte(keyMaxValidators)))

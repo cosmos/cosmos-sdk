@@ -36,11 +36,8 @@ import (
 
 const (
 	name1 = "test1"
-	name2 = "test2"
-	name3 = "test3"
 	memo  = "LCD test tx"
 	pw    = client.DefaultKeyPass
-	altPw = "12345678901"
 )
 
 var fees = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)}

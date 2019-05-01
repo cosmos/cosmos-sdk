@@ -65,13 +65,13 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (a AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
 // module message route name
 func (AppModule) Route() string { return "" }
 
 // module handler
-func (a AppModule) NewHandler() sdk.Handler { return nil }
+func (am AppModule) NewHandler() sdk.Handler { return nil }
 
 // module querier route name
 func (AppModule) QuerierRoute() string {
@@ -79,27 +79,27 @@ func (AppModule) QuerierRoute() string {
 }
 
 // module querier
-func (a AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(a.keeper)
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(am.keeper)
 }
 
 // module init-genesis
-func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, a.keeper, genesisState)
+	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // module export genesis
-func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, a.keeper)
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	gs := ExportGenesis(ctx, am.keeper)
 	return moduleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block
-func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
-	BeginBlocker(ctx, a.keeper)
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
+	BeginBlocker(ctx, am.keeper)
 	return sdk.EmptyTags()
 }
 

@@ -82,21 +82,21 @@ func (AppModule) QuerierRoute() string {
 }
 
 // module querier
-func (a AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(a.accountKeeper)
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(am.accountKeeper)
 }
 
 // module init-genesis
-func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, a.accountKeeper, a.feeCollectionKeeper, genesisState)
+	InitGenesis(ctx, am.accountKeeper, am.feeCollectionKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // module export genesis
-func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, a.accountKeeper, a.feeCollectionKeeper)
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	gs := ExportGenesis(ctx, am.accountKeeper, am.feeCollectionKeeper)
 	return moduleCdc.MustMarshalJSON(gs)
 }
 

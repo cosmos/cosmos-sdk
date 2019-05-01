@@ -8,12 +8,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var (
+	_ sdk.AppModule      = AppModule{}
+	_ sdk.AppModuleBasic = AppModuleBasic{}
+)
+
 const moduleName = "genutil"
 
 // app module basics object
 type AppModuleBasic struct{}
-
-var _ sdk.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -59,8 +62,6 @@ func NewAppModule(accountKeeper AccountKeeper, stakingKeeper StakingKeeper,
 	}
 }
 
-var _ sdk.AppModule = AppModule{}
-
 // register invariants
 func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
@@ -74,23 +75,23 @@ func (AppModule) NewHandler() sdk.Handler { return nil }
 func (AppModule) QuerierRoute() string { return "" }
 
 // module querier
-func (a AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module init-genesis
-func (a AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, a.cdc, a.accountKeeper, a.stakingKeeper, a.deliverTx, genesisState)
+	return InitGenesis(ctx, am.cdc, am.accountKeeper, am.stakingKeeper, am.deliverTx, genesisState)
 }
 
 // module export genesis
-func (a AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, a.accountKeeper)
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	gs := ExportGenesis(ctx, am.accountKeeper)
 	return moduleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block
-func (a AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
 	return sdk.EmptyTags()
 }
 

@@ -12,10 +12,16 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
@@ -24,18 +30,18 @@ var (
 )
 
 func TestParseQueryResponse(t *testing.T) {
-	cdc := app.MakeCodec()
+	cdc := makeCodec()
 	sdkResBytes := cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: 10})
 	gas, err := parseQueryResponse(cdc, sdkResBytes)
 	assert.Equal(t, gas, uint64(10))
 	assert.Nil(t, err)
 	gas, err = parseQueryResponse(cdc, []byte("fuzzy"))
 	assert.Equal(t, gas, uint64(0))
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestCalculateGas(t *testing.T) {
-	cdc := app.MakeCodec()
+	cdc := makeCodec()
 	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, error) {
 		return func(string, common.HexBytes) ([]byte, error) {
 			if wantErr {
@@ -71,7 +77,7 @@ func TestCalculateGas(t *testing.T) {
 }
 
 func TestDefaultTxEncoder(t *testing.T) {
-	cdc := makeCodec()
+	cdc := makeTestCodec()
 
 	defaultEncoder := auth.DefaultTxEncoder(cdc)
 	encoder := GetTxEncoder(cdc)
@@ -80,7 +86,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestConfiguredTxEncoder(t *testing.T) {
-	cdc := makeCodec()
+	cdc := makeTestCodec()
 
 	customEncoder := func(tx sdk.Tx) ([]byte, error) {
 		return json.Marshal(tx)
@@ -92,23 +98,6 @@ func TestConfiguredTxEncoder(t *testing.T) {
 	encoder := GetTxEncoder(cdc)
 
 	compareEncoders(t, customEncoder, encoder)
-}
-
-func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	tx := auth.NewStdTx(msgs, auth.StdFee{}, []auth.StdSignature{}, "")
-
-	defaultEncoderBytes, err := expected(tx)
-	require.NoError(t, err)
-	encoderBytes, err := actual(tx)
-	require.NoError(t, err)
-	require.Equal(t, defaultEncoderBytes, encoderBytes)
-}
-
-func makeCodec() *codec.Codec {
-	cdc := app.MakeCodec()
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
-	return cdc
 }
 
 func TestReadStdTxFromFile(t *testing.T) {
@@ -126,16 +115,50 @@ func TestReadStdTxFromFile(t *testing.T) {
 
 	// Read it back
 	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, decodedTx.Memo, "foomemo")
+}
+
+// aux functions
+
+func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	tx := auth.NewStdTx(msgs, auth.StdFee{}, []auth.StdSignature{}, "")
+
+	defaultEncoderBytes, err := expected(tx)
+	require.NoError(t, err)
+	encoderBytes, err := actual(tx)
+	require.NoError(t, err)
+	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
 func writeToNewTempFile(t *testing.T, data string) *os.File {
 	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = fp.WriteString(data)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	return fp
+}
+
+func makeCodec() *codec.Codec {
+	var cdc = codec.New()
+	bank.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
+	distribution.RegisterCodec(cdc)
+	slashing.RegisterCodec(cdc)
+	params.RegisterCodec(cdc)
+	gov.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
+	crisis.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
+}
+
+func makeTestCodec() *codec.Codec {
+	cdc := makeCodec()
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	return cdc
 }

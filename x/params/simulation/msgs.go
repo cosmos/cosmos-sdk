@@ -24,7 +24,7 @@ type simParamChange struct {
 //
 // NOTE: All parameter value ranges are adapted from appStateRandomizedFn.
 //
-// TODO: governance parameters
+// TODO: governance parameters (blocked on an upgrade to go-amino)
 var paramChangePool = []simParamChange{
 	// staking parameters
 	{

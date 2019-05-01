@@ -1,5 +1,18 @@
 # Contributing
 
+* [Pull Requests](#pull-requests)
+  * [Process for reviewing PRs](#process-for-reviewing-prs)
+  * [Updating Documentation](#updating-documentation)
+* [Forking](#forking)
+* [Dependencies](#dependencies)
+* [Testing](#testing)
+* [Branching Model and Release](#branching-model-and-release)
+  * [PR Targeting](#pr-targeting)
+  * [Development Procedure:](#development-procedure)
+  * [Pull Merge Procedure:](#pull-merge-procedure)
+  * [Release Procedure:](#release-procedure)
+  * [Hotfix Procedure:](#hotfix-procedure)
+
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
 

@@ -8,10 +8,10 @@
 * [Testing](#testing)
 * [Branching Model and Release](#branching-model-and-release)
   * [PR Targeting](#pr-targeting)
-  * [Development Procedure:](#development-procedure)
-  * [Pull Merge Procedure:](#pull-merge-procedure)
-  * [Release Procedure:](#release-procedure)
-  * [Hotfix Procedure:](#hotfix-procedure)
+  * [Development Procedure](#development-procedure)
+  * [Pull Merge Procedure](#pull-merge-procedure)
+  * [Release Procedure](#release-procedure)
+  * [Point Release Procedure](#point-release-procedure)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -170,7 +170,7 @@ All feature additions should be targeted against `master`. Bug fixes for an outs
 should be targeted against the release candidate branch. Release candidate branches themselves should be the
 only pull requests targeted directly against master.
 
-### Development Procedure:
+### Development Procedure
   - the latest state of development is on `master`
   - `master` must never fail `make test` or `make test_cli`
   - `master` should not fail `make lint`
@@ -178,12 +178,12 @@ only pull requests targeted directly against master.
   - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
   - before submitting a pull request, begin `git rebase` on top of `master`
 
-### Pull Merge Procedure:
+### Pull Merge Procedure
   - ensure pull branch is rebased on `master`
   - run `make test` and `make test_cli` to ensure that all tests pass
   - merge pull request
 
-### Release Procedure:
+### Release Procedure
   - start on `master`
   - create the release candidate branch `rcN/v*` (please start with `N=1`) (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
   - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
@@ -192,13 +192,18 @@ only pull requests targeted directly against master.
   - merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
   - delete the `RC` branches
  
-### Hotfix Procedure:
-  - start on `master`
-  - checkout a new branch named hotfix-vX.X.X
-  - make the required changes
-    - these changes should be small and an absolute necessity
-    - add a note to CHANGELOG.md
-  - bump versions
-  - push to hotfix-vX.X.X to run the extended integration tests on the CI
-  - merge hotfix-vX.X.X to `master` and cherry pick the commit to any release branches this applies to
-  - delete the hotfix-vX.X.X branch
+### Point Release Procedure
+
+At the moment, only a single major release will be supported, so all point
+releases will be based off of that release.
+
+  - start on `vX.XX.X`
+  - checkout a new branch `pre-rc/vX.X.X`
+  - cherry pick the desired changes from `master`
+    - these changes should be small and NON-BREAKING (both API and state machine)
+   - add entries to CHANGELOG.md
+  - checkout a new branch `rc/vX.X.X`
+  - run tests and simulations (noted in [Release Procedure](#release-procedure))
+  - after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
+  - delete the `pre-rc/vX.X.X` and `RC` branches
+  - tag and release `release/vX.XX.X`

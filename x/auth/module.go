@@ -8,13 +8,16 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var (
+	_ sdk.AppModule      = AppModule{}
+	_ sdk.AppModuleBasic = AppModuleBasic{}
+)
+
 // name of this module
 const ModuleName = "auth"
 
 // app module basics object
 type AppModuleBasic struct{}
-
-var _ sdk.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -59,7 +62,10 @@ func NewAppModule(accountKeeper AccountKeeper,
 	}
 }
 
-var _ sdk.AppModule = AppModule{}
+// module name
+func (AppModule) Name() string {
+	return ModuleName
+}
 
 // register invariants
 func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}

@@ -10,3 +10,10 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 var moduleCdc = codec.New()
+
+func init() {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	moduleCdc = cdc.Seal()
+}

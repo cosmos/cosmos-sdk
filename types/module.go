@@ -8,8 +8,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// ModuleClients helps modules provide a standard interface for exporting client functionality
-type ModuleClients interface {
+// ModuleClient helps modules provide a standard interface for exporting client functionality
+type ModuleClient interface {
 	GetQueryCmd() *cobra.Command
 	GetTxCmd() *cobra.Command
 }
@@ -152,7 +152,8 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 	for _, moduleName := range mm.OrderInitGenesis {
 		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
-		// overwrite validator updates if provided
+		// use these validator updates if provided, the module manager assumes
+		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
 			validatorUpdates = moduleValUpdates
 		}
@@ -192,7 +193,8 @@ func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.Re
 		moduleValUpdates, moduleTags := mm.Modules[moduleName].EndBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 
-		// overwrite validator updates if provided
+		// use these validator updates if provided, the module manager assumes
+		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
 			validatorUpdates = moduleValUpdates
 		}

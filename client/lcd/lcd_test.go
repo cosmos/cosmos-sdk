@@ -630,6 +630,43 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, proposalID, proposer.ProposalID)
 }
 
+func TestSubmitParamChangeProposal(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
+	// create proposal tx
+	proposalTokens := sdk.TokensFromTendermintPower(5)
+	resultTx := doSubmitParamChangeProposal(t, port, seed, name1, pw, addr, proposalTokens, fees)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was committed
+	require.Equal(t, uint32(0), resultTx.Code)
+
+	var proposalID uint64
+	bz, err := hex.DecodeString(resultTx.Data)
+	require.NoError(t, err)
+	cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
+
+	// verify balance
+	acc = getAccount(t, port, addr)
+	expectedBalance := initialBalance[0].Sub(fees[0])
+	require.Equal(t, expectedBalance.Amount.Sub(proposalTokens), acc.GetCoins().AmountOf(sdk.DefaultBondDenom))
+
+	// query proposal
+	proposal := getProposal(t, port, proposalID)
+	require.Equal(t, "Test", proposal.GetTitle())
+
+	proposer := getProposer(t, port, proposalID)
+	require.Equal(t, addr.String(), proposer.Proposer)
+	require.Equal(t, proposalID, proposer.ProposalID)
+}
+
 func TestDeposit(t *testing.T) {
 	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)

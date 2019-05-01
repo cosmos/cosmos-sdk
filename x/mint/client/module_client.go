@@ -1,12 +1,11 @@
 package client
 
 import (
-    "github.com/spf13/cobra"
-    "github.com/tendermint/go-amino"
-
-    sdkclient "github.com/cosmos/cosmos-sdk/client"
-    "github.com/cosmos/cosmos-sdk/x/mint"
-    "github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	"github.com/spf13/cobra"
+	"github.com/tendermint/go-amino"
 )
 
 type ModuleClient struct {

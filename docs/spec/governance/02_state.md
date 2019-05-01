@@ -33,7 +33,6 @@ Parameters are stored in a global `GlobalParams` KVStore.
 Additionally, we introduce some basic types:
 
 ```go
-
 type Vote byte
 
 const (
@@ -43,22 +42,23 @@ const (
     VoteAbstain     = 0x4
 )
 
-type ProposalType  byte
+type ProposalType  string
 
 const (
-    ProposalTypePlainText       = 0x1 // Plain text proposals
-    ProposalTypeSoftwareUpgrade = 0x2 // Text proposal inducing a software upgrade
+    ProposalTypePlainText       = "Text"
+    ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
 )
 
 type ProposalStatus byte
 
 
 const (
-    ProposalStatusOpen      = 0x1   // Proposal is submitted. Participants can deposit on it but not vote
-    ProposalStatusActive    = 0x2   // MinDeposit is reached, participants can vote
-    ProposalStatusAccepted  = 0x3   // Proposal has been accepted
-    ProposalStatusRejected  = 0x4   // Proposal has been rejected
-    ProposalStatusClosed   = 0x5   // Proposal never reached MinDeposit
+	StatusNil           ProposalStatus = 0x00
+    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
+    StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
+    StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
+    StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
+    StatusFailed        ProposalStatus = 0x05  // Proposal passed but failed execution
 )
 ```
 
@@ -84,38 +84,54 @@ This type is used in a temp map when tallying
 
 ## Proposals
 
-`Proposals` are an item to be voted on. It contains the `ProposalContent` which denotes what this proposal is about, and the other fields, which are the mutable state of the governance process.
+`Proposal` objects are used to account votes and generally track the proposal's state. They contain `Content` which denotes
+what this proposal is about, and other fields, which are the mutable state of
+the governance process.
 
 ```go
 type Proposal struct {
-  ProposalContent                           // Proposal content interface
-  TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
-  Deposits              []Deposit           //  List of deposits on the proposal
-  SubmitTime            time.Time           //  Time of the block where TxGovSubmitProposal was included
-  DepositEndTime        time.Time           //  Time that the DepositPeriod of a proposal would expire
-  Submitter             sdk.AccAddress      //  Address of the submitter
+	Content  // Proposal content interface
 
-  VotingStartTime       time.Time           //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
-  VotingEndTime         time.Time           //  Time of the block that the VotingPeriod for a proposal will end.
-  CurrentStatus         ProposalStatus      //  Current status of the proposal
+	ProposalID       uint64 
+	Status           ProposalStatus  // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult     // Result of Tallies
 
-  YesVotes              sdk.Dec
-  NoVotes               sdk.Dec
-  NoWithVetoVotes       sdk.Dec
-  AbstainVotes          sdk.Dec
+	SubmitTime     time.Time  // Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time  // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins  // Current deposit on this proposal. Initial value is set at InitialDeposit
+
+	VotingStartTime time.Time  //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time  // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 ```
-
-`ProposalContent`s are an interface which contains the information about the `Proposal` where it is provided from an external source, including the proposer. Governance process itself does not evaluate about the internal content.
 
 ```go
-type ProposalContent interface {
-    GetTitle() string
-    GetDescription() string
-    ProposalType() ProposalKind
+type Content interface {
+	GetTitle() string
+	GetDescription() string
+	ProposalRoute() string
+	ProposalType() string
+	ValidateBasic() sdk.Error
+	String() string
 }
-
 ```
+
+The `Content` on a proposal is an interface which contains the information about
+the `Proposal` such as the tile, description, and any notable changes. Also, this
+`Content` type can by implemented by any module. The `Content`'s `ProposalRoute`
+returns a string which must be used to route the `Content`'s `Handler` in the
+governance keeper. This allows the governance keeper to execute proposal logic
+implemented by any module. If a proposal passes, the handler is executed. Only
+if the handler is successful does the state get persisted and the proposal finally
+passes. Otherwise, the proposal is rejected.
+
+```go
+type Handler func(ctx sdk.Context, content Content) sdk.Error
+```
+
+The `Handler` is responsible for actually executing the proposal and processing
+any state changes specified by the proposal. It is executed only if a proposal
+passes during `EndBlock`.
 
 We also mention a method to update the tally for a given proposal:
 
@@ -125,12 +141,15 @@ We also mention a method to update the tally for a given proposal:
 
 ## Stores
 
-*Stores are KVStores in the multistore. The key to find the store is the first parameter in the list*`
+*Stores are KVStores in the multi-store. The key to find the store is the first
+parameter in the list*`
 
 We will use one KVStore `Governance` to store two mappings:
 
-* A mapping from `proposalID|'proposal'` to `Proposal`
-* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows us to query all addresses that voted on the proposal along with their vote by doing a range query on `proposalID:addresses`
+* A mapping from `proposalID|'proposal'` to `Proposal`.
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+us to query all addresses that voted on the proposal along with their vote by
+doing a range query on `proposalID:addresses`.
 
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
@@ -142,11 +161,12 @@ For pseudocode purposes, here are the two function we will use to read or write 
 
 **Store:**
 * `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
-  `ProposalIDs` of proposals that reached `MinDeposit`. Each `EndBlock`, all the proposals
-  that have reached the end of their voting period are processed.
-  To process a finished proposal, the application tallies the votes, compute the votes of
-  each validator and checks if every validator in the valdiator set have voted.
-  If the proposal is accepted, deposits are refunded.
+  `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
+  all the proposals that have reached the end of their voting period are processed.
+  To process a finished proposal, the application tallies the votes, computes the
+  votes of each validator and checks if every validator in the validator set has
+  voted. If the proposal is accepted, deposits are refunded. Finally, the proposal
+  content `Handler` is executed.
 
 And the pseudocode for the `ProposalProcessingQueue`:
 
@@ -191,10 +211,17 @@ And the pseudocode for the `ProposalProcessingQueue`:
       if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
         //  proposal was accepted at the end of the voting period
         //  refund deposits (non-voters already punished)
-        proposal.CurrentStatus = ProposalStatusAccepted
         for each (amount, depositor) in proposal.Deposits
           depositor.AtomBalance += amount
 
+        stateWriter, err := proposal.Handler()
+        if err != nil
+            // proposal passed but failed during state execution
+            proposal.CurrentStatus = ProposalStatusFailed
+         else
+            // proposal pass and state is persisted
+            proposal.CurrentStatus = ProposalStatusAccepted
+            stateWriter.save()
       else
         // proposal was rejected
         proposal.CurrentStatus = ProposalStatusRejected

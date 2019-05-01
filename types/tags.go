@@ -96,7 +96,8 @@ func (st StringTags) String() string {
 	for _, t := range st {
 		sb.WriteString(fmt.Sprintf("    - %s\n", t.String()))
 	}
-	return sb.String()
+
+	return strings.TrimRight(sb.String(), "\n")
 }
 
 // Conversion function from a []byte tag to a string tag

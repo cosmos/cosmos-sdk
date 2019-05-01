@@ -3,13 +3,12 @@ package lcd
 import (
 	"bytes"
 	"fmt"
-	"regexp"
-
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -21,6 +20,7 @@ import (
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -45,6 +45,8 @@ import (
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
+	paramsrest "github.com/cosmos/cosmos-sdk/x/params/client/rest"
+	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -429,7 +431,7 @@ func registerRoutes(rs *RestServer) {
 	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
 	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, paramsrest.ProposalRESTHandler(rs.CliCtx, rs.Cdc))
 	mintrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
@@ -1157,6 +1159,46 @@ func doSubmitProposal(
 
 	// submitproposal
 	resp, body := Request(t, port, "POST", "/gov/proposals", req)
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
+
+	resp, body = signAndBroadcastGenTx(t, port, name, pwd, body, acc, client.DefaultGasAdjustment, false)
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
+
+	var txResp sdk.TxResponse
+	err = cdc.UnmarshalJSON([]byte(body), &txResp)
+	require.NoError(t, err)
+
+	return txResp
+}
+
+func doSubmitParamChangeProposal(
+	t *testing.T, port, seed, name, pwd string, proposerAddr sdk.AccAddress,
+	amount sdk.Int, fees sdk.Coins,
+) sdk.TxResponse {
+
+	acc := getAccount(t, port, proposerAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+	chainID := viper.GetString(client.FlagChainID)
+	from := acc.GetAddress().String()
+
+	baseReq := rest.NewBaseReq(from, "", chainID, "", "", accnum, sequence, fees, nil, false)
+	pr := paramscutils.ParamChangeProposalReq{
+		BaseReq:     baseReq,
+		Title:       "Test",
+		Description: "test",
+		Proposer:    proposerAddr,
+		Deposit:     sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
+		Changes: []params.ParamChange{
+			params.NewParamChange("staking", "MaxValidators", "", "105"),
+		},
+	}
+
+	req, err := cdc.MarshalJSON(pr)
+	require.NoError(t, err)
+
+	resp, body := Request(t, port, "POST", "/gov/proposals/param_change", req)
+	fmt.Println(resp)
 	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	resp, body = signAndBroadcastGenTx(t, port, name, pwd, body, acc, client.DefaultGasAdjustment, false)

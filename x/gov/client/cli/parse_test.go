@@ -25,17 +25,17 @@ func TestParseSubmitProposalFlags(t *testing.T) {
 	badJSON.WriteString("bad json")
 
 	// nonexistent json
-	viper.Set(flagProposal, "fileDoesNotExist")
+	viper.Set(FlagProposal, "fileDoesNotExist")
 	_, err = parseSubmitProposalFlags()
 	require.Error(t, err)
 
 	// invalid json
-	viper.Set(flagProposal, badJSON.Name())
+	viper.Set(FlagProposal, badJSON.Name())
 	_, err = parseSubmitProposalFlags()
 	require.Error(t, err)
 
 	// ok json
-	viper.Set(flagProposal, okJSON.Name())
+	viper.Set(FlagProposal, okJSON.Name())
 	proposal1, err := parseSubmitProposalFlags()
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
@@ -44,7 +44,7 @@ func TestParseSubmitProposalFlags(t *testing.T) {
 	require.Equal(t, "1000test", proposal1.Deposit)
 
 	// flags that can't be used with --proposal
-	for _, incompatibleFlag := range proposalFlags {
+	for _, incompatibleFlag := range ProposalFlags {
 		viper.Set(incompatibleFlag, "some value")
 		_, err := parseSubmitProposalFlags()
 		require.Error(t, err)
@@ -52,11 +52,11 @@ func TestParseSubmitProposalFlags(t *testing.T) {
 	}
 
 	// no --proposal, only flags
-	viper.Set(flagProposal, "")
-	viper.Set(flagTitle, proposal1.Title)
-	viper.Set(flagDescription, proposal1.Description)
+	viper.Set(FlagProposal, "")
+	viper.Set(FlagTitle, proposal1.Title)
+	viper.Set(FlagDescription, proposal1.Description)
 	viper.Set(flagProposalType, proposal1.Type)
-	viper.Set(flagDeposit, proposal1.Deposit)
+	viper.Set(FlagDeposit, proposal1.Deposit)
 	proposal2, err := parseSubmitProposalFlags()
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, proposal1.Title, proposal2.Title)

@@ -159,7 +159,7 @@ gaiacli query tendermint-validator-set | grep "$(gaiad tendermint show-validator
 
 你必须要在[区块浏览器](https://explorecosmos.network/validators)中看见你的验证人节点信息。你可以在`~/.gaiad/config/priv_validator.json`文件中找到`bech32`编码格式的`address`。
 
-::: 注意
+::: warning 注意
 为了能进入验证人集合，你的权重必须超过第100名的验证人。
 :::
 
@@ -170,12 +170,6 @@ gaiacli query tendermint-validator-set | grep "$(gaiad tendermint show-validator
 你的验证人已经是jailed状态。如果验证人在最近`10000`个区块中有超过`500`个区块没有进行投票，或者被发现双签，就会被jail掉。
 
 如果被因为掉线而遭到jail，你可以重获你的投票股权以重回验证人队伍。首先，如果`gaiad`没有运行，请再次启动：
-
-```
-gaiad start
-```
-
-等待你的全节点追赶上最新的区块。接下来，运行以下命令。请注意，`<cosmos>`是你的验证人帐户的地址，`<name>`是验人帐户的名称。你可以通过运行`gaiacli keys list`找到此信息。
 
 ```bash
 gaiad start

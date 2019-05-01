@@ -264,9 +264,9 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 }
 
 // KeysAddRecover prepares gaiacli keys add --recover
-func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
+func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) (exitSuccess bool, stdout, stderr string) {
 	cmd := fmt.Sprintf("%s keys add --home=%s --recover %s", f.GaiacliBinary, f.GaiacliHome, name)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass, mnemonic)
 }
 
 // KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
@@ -384,6 +384,20 @@ func (f *Fixtures) TxGovDeposit(proposalID int, from string, amount sdk.Coin, fl
 // TxGovVote is gaiacli tx gov vote
 func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov vote %d %s --from=%s %v", f.GaiacliBinary, proposalID, option, from, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
+}
+
+// TxGovSubmitParamChangeProposal executes a CLI parameter change proposal
+// submission.
+func (f *Fixtures) TxGovSubmitParamChangeProposal(
+	from, proposalPath string, deposit sdk.Coin, flags ...string,
+) (bool, string, string) {
+
+	cmd := fmt.Sprintf(
+		"%s tx gov submit-proposal param-change %s --from=%s %v",
+		f.GaiacliBinary, proposalPath, from, f.Flags(),
+	)
+
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 

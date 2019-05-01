@@ -1,4 +1,4 @@
-package lcd
+package lcd_test
 
 import (
 	"encoding/base64"

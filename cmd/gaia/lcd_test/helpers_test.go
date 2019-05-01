@@ -1,4 +1,4 @@
-package lcd
+package lcd_test
 
 import (
 	"bytes"
@@ -16,9 +16,11 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -66,6 +68,12 @@ import (
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+var cdc = amino.NewCodec()
+
+func init() {
+	ctypes.RegisterAmino(cdc)
+}
 
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
@@ -394,7 +402,7 @@ func startTM(
 
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
-	rs := NewRestServer(cdc)
+	rs := lcd.NewRestServer(cdc)
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
 	if err != nil {
@@ -405,7 +413,7 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
-func registerRoutes(rs *RestServer) {
+func registerRoutes(rs *lcd.RestServer) {
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)

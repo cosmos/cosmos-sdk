@@ -185,7 +185,7 @@ only pull requests targeted directly against master.
 
 ### Release Procedure
   - start on `master`
-  - create the release candidate branch `rcN/v*` (please start with `N=1`) (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+  - create the release candidate branch `rc/v*` (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
   - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
   - if errors are found during the simulation testing, commit the fixes to `master` and create a new `RC` branch (making sure to increment the `rcN`)
   - after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch

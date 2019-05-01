@@ -8,10 +8,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var (
+	_ sdk.AppModule      = AppModule{}
+	_ sdk.AppModuleBasic = AppModuleBasic{}
+)
+
 // app module basics object
 type AppModuleBasic struct{}
-
-var _ sdk.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -38,7 +41,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-//___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic
@@ -53,7 +55,10 @@ func NewAppModule(keeper Keeper) AppModule {
 	}
 }
 
-var _ sdk.AppModule = AppModule{}
+// module name
+func (AppModule) Name() string {
+	return ModuleName
+}
 
 // register invariants
 func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {

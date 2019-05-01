@@ -73,7 +73,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 	end := time.Now()
 	diff := end.Sub(start)
 
-	logger.With("module", "invariants").Info(
+	logger.With("module", "x/crisis").Info(
 		"Asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 

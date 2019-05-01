@@ -10,6 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var (
+	_ sdk.AppModule      = AppModule{}
+	_ sdk.AppModuleBasic = AppModuleBasic{}
+)
+
 // app module basics object
 type AppModuleBasic struct{}
 
@@ -40,7 +45,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-//___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic
@@ -63,7 +67,10 @@ func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
 	}
 }
 
-var _ sdk.AppModule = AppModule{}
+// module name
+func (AppModule) Name() string {
+	return ModuleName
+}
 
 // register invariants
 func (a AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
@@ -110,6 +117,5 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
 
 // module end-block
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	validatorUpdates, tags := EndBlocker(ctx, a.keeper)
-	return validatorUpdates, tags
+	return EndBlocker(ctx, a.keeper)
 }

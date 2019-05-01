@@ -9,6 +9,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var _ sdk.AppModule = AppModule{}
+
 // app module
 type AppModule struct {
 	keeper      Keeper
@@ -28,8 +30,6 @@ func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
 		accKeeper:   accKeeper,
 	}
 }
-
-var _ sdk.AppModule = AppModule{}
 
 // module name
 func (AppModule) Name() string {
@@ -73,6 +73,5 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
 
 // module end-block
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	validatorUpdates, tags := EndBlocker(ctx, a.keeper)
-	return validatorUpdates, tags
+	return EndBlocker(ctx, a.keeper)
 }

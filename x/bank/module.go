@@ -8,6 +8,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var _ sdk.AppModule = AppModule{}
+
 // name of this module
 const ModuleName = "bank"
 
@@ -24,8 +26,6 @@ func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
 		accountKeeper: accountKeeper,
 	}
 }
-
-var _ sdk.AppModule = AppModule{}
 
 // module name
 func (AppModule) Name() string {

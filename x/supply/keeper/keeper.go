@@ -49,7 +49,7 @@ func (k Keeper) AccountsSupply(ctx sdk.Context) (balance, vesting, liquid sdk.Co
 // EscrowedSupply returns the sum of all the tokens escrowed by the KVstore
 func (k Keeper) EscrowedSupply(ctx sdk.Context) (escrowed sdk.Coins) {
 	bondedSupply := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(ctx), k.sk.TotalBondedTokens(ctx)))
-	collectedFees := k.fck.GetCollectedFees(ctx)
+	collectedFees := k.fck.GetCollectedFees(ctx) // TODO: accordinng to the old implementation this is not required ?
 	communityPool, remainingCommunityPool := k.dk.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
 	totalRewards, remainingRewards := k.dk.GetTotalRewards(ctx).TruncateDecimal()
 

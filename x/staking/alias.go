@@ -70,7 +70,7 @@ var (
 	ValidatorQueueKey            = keeper.ValidatorQueueKey
 	RegisterInvariants           = keeper.RegisterInvariants
 	AllInvariants                = keeper.AllInvariants
-	SupplyInvariants             = keeper.SupplyInvariants
+	BondedTokensInvariants       = keeper.BondedTokensInvariants
 	NonNegativePowerInvariant    = keeper.NonNegativePowerInvariant
 	PositiveDelegationInvariant  = keeper.PositiveDelegationInvariant
 	DelegatorSharesInvariant     = keeper.DelegatorSharesInvariant

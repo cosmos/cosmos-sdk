@@ -24,5 +24,5 @@ type FeeCollectionKeeper interface {
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
-	TotalBondedTokens(ctx sdk.Context) sdk.Int
+	StakingTokenSupply(ctx sdk.Context) sdk.Int
 }

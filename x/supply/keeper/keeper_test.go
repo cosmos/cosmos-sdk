@@ -4,65 +4,71 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 var oneUatom = sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()))
 
-func TestSupplier(t *testing.T) {
-	ctx, keeper := CreateTestInput(t, false)
-
-	require.Panics(t, func() { keeper.GetSupplier(ctx) }, "should panic when supplier is not set")
-
-	expectedSupplier := types.DefaultSupplier()
-	keeper.SetSupplier(ctx, expectedSupplier)
-
-	// test inflation
-	expectedSupplier.Inflate(types.TypeCirculating, oneUatom)
-	keeper.InflateSupply(ctx, types.TypeCirculating, oneUatom)
-
-	supplier := keeper.GetSupplier(ctx)
-	require.Equal(t, expectedSupplier.CirculatingSupply, supplier.CirculatingSupply)
-
-	// test deflation
-	expectedSupplier.Deflate(types.TypeCirculating, oneUatom)
-	keeper.DeflateSupply(ctx, types.TypeCirculating, oneUatom)
-
-	supplier = keeper.GetSupplier(ctx)
-	require.Equal(t, expectedSupplier.CirculatingSupply, supplier.CirculatingSupply)
+func TestSupply(t *testing.T) {
+	// TODO:
 }
 
-func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, Keeper) {
+type testInput struct {
+	mApp     *mock.App
+	keeper   Keeper
+	router   Router
+	sk       staking.Keeper
+	addrs    []sdk.AccAddress
+	pubKeys  []crypto.PubKey
+	privKeys []crypto.PrivKey
+}
 
-	keySupply := sdk.NewKVStoreKey(StoreKey)
+func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) testInput {
+	mApp := mock.NewApp()
 
-	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
-	err := ms.LoadLatestVersion()
-	require.Nil(t, err)
+	staking.RegisterCodec(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "supply-chain"}, isCheckTx, log.NewNopLogger())
-	ctx = ctx.WithConsensusParams(
-		&abci.ConsensusParams{
-			Validator: &abci.ValidatorParams{
-				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
-			},
-		},
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
+	keyGov := sdk.NewKVStoreKey(StoreKey)
+
+	rtr := NewRouter().AddRoute(RouterKey, ProposalHandler)
+
+	pk := mApp.ParamsKeeper
+	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace, rtr)
+
+	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
+	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
+
+	mApp.SetEndBlocker(getEndBlocker(keeper))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, genState))
+
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
+
+	valTokens := sdk.TokensFromTendermintPower(42)
+
+	var (
+		addrs    []sdk.AccAddress
+		pubKeys  []crypto.PubKey
+		privKeys []crypto.PrivKey
 	)
 
-	cdc := codec.New()
+	if genAccs == nil || len(genAccs) == 0 {
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
+			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
+	}
 
-	keeper := NewKeeper(cdc, keySupply)
+	mock.SetGenesis(mApp, genAccs)
 
-	return ctx, keeper
+	return testInput{mApp, keeper, rtr, sk, addrs, pubKeys, privKeys}
 }

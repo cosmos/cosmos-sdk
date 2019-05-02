@@ -14,4 +14,8 @@ var (
 	AccountsSupply = keeper.AccountsSupply
 	EscrowedSupply = keeper.EscrowedSupply
 	TotalSupply    = keeper.TotalSupply
+
+	RegisterInvariants     = keeper.RegisterInvariants
+	AllInvariants          = keeper.AllInvariants
+	StakingTokensInvariant = StakingTokensInvariant
 )

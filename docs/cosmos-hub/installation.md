@@ -15,7 +15,7 @@ source ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.12.1+** is required for the Cosmos SDK.
+**Go 1.12.4+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries

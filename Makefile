@@ -108,7 +108,7 @@ go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
 
-go.sum: tools go.mod
+go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 

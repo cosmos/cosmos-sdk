@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // RegisterInvariants register all supply invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper, sk StakingKeeper) {
+func RegisterInvariants(ck CrisisKeeper, k Keeper, sk StakingKeeper) {
 
-	c.RegisterRoute(types.ModuleName, "staking-tokens",
+	ck.RegisterRoute(ModuleName, "staking-tokens",
 		StakingTokensInvariant(k, sk))
 }
 

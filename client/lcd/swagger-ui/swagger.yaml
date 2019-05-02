@@ -2408,5 +2408,4 @@ definitions:
         type: string
         example: ""
       value:
-        type: string
-        example: "105"
+        type: object

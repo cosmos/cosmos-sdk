@@ -44,7 +44,7 @@ where proposal.json contains:
     {
       "subspace": "staking",
       "key": "MaxValidators",
-      "value": "105"
+      "value": 105
     }
   ],
   "deposit": [
@@ -67,7 +67,7 @@ where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes)
+			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
 			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

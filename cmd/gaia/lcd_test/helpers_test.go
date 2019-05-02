@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -1179,8 +1178,8 @@ func doSubmitParamChangeProposal(
 		Description: "test",
 		Proposer:    proposerAddr,
 		Deposit:     sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
-		Changes: []params.ParamChange{
-			params.NewParamChange("staking", "MaxValidators", "", "105"),
+		Changes: paramscutils.ParamChangesJSON{
+			paramscutils.NewParamChangeJSON("staking", "MaxValidators", "", []byte(`105`)),
 		},
 	}
 
@@ -1188,7 +1187,6 @@ func doSubmitParamChangeProposal(
 	require.NoError(t, err)
 
 	resp, body := Request(t, port, "POST", "/gov/proposals/param_change", req)
-	fmt.Println(resp)
 	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	resp, body = signAndBroadcastGenTx(t, port, name, pwd, body, acc, client.DefaultGasAdjustment, false)

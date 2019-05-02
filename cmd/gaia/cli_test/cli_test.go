@@ -623,7 +623,7 @@ func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
     {
       "subspace": "staking",
       "key": "MaxValidators",
-      "value": "105"
+      "value": 105
     }
   ],
   "deposit": [

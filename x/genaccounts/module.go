@@ -13,7 +13,7 @@ var (
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
-const moduleName = "genutil"
+const moduleName = "accounts"
 
 // app module basics object
 type AppModuleBasic struct{}
@@ -49,14 +49,11 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper,
-	stakingKeeper StakingKeeper, deliverTx deliverTxfn) AppModule {
+func NewAppModule(accountKeeper AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		deliverTx:      deliverTx,
 	}
 }
 
@@ -79,7 +76,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, moduleCdc, am.accountKeeper, am.stakingKeeper, am.deliverTx, genesisState)
+	return InitGenesis(ctx, moduleCdc, am.accountKeeper, genesisState)
 }
 
 // module export genesis

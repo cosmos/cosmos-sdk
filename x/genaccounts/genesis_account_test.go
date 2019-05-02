@@ -1,0 +1,69 @@
+package genutil
+
+import (
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
+
+func TestGenesisAccountValidate(t *testing.T) {
+	cdc := codec.New()
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	tests := []struct {
+		name   string
+		acc    GenesisAccount
+		expErr error
+	}{
+		{
+			"valid account",
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0),
+			nil,
+		},
+		{
+			"invalid vesting amount",
+			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0),
+			errors.New("vesting amount cannot be greater than total amount"),
+		},
+		{
+			"invalid vesting times",
+			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078),
+			errors.New("vesting start-time cannot be before end-time"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.acc.Validate()
+			require.Equal(t, tt.expErr, err)
+		})
+	}
+}
+
+// XXX cleanup
+func TestToAccount(t *testing.T) {
+	priv := ed25519.GenPrivKey()
+	addr := sdk.AccAddress(priv.PubKey().Address())
+	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150)))
+	genAcc := NewGenesisAccount(&authAcc)
+	acc := genAcc.ToAccount()
+	require.IsType(t, &auth.BaseAccount{}, acc)
+	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
+
+	vacc := auth.NewContinuousVestingAccount(
+		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
+	)
+	genAcc = NewGenesisAccountI(vacc)
+	acc = genAcc.ToAccount()
+	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
+	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
+}

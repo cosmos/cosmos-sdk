@@ -1031,19 +1031,19 @@ paths:
             type: object
             properties:
               max_evidence_age:
-                type: integer
+                type: string
               signed_blocks_window:
-                type: integer
+                type: string
               min_signed_per_window:
-                type: integer
+                type: string
               double_sign_unbond_duration:
-                type: integer
+                type: string
               downtime_unbond_duration:
-                type: integer
+                type: string
               slash_fraction_double_sign:
-                type: integer
+                type: string
               slash_fraction_downtime:
-                type: integer
+                type: string
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -1180,7 +1180,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '4'
       responses:
         200:
           description: OK
@@ -1203,7 +1203,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '5'
       responses:
         200:
           description: OK
@@ -1226,7 +1226,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '5'
       responses:
         200:
           description: OK
@@ -1253,7 +1253,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '5'
         - description: ""
           name: post_deposit_body
           in: body
@@ -1294,13 +1294,13 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '5'
         - type: string
           description: Bech32 depositor address
           name: depositor
           required: true
           in: path
-          x-example: cosmos1xl6453f6q6dv5770c9ue6hspdc0vxfuqtudkhz
+          x-example: cosmos1e5mnjg4d6qprkash7vuseahgk2grrj43nk56sj
       responses:
         200:
           description: OK
@@ -1326,7 +1326,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '4'
       responses:
         200:
           description: OK
@@ -1353,7 +1353,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '4'
         - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
           name: post_vote_body
           in: body
@@ -1393,13 +1393,13 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '4'
         - type: string
           description: Bech32 voter address
           name: voter
           required: true
           in: path
-          x-example: cosmos1qwl879nx9t6kef4supyazayf7vjhennyjqwjgr
+          x-example: cosmos1lktjhnzkpkz3ehrg8psvmwhafg56kfss5597tg
       responses:
         200:
           description: OK
@@ -1519,7 +1519,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos1eh5mwu044gd5ntkkc2xgfg8247mgc56f8pycyz
     get:
       summary: Get the total rewards balance from all delegations
       description: Get the sum of all the rewards earned by delegations by a single delegator
@@ -1570,13 +1570,13 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos1eh5mwu044gd5ntkkc2xgfg8247mgc56f8pycyz
       - in: path
         name: validatorAddr
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper1eh5mwu044gd5ntkkc2xgfg8247mgc56fz4sdg3
     get:
       summary: Query a delegation reward
       description: Query a single delegation reward by a delegator
@@ -1823,16 +1823,22 @@ paths:
             properties:
               mint_denom:
                 type: string
+                example: uatom
               inflation_rate_change:
                 type: string
+                example: 0.130000000000000000
               inflation_max:
                 type: string
+                example: 0.200000000000000000
               inflation_min:
                 type: string
+                example: 0.070000000000000000
               goal_bonded:
                 type: string
+                example: 0.670000000000000000
               blocks_per_year:
-                type: integer
+                type: string
+                example: 4855015
         500:
           description: Internal Server Error
   /minting/inflation:
@@ -2209,7 +2215,7 @@ definitions:
     type: object
     properties:
       proposal_id:
-        type: integer
+        type: string
       title:
         type: string
       description:
@@ -2232,7 +2238,7 @@ definitions:
     type: object
     properties:
       proposal_id:
-        type: integer
+        type: string
       proposer:
         type: string
   Deposit:
@@ -2243,7 +2249,7 @@ definitions:
         items:
           $ref: "#/definitions/Coin"
       proposal_id:
-        type: integer
+        type: string
       depositor:
         $ref: "#/definitions/Address"
   TallyResult:
@@ -2267,7 +2273,7 @@ definitions:
       voter:
         type: string
       proposal_id:
-        type: integer
+        type: string
       option:
         type: string
   Validator:

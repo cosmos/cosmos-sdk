@@ -26,8 +26,6 @@ func (spc simParamChange) compKey() string {
 // where each simParamChange corresponds to a ParamChange with a simValue
 // function to generate a simulated new value.
 //
-// NOTE: All parameter value ranges are adapted from appStateRandomizedFn.
-//
 // TODO: governance parameters (blocked on an upgrade to go-amino)
 var paramChangePool = []simParamChange{
 	// staking parameters
@@ -36,7 +34,7 @@ var paramChangePool = []simParamChange{
 		"MaxValidators",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("%d", r.Intn(250)+1)
+			return fmt.Sprintf("%d", simulation.ModuleParamSimulator["MaxValidators"](r).(uint16))
 		},
 	},
 	{
@@ -44,7 +42,7 @@ var paramChangePool = []simParamChange{
 		"UnbondingTime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2))*time.Second)
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration))
 		},
 	},
 	// slashing parameters
@@ -53,7 +51,7 @@ var paramChangePool = []simParamChange{
 		"SignedBlocksWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.RandIntBetween(r, 10, 1000))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64))
 		},
 	},
 	{
@@ -61,7 +59,7 @@ var paramChangePool = []simParamChange{
 		"MinSignedPerWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", sdk.NewDecWithPrec(int64(r.Intn(10)), 1))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec))
 		},
 	},
 	{
@@ -69,7 +67,7 @@ var paramChangePool = []simParamChange{
 		"SlashFractionDowntime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec))
 		},
 	},
 	// minting parameters
@@ -78,7 +76,7 @@ var paramChangePool = []simParamChange{
 		"InflationRateChange",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", sdk.NewDecWithPrec(int64(r.Intn(99)), 2))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
 		},
 	},
 	// auth parameters
@@ -87,7 +85,7 @@ var paramChangePool = []simParamChange{
 		"MaxMemoCharacters",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.RandIntBetween(r, 100, 200))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64))
 		},
 	},
 	{
@@ -95,7 +93,7 @@ var paramChangePool = []simParamChange{
 		"TxSigLimit",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", r.Intn(7)+1)
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64))
 		},
 	},
 	{
@@ -103,7 +101,7 @@ var paramChangePool = []simParamChange{
 		"TxSizeCostPerByte",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.RandIntBetween(r, 5, 15))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64))
 		},
 	},
 }

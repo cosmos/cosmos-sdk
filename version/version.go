@@ -1,4 +1,19 @@
-//nolint
+// This package is a convenience utility that provides SDK
+// consumers with a ready-to-use version command that
+// produces apps versioning information based on flags
+// passed at compile time.
+//
+// Configure the version command
+//
+// The version command can be just added to your cobra root command.
+// At build time, the variables Name, Version, Commit, GoSumHash, and
+// BuildTags can be passed as build flags as shown in the following
+// example:
+//
+//  go build -X github.com/cosmos/cosmos-sdk/version.Name=dapp \
+//   -X github.com/cosmos/cosmos-sdk/version.Version=1.0 \
+//   -X github.com/cosmos/cosmos-sdk/version.Commit=f0f7b7dab7e36c20b757cebce0e8f4fc5b95de60 \
+//   -X "github.com/cosmos/cosmos-sdk/version.BuildTags=linux darwin amd64"
 package version
 
 import (
@@ -6,8 +21,6 @@ import (
 	"runtime"
 )
 
-// Variables representin application's versioning
-// information set at build time.
 var (
 	// Application's name
 	Name = ""

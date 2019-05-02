@@ -108,16 +108,27 @@ var paramChangePool = []simParamChange{
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // 3 parameter changes all of which have random, but valid values.
 func SimulateParamChangeProposalContent(r *rand.Rand) gov.Content {
-	numChanges := simulation.RandIntBetween(r, 1, 3)
+	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool)/2)
 	paramChanges := make([]params.ParamChange, numChanges, numChanges)
+	paramChangesKeys := make(map[string]struct{})
+
 	for i := 0; i < numChanges; i++ {
 		spc := paramChangePool[r.Intn(len(paramChangePool))]
+
+		// do not include duplicate parameter changes for a given subspace/key
+		_, ok := paramChangesKeys[spc.key]
+		for ok {
+			spc = paramChangePool[r.Intn(len(paramChangePool))]
+			_, ok = paramChangesKeys[spc.key]
+		}
+
+		paramChangesKeys[spc.key] = struct{}{}
 		paramChanges[i] = params.NewParamChange(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
 	}
 
 	return params.NewParameterChangeProposal(
-		simulation.RandStringOfLength(r, 5),
-		simulation.RandStringOfLength(r, 5),
+		simulation.RandStringOfLength(r, 200),
+		simulation.RandStringOfLength(r, 6000),
 		paramChanges,
 	)
 }

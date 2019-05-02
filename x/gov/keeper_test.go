@@ -145,9 +145,9 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, deposits, proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(deposits), input.keeper.ck.GetCoins(ctx, addrs[0]))
+	require.Equal(t, addr0Initial.Sub(deposits), input.keeper.ck.GetCoins(ctx, input.addrs[0]))
 
-	moduleAcc = keeper.ak.GetAccount(ctx, ModuleAddress)
+	moduleAcc = input.keeper.ak.GetAccount(ctx, ModuleAddress)
 	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
 
 	// Check third deposit from a new address
@@ -164,7 +164,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, deposits, proposal.TotalDeposit)
 	require.Equal(t, addr1Initial.Sub(fourStake), input.keeper.ck.GetCoins(ctx, input.addrs[1]))
 
-	moduleAcc = keeper.ak.GetAccount(ctx, ModuleAddress)
+	moduleAcc = input.keeper.ak.GetAccount(ctx, ModuleAddress)
 	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
 
 	// Check that proposal moved to voting period

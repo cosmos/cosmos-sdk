@@ -256,6 +256,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 
+	initialModuleAccCoins := input.keeper.ak.GetAccount(ctx, ModuleAddress).GetCoins()
+
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
 
@@ -263,6 +265,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
+
+	moduleAccCoins := input.keeper.ak.GetAccount(ctx, ModuleAddress).GetCoins()
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
+	require.True(t, moduleAccCoins.IsEqual(deposits))
 
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
 	require.NoError(t, err)
@@ -273,4 +279,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
+
+	moduleAcc := input.keeper.ak.GetAccount(ctx, ModuleAddress)
+	require.True(t, moduleAcc.GetCoins().IsEqual(initialModuleAccCoins))
 }

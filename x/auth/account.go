@@ -524,14 +524,14 @@ func (dva *DelayedVestingAccount) GetEndTime() int64 {
 
 var _ ModuleAccount = (*ModuleMinterAccount)(nil)
 
-// ModuleMinterAccount defines an account for modules that held coins on a pool
+// ModuleMinterAccount defines an account for modules that holds coins on a pool
 type ModuleMinterAccount struct {
 	*BaseAccount
 
 	Module string `json:"module"` // name of the module
 }
 
-// NewModuleMinterAccount creates a new BaseTokenHolder instance
+// NewModuleMinterAccount creates a new  ModuleMinterAccount instance
 func NewModuleMinterAccount(moduleName string) *ModuleMinterAccount {
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 
@@ -547,19 +547,55 @@ func (mma ModuleMinterAccount) ModuleName() string {
 	return mma.Module
 }
 
+// String follows stringer interface
+func (mma ModuleMinterAccount) String() string {
+	var pubkey string
+
+	if mma.PubKey != nil {
+		pubkey = sdk.MustBech32ifyAccPub(mma.PubKey)
+	}
+
+	return fmt.Sprintf(`Module Minter Account:
+  Address:          %s
+  Pubkey:           %s
+  Coins:            %s
+  AccountNumber:    %d
+	Sequence:         %d
+	Module Name:      %s`,
+		mma.Address, pubkey, mma.Coins, mma.AccountNumber, mma.Sequence, mma.Module)
+}
+
 //-----------------------------------------------------------------------------
 // Module Holder Account
 
 var _ ModuleAccount = (*ModuleHolderAccount)(nil)
 
-// ModuleHolderAccount defines an account for modules that held coins on a pool
+// ModuleHolderAccount defines an account for modules that holds coins on a pool
 type ModuleHolderAccount struct {
 	*ModuleMinterAccount
 }
 
-// NewModuleHolderAccount creates a new BaseTokenHolder instance
+// NewModuleHolderAccount creates a new ModuleHolderAccount instance
 func NewModuleHolderAccount(moduleName string) *ModuleHolderAccount {
 	moduleMinterAcc := NewModuleMinterAccount(moduleName)
 
 	return &ModuleHolderAccount{ModuleMinterAccount: moduleMinterAcc}
+}
+
+// String follows stringer interface
+func (mha ModuleHolderAccount) String() string {
+	var pubkey string
+
+	if mha.PubKey != nil {
+		pubkey = sdk.MustBech32ifyAccPub(mha.PubKey)
+	}
+
+	return fmt.Sprintf(`Module Holder Account:
+  Address:          %s
+  Pubkey:           %s
+  Coins:            %s
+  AccountNumber:    %d
+	Sequence:         %d
+	Module Name:      %s`,
+		mha.Address, pubkey, mha.Coins, mha.AccountNumber, mha.Sequence, mha.Module)
 }

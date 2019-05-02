@@ -64,7 +64,7 @@ type VestingAccount interface {
 type ModuleAccount interface {
 	Account
 
-	GetModuleName() string
+	ModuleName() string
 }
 
 // AccountDecoder unmarshals account bytes
@@ -542,8 +542,8 @@ func NewModuleMinterAccount(moduleName string) *ModuleMinterAccount {
 	}
 }
 
-// GetModuleName returns the the name of the holder's module
-func (mma ModuleMinterAccount) GetModuleName() string {
+// ModuleName returns the the name of the holder's module
+func (mma ModuleMinterAccount) ModuleName() string {
 	return mma.Module
 }
 

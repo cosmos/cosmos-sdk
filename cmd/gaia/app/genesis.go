@@ -88,8 +88,12 @@ type GenesisAccount struct {
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
 	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
+
+	// module account fields
+	Module string `json:"module"` // name of the module
 }
 
+// NewGenesisAccount creates a GenesisAccount instance from a BaseAccount
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.Address,
@@ -99,6 +103,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
+// NewGenesisAccountI creates a GenesisAccount instance from an Account interface
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
@@ -116,10 +121,15 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 		gacc.EndTime = vacc.GetEndTime()
 	}
 
+	macc, ok := acc.(auth.ModuleAccount)
+	if ok {
+		gacc.Module = macc.ModuleName()
+	}
+
 	return gacc
 }
 
-// convert GenesisAccount to auth.BaseAccount
+// ToAccount converts a GenesisAccount to an Account interface
 func (ga *GenesisAccount) ToAccount() auth.Account {
 	bacc := &auth.BaseAccount{
 		Address:       ga.Address,
@@ -149,6 +159,11 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 		} else {
 			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}
+	}
+
+	// module accounts
+	if ga.Module != "" {
+		return auth.NewModuleHolderAccount(ga.Module)
 	}
 
 	return bacc

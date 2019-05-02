@@ -10,12 +10,9 @@ type (
 )
 
 var (
-	NewKeeper      = keeper.NewKeeper
-	AccountsSupply = keeper.AccountsSupply
-	EscrowedSupply = keeper.EscrowedSupply
-	TotalSupply    = keeper.TotalSupply
+	NewKeeper = keeper.NewKeeper
 
 	RegisterInvariants     = keeper.RegisterInvariants
 	AllInvariants          = keeper.AllInvariants
-	StakingTokensInvariant = StakingTokensInvariant
+	StakingTokensInvariant = keeper.StakingTokensInvariant
 )

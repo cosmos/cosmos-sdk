@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -295,10 +294,18 @@ func TestAddressInterface(t *testing.T) {
 
 func TestCustomAddressVerifier(t *testing.T) {
 	// Create a 10 byte address
-	addr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
-	bech := addr.String()
+	addr := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	accBech := types.AccAddress(addr).String()
+	valBech := types.ValAddress(addr).String()
+	consBech := types.ConsAddress(addr).String()
 	// Verifiy that the default logic rejects this 10 byte address
-	_, err := types.AccAddressFromBech32(bech)
+	err := types.VerifyAddressFormat(addr)
+	require.NotNil(t, err)
+	_, err = types.AccAddressFromBech32(accBech)
+	require.NotNil(t, err)
+	_, err = types.ValAddressFromBech32(valBech)
+	require.NotNil(t, err)
+	_, err = types.ConsAddressFromBech32(consBech)
 	require.NotNil(t, err)
 
 	// Set a custom address verifier that accepts 10 or 20 byte addresses
@@ -311,7 +318,12 @@ func TestCustomAddressVerifier(t *testing.T) {
 	})
 
 	// Verifiy that the custom logic accepts this 10 byte address
-	addr2, err := types.AccAddressFromBech32(bech)
+	err = types.VerifyAddressFormat(addr)
 	require.Nil(t, err)
-	require.True(t, bytes.Equal(addr, addr2), "addresses not equal")
+	_, err = types.AccAddressFromBech32(accBech)
+	require.Nil(t, err)
+	_, err = types.ValAddressFromBech32(valBech)
+	require.Nil(t, err)
+	_, err = types.ConsAddressFromBech32(consBech)
+	require.Nil(t, err)
 }

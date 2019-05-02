@@ -354,6 +354,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		node.Stop() //nolint:errcheck
 		node.Wait()
 		lcd.Close()
+		require.NoError(t, os.RemoveAll(config.RootDir))
 	}
 
 	return cleanup, valConsPubKeys, valOperAddrs, port

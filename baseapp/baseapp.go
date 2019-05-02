@@ -122,6 +122,11 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// AppVersion returns the application's version string.
+func (app *BaseApp) AppVersion() string {
+	return app.appVersion
+}
+
 // Logger returns the logger of the BaseApp.
 func (app *BaseApp) Logger() log.Logger {
 	return app.logger
@@ -132,12 +137,6 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.SetTracer(w)
 }
-
-// AppVersion returns the application's version string.
-func (app *BaseApp) AppVersion() string { return app.appVersion }
-
-// SetAppVersion sets the application's version string.
-func (app *BaseApp) SetAppVersion(v string) { app.appVersion = v }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.

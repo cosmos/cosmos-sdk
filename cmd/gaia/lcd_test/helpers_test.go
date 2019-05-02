@@ -1179,7 +1179,7 @@ func doSubmitParamChangeProposal(
 		Proposer:    proposerAddr,
 		Deposit:     sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
 		Changes: paramscutils.ParamChangesJSON{
-			paramscutils.ParamChangeJSON{"staking", "MaxValidators", "", []byte(`105`)},
+			paramscutils.NewParamChangeJSON("staking", "MaxValidators", "", []byte(`105`)),
 		},
 	}
 

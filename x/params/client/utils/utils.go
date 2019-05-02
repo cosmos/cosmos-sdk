@@ -45,6 +45,10 @@ type (
 	}
 )
 
+func NewParamChangeJSON(subspace, key, subkey string, value json.RawMessage) ParamChangeJSON {
+	return ParamChangeJSON{subspace, key, subkey, value}
+}
+
 // ToParamChange converts a ParamChangeJSON object to ParamChange.
 func (pcj ParamChangeJSON) ToParamChange() params.ParamChange {
 	return params.NewParamChange(pcj.Subspace, pcj.Key, pcj.Subkey, string(pcj.Value))

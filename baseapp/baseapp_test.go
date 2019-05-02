@@ -247,6 +247,9 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetName("")
 	})
 	require.Panics(t, func() {
+		app.SetAppVersion("")
+	})
+	require.Panics(t, func() {
 		app.SetDB(nil)
 	})
 	require.Panics(t, func() {

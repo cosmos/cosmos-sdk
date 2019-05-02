@@ -15,14 +15,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgTransferNFT:
 			return handleMsgTransferNFT(ctx, msg, k)
-		case types.MsgEditNFTMetadata:
-			return handleMsgEditNFTMetadata(ctx, msg, k)
-		case types.MsgMintNFT:
-			return handleMsgMintNFT(ctx, msg, k)
-		case types.MsgBurnNFT:
-			return handleMsgBurnNFT(ctx, msg, k)
-		// case MsgBuyNFT:
-		// 	return handleMsgBuyNFT(ctx, msg, k)
+		// NOTE: These messages should be enabled on an application specific basis
+		// case types.MsgEditNFTMetadata:
+		// 	return HandleMsgEditNFTMetadata(ctx, msg, k)
+		// case types.MsgMintNFT:
+		// 	return HandleMsgMintNFT(ctx, msg, k)
+		// case types.MsgBurnNFT:
+		// 	return HandleMsgBurnNFT(ctx, msg, k)
 		default:
 			errMsg := fmt.Sprintf("unrecognized nft message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -77,7 +76,7 @@ func handleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	}
 }
 
-func handleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k keeper.Keeper,
+func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -108,8 +107,7 @@ func handleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	}
 }
 
-// TODO: move to separate Module?
-func handleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
+func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	// make sure NFT with that ID and denom doesn't exist
@@ -146,7 +144,7 @@ func handleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 	}
 }
 
-func handleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
+func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
@@ -185,47 +183,3 @@ func handleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 		Tags: resTags,
 	}
 }
-
-// func handleMsgBuyNFT(ctx sdk.Context, msg types.MsgBuyNFT, k keeper.Keeper,
-// ) sdk.Result {
-
-// 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
-// 	if err != nil {
-// 		return err.Result()
-// 	}
-
-// 	owner, found := k.GetOwner(ctx, nft.Owner)
-// 	if !found {
-// 		panic(fmt.Sprintf("%s should have an ownership relation with NFT %d", nft.Owner, msg.ID))
-// 	}
-// 	// owner[msg.Denom]
-
-// 	_, err = k.bk.SubtractCoins(msg.Sender, msg.Amount)
-// 	if err != nil {
-// 		return err.Result()
-// 	}
-// 	_, err = k.bk.AddCoins(nft.Owner, msg.Amount)
-// 	if err != nil {
-// 		return err.Result()
-// 	}
-
-// 	nft.Owner = msg.Sender
-
-// 	// TODO: add to new owners ownership
-
-// 	err = k.SetNFT(ctx, nft)
-// 	if err != nil {
-// 		return err.Result()
-// 	}
-
-// 	resTags := sdk.NewTags(
-// 		tags.Category, tags.TxCategory,
-// 		tags.Sender, msg.Sender.String(),
-// 		tags.Owner, msg.Owner.String(),
-// 		tags.Denom, msg.Denom.String(),
-// 		tags.NFTID, msg.ID,
-// 	)
-// 	return sdk.Result{
-// 		Tags: resTags,
-// 	}
-// }

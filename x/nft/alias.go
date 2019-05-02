@@ -1,5 +1,6 @@
-// nolint
 package nft
+
+// nolint
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -23,6 +24,10 @@ type (
 var (
 	NewKeeper          = keeper.NewKeeper
 	RegisterInvariants = keeper.RegisterInvariants
+
+	HandleMsgEditNFTMetadata = handler.HandleMsgEditNFTMetadata
+	HandleMsgMintNFT         = handler.HandleMsgMintNFT
+	HandleMsgBurnNFT         = handler.HandleMsgBurnNFT
 
 	NewNFT              = types.NewNFT
 	NewNFTs             = types.NewNFTs

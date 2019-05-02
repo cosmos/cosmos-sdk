@@ -19,7 +19,6 @@ type Keeper struct {
 // NewKeeper creates new instances of the nft Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{
-
 		storeKey: storeKey,
 		cdc:      cdc,
 	}
@@ -59,17 +58,15 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom string, id uint64, nft types.NFT) 
 }
 
 // BurnNFT deletes an existing NFT from store
-//
-// CONTRACT: can only be burned by the owner of the NFT
-// func (k Keeper) BurnNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {\
-// 	collection, found := k.GetCollection(ctx, denom)
-// 	if !found {
-// 		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
-// 	}
-// 	delete(collection, id)
-// 	k.SetCollection(ctx, denom, collection)
-// 	return
-// }
+func (k Keeper) BurnNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {\
+	collection, found := k.GetCollection(ctx, denom)
+	if !found {
+		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+	}
+	delete(collection, id)
+	k.SetCollection(ctx, denom, collection)
+	return
+}
 
 // IterateCollections iterates over collections and performs a function
 func (k Keeper) IterateCollections(ctx sdk.Context, handler func(collection types.Collection) (stop bool)) {

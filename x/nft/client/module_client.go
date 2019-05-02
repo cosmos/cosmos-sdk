@@ -45,9 +45,9 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 
 	nftTxCmd.AddCommand(client.PostCommands(
 		nftcmd.GetCmdTransferNFT(mc.cdc),
-		nftcmd.GetCmdEditNFTMetadata(mc.cdc),
-		nftcmd.GetCmdMintNFT(mc.cdc),
-		nftcmd.GetCmdBurnNFT(mc.cdc),
+		// nftcmd.GetCmdEditNFTMetadata(mc.cdc),
+		// nftcmd.GetCmdMintNFT(mc.cdc),
+		// nftcmd.GetCmdBurnNFT(mc.cdc),
 	)...)
 
 	return nftTxCmd

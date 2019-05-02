@@ -6,7 +6,7 @@ import (
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "nfts"
+	ModuleName = "nft"
 
 	// StoreKey is the default store key for NFT
 	StoreKey = ModuleName

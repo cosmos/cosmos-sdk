@@ -61,7 +61,8 @@ func TestToAccount(t *testing.T) {
 	vacc := auth.NewContinuousVestingAccount(
 		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
 	)
-	genAcc = NewGenesisAccountI(vacc)
+	genAc, err = NewGenesisAccountI(vacc)
+	require.NoError(t, err)
 	acc = genAcc.ToAccount()
 	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
 	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))

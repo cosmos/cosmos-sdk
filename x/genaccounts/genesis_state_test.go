@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
+// XXX cleanup no makeGenesisState or mbm
 func TestSanitize(t *testing.T) {
 	genesisState := makeGenesisState(t, nil)
 	require.Nil(t, mbm.ValidateGenesis(genesisState.Modules))
@@ -59,7 +60,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	genAccs[1] = NewGenesisAccount(&acc1)
 
 	genesisState := NewGenesisState(genAccs)
-	err = ValidateGenesis(genesisState)
+	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
 }
 
@@ -76,7 +77,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 
 	genesisState := NewGenesisState(genAccs)
 	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins
-	err = ValidateGenesis(genesisState)
+	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
 
 	genesisState.Accounts[0].StartTime = 1548888000

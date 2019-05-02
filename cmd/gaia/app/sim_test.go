@@ -27,6 +27,7 @@ import (
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -101,7 +102,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
 ) (json.RawMessage, []simulation.Account, string) {
 
-	var genesisAccounts []genutil.GenesisAccount
+	var genesisAccounts []genaccounts.GenesisAccount
 	genesisState := NewDefaultGenesisState()
 	cdc := MakeCodec()
 
@@ -121,7 +122,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
-		var gacc genutil.GenesisAccount
+		var gacc genaccounts.GenesisAccount
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
@@ -151,9 +152,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
-			gacc = genutil.NewGenesisAccountI(vacc)
+			gacc = genaccounts.NewGenesisAccountI(vacc)
 		} else {
-			gacc = genutil.NewGenesisAccount(&bacc)
+			gacc = genaccounts.NewGenesisAccount(&bacc)
 		}
 
 		genesisAccounts = append(genesisAccounts, gacc)

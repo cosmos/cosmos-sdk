@@ -123,7 +123,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			err = genutil.ValidateAccountInGenesis(genesisState, key.GetAddress(), coins, cdc)
+			err = genutil.ValidateAccountInGenesis(genesisState, mbm[genaccounts.ModuleName], key.GetAddress(), coins, cdc)
 			if err != nil {
 				return err
 			}

@@ -182,8 +182,8 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys,
-		numValidators, outputDir, nodeDirPrefix, nodeDaemonHome,
+		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+		outputDir, nodeDirPrefix, nodeDaemonHome, mbm[genaccounts.ModuleName],
 	)
 	if err != nil {
 		return err
@@ -221,7 +221,8 @@ func initGenFiles(cdc *codec.Codec, mbm sdk.ModuleBasicManager, chainID string,
 func collectGenFiles(
 	cdc *codec.Codec, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
-	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string) error {
+	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
+	iterateGenAcc IterateGenesisAccountsFn) error {
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
@@ -243,7 +244,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, iterateGenAcc)
 		if err != nil {
 			return err
 		}

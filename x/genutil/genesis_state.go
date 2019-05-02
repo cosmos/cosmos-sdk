@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -14,15 +12,13 @@ import (
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts GenesisAccounts   `json:"accounts"`
-	GenTxs   []json.RawMessage `json:"gentxs"`
+	GenTxs []json.RawMessage `json:"gentxs"`
 }
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(accounts GenesisAccounts, genTxs []json.RawMessage) GenesisState {
+func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 	return GenesisState{
-		Accounts: accounts,
-		GenTxs:   genTxs,
+		GenTxs: genTxs,
 	}
 }
 
@@ -42,71 +38,9 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 	return appState
 }
 
-// set the genutil genesis state within the expected app state
-func SetAccountsInAppState(cdc *codec.Codec,
-	appState ExpectedAppGenesisState, genesisAccounts GenesisAccounts) ExpectedAppGenesisState {
-
-	genesisState := GetGenesisStateFromAppState(cdc, appState)
-	genesisState.Accounts = genesisAccounts
-	return SetGenesisStateInAppState(cdc, appState, genesisState)
-}
-
-// Sanitize sorts accounts and coin sets.
-func (gs GenesisState) Sanitize() {
-	sort.Slice(gs.Accounts, func(i, j int) bool {
-		return gs.Accounts[i].AccountNumber < gs.Accounts[j].AccountNumber
-	})
-
-	for _, acc := range gs.Accounts {
-		acc.Coins = acc.Coins.Sort()
-	}
-}
-
-// validate genesis information
-func ValidateGenesis(genesisState GenesisState) error {
-	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
-		return err
-	}
-	return validateGenTxs(genesisState.GenTxs)
-}
-
-// validateGenesisStateAccounts performs validation of genesis accounts. It
-// ensures that there are no duplicate accounts in the genesis state and any
-// provided vesting accounts are valid.
-func validateGenesisStateAccounts(accs []GenesisAccount) error {
-	addrMap := make(map[string]bool, len(accs))
-	for _, acc := range accs {
-		addrStr := acc.Address.String()
-
-		// disallow any duplicate accounts
-		if _, ok := addrMap[addrStr]; ok {
-			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
-		}
-
-		// validate any vesting fields
-		if !acc.OriginalVesting.IsZero() {
-			if acc.EndTime == 0 {
-				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
-			}
-
-			if acc.StartTime >= acc.EndTime {
-				return fmt.Errorf(
-					"vesting start time must before end time; address: %s, start: %s, end: %s",
-					addrStr,
-					time.Unix(acc.StartTime, 0).UTC().Format(time.RFC3339),
-					time.Unix(acc.EndTime, 0).UTC().Format(time.RFC3339),
-				)
-			}
-		}
-
-		addrMap[addrStr] = true
-	}
-	return nil
-}
-
 // validate GenTx transactions
-func validateGenTxs(genTxs []json.RawMessage) error {
-	for i, genTx := range genTxs {
+func ValidateGenesis(genesisState GenesisState) error {
+	for i, genTx := range genesisState.GenTxs {
 		var tx auth.StdTx
 		if err := moduleCdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return err

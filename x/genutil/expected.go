@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -23,3 +24,10 @@ type AccountKeeper interface {
 
 // The expected format of app genesis state
 type ExpectedAppGenesisState map[string]json.RawMessage
+
+// The expected function for iterating genesis accounts
+type IterateGenesisAccountsFn func(
+	cdc *codec.Codec,
+	appState ExpectedAppGenesisState,
+	iterateFn func(auth.Account) (stop bool),
+)

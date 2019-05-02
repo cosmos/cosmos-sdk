@@ -46,11 +46,12 @@ func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.Pub
 
 // XXX TODO
 func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
-	initCfg InitConfig, genDoc tmtypes.GenesisDoc) (appState json.RawMessage, err error) {
+	initCfg InitConfig, genDoc tmtypes.GenesisDoc, iterateGenAcc IterateGenesisAccountsFn,
+) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectStdTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc)
+		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, iterateGenAcc)
 	if err != nil {
 		return appState, err
 	}
@@ -104,8 +105,9 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState ExpectedAppGen
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tmtypes.GenesisDoc) (
-	appGenTxs []auth.StdTx, persistentPeers string, err error) {
+func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
+	genDoc tmtypes.GenesisDoc, iterateGenAcc IterateGenesisAccountsFn,
+) (appGenTxs []auth.StdTx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -120,12 +122,13 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		return appGenTxs, persistentPeers, err
 	}
 
-	genesisState := GetGenesisStateFromAppState(cdc, appState)
-	addrMap := make(map[string]GenesisAccount, len(genesisState.Accounts))
-	for i := 0; i < len(genesisState.Accounts); i++ {
-		acc := genesisState.Accounts[i]
-		addrMap[acc.Address.String()] = acc
-	}
+	addrMap := make(map[string]auth.Account)
+	iterateGenAcc(cdc, appState,
+		func(acc auth.Account) (stop bool) {
+			addrMap[acc.GetAddress().String()] = acc
+			return false
+		},
+	)
 
 	// addresses and IPs (and port) validator server info
 	var addressesIPs []string
@@ -181,10 +184,10 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"account %v not in genesis.json: %+v", valAddr, addrMap)
 		}
 
-		if delAcc.Coins.AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
+		if delAcc.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				delAcc.Address, delAcc.Coins.AmountOf(msg.Value.Denom), msg.Value.Amount,
+				delAcc.GetAddress(), delAcc.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
 			)
 		}
 

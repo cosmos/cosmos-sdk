@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/server/cli"
 	genutil "github.com/cosmos/cosmos-sdk/x/genutil/server/cli"
 	"github.com/cosmos/cosmos-sdk/x/testnet"
 )
@@ -46,10 +47,10 @@ func main() {
 	}
 
 	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc, app.BasicGaiaApp))
-	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc))
+	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc, app.BasicGaiaApp, app.DefaultNodeHome, app.DefaultCLIHome))
-	rootCmd.AddCommand(genutil.AddGenesisAccountCmd(ctx, cdc))
 	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genaccounts.AddGenesisAccountCmd(ctx, cdc))
 	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 

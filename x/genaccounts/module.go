@@ -1,10 +1,11 @@
-package genutil
+package genaccounts
 
 import (
 	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -39,13 +40,26 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// extra function from sdk.AppModuleBasic
+// iterate the genesis accounts and perform an operation at each of them
+// - to used by other modules
+func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appState ExpectedAppGenesisState,
+	iterateFn func(auth.Account) (stop bool)) {
+
+	genesisState := GetGenesisStateFromAppState(cdc, appState)
+	for _, genAcc := range genesisState.Accounts {
+		acc := genAcc.ToAccount()
+		if iterateFn(acc) {
+			break
+		}
+	}
+}
+
 //___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic
 	accountKeeper AccountKeeper
-	stakingKeeper StakingKeeper
-	deliverTx     deliverTxfn
 }
 
 // NewAppModule creates a new AppModule object

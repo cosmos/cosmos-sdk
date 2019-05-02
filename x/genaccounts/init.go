@@ -1,4 +1,4 @@
-package genutil
+package genaccounts
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

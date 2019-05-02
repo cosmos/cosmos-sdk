@@ -29,7 +29,9 @@ var (
 )
 
 // XXX TODO
-func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
+func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, iterateGenAcc IterateGenesisAccountsFn,
+	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
+
 	accountIsInGenesis := false
 
 	// TODO refactor out bond denom to common state area
@@ -42,21 +44,31 @@ func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, key sdk.A
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(genUtilDataBz, &genesisState)
 
-	// Check if the account is in genesis
-	for _, acc := range genesisState.Accounts {
-		// Ensure that account is in genesis
-		if acc.Address.Equals(key) {
+	var err error
+	iterateGenAcc(cdc, appGenesisState,
+		func(acc auth.Account) (stop bool) {
+			accAddress := acc.GetAddress()
+			accCoins := acc.GetCoins()
 
-			// Ensure account contains enough funds of default bond denom
-			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
-				return fmt.Errorf(
-					"account %v is in genesis, but it only has %v%v available to stake, not %v%v",
-					key.String(), acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
-				)
+			// Ensure that account is in genesis
+			if accAddress.Equals(key) {
+
+				// Ensure account contains enough funds of default bond denom
+				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
+					err = fmt.Errorf(
+						"account %v is in genesis, but it only has %v%v available to stake, not %v%v",
+						key.String(), accCoins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
+					)
+					return true
+				}
+				accountIsInGenesis = true
+				return true
 			}
-			accountIsInGenesis = true
-			break
-		}
+			return false
+		},
+	)
+	if err != nil {
+		return err
 	}
 
 	if !accountIsInGenesis {

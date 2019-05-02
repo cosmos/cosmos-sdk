@@ -152,15 +152,16 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	authGenesis := auth.GenesisState{
-		Params: auth.Params{
+	authGenesis := auth.NewGenesisState(
+		nil,
+		auth.Params{
 			MaxMemoCharacters:      simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64),
 			TxSigLimit:             simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64),
 			TxSizeCostPerByte:      simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64),
 			SigVerifyCostED25519:   simulation.ModuleParamSimulator["SigVerifyCostED25519"](r).(uint64),
 			SigVerifyCostSecp256k1: simulation.ModuleParamSimulator["SigVerifyCostSecp256k1"](r).(uint64),
 		},
-	}
+	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
@@ -168,31 +169,33 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	// Random genesis states
 	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
-	govGenesis := gov.GenesisState{
-		StartingProposalID: uint64(r.Intn(100)),
-		DepositParams: gov.DepositParams{
+	govGenesis := gov.NewGenesisState(
+		uint64(r.Intn(100)),
+		gov.DepositParams{
 			MinDeposit:       simulation.ModuleParamSimulator["DepositParams/MinDeposit"](r).(sdk.Coins),
 			MaxDepositPeriod: vp,
 		},
-		VotingParams: gov.VotingParams{
+		gov.VotingParams{
 			VotingPeriod: vp,
 		},
-		TallyParams: gov.TallyParams{
+		gov.TallyParams{
 			Quorum:    simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
 			Threshold: simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
 			Veto:      simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
 		},
-	}
+	)
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
-	stakingGenesis := staking.GenesisState{
-		Pool: staking.InitialPool(),
-		Params: staking.Params{
+	stakingGenesis := staking.NewGenesisState(
+		staking.InitialPool(),
+		staking.Params{
 			UnbondingTime: simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration),
 			MaxValidators: simulation.ModuleParamSimulator["MaxValidators"](r).(uint16),
 			BondDenom:     sdk.DefaultBondDenom,
 		},
-	}
+		nil,
+		nil,
+	)
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
 
 	slashingGenesis := slashing.GenesisState{
@@ -207,17 +210,18 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	}
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
-	mintGenesis := mint.GenesisState{
-		Minter: mint.InitialMinter(
+	mintGenesis := mint.NewGenesisState(
+		mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
-		Params: mint.NewParams(
+		mint.NewParams(
 			sdk.DefaultBondDenom,
 			simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec),
 			simulation.ModuleParamSimulator["InflationMax"](r).(sdk.Dec),
 			simulation.ModuleParamSimulator["InflationMin"](r).(sdk.Dec),
 			simulation.ModuleParamSimulator["GoalBonded"](r).(sdk.Dec),
-			uint64(60*60*8766/5)),
-	}
+			uint64(60*60*8766/5),
+		),
+	)
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
 	var validators []staking.Validator

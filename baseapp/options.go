@@ -40,6 +40,14 @@ func (app *BaseApp) SetName(name string) {
 	app.name = name
 }
 
+// SetAppVersion sets the application's version string.
+func (app *BaseApp) SetAppVersion(v string) {
+	if app.sealed {
+		panic("SetAppVersion() on sealed BaseApp")
+	}
+	app.appVersion = v
+}
+
 func (app *BaseApp) SetDB(db dbm.DB) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")

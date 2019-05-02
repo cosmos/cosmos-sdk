@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Key to store the consensus params in the main store.
@@ -85,6 +84,9 @@ type BaseApp struct {
 
 	// height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// application's version string
+	appVersion string
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -118,6 +120,11 @@ func NewBaseApp(
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// AppVersion returns the application's version string.
+func (app *BaseApp) AppVersion() string {
+	return app.appVersion
 }
 
 // Logger returns the logger of the BaseApp.
@@ -439,7 +446,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
-				Value:     []byte(version.Version),
+				Value:     []byte(app.appVersion),
 			}
 
 		default:

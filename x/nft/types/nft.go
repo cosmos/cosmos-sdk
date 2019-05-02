@@ -11,8 +11,15 @@ import (
 
 // TODO: create interface for buyable NFT
 
-// NFT non fungible token definition
-type NFT struct {
+// NFT non fungible token interface
+type NFT interface {
+	EditMetadata(editName, editDescription, editImage, editTokenURI bool, name, description, image, tokenURI string)
+}
+
+var _ NFT = (*BaseNFT)(nil)
+
+// BaseNFT non fungible token definition
+type BaseNFT struct {
 	ID          uint64         `json:"id,omitempty"` // id of the token; not exported to clients
 	Owner       sdk.AccAddress `json:"owner"`        // account address that owns the NFT
 	Name        string         `json:"name"`         // name of the token
@@ -21,10 +28,10 @@ type NFT struct {
 	TokenURI    string         `json:"token_uri"`    // optional extra data available fo querying
 }
 
-// NewNFT creates a new NFT instance
-func NewNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, name string,
-) NFT {
-	return NFT{
+// NewBaseNFT creates a new NFT instance
+func NewBaseNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, name string,
+) BaseNFT {
+	return BaseNFT{
 		ID:          ID,
 		Owner:       owner,
 		Name:        strings.TrimSpace(name),
@@ -35,8 +42,8 @@ func NewNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, name 
 }
 
 // EditMetadata edits metadata of an nft
-func (nft NFT) EditMetadata(editName, editDescription, editImage, editTokenURI bool,
-	name, description, image, tokenURI string) NFT {
+func (nft *BaseNFT) EditMetadata(editName, editDescription, editImage, editTokenURI bool,
+	name, description, image, tokenURI string) {
 	if editName {
 		nft.Name = name
 	}
@@ -49,17 +56,15 @@ func (nft NFT) EditMetadata(editName, editDescription, editImage, editTokenURI b
 	if editTokenURI {
 		nft.TokenURI = tokenURI
 	}
-	return nft
 }
 
-func (nft NFT) String() string {
-	return fmt.Sprintf(`
-	ID: 					%d
-	Owner:        %s
-  Name:         %s
-  Description:  %s
-  Image:        %s
-	TokenURI:   	%s`,
+func (nft BaseNFT) String() string {
+	return fmt.Sprintf(`	ID: 					%d
+	Owner:        			%s
+  	Name:         			%s
+  	Description: 			%s
+  	Image:        			%s
+	TokenURI:   			%s`,
 		nft.ID,
 		nft.Owner,
 		nft.Name,
@@ -70,10 +75,10 @@ func (nft NFT) String() string {
 }
 
 // ----------------------------------------------------------------------------
-// NFTs
-// TODO: create interface and types for mintable NFTs
+// NFT
+// TODO: create interface and types for mintable NFT
 
-// NFTs define a list of NFTs
+// NFTs define a list of NFT
 type NFTs []NFT
 
 // NewNFTs creates a new set of NFTs

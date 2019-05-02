@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
-	nftcmd "github.com/cosmos/cosmos-sdk/x/nfts/client/cli"
+	nftcmd "github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 	"github.com/spf13/cobra"
 
 	amino "github.com/tendermint/go-amino"

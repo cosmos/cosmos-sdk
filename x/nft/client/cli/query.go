@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/nfts"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return nil
 			}
 
-			// var out nfts.NFT
+			// var out nft.NFT
 			// cdc.MustUnmarshalJSON(res, &out)
 			// return cliCtx.PrintOutput(out)
 		},
@@ -51,7 +51,7 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return nil
 			}
 
-			var out nfts.QueryResBalance
+			var out nft.QueryResBalance
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -76,7 +76,7 @@ func GetCmdQueryNFTs(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return nil
 			}
 
-			var out nfts.QueryResOwnerOf
+			var out nft.QueryResOwnerOf
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -86,7 +86,7 @@ func GetCmdQueryNFTs(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryNFT queries a single NFTs from a collection
 func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "nft [denom] [ID]",
+		Use:   "token [denom] [ID]",
 		Short: "query a single NFT from a collection",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -101,7 +101,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return nil
 			}
 
-			var out nfts.QueryResOwnerOf
+			var out nft.QueryResOwnerOf
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

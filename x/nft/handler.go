@@ -1,12 +1,12 @@
-package nfts
+package nft
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nfts/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nfts/tags"
-	"github.com/cosmos/cosmos-sdk/x/nfts/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/tags"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 // NewHandler routes the messages to the handlers

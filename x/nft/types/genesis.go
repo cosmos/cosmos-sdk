@@ -10,7 +10,7 @@ type OwnerNFTs struct {
 	Balance Collections    `json:"balance"`
 }
 
-// GenesisState is the bank state that must be provided at genesis.
+// GenesisState is the state that must be provided at genesis.
 type GenesisState struct {
 	Balances    []OwnerNFTs `json:"balances"`
 	Collections Collections `json:"collections"`

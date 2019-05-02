@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/x/nfts"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 const (

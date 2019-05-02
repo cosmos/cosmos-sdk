@@ -8,10 +8,10 @@ const (
 	// ModuleName is the name of the module
 	ModuleName = "nfts"
 
-	// StoreKey is the default store key for NFT bank
+	// StoreKey is the default store key for NFT
 	StoreKey = ModuleName
 
-	// QuerierRoute is the querier route for the NFT bank store.
+	// QuerierRoute is the querier route for the NFT store.
 	QuerierRoute = StoreKey
 )
 

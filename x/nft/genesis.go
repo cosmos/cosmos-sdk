@@ -1,4 +1,4 @@
-package nfts
+package nft
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

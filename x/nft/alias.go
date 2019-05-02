@@ -1,9 +1,9 @@
 // nolint
-package nfts
+package nft
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/nfts/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nfts/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 type (

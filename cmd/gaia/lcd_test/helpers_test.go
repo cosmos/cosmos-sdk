@@ -1187,7 +1187,6 @@ func doSubmitParamChangeProposal(
 	require.NoError(t, err)
 
 	resp, body := Request(t, port, "POST", "/gov/proposals/param_change", req)
-	fmt.Println(resp)
 	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	resp, body = signAndBroadcastGenTx(t, port, name, pwd, body, acc, client.DefaultGasAdjustment, false)

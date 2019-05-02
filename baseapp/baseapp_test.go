@@ -130,6 +130,26 @@ func TestLoadVersion(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
+func TestAppVersionSetterGetter(t *testing.T) {
+	logger := defaultLogger()
+	pruningOpt := SetPruning(store.PruneSyncable)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	require.Equal(t, "", app.AppVersion())
+	res := app.Query(abci.RequestQuery{Path: "app/version"})
+	require.True(t, res.IsOK())
+	require.Equal(t, "", string(res.Value))
+
+	versionString := "1.0.0"
+	app.SetAppVersion(versionString)
+	require.Equal(t, versionString, app.AppVersion())
+	res = app.Query(abci.RequestQuery{Path: "app/version"})
+	require.True(t, res.IsOK())
+	require.Equal(t, versionString, string(res.Value))
+}
+
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOpt := SetPruning(store.PruneSyncable)

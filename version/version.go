@@ -6,16 +6,24 @@ import (
 	"runtime"
 )
 
-// Variables set by build flags
+// Variables representin application's versioning
+// information set at build time.
 var (
-	Commit    = ""
-	Version   = ""
+	// Application's name
+	Name = ""
+	// Application's version string
+	Version = ""
+	// Commit
+	Commit = ""
+	// Hash of the go.sum file
 	GoSumHash = ""
+	// Build tags
 	BuildTags = ""
 )
 
 type versionInfo struct {
-	CosmosSDK string `json:"cosmos_sdk"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
 	GitCommit string `json:"commit"`
 	GoSumHash string `json:"gosum_hash"`
 	BuildTags string `json:"build_tags"`
@@ -23,15 +31,16 @@ type versionInfo struct {
 }
 
 func (v versionInfo) String() string {
-	return fmt.Sprintf(`cosmos-sdk: %s
+	return fmt.Sprintf(`%s: %s
 git commit: %s
 go.sum hash: %s
 build tags: %s
-%s`, v.CosmosSDK, v.GitCommit, v.GoSumHash, v.BuildTags, v.GoVersion)
+%s`, v.Name, v.Version, v.GitCommit, v.GoSumHash, v.BuildTags, v.GoVersion)
 }
 
 func newVersionInfo() versionInfo {
 	return versionInfo{
+		Name,
 		Version,
 		Commit,
 		GoSumHash,

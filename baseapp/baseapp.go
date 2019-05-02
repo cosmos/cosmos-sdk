@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Key to store the consensus params in the main store.
@@ -85,6 +84,9 @@ type BaseApp struct {
 
 	// height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// application's version string
+	appVersion string
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -130,6 +132,12 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.SetTracer(w)
 }
+
+// AppVersion returns the application's version string.
+func (app *BaseApp) AppVersion() string { return app.appVersion }
+
+// SetAppVersion sets the application's version string.
+func (app *BaseApp) SetAppVersion(v string) { app.appVersion = v }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -439,7 +447,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
-				Value:     []byte(version.Version),
+				Value:     []byte(app.appVersion),
 			}
 
 		default:

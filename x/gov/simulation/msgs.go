@@ -104,8 +104,8 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 // SimulateTextProposalContent returns random text proposal content.
 func SimulateTextProposalContent(r *rand.Rand) gov.Content {
 	return gov.NewTextProposal(
-		simulation.RandStringOfLength(r, 200),
-		simulation.RandStringOfLength(r, 6000),
+		simulation.RandStringOfLength(r, 140),
+		simulation.RandStringOfLength(r, 5000),
 	)
 }
 

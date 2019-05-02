@@ -131,8 +131,8 @@ func SimulateParamChangeProposalContent(r *rand.Rand) gov.Content {
 	}
 
 	return params.NewParameterChangeProposal(
-		simulation.RandStringOfLength(r, 200),
-		simulation.RandStringOfLength(r, 6000),
+		simulation.RandStringOfLength(r, 140),
+		simulation.RandStringOfLength(r, 5000),
 		paramChanges,
 	)
 }

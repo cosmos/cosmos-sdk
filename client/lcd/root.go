@@ -1,7 +1,6 @@
 package lcd
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -105,17 +104,4 @@ func (rs *RestServer) registerSwaggerUI() {
 	}
 	staticServer := http.FileServer(statikFS)
 	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
-}
-
-func validateCertKeyFiles(certFile, keyFile string) error {
-	if keyFile == "" {
-		return errors.New("a key file is required")
-	}
-	if _, err := os.Stat(certFile); err != nil {
-		return err
-	}
-	if _, err := os.Stat(keyFile); err != nil {
-		return err
-	}
-	return nil
 }

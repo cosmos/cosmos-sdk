@@ -18,6 +18,10 @@ type simParamChange struct {
 	simValue func(r *rand.Rand) string
 }
 
+func (spc simParamChange) compKey() string {
+	return fmt.Sprintf("%s/%s/%s", spc.subkey, spc.key, spc.subkey)
+}
+
 // paramChangePool defines a static slice of possible simulated parameter changes
 // where each simParamChange corresponds to a ParamChange with a simValue
 // function to generate a simulated new value.
@@ -116,13 +120,13 @@ func SimulateParamChangeProposalContent(r *rand.Rand) gov.Content {
 		spc := paramChangePool[r.Intn(len(paramChangePool))]
 
 		// do not include duplicate parameter changes for a given subspace/key
-		_, ok := paramChangesKeys[spc.key]
+		_, ok := paramChangesKeys[spc.compKey()]
 		for ok {
 			spc = paramChangePool[r.Intn(len(paramChangePool))]
-			_, ok = paramChangesKeys[spc.key]
+			_, ok = paramChangesKeys[spc.compKey()]
 		}
 
-		paramChangesKeys[spc.key] = struct{}{}
+		paramChangesKeys[spc.compKey()] = struct{}{}
 		paramChanges[i] = params.NewParamChange(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
 	}
 

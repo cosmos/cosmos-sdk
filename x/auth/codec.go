@@ -12,6 +12,9 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "auth/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "auth/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "auth/DelayedVestingAccount", nil)
+	cdc.RegisterInterface((*ModuleAccount)(nil), nil)
+	cdc.RegisterConcrete(&ModuleHolderAccount{}, "auth/ModuleHolderAccount", nil)
+	cdc.RegisterConcrete(&ModuleMinterAccount{}, "auth/ModuleMinterAccount", nil)
 	cdc.RegisterConcrete(StdTx{}, "auth/StdTx", nil)
 }
 
@@ -23,6 +26,9 @@ func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
+	cdc.RegisterInterface((*ModuleAccount)(nil), nil)
+	cdc.RegisterConcrete(&ModuleHolderAccount{}, "auth/ModuleHolderAccount", nil)
+	cdc.RegisterConcrete(&ModuleMinterAccount{}, "auth/ModuleMinterAccount", nil)
 	codec.RegisterCrypto(cdc)
 }
 

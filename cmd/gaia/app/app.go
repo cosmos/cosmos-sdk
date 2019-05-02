@@ -148,7 +148,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
+		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.accountKeeper, app.bankKeeper, &stakingKeeper,
 		gov.DefaultCodespace,
 		govRouter,
 	)

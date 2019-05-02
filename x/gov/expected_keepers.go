@@ -1,12 +1,19 @@
 package gov
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
 
-// expected bank keeper
+// AccountKeeper defines the expected account keeper
+type AccountKeeper interface {
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.Account
+	SetAccount(ctx sdk.Context, acc auth.Account)
+}
+
+// BankKeeper defines the expected bank keeper
 type BankKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-
-	// TODO remove once governance doesn't require use of accounts
+	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SetSendEnabled(ctx sdk.Context, enabled bool)
 }

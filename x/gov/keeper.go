@@ -39,7 +39,10 @@ type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
 	paramSpace params.Subspace
 
-	// The reference to the CoinKeeper to modify balances
+	// The reference to the AccountKeeper to create a module account
+	ak AccountKeeper
+
+	// The reference to the BankKeeper to modify balances
 	ck BankKeeper
 
 	// The ValidatorSet to get information about validators
@@ -68,7 +71,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+	ak AccountKeeper, ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -80,6 +83,7 @@ func NewKeeper(
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
+		ak:           ak,
 		ck:           ck,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
@@ -383,9 +387,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Send coins from depositor's account to DepositedCoinsAccAddr account
-	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	// update the governance module's account coins pool
+	err := keeper.ck.SendCoins(ctx, depositorAddr, ModuleAddress, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -429,9 +432,10 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		// update the governance module account coin pool
+		err := keeper.ck.SendCoins(ctx, ModuleAddress, deposit.Depositor, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
 
 		store.Delete(depositsIterator.Key())
@@ -447,10 +451,10 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		// TODO: Find a way to do this without using accounts.
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		// update the governance module account coin pool and burn deposit
+		_, err := keeper.ck.SubtractCoins(ctx, ModuleAddress, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
 
 		store.Delete(depositsIterator.Key())

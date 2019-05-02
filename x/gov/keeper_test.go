@@ -105,6 +105,10 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
 	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
+	moduleAcc := input.keeper.ak.GetAccount(ctx, ModuleAddress)
+	deposits := proposal.TotalDeposit
+	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
+
 	// Check no deposits at beginning
 	deposit, found := input.keeper.GetDeposit(ctx, proposalID, input.addrs[1])
 	require.False(t, found)
@@ -125,31 +129,43 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, fourStake, proposal.TotalDeposit)
 	require.Equal(t, addr0Initial.Sub(fourStake), input.keeper.ck.GetCoins(ctx, input.addrs[0]))
 
+	moduleAcc = input.keeper.ak.GetAccount(ctx, ModuleAddress)
+	deposits = deposits.Add(fourStake)
+	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
+
 	// Check a second deposit from same address
 	err, votingStarted = input.keeper.AddDeposit(ctx, proposalID, input.addrs[0], fiveStake)
 	require.Nil(t, err)
 	require.False(t, votingStarted)
+	deposits = fourStake.Add(fiveStake)
 	deposit, found = input.keeper.GetDeposit(ctx, proposalID, input.addrs[0])
 	require.True(t, found)
 	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
 	require.Equal(t, input.addrs[0], deposit.Depositor)
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	require.Equal(t, fourStake.Add(fiveStake), proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), input.keeper.ck.GetCoins(ctx, input.addrs[0]))
+	require.Equal(t, deposits, proposal.TotalDeposit)
+	require.Equal(t, addr0Initial.Sub(deposits), input.keeper.ck.GetCoins(ctx, addrs[0]))
+
+	moduleAcc = keeper.ak.GetAccount(ctx, ModuleAddress)
+	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
 
 	// Check third deposit from a new address
 	err, votingStarted = input.keeper.AddDeposit(ctx, proposalID, input.addrs[1], fourStake)
 	require.Nil(t, err)
 	require.True(t, votingStarted)
+	deposits = deposits.Add(fourStake)
 	deposit, found = input.keeper.GetDeposit(ctx, proposalID, input.addrs[1])
 	require.True(t, found)
 	require.Equal(t, input.addrs[1], deposit.Depositor)
 	require.Equal(t, fourStake, deposit.Amount)
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), proposal.TotalDeposit)
+	require.Equal(t, deposits, proposal.TotalDeposit)
 	require.Equal(t, addr1Initial.Sub(fourStake), input.keeper.ck.GetCoins(ctx, input.addrs[1]))
+
+	moduleAcc = keeper.ak.GetAccount(ctx, ModuleAddress)
+	require.True(t, moduleAcc.GetCoins().IsEqual(deposits))
 
 	// Check that proposal moved to voting period
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)

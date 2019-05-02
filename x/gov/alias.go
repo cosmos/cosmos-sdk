@@ -77,6 +77,8 @@ var (
 
 	RegisterCodec = types.RegisterCodec
 
+	ModuleAddress = types.ModuleAddress
+
 	KeyDelimiter                = types.KeyDelimiter
 	KeyNextProposalID           = types.KeyNextProposalID
 	PrefixActiveProposalQueue   = types.PrefixActiveProposalQueue

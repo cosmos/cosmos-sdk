@@ -6,6 +6,8 @@ import (
 
 // Crisis module tags
 var (
-	Sender    = sdk.TagSender
-	Invariant = "invariant"
+	TxCategory = "crisis"
+	Sender     = sdk.TagSender
+	Category   = sdk.TagCategory
+	Invariant  = "invariant"
 )

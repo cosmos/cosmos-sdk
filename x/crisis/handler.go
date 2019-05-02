@@ -74,11 +74,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		panic(invarianceErr)
 	}
 
-	resTags := sdk.NewTags(
-		tags.Sender, msg.Sender.String(),
-		tags.Invariant, msg.InvariantRoute,
-	)
 	return sdk.Result{
-		Tags: resTags,
+		Tags: sdk.NewTags(
+			tags.Category, tags.TxCategory,
+			tags.Sender, msg.Sender.String(),
+			tags.Invariant, msg.InvariantRoute,
+		),
 	}
 }

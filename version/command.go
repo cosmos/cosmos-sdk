@@ -30,7 +30,7 @@ var (
 			}
 
 			if viper.GetString(cli.OutputFlag) != "json" {
-				fmt.Print(verInfo)
+				fmt.Println(verInfo)
 				return nil
 			}
 

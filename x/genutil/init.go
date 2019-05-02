@@ -12,15 +12,6 @@ func InitGenesis(ctx sdk.Context, cdc *codec.Codec,
 	accountKeeper AccountKeeper, stakingKeeper StakingKeeper,
 	deliverTx deliverTxfn, genesisState GenesisState) []abci.ValidatorUpdate {
 
-	genesisState.Sanitize()
-
-	// load the accounts
-	for _, gacc := range genesisState.Accounts {
-		acc := gacc.ToAccount()
-		acc = accountKeeper.NewAccount(ctx, acc) // set account number
-		accountKeeper.SetAccount(ctx, acc)
-	}
-
 	var validators []abci.ValidatorUpdate
 	if len(genesisState.GenTxs) > 0 {
 		validators = DeliverGenTxs(ctx, cdc, genesisState.GenTxs, stakingKeeper, deliverTx)

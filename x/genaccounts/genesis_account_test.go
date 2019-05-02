@@ -48,7 +48,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 }
 
-// XXX cleanup
 func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())

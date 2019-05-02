@@ -66,8 +66,8 @@ $(GOIMPORTS):
 $(GOSUM): ./contrib/devtools/gosum/main.go
 	go install -mod=readonly ./$(<D)/
 
-$(CLOG): ./contrib/devtools/clog/main.go
-	go install -mod=readonly ./$(<D)/
+$(CLOG):
+	$(call go_install,alessio,clog,1)
 
 tools-clean:
 	rm -f $(GOLANGCI_LINT) $(STATIK) $(GOIMPORTS) $(GOSUM) $(CLOG)

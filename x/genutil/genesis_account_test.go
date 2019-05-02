@@ -3,12 +3,15 @@ package genutil
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func TestGenesisAccountValidate(t *testing.T) {
@@ -40,7 +43,27 @@ func TestGenesisAccountValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
-			require.Equal(t, tt.expErr)
+			require.Equal(t, tt.expErr, err)
 		})
 	}
+}
+
+// XXX cleanup
+func TestToAccount(t *testing.T) {
+	priv := ed25519.GenPrivKey()
+	addr := sdk.AccAddress(priv.PubKey().Address())
+	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150)))
+	genAcc := NewGenesisAccount(&authAcc)
+	acc := genAcc.ToAccount()
+	require.IsType(t, &auth.BaseAccount{}, acc)
+	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
+
+	vacc := auth.NewContinuousVestingAccount(
+		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
+	)
+	genAcc = NewGenesisAccountI(vacc)
+	acc = genAcc.ToAccount()
+	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
+	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
 }

@@ -1,20 +1,48 @@
 package genutil
 
 import (
-	"encoding/json"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
+
+func TestSanitize(t *testing.T) {
+	genesisState := makeGenesisState(t, nil)
+	require.Nil(t, mbm.ValidateGenesis(genesisState.Modules))
+
+	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	authAcc1 := auth.NewBaseAccountWithAddress(addr1)
+	authAcc1.SetCoins(sdk.Coins{
+		sdk.NewInt64Coin("bcoin", 150),
+		sdk.NewInt64Coin("acoin", 150),
+	})
+	authAcc1.SetAccountNumber(1)
+	genAcc1 := NewGenesisAccount(&authAcc1)
+
+	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	authAcc2 := auth.NewBaseAccountWithAddress(addr2)
+	authAcc2.SetCoins(sdk.Coins{
+		sdk.NewInt64Coin("acoin", 150),
+		sdk.NewInt64Coin("bcoin", 150),
+	})
+	genAcc2 := NewGenesisAccount(&authAcc2)
+
+	genesisState.Accounts = []GenesisAccount{genAcc1, genAcc2}
+	require.True(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
+	require.Equal(t, genesisState.Accounts[0].Coins[0].Denom, "bcoin")
+	require.Equal(t, genesisState.Accounts[0].Coins[1].Denom, "acoin")
+	require.Equal(t, genesisState.Accounts[1].Address, addr2)
+	genesisState.Sanitize()
+	require.False(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
+	require.Equal(t, genesisState.Accounts[1].Address, addr1)
+	require.Equal(t, genesisState.Accounts[1].Coins[0].Denom, "acoin")
+	require.Equal(t, genesisState.Accounts[1].Coins[1].Denom, "bcoin")
+}
 
 var (
 	pk1   = ed25519.GenPrivKey().PubKey()
@@ -23,10 +51,6 @@ var (
 	addr1 = sdk.ValAddress(pk1.Address())
 	addr2 = sdk.ValAddress(pk2.Address())
 	addr3 = sdk.ValAddress(pk3.Address())
-
-	emptyAddr     sdk.ValAddress
-	emptyPubkey   crypto.PubKey
-	testBondDenom = sdk.DefaultBondDenom
 )
 
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
@@ -57,64 +81,16 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	return appState
 }
 
-func TestToAccount(t *testing.T) {
-	priv := ed25519.GenPrivKey()
-	addr := sdk.AccAddress(priv.PubKey().Address())
-	authAcc := auth.NewBaseAccountWithAddress(addr)
-	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(testBondDenom, 150)))
-	genAcc := NewGenesisAccount(&authAcc)
-	acc := genAcc.ToAccount()
-	require.IsType(t, &auth.BaseAccount{}, acc)
-	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
-
-	vacc := auth.NewContinuousVestingAccount(
-		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
-	)
-	genAcc = NewGenesisAccountI(vacc)
-	acc = genAcc.ToAccount()
-	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
-	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
-}
-
-func TestGaiaAppGenTx(t *testing.T) {
-	cdc := MakeCodec()
-	_ = cdc
-
-	//TODO test that key overwrite flags work / no overwrites if set off
-	//TODO test validator created has provided pubkey
-	//TODO test the account created has the correct pubkey
-}
-
-func TestGaiaAppGenState(t *testing.T) {
-	cdc := MakeCodec()
-	_ = cdc
-	var genDoc tmtypes.GenesisDoc
-
-	// test unmarshalling error
-	_, err := GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
-	require.Error(t, err)
-
-	appState := makeGenesisState(t, []auth.StdTx{})
-	genDoc.AppState, err = json.Marshal(appState)
-	require.NoError(t, err)
-
-	// test validation error
-	_, err = GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
-	require.Error(t, err)
-
-	// TODO test must provide at least genesis transaction
-	// TODO test with both one and two genesis transactions:
-	// TODO        correct: genesis account created, canididates created, pool token variance
-}
-
+// TODO delete
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	desc := staking.NewDescription(name, "", "", "")
 	comm := staking.CommissionMsg{}
-	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(testBondDenom,
+	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(sdk.DefaultBondDenom,
 		50), desc, comm, sdk.OneInt())
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
 }
 
+// XXX make depend only on module genesis state
 func TestGaiaGenesisValidation(t *testing.T) {
 	genTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk2)}
 	dupGenTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk1)}
@@ -162,37 +138,4 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genesisState.Modules[staking.ModuleName] = stakingDataBz
 	err = mbm.ValidateGenesis(genesisState.Modules)
 	require.Error(t, err)
-}
-
-func TestGenesisStateSanitize(t *testing.T) {
-	genesisState := makeGenesisState(t, nil)
-	require.Nil(t, mbm.ValidateGenesis(genesisState.Modules))
-
-	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc1 := auth.NewBaseAccountWithAddress(addr1)
-	authAcc1.SetCoins(sdk.Coins{
-		sdk.NewInt64Coin("bcoin", 150),
-		sdk.NewInt64Coin("acoin", 150),
-	})
-	authAcc1.SetAccountNumber(1)
-	genAcc1 := NewGenesisAccount(&authAcc1)
-
-	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc2 := auth.NewBaseAccountWithAddress(addr2)
-	authAcc2.SetCoins(sdk.Coins{
-		sdk.NewInt64Coin("acoin", 150),
-		sdk.NewInt64Coin("bcoin", 150),
-	})
-	genAcc2 := NewGenesisAccount(&authAcc2)
-
-	genesisState.Accounts = []GenesisAccount{genAcc1, genAcc2}
-	require.True(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
-	require.Equal(t, genesisState.Accounts[0].Coins[0].Denom, "bcoin")
-	require.Equal(t, genesisState.Accounts[0].Coins[1].Denom, "acoin")
-	require.Equal(t, genesisState.Accounts[1].Address, addr2)
-	genesisState.Sanitize()
-	require.False(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
-	require.Equal(t, genesisState.Accounts[1].Address, addr1)
-	require.Equal(t, genesisState.Accounts[1].Coins[0].Denom, "acoin")
-	require.Equal(t, genesisState.Accounts[1].Coins[1].Denom, "bcoin")
 }

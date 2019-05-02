@@ -83,8 +83,9 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	accounts := genutil.GetGenesisStateFromAppState(cdc, appState).Accounts
 	var newAccs []simulation.Account
-	for _, acc := range appState.Accounts {
+	for _, acc := range accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
@@ -101,7 +102,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 ) (json.RawMessage, []simulation.Account, string) {
 
 	var genesisAccounts []genutil.GenesisAccount
-	modulesGenesis := NewDefaultGenesisState().Modules
+	genesisState := NewDefaultGenesisState()
 	cdc := MakeCodec()
 
 	amount := int64(r.Intn(1e12))
@@ -120,7 +121,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
-		var gacc GenesisAccount
+		var gacc genutil.GenesisAccount
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
@@ -150,13 +151,15 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
-			gacc = NewGenesisAccountI(vacc)
+			gacc = genutil.NewGenesisAccountI(vacc)
 		} else {
-			gacc = NewGenesisAccount(&bacc)
+			gacc = genutil.NewGenesisAccount(&bacc)
 		}
 
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
+	genutilGenesis := genutil.NewGenesisState(genesisAccounts, nil)
+	genesisState[genutil.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 
 	authGenesis := auth.NewGenesisState(
 		nil,
@@ -169,10 +172,10 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		),
 	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
-	modulesGenesis[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
+	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
-	modulesGenesis[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
+	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
@@ -183,7 +186,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		gov.NewVotingParams(vp),
 		gov.NewTallyParams(sdk.NewDecWithPrec(334, 3), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(334, 3)),
 	)
-	modulesGenesis[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
+	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
 	stakingGenesis := staking.NewGenesisState(
@@ -204,7 +207,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)+1))),
 	)
 	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
-	modulesGenesis[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
+	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
 	mintGenesis := mint.NewGenesisState(
@@ -218,7 +221,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			sdk.NewDecWithPrec(67, 2),
 			uint64(60*60*8766/5)),
 	)
-	modulesGenesis[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
+	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
 	var validators []staking.Validator
@@ -240,7 +243,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
-	modulesGenesis[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
+	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
 	// TODO make use NewGenesisState
 	distrGenesis := distr.GenesisState{
@@ -249,12 +252,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 	}
-	modulesGenesis[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
+	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 
 	// Marshal genesis
-	genesis := NewGenesisState(genesisAccounts, modulesGenesis, nil)
-	appState, err := MakeCodec().MarshalJSON(genesis)
+	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -416,7 +418,7 @@ func TestGaiaImportExport(t *testing.T) {
 		panic(err)
 	}
 	ctxB := newApp.NewContext(true, abci.Header{})
-	newApp.mm.InitGenesis(ctx, genesisState.Modules)
+	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})

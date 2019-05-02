@@ -18,6 +18,14 @@ type GenesisState struct {
 	GenTxs   []json.RawMessage `json:"gentxs"`
 }
 
+// NewGenesisState creates a new GenesisState object
+func NewGenesisState(accounts GenesisAccounts, genTxs []json.RawMessage) GenesisState {
+	return GenesisState{
+		Accounts: accounts,
+		GenTxs:   genTxs,
+	}
+}
+
 // get the genutil genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
 	var genesisState GenesisState

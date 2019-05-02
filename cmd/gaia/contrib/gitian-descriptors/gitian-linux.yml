@@ -3,7 +3,7 @@ name: "gaia-0.34.3"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "xenial"
+- "bionic"
 architectures:
 - "amd64"
 packages:

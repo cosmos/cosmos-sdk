@@ -39,7 +39,7 @@ var (
 // GenTxCmd builds the gaiad gentx command.
 // nolint: errcheck
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
-	defaultNodeHome, defaultCLIHome string) *cobra.Command {
+	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "gentx",
@@ -123,7 +123,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			err = genutil.ValidateAccountInGenesis(genesisState, mbm[genaccounts.ModuleName], key.GetAddress(), coins, cdc)
+			err = genutil.ValidateAccountInGenesis(genesisState, genAccIterator, key.GetAddress(), coins, cdc)
 			if err != nil {
 				return err
 			}

@@ -25,7 +25,8 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func InitFilesCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command {
+func InitFilesCmd(ctx *server.Context, cdc *codec.Codec,
+	mbm sdk.ModuleBasicManager, genAccIterator GenesisAccountsIterator) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -50,8 +51,8 @@ Example:
 			startingIPAddress := viper.GetString(flagStartingIPAddress)
 			numValidators := viper.GetInt(flagNumValidators)
 
-			return InitTestnet(config, cdc, mbm, outputDir, chainID, minGasPrices, nodeDirPrefix,
-				nodeDaemonHome, nodeCLIHome, startingIPAddress, numValidators)
+			return InitTestnet(config, cdc, mbm, genAccIterator, outputDir, chainID, minGasPrices,
+				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, numValidators)
 		},
 	}
 

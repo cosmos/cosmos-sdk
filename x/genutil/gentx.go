@@ -29,7 +29,8 @@ var (
 )
 
 // XXX TODO
-func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, iterateGenAcc IterateGenesisAccountsFn,
+func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState,
+	genAccIterator GenesisAccountsIterator,
 	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 
 	accountIsInGenesis := false
@@ -45,7 +46,7 @@ func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState, iterateGe
 	cdc.MustUnmarshalJSON(genUtilDataBz, &genesisState)
 
 	var err error
-	iterateGenAcc(cdc, appGenesisState,
+	genAccIterator.IterateGenesisAccounts(cdc, appGenesisState,
 		func(acc auth.Account) (stop bool) {
 			accAddress := acc.GetAddress()
 			accCoins := acc.GetCoins()

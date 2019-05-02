@@ -19,8 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/server/cli"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil/server/cli"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	genaccscli "github.com/cosmos/cosmos-sdk/x/genaccounts/server/cli"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/server/cli"
 	"github.com/cosmos/cosmos-sdk/x/testnet"
 )
 
@@ -46,12 +47,12 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(genutil.InitCmd(ctx, cdc, app.BasicGaiaApp))
-	rootCmd.AddCommand(genutil.CollectGenTxsCmd(ctx, cdc, app.BasicGaiaApp))
-	rootCmd.AddCommand(genutil.GenTxCmd(ctx, cdc, app.BasicGaiaApp, app.DefaultNodeHome, app.DefaultCLIHome))
-	rootCmd.AddCommand(genutil.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
-	rootCmd.AddCommand(genaccounts.AddGenesisAccountCmd(ctx, cdc))
-	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}))
+	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
+	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

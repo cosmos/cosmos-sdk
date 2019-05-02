@@ -22,11 +22,8 @@ import (
 )
 
 const (
-	flagOverwrite    = "overwrite"
-	flagClientHome   = "home-client"
-	flagVestingStart = "vesting-start-time"
-	flagVestingEnd   = "vesting-end-time"
-	flagVestingAmt   = "vesting-amount"
+	flagOverwrite  = "overwrite"
+	flagClientHome = "home-client"
 )
 
 type printInfo struct {

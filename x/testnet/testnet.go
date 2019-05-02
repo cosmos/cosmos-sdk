@@ -22,6 +22,7 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,6 +33,7 @@ const nodeDirPerm = 0755
 
 // Initialize the testnet
 func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
+	genAccIterator GenesisAccountsIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress string, numValidators int) error {
 
@@ -47,7 +49,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 	gaiaConfig.MinGasPrices = minGasPrices
 
 	var (
-		accs     []genutil.GenesisAccount
+		accs     []genaccounts.GenesisAccount
 		genFiles []string
 	)
 
@@ -128,7 +130,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 
 		accTokens := sdk.TokensFromTendermintPower(1000)
 		accStakingTokens := sdk.TokensFromTendermintPower(500)
-		accs = append(accs, genutil.GenesisAccount{
+		accs = append(accs, genaccounts.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
@@ -183,7 +185,7 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 
 	err := collectGenFiles(
 		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
-		outputDir, nodeDirPrefix, nodeDaemonHome, mbm[genaccounts.ModuleName],
+		outputDir, nodeDirPrefix, nodeDaemonHome, genAccIterator,
 	)
 	if err != nil {
 		return err
@@ -194,10 +196,14 @@ func InitTestnet(config *tmconfig.Config, cdc *codec.Codec, mbm sdk.ModuleBasicM
 }
 
 func initGenFiles(cdc *codec.Codec, mbm sdk.ModuleBasicManager, chainID string,
-	accs []genutil.GenesisAccount, genFiles []string, numValidators int) error {
+	accs []genaccounts.GenesisAccount, genFiles []string, numValidators int) error {
 
 	appGenState := mbm.DefaultGenesis()
-	genutil.SetAccountsInAppState(cdc, appGenState, accs)
+
+	// set the accounts in the genesis state
+	appGenState = genaccounts.SetGenesisStateInAppState(cdc, appGenState,
+		genaccounts.NewGenesisState(accs))
+
 	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
 	if err != nil {
 		return err
@@ -222,7 +228,7 @@ func collectGenFiles(
 	cdc *codec.Codec, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
-	iterateGenAcc IterateGenesisAccountsFn) error {
+	genAccIterator GenesisAccountsIterator) error {
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
@@ -244,7 +250,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, iterateGenAcc)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genAccIterator)
 		if err != nil {
 			return err
 		}

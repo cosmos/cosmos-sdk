@@ -20,7 +20,9 @@ import (
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command {
+func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
+	mbm sdk.ModuleBasicManager, genAccIterator genutil.GenesisAccountsIterator) *cobra.Command {
+
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
@@ -46,7 +48,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasic
 			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := genutil.NewInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, mbm[genaccounts.ModuleName])
+			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genAccIterator)
 			if err != nil {
 				return err
 			}

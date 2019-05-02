@@ -14,14 +14,15 @@ var (
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
-const moduleName = "accounts"
+// module name
+const ModuleName = "accounts"
 
 // app module basics object
 type AppModuleBasic struct{}
 
 // module name
 func (AppModuleBasic) Name() string {
-	return moduleName
+	return ModuleName
 }
 
 // module name
@@ -43,7 +44,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 // extra function from sdk.AppModuleBasic
 // iterate the genesis accounts and perform an operation at each of them
 // - to used by other modules
-func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appState ExpectedAppGenesisState,
+func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appState map[string]json.RawMessage,
 	iterateFn func(auth.Account) (stop bool)) {
 
 	genesisState := GetGenesisStateFromAppState(cdc, appState)

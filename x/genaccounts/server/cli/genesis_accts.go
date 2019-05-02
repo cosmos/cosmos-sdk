@@ -16,6 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
+const (
+	flagClientHome   = "home-client"
+	flagVestingStart = "vesting-start-time"
+	flagVestingEnd   = "vesting-end-time"
+	flagVestingAmt   = "vesting-amount"
+)
+
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -60,18 +67,21 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 
 			// retrieve the app state
 			genFile := config.GenesisFile()
-			appState, genDoc, err := genaccounts.GenesisStateFromGenFile(cdc, genFile)
+			appState, genDoc, err := genutil.GenesisStateFromGenFile(cdc, genFile)
 			if err != nil {
 				return err
 			}
 
 			// add genesis account to the app state
-			genesisState := genaccounts.GetGenesisStateFromAppState(cdc, appState)
+			var genesisState genaccounts.GenesisState
+			cdc.MustUnmarshalJSON(appState[genaccounts.ModuleName], &genesisState)
 			if genesisState.Accounts.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %v", addr)
 			}
 			genesisState.Accounts = append(genesisState.Accounts, genAcc)
-			appState = genaccounts.SetGenesisStateInAppState(cdc, appState, genesisState)
+
+			genesisStateBz := cdc.MustMarshalJSON(genesisState)
+			appState[genaccounts.ModuleName] = genesisStateBz
 
 			appStateJSON, err := cdc.MarshalJSON(appState)
 			if err != nil {

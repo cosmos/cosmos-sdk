@@ -46,12 +46,13 @@ func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.Pub
 
 // XXX TODO
 func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
-	initCfg InitConfig, genDoc tmtypes.GenesisDoc, iterateGenAcc IterateGenesisAccountsFn,
+	initCfg InitConfig, genDoc tmtypes.GenesisDoc,
+	genAccIterator GenesisAccountsIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectStdTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, iterateGenAcc)
+		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, genAccIterator)
 	if err != nil {
 		return appState, err
 	}
@@ -106,7 +107,7 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState ExpectedAppGen
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
-	genDoc tmtypes.GenesisDoc, iterateGenAcc IterateGenesisAccountsFn,
+	genDoc tmtypes.GenesisDoc, genAccIterator GenesisAccountsIterator,
 ) (appGenTxs []auth.StdTx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
@@ -123,7 +124,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 	}
 
 	addrMap := make(map[string]auth.Account)
-	iterateGenAcc(cdc, appState,
+	genAccIterator.IterateGenesisAccounts(cdc, appState,
 		func(acc auth.Account) (stop bool) {
 			addrMap[acc.GetAddress().String()] = acc
 			return false

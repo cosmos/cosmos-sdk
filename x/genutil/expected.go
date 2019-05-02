@@ -25,9 +25,11 @@ type AccountKeeper interface {
 // The expected format of app genesis state
 type ExpectedAppGenesisState map[string]json.RawMessage
 
-// The expected function for iterating genesis accounts
-type IterateGenesisAccountsFn func(
-	cdc *codec.Codec,
-	appState ExpectedAppGenesisState,
-	iterateFn func(auth.Account) (stop bool),
-)
+// The expected interface for iterating genesis accounts object
+type GenesisAccountsIterator interface {
+	IterateGenesisAccounts(
+		cdc *codec.Codec,
+		appState map[string]json.RawMessage,
+		iterateFn func(auth.Account) (stop bool),
+	)
+}

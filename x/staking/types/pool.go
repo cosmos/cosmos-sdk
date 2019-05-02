@@ -30,14 +30,14 @@ func InitialPool() Pool {
 	}
 }
 
-// Sum total of all staking tokens in the pool
-func (p Pool) TokenSupply() sdk.Int {
+// StakingTokenSupply returns the sum of all staking tokens
+func (p Pool) StakingTokenSupply() sdk.Int {
 	return p.NotBondedTokens.Add(p.BondedTokens)
 }
 
 // Get the fraction of the staking token which is currently bonded
 func (p Pool) BondedRatio() sdk.Dec {
-	supply := p.TokenSupply()
+	supply := p.StakingTokenSupply()
 	if supply.IsPositive() {
 		return p.BondedTokens.ToDec().QuoInt(supply)
 	}
@@ -67,9 +67,9 @@ func (p Pool) String() string {
 	return fmt.Sprintf(`Pool:
   Loose Tokens:  %s
   Bonded Tokens: %s
-  Token Supply:  %s
+  Staking Token Supply:  %s
   Bonded Ratio:  %v`, p.NotBondedTokens,
-		p.BondedTokens, p.TokenSupply(),
+		p.BondedTokens, p.StakingTokenSupply(),
 		p.BondedRatio())
 }
 

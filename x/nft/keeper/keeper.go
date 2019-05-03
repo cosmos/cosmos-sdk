@@ -36,11 +36,11 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return types.NFT{}, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
 	nft, err = collection.GetNFT(id)
 	if err != nil {
-		return
+		return nil, err
 	}
 	return
 }
@@ -57,14 +57,21 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom string, id uint64, nft types.NFT) 
 	return
 }
 
-// BurnNFT deletes an existing NFT from store
-func (k Keeper) BurnNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {\
+// DeleteNFT deletes an existing NFT from store
+func (k Keeper) DeleteNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
-	delete(collection, id)
+	nft, err := collection.GetNFT(id)
+	if err != nil {
+		return err
+	}
+
+	collection.DeleteNFT(id)
+
 	k.SetCollection(ctx, denom, collection)
+
 	return
 }
 
@@ -96,8 +103,7 @@ func (k Keeper) GetCollections(ctx sdk.Context) (collections []types.Collection)
 }
 
 // GetCollection returns a collection of NFTs
-func (k Keeper) GetCollection(ctx sdk.Context, denom string,
-) (collection types.Collection, found bool) {
+func (k Keeper) GetCollection(ctx sdk.Context, denom string) (collection types.Collection, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(denom))
 	if b == nil {
@@ -129,4 +135,31 @@ func (k Keeper) IterateNFTBalances(ctx sdk.Context, handler func(owner sdk.AccAd
 			break
 		}
 	}
+}
+
+// GetBalance gets the collection of NFTs owned by an address
+func (k Keeper) GetBalance(ctx sdk.Context, owner sdk.AccAddress) (collections types.Collections, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(owner.Bytes())
+	if b == nil {
+		return nil, false
+	}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collections)
+	return collections, true
+}
+
+// GetBalanceCollection gets the collection of NFTs owned by an address
+func (k Keeper) GetBalanceCollection(ctx sdk.Context, owner sdk.AccAddress, denom string) (collection types.Collection, found bool) {
+	collections, found := k.GetBalance(ctx, owner)
+	if !found {
+		return collection, false
+	}
+
+	sorted := collections.Sort()
+	collection, found = sorted.Find(denom)
+	if !found {
+		return collection, false
+	}
+
+	return collection, true
 }

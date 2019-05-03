@@ -49,8 +49,15 @@ func (collection *Collection) AddNFT(nft NFT) {
 }
 
 // DeleteNFT deletes an NFT from a collection
-func (collection *Collection) DeleteNFT(id uint64) {
-	// TODO:
+func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
+	nfts, ok := collection.NFTs.Remove(nft.GetID())
+	if !ok {
+		ErrUnknownNFT(DefaultCodespace,
+			fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
+		)
+	}
+	(*collection).NFTs = nfts
+	return nil
 }
 
 // Supply gets the total supply of NFTs of a collection
@@ -87,9 +94,58 @@ func (collections *Collections) Add(collectionsB Collections) {
 	(*collections) = append((*collections), collectionsB...)
 }
 
+// Find returns the searched collection from the set
+func (collections Collections) Find(denom string) (Collection, bool) {
+	index := collections.find(denom)
+	if index == -1 {
+		return Collection{}, false
+	}
+	return collections[index], true
+}
+
+// Remove removes a collection from the set of collections
+func (collections Collections) Remove(denom string) (Collections, bool) {
+	index := collections.find(denom)
+	if index == -1 {
+		return collections, false
+	}
+
+	return append(collections[:index], collections[:index+1]...), true
+}
+
+// String follows stringer interface
+func (collections Collections) String() string {
+	if len(collections) == 0 {
+		return ""
+	}
+
+	out := ""
+	for _, collection := range collections {
+		out += fmt.Sprintf("%v\n", collection.String())
+	}
+	return out[:len(out)-1]
+}
+
 // Empty returns true if there are no collections and false otherwise.
 func (collections Collections) Empty() bool {
 	return len(collections) == 0
+}
+
+func (collections Collections) find(denom string) int {
+	if len(collections) == 0 {
+		return -1
+	}
+
+	midIdx := len(collections) / 2
+	midCollection := collections[midIdx]
+
+	if strings.Compare(denom, midCollection.Denom) == -1 {
+		return collections[:midIdx].find(denom)
+	} else if midCollection.Denom == denom {
+		return midIdx
+	} else {
+		return collections[midIdx+1:].find(denom)
+	}
 }
 
 // ----------------------------------------------------------------------------

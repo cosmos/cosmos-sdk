@@ -111,14 +111,23 @@ func (nfts *NFTs) Add(nftsB NFTs) {
 	(*nfts) = append((*nfts), nftsB...)
 }
 
-// Delete deletes NFTs from the set
-func (nfts *NFTs) Delete(ids ...uint64) error {
-	newNFTs, err := removeNFT(*nfts, ids)
-	if err != nil {
-		return err
+// Find returns the searched collection from the set
+func (nfts NFTs) Find(id uint64) (nft NFT, found bool) {
+	index := nfts.find(id)
+	if index == -1 {
+		return nft, false
 	}
-	(*nfts) = newNFTs
-	return nil
+	return nfts[index], true
+}
+
+// Remove removes a collection from the set of collections
+func (nfts NFTs) Remove(id uint64) (NFTs, bool) {
+	index := nfts.find(id)
+	if index == -1 {
+		return nfts, false
+	}
+
+	return append(nfts[:index], nfts[:index+1]...), true
 }
 
 // String follows stringer interface
@@ -139,10 +148,21 @@ func (nfts NFTs) Empty() bool {
 	return len(nfts) == 0
 }
 
-// removeNFT removes NFTs from the set matching the given ids
-func removeNFT(nfts NFTs, ids []uint64) (NFTs, error) {
-	// TODO: do this efficciently
-	return nfts, nil
+func (nfts NFTs) find(id uint64) int {
+	if len(nfts) == 0 {
+		return -1
+	}
+
+	midIdx := len(nfts) / 2
+	nft := nfts[midIdx]
+
+	if id < nft.GetID() {
+		return nfts[:midIdx].find(id)
+	} else if id == nft.GetID() {
+		return midIdx
+	} else {
+		return nfts[midIdx+1:].find(id)
+	}
 }
 
 // ----------------------------------------------------------------------------

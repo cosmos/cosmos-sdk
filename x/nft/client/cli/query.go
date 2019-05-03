@@ -36,13 +36,17 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 // GetCmdQueryBalance queries all the NFTs owned by an account
 func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "balance [accountAddress] [denom]",
-		Short: "get the NFTs owned by an account address",
+		Use:   "balance [accountAddress] [denom (optional)]",
+		Short: "get the NFTs owned by an account address.",
 		Long:  "get the NFTs owned by an account address", // TODO: finish this
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			account := args[0]
+			denom := ""
+			if len(args) == 2 {
+				denom = args[1]
+			}
 
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/balance/%s", queryRoute, account), nil)
 			if err != nil {

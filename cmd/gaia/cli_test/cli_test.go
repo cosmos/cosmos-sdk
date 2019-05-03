@@ -46,6 +46,9 @@ func TestGaiaCLIKeysAddMultisig(t *testing.T) {
 		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar),
 		"--nosort")
 	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIKeysAddRecover(t *testing.T) {
@@ -58,6 +61,9 @@ func TestGaiaCLIKeysAddRecover(t *testing.T) {
 	exitSuccess, _, _ = f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
 	require.True(t, exitSuccess)
 	require.Equal(t, "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4", f.KeyAddress("test-recover").String())
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIKeysAddRecoverHDPath(t *testing.T) {
@@ -75,6 +81,9 @@ func TestGaiaCLIKeysAddRecoverHDPath(t *testing.T) {
 
 	f.KeysAddRecoverHDPath("test-recoverH4", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 2, 17)
 	require.Equal(t, "cosmos1v9plmhvyhgxk3th9ydacm7j4z357s3nhtwsjat", f.KeyAddress("test-recoverH4").String())
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
@@ -299,6 +308,9 @@ func TestGaiaCLIConfirmTx(t *testing.T) {
 	// ensure account balances match expected
 	barAcc = f.QueryAccount(barAddr)
 	require.Equal(t, sendTokens, barAcc.GetCoins().AmountOf(denom))
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIGasAuto(t *testing.T) {
@@ -630,7 +642,7 @@ func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
     {
       "subspace": "staking",
       "key": "MaxValidators",
-      "value": "105"
+      "value": 105
     }
   ],
   "deposit": [
@@ -668,6 +680,9 @@ func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
 	// ensure the correct deposit amount on the proposal
 	deposit := f.QueryGovDeposit(1, fooAddr)
 	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(denom))
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIQueryTxPagination(t *testing.T) {
@@ -717,6 +732,9 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 
 	// limit = 0
 	f.QueryTxsInvalid(errors.New("ERROR: limit must greater than 0"), 1, 0, fmt.Sprintf("sender:%s", fooAddr))
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIValidateSignatures(t *testing.T) {
@@ -907,6 +925,9 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	// Broadcast the transaction
 	success, _, _ = f.TxBroadcast(signedTxFile.Name())
 	require.False(t, success)
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIEncode(t *testing.T) {
@@ -1007,6 +1028,9 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	// Broadcast the transaction
 	success, _, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIMultisign(t *testing.T) {
@@ -1070,6 +1094,9 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	// Broadcast the transaction
 	success, _, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIConfig(t *testing.T) {
@@ -1183,6 +1210,9 @@ func TestGaiadAddGenesisAccount(t *testing.T) {
 	require.Equal(t, genesisState.Accounts[1].Address, f.KeyAddress(keyBar))
 	require.True(t, genesisState.Accounts[0].Coins.IsEqual(startCoins))
 	require.True(t, genesisState.Accounts[1].Coins.IsEqual(bazCoins))
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestSlashingGetParams(t *testing.T) {
@@ -1201,6 +1231,9 @@ func TestSlashingGetParams(t *testing.T) {
 	sinfo := f.QuerySigningInfo(f.GDTendermint("show-validator"))
 	require.Equal(t, int64(0), sinfo.StartHeight)
 	require.False(t, sinfo.Tombstoned)
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestValidateGenesis(t *testing.T) {
@@ -1212,4 +1245,7 @@ func TestValidateGenesis(t *testing.T) {
 	defer proc.Stop(false)
 
 	f.ValidateGenesis()
+
+	// Cleanup testing directories
+	f.Cleanup()
 }

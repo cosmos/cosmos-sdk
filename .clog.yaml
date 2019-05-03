@@ -1,0 +1,12 @@
+sections:
+  breaking: Breaking Changes
+  features: Features
+  improvements: Improvements
+  bugfixes: Bugfixes
+
+tags:
+  - gaia
+  - gaiacli
+  - gaiarest
+  - sdk
+  - tendermint

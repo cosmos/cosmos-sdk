@@ -35,7 +35,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		content := params.NewParameterChangeProposal(req.Title, req.Description, req.Changes)
+		content := params.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
 
 		msg := gov.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
 		if err := msg.ValidateBasic(); err != nil {

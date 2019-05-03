@@ -24,9 +24,11 @@ type cValue struct {
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
 type Store struct {
-	mtx    sync.Mutex
-	cache  map[string]cValue
-	parent types.KVStore
+	mtx           sync.Mutex
+	cache         map[string]cValue
+	unsortedCache map[string]struct{}
+	sortedCache   []cmn.KVPair
+	parent        types.KVStore
 }
 
 var _ types.CacheKVStore = (*Store)(nil)
@@ -34,8 +36,10 @@ var _ types.CacheKVStore = (*Store)(nil)
 // nolint
 func NewStore(parent types.KVStore) *Store {
 	return &Store{
-		cache:  make(map[string]cValue),
-		parent: parent,
+		cache:         make(map[string]cValue),
+		unsortedCache: make(map[string]struct{}),
+		sortedCache:   nil,
+		parent:        parent,
 	}
 }
 
@@ -117,6 +121,8 @@ func (store *Store) Write() {
 
 	// Clear the cache
 	store.cache = make(map[string]cValue)
+	store.unsortedCache = make(map[string]struct{})
+	store.sortedCache = nil
 }
 
 //----------------------------------------
@@ -162,23 +168,60 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
-	items := make([]cmn.KVPair, 0)
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
 
-	for key, cacheValue := range store.cache {
-		if !cacheValue.dirty {
-			continue
-		}
+	unsorted := make([]cmn.KVPair, 0)
+
+	for key := range store.unsortedCache {
+		cacheValue := store.cache[key]
 		if dbm.IsKeyInDomain([]byte(key), start, end) {
-			items = append(items, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
+			unsorted = append(unsorted, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
+			delete(store.unsortedCache, key)
 		}
 	}
 
-	sort.Slice(items, func(i, j int) bool {
+	sort.Slice(unsorted, func(i, j int) bool {
 		if ascending {
-			return bytes.Compare(items[i].Key, items[j].Key) < 0
+			return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
 		}
-		return bytes.Compare(items[i].Key, items[j].Key) > 0
+		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) > 0
 	})
+
+	// merge with already sortedCache
+	sorted := store.sortedCache
+	items := make([]cmn.KVPair, 0, len(unsorted)+len(sorted))
+
+	for {
+		if len(unsorted) == 0 {
+			items = append(items, sorted...)
+			break
+		}
+		if len(sorted) == 0 {
+			items = append(items, unsorted...)
+			break
+		}
+		uitem := unsorted[0]
+		sitem := sorted[0]
+		comp := bytes.Compare(uitem.Key, sitem.Key)
+		if !ascending {
+			comp = comp * -1
+		}
+		switch comp {
+		case -1:
+			unsorted = unsorted[1:]
+			items = append(items, uitem)
+		case 1:
+			sorted = sorted[1:]
+			items = append(items, sitem)
+		case 0:
+			unsorted = unsorted[1:]
+			sorted = sorted[1:]
+			items = append(items, uitem)
+		}
+	}
+
+	store.sortedCache = items
 
 	return items
 }
@@ -192,5 +235,8 @@ func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,
+	}
+	if dirty {
+		store.unsortedCache[string(key)] = struct{}{}
 	}
 }

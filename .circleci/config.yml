@@ -4,8 +4,6 @@ defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
     - image: circleci/golang:1.12.4
-  environment:
-    GOPATH: /tmp/workspace
 
 
 ############

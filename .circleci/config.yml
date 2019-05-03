@@ -54,6 +54,7 @@ jobs:
       - run:
           name: binaries
           command: |
+            export PATH=/tmp/workspace/bin:$PATH
             make go-mod-cache
             make install
       - save_cache:
@@ -79,6 +80,7 @@ jobs:
       - run:
           name: Lint source
           command: |
+            export PATH=/tmp/workspace/bin:$PATH
             make ci-lint
 
   integration_tests:

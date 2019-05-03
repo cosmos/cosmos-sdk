@@ -53,7 +53,8 @@ script: |
     export GOARCH=${arch}
     make tools-clean
     make ${GOPATH}/bin/gosum
-    make build VERSION="${VERSION}" COMMIT="${COMMIT}"
+    [ -f "${GOPATH}/bin/gosum" ]
+    make build VERSION="${VERSION}" COMMIT="${COMMIT}" GOSUM="${GOPATH}/bin/gosum"
     unset GOARCH
 
     mv build/* ${INSTALLPATH}

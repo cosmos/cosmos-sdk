@@ -65,7 +65,7 @@ script: |
 
     mv build/* ${INSTALLPATH}
     pushd installed
-    find ${DISTNAME} -type f | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${arch}.tar.gz
+    find ${DISTNAME} -type f | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-linux-${arch}.tar.gz
     popd  # installed
 
     popd  # distsrc-${arch}

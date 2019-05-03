@@ -14,15 +14,15 @@ remotes:
 - "url": "https://github.com/cosmos/cosmos-sdk.git"
   "dir": "cosmos-sdk"
 files:
-- "go1.12.4.darwin-amd64.tar.gz"
+- "go1.12.4.linux-amd64.tar.gz"
 script: |
   set -e -o pipefail
 
   # Install go and configure the environment
   export BUILD_DIR=`pwd`
-  tar xf go1.12.4.darwin-amd64.tar.gz
+  tar xf go1.12.4.linux-amd64.tar.gz
   [ -d go/ ]
-  rm -f go1.12.4.darwin-amd64.tar.gz
+  rm -f go1.12.4.linux-amd64.tar.gz
   
   export GOROOT=${BUILD_DIR}/go
   export GOPATH=${BUILD_DIR}/gopath

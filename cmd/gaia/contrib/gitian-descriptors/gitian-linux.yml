@@ -51,6 +51,7 @@ script: |
     tar --strip-components=1 -xf $SOURCEDIST
 
     export GOARCH=${arch}
+    make clean
     make build VERSION="${VERSION}" COMMIT="${COMMIT}"
     unset GOARCH
 

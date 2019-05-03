@@ -27,7 +27,7 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]cValue
 	unsortedCache map[string]struct{}
-	sortedCache   []cmn.KVPair
+	sortedCache   []cmn.KVPair // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -182,14 +182,12 @@ func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 	}
 
 	sort.Slice(unsorted, func(i, j int) bool {
-		if ascending {
-			return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
-		}
-		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) > 0
+		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
 	})
 
-	// merge with already sortedCache
 	sorted := store.sortedCache
+
+	// merge with already sortedCache
 	items := make([]cmn.KVPair, 0, len(unsorted)+len(sorted))
 
 	for {
@@ -204,9 +202,6 @@ func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 		uitem := unsorted[0]
 		sitem := sorted[0]
 		comp := bytes.Compare(uitem.Key, sitem.Key)
-		if !ascending {
-			comp = comp * -1
-		}
 		switch comp {
 		case -1:
 			unsorted = unsorted[1:]
@@ -223,6 +218,9 @@ func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 
 	store.sortedCache = items
 
+	if !ascending {
+		sort.Reverse(cmn.KVPairs(items))
+	}
 	return items
 }
 

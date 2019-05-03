@@ -42,6 +42,14 @@ script: |
   SOURCEDIST=`pwd`/`echo cosmos-sdk-*.tar.gz`
   popd
 
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf $SOURCEDIST
+  rm $SOURCEDIST
+  find cosmos-sdk-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $SOURCEDIST
+  popd
+
   # Extract release tarball and build
   for arch in ${ARCHS}; do
     mkdir distsrc-${arch}

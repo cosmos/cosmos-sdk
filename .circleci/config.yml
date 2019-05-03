@@ -51,7 +51,6 @@ jobs:
           name: tools
           command: |
             make tools
-      - *dependencies
       - run:
           name: binaries
           command: |
@@ -74,7 +73,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -90,7 +88,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -106,7 +103,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -122,7 +118,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -138,7 +133,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -154,7 +148,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -170,7 +163,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -188,7 +180,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -206,7 +197,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - run: mkdir -p /tmp/logs
       - restore_cache:
           keys:
@@ -234,7 +224,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - run:
           name: gather
           command: |

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -125,4 +126,24 @@ func (collections *Collections) UnmarshalJSON(b []byte) error {
 	}
 
 	return nil
+}
+
+//-----------------------------------------------------------------------------
+// Sort interface
+
+//nolint
+func (collections Collections) Len() int { return len(collections) }
+func (collections Collections) Less(i, j int) bool {
+	return strings.Compare(collections[i].Denom, collections[j].Denom) == -1
+}
+func (collections Collections) Swap(i, j int) {
+	collections[i], collections[j] = collections[j], collections[i]
+}
+
+var _ sort.Interface = Collections{}
+
+// Sort is a helper function to sort the set of coins inplace
+func (collections Collections) Sort() Collections {
+	sort.Sort(collections)
+	return collections
 }

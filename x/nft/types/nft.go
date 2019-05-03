@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -178,4 +179,20 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	}
 
 	return nil
+}
+
+//-----------------------------------------------------------------------------
+// Sort interface
+
+//nolint
+func (nfts NFTs) Len() int           { return len(nfts) }
+func (nfts NFTs) Less(i, j int) bool { return nfts[i].GetID() < nfts[j].GetID() }
+func (nfts NFTs) Swap(i, j int)      { nfts[i], nfts[j] = nfts[j], nfts[i] }
+
+var _ sort.Interface = NFTs{}
+
+// Sort is a helper function to sort the set of coins inplace
+func (nfts NFTs) Sort() NFTs {
+	sort.Sort(nfts)
+	return nfts
 }

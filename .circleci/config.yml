@@ -4,8 +4,6 @@ defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
     - image: circleci/golang:1.12.4
-  environment:
-    GOBIN: /tmp/workspace/bin
 
 
 ############
@@ -25,8 +23,7 @@ set_macos_env: &macos_env
     command: |
       echo 'export PATH=$PATH:$HOME/go/bin' >> $BASH_ENV
       echo 'export GOPATH=$HOME/project' >> $BASH_ENV
-      echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
-      echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
+      echo 'export PATH=$PATH:$HOME/go/bin:$GOPATH/bin' >> $BASH_ENV
       echo 'export GO111MODULE=on'
 
 ############
@@ -39,12 +36,6 @@ docs_update: &docs_deploy
     - image: tendermintdev/jq_curl
   environment:
     AWS_REGION: us-east-1
-
-deps: &dependencies
-  run:
-    name: dependencies
-    command: |
-      export PATH="$GOBIN:$PATH"
 
 jobs:
   setup_dependencies:
@@ -59,13 +50,11 @@ jobs:
       - run:
           name: tools
           command: |
-            export PATH="$GOBIN:$PATH"
             make tools
       - *dependencies
       - run:
           name: binaries
           command: |
-            export PATH="$GOBIN:$PATH"
             make go-mod-cache
             make install
       - save_cache:
@@ -92,7 +81,6 @@ jobs:
       - run:
           name: Lint source
           command: |
-            export PATH="$GOBIN:$PATH"
             make ci-lint
 
   integration_tests:
@@ -109,7 +97,6 @@ jobs:
       - run:
           name: Test cli
           command: |
-            export PATH="$GOBIN:$PATH"
             make test_cli
 
   test_sim_gaia_nondeterminism:
@@ -126,7 +113,6 @@ jobs:
       - run:
           name: Test individual module simulations
           command: |
-            export PATH="$GOBIN:$PATH"
             make test_sim_gaia_nondeterminism
 
   test_sim_gaia_fast:
@@ -143,7 +129,6 @@ jobs:
       - run:
           name: Test full Gaia simulation
           command: |
-            export PATH="$GOBIN:$PATH"
             make test_sim_gaia_fast
 
   test_sim_gaia_import_export:
@@ -160,7 +145,6 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
-            export PATH="$GOBIN:$PATH"
             make test_sim_gaia_import_export
 
   test_sim_gaia_simulation_after_import:
@@ -177,7 +161,6 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
-            export PATH="$GOBIN:$PATH"
             make test_sim_gaia_simulation_after_import
 
   test_sim_gaia_multi_seed_long:
@@ -194,7 +177,6 @@ jobs:
       - run:
           name: Test multi-seed Gaia simulation long
           command: |
-            export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
             make runsim
             runsim 500 50 TestFullGaiaSimulation
@@ -213,7 +195,6 @@ jobs:
       - run:
           name: Test multi-seed Gaia simulation short
           command: |
-            export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
             make runsim
             runsim 50 10 TestFullGaiaSimulation
@@ -233,7 +214,6 @@ jobs:
       - run:
           name: Run tests
           command: |
-            export PATH="$GOBIN:$PATH"
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             export GO111MODULE=on
             for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
@@ -283,7 +263,6 @@ jobs:
       machine:
         image: circleci/classic:latest
       environment:
-        GOBIN: /home/circleci/.go_workspace/bin
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64

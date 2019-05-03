@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"bytes"
+	"container/list"
 	"io"
 	"sort"
 	"sync"
@@ -27,7 +28,7 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]cValue
 	unsortedCache map[string]struct{}
-	sortedCache   []cmn.KVPair // always ascending sorted
+	sortedCache   *list.List // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -38,7 +39,7 @@ func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]cValue),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   nil,
+		sortedCache:   list.New(),
 		parent:        parent,
 	}
 }
@@ -122,7 +123,7 @@ func (store *Store) Write() {
 	// Clear the cache
 	store.cache = make(map[string]cValue)
 	store.unsortedCache = make(map[string]struct{})
-	store.sortedCache = nil
+	store.sortedCache = list.New()
 }
 
 //----------------------------------------
@@ -160,14 +161,14 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 		parent = store.parent.ReverseIterator(start, end)
 	}
 
-	items := store.dirtyItems(start, end)
-	cache = newMemIterator(start, end, items, ascending)
+	store.dirtyItems(start, end)
+	cache = newMemIterator(start, end, store.sortedCache, ascending)
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
-func (store *Store) dirtyItems(start, end []byte) []cmn.KVPair {
+func (store *Store) dirtyItems(start, end []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -185,44 +186,26 @@ func (store *Store) dirtyItems(start, end []byte) []cmn.KVPair {
 		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
 	})
 
-	sorted := store.sortedCache
-
-	// merge with already sortedCache
-	items := make([]cmn.KVPair, 0, len(unsorted)+len(sorted))
-
-	for {
-		if len(unsorted) == 0 {
-			items = append(items, sorted...)
-			break
-		}
-		if len(sorted) == 0 {
-			items = append(items, unsorted...)
-			break
-		}
+	for e := store.sortedCache.Front(); e != nil && len(unsorted) != 0; {
 		uitem := unsorted[0]
-		sitem := sorted[0]
+		sitem := e.Value.(cmn.KVPair)
 		comp := bytes.Compare(uitem.Key, sitem.Key)
 		switch comp {
 		case -1:
 			unsorted = unsorted[1:]
-			items = append(items, uitem)
+			store.sortedCache.InsertBefore(uitem, e)
 		case 1:
-			sorted = sorted[1:]
-			items = append(items, sitem)
+			e = e.Next()
 		case 0:
 			unsorted = unsorted[1:]
-			sorted = sorted[1:]
-			items = append(items, uitem)
+			e.Value = uitem
+			e = e.Next()
 		}
 	}
 
-	store.sortedCache = items
-
-	if !sort.IsSorted(cmn.KVPairs(items)) {
-		panic("ddd")
+	for _, kvp := range unsorted {
+		store.sortedCache.PushBack(kvp)
 	}
-
-	return items
 }
 
 //----------------------------------------

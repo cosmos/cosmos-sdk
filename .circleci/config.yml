@@ -57,11 +57,12 @@ jobs:
           name: binaries
           command: |
             make go-mod-cache
+            make tools
             make install
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
-            - "/go/pkg/mod"
+            - "/tmp/workspace/pkg/mod"
       - persist_to_workspace:
           root: /tmp/workspace
           paths:

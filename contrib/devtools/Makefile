@@ -42,20 +42,22 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 # tools
 ###
 
-GOLANGCI_LINT   = $(GOBIN)/golangci-lint
-STATIK          = $(GOBIN)/statik
-GOIMPORTS       = $(GOBIN)/goimports
-GOSUM           = $(GOBIN)/gosum
-CLOG            = $(GOBIN)/clog
+TOOLS_DESTDIR  ?= $(GOPATH)/bin
+
+GOLANGCI_LINT   = $(TOOLS_DESTDIR)/golangci-lint
+STATIK          = $(TOOLS_DESTDIR)/statik
+GOIMPORTS       = $(TOOLS_DESTDIR)/goimports
+GOSUM           = $(TOOLS_DESTDIR)/gosum
+CLOG            = $(TOOLS_DESTDIR)/clog
 
 all: tools
 
 tools: tools-stamp
-tools-stamp: $(GOLANGCI_LINT) $(STATIK) $(GOIMPORTS) $(GOSUM) $(CLOG)
+tools-stamp: $(STATIK) $(GOIMPORTS) $(GOSUM) $(CLOG)
 	touch $@
 
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh $(GOSUM)
-	bash $(mkfile_dir)/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
+	bash $(mkfile_dir)/install-golangci-lint.sh $(TOOLS_DESTDIR) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
 $(STATIK):
 	$(call go_install,rakyll,statik,v0.1.5)
@@ -70,7 +72,7 @@ $(CLOG):
 	$(call go_install,alessio,clog,1)
 
 tools-clean:
-	rm -f $(GOLANGCI_LINT) $(STATIK) $(GOIMPORTS) $(GOSUM) $(CLOG)
+	rm -f $(STATIK) $(GOIMPORTS) $(GOSUM) $(CLOG)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

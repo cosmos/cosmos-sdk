@@ -26,35 +26,44 @@ script: |
   
   export GOROOT=${BUILD_DIR}/go
   export GOPATH=${BUILD_DIR}/gopath
-  export GOBIN=${GOPATH}/bin
+  mkdir -p ${GOPATH}/bin
 
   export PATH_orig=${PATH}
-  export PATH=$GOBIN:$GOROOT/bin:$PATH
+  export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+  export ARCHS='amd64 386 arm armbe arm64 arm64be'
 
   # Make release tarball
   pushd cosmos-sdk
-  export VERSION=$(git describe --tags | sed 's/^v//')
+  VERSION=$(git describe --tags | sed 's/^v//')
   DISTNAME=cosmos-sdk-${VERSION}
   git archive --format tar.gz --prefix cosmos-sdk-${VERSION}/ -o ${DISTNAME}.tar.gz HEAD
   SOURCEDIST=`pwd`/`echo cosmos-sdk-*.tar.gz`
   popd
 
-  # Extract release tarball
-  mkdir distsrc
-  pushd distsrc
-  INSTALLPATH=`pwd`/installed/${DISTNAME}
-  mkdir -p ${INSTALLPATH}
-  tar --strip-components=1 -xf $SOURCEDIST
+  # Extract release tarball and build
+  for arch in ${ARCHS}; do
+    mkdir distsrc-${arch}
+    pushd distsrc-${arch}
+    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    mkdir -p ${INSTALLPATH}
+    tar --strip-components=1 -xf $SOURCEDIST
 
-  make tools
-  make build
-  mv build/* ${INSTALLPATH}
-  
-  pushd installed
-  find ${DISTNAME} -type f | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}.tar.gz
-  popd
+    export GOARCH=${arch}
+    make tools-clean
+    make build VERSION="${VERSION}"
+    unset GOARCH
 
-  popd
+    mv build/* ${INSTALLPATH}
+    pushd installed
+    find ${DISTNAME} -type f | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${arch}.tar.gz
+    popd  # installed
+
+    popd  # distsrc-${arch}
+
+    rm -rf distsrc-${arch}
+  done
+
 
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src

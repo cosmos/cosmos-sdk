@@ -32,13 +32,13 @@ func EmptyCollection() Collection {
 func (collection Collection) GetNFT(id uint64) (nft NFT, err sdk.Error) {
 
 	for _, nft := range collection.NFTs {
-		if nft.ID == id {
-			return nft, nil
+		if nft.GetID() == id {
+			return nil, nil
 		}
 	}
 
-	return NFT{}, ErrUnknownNFT(DefaultCodespace,
-		fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.ID, collection.Denom),
+	return nil, ErrUnknownNFT(DefaultCodespace,
+		fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
 	)
 }
 

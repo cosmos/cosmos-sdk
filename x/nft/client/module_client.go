@@ -23,14 +23,15 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group nameservice queries under a subcommand
 	nftQueryCmd := &cobra.Command{
-		Use:   "nfts",
+		Use:   "nft",
 		Short: "Querying commands for the NFT module",
 	}
 
 	nftQueryCmd.AddCommand(client.GetCommands(
-		nftcmd.GetCmdQueryBalanceOf(mc.storeKey, mc.cdc),
-		nftcmd.GetCmdQueryOwnerOf(mc.storeKey, mc.cdc),
-		nftcmd.GetCmdQueryMetadata(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryCollectionSupply(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryBalance(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryNFTs(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryNFT(mc.storeKey, mc.cdc),
 	)...)
 
 	return nftQueryCmd
@@ -39,15 +40,13 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	nftTxCmd := &cobra.Command{
-		Use:   "nfts",
-		Short: "Non-FungibleToken transactions subcommands",
+		Use:   "nft",
+		Short: "NFT transactions subcommands",
 	}
 
 	nftTxCmd.AddCommand(client.PostCommands(
 		nftcmd.GetCmdTransferNFT(mc.cdc),
-		// nftcmd.GetCmdEditNFTMetadata(mc.cdc),
-		// nftcmd.GetCmdMintNFT(mc.cdc),
-		// nftcmd.GetCmdBurnNFT(mc.cdc),
+		nftcmd.GetCmdEditNFTMetadata(mc.cdc),
 	)...)
 
 	return nftTxCmd

@@ -16,18 +16,11 @@ type (
 	GenesisState       = types.GenesisState
 	MsgTransferNFT     = types.MsgTransferNFT
 	MsgEditNFTMetadata = types.MsgEditNFTMetadata
-	MsgMintNFT         = types.MsgMintNFT
-	MsgBurnNFT         = types.MsgBurnNFT
-	MsgBuyNFT          = types.MsgBuyNFT
 )
 
 var (
 	NewKeeper          = keeper.NewKeeper
 	RegisterInvariants = keeper.RegisterInvariants
-
-	HandleMsgEditNFTMetadata = handler.HandleMsgEditNFTMetadata
-	HandleMsgMintNFT         = handler.HandleMsgMintNFT
-	HandleMsgBurnNFT         = handler.HandleMsgBurnNFT
 
 	NewNFT              = types.NewNFT
 	NewNFTs             = types.NewNFTs

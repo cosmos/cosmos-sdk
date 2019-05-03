@@ -8,7 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+// Edit metadata flags
+const (
+	flagName        = "name"
+	flagDescription = "description"
+	flagImage       = "image"
+	flagTokenURI    = "tokenURI"
 )
 
 // GetCmdTransferNFT is the CLI command for sending a TransferNFT transaction
@@ -19,23 +29,49 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			tokenID, err := strconv.ParseUint(args[2], 10, 64)
+			tokenID, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := nft.NewMsgTransferNFT(cliCtx.GetFromAddress(), sdk.AccAddress(args[0]), nft.Denom(args[1]), nft.TokenID(tokenID))
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			cliCtx.PrintResponse = true
-
+			msg := nft.NewMsgTransferNFT(sdk.AccAddress(args[0]), sdk.AccAddress(args[1]), nft.Denom(args[2]), tokenID)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
+}
+
+// GetCmdEditNFTMetadata is the CLI command for sending an EditMetadata transaction
+func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "edit-metadata [denom] [tokenID]",
+		Short: "transfer a token of some denom with some tokenID to some recipient",
+		Args:  cobra.ExactArgs(2),
+
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			denom := args[0]
+			tokenID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			name := viper.GetString(flagName)
+			description := viper.GetString(flagDescription)
+			image := viper.GetString(flagImage)
+			tokenURI := := viper.GetString(flagTokenURI)
+
+			msg := nft.NewMsgEditMetadata(cliCtx.GetFromAddress(), tokenID, denom, name,description, image, tokenURI)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+		},
+	}
+
+	cmd.Flags().String(flagName, "", "Name of the NFT")
+	cmd.Flags().String(flagDescription, "", "Unique description of the NFT")
+	cmd.Flags().String(flagImage, "", "Image path")
+	cmd.Flags().String(flagTokenURI, "", "Extra properties available fo querying")
+	return cmd
 }

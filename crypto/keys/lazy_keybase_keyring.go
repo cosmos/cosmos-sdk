@@ -1,7 +1,6 @@
 package keys
 
 import (
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,10 +12,11 @@ var _ Keybase = lazyKeybaseKeyring{}
 
 type lazyKeybaseKeyring struct {
 	name string
+	dir string
 }
 
 // New creates a new instance of a lazy keybase.
-func NewKeybaseKeyring(name string) Keybase {
+func NewKeybaseKeyring(name string, dir string) Keybase {
 
 	_, err := keyring.Open(keyring.Config{
 		//Keyring with encrypted application data
@@ -26,16 +26,30 @@ func NewKeybaseKeyring(name string) Keybase {
 		panic(err)
 	}
 
-	return lazyKeybaseKeyring{name: name}
+	return lazyKeybaseKeyring{name: name, dir: dir}
 }
+
+func (lkb lazyKeybaseKeyring) lkbToKeytingConfig() keyring.Config{
+
+	if lkb.dir != ""{
+		return keyring.Config{
+			AllowedBackends: []keyring.BackendType{"file"},
+			//Keyring with encrypted application data
+			ServiceName: lkb.name,
+			FileDir:lkb.dir,
+		}}
+
+	return keyring.Config{
+		//Keyring with encrypted application data
+		ServiceName: lkb.name,
+	}
+}
+
 
 func (lkb lazyKeybaseKeyring) List() ([]Info, error) {
 
 
-	db, err := keyring.Open(keyring.Config{
-		//Keyring with encrypted application data
-		ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +58,7 @@ func (lkb lazyKeybaseKeyring) List() ([]Info, error) {
 }
 
 func (lkb lazyKeybaseKeyring) Get(name string) (Info, error) {
-	db, err := keyring.Open(keyring.Config{
-		ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +67,7 @@ func (lkb lazyKeybaseKeyring) Get(name string) (Info, error) {
 }
 
 func (lkb lazyKeybaseKeyring) GetByAddress(address sdk.AccAddress) (Info, error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +76,7 @@ func (lkb lazyKeybaseKeyring) GetByAddress(address sdk.AccAddress) (Info, error)
 }
 
 func (lkb lazyKeybaseKeyring) Delete(name, passphrase string, skipPass bool) error {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
 	if err != nil {
 		return err
 	}
@@ -77,9 +85,8 @@ func (lkb lazyKeybaseKeyring) Delete(name, passphrase string, skipPass bool) err
 }
 
 func (lkb lazyKeybaseKeyring) Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -88,9 +95,8 @@ func (lkb lazyKeybaseKeyring) Sign(name, passphrase string, msg []byte) ([]byte,
 }
 
 func (lkb lazyKeybaseKeyring) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, "", err
 	}
@@ -99,9 +105,8 @@ func (lkb lazyKeybaseKeyring) CreateMnemonic(name string, language Language, pas
 }
 
 func (lkb lazyKeybaseKeyring) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}
@@ -110,9 +115,8 @@ func (lkb lazyKeybaseKeyring) CreateAccount(name, mnemonic, bip39Passwd, encrypt
 }
 
 func (lkb lazyKeybaseKeyring) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}
@@ -121,9 +125,8 @@ func (lkb lazyKeybaseKeyring) Derive(name, mnemonic, bip39Passwd, encryptPasswd 
 }
 
 func (lkb lazyKeybaseKeyring) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}
@@ -132,9 +135,8 @@ func (lkb lazyKeybaseKeyring) CreateLedger(name string, algo SigningAlgo, accoun
 }
 
 func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}
@@ -143,9 +145,8 @@ func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (
 }
 
 func (lkb lazyKeybaseKeyring) CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +155,8 @@ func (lkb lazyKeybaseKeyring) CreateMulti(name string, pubkey crypto.PubKey) (in
 }
 
 func (lkb lazyKeybaseKeyring) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return err
 	}
@@ -165,9 +165,8 @@ func (lkb lazyKeybaseKeyring) Update(name, oldpass string, getNewpass func() (st
 }
 
 func (lkb lazyKeybaseKeyring) Import(name string, armor string) (err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return err
 	}
@@ -176,9 +175,8 @@ func (lkb lazyKeybaseKeyring) Import(name string, armor string) (err error) {
 }
 
 func (lkb lazyKeybaseKeyring) ImportPubKey(name string, armor string) (err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return err
 	}
@@ -187,9 +185,8 @@ func (lkb lazyKeybaseKeyring) ImportPubKey(name string, armor string) (err error
 }
 
 func (lkb lazyKeybaseKeyring) Export(name string) (armor string, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return "", err
 	}
@@ -198,9 +195,8 @@ func (lkb lazyKeybaseKeyring) Export(name string) (armor string, err error) {
 }
 
 func (lkb lazyKeybaseKeyring) ExportPubKey(name string) (armor string, err error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return "", err
 	}
@@ -209,9 +205,8 @@ func (lkb lazyKeybaseKeyring) ExportPubKey(name string) (armor string, err error
 }
 
 func (lkb lazyKeybaseKeyring) ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error) {
-	db, err := keyring.Open(keyring.Config{
-	ServiceName: lkb.name,
-	})
+	db, err := keyring.Open(lkb.lkbToKeytingConfig())
+
 	if err != nil {
 		return nil, err
 	}

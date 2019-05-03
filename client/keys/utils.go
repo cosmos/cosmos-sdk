@@ -77,6 +77,12 @@ func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	return NewKeyBaseFromDir(rootDir)
 }
 
+
+func NewKeyringKeybase()(keys.Keybase){
+	return keys.NewKeybaseKeyring("gaiacli_keys")
+}
+
+
 // NewKeyBaseFromDir initializes a keybase at a particular dir.
 func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return getLazyKeyBaseFromDir(rootDir)

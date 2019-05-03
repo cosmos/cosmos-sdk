@@ -1994,7 +1994,7 @@ definitions:
       page_number:
         type: number
         example: 1
-      page_count:
+      page_total:
         type: number
         example: 1
       limit:

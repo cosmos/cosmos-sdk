@@ -255,7 +255,7 @@ type SearchTxsResult struct {
 	TotalCount int          `json:"total_count"` // Count of all txs
 	Count      int          `json:"count"`       // Count of txs in current page
 	PageNumber int          `json:"page_number"` // Index of current page, start from 1
-	PageCount  int          `json:"page_count"`  // Count of all pages
+	PageTotal  int          `json:"page_total"`  // Count of total pages
 	Limit      int          `json:"limit"`       // Max count txs per page
 	Txs        []TxResponse `json:"txs"`         // List of txs in current page
 }
@@ -265,7 +265,7 @@ func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) Se
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageCount:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  int(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Txs:        txs,
 	}

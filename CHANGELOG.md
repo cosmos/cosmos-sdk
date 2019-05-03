@@ -13,6 +13,12 @@ actually work offline.
 
 * [\#4219](https://github.com/cosmos/cosmos-sdk/issues/4219) Return an error when an empty mnemonic is provided during key recovery.
 
+### Improvements
+
+#### Gaia
+
+* [\#2007](https://github.com/cosmos/cosmos-sdk/issues/2007) Return 200 status code on empty results
+
 ### New features
 
 #### SDK

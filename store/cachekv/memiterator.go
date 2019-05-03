@@ -13,14 +13,14 @@ import (
 // Implements Iterator.
 type memIterator struct {
 	start, end []byte
-	items      []cmn.KVPair
+	items      []*cmn.KVPair
 	ascending  bool
 }
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
-	itemsInDomain := make([]cmn.KVPair, 0)
+	itemsInDomain := make([]*cmn.KVPair, 0)
 	for e := items.Front(); e != nil; e = e.Next() {
-		item := e.Value.(cmn.KVPair)
+		item := e.Value.(*cmn.KVPair)
 		if dbm.IsKeyInDomain(item.Key, start, end) {
 			itemsInDomain = append(itemsInDomain, item)
 		}

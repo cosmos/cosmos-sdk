@@ -31,11 +31,12 @@ script: |
   export PATH_orig=${PATH}
   export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
-  export ARCHS='amd64 386 arm armbe arm64 arm64be'
+  export ARCHS='386 amd64 arm arm64'
 
   # Make release tarball
   pushd cosmos-sdk
   VERSION=$(git describe --tags | sed 's/^v//')
+  COMMIT=$(git log -1 --format='%H')
   DISTNAME=cosmos-sdk-${VERSION}
   git archive --format tar.gz --prefix cosmos-sdk-${VERSION}/ -o ${DISTNAME}.tar.gz HEAD
   SOURCEDIST=`pwd`/`echo cosmos-sdk-*.tar.gz`
@@ -51,7 +52,7 @@ script: |
 
     export GOARCH=${arch}
     make tools-clean
-    make build VERSION="${VERSION}"
+    make build VERSION="${VERSION}" COMMIT="${COMMIT}"
     unset GOARCH
 
     mv build/* ${INSTALLPATH}

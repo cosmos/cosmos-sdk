@@ -15,13 +15,20 @@ type memIterator struct {
 	items      []cmn.KVPair
 }
 
-func newMemIterator(start, end []byte, items []cmn.KVPair) *memIterator {
+func newMemIterator(start, end []byte, items []cmn.KVPair, ascending bool) *memIterator {
 	itemsInDomain := make([]cmn.KVPair, 0)
 	for _, item := range items {
 		if dbm.IsKeyInDomain(item.Key, start, end) {
 			itemsInDomain = append(itemsInDomain, item)
 		}
 	}
+
+	if !ascending {
+		for left, right := 0, len(itemsInDomain)-1; left < right; left, right = left+1, right-1 {
+			itemsInDomain[left], itemsInDomain[right] = itemsInDomain[right], itemsInDomain[left]
+		}
+	}
+
 	return &memIterator{
 		start: start,
 		end:   end,

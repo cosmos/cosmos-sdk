@@ -160,14 +160,14 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 		parent = store.parent.ReverseIterator(start, end)
 	}
 
-	items := store.dirtyItems(start, end, ascending)
-	cache = newMemIterator(start, end, items)
+	items := store.dirtyItems(start, end)
+	cache = newMemIterator(start, end, items, ascending)
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
-func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
+func (store *Store) dirtyItems(start, end []byte) []cmn.KVPair {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -218,9 +218,10 @@ func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 
 	store.sortedCache = items
 
-	if !ascending {
-		sort.Reverse(cmn.KVPairs(items))
+	if !sort.IsSorted(cmn.KVPairs(items)) {
+		panic("ddd")
 	}
+
 	return items
 }
 

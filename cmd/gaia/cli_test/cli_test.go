@@ -654,8 +654,8 @@ func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// ensure transaction tags can be queried
-	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
-	require.Len(t, txs, 1)
+	txsPage := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage.Txs, 1)
 
 	// ensure deposit was deducted
 	fooAcc = f.QueryAccount(fooAddr)

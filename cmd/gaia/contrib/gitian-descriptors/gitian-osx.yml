@@ -1,0 +1,78 @@
+---
+name: "gaia-linux-0.34.3"
+enable_cache: true
+distro: "ubuntu"
+suites:
+- "bionic"
+architectures:
+- "amd64"
+packages:
+- "curl"
+- "git"
+- "ca-certificates"
+remotes:
+- "url": "https://github.com/cosmos/cosmos-sdk.git"
+  "dir": "cosmos-sdk"
+files:
+- "go1.12.4.darwin-amd64.tar.gz"
+script: |
+  set -e -o pipefail
+
+  # Install go and configure the environment
+  export BUILD_DIR=`pwd`
+  tar xf go1.12.4.darwin-amd64.tar.gz
+  [ -d go/ ]
+  rm -f go1.12.4.darwin-amd64.tar.gz
+  
+  export GOROOT=${BUILD_DIR}/go
+  export GOPATH=${BUILD_DIR}/gopath
+  mkdir -p ${GOPATH}/bin
+
+  export PATH_orig=${PATH}
+  export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+  export ARCHS='386 amd64'
+
+  # Make release tarball
+  pushd cosmos-sdk
+  VERSION=$(git describe --tags | sed 's/^v//')
+  COMMIT=$(git log -1 --format='%H')
+  DISTNAME=cosmos-sdk-${VERSION}
+  git archive --format tar.gz --prefix cosmos-sdk-${VERSION}/ -o ${DISTNAME}.tar.gz HEAD
+  SOURCEDIST=`pwd`/`echo cosmos-sdk-*.tar.gz`
+  popd
+
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf $SOURCEDIST
+  rm $SOURCEDIST
+  find cosmos-sdk-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $SOURCEDIST
+  popd
+
+  # Extract release tarball and build
+  for arch in ${ARCHS}; do
+    mkdir distsrc-${arch}
+    pushd distsrc-${arch}
+    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    mkdir -p ${INSTALLPATH}
+    tar --strip-components=1 -xf $SOURCEDIST
+
+    export GOARCH=${arch}
+    make clean
+    make build VERSION="${VERSION}" COMMIT="${COMMIT}"
+    unset GOARCH
+
+    mv build/* ${INSTALLPATH}
+    pushd installed
+    find ${DISTNAME} -type f | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-darwin-${arch}.tar.gz
+    popd  # installed
+
+    popd  # distsrc-${arch}
+
+    rm -rf distsrc-${arch}
+  done
+
+
+  mkdir -p $OUTDIR/src
+  mv $SOURCEDIST $OUTDIR/src

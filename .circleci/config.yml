@@ -50,7 +50,7 @@ jobs:
       - run:
           name: tools
           command: |
-            make tools
+            make tools TOOLS_DESTDIR=/tmp/workspace/bin
       - run:
           name: binaries
           command: |

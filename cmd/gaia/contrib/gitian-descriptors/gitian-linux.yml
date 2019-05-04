@@ -61,7 +61,8 @@ script: |
 
     export GOARCH=${arch}
     make clean
-    make build VERSION="${VERSION}" COMMIT="${COMMIT}"
+    export GOROOT_FINAL=go
+    make build VERSION="${VERSION}" COMMIT="${COMMIT}" LDFLAGS=-linkmode=internal
     unset GOARCH
 
     mv build/* ${INSTALLPATH}

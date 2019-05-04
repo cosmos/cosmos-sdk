@@ -28,7 +28,6 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -85,7 +84,8 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
-	accounts := genutil.GetGenesisStateFromAppState(cdc, appState).Accounts
+	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState).Accounts
+
 	var newAccs []simulation.Account
 	for _, acc := range accounts {
 		// Pick a random private key, since we don't know the actual key
@@ -153,7 +153,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
-			gacc = genaccounts.NewGenesisAccountI(vacc)
+			var err error
+			gacc, err = genaccounts.NewGenesisAccountI(vacc)
+			if err != nil {
+				panic(err)
+			}
 		} else {
 			gacc = genaccounts.NewGenesisAccount(&bacc)
 		}
@@ -161,9 +165,8 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	// XXX accounts not in genutil anymore
-	genutilGenesis := genutil.NewGenesisState(genesisAccounts, nil)
-	genesisState[genutil.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
+	genaccsGenesis := genaccounts.NewGenesisState(genesisAccounts)
+	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
 
 	authGenesis := auth.NewGenesisState(
 		nil,

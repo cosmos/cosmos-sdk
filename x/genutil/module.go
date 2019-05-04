@@ -13,14 +13,15 @@ var (
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
-const moduleName = "genutil"
+// module name
+const ModuleName = "genutil"
 
 // app module basics object
 type AppModuleBasic struct{}
 
 // module name
 func (AppModuleBasic) Name() string {
-	return moduleName
+	return ModuleName
 }
 
 // module name

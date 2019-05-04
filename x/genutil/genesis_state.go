@@ -37,7 +37,7 @@ func NewGenesisStateFromStdTx(genTxs []auth.StdTx) GenesisState {
 // get the genutil genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
 	var genesisState GenesisState
-	cdc.MustUnmarshalJSON(appState[moduleName], &genesisState)
+	cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	return genesisState
 }
 
@@ -46,7 +46,7 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 	appState ExpectedAppGenesisState, genesisState GenesisState) ExpectedAppGenesisState {
 
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
-	appState[moduleName] = genesisStateBz
+	appState[ModuleName] = genesisStateBz
 	return appState
 }
 

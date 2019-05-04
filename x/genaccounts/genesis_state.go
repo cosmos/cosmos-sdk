@@ -1,6 +1,7 @@
 package genaccounts
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
@@ -21,7 +22,7 @@ func NewGenesisState(accounts GenesisAccounts) GenesisState {
 }
 
 // get the genesis state from the expected app state
-func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
+func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	return genesisState
@@ -29,7 +30,7 @@ func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisSt
 
 // set the genesis state within the expected app state
 func SetGenesisStateInAppState(cdc *codec.Codec,
-	appState ExpectedAppGenesisState, genesisState GenesisState) ExpectedAppGenesisState {
+	appState map[string]json.RawMessage, genesisState GenesisState) map[string]json.RawMessage {
 
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
 	appState[ModuleName] = genesisStateBz

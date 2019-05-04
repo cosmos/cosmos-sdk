@@ -69,10 +69,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-var cdc = amino.NewCodec()
+var cdc = codec.New()
 
 func init() {
-	ctypes.RegisterAmino(cdc)
+	codec.RegisterCrypto(cdc)
 }
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -304,10 +304,12 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
-	genesisState = genutil.SetAccountsInAppState(cdc, genesisState, accs)
-
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
 	genesisState[staking.ModuleName] = stakingDataBz
+
+	genaccountsData := genaccounts.NewGenesisState(accs)
+	genaccountsDataBz := cdc.MustMarshalJSON(genaccountsData)
+	genesisState[genaccounts.ModuleName] = genaccountsDataBz
 
 	// mint genesis (none set within genesisState)
 	mintData := mint.DefaultGenesisState()

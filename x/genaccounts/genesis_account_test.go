@@ -9,13 +9,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func TestGenesisAccountValidate(t *testing.T) {
-	cdc := codec.New()
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	tests := []struct {
 		name   string

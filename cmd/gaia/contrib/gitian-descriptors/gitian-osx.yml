@@ -1,5 +1,5 @@
 ---
-name: "gaia-osx-0.34.3"
+name: "cosmos-sdk-osx-0.34.3"
 enable_cache: true
 distro: "ubuntu"
 suites:

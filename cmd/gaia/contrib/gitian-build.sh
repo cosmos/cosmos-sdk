@@ -10,16 +10,16 @@ f_main() {
     l_platform
 
   l_platform=$1
-  l_workdir=`mktemp -d gitian-build-${l_platform}-XXXXX`
-  echo "Work directory: ${l_workdir}" >&2
-  pushd ${l_workdir}
-  git clone -b alessio/reproducible-builds git@github.com:cosmos/cosmos-sdk.git
-  l_sdk="$(pwd)/cosmos-sdk"
-  git clone https://github.com/devrandom/gitian-builder
-  l_gitian="$(pwd)/gitian-builder"
+  l_sdk=$2
   pushd ${l_sdk}
   l_commit=$(git rev-parse HEAD)
   popd
+
+  l_workdir=`mktemp -d gitian-build-${l_platform}-XXXXX`
+  echo "Work directory: ${l_workdir}" >&2
+  pushd ${l_workdir}
+  git clone https://github.com/devrandom/gitian-builder
+  l_gitian="$(pwd)/gitian-builder"
 
   f_prep_docker_image "${l_gitian}"
   f_download_go "${l_gitian}"
@@ -64,4 +64,4 @@ f_build() {
   libexec/stop-target || echo "warning: couldn't stop target" >&2
 }
 
-f_main $1
+f_main $1 $2

@@ -5,13 +5,8 @@ package genutil
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +23,8 @@ var (
 	defaultMinSelfDelegation       = "1"
 )
 
-// XXX TODO
+// ValidateAccountInGenesis checks that the provided key has sufficient
+// coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState,
 	genAccIterator GenesisAccountsIterator,
 	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
@@ -77,41 +73,6 @@ func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState,
 	}
 
 	return nil
-}
-
-// XXX TODO
-func MakeOutputFilepath(rootDir, nodeID string) (string, error) {
-	writePath := filepath.Join(rootDir, "config", "gentx")
-	if err := common.EnsureDir(writePath, 0700); err != nil {
-		return "", err
-	}
-	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
-}
-
-// XXX TODO
-func ReadUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
-	var stdTx auth.StdTx
-	bytes, err := ioutil.ReadAll(r)
-	if err != nil {
-		return stdTx, err
-	}
-	err = cdc.UnmarshalJSON(bytes, &stdTx)
-	return stdTx, err
-}
-
-// XXX TODO
-func WriteSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
-	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	defer outputFile.Close()
-	if err != nil {
-		return err
-	}
-	json, err := cdc.MarshalJSON(tx)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(outputFile, "%s\n", json)
-	return err
 }
 
 type deliverTxfn func([]byte) abci.ResponseDeliverTx

@@ -22,6 +22,18 @@ func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 	}
 }
 
+// NewGenesisStateFromStdTx creates a new GenesisState object
+// from auth transactions
+func NewGenesisStateFromStdTx(genTxs []auth.StdTx) GenesisState {
+	genTxsBz := make([]json.RawMessage, len(genTxs))
+	for i, genTx := range genTxs {
+		genTxsBz[i] = moduleCdc.MustMarshalJSON(genTx)
+	}
+	return GenesisState{
+		GenTxs: genTxsBz,
+	}
+}
+
 // get the genutil genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
 	var genesisState GenesisState

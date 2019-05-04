@@ -9,10 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-// XXX cleanup no makeGenesisState or mbm
 func TestSanitize(t *testing.T) {
-	genesisState := makeGenesisState(t, nil)
-	require.Nil(t, mbm.ValidateGenesis(genesisState.Modules))
 
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc1 := auth.NewBaseAccountWithAddress(addr1)
@@ -31,7 +28,8 @@ func TestSanitize(t *testing.T) {
 	})
 	genAcc2 := NewGenesisAccount(&authAcc2)
 
-	genesisState.Accounts = []GenesisAccount{genAcc1, genAcc2}
+	genesisState := NewGenesisState([]GenesisAccount{genAcc1, genAcc2})
+	require.NoError(t, ValidateGenesis(genesisState))
 	require.True(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
 	require.Equal(t, genesisState.Accounts[0].Coins[0].Denom, "bcoin")
 	require.Equal(t, genesisState.Accounts[0].Coins[1].Denom, "acoin")

@@ -81,11 +81,10 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) 
 			config.Moniker = args[0]
 
 			genFile := config.GenesisFile()
-
-			appState, err := genutil.InitializeEmptyGenesis(mbm, cdc, genFile, chainID, viper.GetBool(flagOverwrite))
-			if err != nil {
-				return err
+			if !overwrite && common.FileExists(genFile) {
+				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
+			appState := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
 
 			genDoc := &types.GenesisDoc{}
 			if _, err := os.Stat(genFile); err != nil {

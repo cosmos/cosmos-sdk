@@ -3,8 +3,6 @@ package genutil
 import "testing"
 
 func TestGenTx(t *testing.T) {
-	cdc := MakeCodec()
-	_ = cdc
 
 	// TODO test that key overwrite flags work / no overwrites if set off
 	// TODO test validator created has provided pubkey

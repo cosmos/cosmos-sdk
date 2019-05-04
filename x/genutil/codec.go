@@ -2,6 +2,8 @@ package genutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -14,6 +16,8 @@ func init() {
 	// TODO abstract genesis transactions registration back to staking
 	// required for genesis transactions
 	staking.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	moduleCdc = cdc.Seal()
 }

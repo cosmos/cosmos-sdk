@@ -84,11 +84,13 @@ func TestEmptyState(t *testing.T) {
 	w.Close()
 	os.Stdout = old
 	out := <-outC
+
 	require.Contains(t, out, "genesis_time")
 	require.Contains(t, out, "chain_id")
 	require.Contains(t, out, "consensus_params")
 	require.Contains(t, out, "validators")
 	require.Contains(t, out, "app_hash")
+	require.Contains(t, out, "app_state")
 }
 
 func TestStartStandAlone(t *testing.T) {

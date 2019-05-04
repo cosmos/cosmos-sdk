@@ -3,7 +3,10 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,6 +14,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,6 +26,7 @@ import (
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -163,7 +168,7 @@ following delegation and commission default parameters:
 			}
 
 			// read the transaction
-			stdTx, err := genutil.ReadUnsignedGenTxFile(cdc, w)
+			stdTx, err := readUnsignedGenTxFile(cdc, w)
 			if err != nil {
 				return err
 			}
@@ -177,13 +182,13 @@ following delegation and commission default parameters:
 			// Fetch output file name
 			outputDocument := viper.GetString(client.FlagOutputDocument)
 			if outputDocument == "" {
-				outputDocument, err = genutil.MakeOutputFilepath(config.RootDir, nodeID)
+				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
 				if err != nil {
 					return err
 				}
 			}
 
-			if err := genutil.WriteSignedGenTx(cdc, outputDocument, signedTx); err != nil {
+			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
 				return err
 			}
 
@@ -211,6 +216,38 @@ following delegation and commission default parameters:
 	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
+}
+
+func makeOutputFilepath(rootDir, nodeID string) (string, error) {
+	writePath := filepath.Join(rootDir, "config", "gentx")
+	if err := common.EnsureDir(writePath, 0700); err != nil {
+		return "", err
+	}
+	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
+}
+
+func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
+	var stdTx auth.StdTx
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		return stdTx, err
+	}
+	err = cdc.UnmarshalJSON(bytes, &stdTx)
+	return stdTx, err
+}
+
+func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
+	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	defer outputFile.Close()
+	if err != nil {
+		return err
+	}
+	json, err := cdc.MarshalJSON(tx)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(outputFile, "%s\n", json)
+	return err
 }
 
 func prepareFlagsForTxCreateValidator(

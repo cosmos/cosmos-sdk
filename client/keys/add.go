@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -10,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,11 +31,6 @@ const (
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
-)
-
-const (
-	maxValidAccountValue = int(0x80000000 - 1)
-	maxValidIndexalue    = int(0x80000000 - 1)
 )
 
 func addKeyCommand() *cobra.Command {
@@ -201,6 +195,10 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		if !bip39.IsMnemonicValid(mnemonic) {
+			return errors.New("invalid mnemonic")
+		}
 	}
 
 	if len(mnemonic) == 0 {
@@ -214,11 +212,6 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
-		return nil
 	}
 
 	// override bip39 passphrase

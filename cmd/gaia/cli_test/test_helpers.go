@@ -249,9 +249,9 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 }
 
 // KeysAddRecover prepares gaiacli keys add --recover
-func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
+func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) (exitSuccess bool, stdout, stderr string) {
 	cmd := fmt.Sprintf("../../../build/gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
 }
 
 // KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index

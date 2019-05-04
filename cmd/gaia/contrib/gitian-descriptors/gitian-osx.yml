@@ -20,6 +20,9 @@ script: |
   set -e -o pipefail
 
   # Install go and configure the environment
+  export REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
   export BUILD_DIR=`pwd`
   tar xf go1.12.4.linux-amd64.tar.gz
   [ -d go/ ]

@@ -134,7 +134,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []sdk.TxResponse{}
+		var txs []*sdk.SearchTxsResult
 		var actions []string
 
 		switch {
@@ -158,7 +158,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			if errQuery != nil {
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, errQuery.Error())
 			}
-			txs = append(txs, foundTxs...)
+			txs = append(txs, foundTxs)
 		}
 
 		res, err := cdc.MarshalJSON(txs)

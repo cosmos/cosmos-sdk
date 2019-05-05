@@ -2,19 +2,24 @@
 
 set -euo pipefail
 
+g_default_dirname="gitian-build-$(date +%Y-%m-%d-%H%M%S)"
+g_dirname=''
+
 f_main() {
-  local l_workdir \
+  local l_dirname \
+    l_workdir \
     l_sdk \
     l_commit \
     l_platform
 
-  l_platform=$1
-  l_sdk=$2
+  l_dirname=$1
+  l_platform=$2
+  l_sdk=$3
   pushd ${l_sdk}
   l_commit=$(git rev-parse HEAD)
   popd
 
-  l_workdir="$(pwd)/gitian-build-$(date +%Y-%m-%d-%H%M%S)"
+  l_workdir="$(pwd)/${l_dirname}"
   mkdir ${l_workdir}/
   echo "Download gitian" >&2
   git clone https://github.com/devrandom/gitian-builder ${l_workdir}
@@ -73,15 +78,17 @@ Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
    -h        Display this help and exit
+   -d        Set working directory name
 EOF
 }
 
 while getopts ":d:hnv" opt; do
   case "${opt}" in
     h)  f_help ; exit 0 ;;
+    d)  g_dirname="${OPTARG}"
   esac
 done
 
 shift "$((OPTIND-1))"
 
-f_main $1 $2
+f_main "${g_dirname:-${g_default_dirname}}" $1 $2

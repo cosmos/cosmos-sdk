@@ -14,6 +14,7 @@ type (
 	ModuleHolderAccount = types.ModuleHolderAccount
 	ModuleMinterAccount = types.ModuleMinterAccount
 	Supply              = types.Supply
+	GenesisState        = types.GenesisState
 )
 
 var (
@@ -28,4 +29,8 @@ var (
 	NewModuleMinterAccount = types.NewModuleMinterAccount
 	NewSupply              = types.NewSupply
 	DefaultSupply          = types.DefaultSupply
+	NewGenesisState        = types.NewGenesisState
+	DefaultGenesisState    = types.DefaultGenesisState
 )
+
+const StoreKey = keeper.StoreKey

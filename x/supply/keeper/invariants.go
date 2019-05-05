@@ -32,10 +32,10 @@ func StakingTokensInvariant(k SupplyKeeper, sk StakingKeeper) sdk.Invariant {
 		expectedTotalStakeSupply := sk.StakingTokenSupply(ctx)
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !totalStakeSupply.Equal(stakeCoins) {
+		if !totalStakeSupply.Equal(expectedTotalStakeSupply) {
 			return fmt.Errorf("total staking token supply invariance:\n"+
 				"\tstaking pool tokens: %v\n"+
-				"\tsupply staking tokens: %v", totalStakeSupply, stakeCoins)
+				"\tsupply staking tokens: %v", expectedTotalStakeSupply, totalStakeSupply)
 		}
 
 		return nil

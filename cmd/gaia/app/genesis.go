@@ -93,7 +93,7 @@ type GenesisAccount struct {
 	Module string `json:"module"` // name of the module
 }
 
-// NewGenesisAccount creates a GenesisAccount instance from a BaseAccount
+// NewGenesisAccount creates a GenesisAccount instance from a BaseAccount.
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.Address,
@@ -103,7 +103,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
-// NewGenesisAccountI creates a GenesisAccount instance from an Account interface
+// NewGenesisAccountI creates a GenesisAccount instance from an Account interface.
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),

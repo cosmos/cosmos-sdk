@@ -54,7 +54,11 @@ func (hk BaseSendKeeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule 
 		return err
 	}
 
-	sendCoins(ctx, hk.ak, senderAcc.GetAddress(), recipientAddr, amt)
+	err = sendCoins(ctx, hk.ak, senderAcc.GetAddress(), recipientAddr, amt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -70,7 +74,11 @@ func (hk BaseSendKeeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, 
 		return err
 	}
 
-	sendCoins(ctx, hk.ak, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
+	err = sendCoins(ctx, hk.ak, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -81,7 +89,11 @@ func (hk BaseSendKeeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sd
 		return err
 	}
 
-	sendCoins(ctx, hk.ak, senderAddr, recipientAcc.GetAddress(), amt)
+	err = sendCoins(ctx, hk.ak, senderAddr, recipientAcc.GetAddress(), amt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -97,7 +109,11 @@ func (hk BaseSendKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) 
 		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", name))
 	}
 
-	addCoins(ctx, hk.ak, macc.GetAddress(), amt)
+	_, err = addCoins(ctx, hk.ak, macc.GetAddress(), amt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

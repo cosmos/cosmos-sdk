@@ -561,7 +561,7 @@ func (mma ModuleMinterAccount) String() string {
   Coins:            %s
   AccountNumber:    %d
 Sequence:         %d
-	Module Name:      %s`,
+ModuleName:      %s`,
 		mma.Address, pubkey, mma.Coins, mma.AccountNumber, mma.Sequence, mma.Module)
 }
 

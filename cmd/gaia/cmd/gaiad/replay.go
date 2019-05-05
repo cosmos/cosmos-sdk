@@ -170,7 +170,7 @@ func replayTxs(rootDir string) error {
 		}
 		block := blockStore.LoadBlock(int64(i))
 		if block == nil {
-			panic(fmt.Sprintf("couldn't find block %d", i))
+			return fmt.Errorf("couldn't find block %d", i)
 		}
 
 		t2 := time.Now()
@@ -187,6 +187,4 @@ func replayTxs(rootDir string) error {
 		fmt.Fprintf(os.Stderr, "new app hash: %X\n", state.AppHash)
 		fmt.Fprintln(os.Stderr, tz)
 	}
-
-	return nil
 }

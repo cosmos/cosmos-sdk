@@ -25,7 +25,7 @@ script: |
       local PATTERN="$2"
       local REPLACEMENT="$3"
 
-      # Find all unique strings in FILE that contain the pattern 
+      # Find all unique strings in FILE that contain the pattern
       STRINGS=$(strings ${FILE} | grep ${PATTERN} | sort -u -r)
 
       if [ "${STRINGS}" != "" ] ; then
@@ -46,7 +46,7 @@ script: |
                       NEW_STRING_HEX="${NEW_STRING_HEX}00"
                   done
 
-                  # Now, replace every occurrence of OLD_STRING with NEW_STRING 
+                  # Replace every occurrence of OLD_STRING with NEW_STRING
                   echo -n "Replacing ${OLD_STRING} with ${NEW_STRING}... "
                   hexdump -ve '1/1 "%.2X"' ${FILE} | \
                   sed "s/${OLD_STRING_HEX}/${NEW_STRING_HEX}/g" | \
@@ -131,13 +131,10 @@ script: |
       go_build_tmpdir="$(strings ${INSTALLPATH}/${prog} | grep /tmp/go-build)"
       f_patch_strings_in_file ${INSTALLPATH}/${prog} ${go_build_tmpdir} /tmp/go-build/b001/_gomod_.go
 
-      # Move the binary into the output directory
-      # mv ${INSTALLPATH}/${prog} ${OUTDIR}/linux-${arch}-${prog}
     done
     popd # ${distsrc}
 
-    # mv ${INSTALLPATH}/gaiad ${OUTDIR}/${DISTNAME}-linux-${arch}-gaiad
-    pushd ${INSTALLPATH} # installed/${DISTNAME}-${arch}
+    pushd ${INSTALLPATH}
     find -type f | sort | tar \
       --no-recursion --mode='u+rw,go+r-w,a+X' \
       --numeric-owner --sort=name \

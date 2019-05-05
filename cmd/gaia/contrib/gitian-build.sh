@@ -15,16 +15,17 @@ f_main() {
   l_commit=$(git rev-parse HEAD)
   popd
 
-  l_workdir=`mktemp -d gitian-build-${l_platform}-XXXXX`
-  echo "Work directory: ${l_workdir}" >&2
+  l_workdir="$(pwd)/gitian-build-$(date +%Y-%m-%d-%H%M%S)"
+  mkdir ${l_workdir}/
+  echo "Work directory: ${l_workdir}, log: ${l_workdir}/log" >&2
   pushd ${l_workdir}
-  git clone https://github.com/devrandom/gitian-builder
+  git clone https://github.com/devrandom/gitian-builder >${l_workdir}/log
   l_gitian="$(pwd)/gitian-builder"
 
-  f_prep_docker_image "${l_gitian}"
-  f_download_go "${l_gitian}"
+  f_prep_docker_image "${l_gitian}" >${l_workdir}/log
+  f_download_go "${l_gitian}" >${l_workdir}/log
 
-  f_build "${l_gitian}" "${l_sdk}" "${l_commit}" "${l_platform}"
+  f_build "${l_gitian}" "${l_sdk}" "${l_commit}" "${l_platform}" >${l_workdir}/log
   echo "You may find the result in ${l_gitian}/result" >&2
   return 0
 }

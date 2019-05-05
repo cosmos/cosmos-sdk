@@ -11,15 +11,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-const (
-	// ModuleName is the name of the module
-	ModuleName = "supply"
-
-	// TODO: move to querier
-	// QuerierRoute is the querier route for the supply store.
-	QuerierRoute = ModuleName
-)
-
 // SendKeeper
 type SendKeeper interface {
 	bank.ViewKeeper // GetCoins, HasCoins, Codespace

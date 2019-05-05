@@ -7,14 +7,18 @@ import (
 )
 
 type (
-	Keeper              = keeper.Keeper
+	SupplyKeeper        = keeper.SupplyKeeper
+	SendKeeper          = keeper.SendKeeper
+	BaseSendKeeper      = keeper.SendKeeper
 	ModuleAccount       = types.ModuleAccount
 	ModuleHolderAccount = types.ModuleHolderAccount
 	ModuleMinterAccount = types.ModuleMinterAccount
+	Supply              = types.Supply
 )
 
 var (
-	NewKeeper = keeper.NewKeeper
+	NewSupplyKeeper   = keeper.NewSupplyKeeper
+	NewBaseSendKeeper = keeper.NewBaseSendKeeper
 
 	RegisterInvariants     = keeper.RegisterInvariants
 	AllInvariants          = keeper.AllInvariants
@@ -22,4 +26,6 @@ var (
 
 	NewModuleHolderAccount = types.NewModuleHolderAccount
 	NewModuleMinterAccount = types.NewModuleMinterAccount
+	NewSupply              = types.NewSupply
+	DefaultSupply          = types.DefaultSupply
 )

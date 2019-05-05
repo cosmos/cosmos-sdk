@@ -8,7 +8,7 @@ import (
 type StakingKeeper interface {
 	StakingTokenSupply(ctx sdk.Context) sdk.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
-	InflateNotBondedTokenSupply(ctx sdk.Context, newTokens sdk.Int)
+	InflateUnbondedTokenSupply(ctx sdk.Context, newTokens sdk.Int)
 }
 
 // FeeCollectionKeeper defines the expected fee collection keeper interface

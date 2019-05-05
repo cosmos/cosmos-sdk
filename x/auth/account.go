@@ -595,7 +595,7 @@ func (mha ModuleHolderAccount) String() string {
   Pubkey:           %s
   Coins:            %s
   AccountNumber:    %d
-	Sequence:         %d
+Sequence:         %d
 Module Name:      %s`,
 		mha.Address, pubkey, mha.Coins, mha.AccountNumber, mha.Sequence, mha.Module)
 }

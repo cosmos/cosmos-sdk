@@ -10,7 +10,10 @@ f_main() {
     l_workdir \
     l_sdk \
     l_commit \
-    l_platform
+    l_platform \
+    l_result \
+    l_descriptor \
+    l_release_name
 
   l_dirname=$1
   l_platform=$2
@@ -19,20 +22,28 @@ f_main() {
   l_commit=$(git rev-parse HEAD)
   popd
 
+  l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
+  [ -f ${l_descriptor} ]
+
   l_workdir="$(pwd)/${l_dirname}"
   mkdir ${l_workdir}/
   echo "Download gitian" >&2
   git clone https://github.com/devrandom/gitian-builder ${l_workdir}
 
   echo "Prepare gitian-target docker image" >&2
-  f_prep_docker_image "${l_workdir}" >${l_workdir}/log
+  f_prep_docker_image "${l_workdir}"
 
   echo "Download Go" >&2
-  f_download_go "${l_workdir}" >${l_workdir}/log
+  f_download_go "${l_workdir}"
 
   echo "Start the build" >&2
-  f_build "${l_workdir}" "${l_sdk}" "${l_commit}" "${l_platform}" >${l_workdir}/log
-  echo "You may find the result in ${l_workdir}/result" >&2
+  f_build "${l_workdir}" "${l_sdk}" "${l_commit}" "${l_platform}"
+  echo "You may find the result in $(echo ${l_workdir}/result/*.yml))" >&2
+
+  l_release_name="$(sed -n 's/^name: \"\(.\+\)\"$/\1/p' ${l_descriptor})"
+  [ -n ${l_release_name} ]
+  echo "You can now sign the build with the following command:" >&2
+  echo "${l_workdir}/bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release_name} ${l_descriptor}" >&2
   return 0
 }
 
@@ -77,12 +88,12 @@ Usage: $(basename $0) [-h] GOOS GIT_REPO
 Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
-   -h        Display this help and exit
-   -d        Set working directory name
+   -h               Display this help and exit
+   -d DIRNAME       Set working directory name
 EOF
 }
 
-while getopts ":d:hnv" opt; do
+while getopts ":d:h" opt; do
   case "${opt}" in
     h)  f_help ; exit 0 ;;
     d)  g_dirname="${OPTARG}"

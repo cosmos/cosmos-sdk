@@ -77,7 +77,7 @@ script: |
   export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
   # export ARCHS='386 amd64 arm arm64'
-  export ARCHS='amd64'
+  export ARCHS='amd64 386'
   export GO111MODULE=on
 
   # Make release tarball

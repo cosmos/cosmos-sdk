@@ -5,7 +5,7 @@ info:
   title: Gaia-Lite for Cosmos
   description: A REST interface for state queries, transaction generation and broadcasting.
 tags:
-  - name: ICS0
+  - name: TENDERMINT
     description: Tendermint APIs, such as query blocks, transactions and validatorset
   - name: ICS20
     description: Create and broadcast transactions
@@ -51,7 +51,7 @@ paths:
       description: Information about the connected node
       summary: The properties of the connected node
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       responses:
@@ -104,7 +104,7 @@ paths:
     get:
       summary: Syncing state of node
       tags:
-        - ICS0
+        - TENDERMINT
       description: Get if the node is currently syning with other nodes
       responses:
         200:
@@ -115,7 +115,7 @@ paths:
     get:
       summary: Get the latest block
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       responses:
@@ -129,7 +129,7 @@ paths:
     get:
       summary: Get a block at a certain height
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       parameters:
@@ -154,7 +154,7 @@ paths:
     get:
       summary: Get the latest validator set
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       responses:
@@ -175,7 +175,7 @@ paths:
     get:
       summary: Get a validator set a certain height
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       parameters:
@@ -207,7 +207,7 @@ paths:
     get:
       summary: Get a Tx by hash
       tags:
-        - ICS0
+        - TENDERMINT
       produces:
         - application/json
       parameters:
@@ -227,7 +227,7 @@ paths:
   /txs:
     get:
       tags:
-        - ICS0
+        - TENDERMINT
       summary: Search transactions
       description: Search transactions by tag(s).
       produces:
@@ -262,7 +262,7 @@ paths:
           description: Internal Server Error
     post:
       tags:
-        - ICS0
+        - TENDERMINT
       summary: Broadcast a signed tx
       description: Broadcast a signed tx to a full node
       consumes:
@@ -292,7 +292,7 @@ paths:
   /txs/encode:
     post:
       tags:
-        - ICS0
+        - TENDERMINT
       summary: Encode a transaction to the Amino wire format
       description: Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
       consumes:

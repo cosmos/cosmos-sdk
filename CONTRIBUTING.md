@@ -33,7 +33,7 @@ contributors, the general procedure for contributing has been established:
      4. follow standard github best practices: fork the repo, branch from the
        top of `master`, make some commits, and submit a PR to `master`,
          - for core developers working within the cosmos-sdk repo, 
-	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/feature-name`.  
+	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.  
      5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code

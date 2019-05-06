@@ -5,7 +5,7 @@ set -euo pipefail
 f_sha256() {
   local l_file
   l_file=$1
-  python -sBc "import hashlib;print hashlib.sha256(open('$l_file','rb').read()).hexdigest()"
+  python -sBc "import hashlib;print(hashlib.sha256(open('$l_file','rb').read()).hexdigest())"
 }
 
 installer="$(mktemp)"

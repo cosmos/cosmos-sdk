@@ -209,9 +209,6 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 
 		// get the mnemonic size
 		mnemonicSize := viper.GetInt(flagMnemonicSize)
-		if mnemonicSize == 0 {
-			mnemonicSize = 24
-		}
 
 		// check the mnemonic size validity
 		if mnemonicSize != 12 && mnemonicSize != 15 && mnemonicSize != 18 && mnemonicSize != 21 && mnemonicSize != 24 {

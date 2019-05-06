@@ -259,9 +259,9 @@ func (f *Fixtures) KeysDelete(name string, flags ...string) {
 }
 
 // KeysAdd is gaiacli keys add
-func (f *Fixtures) KeysAdd(name string, flags ...string) {
+func (f *Fixtures) KeysAdd(name string, flags ...string) (exitSuccess bool, stdout, stderr string) {
 	cmd := fmt.Sprintf("%s keys add --home=%s %s", f.GaiacliBinary, f.GaiacliHome, name)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), client.DefaultKeyPass)
 }
 
 // KeysAddRecover prepares gaiacli keys add --recover

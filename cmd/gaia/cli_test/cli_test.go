@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,14 +28,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
-func TestGaiaCLIKeysAddDifferentMneminicSizes(t *testing.T) {
+func TestGaiaCLIKeysAddDifferentMnemonicSizes(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
 
-	f.KeysAdd("test-mnemonic-15", "--mnemonic-size=15")
-	f.KeysAdd("test-mnemonic-18", "--mnemonic-size=18")
-	f.KeysAdd("test-mnemonic-21", "--mnemonic-size=21")
-	f.KeysAdd("test-mnemonic-24", "--mnemonic-size=24")
+	/// Valid mnemonic sizes
+	exitSuccess, _, _ := f.KeysAdd("test-mnemonic-15", "--mnemonic-size=15")
+	require.True(t, exitSuccess)
+
+	exitSuccess, _, _ = f.KeysAdd("test-mnemonic-18", "--mnemonic-size=18")
+	require.True(t, exitSuccess)
+
+	exitSuccess, _, _ = f.KeysAdd("test-mnemonic-21", "--mnemonic-size=21")
+	require.True(t, exitSuccess)
+
+	exitSuccess, _, _ = f.KeysAdd("test-mnemonic-24", "--mnemonic-size=24")
+	require.True(t, exitSuccess)
 
 	require.NotEqual(t, f.KeysShow("test-mnemonic-15").Address, f.KeysShow("test-mnemonic-18").Address)
 	require.NotEqual(t, f.KeysShow("test-mnemonic-15").Address, f.KeysShow("test-mnemonic-21").Address)
@@ -42,6 +51,33 @@ func TestGaiaCLIKeysAddDifferentMneminicSizes(t *testing.T) {
 	require.NotEqual(t, f.KeysShow("test-mnemonic-18").Address, f.KeysShow("test-mnemonic-21").Address)
 	require.NotEqual(t, f.KeysShow("test-mnemonic-18").Address, f.KeysShow("test-mnemonic-24").Address)
 	require.NotEqual(t, f.KeysShow("test-mnemonic-21").Address, f.KeysShow("test-mnemonic-24").Address)
+
+	/// Invalid mnemonic sizes
+	type TestData struct {
+		Iterations int
+		MinValue   int
+		MaxValue   int
+	}
+
+	/// Create the test data
+	testData := []TestData{
+		{Iterations: 10, MinValue: -100, MaxValue: 0},
+		{Iterations: 10, MinValue: 0, MaxValue: 14},
+		{Iterations: 3, MinValue: 19, MaxValue: 20},
+		{Iterations: 3, MinValue: 22, MaxValue: 23},
+	}
+
+	/// Run the tests for all the test data
+	for _, data := range testData {
+		for i := 0; i < data.Iterations; i++ {
+			rand.Seed(time.Now().UnixNano())
+			randomSize := rand.Intn(data.MaxValue-data.MinValue) + data.MinValue
+			success, _, _ := f.KeysAdd(fmt.Sprintf("test-mnemonic-%d", randomSize),
+				fmt.Sprintf("--mnemonic-size=%d", randomSize))
+			require.False(t, success)
+		}
+
+	}
 
 	// Cleanup testing directories
 	f.Cleanup()

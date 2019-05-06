@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 type testInput struct {
@@ -39,13 +40,17 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	rtr := NewRouter().AddRoute(RouterKey, ProposalHandler)
 
 	pk := mApp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace, rtr)
+	supplyKeeper := supply.NewSupplyKeeper(mApp.Cdc, keySupply)
+	ssk := supply.NewBaseSendKeeper(mApp.AccountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
+
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, ssk, supplyKeeper, sk, DefaultCodespace, rtr)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))

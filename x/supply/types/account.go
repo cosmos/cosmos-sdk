@@ -10,7 +10,7 @@ import (
 
 // TODO: register within auth codec
 
-// ModuleAccount defines an account type for modules that hold tokens as an escrow
+// ModuleAccount defines an account type for modules that hold tokens in an escrow
 type ModuleAccount interface {
 	auth.Account
 

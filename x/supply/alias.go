@@ -24,6 +24,7 @@ var (
 	RegisterInvariants     = keeper.RegisterInvariants
 	AllInvariants          = keeper.AllInvariants
 	StakingTokensInvariant = keeper.StakingTokensInvariant
+	DefaultCodespace       = keeper.DefaultCodespace
 
 	NewModuleHolderAccount = types.NewModuleHolderAccount
 	NewModuleMinterAccount = types.NewModuleMinterAccount
@@ -33,4 +34,7 @@ var (
 	DefaultGenesisState    = types.DefaultGenesisState
 )
 
-const StoreKey = keeper.StoreKey
+const (
+	DefaultParamspace = keeper.DefaultParamspace
+	StoreKey          = keeper.StoreKey
+)

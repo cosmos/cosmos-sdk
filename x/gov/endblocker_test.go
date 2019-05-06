@@ -20,7 +20,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -70,7 +69,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -139,7 +137,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -189,7 +186,6 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -257,9 +253,12 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	valAddr := sdk.ValAddress(input.addrs[0])
 
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
+
+	macc, err := input.keeper.ssk.GetModuleAccountByName(ctx, ModuleName)
+	require.NoError(t, err)
+	initialModuleAccCoins := macc.GetCoins()
 
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
@@ -268,6 +267,13 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
+
+	macc, err = input.keeper.ssk.GetModuleAccountByName(ctx, ModuleName)
+	require.NoError(t, err)
+	moduleAccCoins := macc.GetCoins()
+
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
+	require.True(t, moduleAccCoins.IsEqual(deposits))
 
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
 	require.NoError(t, err)
@@ -278,4 +284,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
+
+	macc, err = input.keeper.ssk.GetModuleAccountByName(ctx, ModuleName)
+	require.NoError(t, err)
+	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
+
 }

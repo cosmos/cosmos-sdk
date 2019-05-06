@@ -27,6 +27,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
+func TestGaiaCLIKeysAddDifferentMneminicSizes(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	f.KeysAdd("test-mnemonic-15", "--mnemonic-size=15")
+	f.KeysAdd("test-mnemonic-18", "--mnemonic-size=18")
+	f.KeysAdd("test-mnemonic-21", "--mnemonic-size=21")
+	f.KeysAdd("test-mnemonic-24", "--mnemonic-size=24")
+
+	require.NotEqual(t, f.KeysShow("test-mnemonic-15").Address, f.KeysShow("test-mnemonic-18").Address)
+	require.NotEqual(t, f.KeysShow("test-mnemonic-15").Address, f.KeysShow("test-mnemonic-21").Address)
+	require.NotEqual(t, f.KeysShow("test-mnemonic-15").Address, f.KeysShow("test-mnemonic-24").Address)
+	require.NotEqual(t, f.KeysShow("test-mnemonic-18").Address, f.KeysShow("test-mnemonic-21").Address)
+	require.NotEqual(t, f.KeysShow("test-mnemonic-18").Address, f.KeysShow("test-mnemonic-24").Address)
+	require.NotEqual(t, f.KeysShow("test-mnemonic-21").Address, f.KeysShow("test-mnemonic-24").Address)
+
+	// Cleanup testing directories
+	f.Cleanup()
+}
+
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

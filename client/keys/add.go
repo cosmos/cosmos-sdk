@@ -23,14 +23,15 @@ import (
 )
 
 const (
-	flagInteractive = "interactive"
-	flagRecover     = "recover"
-	flagNoBackup    = "no-backup"
-	flagDryRun      = "dry-run"
-	flagAccount     = "account"
-	flagIndex       = "index"
-	flagMultisig    = "multisig"
-	flagNoSort      = "nosort"
+	flagInteractive  = "interactive"
+	flagRecover      = "recover"
+	flagNoBackup     = "no-backup"
+	flagDryRun       = "dry-run"
+	flagAccount      = "account"
+	flagIndex        = "index"
+	flagMultisig     = "multisig"
+	flagNoSort       = "nosort"
+	flagMnemonicSize = "mnemonic-size"
 )
 
 func addKeyCommand() *cobra.Command {
@@ -69,6 +70,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Uint32(flagMnemonicSize, 24, "Mnemonic seed phrase size in words (12, 15, 18, 21 or 24)")
 	return cmd
 }
 
@@ -204,7 +206,19 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 
 	if len(mnemonic) == 0 {
 		// read entropy seed straight from crypto.Rand and convert to mnemonic
-		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
+
+		// get the mnemonic size
+		mnemonicSize := viper.GetInt(flagMnemonicSize)
+		if mnemonicSize == 0 {
+			mnemonicSize = 24
+		}
+
+		// check the mnemonic size validity
+		if mnemonicSize != 12 && mnemonicSize != 15 && mnemonicSize != 18 && mnemonicSize != 21 && mnemonicSize != 24 {
+			return errors.New("invalid mnemonic size, it must be either 12, 15, 18, 21 or 24 words")
+		}
+
+		entropySeed, err := bip39.NewEntropy(int(mnemonicSize / 3 * 32))
 		if err != nil {
 			return err
 		}

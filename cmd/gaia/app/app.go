@@ -51,6 +51,7 @@ func init() {
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.AppModuleBasic{},
+		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 	)

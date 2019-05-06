@@ -427,6 +427,7 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 	return listener, nil
 }
 
+// XXX generalize this with the module basic manager
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
 func registerRoutes(rs *lcd.RestServer) {
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)

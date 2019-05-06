@@ -150,6 +150,9 @@ func (mm *ModuleManager) RegisterRoutes(router Router, queryRouter QueryRouter) 
 func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range mm.OrderInitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
 		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// use these validator updates if provided, the module manager assumes

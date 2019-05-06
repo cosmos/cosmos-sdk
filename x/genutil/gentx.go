@@ -25,7 +25,7 @@ var (
 
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
-func ValidateAccountInGenesis(appGenesisState ExpectedAppGenesisState,
+func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	genAccIterator GenesisAccountsIterator,
 	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 

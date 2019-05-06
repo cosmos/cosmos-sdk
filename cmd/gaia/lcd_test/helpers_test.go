@@ -282,11 +282,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accs = append(accs, genaccounts.NewGenesisAccount(&accAuth))
 	}
 
-	appGenState := gapp.NewDefaultGenesisState()
-	genesisState, err := genutil.GenesisStateFromGenDoc(cdc, *genDoc)
-	require.NoError(t, err)
-
-	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
+	genesisState := gapp.NewDefaultGenesisState()
+	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	genesisState, err = genutil.SetGenTxsInAppGenesisState(cdc, genesisState, genTxs)
 	require.NoError(t, err)
@@ -301,7 +298,11 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
 		acc := genaccounts.NewGenesisAccount(&accAuth)
 		accs = append(accs, acc)
+	}
 
+	// now add the account tokens to the non-bonded pool
+	for _, acc := range accs {
+		accTokens := acc.Coins.AmountOf(sdk.DefaultBondDenom)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
 	stakingDataBz = cdc.MustMarshalJSON(stakingData)
@@ -351,13 +352,13 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	listenAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	// XXX: Need to set this so LCD knows the tendermint node address!
+	// NOTE: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
 	viper.Set(client.FlagTrustNode, true)
 
-	node, err := startTM(config, logger, genDoc, privVal, app)
+	node := startTM(t, config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
@@ -384,16 +385,15 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 //
 // TODO: Clean up the WAL dir or enable it to be not persistent!
 func startTM(
-	tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
+	t *testing.T, tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
 	privVal tmtypes.PrivValidator, app abci.Application,
-) (*nm.Node, error) {
+) *nm.Node {
 
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
+
 	node, err := nm.NewNode(
 		tmcfg,
 		privVal,
@@ -404,19 +404,15 @@ func startTM(
 		nm.DefaultMetricsProvider(tmcfg.Instrumentation),
 		logger.With("module", "node"),
 	)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	err = node.Start()
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	tests.WaitForRPC(tmcfg.RPC.ListenAddress)
 	logger.Info("Tendermint running!")
 
-	return node, err
+	return node
 }
 
 // startLCD starts the LCD.

@@ -25,11 +25,13 @@ func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// module name
+// register module codec
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
-// module name
-func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
+// default genesis state
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return moduleCdc.MustMarshalJSON(GenesisState{})
+}
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {

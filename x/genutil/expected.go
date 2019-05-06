@@ -22,9 +22,6 @@ type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 
-// The expected format of app genesis state
-type ExpectedAppGenesisState map[string]json.RawMessage
-
 // The expected interface for iterating genesis accounts object
 type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(

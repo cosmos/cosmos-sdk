@@ -24,7 +24,9 @@ func NewGenesisState(accounts GenesisAccounts) GenesisState {
 // get the genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
-	cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
 	return genesisState
 }
 

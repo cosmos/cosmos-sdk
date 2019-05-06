@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // State to Unmarshal
@@ -35,19 +37,50 @@ func NewGenesisStateFromStdTx(genTxs []auth.StdTx) GenesisState {
 }
 
 // get the genutil genesis state from the expected app state
-func GetGenesisStateFromAppState(cdc *codec.Codec, appState ExpectedAppGenesisState) GenesisState {
+func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
-	cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
 	return genesisState
 }
 
 // set the genutil genesis state within the expected app state
 func SetGenesisStateInAppState(cdc *codec.Codec,
-	appState ExpectedAppGenesisState, genesisState GenesisState) ExpectedAppGenesisState {
+	appState map[string]json.RawMessage, genesisState GenesisState) map[string]json.RawMessage {
 
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
 	appState[ModuleName] = genesisStateBz
 	return appState
+}
+
+// Create the core parameters for genesis initialization for gaia
+// note that the pubkey input is this machines pubkey
+func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
+) (genesisState map[string]json.RawMessage, err error) {
+
+	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
+		return genesisState, err
+	}
+	return genesisState, nil
+}
+
+// Create the core parameters for genesis initialization for gaia
+// note that the pubkey input is this machines pubkey
+func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
+) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
+
+	if !common.FileExists(genFile) {
+		return genesisState, genDoc,
+			fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
+	}
+	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
+	if err != nil {
+		return genesisState, genDoc, err
+	}
+
+	genesisState, err = GenesisStateFromGenDoc(cdc, *genDoc)
+	return genesisState, genDoc, err
 }
 
 // validate GenTx transactions

@@ -86,8 +86,8 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 }
 
 // Set the genesis transactions int the app genesis state
-func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState ExpectedAppGenesisState,
-	genTxs []auth.StdTx) (ExpectedAppGenesisState, error) {
+func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]json.RawMessage,
+	genTxs []auth.StdTx) (map[string]json.RawMessage, error) {
 
 	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
 	// convert all the GenTxs to JSON
@@ -118,7 +118,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 
 	// prepare a map of all accounts in genesis state to then validate
 	// against the validators addresses
-	var appState ExpectedAppGenesisState
+	var appState map[string]json.RawMessage
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}

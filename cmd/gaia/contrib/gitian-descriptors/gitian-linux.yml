@@ -119,7 +119,7 @@ script: |
 
     # Build gaia tool suite
     pushd ${distsrc}
-    for prog in gaiacli gaiad gaiareplay; do
+    for prog in gaiacli gaiad; do
       GOARCH=${arch} CGO_ENABLED=0 GOROOT_FINAL=go go build -a \
         -gcflags=all=-trimpath=${GOPATH} \
         -asmflags=all=-trimpath=${GOPATH} \

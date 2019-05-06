@@ -37,3 +37,17 @@ func (sk SupplyKeeper) SetSupply(ctx sdk.Context, supply types.Supply) {
 	b := sk.cdc.MustMarshalBinaryLengthPrefixed(supply)
 	store.Set(supplyKey, b)
 }
+
+// Inflate increases the total supply amount
+func (sk SupplyKeeper) Inflate(ctx sdk.Context, amount sdk.Coins) {
+	supply := sk.GetSupply(ctx)
+	supply.Inflate(amount)
+	sk.SetSupply(ctx, supply)
+}
+
+// Deflate reduces the total supply amount
+func (sk SupplyKeeper) Deflate(ctx sdk.Context, amount sdk.Coins) {
+	supply := sk.GetSupply(ctx)
+	supply.Deflate(amount)
+	sk.SetSupply(ctx, supply)
+}

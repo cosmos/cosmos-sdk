@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 const (
@@ -112,6 +113,14 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		// TODO: Handle this with #870
 		panic(err)
 	}
+
+	// check if the module account exists and create it if not
+	moduleAcc, _ := k.ssk.GetAccountByName(ctx, ModuleName)
+	if moduleAcc == nil {
+		moduleAcc = supply.NewModuleHolderAccount(ModuleName)
+		k.ssk.SetModuleAccount(ctx, moduleAcc)
+	}
+
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)

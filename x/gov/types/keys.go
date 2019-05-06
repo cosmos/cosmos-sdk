@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 const (
@@ -24,6 +25,9 @@ const (
 	// Parameter store default namestore
 	DefaultParamspace = ModuleName
 )
+
+// ModuleAddress governance module account address
+var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 
 // Key for getting a the next available proposalID from the store
 var (

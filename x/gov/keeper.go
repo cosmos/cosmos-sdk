@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
@@ -16,10 +15,6 @@ var (
 	ParamStoreKeyDepositParams = []byte("depositparams")
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
-
-	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
-	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
-	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
 // Key declaration for parameters
@@ -41,6 +36,12 @@ type Keeper struct {
 
 	// The reference to the CoinKeeper to modify balances
 	ck BankKeeper
+
+	// The SendKeeper from the supply module to send balances to module accounts
+	ssk SupplySendKeeper
+
+	// The SupplyKeeper to reduce the supply of the network
+	sk SupplyKeeper
 
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
@@ -68,7 +69,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+	ck BankKeeper, ssk SupplySendKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -81,6 +82,8 @@ func NewKeeper(
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
+		ssk:          ssk,
+		sk:           sk,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
@@ -383,9 +386,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Send coins from depositor's account to DepositedCoinsAccAddr account
-	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	// update the governance module's account coins pool
+	err := keeper.ssk.SendCoinsAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -429,9 +431,10 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		// update the governance module account coin pool
+		err := keeper.ssk.SendCoinsModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
 
 		store.Delete(depositsIterator.Key())
@@ -447,11 +450,11 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		// TODO: Find a way to do this without using accounts.
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		err := keeper.ssk.BurnCoins(ctx, ModuleName, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
+		keeper.sk.Deflate(ctx, deposit.Amount)
 
 		store.Delete(depositsIterator.Key())
 	}

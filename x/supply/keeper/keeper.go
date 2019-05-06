@@ -15,10 +15,15 @@ import (
 type SendKeeper interface {
 	bank.ViewKeeper // GetCoins, HasCoins, Codespace
 
+	GetAccountByName(ctx sdk.Context, name string) (auth.Account, sdk.Error)
+	GetModuleAccountByName(ctx sdk.Context, name string) (types.ModuleAccount, sdk.Error)
+	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount)
+
 	SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
 	SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
 	MintCoins(ctx sdk.Context, module string, amt sdk.Coins) sdk.Error // panics if used with with holder account
+	BurnCoins(ctx sdk.Context, module string, amt sdk.Coins) sdk.Error
 
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
@@ -37,7 +42,7 @@ type BaseSendKeeper struct {
 	paramSpace params.Subspace
 }
 
-// NewBaseSendKeeper
+// NewBaseSendKeeper creates a new BaseSendKeeper instance
 func NewBaseSendKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType, paramSpace params.Subspace) BaseSendKeeper {
 	baseViewKeeper := bank.NewBaseViewKeeper(ak, codespace)
 	return BaseSendKeeper{
@@ -47,9 +52,40 @@ func NewBaseSendKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType, param
 	}
 }
 
+// GetAccountByName returns an Account based on the name
+func (hk BaseSendKeeper) GetAccountByName(ctx sdk.Context, name string) (auth.Account, sdk.Error) {
+	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	acc := hk.ak.GetAccount(ctx, moduleAddress)
+	if acc == nil {
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
+	}
+
+	return acc, nil
+}
+
+// GetModuleAccountByName returns a ModuleAccount based on the name
+func (hk BaseSendKeeper) GetModuleAccountByName(ctx sdk.Context, name string) (types.ModuleAccount, sdk.Error) {
+	acc, err := hk.GetAccountByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	macc, isModuleAccount := acc.(types.ModuleAccount)
+	if !isModuleAccount {
+		return nil, sdk.ErrInvalidAddress(fmt.Sprintf("account %s is not a module account", name))
+	}
+
+	return macc, nil
+}
+
+// SetModuleAccount sets the module account to the auth account store
+func (hk BaseSendKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount) {
+	hk.ak.SetAccount(ctx, macc)
+}
+
 // SendCoinsModuleToAccount
 func (hk BaseSendKeeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	senderAcc, err := getModuleAccount(ctx, hk.ak, senderModule)
+	senderAcc, err := hk.GetAccountByName(ctx, senderModule)
 	if err != nil {
 		return err
 	}
@@ -64,12 +100,12 @@ func (hk BaseSendKeeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule 
 
 // SendCoinsModuleToModule
 func (hk BaseSendKeeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
-	senderAcc, err := getModuleAccount(ctx, hk.ak, senderModule)
+	senderAcc, err := hk.GetAccountByName(ctx, senderModule)
 	if err != nil {
 		return err
 	}
 
-	recipientAcc, err := getModuleAccount(ctx, hk.ak, recipientModule)
+	recipientAcc, err := hk.GetAccountByName(ctx, recipientModule)
 	if err != nil {
 		return err
 	}
@@ -84,7 +120,7 @@ func (hk BaseSendKeeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, 
 
 // SendCoinsAccountToModule
 func (hk BaseSendKeeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
-	recipientAcc, err := getModuleAccount(ctx, hk.ak, recipientModule)
+	recipientAcc, err := hk.GetAccountByName(ctx, recipientModule)
 	if err != nil {
 		return err
 	}
@@ -97,9 +133,10 @@ func (hk BaseSendKeeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sd
 	return nil
 }
 
-// MintCoins
+// MintCoins creates new coins from thin air and adds it to the MinterAccount.
+// Panics if the name maps to a HolderAccount
 func (hk BaseSendKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	moduleAcc, err := getModuleAccount(ctx, hk.ak, name)
+	moduleAcc, err := hk.GetAccountByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -117,6 +154,21 @@ func (hk BaseSendKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) 
 	return nil
 }
 
+// BurnCoins burns coins deletes coins from the balance of the module account
+func (hk BaseSendKeeper) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
+	moduleAcc, err := hk.GetModuleAccountByName(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	_, err = subtractCoins(ctx, hk.ak, moduleAcc.GetAddress(), amt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSendEnabled
 func (hk BaseSendKeeper) GetSendEnabled(ctx sdk.Context) (enabled bool) {
 	hk.paramSpace.Get(ctx, ParamStoreKeySendEnabled, &enabled)
@@ -126,18 +178,6 @@ func (hk BaseSendKeeper) GetSendEnabled(ctx sdk.Context) (enabled bool) {
 // SetSendEnabled
 func (hk BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	hk.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
-}
-
-//-----------------------------------------------------------------------------
-// private functions
-
-func getModuleAccount(ctx sdk.Context, ak auth.AccountKeeper, name string) (auth.Account, sdk.Error) {
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
-	acc := ak.GetAccount(ctx, moduleAddress)
-	if acc == nil {
-		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
-	}
-	return acc, nil
 }
 
 //-----------------------------------------------------------------------------

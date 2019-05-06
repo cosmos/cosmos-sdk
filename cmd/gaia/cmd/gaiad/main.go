@@ -54,6 +54,7 @@ func main() {
 	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc))
 	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
+	rootCmd.AddCommand(replayCmd())
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 

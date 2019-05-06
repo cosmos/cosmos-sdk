@@ -201,9 +201,11 @@ releases will be based off of that release.
   - checkout a new branch `pre-rc/vX.X.X`
   - cherry pick the desired changes from `master`
     - these changes should be small and NON-BREAKING (both API and state machine)
-  - add entries to CHANGELOG.md
-  - checkout a new branch `rc/vX.X.X`
+  - add entries to CHANGELOG.md and remove corresponding pending log entries
+  - checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
+  - create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
   - run tests and simulations (noted in [Release Procedure](#release-procedure))
   - after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
   - delete the `pre-rc/vX.X.X` and `RC` branches
+  - create a PR into `master` containing ONLY the CHANGELOG.md updates
   - tag and release `release/vX.XX.X`

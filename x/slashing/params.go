@@ -70,8 +70,8 @@ func (p Params) String() string {
   SignedBlocksWindow:      %d
   MinSignedPerWindow:      %s
   DowntimeJailDuration:    %s
-  SlashFractionDoubleSign: %d
-  SlashFractionDowntime:   %d`, p.MaxEvidenceAge,
+  SlashFractionDoubleSign: %s
+  SlashFractionDowntime:   %s`, p.MaxEvidenceAge,
 		p.SignedBlocksWindow, p.MinSignedPerWindow,
 		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
 		p.SlashFractionDowntime)

@@ -81,7 +81,6 @@ ifeq ($(OS),Windows_NT)
 else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
 endif
 
 build-linux: go.sum
@@ -93,7 +92,6 @@ update_gaia_lite_docs:
 install: go.sum check-ledger update_gaia_lite_docs
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
 
 install_debug: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
@@ -211,7 +209,6 @@ test_cover:
 lint: tools ci-lint
 ci-lint:
 	golangci-lint run
-	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 

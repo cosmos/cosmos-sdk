@@ -18,9 +18,7 @@ import (
 
 type (
 	// EncodeReq defines a tx encoding request.
-	EncodeReq struct {
-		Tx auth.StdTx `json:"tx"`
-	}
+	// Use auth.StdTx directly
 
 	// EncodeResp defines a tx encoding response.
 	EncodeResp struct {
@@ -33,7 +31,7 @@ type (
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req EncodeReq
+		var req auth.StdTx
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -48,7 +46,7 @@ func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 		}
 
 		// re-encode it via the Amino wire protocol
-		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req.Tx)
+		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -59,7 +59,7 @@ var paramChangePool = []simParamChange{
 		"MinSignedPerWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec))
 		},
 	},
 	{
@@ -67,7 +67,7 @@ var paramChangePool = []simParamChange{
 		"SlashFractionDowntime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec))
 		},
 	},
 	// minting parameters
@@ -76,7 +76,7 @@ var paramChangePool = []simParamChange{
 		"InflationRateChange",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
 		},
 	},
 	// auth parameters

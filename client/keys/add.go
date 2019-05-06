@@ -218,7 +218,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			return errors.New("invalid mnemonic size, it must be either 12, 15, 18, 21 or 24 words")
 		}
 
-		entropySeed, err := bip39.NewEntropy(int(mnemonicSize / 3 * 32))
+		entropySeed, err := bip39.NewEntropy(mnemonicSize / 3 * 32)
 		if err != nil {
 			return err
 		}

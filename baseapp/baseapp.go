@@ -79,6 +79,9 @@ type BaseApp struct {
 	// transaction. This is mainly used for DoS and spam prevention.
 	minGasPrices sdk.DecCoins
 
+	// Snapshot for state sync related fields
+	StateSyncHelper *store.StateSyncHelper // manage state sync related status
+
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
@@ -199,6 +202,10 @@ func (app *BaseApp) LastCommitID() sdk.CommitID {
 // LastBlockHeight returns the last committed block height.
 func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
+}
+
+func (app *BaseApp) GetCommitMultiStore() sdk.CommitMultiStore {
+	return app.cms
 }
 
 // initializes the remaining logic from app.cms
@@ -934,6 +941,14 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
+}
+
+func (app *BaseApp) StartRecovery(manifest *abci.Manifest) error {
+	return app.StateSyncHelper.StartRecovery(manifest)
+}
+
+func (app *BaseApp) WriteRecoveryChunk(hash abci.SHA256Sum, chunk *abci.AppStateChunk, isComplete bool) error {
+	return app.StateSyncHelper.WriteRecoveryChunk(hash, chunk, isComplete)
 }
 
 // ----------------------------------------------------------------------------

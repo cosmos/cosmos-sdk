@@ -6,6 +6,7 @@ linters:
     - ineffassign
     - unconvert
     - misspell
+    - govet
 linters-settings:
   gocyclo:
     min-complexity: 11
@@ -13,5 +14,8 @@ linters-settings:
     ignore: fmt:.*,io/ioutil:^Read.*,github.com/spf13/cobra:MarkFlagRequired,github.com/spf13/viper:BindPFlag
   golint:
     min-confidence: 1.1
+issues:
+  exclude:
+    - composite
 run:
   tests: false

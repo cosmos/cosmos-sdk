@@ -129,7 +129,6 @@ check-all: check-unit check-race check-cover check-build
 lint: ci-lint
 ci-lint:
 	golangci-lint run
-	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 

@@ -91,11 +91,6 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		syncing := status.SyncInfo.CatchingUp
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
 		if _, err := w.Write([]byte(strconv.FormatBool(syncing))); err != nil {
 			log.Printf("could not write response: %v", err)
 		}

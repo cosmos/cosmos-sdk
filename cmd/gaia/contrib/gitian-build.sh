@@ -41,7 +41,7 @@ f_main() {
   echo "You may find the result in $(echo ${l_workdir}/result/*.yml))" >&2
 
   l_release_name="$(sed -n 's/^name: \"\(.\+\)\"$/\1/p' ${l_descriptor})"
-  [ -n ${l_release_name} ]
+  [ -z ${l_release_name} ] || l_release_name=UNKNOWN
   echo "You can now sign the build with the following command:" >&2
   echo "cd ${l_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release_name} ${l_descriptor}" >&2
   return 0

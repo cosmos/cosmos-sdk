@@ -70,7 +70,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Uint32(flagMnemonicSize, 24, "Mnemonic seed phrase size in words (12, 15, 18, 21 or 24)")
+	cmd.Flags().Uint32(flagMnemonicSize, 24, "Mnemonic seed phrase length in words (12, 15, 18, 21 or 24)")
 	return cmd
 }
 

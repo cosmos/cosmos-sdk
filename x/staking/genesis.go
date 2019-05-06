@@ -25,10 +25,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	keeper.SetPool(ctx, data.Pool) // TODO remove pool from genesis data and always calculate?
-	keeper.SetParams(ctx, data.Params)
-	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
-
 	// manually set the total supply for staking based on accounts if not provided
 	if data.Pool.NotBondedTokens.IsZero() {
 		accountKeeper.IterateAccounts(ctx,
@@ -43,6 +39,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			},
 		)
 	}
+
+	keeper.SetPool(ctx, data.Pool) // TODO remove pool from genesis data and always calculate?
+	keeper.SetParams(ctx, data.Params)
+	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)

@@ -3,7 +3,7 @@
 The gaia cli integration tests live in this folder. You can run the full suite by running:
 
 ```bash
-$ go test -v -p 4 ./cmd/gaia/cli_test/...
+$ go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
 # OR!
 $ make test_cli
 ```

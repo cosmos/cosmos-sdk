@@ -419,7 +419,12 @@ paths:
                     items:
                       $ref: "#/definitions/Coin"
                   public_key:
-                    type: string
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      value:
+                        type: string
                   sequence:
                     type: string
         204:

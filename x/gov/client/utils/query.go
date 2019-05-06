@@ -48,14 +48,14 @@ func QueryDepositsByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
 
 	var deposits []gov.Deposit
 
-	for _, info := range infos {
+	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			if msg.Type() == gov.TypeMsgDeposit {
 				depMsg := msg.(gov.MsgDeposit)
@@ -93,14 +93,14 @@ func QueryVotesByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
 
 	var votes []gov.Vote
 
-	for _, info := range infos {
+	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			if msg.Type() == gov.TypeMsgVote {
 				voteMsg := msg.(gov.MsgVote)
@@ -134,12 +134,12 @@ func QueryVoteByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, info := range infos {
+	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single vote under the given conditions
 			if msg.Type() == gov.TypeMsgVote {
@@ -177,12 +177,12 @@ func QueryDepositByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, info := range infos {
+	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == gov.TypeMsgDeposit {
@@ -219,12 +219,12 @@ func QueryProposerByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return Proposer{}, err
 	}
 
-	for _, info := range infos {
+	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == gov.TypeMsgSubmitProposal {

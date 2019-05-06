@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store"
-
 	cpm "github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 
@@ -22,46 +20,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	rootDir string
-)
-
-var rootCmd = &cobra.Command{
-	Use:   "gaiareplay",
-	Short: "Replay gaia transactions",
-	Run: func(cmd *cobra.Command, args []string) {
-		run(rootDir)
-	},
-}
-
-func init() {
-	// cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&rootDir, "root", "r", "root dir")
-}
-
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+func replayCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "replay <root-dir>",
+		Short: "Replay gaia transactions",
+		RunE: func(_ *cobra.Command, args []string) error {
+			return replayTxs(args[0])
+		},
+		Args: cobra.ExactArgs(1),
 	}
 }
 
-func run(rootDir string) {
+func replayTxs(rootDir string) error {
 
 	if false {
 		// Copy the rootDir to a new directory, to preserve the old one.
-		fmt.Println("Copying rootdir over")
+		fmt.Fprintln(os.Stderr, "Copying rootdir over")
 		oldRootDir := rootDir
 		rootDir = oldRootDir + "_replay"
 		if cmn.FileExists(rootDir) {
 			cmn.Exit(fmt.Sprintf("temporary copy dir %v already exists", rootDir))
 		}
-		err := cpm.Copy(oldRootDir, rootDir)
-		if err != nil {
-			panic(err)
+		if err := cpm.Copy(oldRootDir, rootDir); err != nil {
+			return err
 		}
 	}
 
@@ -71,25 +56,25 @@ func run(rootDir string) {
 
 	// App DB
 	// appDB := dbm.NewMemDB()
-	fmt.Println("Opening app database")
+	fmt.Fprintln(os.Stderr, "Opening app database")
 	appDB, err := sdk.NewLevelDB("application", dataDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// TM DB
 	// tmDB := dbm.NewMemDB()
-	fmt.Println("Opening tendermint state database")
+	fmt.Fprintln(os.Stderr, "Opening tendermint state database")
 	tmDB, err := sdk.NewLevelDB("state", dataDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Blockchain DB
-	fmt.Println("Opening blockstore database")
+	fmt.Fprintln(os.Stderr, "Opening blockstore database")
 	bcDB, err := sdk.NewLevelDB("blockstore", dataDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// TraceStore
@@ -101,11 +86,11 @@ func run(rootDir string) {
 		0666,
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Application
-	fmt.Println("Creating application")
+	fmt.Fprintln(os.Stderr, "Creating application")
 	myapp := app.NewGaiaApp(
 		ctx.Logger, appDB, traceStoreWriter, true, uint(1),
 		baseapp.SetPruning(store.PruneEverything), // nothing
@@ -115,11 +100,11 @@ func run(rootDir string) {
 	var genDocPath = filepath.Join(configDir, "genesis.json")
 	genDoc, err := tm.GenesisDocFromFile(genDocPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	genState, err := tmsm.MakeGenesisState(genDoc)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	// tmsm.SaveState(tmDB, genState)
 
@@ -127,7 +112,7 @@ func run(rootDir string) {
 	proxyApp := proxy.NewAppConns(cc)
 	err = proxyApp.Start()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() {
 		_ = proxyApp.Stop()
@@ -136,7 +121,7 @@ func run(rootDir string) {
 	state := tmsm.LoadState(tmDB)
 	if state.LastBlockHeight == 0 {
 		// Send InitChain msg
-		fmt.Println("Sending InitChain msg")
+		fmt.Fprintln(os.Stderr, "Sending InitChain msg")
 		validators := tm.TM2PB.ValidatorUpdates(genState.Validators)
 		csParams := tm.TM2PB.ConsensusParams(genDoc.ConsensusParams)
 		req := abci.RequestInitChain{
@@ -148,11 +133,11 @@ func run(rootDir string) {
 		}
 		res, err := proxyApp.Consensus().InitChainSync(req)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		newValidatorz, err := tm.PB2TM.ValidatorUpdates(res.Validators)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		newValidators := tm.NewValidatorSet(newValidatorz)
 
@@ -163,17 +148,17 @@ func run(rootDir string) {
 	}
 
 	// Create executor
-	fmt.Println("Creating block executor")
+	fmt.Fprintln(os.Stderr, "Creating block executor")
 	blockExec := tmsm.NewBlockExecutor(tmDB, ctx.Logger, proxyApp.Consensus(),
 		tmsm.MockMempool{}, tmsm.MockEvidencePool{})
 
 	// Create block store
-	fmt.Println("Creating block store")
+	fmt.Fprintln(os.Stderr, "Creating block store")
 	blockStore := bcm.NewBlockStore(bcDB)
 
 	tz := []time.Duration{0, 0, 0}
 	for i := int(state.LastBlockHeight) + 1; ; i++ {
-		fmt.Println("Running block ", i)
+		fmt.Fprintln(os.Stderr, "Running block ", i)
 		t1 := time.Now()
 
 		// Apply block
@@ -181,26 +166,25 @@ func run(rootDir string) {
 		blockmeta := blockStore.LoadBlockMeta(int64(i))
 		if blockmeta == nil {
 			fmt.Printf("Couldn't find block meta %d... done?\n", i)
-			return
+			return nil
 		}
 		block := blockStore.LoadBlock(int64(i))
 		if block == nil {
-			panic(fmt.Sprintf("couldn't find block %d", i))
+			return fmt.Errorf("couldn't find block %d", i)
 		}
 
 		t2 := time.Now()
 
 		state, err = blockExec.ApplyBlock(state, blockmeta.BlockID, block)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		t3 := time.Now()
 		tz[0] += t2.Sub(t1)
 		tz[1] += t3.Sub(t2)
 
-		fmt.Printf("new app hash: %X\n", state.AppHash)
-		fmt.Println(tz)
+		fmt.Fprintf(os.Stderr, "new app hash: %X\n", state.AppHash)
+		fmt.Fprintln(os.Stderr, tz)
 	}
-
 }

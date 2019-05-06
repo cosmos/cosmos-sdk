@@ -67,7 +67,6 @@ ifeq ($(OS),Windows_NT)
 else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ../../cmd/gaia/cmd/gaiad
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ../../cmd/gaia/cmd/gaiacli
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ../../cmd/gaia/cmd/gaiareplay
 endif
 
 build-linux: ../../go.sum
@@ -76,7 +75,6 @@ build-linux: ../../go.sum
 install: ../../go.sum check-ledger
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiad
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiacli
-	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiareplay
 
 install-debug: ../../go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiadebug

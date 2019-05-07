@@ -151,8 +151,8 @@ github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5 h1:u8i49c+BxloX3
 github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5/go.mod h1:z4YtwM70uOnk8h0pjJYlj3zdYwi9l03By6iAIF5j/Pk=
 github.com/tendermint/go-amino v0.14.1 h1:o2WudxNfdLNBwMyl2dqOJxiro5rfrEaU0Ugs6offJMk=
 github.com/tendermint/go-amino v0.14.1/go.mod h1:i/UKE5Uocn+argJJBb12qTZsCDBcAYMbR92AaJVmKso=
-github.com/tendermint/iavl v0.12.1 h1:JDfyhM/Hhrumu1CL1Nxrypm8sNTPYqmeHo1IZLiJoXM=
-github.com/tendermint/iavl v0.12.1/go.mod h1:EoKMMv++tDOL5qKKVnoIqtVPshRrEPeJ0WsgDOLAauM=
+github.com/tendermint/iavl v0.12.2 h1:Ls5p5VINCM1HRT9g5Vvs2zmDOCU/CCIvIHzd/pZ8P0E=
+github.com/tendermint/iavl v0.12.2/go.mod h1:EoKMMv++tDOL5qKKVnoIqtVPshRrEPeJ0WsgDOLAauM=
 github.com/tendermint/tendermint v0.31.5 h1:vTet8tCq3B9/J9Yo11dNZ8pOB7NtSy++bVSfkP4KzR4=
 github.com/tendermint/tendermint v0.31.5/go.mod h1:ymcPyWblXCplCPQjbOYbrF1fWnpslATMVqiGgWbZrlc=
 github.com/zondax/hid v0.9.0 h1:eiT3P6vNxAEVxXMw66eZUAAnU2zD33JBkfG/EnfAKl8=

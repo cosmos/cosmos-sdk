@@ -166,3 +166,27 @@ func saveConfigFile(cfgFile string, tree *toml.Tree) error {
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
 }
+
+// initialize the config command flags
+func InitConfig(cmd *cobra.Command) error {
+	home, err := cmd.PersistentFlags().GetString(cli.HomeFlag)
+	if err != nil {
+		return err
+	}
+
+	cfgFile := path.Join(home, "config", "config.toml")
+	if _, err := os.Stat(cfgFile); err == nil {
+		viper.SetConfigFile(cfgFile)
+
+		if err := viper.ReadInConfig(); err != nil {
+			return err
+		}
+	}
+	if err := viper.BindPFlag(FlagChainID, cmd.PersistentFlags().Lookup(FlagChainID)); err != nil {
+		return err
+	}
+	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
+		return err
+	}
+	return viper.BindPFlag(cli.OutputFlag, cmd.PersistentFlags().Lookup(cli.OutputFlag))
+}

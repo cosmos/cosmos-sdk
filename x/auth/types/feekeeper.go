@@ -1,4 +1,4 @@
-package auth
+package types
 
 import (
 	codec "github.com/cosmos/cosmos-sdk/codec"

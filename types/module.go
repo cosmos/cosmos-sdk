@@ -1,26 +1,29 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
+	"github.com/tendermint/go-crypto/keys"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
-
-// ModuleClient helps modules provide a standard interface for exporting client functionality
-type ModuleClient interface {
-	GetQueryCmd() *cobra.Command
-	GetTxCmd() *cobra.Command
-}
 
 //__________________________________________________________________________________________
 // AppModule is the standard form for basic non-dependant elements of an application module
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
+
+	// genesis
 	DefaultGenesis() json.RawMessage
 	ValidateGenesis(json.RawMessage) error
+
+	// client functionality
+	RegisterRESTRoutes(context.CLIContext, *mux.Router, *codec.Codec, keys.Keybase)
+	GetQueryCmd() *cobra.Command
+	GetTxCmd() *cobra.Command
 }
 
 // collections of AppModuleBasic
@@ -54,6 +57,33 @@ func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage
 		}
 	}
 	return nil
+}
+
+// RegisterRestRoutes registers all module rest routes
+func (mbm ModuleBasicManager) RegisterRESTRoutes(
+	ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+
+	for _, mb := range mbm {
+		mb.RegisterRESTRoutes(ctx, rtr, cdc, kb)
+	}
+}
+
+// add all tx commands to the rootTxCmd
+func (mbm ModuleBasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
+	for _, mb := range mbm {
+		if cmd := mb.GetTxCmd(); cmd != nil {
+			rootTxCmd.AddCommand(cmd)
+		}
+	}
+}
+
+// add all query commands to the rootQueryCmd
+func (mbm ModuleBasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
+	for _, mb := range mbm {
+		if cmd := mb.GetQueryCmd(); cmd != nil {
+			rootQueryCmd.AddCommand(cmd)
+		}
+	}
 }
 
 //_________________________________________________________

@@ -3,8 +3,11 @@ package auth
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	"github.com/tendermint/go-crypto/keys"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -42,6 +45,12 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 		return err
 	}
 	return ValidateGenesis(data)
+}
+
+// XXX
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
 }
 
 //___________________________

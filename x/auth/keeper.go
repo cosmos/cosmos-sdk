@@ -10,24 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
-const (
-	// StoreKey is string representation of the store key for auth
-	StoreKey = "acc"
-
-	// FeeStoreKey is a string representation of the store key for fees
-	FeeStoreKey = "fee"
-
-	// QuerierRoute is the querier route for acc
-	QuerierRoute = StoreKey
-)
-
-var (
-	// AddressStoreKeyPrefix prefix for account-by-address store
-	AddressStoreKeyPrefix = []byte{0x01}
-
-	globalAccountNumberKey = []byte("globalAccountNumber")
-)
-
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -80,11 +62,6 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 		panic(err)
 	}
 	return acc
-}
-
-// AddressStoreKey turn an address to key used to get it from the account store
-func AddressStoreKey(addr sdk.AccAddress) []byte {
-	return append(AddressStoreKeyPrefix, addr.Bytes()...)
 }
 
 // GetAccount implements sdk.AccountKeeper.

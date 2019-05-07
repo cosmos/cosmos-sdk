@@ -1,5 +1,5 @@
 ---
-name: "cosmos-sdk-darwin"
+name: "gaia-darwin"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -84,9 +84,9 @@ script: |
   pushd cosmos-sdk
   VERSION=$(git describe --tags | sed 's/^v//')
   COMMIT=$(git log -1 --format='%H')
-  DISTNAME=cosmos-sdk-${VERSION}
-  git archive --format tar.gz --prefix cosmos-sdk-${VERSION}/ -o ${DISTNAME}.tar.gz HEAD
-  SOURCEDIST=`pwd`/`echo cosmos-sdk-*.tar.gz`
+  DISTNAME=gaia-${VERSION}
+  git archive --format tar.gz --prefix ${DISTNAME}/ -o ${DISTNAME}.tar.gz HEAD
+  SOURCEDIST=`pwd`/`echo gaia-*.tar.gz`
   popd
 
   # Correct tar file order
@@ -94,7 +94,7 @@ script: |
   pushd temp
   tar xf $SOURCEDIST
   rm $SOURCEDIST
-  find cosmos-sdk-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $SOURCEDIST
+  find gaia-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $SOURCEDIST
   popd
 
   # Prepare GOPATH and install deps

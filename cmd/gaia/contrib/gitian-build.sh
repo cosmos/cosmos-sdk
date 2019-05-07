@@ -18,9 +18,10 @@ f_main() {
 
   l_platform=$1
   l_sdk=$2
-  l_release=$3
+
   pushd ${l_sdk}
-  l_commit=$(git rev-parse HEAD)
+  l_commit="$(git rev-parse HEAD)"
+  l_release="$(git describe --tags | sed 's/^v//')"
   popd
 
   l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
@@ -107,7 +108,7 @@ f_abspath() {
 
 f_help() {
   cat >&2 <<EOF
-Usage: $(basename $0) [-h] GOOS GIT_REPO MAJ_MIN_RELEASE
+Usage: $(basename $0) [-h] GOOS GIT_REPO
 Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
@@ -141,4 +142,4 @@ mkdir "${g_workdir}"
 g_sdk="$(f_abspath ${2})"
 [ -d "${g_sdk}" ]
 
-f_main "${g_platform}" "${g_sdk}" "${3}"
+f_main "${g_platform}" "${g_sdk}"

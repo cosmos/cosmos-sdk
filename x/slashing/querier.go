@@ -12,6 +12,7 @@ import (
 // Query endpoints supported by the slashing querier
 const (
 	QueryParameters   = "parameters"
+	QuerySigningInfo  = "signingInfo"
 	QuerySigningInfos = "signingInfos"
 )
 
@@ -22,8 +23,11 @@ func NewQuerier(k Keeper, cdc *codec.Codec) sdk.Querier {
 		case QueryParameters:
 			return queryParams(ctx, cdc, k)
 
-		case QuerySigningInfos:
+		case QuerySigningInfo:
 			return querySigningInfo(ctx, cdc, req, k)
+
+		case QuerySigningInfos:
+			return querySigningInfos(ctx, cdc, req, k)
 
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
@@ -42,6 +46,37 @@ func queryParams(ctx sdk.Context, cdc *codec.Codec, k Keeper) ([]byte, sdk.Error
 	return res, nil
 }
 
+// QuerySigningInfoParams defines the params for the following queries:
+// - 'custom/slashing/signingInfo'
+type QuerySigningInfoParams struct {
+	ConsAddress sdk.ConsAddress
+}
+
+func NewQuerySigningInfoParams(consAddr sdk.ConsAddress) QuerySigningInfoParams {
+	return QuerySigningInfoParams{consAddr}
+}
+
+func querySigningInfo(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QuerySigningInfoParams
+
+	err := cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	}
+
+	signingInfo, found := k.getValidatorSigningInfo(ctx, params.ConsAddress)
+	if !found {
+		return nil, ErrNoSigningInfoFound(DefaultCodespace, params.ConsAddress)
+	}
+
+	res, err := codec.MarshalJSONIndent(cdc, signingInfo)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
+	return res, nil
+}
+
 // QuerySigningInfosParams defines the params for the following queries:
 // - 'custom/slashing/signingInfos'
 type QuerySigningInfosParams struct {
@@ -52,7 +87,7 @@ func NewQuerySigningInfosParams(page, limit int) QuerySigningInfosParams {
 	return QuerySigningInfosParams{page, limit}
 }
 
-func querySigningInfo(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func querySigningInfos(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QuerySigningInfosParams
 
 	err := cdc.UnmarshalJSON(req.Data, &params)

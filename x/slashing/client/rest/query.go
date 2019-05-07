@@ -16,7 +16,7 @@ import (
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
-		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
+		signingInfoHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
@@ -31,7 +31,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
+func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
@@ -40,13 +40,22 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, sdk.ConsAddress(pk.Address()))
+		params := slashing.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
+
+		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
-			rest.WriteErrorResponse(w, code, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
+		route := fmt.Sprintf("custom/%s/%s", slashing.QuerierRoute, slashing.QuerySigningInfo)
+		res, err := cliCtx.QueryWithData(route, bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -95,29 +104,4 @@ func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Hand
 
 		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
-}
-
-func getSigningInfo(
-	cliCtx context.CLIContext, storeName string, cdc *codec.Codec, consAddr sdk.ConsAddress,
-) (signingInfo slashing.ValidatorSigningInfo, code int, err error) {
-	key := slashing.GetValidatorSigningInfoKey(consAddr)
-
-	res, err := cliCtx.QueryStore(key, storeName)
-	if err != nil {
-		code = http.StatusInternalServerError
-		return signingInfo, code, err
-	}
-
-	if len(res) == 0 {
-		code = http.StatusOK
-		return signingInfo, code, err
-	}
-
-	err = cdc.UnmarshalBinaryLengthPrefixed(res, &signingInfo)
-	if err != nil {
-		code = http.StatusInternalServerError
-		return signingInfo, code, err
-	}
-
-	return signingInfo, code, nil
 }

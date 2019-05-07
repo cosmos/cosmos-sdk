@@ -2,10 +2,14 @@
 
 set -euo pipefail
 
-SIGN_COMMAND=${SIGN_COMMAND:-'gpg --detach-sign --armor'}
+DEFAULT_SIGN_COMMAND='gpg --detach-sign'
+DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
+
+SIGN_COMMAND=${SIGN_COMMAND:-${DEFAULT_SIGN_COMMAND}}
 
 g_workdir=''
 g_sign_identity=''
+g_gitian_skip_download=''
 
 f_main() {
   local l_dirname \
@@ -14,21 +18,25 @@ f_main() {
     l_platform \
     l_result \
     l_descriptor \
-    l_release
+    l_release \
+    l_sigs_dir
 
   l_platform=$1
   l_sdk=$2
+  l_sigs_dir=$3
 
   pushd ${l_sdk}
   l_commit="$(git rev-parse HEAD)"
-  l_release="$(git describe --tags | sed 's/^v//')"
+  l_release="$(git describe --tags | sed 's/^v//')-${l_platform}"
   popd
 
   l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
   [ -f ${l_descriptor} ]
 
-  echo "Download gitian" >&2
-  git clone https://github.com/devrandom/gitian-builder ${g_workdir}
+  if [ "${g_gitian_skip_download}" != "y" ]; then
+    echo "Download gitian-builder to ${g_workdir}" >&2
+    git clone https://github.com/devrandom/gitian-builder ${g_workdir}
+  fi
 
   echo "Prepare gitian-target docker image" >&2
   f_prep_docker_image
@@ -41,8 +49,10 @@ f_main() {
   echo "You may find the result in $(echo ${g_workdir}/result/*.yml))" >&2
 
   if [ -n "${g_sign_identity}" ]; then
-    f_sign ${l_descriptor} ${l_release}
-    echo "Build signed as ${g_sign_identity}: ${g_workdir}/sigs/"
+    f_sign "${l_descriptor}" "${l_release}" "${l_sigs_dir}"
+    echo "Build signed as ${g_sign_identity}, signatures can be found in ${l_sigs_dir}"
+    f_verify "${l_descriptor}" "${l_release}" "${l_sigs_dir}"
+    echo "Signatures in ${l_sigs_dir} have been verified"
   else
     echo "You can now sign the build with the following command:" >&2
     echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release} ${l_descriptor}" >&2
@@ -83,13 +93,27 @@ f_build() {
 }
 
 f_sign() {
-  local l_descriptor l_release_name
+  local l_descriptor l_release_name l_sigs_dir
 
   l_descriptor=$1
   l_release_name=$2
+  l_sigs_dir=$3
 
-  cd ${g_workdir}
-  bin/gsign -p "${SIGN_COMMAND}" -s "${g_sign_identity}" --release=${l_release_name} ${l_descriptor}
+  pushd ${g_workdir}
+  bin/gsign -p "${SIGN_COMMAND}" -s "${g_sign_identity}" --destination="${l_sigs_dir}" --release=${l_release_name} ${l_descriptor}
+  popd
+}
+
+f_verify() {
+  local l_descriptor l_release_name l_sigs_dir
+
+  l_descriptor=$1
+  l_release_name=$2
+  l_sigs_dir=$3
+
+  pushd ${g_workdir}
+  bin/gverify --destination="${l_sigs_dir}" --release="${l_release_name}" ${l_descriptor}
+  popd
 }
 
 f_validate_platform() {
@@ -113,10 +137,14 @@ Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
    -h               display this help and exit
-   -d DIRNAME       set working directory name
+   -d DIRNAME       set working directory name and skip gitian-builder download
    -s IDENTITY      sign build as IDENTITY
 
-The default signing command used to sign the build is '$SIGN_COMMAND'.
+If a GPG identity is supplied via the -s flag, the build will be signed and verified.
+The signature will be saved in '${DEFAULT_GAIA_SIGS}/'. An alternative output directory
+for signatures can be supplied via the environment variable \$GAIA_SIGS.
+
+The default signing command used to sign the build is '$DEFAULT_SIGN_COMMAND'.
 An alternative signing command can be supplied via the environment
 variable \$SIGN_COMMAND.
 EOF
@@ -137,9 +165,14 @@ f_validate_platform "${g_platform}"
 
 g_dirname="${g_dirname:-gitian-build-${g_platform}}"
 g_workdir="$(pwd)/${g_dirname}"
-mkdir "${g_workdir}"
+if [ -d "${g_workdir}" ]; then
+  echo "Directory ${g_workdir} exists and will be preserved" 2>/dev/null
+  g_gitian_skip_download=y
+fi
 
 g_sdk="$(f_abspath ${2})"
 [ -d "${g_sdk}" ]
 
-f_main "${g_platform}" "${g_sdk}"
+g_sigs_dir=${GAIA_SIGS:-"$(pwd)/${DEFAULT_GAIA_SIGS}"}
+
+f_main "${g_platform}" "${g_sdk}" "${g_sigs_dir}"

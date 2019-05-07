@@ -41,8 +41,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, pk.Address())
-
+		signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, sdk.ConsAddress(pk.Address()))
 		if err != nil {
 			rest.WriteErrorResponse(w, code, err.Error())
 			return
@@ -69,24 +68,26 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, storeName string, cdc *
 			return
 		}
 
-		validators, err := rpc.GetValidators(cliCtx, &height)
+		valResult, err := rpc.GetValidators(cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		if len(validators.Validators) == 0 {
-			rest.PostProcessResponse(w, cdc, signingInfoList, cliCtx.Indent)
+		if len(valResult.Validators) == 0 {
+			rest.PostProcessResponse(w, cdc, []slashing.ValidatorSigningInfo{}, cliCtx.Indent)
 			return
 		}
+
+		fmt.Println("NUM VALIDATORS IN RESULT:", len(valResult.Validators))
 
 		// TODO: this should happen when querying Validators from RPC,
 		//  as soon as it's available this is not needed anymore
 		// parameter page is (page-1) because ParseHTTPArgs starts with page 1, where our array start with 0
-		start, end := adjustPagination(uint(len(validators.Validators)), uint(page)-1, uint(limit))
-		for _, validator := range validators.Validators[start:end] {
-			address := validator.Address
-			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, address)
+		start, end := adjustPagination(uint(len(valResult.Validators)), uint(page)-1, uint(limit))
+		for _, validator := range valResult.Validators[start:end] {
+			consAddr := validator.Address
+			signingInfo, code, err := getSigningInfo(cliCtx, storeName, cdc, consAddr)
 			if err != nil {
 				rest.WriteErrorResponse(w, code, err.Error())
 				return
@@ -117,27 +118,29 @@ func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Hand
 	}
 }
 
-func getSigningInfo(cliCtx context.CLIContext, storeName string, cdc *codec.Codec, address []byte) (signingInfo slashing.ValidatorSigningInfo, code int, err error) {
-	key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(address))
+func getSigningInfo(
+	cliCtx context.CLIContext, storeName string, cdc *codec.Codec, consAddr sdk.ConsAddress,
+) (signingInfo slashing.ValidatorSigningInfo, code int, err error) {
+	key := slashing.GetValidatorSigningInfoKey(consAddr)
 
 	res, err := cliCtx.QueryStore(key, storeName)
 	if err != nil {
 		code = http.StatusInternalServerError
-		return
+		return signingInfo, code, err
 	}
 
 	if len(res) == 0 {
 		code = http.StatusOK
-		return
+		return signingInfo, code, err
 	}
 
 	err = cdc.UnmarshalBinaryLengthPrefixed(res, &signingInfo)
 	if err != nil {
 		code = http.StatusInternalServerError
-		return
+		return signingInfo, code, err
 	}
 
-	return
+	return signingInfo, code, nil
 }
 
 // Adjust pagination with page starting from 0

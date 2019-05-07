@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.34.4
+
+### Bug Fixes
+
+#### SDK
+
+* [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
+actually work offline.
+
+#### Gaia
+
+* [\#4219](https://github.com/cosmos/cosmos-sdk/issues/4219) Return an error when an empty mnemonic is provided during key recovery.
+
+### Improvements
+
+#### Gaia
+
+* [\#2007](https://github.com/cosmos/cosmos-sdk/issues/2007) Return 200 status code on empty results
+
+### New features
+
+#### SDK
+
+* [\#3850](https://github.com/cosmos/cosmos-sdk/issues/3850) Add `rewards` and `commission` to distribution tx tags.
+
 ## 0.34.3
 
 ### Bug Fixes

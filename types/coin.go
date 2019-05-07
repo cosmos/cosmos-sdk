@@ -370,6 +370,10 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 
 // IsAnyGT returns true iff for any denom in coins, the denom is present at a
 // greater amount in coinsB.
+//
+// e.g.
+// {2A, 3B}.IsAnyGT{A} = true
+// {2A, 3B}.IsAnyGT{5C} = false
 func (coins Coins) IsAnyGT(coinsB Coins) bool {
 	if len(coinsB) == 0 {
 		return false

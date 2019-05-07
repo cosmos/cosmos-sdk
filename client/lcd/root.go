@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -45,20 +46,22 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 		Mux:    r,
 		CliCtx: cliCtx,
 		Cdc:    cdc,
-
-		log: logger,
+		log:    logger,
 	}
 }
 
 // Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, maxOpen int) (err error) {
+func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint) (err error) {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	cfg := rpcserver.DefaultConfig()
-	cfg.MaxOpenConnections = maxOpen
+	cfg := &rpcserver.Config{
+		MaxOpenConnections: maxOpen,
+		ReadTimeout:        time.Duration(readTimeout) * time.Second,
+		WriteTimeout:       time.Duration(writeTimeout) * time.Second,
+	}
 
 	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {
@@ -87,8 +90,12 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			registerRoutesFn(rs)
 
 			// Start the rest server and return error if one exists
-			err = rs.Start(viper.GetString(client.FlagListenAddr),
-				viper.GetInt(client.FlagMaxOpenConnections))
+			err = rs.Start(
+				viper.GetString(client.FlagListenAddr),
+				viper.GetInt(client.FlagMaxOpenConnections),
+				uint(viper.GetInt(client.FlagRPCReadTimeout)),
+				uint(viper.GetInt(client.FlagRPCWriteTimeout)),
+			)
 
 			return err
 		},

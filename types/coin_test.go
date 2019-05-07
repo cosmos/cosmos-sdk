@@ -574,3 +574,22 @@ func TestNewCoins(t *testing.T) {
 		})
 	}
 }
+
+func TestCoinsIsAnyGT(t *testing.T) {
+	twoAtom := NewInt64Coin("atom", 2)
+	fiveAtom := NewInt64Coin("atom", 5)
+	threeEth := NewInt64Coin("eth", 3)
+	sixEth := NewInt64Coin("eth", 6)
+	twoBtc := NewInt64Coin("btc", 2)
+
+	require.False(t, Coins{}.IsAnyGT(Coins{}))
+
+	require.False(t, Coins{fiveAtom}.IsAnyGT(Coins{}))
+	require.False(t, Coins{}.IsAnyGT(Coins{fiveAtom}))
+	require.True(t, Coins{fiveAtom}.IsAnyGT(Coins{twoAtom}))
+	require.False(t, Coins{twoAtom}.IsAnyGT(Coins{fiveAtom}))
+
+	require.True(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom, threeEth}))
+	require.False(t, Coins{twoBtc, twoAtom, threeEth}.IsAnyGT(Coins{fiveAtom, sixEth}))
+	require.False(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom}))
+}

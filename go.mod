@@ -44,7 +44,7 @@ require (
 	github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 // indirect
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.14.1
-	github.com/tendermint/iavl v0.12.1
+	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.31.5
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect

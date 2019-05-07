@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-g_default_dirname="gitian-build-$(date +%Y-%m-%d-%H%M%S)"
-g_dirname=''
+SIGN_COMMAND='gpg --detach-sign --armor'
+
+g_workdir=''
+g_sign_identity=''
 
 f_main() {
   local l_dirname \
-    l_workdir \
     l_sdk \
     l_commit \
     l_platform \
@@ -15,9 +16,8 @@ f_main() {
     l_descriptor \
     l_release_name
 
-  l_dirname=$1
-  l_platform=$2
-  l_sdk=$3
+  l_platform=$1
+  l_sdk=$2
   pushd ${l_sdk}
   l_commit=$(git rev-parse HEAD)
   popd
@@ -25,61 +25,86 @@ f_main() {
   l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
   [ -f ${l_descriptor} ]
 
-  l_workdir="$(pwd)/${l_dirname}"
-  mkdir ${l_workdir}/
   echo "Download gitian" >&2
-  git clone https://github.com/devrandom/gitian-builder ${l_workdir}
+  git clone https://github.com/devrandom/gitian-builder ${g_workdir}
 
   echo "Prepare gitian-target docker image" >&2
-  f_prep_docker_image "${l_workdir}"
+  f_prep_docker_image
 
   echo "Download Go" >&2
-  f_download_go "${l_workdir}"
+  f_download_go
 
   echo "Start the build" >&2
-  f_build "${l_workdir}" "${l_sdk}" "${l_commit}" "${l_platform}"
-  echo "You may find the result in $(echo ${l_workdir}/result/*.yml))" >&2
+  f_build "${l_sdk}" "${l_commit}" "${l_platform}"
+  echo "You may find the result in $(echo ${g_workdir}/result/*.yml))" >&2
 
   l_release_name="$(sed -n 's/^name: \"\(.\+\)\"$/\1/p' ${l_descriptor})"
-  [ -z ${l_release_name} ] || l_release_name=UNKNOWN
-  echo "You can now sign the build with the following command:" >&2
-  echo "cd ${l_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release_name} ${l_descriptor}" >&2
+  [ -n "${l_release_name}" ]
+
+  if [ -n "${g_sign_identity}" ]; then
+    f_sign ${l_descriptor} ${l_release_name}
+    echo "Build signed as ${g_sign_identity}: ${g_workdir}/sigs/"
+  else
+    echo "You can now sign the build with the following command:" >&2
+    echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release_name} ${l_descriptor}" >&2
+  fi
+
   return 0
 }
 
 f_prep_docker_image() {
-  local l_dir=$1
-
-  pushd ${l_dir}
+  pushd ${g_workdir}
   bin/make-base-vm --docker --suite bionic --arch amd64
   popd
 }
 
 f_download_go() {
-  local l_dir l_gopkg
+  local l_gopkg
 
-  l_dir=$1
-
-  mkdir -p ${l_dir}/inputs
   l_gopkg=go1.12.4.linux-amd64.tar.gz
-  curl -L https://dl.google.com/go/${l_gopkg} > ${l_dir}/inputs/${l_gopkg}
+
+  mkdir -p ${g_workdir}/inputs
+  curl -L https://dl.google.com/go/${l_gopkg} > ${g_workdir}/inputs/${l_gopkg}
 }
 
 f_build() {
-  local l_gitian l_sdk l_platform l_descriptor
+  local l_sdk l_platform l_descriptor
 
-  l_gitian=$1
-  l_sdk=$2
-  l_commit=$3
-  l_platform=$4
+  l_sdk=$1
+  l_commit=$2
+  l_platform=$3
   l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
 
   [ -f ${l_descriptor} ]
 
-  cd ${l_gitian}
+  cd ${g_workdir}
   export USE_DOCKER=1
   bin/gbuild $l_descriptor --commit cosmos-sdk=$l_commit
   libexec/stop-target || echo "warning: couldn't stop target" >&2
+}
+
+f_sign() {
+  local l_descriptor l_release_name
+
+  l_descriptor=$1
+  l_release_name=$2
+
+  cd ${g_workdir}
+  bin/gsign -p "${SIGN_COMMAND}" -s "${g_sign_identity}" --release=${l_release_name} ${l_descriptor}
+}
+
+f_validate_platform() {
+  case "${1}" in
+  linux|osx|windows)
+    ;;
+  *)
+    echo "invalid platform -- ${1}"
+    exit 1
+  esac
+}
+
+f_abspath() {
+  echo "$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
 }
 
 f_help() {
@@ -88,18 +113,34 @@ Usage: $(basename $0) [-h] GOOS GIT_REPO
 Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
-   -h               Display this help and exit
-   -d DIRNAME       Set working directory name
+   -h               display this help and exit
+   -d DIRNAME       set working directory name
+   -s IDENTITY      sign build as IDENTITY
+
+The default signing command used to sign the build is '$SIGN_COMMAND'.
+An alternative signing command can be supplied via the environment
+variable \$SIGN_COMMAND.
 EOF
 }
 
-while getopts ":d:h" opt; do
+while getopts ":d:s:h" opt; do
   case "${opt}" in
     h)  f_help ; exit 0 ;;
-    d)  g_dirname="${OPTARG}"
+    d)  g_dirname="${OPTARG}" ;;
+    s)  g_sign_identity="${OPTARG}" ;;
   esac
 done
 
 shift "$((OPTIND-1))"
 
-f_main "${g_dirname:-${g_default_dirname}}" $1 $2
+g_platform="${1}"
+f_validate_platform "${g_platform}"
+
+g_dirname="${g_dirname:-gitian-build-${g_platform}}"
+g_workdir="$(pwd)/${g_dirname}"
+mkdir "${g_workdir}"
+
+g_sdk="$(f_abspath ${2})"
+[ -d "${g_sdk}" ]
+
+f_main "${g_platform}" "${g_sdk}"

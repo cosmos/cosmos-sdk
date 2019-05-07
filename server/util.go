@@ -64,9 +64,12 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		}
 
 		// okchain
-		output, err := os.OpenFile(filepath.Join(config.RootDir, "okchaind.log"), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-		if err != nil {
-			output = os.Stdout
+		output := os.Stdout
+		if !config.LogStdout {
+			output, err = os.OpenFile(config.LogFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+			if err != nil {
+				return err
+			}
 		}
 
 		logger := log.NewTMLogger(log.NewSyncWriter(output))
@@ -140,6 +143,8 @@ func AddCommands(
 	appCreator AppCreator, appExport AppExporter) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
+	rootCmd.PersistentFlags().String("log_file", ctx.Config.LogFile, "Log file")
+	rootCmd.PersistentFlags().Bool("log_stdout", ctx.Config.LogStdout, "Print log to stdout, rather than a file")
 
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",

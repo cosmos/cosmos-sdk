@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -41,7 +42,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "%s\n", string(out)) // nolint: errcheck
+	fmt.Fprintf(os.Stderr, "%s\n", string(sdk.MustSortJSON(out))) // nolint: errcheck
 	return nil
 }
 

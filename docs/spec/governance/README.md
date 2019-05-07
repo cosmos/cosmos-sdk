@@ -25,7 +25,7 @@ Features that may be added in the future are described in [Future Improvements](
 ## Contents
 
 The following specification uses *Atom* as the native staking token. The module
-can be adapted to any Proof-Of-Stake blockchain by replacing *Atom* with the native
+can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
 
 1. **[Concepts](01_concepts.md)**

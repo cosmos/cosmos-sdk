@@ -11,6 +11,7 @@ import (
 
 	"io/ioutil"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -81,7 +82,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 				return err
 			}
 
-			fmt.Println(string(encoded))
+			fmt.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}

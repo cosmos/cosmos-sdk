@@ -94,7 +94,7 @@ f_sign() {
 
 f_validate_platform() {
   case "${1}" in
-  linux|osx|windows)
+  linux|darwin|windows)
     ;;
   *)
     echo "invalid platform -- ${1}"

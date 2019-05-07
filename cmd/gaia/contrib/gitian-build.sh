@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-SIGN_COMMAND='gpg --detach-sign --armor'
+SIGN_COMMAND=${SIGN_COMMAND:-'gpg --detach-sign --armor'}
 
 g_workdir=''
 g_sign_identity=''

@@ -75,14 +75,27 @@ func TestAddGenesisAccount(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"invalid vesting amount with multi coins",
+			args{
+				app.GenesisState{},
+				addr1,
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)),
+				0,
+				1,
+			},
+			true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := addGenesisAccount(
 				cdc, tt.args.appState, tt.args.addr, tt.args.coins,
 				tt.args.vestingAmt, tt.args.vestingStart, tt.args.vestingEnd,
 			)
-			require.Equal(t, tt.wantErr, (err != nil))
+			require.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }

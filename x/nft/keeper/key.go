@@ -17,12 +17,12 @@ const (
 
 // NFTs are stored as follow:
 //
-// - Colections: 0x00<denom_bytes_key><Collection>
+// - Colections: 0x00<denom_bytes_key> :<Collection>
 //
-// - Balances: 0x01<address_bytes_key><denom_bytes_key><Collection>
+// - Balances: 0x01<address_bytes_key><denom_bytes_key>: <Collections>
 var (
 	CollectionsKeyPrefix = []byte{0x00} // key for NFT collections
-	NFTBalancesKeyPrefix = []byte{0x01} // key for balance of NFTs held by an address
+	BalancesKeyPrefix    = []byte{0x01} // key for balance of NFTs held by an address
 )
 
 // GetCollectionKey gets the key of a collection
@@ -41,7 +41,7 @@ func GetNFTBalancesAddress(key []byte) (address sdk.AccAddress) {
 
 // GetNFTBalancesKey gets the key of the NFTs owned by an account address
 func GetNFTBalancesKey(address sdk.AccAddress) []byte {
-	return append(NFTBalancesKeyPrefix, address.Bytes()...)
+	return append(BalancesKeyPrefix, address.Bytes()...)
 }
 
 // GetBalancesNFTKey gets the key of a single NFT owned by an account address

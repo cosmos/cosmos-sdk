@@ -16,7 +16,6 @@ import (
 const (
 	QuerySupply     = "supply"
 	QueryBalance    = "balance"
-	QueryBalance    = "balance-collection"
 	QueryCollection = "collection"
 	QueryNFT        = "nft"
 )
@@ -96,7 +95,7 @@ func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Requ
 	}
 
 	bz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bz, int64(len(collection.Supply)))
+	binary.LittleEndian.PutUint64(bz, int64(collection.Supply))
 	return bz, nil
 }
 

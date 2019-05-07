@@ -57,12 +57,8 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 		// create the message
-		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, types.Denom(req.Denom), types.TokenID(tokenID))
-		err = msg.ValidateBasic()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, req.Denom, tokenID)
+
 		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }
@@ -93,20 +89,12 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		editName := req.Name != ""
-		editDescription := req.Description != ""
-		editImage := req.Image != ""
-		editTokenURI := req.TokenURI != ""
+
 		// create the message
-		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), types.Denom(req.Denom), types.TokenID(tokenID),
-			editName, editDescription, editImage, editTokenURI,
+		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, req.Denom,
 			req.Name, req.Description, req.Image, req.TokenURI,
 		)
-		err = msg.ValidateBasic()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+
 		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }

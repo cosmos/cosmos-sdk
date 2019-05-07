@@ -14,10 +14,11 @@ f_main() {
     l_platform \
     l_result \
     l_descriptor \
-    l_release_name
+    l_release
 
   l_platform=$1
   l_sdk=$2
+  l_release=$3
   pushd ${l_sdk}
   l_commit=$(git rev-parse HEAD)
   popd
@@ -38,15 +39,12 @@ f_main() {
   f_build "${l_sdk}" "${l_commit}" "${l_platform}"
   echo "You may find the result in $(echo ${g_workdir}/result/*.yml))" >&2
 
-  l_release_name="$(sed -n 's/^name: \"\(.\+\)\"$/\1/p' ${l_descriptor})"
-  [ -n "${l_release_name}" ]
-
   if [ -n "${g_sign_identity}" ]; then
-    f_sign ${l_descriptor} ${l_release_name}
+    f_sign ${l_descriptor} ${l_release}
     echo "Build signed as ${g_sign_identity}: ${g_workdir}/sigs/"
   else
     echo "You can now sign the build with the following command:" >&2
-    echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release_name} ${l_descriptor}" >&2
+    echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release} ${l_descriptor}" >&2
   fi
 
   return 0
@@ -109,7 +107,7 @@ f_abspath() {
 
 f_help() {
   cat >&2 <<EOF
-Usage: $(basename $0) [-h] GOOS GIT_REPO
+Usage: $(basename $0) [-h] GOOS GIT_REPO MAJ_MIN_RELEASE
 Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
@@ -143,4 +141,4 @@ mkdir "${g_workdir}"
 g_sdk="$(f_abspath ${2})"
 [ -d "${g_sdk}" ]
 
-f_main "${g_platform}" "${g_sdk}"
+f_main "${g_platform}" "${g_sdk}" "${3}"

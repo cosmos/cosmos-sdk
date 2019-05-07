@@ -1,5 +1,5 @@
 ---
-name: "cosmos-sdk-windows-0.34.3"
+name: "cosmos-sdk-windows"
 enable_cache: true
 distro: "ubuntu"
 suites:

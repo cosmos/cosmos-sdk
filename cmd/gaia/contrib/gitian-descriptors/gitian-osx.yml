@@ -1,5 +1,5 @@
 ---
-name: "cosmos-sdk-darwin-0.34.3"
+name: "cosmos-sdk-darwin"
 enable_cache: true
 distro: "ubuntu"
 suites:

@@ -1,5 +1,5 @@
 ---
-name: "cosmos-sdk-linux-0.34.3"
+name: "cosmos-sdk-linux"
 enable_cache: true
 distro: "ubuntu"
 suites:

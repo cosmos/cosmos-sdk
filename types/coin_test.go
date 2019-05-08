@@ -593,3 +593,31 @@ func TestCoinsIsAnyGT(t *testing.T) {
 	require.False(t, Coins{twoBtc, twoAtom, threeEth}.IsAnyGT(Coins{fiveAtom, sixEth}))
 	require.False(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom}))
 }
+
+func TestFindDup(t *testing.T) {
+	abc := NewInt64Coin("abc", 10)
+	def := NewInt64Coin("def", 10)
+	ghi := NewInt64Coin("ghi", 10)
+
+	type args struct {
+		coins Coins
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"empty", args{NewCoins()}, -1},
+		{"one coin", args{NewCoins(NewInt64Coin("xyz", 10))}, -1},
+		{"no dups", args{Coins{abc, def, ghi}}, -1},
+		{"dup at first position", args{Coins{abc, abc, def}}, 1},
+		{"dup after first position", args{Coins{abc, def, def}}, 2},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := findDup(tt.args.coins); got != tt.want {
+				t.Errorf("findDup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

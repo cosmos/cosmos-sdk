@@ -646,11 +646,12 @@ func findDup(coins Coins) int {
 		return -1
 	}
 
-	prevDenom := coins[0]
+	prevDenom := coins[0].Denom
 	for i := 1; i < len(coins); i++ {
-		if coins[i] == prevDenom {
+		if coins[i].Denom == prevDenom {
 			return i
 		}
+		prevDenom = coins[i].Denom
 	}
 
 	return -1

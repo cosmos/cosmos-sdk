@@ -7,31 +7,27 @@ import (
 )
 
 type (
-	SupplyKeeper        = keeper.SupplyKeeper
-	SendKeeper          = keeper.SendKeeper
-	BaseSendKeeper      = keeper.SendKeeper
-	ModuleAccount       = types.ModuleAccount
-	ModuleHolderAccount = types.ModuleHolderAccount
-	ModuleMinterAccount = types.ModuleMinterAccount
-	Supply              = types.Supply
-	GenesisState        = types.GenesisState
+	Keeper            = keeper.Keeper
+	PoolAccount       = types.PoolAccount
+	PoolHolderAccount = types.PoolHolderAccount
+	PoolMinterAccount = types.PoolMinterAccount
+	Supply            = types.Supply
+	GenesisState      = types.GenesisState
 )
 
 var (
-	NewSupplyKeeper   = keeper.NewSupplyKeeper
-	NewBaseSendKeeper = keeper.NewBaseSendKeeper
-
+	NewKeeper              = keeper.NewKeeper
 	RegisterInvariants     = keeper.RegisterInvariants
 	AllInvariants          = keeper.AllInvariants
 	StakingTokensInvariant = keeper.StakingTokensInvariant
 	DefaultCodespace       = keeper.DefaultCodespace
 
-	NewModuleHolderAccount = types.NewModuleHolderAccount
-	NewModuleMinterAccount = types.NewModuleMinterAccount
-	NewSupply              = types.NewSupply
-	DefaultSupply          = types.DefaultSupply
-	NewGenesisState        = types.NewGenesisState
-	DefaultGenesisState    = types.DefaultGenesisState
+	NewPoolHolderAccount = types.NewPoolHolderAccount
+	NewPoolMinterAccount = types.NewPoolMinterAccount
+	NewSupply            = types.NewSupply
+	DefaultSupply        = types.DefaultSupply
+	NewGenesisState      = types.NewGenesisState
+	DefaultGenesisState  = types.DefaultGenesisState
 )
 
 const (

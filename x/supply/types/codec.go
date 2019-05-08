@@ -6,7 +6,7 @@ import (
 
 // RegisterCodec registers concrete types on the codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*ModuleAccount)(nil), nil)
-	cdc.RegisterConcrete(&ModuleHolderAccount{}, "auth/ModuleHolderAccount", nil)
-	cdc.RegisterConcrete(&ModuleMinterAccount{}, "auth/ModuleMinterAccount", nil)
+	cdc.RegisterInterface((*PoolAccount)(nil), nil)
+	cdc.RegisterConcrete(&PoolHolderAccount{}, "auth/PoolHolderAccount", nil)
+	cdc.RegisterConcrete(&PoolMinterAccount{}, "auth/PoolMinterAccount", nil)
 }

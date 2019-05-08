@@ -10,8 +10,8 @@ import (
 
 // TODO: register within auth codec
 
-// ModuleAccount defines an account type for modules that hold tokens in an escrow
-type ModuleAccount interface {
+// PoolAccount defines an account type for pools that hold tokens in an escrow
+type PoolAccount interface {
 	auth.Account
 
 	Name() string
@@ -20,74 +20,74 @@ type ModuleAccount interface {
 //-----------------------------------------------------------------------------
 // Module Holder Account
 
-var _ ModuleAccount = (*ModuleHolderAccount)(nil)
+var _ PoolAccount = (*PoolHolderAccount)(nil)
 
-// ModuleHolderAccount defines an account for modules that holds coins on a pool
-type ModuleHolderAccount struct {
+// PoolHolderAccount defines an account for modules that holds coins on a pool
+type PoolHolderAccount struct {
 	*auth.BaseAccount
 
-	ModuleName string `json:"name"` // name of the module
+	PoolName string `json:"name"` // name of the pool
 }
 
-// NewModuleHolderAccount creates a new ModuleHolderAccount instance
-func NewModuleHolderAccount(moduleName string) *ModuleHolderAccount {
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+// NewPoolHolderAccount creates a new PoolHolderAccount instance
+func NewPoolHolderAccount(name string) *PoolHolderAccount {
+	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 
 	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
-	return &ModuleHolderAccount{
+	return &PoolHolderAccount{
 		BaseAccount: &baseAcc,
-		ModuleName:  moduleName,
+		PoolName:    name,
 	}
 }
 
 // Name returns the the name of the holder's module
-func (mha ModuleHolderAccount) Name() string {
-	return mha.ModuleName
+func (pha PoolHolderAccount) Name() string {
+	return pha.PoolName
 }
 
 // SetPubKey - Implements Account
-func (mha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
-	return fmt.Errorf("not supported for module accounts")
+func (pha *PoolHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
+	return fmt.Errorf("not supported for pool accounts")
 }
 
 // SetSequence - Implements Account
-func (mha *ModuleHolderAccount) SetSequence(seq uint64) error {
-	return fmt.Errorf("not supported for module accounts")
+func (pha *PoolHolderAccount) SetSequence(seq uint64) error {
+	return fmt.Errorf("not supported for pool accounts")
 }
 
 // String follows stringer interface
-func (mha ModuleHolderAccount) String() string {
+func (pha PoolHolderAccount) String() string {
 	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Holder Account:
+	return fmt.Sprintf(`Pool Holder Account:
 Address:  %s
 Coins:    %s
 Name:     %s`,
-		mha.Address, mha.Coins, mha.ModuleName)
+		pha.Address, pha.Coins, pha.PoolName)
 }
 
 //-----------------------------------------------------------------------------
 // Module Minter Account
 
-var _ ModuleAccount = (*ModuleMinterAccount)(nil)
+var _ PoolAccount = (*PoolMinterAccount)(nil)
 
-// ModuleMinterAccount defines an account for modules that holds coins on a pool
-type ModuleMinterAccount struct {
-	*ModuleHolderAccount
+// PoolMinterAccount defines an account for modules that holds coins on a pool
+type PoolMinterAccount struct {
+	*PoolHolderAccount
 }
 
-// NewModuleMinterAccount creates a new  ModuleMinterAccount instance
-func NewModuleMinterAccount(moduleName string) *ModuleMinterAccount {
-	moduleHolderAcc := NewModuleHolderAccount(moduleName)
+// NewPoolMinterAccount creates a new  PoolMinterAccount instance
+func NewPoolMinterAccount(name string) *PoolMinterAccount {
+	moduleHolderAcc := NewPoolHolderAccount(name)
 
-	return &ModuleMinterAccount{ModuleHolderAccount: moduleHolderAcc}
+	return &PoolMinterAccount{PoolHolderAccount: moduleHolderAcc}
 }
 
 // String follows stringer interface
-func (mma ModuleMinterAccount) String() string {
+func (pma PoolMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Minter Account:
+	return fmt.Sprintf(`Pool Minter Account:
 Address: %s
 Coins:   %s
 Name:    %s`,
-		mma.Address, mma.Coins, mma.ModuleName)
+		pma.Address, pma.Coins, pma.PoolName)
 }

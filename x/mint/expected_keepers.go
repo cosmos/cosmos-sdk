@@ -2,16 +2,27 @@ package mint
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
-	StakingTokenSupply(ctx sdk.Context) sdk.Int
+	StakingTokenSupply(ctx sdk.Context) sdk.Int // TODO: delete this and use the account
 	BondedRatio(ctx sdk.Context) sdk.Dec
-	InflateUnbondedTokenSupply(ctx sdk.Context, newTokens sdk.Int)
 }
 
-// FeeCollectionKeeper defines the expected fee collection keeper interface
-type FeeCollectionKeeper interface {
-	AddCollectedFees(sdk.Context, sdk.Coins) sdk.Coins
+// SupplySendKeeper defines the supply SendKeeper for module accounts
+type SupplySendKeeper interface {
+	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
+	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
+
+	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
+	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
+}
+
+// SupplyKeeper defines the expected supply keeper
+type SupplyKeeper interface {
+	Inflate(ctx sdk.Context, amount sdk.Coins)
 }

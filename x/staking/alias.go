@@ -134,6 +134,9 @@ const (
 	CodeUnauthorized      = types.CodeUnauthorized
 	CodeInternal          = types.CodeInternal
 	CodeUnknownRequest    = types.CodeUnknownRequest
+
+	UnbondedTokensName = keeper.UnbondedTokensName
+	BondedTokensName   = keeper.BondedTokensName
 )
 
 var (

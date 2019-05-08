@@ -30,11 +30,15 @@ func init() {
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
+		feeCollector := ak.GetAccount(ctx, FeeCollectorAddr)
+		if feeCollector == nil {
+			panic(fmt.Errorf("fee collector account hasn't been set"))
+		}
 		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
 		if !ok {
@@ -109,7 +113,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				return newCtx, res, true
 			}
 
-			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
+			feeCollector.SetCoins(stdTx.Fee.Amount)
 		}
 
 		// stdSigs contains the sequence number, account number, and signatures.

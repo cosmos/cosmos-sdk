@@ -8,36 +8,38 @@ import (
 
 const (
 	// ModuleName is the name of the module
-	ModuleName = "minting"
+	ModuleName = "mint"
 
-	// default paramspace for params keeper
-	DefaultParamspace = "mint"
+	// DefaultParamspace is the default paramspace for params keeper
+	DefaultParamspace = ModuleName
 
 	// StoreKey is the default store key for mint
-	StoreKey = "mint"
+	StoreKey = ModuleName
 
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey
 )
 
-// keeper of the staking store
+// keeper of the mint store
 type Keeper struct {
-	storeKey   sdk.StoreKey
-	cdc        *codec.Codec
-	paramSpace params.Subspace
-	sk         StakingKeeper
-	fck        FeeCollectionKeeper
+	storeKey     sdk.StoreKey
+	cdc          *codec.Codec
+	paramSpace   params.Subspace
+	sk           StakingKeeper
+	skk          SupplySendKeeper
+	supplyKeeper SupplyKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
-	paramSpace params.Subspace, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	sk StakingKeeper, skk SupplySendKeeper, supplyKeeper SupplyKeeper) Keeper {
 
 	keeper := Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		paramSpace: paramSpace.WithKeyTable(ParamKeyTable()),
-		sk:         sk,
-		fck:        fck,
+		storeKey:     key,
+		cdc:          cdc,
+		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
+		sk:           sk,
+		skk:          skk,
+		supplyKeeper: supplyKeeper,
 	}
 	return keeper
 }

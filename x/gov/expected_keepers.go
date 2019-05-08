@@ -2,7 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // expected bank keeper
@@ -16,12 +16,12 @@ type BankKeeper interface {
 
 // SupplySendKeeper defines the supply SendKeeper for module accounts
 type SupplySendKeeper interface {
-	GetModuleAccountByName(ctx sdk.Context, name string) (types.ModuleAccount, sdk.Error)
-	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount)
+	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
+	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
+	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }
 

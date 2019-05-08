@@ -14,8 +14,8 @@ const (
 	// StoreKey is string representation of the store key for auth
 	StoreKey = "acc"
 
-	// FeeStoreKey is a string representation of the store key for fees
-	FeeStoreKey = "fee"
+	// FeeCollectorName is the root string from which the fee collector account is generated
+	FeeCollectorName = "fees"
 
 	// QuerierRoute is the querier route for acc
 	QuerierRoute = StoreKey
@@ -27,6 +27,9 @@ var (
 
 	globalAccountNumberKey = []byte("globalAccountNumber")
 )
+
+// FeeCollectorAddr is the address generated from the FeeCollectorName string
+var FeeCollectorAddr = sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.

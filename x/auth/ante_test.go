@@ -47,7 +47,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 
 	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
@@ -95,7 +95,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -150,7 +150,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(0)
 
 	// keys and addresses
@@ -205,7 +205,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -280,7 +280,8 @@ func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
+	emptyCoins := sdk.NewCoins()
 
 	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
@@ -304,14 +305,14 @@ func TestAnteHandlerFees(t *testing.T) {
 	input.ak.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
 
-	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	require.True(t, input.ak.GetAccount(ctx, FeeCollectorAddr).GetCoins().IsEqual(emptyCoins))
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 
 	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	input.ak.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
-	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+	require.True(t, input.ak.GetAccount(ctx, FeeCollectorAddr).GetCoins().IsEqual(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
 }
 
@@ -319,7 +320,7 @@ func TestAnteHandlerFees(t *testing.T) {
 func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -358,7 +359,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -405,7 +406,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -480,7 +481,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -674,7 +675,7 @@ func TestCountSubkeys(t *testing.T) {
 func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, input.fck)
+	anteHandler := NewAnteHandler(input.ak)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses

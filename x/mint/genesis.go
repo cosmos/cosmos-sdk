@@ -2,6 +2,7 @@ package mint
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // GenesisState - minter state
@@ -26,8 +27,15 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// new mint genesis
+// InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
+	// check if the module account exists and create it if not
+	moduleAcc, _ := keeper.skk.GetPoolAccountByName(ctx, ModuleName)
+	if moduleAcc == nil {
+		moduleAcc = supply.NewPoolMinterAccount(ModuleName)
+		keeper.skk.SetPoolAccount(ctx, moduleAcc)
+	}
+
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
 }

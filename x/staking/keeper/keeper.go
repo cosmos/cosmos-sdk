@@ -13,12 +13,19 @@ import (
 
 const aminoCacheSize = 500
 
+// strings for pool module accounts
+const (
+	UnbondedTokensName = "UnbondedTokens"
+	BondedTokensName   = "BondedTokens"
+)
+
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
 	bankKeeper         types.BankKeeper
+	supplyKeeper       types.SupplyKeeper
 	hooks              sdk.StakingHooks
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
@@ -28,21 +35,22 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
+// NewKeeper creates a new staking Keeper instance
 func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper,
-	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
+	sk types.SupplyKeeper, paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
-	keeper := Keeper{
+	return Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,
 		cdc:                cdc,
 		bankKeeper:         bk,
+		supplyKeeper:       sk,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
 		codespace:          codespace,
 	}
-	return keeper
 }
 
 // Logger returns a module-specific logger.
@@ -62,24 +70,6 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
 }
 
-// get the pool
-func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(PoolKey)
-	if b == nil {
-		panic("stored pool should not have been nil")
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &pool)
-	return
-}
-
-// set the pool
-func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
-	store.Set(PoolKey, b)
-}
-
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
@@ -97,3 +87,53 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(LastTotalPowerKey, b)
 }
+
+func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Coins) {
+	k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedTokens)
+}
+
+func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Coins) {
+	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedTokens)
+}
+
+func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
+	params := k.GetParams(ctx)
+	unbondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
+	if err != nil {
+		panic(err)
+	}
+
+	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	if err != nil {
+		panic(err)
+	}
+
+	return bondedPool.GetCoins().AmountOf(params.BondDenom).Add(unbondedPool.GetCoins().AmountOf(params.BondDenom))
+}
+
+func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+	params := k.GetParams(ctx)
+	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	if err != nil {
+		panic(err)
+	}
+
+	stakeSupply := k.StakingTokenSupply(ctx, params.BondDenom)
+	if stakeSupply.IsPositive() {
+		return bondedPool.GetCoins().AmountOf(params.BondDenom).ToDec().QuoInt(stakeSupply)
+	}
+	return sdk.ZeroDec()
+}
+
+// // String returns a human readable string representation of a pool.
+// func (p Pool) String(bondDenom string) string {
+// 	return fmt.Sprintf(`Pool:
+//   Not Bonded Tokens:  %s
+//   Bonded Tokens: %s
+//   Staking Token Supply:  %s
+// 	Bonded Ratio:  %v`,
+// 		p.NotBondedTokens.GetCoins().AmountOf(bondDenom),
+// 		p.BondedTokens.GetCoins().AmountOf(bondDenom),
+// 		p.StakingTokenSupply(bondDenom),
+// 		p.BondedRatio(bondDenom))
+// }

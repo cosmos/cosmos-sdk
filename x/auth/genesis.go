@@ -4,39 +4,41 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	CollectedFees sdk.Coins `json:"collected_fees"`
-	Params        Params    `json:"params"`
+	Params Params `json:"params"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
-	return GenesisState{
-		Params:        params,
-		CollectedFees: collectedFees,
-	}
+func NewGenesisState(params Params) GenesisState {
+	return GenesisState{params}
 }
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(sdk.NewCoins(), DefaultParams())
+	return NewGenesisState(DefaultParams())
 }
 
 // InitGenesis - Init store state from genesis data
-func InitGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
-	fck.setCollectedFees(ctx, data.CollectedFees)
+
+	feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
+	feeCollectorAcc := ak.GetAccount(ctx, feeCollectorAddr)
+	if feeCollectorAcc == nil {
+		feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
+		feeCollectorBAcc := NewBaseAccountWithAddress(feeCollectorAddr)
+		ak.SetAccount(ctx, &feeCollectorBAcc)
+	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
-func ExportGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper) GenesisState {
-	collectedFees := fck.GetCollectedFees(ctx)
+func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
-
-	return NewGenesisState(collectedFees, params)
+	return NewGenesisState(params)
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an

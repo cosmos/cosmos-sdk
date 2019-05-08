@@ -18,7 +18,6 @@ type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
 	ak  AccountKeeper
-	fck FeeCollectionKeeper
 }
 
 func setupTestInput() testInput {
@@ -28,25 +27,25 @@ func setupTestInput() testInput {
 	RegisterBaseAccount(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
-	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(fckCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
 	ak := NewAccountKeeper(cdc, authCapKey, ps, ProtoBaseAccount)
-	fck := NewFeeCollectionKeeper(cdc, fckCapKey)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, fck: fck}
+	feeCollector := ak.NewAccountWithAddress(ctx, FeeCollectorAddr)
+	ak.SetAccount(ctx, feeCollector)
+
+	return testInput{cdc: cdc, ctx: ctx, ak: ak}
 }
 
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {

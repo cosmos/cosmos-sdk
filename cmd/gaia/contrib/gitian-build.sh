@@ -1,11 +1,18 @@
 #!/bin/bash
 
+# symbol prefixes:
+# g_ -> global
+# l_ - local variable
+# f_ -> function
+
 set -euo pipefail
 
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+THIS="${THIS_DIR}/$(basename ${BASH_SOURCE[0]})"
 DEFAULT_SIGN_COMMAND='gpg --detach-sign'
 DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
-
 SIGN_COMMAND=${SIGN_COMMAND:-${DEFAULT_SIGN_COMMAND}}
+GO_TARBALL='go1.12.4.linux-amd64.tar.gz'
 
 g_workdir=''
 g_sign_identity=''
@@ -30,7 +37,7 @@ f_main() {
   l_release="$(git describe --tags | sed 's/^v//')-${l_platform}"
   popd
 
-  l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
+  l_descriptor=${THIS_DIR}/gitian-descriptors/gitian-${l_platform}.yml
   [ -f ${l_descriptor} ]
 
   if [ "${g_gitian_skip_download}" != "y" ]; then
@@ -45,7 +52,7 @@ f_main() {
   f_download_go
 
   echo "Start the build" >&2
-  f_build "${l_sdk}" "${l_commit}" "${l_platform}"
+  f_build "${l_descriptor}" "${l_commit}"
   echo "You may find the result in $(echo ${g_workdir}/result/*.yml))" >&2
 
   if [ -n "${g_sign_identity}" ]; then
@@ -68,21 +75,15 @@ f_prep_docker_image() {
 }
 
 f_download_go() {
-  local l_gopkg
-
-  l_gopkg=go1.12.4.linux-amd64.tar.gz
-
   mkdir -p ${g_workdir}/inputs
-  curl -L https://dl.google.com/go/${l_gopkg} > ${g_workdir}/inputs/${l_gopkg}
+  curl -L https://dl.google.com/go/${GO_TARBALL} > ${g_workdir}/inputs/${GO_TARBALL}
 }
 
 f_build() {
-  local l_sdk l_platform l_descriptor
+  local l_sdk l_descriptor
 
-  l_sdk=$1
+  l_descriptor=$1
   l_commit=$2
-  l_platform=$3
-  l_descriptor=$l_sdk/cmd/gaia/contrib/gitian-descriptors/gitian-${l_platform}.yml
 
   [ -f ${l_descriptor} ]
 

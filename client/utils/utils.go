@@ -30,11 +30,14 @@ func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }
 
-// GenerateOrBroadcastMsgs respects CLI flags and outputs a message
-func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg, offline bool) error {
+// GenerateOrBroadcastMsgs creates a StdTx given a series of messages. If
+// the provided context has generate-only enabled, the tx will only be printed
+// to STDOUT. Otherwise, the tx will be signed and broadcasted.
+func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
 	if cliCtx.GenerateOnly {
-		return PrintUnsignedStdTx(txBldr, cliCtx, msgs, offline)
+		return PrintUnsignedStdTx(txBldr, cliCtx, msgs)
 	}
+
 	return CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs)
 }
 
@@ -141,29 +144,20 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error),
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-// Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(
-	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool,
-) (err error) {
-
-	var stdTx auth.StdTx
-
-	if offline {
-		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
-	} else {
-		stdTx, err = buildUnsignedStdTx(txBldr, cliCtx, msgs)
-	}
-
+func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+	stdTx, err := buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
 	if err != nil {
-		return
+		return err
 	}
 
 	json, err := cliCtx.Codec.MarshalJSON(stdTx)
-	if err == nil {
-		fmt.Fprintf(cliCtx.Output, "%s\n", json)
+	if err != nil {
+		return err
+
 	}
 
-	return
+	_, _ = fmt.Fprintf(cliCtx.Output, "%s\n", json)
+	return nil
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
@@ -325,16 +319,6 @@ func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 		txBldr = txBldr.WithSequence(accSeq)
 	}
 	return txBldr, nil
-}
-
-// buildUnsignedStdTx builds a StdTx as per the parameters passed in the
-// contexts. Gas is automatically estimated if gas wanted is set to 0.
-func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	txBldr, err = PrepareTxBuilder(txBldr, cliCtx)
-	if err != nil {
-		return
-	}
-	return buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
 }
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {

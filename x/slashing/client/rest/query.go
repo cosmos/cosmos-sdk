@@ -77,7 +77,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		params := slashing.NewQuerySigningInfosParams(page, limit)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

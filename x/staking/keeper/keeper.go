@@ -96,35 +96,7 @@ func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Coins) 
 	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedTokens)
 }
 
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	params := k.GetParams(ctx)
-	unbondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
-	if err != nil {
-		panic(err)
-	}
-
-	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
-	if err != nil {
-		panic(err)
-	}
-
-	return bondedPool.GetCoins().AmountOf(params.BondDenom).Add(unbondedPool.GetCoins().AmountOf(params.BondDenom))
-}
-
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
-	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
-	if err != nil {
-		panic(err)
-	}
-
-	stakeSupply := k.StakingTokenSupply(ctx, params.BondDenom)
-	if stakeSupply.IsPositive() {
-		return bondedPool.GetCoins().AmountOf(params.BondDenom).ToDec().QuoInt(stakeSupply)
-	}
-	return sdk.ZeroDec()
-}
-
+// TODO: move to client CLI
 // // String returns a human readable string representation of a pool.
 // func (p Pool) String(bondDenom string) string {
 // 	return fmt.Sprintf(`Pool:

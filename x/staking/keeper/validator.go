@@ -443,3 +443,114 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 		store.Delete(validatorTimesliceIterator.Key())
 	}
 }
+
+// UpdateStatus updates the location of the shares within a validator
+// to reflect the new status
+func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
+
+	switch v.Status {
+	case sdk.Unbonded:
+
+		switch NewStatus {
+		case sdk.Unbonded:
+			return v, pool
+		case sdk.Bonded:
+			k.UnbondedTokensToBonded(ctx, v.Tokens)
+		}
+	case sdk.Unbonding:
+
+		switch NewStatus {
+		case sdk.Unbonding:
+			return v, pool
+		case sdk.Bonded:
+			k.UnbondedTokensToBonded(ctx, v.Tokens)
+		}
+	case sdk.Bonded:
+
+		switch NewStatus {
+		case sdk.Bonded:
+			return v, pool
+		default:
+			k.BondedTokensToUnbonded(ctx, v.Tokens)
+		}
+	}
+
+	v.Status = NewStatus
+	return v
+}
+
+// RemoveTokens removes tokens from a validator
+func (k Keeper) RemoveTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int) types.Validator {
+	if tokens.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
+	}
+	if v.Tokens.LT(tokens) {
+		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
+	}
+	v.Tokens = v.Tokens.Sub(tokens)
+	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
+	if v.Status == sdk.Bonded {
+		k.BondedTokensToUnbonded(ctx, tokens)
+	}
+	return v
+}
+
+// AddTokensFromDel adds tokens to a validator
+// CONTRACT: Tokens are assumed to have come from not-bonded pool.
+func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
+
+	// calculate the shares to issue
+	var issuedShares sdk.Dec
+	if v.DelegatorShares.IsZero() {
+		// the first delegation to a validator sets the exchange rate to one
+		issuedShares = amount.ToDec()
+	} else {
+		shares, err := v.SharesFromTokens(amount)
+		if err != nil {
+			panic(err)
+		}
+
+		issuedShares = shares
+	}
+
+	if v.Status == sdk.Bonded {
+		k.UnbondedTokensToBonded(ctx, amount)
+	}
+
+	v.Tokens = v.Tokens.Add(amount)
+	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
+
+	return v, issuedShares
+}
+
+// RemoveDelShares removes delegator shares from a validator.
+// NOTE: because token fractions are left in the valiadator,
+//       the exchange rate of future shares of this validator can increase.
+// CONTRACT: Tokens are assumed to move to the not-bonded pool.
+func (k Keeper) RemoveDelShares(ctx sdk.Context, v types.Validator, delShares sdk.Dec) (types.Validator, sdk.Int) {
+
+	remainingShares := v.DelegatorShares.Sub(delShares)
+	var issuedTokens sdk.Int
+	if remainingShares.IsZero() {
+
+		// last delegation share gets any trimmings
+		issuedTokens = v.Tokens
+		v.Tokens = sdk.ZeroInt()
+	} else {
+
+		// leave excess tokens in the validator
+		// however fully use all the delegator shares
+		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
+		v.Tokens = v.Tokens.Sub(issuedTokens)
+		if v.Tokens.IsNegative() {
+			panic("attempting to remove more tokens than available in validator")
+		}
+	}
+
+	v.DelegatorShares = remainingShares
+	if v.Status == sdk.Bonded {
+		k.BondedTokensToUnbonded(ctx, issuedTokens)
+	}
+
+	return v, issuedTokens
+}

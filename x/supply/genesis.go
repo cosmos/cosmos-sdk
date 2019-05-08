@@ -5,14 +5,14 @@ import (
 )
 
 // InitGenesis sets supply information for genesis.
-func InitGenesis(ctx sdk.Context, supplyKeeper SupplyKeeper, sendKeeper SendKeeper, data GenesisState) {
-	supplyKeeper.SetSupply(ctx, data.Supply)
-	sendKeeper.SetSendEnabled(ctx, data.SendEnabled)
+func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
+	keeper.SetSupply(ctx, data.Supply)
+	keeper.SetSendEnabled(ctx, data.SendEnabled)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, supplyKeeper SupplyKeeper, sendKeeper SendKeeper) GenesisState {
-	return NewGenesisState(supplyKeeper.GetSupply(ctx), sendKeeper.GetSendEnabled(ctx))
+func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
+	return NewGenesisState(keeper.GetSupply(ctx), keeper.GetSendEnabled(ctx))
 }
 
 // ValidateGenesis performs basic validation of supply genesis data returning an

@@ -125,10 +125,9 @@ func TestQueryValidators(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
-		validators[i], pool = validators[i].UpdateStatus(pool, status[i])
+		validators[i] = validators[i].UpdateStatus(status[i])
 	}
 
-	keeper.SetPool(ctx, pool)
 	keeper.SetValidator(ctx, validators[0])
 	keeper.SetValidator(ctx, validators[1])
 	keeper.SetValidator(ctx, validators[2])

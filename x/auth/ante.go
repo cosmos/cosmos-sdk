@@ -113,7 +113,10 @@ func NewAnteHandler(ak AccountKeeper) sdk.AnteHandler {
 				return newCtx, res, true
 			}
 
-			feeCollector.SetCoins(stdTx.Fee.Amount)
+			err := feeCollector.SetCoins(stdTx.Fee.Amount)
+			if err != nil {
+				return newCtx, res, true
+			}
 		}
 
 		// stdSigs contains the sequence number, account number, and signatures.

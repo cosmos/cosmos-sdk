@@ -8,8 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// TODO: register within auth codec
-
 // PoolAccount defines an account type for pools that hold tokens in an escrow
 type PoolAccount interface {
 	auth.Account

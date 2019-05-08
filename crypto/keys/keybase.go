@@ -115,13 +115,16 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	}
 
 	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
+	config := types.GetConfig()
+	fullFundraiserPath := config.GetFullFundraiserPath()
+	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
 	return
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := hd.NewFundraiserParams(account, index)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -142,7 +145,8 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, acco
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	hdPath := hd.NewFundraiserParams(account, index)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err

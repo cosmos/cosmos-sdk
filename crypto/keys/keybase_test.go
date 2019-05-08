@@ -383,7 +383,7 @@ func TestSeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, 0)
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
@@ -406,8 +406,8 @@ func ExampleNew() {
 		// return info here just like in List
 		fmt.Println(bob.GetName())
 	}
-	cstore.CreateMnemonic("Alice", English, "secret", sec)
-	cstore.CreateMnemonic("Carl", English, "mitm", sec)
+	_, _, _ = cstore.CreateMnemonic("Alice", English, "secret", sec)
+	_, _, _ = cstore.CreateMnemonic("Carl", English, "mitm", sec)
 	info, _ := cstore.List()
 	for _, i := range info {
 		fmt.Println(i.GetName())

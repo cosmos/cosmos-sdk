@@ -144,12 +144,24 @@ func (kb keyringKeybase) List() ([]Info, error) {
 
 	for _, key :=range keys {
 		if strings.HasSuffix(key, infoSuffix) {
-			info, err := kb.Get(key)   
+			rawInfo, err := kb.db.Get(key)   
 			if err != nil {
 				return nil, err
 			}
 
+			if len (rawInfo.Data) == 0 {
+				return nil, keyerror.NewErrKeyNotFound(key)
+			}
+	
+
+			info, err := readInfo(rawInfo.Data)
+			if err != nil {
+				return nil, err
+			}
+
+
 			res = append(res, info)
+			
 		}
 	}
 	return res, nil
@@ -356,11 +368,6 @@ func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
 	if err != nil {
 		return err
 	}
-	if linfo, ok := info.(localInfo); ok && !skipPass {
-		if _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
-			return err
-		}
-	}
 	
 	kb.db.Remove(string(addrKey(info.GetAddress())))
 	kb.db.Remove(string(infoKey(name)))
@@ -440,7 +447,18 @@ func (kb keyringKeybase) writeInfo (name string, info Info){
 	err := kb.db.Set(keyring.Item{
 		Key: string(key),
 		Data: serializedInfo,
+		
 	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = kb.db.Set(keyring.Item {
+		Key: string(addrKey(info.GetAddress())),
+		Data: key,
+	})
+
 
 	if err != nil{
 		panic(err)

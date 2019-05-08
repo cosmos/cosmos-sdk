@@ -154,7 +154,6 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err != nil {
 		return err
-
 	}
 
 	_, _ = fmt.Fprintf(cliCtx.Output, "%s\n", json)

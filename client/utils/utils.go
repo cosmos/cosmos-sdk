@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -323,9 +324,13 @@ func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.SimulateAndExecute() {
+		if cliCtx.GenerateOnly {
+			return stdTx, errors.New("cannot estimate gas with generate-only")
+		}
+
 		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
-			return
+			return stdTx, err
 		}
 
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
@@ -333,7 +338,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
-		return
+		return stdTx, nil
 	}
 
 	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil

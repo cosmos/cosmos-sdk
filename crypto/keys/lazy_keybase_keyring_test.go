@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/99designs/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -264,4 +265,82 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	// Ensure keys cannot be overwritten
 	err = kb.ImportPubKey("john-pubkey-only", armor)
 	require.NotNil(t, err)
+}
+
+func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+
+	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+
+	// export private key object
+	exported, err := kb.ExportPrivateKeyObject("john", "secretcpw")
+	require.Nil(t, err, "%+v", err)
+	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
+}
+
+func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+
+	algo := Secp256k1
+	n1, n2 := "old-name", "new name"
+	p1 := "1234"
+
+	// make sure key works with initial password
+	_, _, err := kb.CreateMnemonic(n1, English, p1, algo)
+	require.Nil(t, err, "%+v", err)
+
+	_, err = kb.Export(n1 + ".notreal")
+	require.NotNil(t, err)
+	_, err = kb.Export(" " + n1)
+	require.NotNil(t, err)
+	_, err = kb.Export(n1 + " ")
+	require.NotNil(t, err)
+	_, err = kb.Export("")
+	require.NotNil(t, err)
+	exported, err := kb.Export(n1)
+	require.Nil(t, err, "%+v", err)
+
+	// import succeeds
+	err = kb.Import(n2, exported)
+	require.NoError(t, err)
+
+	// second import fails
+	err = kb.Import(n2, exported)
+	require.NotNil(t, err)
+}
+
+func TestLazySeedPhraseKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+
+	algo := Secp256k1
+	n1, n2 := "lost-key", "found-again"
+	p1, p2 := "1234", "foobar"
+
+	// make sure key works with initial password
+	info, mnemonic, err := kb.CreateMnemonic(n1, English, p1, algo)
+	require.Nil(t, err, "%+v", err)
+	require.Equal(t, n1, info.GetName())
+	assert.NotEmpty(t, mnemonic)
+
+	// now, let us delete this key
+	err = kb.Delete(n1, p1, false)
+	require.Nil(t, err, "%+v", err)
+	_, err = kb.Get(n1)
+	require.NotNil(t, err)
+
+	// let us re-create it from the mnemonic-phrase
+	params := *hd.NewFundraiserParams(0, 0)
+	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	require.NoError(t, err)
+	require.Equal(t, n2, newInfo.GetName())
+	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
+	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
 }

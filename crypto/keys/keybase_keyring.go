@@ -275,7 +275,8 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 			err = fmt.Errorf("private key not available")
 			return nil, err
 		}
-		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		
+		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}

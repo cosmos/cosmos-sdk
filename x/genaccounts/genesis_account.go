@@ -26,7 +26,7 @@ type GenesisAccount struct {
 // validate the the VestingAccount parameters are possible
 func (ga GenesisAccount) Validate() error {
 	if !ga.OriginalVesting.IsZero() {
-		if ga.OriginalVesting.IsAllGT(ga.Coins) {
+		if ga.OriginalVesting.IsAnyGT(ga.Coins) {
 			return errors.New("vesting amount cannot be greater than total amount")
 		}
 		if ga.StartTime >= ga.EndTime {

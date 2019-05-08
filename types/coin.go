@@ -627,6 +627,8 @@ func findDup(coins Coins) int {
 	for i := 1; i < len(coins); i++ {
 		if coins[i] == prevDenom {
 			return i
+		} else {
+			prevDenom = coins[i]
 		}
 	}
 

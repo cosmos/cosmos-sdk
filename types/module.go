@@ -1,3 +1,24 @@
+/*
+This file contains application module patterns and associated "manager" functionality.
+The module pattern has been broken down by:
+ - independent module functionality (AppModuleBasic)
+ - inter-dependent module functionality (AppModule)
+
+inter-dependent module functionality is module functionality which somehow
+depends on other modules, typically through the module keeper.  Many of the
+module keepers are dependent on each other, thus in order to access the full
+set of module functionality we need to define all the keepers/params-store/keys
+etc. This full set of advanced functionality is defined by the AppModule interface.
+
+Independent module functions are separated to allow for the construction of the
+basic application structures required early on in the application definition
+and used to enable the definition of full module functionality later in the
+process. This separation is necessary, however we still want to allow for a
+high level pattern for modules to follow - for instance, such that we don't
+have to manually register all of the codecs for all the modules. This basic
+procedure as well as other basic patterns are handled through the use of
+ModuleBasicManager.
+*/
 package types
 
 import (
@@ -15,7 +36,7 @@ type ModuleClient interface {
 }
 
 //__________________________________________________________________________________________
-// AppModule is the standard form for basic non-dependant elements of an application module
+// AppModule is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)

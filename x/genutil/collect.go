@@ -33,7 +33,7 @@ type InitConfig struct {
 	ValPubKey crypto.PubKey
 }
 
-// XXX TODO
+// NewInitConfig creates a new InitConfig object
 func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) InitConfig {
 	return InitConfig{
 		ChainID:   chainID,
@@ -44,7 +44,7 @@ func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.Pub
 	}
 }
 
-// XXX TODO
+// get the genesis app state from the config
 func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	initCfg InitConfig, genDoc tmtypes.GenesisDoc,
 	genAccIterator GenesisAccountsIterator,

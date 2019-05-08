@@ -32,7 +32,8 @@ func (gr GasEstimateResponse) String() string {
 
 // GenerateOrBroadcastMsgs creates a StdTx given a series of messages. If
 // the provided context has generate-only enabled, the tx will only be printed
-// to STDOUT. Otherwise, the tx will be signed and broadcasted.
+// to STDOUT in a fully offline manner. Otherwise, the tx will be signed and
+// broadcasted.
 func GenerateOrBroadcastMsgs(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
 	if cliCtx.GenerateOnly {
 		return PrintUnsignedStdTx(txBldr, cliCtx, msgs)

@@ -212,7 +212,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 			return
 		}
 
-		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv,err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -338,11 +338,13 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 //ImportPubKey for keyring
 func (kb keyringKeybase) ImportPubKey(name string, armor string) (err error) {
 	bz, err := kb.Get(name)
+	if err == nil {
+		pubkey := bz.GetPubKey()
 
-	pubkey := bz.GetPubKey()
-
-	if len(pubkey.Bytes()) > 0 {
-		return errors.New("Cannot overwrite data for name " + name)
+		if len(pubkey.Bytes()) > 0 {
+			return errors.New("Cannot overwrite data for name " + name)
+		}
+		
 	}
 	pubBytes, err := mintkey.UnarmorPubKeyBytes(armor)
 	if err != nil {

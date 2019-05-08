@@ -226,3 +226,42 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 	require.Equal(t, john.GetName(), "john")
 	require.Equal(t, john, john2)
 }
+
+func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+
+	// CreateMnemonic a private-public key pair and ensure consistency
+	notPasswd := "n9y25ah7"
+	info, _, err := kb.CreateMnemonic("john", English, notPasswd, Secp256k1)
+	require.Nil(t, err)
+	require.NotEqual(t, info, "")
+	require.Equal(t, info.GetName(), "john")
+	addr := info.GetPubKey().Address()
+	john, err := kb.Get("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetPubKey().Address(), addr)
+
+	// Export the public key only
+	armor, err := kb.ExportPubKey("john")
+	require.NoError(t, err)
+	// Import it under a different name
+	err = kb.ImportPubKey("john-pubkey-only", armor)
+	require.NoError(t, err)
+	// Ensure consistency
+	john2, err := kb.Get("john-pubkey-only")
+	require.NoError(t, err)
+	// Compare the public keys
+	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	// Ensure the original key hasn't changed
+	john, err = kb.Get("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetPubKey().Address(), addr)
+	require.Equal(t, john.GetName(), "john")
+
+	// Ensure keys cannot be overwritten
+	err = kb.ImportPubKey("john-pubkey-only", armor)
+	require.NotNil(t, err)
+}

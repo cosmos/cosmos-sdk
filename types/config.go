@@ -91,6 +91,7 @@ func (config *Config) SetCoinType(coinType uint32) {
 }
 
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
+	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath
 }
 

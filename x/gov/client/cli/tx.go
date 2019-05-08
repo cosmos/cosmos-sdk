@@ -130,12 +130,6 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
-			// check to see if the proposal is in the store
-			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
 			// Get depositor address
 			from := cliCtx.GetFromAddress()
 

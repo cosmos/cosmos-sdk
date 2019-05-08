@@ -47,12 +47,12 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, app.BasicGaiaApp))
-	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}))
-	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
-	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.BasicGaiaApp))
+	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, app.ModuleBasics))
+	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, app.ModuleBasics, genaccounts.AppModuleBasic{}))
+	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.ModuleBasics, genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
+	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics))
 	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc))
-	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.BasicGaiaApp, genaccounts.AppModuleBasic{}))
+	rootCmd.AddCommand(testnet.InitFilesCmd(ctx, cdc, app.ModuleBasics, genaccounts.AppModuleBasic{}))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 	rootCmd.AddCommand(replayCmd())
 

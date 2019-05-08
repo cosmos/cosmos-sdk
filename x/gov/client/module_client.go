@@ -60,8 +60,8 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(
-		govCli.GetCmdDeposit(mc.storeKey, mc.cdc),
-		govCli.GetCmdVote(mc.storeKey, mc.cdc),
+		govCli.GetCmdDeposit(mc.cdc),
+		govCli.GetCmdVote(mc.cdc),
 		cmdSubmitProp,
 	)...)
 

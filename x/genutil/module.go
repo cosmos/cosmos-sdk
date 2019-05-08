@@ -3,9 +3,12 @@ package genutil
 import (
 	"encoding/json"
 
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -41,6 +44,16 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	}
 	return ValidateGenesis(data)
 }
+
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
 //___________________________
 // app module

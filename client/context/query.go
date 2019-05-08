@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/pkg/errors"
 
@@ -61,7 +62,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
+func (ctx CLIContext) GetAccount(address []byte) (authtypes.Account, error) {
 	if ctx.AccDecoder == nil {
 		return nil, errors.New("account decoder required but not provided")
 	}
@@ -71,7 +72,7 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 		return nil, err
 	}
 
-	var account auth.Account
+	var account authtypes.Account
 	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
 		return nil, err
 	}

@@ -45,6 +45,7 @@ func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 // ProposalType returns the type of a parameter change proposal.
 func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
+// validate the ParameterChangeProposal
 func (pcp ParameterChangeProposal) ValidateBasic() sdk.Error {
 	err := govtypes.ValidateAbstract(DefaultCodespace, pcp)
 	if err != nil {

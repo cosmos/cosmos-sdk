@@ -3,9 +3,15 @@ package distribution
 import (
 	"encoding/json"
 
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 var (
@@ -41,6 +47,22 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(StoreKey, moduleCdc)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, moduleCdc)
+}
+
+//___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic

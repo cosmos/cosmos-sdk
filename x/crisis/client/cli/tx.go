@@ -4,6 +4,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +12,19 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(cdc *amino.Codec) *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:   crisis.ModuleName,
+		Short: "crisis transactions subcommands",
+	}
+
+	txCmd.AddCommand(client.PostCommands(
+		GetCmdInvariantBroken(cdc),
+	)...)
+	return txCmd
+}
 
 // command to replace a delegator's withdrawal address
 func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {

@@ -6,12 +6,38 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	stakingQueryCmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Querying commands for the staking module",
+	}
+	stakingQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryDelegation(mc.storeKey, mc.cdc),
+		GetCmdQueryDelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryUnbondingDelegation(mc.storeKey, mc.cdc),
+		GetCmdQueryUnbondingDelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryRedelegation(mc.storeKey, mc.cdc),
+		GetCmdQueryRedelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryValidator(mc.storeKey, mc.cdc),
+		GetCmdQueryValidators(mc.storeKey, mc.cdc),
+		GetCmdQueryValidatorDelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryValidatorUnbondingDelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryValidatorRedelegations(mc.storeKey, mc.cdc),
+		GetCmdQueryParams(mc.storeKey, mc.cdc),
+		GetCmdQueryPool(mc.storeKey, mc.cdc))...)
+
+	return stakingQueryCmd
+
+}
 
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {

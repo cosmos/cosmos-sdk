@@ -8,12 +8,36 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+	// Group gov queries under a subcommand
+	govQueryCmd := &cobra.Command{
+		Use:   gov.ModuleName,
+		Short: "Querying commands for the governance module",
+	}
+
+	govQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryProposal(storeKey, cdc),
+		GetCmdQueryProposals(storeKey, cdc),
+		GetCmdQueryVote(storeKey, cdc),
+		GetCmdQueryVotes(storeKey, cdc),
+		GetCmdQueryParam(storeKey, cdc),
+		GetCmdQueryParams(storeKey, cdc),
+		GetCmdQueryProposer(storeKey, cdc),
+		GetCmdQueryDeposit(storeKey, cdc),
+		GetCmdQueryDeposits(storeKey, cdc),
+		GetCmdQueryTally(storeKey, cdc))...)
+
+	return govQueryCmd
+}
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {

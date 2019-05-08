@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/go-crypto/keys"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -21,9 +20,9 @@ type AppModuleBasic interface {
 	ValidateGenesis(json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router, *codec.Codec, keys.Keybase)
-	GetQueryCmd() *cobra.Command
+	RegisterRESTRoutes(context.CLIContext, *mux.Router, *codec.Codec)
 	GetTxCmd() *cobra.Command
+	GetQueryCmd() *cobra.Command
 }
 
 // collections of AppModuleBasic
@@ -61,10 +60,10 @@ func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage
 
 // RegisterRestRoutes registers all module rest routes
 func (mbm ModuleBasicManager) RegisterRESTRoutes(
-	ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+	ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
 
 	for _, mb := range mbm {
-		mb.RegisterRESTRoutes(ctx, rtr, cdc, kb)
+		mb.RegisterRESTRoutes(ctx, rtr, cdc)
 	}
 }
 

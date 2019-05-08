@@ -198,3 +198,31 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 	_, _, err = kb.Sign(n3, p3, d3)
 	require.NotNil(t, err)
 }
+
+func TestLazyExportImportKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+
+	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+
+	john, err := kb.Get("john")
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+	johnAddr := info.GetPubKey().Address()
+
+	armor, err := kb.Export("john")
+	require.NoError(t, err)
+
+	err = kb.Import("john2", armor)
+	require.NoError(t, err)
+
+	john2, err := kb.Get("john2")
+	require.NoError(t, err)
+
+	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john, john2)
+}

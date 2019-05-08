@@ -306,6 +306,7 @@ func (kb keyringKeybase) Export(name string) (armor string, err error) {
 // a portable format.
 func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 	bz, err := kb.Get(name)
+
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
@@ -316,11 +317,14 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 func (kb keyringKeybase) Import(name string, armor string) (err error) {
 	bz, err := kb.Get(name)
 
-	pubkey := bz.GetPubKey()
+	if err == nil {
+		pubkey := bz.GetPubKey()
 
-	if len(pubkey.Bytes()) > 0 {
-		return errors.New("Cannot overwrite data for name " + name)
+		if len(pubkey.Bytes()) > 0 {
+			return errors.New("Cannot overwrite data for name " + name)
 	}
+	}
+
 	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
 	if err != nil {
 		return

@@ -197,3 +197,4 @@ func (lkb lazyKeybase) ExportPrivateKeyObject(name string, passphrase string) (c
 }
 
 func (lkb lazyKeybase) CloseDB() {}
+

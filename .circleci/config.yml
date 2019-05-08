@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.12.4
+    - image: circleci/golang:1.12.5
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.12.4"
+    GO_VERSION: "1.12.5"
 
 set_macos_env: &macos_env
   run:
@@ -369,48 +369,20 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
-          GAIAD_VERSION=''
-          if [ "${CIRCLE_BRANCH}" = "master" ]; then
-            GAIAD_VERSION="stable"
-          elif [ "${CIRCLE_BRANCH}" = "develop" ]; then
-            GAIAD_VERSION="develop"
-          fi
-          if [ -z "${GAIAD_VERSION}" ]; then
-            docker build .
-          else
-            docker build -t tendermint/gaia:$GAIAD_VERSION .
-            docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
-            docker push tendermint/gaia:$GAIAD_VERSION
-          fi
-
-  docker_tagged:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run: |
-          docker build -t tendermint/gaia:$CIRCLE_TAG .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaia:$CIRCLE_TAG
+          docker build -t tendermint/gaia:${CIRCLE_BRANCH} .
+          docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
+          docker push tendermint/gaia:${CIRCLE_BRANCH}
 
 workflows:
   version: 2
   test-suite:
     jobs:
       - docker_image:
-          requires:
-            - setup_dependencies
-      - docker_tagged:
           filters:
-            tags:
-              only:
-                - /^v.*/
             branches:
-              ignore:
-                - /.*/
+              only:
+                - /release\/v*/
+                - master
           requires:
             - setup_dependencies
       - macos_ci:

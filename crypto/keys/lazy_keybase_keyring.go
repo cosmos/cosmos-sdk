@@ -1,18 +1,19 @@
 package keys
 
 import (
-	"github.com/tendermint/tendermint/crypto"
+	"fmt"
+
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/99designs/keyring"
-
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var _ Keybase = lazyKeybaseKeyring{}
 
 type lazyKeybaseKeyring struct {
 	name string
-	dir string
+	dir  string
 }
 
 // New creates a new instance of a lazy keybase.
@@ -22,22 +23,24 @@ func NewKeybaseKeyring(name string, dir string) Keybase {
 		//Keyring with encrypted application data
 		ServiceName: name,
 	})
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	return lazyKeybaseKeyring{name: name, dir: dir}
 }
 
-func (lkb lazyKeybaseKeyring) lkbToKeytingConfig() keyring.Config{
+func (lkb lazyKeybaseKeyring) lkbToKeytingConfig() keyring.Config {
 
-	if lkb.dir != ""{
+	if lkb.dir != "" {
 		return keyring.Config{
 			AllowedBackends: []keyring.BackendType{"file"},
 			//Keyring with encrypted application data
-			ServiceName: lkb.name,
-			FileDir:lkb.dir,
-		}}
+			ServiceName:      lkb.name,
+			FileDir:          lkb.dir,
+			FilePasswordFunc: fakePrompt,
+		}
+	}
 
 	return keyring.Config{
 		//Keyring with encrypted application data
@@ -45,9 +48,13 @@ func (lkb lazyKeybaseKeyring) lkbToKeytingConfig() keyring.Config{
 	}
 }
 
+func fakePrompt(prompt string) (string, error) {
+	fmt.Printf("%s: ", prompt)
+
+	return "test", nil
+}
 
 func (lkb lazyKeybaseKeyring) List() ([]Info, error) {
-
 
 	db, err := keyring.Open(lkb.lkbToKeytingConfig())
 	if err != nil {
@@ -80,7 +87,7 @@ func (lkb lazyKeybaseKeyring) Delete(name, passphrase string, skipPass bool) err
 	if err != nil {
 		return err
 	}
-	
+
 	return newKeyringKeybase(db).Delete(name, passphrase, skipPass)
 }
 
@@ -140,7 +147,7 @@ func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return newKeyringKeybase(db).CreateOffline(name, pubkey)
 }
 

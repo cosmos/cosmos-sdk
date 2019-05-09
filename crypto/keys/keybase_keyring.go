@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sort"
 
 	"github.com/pkg/errors"
 
@@ -141,6 +142,7 @@ func (kb keyringKeybase) List() ([]Info, error) {
 	if err != nil {
 		return nil, err
 	}
+	sort.Strings(keys)
 
 	for _, key :=range keys {
 		if strings.HasSuffix(key, infoSuffix) {

@@ -10,10 +10,22 @@ set -euo pipefail
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 THIS="${THIS_DIR}/$(basename ${BASH_SOURCE[0]})"
 GITIAN_CACHE_DIRNAME='.gitian-builder-cache'
+GO_TARBALL='golang-debian-1.12.4-1.tar.gz'
+
+# Defaults
+
 DEFAULT_SIGN_COMMAND='gpg --detach-sign'
 DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
+DEFAULT_GITIAN_REPO='https://github.com/devrandom/gitian-builder'
+DEFAULT_GBUILD_FLAGS=''
+
+# Overrides
+
 SIGN_COMMAND=${SIGN_COMMAND:-${DEFAULT_SIGN_COMMAND}}
-GO_TARBALL='golang-debian-1.12.4-1.tar.gz'
+GITIAN_REPO=${GITIAN_REPO:-${DEFAULT_GITIAN_REPO}}
+GBUILD_FLAGS=${GBUILD_FLAGS:-${DEFAULT_GBUILD_FLAGS}}
+
+# Globals
 
 g_workdir=''
 g_gitian_cache=''
@@ -44,7 +56,7 @@ f_main() {
 
   if [ "${g_gitian_skip_download}" != "y" ]; then
     echo "Download gitian-builder to ${g_workdir}" >&2
-    git clone https://github.com/devrandom/gitian-builder ${g_workdir}
+    git clone ${GITIAN_REPO} ${g_workdir}
   fi
 
   echo "Fetching Go sources" >&2
@@ -108,7 +120,7 @@ f_build() {
 
   cd ${g_workdir}
   export USE_DOCKER=1
-  bin/gbuild $l_descriptor --commit cosmos-sdk=$l_commit
+  bin/gbuild --commit cosmos-sdk="$l_commit" ${GBUILD_FLAGS} "$l_descriptor"
   libexec/stop-target || echo "warning: couldn't stop target" >&2
 }
 

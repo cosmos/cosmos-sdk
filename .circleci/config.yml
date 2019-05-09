@@ -366,11 +366,31 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push tendermint/gaia:$CIRCLE_TAG
 
+  gdbs:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          for os in darwin linux windows; do
+            bash ./cmd/gaia/contrib/gitian-build.sh ${os} `pwd`
+            cp gitian-build-${os}/result/gaia-${os}-res.yml .
+            rm -rf gitian-build-${os}/
+            echo "GDBS report for ${os}"
+            cat gaia-${os}-res.yml
+          done
+
 workflows:
   version: 2
   test-suite:
     jobs:
       - docker_image:
+          requires:
+            - setup_dependencies
+      - gdbs:
           requires:
             - setup_dependencies
       - docker_tagged:

@@ -62,16 +62,10 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Hand
 // http request handler to query signing info
 func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgs(r)
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
-		}
-
-		// Override default limit if it wasn't provided as the querier will set
-		// it to the correct default limit.
-		if l := r.FormValue("limit"); l == "" {
-			limit = 0
 		}
 
 		params := slashing.NewQuerySigningInfosParams(page, limit)

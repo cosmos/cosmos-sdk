@@ -33,16 +33,16 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBas
 
 			var genDoc *tmtypes.GenesisDoc
 			if genDoc, err = tmtypes.GenesisDocFromFile(genesis); err != nil {
-				return fmt.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
+				return fmt.Errorf("error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 
 			var genState map[string]json.RawMessage
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
-				return fmt.Errorf("Error unmarshaling genesis doc %s: %s", genesis, err.Error())
+				return fmt.Errorf("error unmarshaling genesis doc %s: %s", genesis, err.Error())
 			}
 
 			if err = mbm.ValidateGenesis(genState); err != nil {
-				return fmt.Errorf("Error validating genesis file %s: %s", genesis, err.Error())
+				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 
 			fmt.Printf("File at %s is a valid genesis file for gaiad\n", genesis)

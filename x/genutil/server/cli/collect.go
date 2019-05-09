@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -21,7 +20,7 @@ const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
 func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
-	mbm sdk.ModuleBasicManager, genAccIterator genutil.GenesisAccountsIterator) *cobra.Command {
+	genAccIterator genutil.GenesisAccountsIterator) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",

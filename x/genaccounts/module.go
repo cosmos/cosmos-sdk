@@ -46,10 +46,10 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 // extra function from sdk.AppModuleBasic
 // iterate the genesis accounts and perform an operation at each of them
 // - to used by other modules
-func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appState map[string]json.RawMessage,
+func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[string]json.RawMessage,
 	iterateFn func(auth.Account) (stop bool)) {
 
-	genesisState := GetGenesisStateFromAppState(cdc, appState)
+	genesisState := GetGenesisStateFromAppState(cdc, appGenesis)
 	for _, genAcc := range genesisState.Accounts {
 		acc := genAcc.ToAccount()
 		if iterateFn(acc) {

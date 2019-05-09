@@ -375,6 +375,7 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
+          sudo apt-get install -y ruby
           for os in darwin linux windows; do
             bash ./cmd/gaia/contrib/gitian-build.sh ${os} `pwd`
             cp gitian-build-${os}/result/gaia-${os}-res.yml .

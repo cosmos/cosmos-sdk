@@ -12,7 +12,7 @@ THIS="${THIS_DIR}/$(basename ${BASH_SOURCE[0]})"
 DEFAULT_SIGN_COMMAND='gpg --detach-sign'
 DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
 SIGN_COMMAND=${SIGN_COMMAND:-${DEFAULT_SIGN_COMMAND}}
-GO_TARBALL='go1.12.4.linux-amd64.tar.gz'
+GO_TARBALL='golang-debian-1.12.4-1.tar.gz'
 
 g_workdir=''
 g_sign_identity=''
@@ -75,8 +75,11 @@ f_prep_docker_image() {
 }
 
 f_download_go() {
+  local l_remote
+
+  l_remote=https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/1.12.4-1
   mkdir -p ${g_workdir}/inputs
-  curl -L https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/1.12.4-1/golang-debian-1.12.4-1.tar.gz > ${g_workdir}/inputs/${GO_TARBALL}
+  curl -L "${l_remote}/${GO_TARBALL}" > ${g_workdir}/inputs/${GO_TARBALL}
 }
 
 f_build() {

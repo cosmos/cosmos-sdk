@@ -86,7 +86,7 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 	return gacc, nil
 }
 
-// convert GenesisAccount to auth.BaseAccount
+// convert GenesisAccount to auth.Account
 func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(),

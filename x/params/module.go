@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	_          sdk.AppModuleBasic = AppModuleBasic{}
-	moduleName                    = "params"
+	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
+
+const moduleName = "params"
 
 // app module basics object
 type AppModuleBasic struct{}

@@ -812,9 +812,9 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
-	success, stdout, stderr = f.TxSend(fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--gas=auto", "--generate-only")
+	success, stdout, stderr = f.TxSend(fooAddr.String(), barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only")
 	require.True(t, success)
-	require.NotEmpty(t, stderr)
+	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
 	require.True(t, msg.Fee.Gas > 0)
 	require.Equal(t, len(msg.Msgs), 1)
@@ -854,13 +854,6 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Test broadcast
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
-
-	var result sdk.TxResponse
-
-	// Unmarshal the response and ensure that gas was properly used
-	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, uint64(result.GasUsed))
-	require.Equal(t, msg.Fee.Gas, uint64(result.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account state

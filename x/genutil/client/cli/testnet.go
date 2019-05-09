@@ -1,4 +1,4 @@
-package testnet
+package cli
 
 // DONTCOVER
 
@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,8 +26,8 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func InitFilesCmd(ctx *server.Context, cdc *codec.Codec,
-	mbm sdk.ModuleBasicManager, genAccIterator GenesisAccountsIterator) *cobra.Command {
+func TestnetCmd(ctx *server.Context, cdc *codec.Codec,
+	mbm sdk.ModuleBasicManager, genAccIterator genutil.GenesisAccountsIterator) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -51,7 +52,7 @@ Example:
 			startingIPAddress := viper.GetString(flagStartingIPAddress)
 			numValidators := viper.GetInt(flagNumValidators)
 
-			return InitTestnet(config, cdc, mbm, genAccIterator, outputDir, chainID, minGasPrices,
+			return genutil.InitTestnet(config, cdc, mbm, genAccIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, numValidators)
 		},
 	}

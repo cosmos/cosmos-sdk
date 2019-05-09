@@ -75,12 +75,11 @@ script: |
   popd
 
   # Configure LDFLAGS for reproducible builds
-  #export BUILD_PATH_PREFIX_MAP=/tmp/go-build=.
   LDFLAGS="-extldflags=-static -buildid=${VERSION} -s -w \
     -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
     -X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
     -X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-    -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo+ledger"  # FIXME
+    -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger"
 
   # Extract release tarball and build
   for arch in ${ARCHS}; do

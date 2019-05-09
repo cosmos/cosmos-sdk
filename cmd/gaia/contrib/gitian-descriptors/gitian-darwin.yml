@@ -8,10 +8,17 @@ architectures:
 - "amd64"
 packages:
 - "bsdmainutils"
+- "build-essential"
 - "ca-certificates"
 - "curl"
+- "debhelper"
+- "dpkg-dev"
+- "devscripts"
+- "fakeroot"
 - "git"
+- "golang-any"
 - "xxd"
+- "quilt"
 remotes:
 - "url": "https://github.com/cosmos/cosmos-sdk.git"
   "dir": "cosmos-sdk"
@@ -20,54 +27,17 @@ files:
 script: |
   set -e -o pipefail
 
-  f_patch_strings_in_file() {
-      local FILE="$1"
-      local PATTERN="$2"
-      local REPLACEMENT="$3"
-
-      # Find all unique strings in FILE that contain the pattern
-      STRINGS=$(strings ${FILE} | grep ${PATTERN} | sort -u -r)
-
-      if [ "${STRINGS}" != "" ] ; then
-          echo "File '${FILE}' contain strings with '${PATTERN}' in them:"
-
-          for OLD_STRING in ${STRINGS} ; do
-              # Create the new string with a simple bash-replacement
-              NEW_STRING=${OLD_STRING//${PATTERN}/${REPLACEMENT}}
-
-              # Create null terminated ASCII HEX representations of the strings
-              OLD_STRING_HEX="$(echo -n ${OLD_STRING} | xxd -g 0 -u -ps -c 256)00"
-              NEW_STRING_HEX="$(echo -n ${NEW_STRING} | xxd -g 0 -u -ps -c 256)00"
-
-              if [ ${#NEW_STRING_HEX} -le ${#OLD_STRING_HEX} ] ; then
-                  # Pad the replacement string with null terminations so the
-                  # length matches the original string
-                  while [ ${#NEW_STRING_HEX} -lt ${#OLD_STRING_HEX} ] ; do
-                      NEW_STRING_HEX="${NEW_STRING_HEX}00"
-                  done
-
-                  # Replace every occurrence of OLD_STRING with NEW_STRING
-                  echo -n "Replacing ${OLD_STRING} with ${NEW_STRING}... "
-                  hexdump -ve '1/1 "%.2X"' ${FILE} | \
-                  sed "s/${OLD_STRING_HEX}/${NEW_STRING_HEX}/g" | \
-                  xxd -r -p > ${FILE}.tmp
-                  chmod --reference ${FILE} ${FILE}.tmp
-                  mv ${FILE}.tmp ${FILE}
-                  echo "Done!"
-              else
-                  echo "New string '${NEW_STRING}' is longer than old" \
-                      "string '${OLD_STRING}'. Skipping."
-              fi
-          done
-      fi
-  }
-
-  # Install go and configure the environment
+  # Compile go and configure the environment
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export BUILD_DIR=`pwd`
   tar xf go1.12.4.linux-amd64.tar.gz
-  [ -d go/ ]
+  [ -d golang-debian-1.12.4-1/ ]
   rm -f go1.12.4.linux-amd64.tar.gz
+  mv golang-debian-1.12.4-1/ go/
+  pushd go/
+  QUILT_PATCHES=debian/patches quilt push -a
+  fakeroot debian/rules build RUN_TESTS=false GOCACHE=/tmp/go-cache
+  popd
 
   export GOOS=darwin
   export GOROOT=${BUILD_DIR}/go
@@ -106,12 +76,11 @@ script: |
   popd
 
   # Configure LDFLAGS for reproducible builds
-  LDFLAGS="-s -w -linkmode=internal \
-    -buildid=reproducible \
+  LDFLAGS="-extldflags=-static -buildid=${VERSION} -s -w \
     -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
     -X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
     -X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-    -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo"
+    -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger"
 
   # Extract release tarball and build
   for arch in ${ARCHS}; do
@@ -121,16 +90,12 @@ script: |
     # Build gaia tool suite
     pushd ${distsrc}
     for prog in gaiacli gaiad; do
-      GOARCH=${arch} CGO_ENABLED=0 GOROOT_FINAL=go go build -a \
+      GOARCH=${arch} GOROOT_FINAL=${GOROOT} go build -a \
         -gcflags=all=-trimpath=${GOPATH} \
         -asmflags=all=-trimpath=${GOPATH} \
-        -mod=readonly -tags "netgo" \
-        -ldflags "${LDFLAGS}" \
+        -mod=readonly -tags "netgo ledger" \
+        -ldflags="${LDFLAGS}" \
         -o ${INSTALLPATH}/${prog} ./cmd/gaia/cmd/${prog}
-
-      # Remove DWARF info from the binary
-      go_build_tmpdir="$(strings ${INSTALLPATH}/${prog} | grep /tmp/go-build)"
-      f_patch_strings_in_file ${INSTALLPATH}/${prog} ${go_build_tmpdir} /tmp/go-build/b001/_gomod_.go
 
     done
     popd # ${distsrc}

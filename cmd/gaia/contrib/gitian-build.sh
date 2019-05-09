@@ -76,7 +76,7 @@ f_prep_docker_image() {
 
 f_download_go() {
   mkdir -p ${g_workdir}/inputs
-  curl -L https://dl.google.com/go/${GO_TARBALL} > ${g_workdir}/inputs/${GO_TARBALL}
+  curl -L https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/1.12.4-1/golang-debian-1.12.4-1.tar.gz > ${g_workdir}/inputs/${GO_TARBALL}
 }
 
 f_build() {

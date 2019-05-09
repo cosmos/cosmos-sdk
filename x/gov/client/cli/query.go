@@ -155,7 +155,7 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			// check to see if the proposal is in the store
 			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
 			voterAddr, err := sdk.AccAddressFromBech32(args[1])
@@ -224,7 +224,7 @@ $ gaiacli query gov votes 1
 			// check to see if the proposal is in the store
 			res, err := gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
 			var proposal gov.Proposal

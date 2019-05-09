@@ -14,7 +14,7 @@ according to users' configuration. These features allow developers to build secu
 and usable mobile apps, websites, and other applications without deploying or
 maintaining any full blockchain nodes.
 
-### What is a light client?
+### What is a Light Client?
 
 The Cosmos SDK Light Client (Gaia-lite) is split into two separate components. The first component is generic for
 any Tendermint-based application. It handles the security and connectivity aspects of following the header

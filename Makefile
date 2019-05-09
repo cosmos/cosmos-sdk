@@ -119,6 +119,12 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
+distclean: clean
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
 
 ########################################
 ### Documentation

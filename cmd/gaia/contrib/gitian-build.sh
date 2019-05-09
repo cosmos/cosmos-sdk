@@ -9,12 +9,14 @@ set -euo pipefail
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 THIS="${THIS_DIR}/$(basename ${BASH_SOURCE[0]})"
+GITIAN_CACHE_DIRNAME='.gitian-builder-cache'
 DEFAULT_SIGN_COMMAND='gpg --detach-sign'
 DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
 SIGN_COMMAND=${SIGN_COMMAND:-${DEFAULT_SIGN_COMMAND}}
 GO_TARBALL='golang-debian-1.12.4-1.tar.gz'
 
 g_workdir=''
+g_gitian_cache=''
 g_sign_identity=''
 g_gitian_skip_download=''
 
@@ -45,11 +47,11 @@ f_main() {
     git clone https://github.com/devrandom/gitian-builder ${g_workdir}
   fi
 
+  echo "Fetching Go sources" >&2
+  f_ensure_go_source_tarball
+
   echo "Prepare gitian-target docker image" >&2
   f_prep_docker_image
-
-  echo "Download Go" >&2
-  f_download_go
 
   echo "Start the build" >&2
   f_build "${l_descriptor}" "${l_commit}"
@@ -74,11 +76,25 @@ f_prep_docker_image() {
   popd
 }
 
+f_ensure_go_source_tarball() {
+  local l_cached_tar
+
+  l_cached_tar="${g_gitian_cache}/${GO_TARBALL}"
+  mkdir -p ${g_workdir}/inputs
+  if [ -f "${l_cached_tar}" ]; then
+    echo "Fetching cached tarball from ${l_cached_tar}" >&2
+    cp "${l_cached_tar}" ${g_workdir}/inputs/${GO_TARBALL}
+  else
+    f_download_go
+    echo "Caching ${GO_TARBALL}" >&2
+    cp ${g_workdir}/inputs/${GO_TARBALL} "${l_cached_tar}"
+  fi
+}
+
 f_download_go() {
   local l_remote
 
   l_remote=https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/1.12.4-1
-  mkdir -p ${g_workdir}/inputs
   curl -L "${l_remote}/${GO_TARBALL}" > ${g_workdir}/inputs/${GO_TARBALL}
 }
 
@@ -170,7 +186,7 @@ f_validate_platform "${g_platform}"
 g_dirname="${g_dirname:-gitian-build-${g_platform}}"
 g_workdir="$(pwd)/${g_dirname}"
 if [ -d "${g_workdir}" ]; then
-  echo "Directory ${g_workdir} exists and will be preserved" 2>/dev/null
+  echo "Directory ${g_workdir} exists and will be preserved" >&2
   g_gitian_skip_download=y
 fi
 
@@ -178,5 +194,10 @@ g_sdk="$(f_abspath ${2})"
 [ -d "${g_sdk}" ]
 
 g_sigs_dir=${GAIA_SIGS:-"$(pwd)/${DEFAULT_GAIA_SIGS}"}
+
+# create local cache directory for all gitian builds
+g_gitian_cache="$(pwd)/${GITIAN_CACHE_DIRNAME}"
+echo "Ensure cache directory ${g_gitian_cache} exists" >&2
+mkdir -p "${g_gitian_cache}"
 
 f_main "${g_platform}" "${g_sdk}" "${g_sigs_dir}"

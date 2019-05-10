@@ -1,5 +1,5 @@
 /*
-This file contains application module patterns and associated "manager" functionality.
+Package types contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
  - independent module functionality (AppModuleBasic)
  - inter-dependent module functionality (AppModule)
@@ -220,6 +220,9 @@ func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.Re
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
+			if len(validatorUpdates) > 0 {
+				panic("validator updates already set by a previous module")
+			}
 			validatorUpdates = moduleValUpdates
 		}
 	}

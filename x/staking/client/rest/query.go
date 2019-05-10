@@ -244,15 +244,10 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 // HTTP request handler to query list of validators
 func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgs(r)
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
-		}
-
-		// override default limit if it wasn't provided
-		if l := r.FormValue("limit"); l == "" {
-			limit = 0
 		}
 
 		status := r.FormValue("status")

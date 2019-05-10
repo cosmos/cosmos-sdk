@@ -13,12 +13,14 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]))
 	require.False(t, found)
-	newInfo := ValidatorSigningInfo{
-		StartHeight:         int64(4),
-		IndexOffset:         int64(3),
-		JailedUntil:         time.Unix(2, 0),
-		MissedBlocksCounter: int64(10),
-	}
+	newInfo := NewValidatorSigningInfo(
+		sdk.ConsAddress(addrs[0]),
+		int64(4),
+		int64(3),
+		time.Unix(2, 0),
+		false,
+		int64(10),
+	)
 	keeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]), newInfo)
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]))
 	require.True(t, found)

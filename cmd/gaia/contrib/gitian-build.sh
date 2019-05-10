@@ -10,7 +10,8 @@ set -euo pipefail
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 THIS="${THIS_DIR}/$(basename ${BASH_SOURCE[0]})"
 GITIAN_CACHE_DIRNAME='.gitian-builder-cache'
-GO_TARBALL='golang-debian-1.12.4-1.tar.gz'
+GO_DEBIAN_RELEASE='1.12.5-1'
+GO_TARBALL="golang-debian-${GO_DEBIAN_RELEASE}.tar.gz"
 
 # Defaults
 
@@ -55,7 +56,7 @@ f_main() {
   [ -f ${l_descriptor} ]
 
   if [ "${g_gitian_skip_download}" != "y" ]; then
-    echo "Download gitian-builder to ${g_workdir}" >&2
+    echo "Cloning ${GITIAN_REPO} to ${g_workdir}" >&2
     git clone ${GITIAN_REPO} ${g_workdir}
   fi
 
@@ -67,7 +68,7 @@ f_main() {
 
   echo "Start the build" >&2
   f_build "${l_descriptor}" "${l_commit}"
-  echo "You may find the result in $(echo ${g_workdir}/result/*.yml))" >&2
+  echo "You may find the result in $(echo ${g_workdir}/result/*.yml)" >&2
 
   if [ -n "${g_sign_identity}" ]; then
     f_sign "${l_descriptor}" "${l_release}" "${l_sigs_dir}"
@@ -106,7 +107,7 @@ f_ensure_go_source_tarball() {
 f_download_go() {
   local l_remote
 
-  l_remote=https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/1.12.4-1
+  l_remote=https://salsa.debian.org/go-team/compiler/golang/-/archive/debian/${GO_DEBIAN_RELEASE}
   curl -L "${l_remote}/${GO_TARBALL}" > ${g_workdir}/inputs/${GO_TARBALL}
 }
 

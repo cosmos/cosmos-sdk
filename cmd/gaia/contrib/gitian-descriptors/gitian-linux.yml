@@ -23,17 +23,19 @@ remotes:
 - "url": "https://github.com/cosmos/cosmos-sdk.git"
   "dir": "cosmos-sdk"
 files:
-- "golang-debian-1.12.4-1.tar.gz"
+- "golang-debian-1.12.5-1.tar.gz"
 script: |
   set -e -o pipefail
 
+  GO_SRC_RELEASE=golang-debian-1.12.5-1
+  GO_SRC_TARBALL="${GO_SRC_RELEASE}.tar.gz"
   # Compile go and configure the environment
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export BUILD_DIR=`pwd`
-  tar xf golang-debian-1.12.4-1.tar.gz
-  [ -d golang-debian-1.12.4-1/ ]
-  rm -f golang-debian-1.12.4-1.tar.gz
-  mv golang-debian-1.12.4-1/ go/
+  tar xf "${GO_SRC_TARBALL}"
+  rm -f "${GO_SRC_TARBALL}"
+  [ -d "${GO_SRC_RELEASE}/" ]
+  mv "${GO_SRC_RELEASE}/" go/
   pushd go/
   QUILT_PATCHES=debian/patches quilt push -a
   fakeroot debian/rules build RUN_TESTS=false GOCACHE=/tmp/go-cache

@@ -14,8 +14,8 @@ type BankKeeper interface {
 	SetSendEnabled(ctx sdk.Context, enabled bool)
 }
 
-// SupplySendKeeper defines the supply SendKeeper for module accounts
-type SupplySendKeeper interface {
+// SupplyKeeper defines the supply Keeper for module accounts
+type SupplyKeeper interface {
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
 	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 
@@ -23,9 +23,6 @@ type SupplySendKeeper interface {
 	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
-}
 
-// SupplyKeeper defines the expected supply keeper
-type SupplyKeeper interface {
 	Deflate(ctx sdk.Context, amount sdk.Coins)
 }

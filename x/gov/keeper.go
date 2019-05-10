@@ -37,9 +37,6 @@ type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck BankKeeper
 
-	// The SendKeeper from the supply module to send balances to module accounts
-	ssk SupplySendKeeper
-
 	// The SupplyKeeper to reduce the supply of the network
 	sk SupplyKeeper
 
@@ -69,7 +66,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, ssk SupplySendKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+	ck BankKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -387,7 +384,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.ssk.SendCoinsAccountToPool(ctx, depositorAddr, ModuleName, depositAmount)
+	err := keeper.sk.SendCoinsAccountToPool(ctx, depositorAddr, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -432,7 +429,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// update the governance module account coin pool
-		err := keeper.ssk.SendCoinsPoolToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
+		err := keeper.sk.SendCoinsPoolToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -450,7 +447,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		err := keeper.ssk.BurnCoins(ctx, ModuleName, deposit.Amount)
+		err := keeper.sk.BurnCoins(ctx, ModuleName, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

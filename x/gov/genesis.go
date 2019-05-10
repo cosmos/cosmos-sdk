@@ -114,11 +114,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(err)
 	}
 
-	// check if the module account exists and create it if not
-	moduleAcc, _ := k.ssk.GetPoolAccountByName(ctx, ModuleName)
-	if moduleAcc == nil {
-		moduleAcc = supply.NewPoolHolderAccount(ModuleName)
-		k.ssk.SetPoolAccount(ctx, moduleAcc)
+	// check if the deposits pool account exists and create it if not
+	poolAcc, _ := k.sk.GetPoolAccountByName(ctx, ModuleName)
+	if poolAcc == nil {
+		poolAcc = supply.NewPoolHolderAccount(ModuleName)
+		k.sk.SetPoolAccount(ctx, poolAcc)
 	}
 
 	k.setDepositParams(ctx, data.DepositParams)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"errors"
@@ -212,13 +213,20 @@ func ExternalIP() (string, error) {
 // TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
 func TrapSignal(cleanupFunc func()) {
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, os.Kill)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		if cleanupFunc != nil {
 			cleanupFunc()
 		}
-		os.Exit(128 + int(sig))
+		exitCode := 128
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+		os.Exit(exitCode)
 	}()
 }
 

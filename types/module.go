@@ -36,7 +36,7 @@ type ModuleClient interface {
 }
 
 //__________________________________________________________________________________________
-// AppModule is the standard form for basic non-dependant elements of an application module.
+// AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)

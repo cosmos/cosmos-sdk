@@ -29,9 +29,12 @@ type CrisisKeeper interface {
 
 // SupplyKeeper defines the expected supply Keeper
 type SupplyKeeper interface {
+	Deflate(ctx sdk.Context, amount sdk.Coins)
+
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
 	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
+	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }

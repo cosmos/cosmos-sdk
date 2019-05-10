@@ -5,16 +5,16 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // RegisterInvariants register all staking invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) {
+func RegisterInvariants(c types.CrisisKeeper, k Keeper) {
 
 	c.RegisterRoute(types.ModuleName, "bonded-tokens",
-		BondedTokensInvariants(k, f, d, am))
+		BondedTokensInvariant(k))
+	// c.RegisterRoute(types.ModuleName, "staking-tokens-supply",
+	// 	StakingTokensInvariant(k))
 	c.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
 	c.RegisterRoute(types.ModuleName, "positive-delegation",
@@ -24,11 +24,10 @@ func RegisterInvariants(c types.CrisisKeeper, k Keeper, f types.FeeCollectionKee
 }
 
 // AllInvariants runs all invariants of the staking module.
-func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
+func AllInvariants(k Keeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
-		err := BondedTokensInvariants(k, f, d, am)(ctx)
+		err := BondedTokensInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
@@ -52,56 +51,30 @@ func AllInvariants(k Keeper, f types.FeeCollectionKeeper,
 	}
 }
 
-// BondedTokensInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
-func BondedTokensInvariants(k Keeper, f types.FeeCollectionKeeper,
-	d types.DistributionKeeper, am auth.AccountKeeper) sdk.Invariant {
-
+// BondedTokensInvariant checks that the bonded pool account reflects the tokens actively bonded
+func BondedTokensInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		pool := k.GetPool(ctx)
+		bonded := sdk.ZeroInt()
+		bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+		if err != nil {
+			return err
+		}
 
-		loose := sdk.ZeroDec()
-		bonded := sdk.ZeroDec()
-		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(acc.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec())
-			return false
-		})
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) bool {
-			for _, entry := range ubd.Entries {
-				loose = loose.Add(entry.Balance.ToDec())
-			}
-			return false
-		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetBondedTokens().ToDec())
-			case sdk.Unbonding, sdk.Unbonded:
-				loose = loose.Add(validator.GetTokens().ToDec())
+				bonded = bonded.Add(validator.GetBondedTokens())
 			}
-			// add yet-to-be-withdrawn
-			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
 
-		// add outstanding fees
-		loose = loose.Add(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx)).ToDec())
-
-		// add community pool
-		loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
-
-		// Not-bonded tokens should equal coin supply plus unbonding delegations
-		// plus tokens on unbonded validators
-		if !pool.NotBondedTokens.ToDec().Equal(loose) {
-			return fmt.Errorf("loose token invariance:\n"+
-				"\tpool.NotBondedTokens: %v\n"+
-				"\tsum of account tokens: %v", pool.NotBondedTokens, loose)
-		}
+		expectedBonded := bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !pool.BondedTokens.ToDec().Equal(bonded) {
+		if !expectedBonded.Equal(bonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
-				"\tpool.BondedTokens: %v\n"+
-				"\tsum of account tokens: %v", pool.BondedTokens, bonded)
+				"\tPool's bonded tokens: %v\n"+
+				"\tsum of bonded tokens from delegations: %v", expectedBonded, bonded)
 		}
 
 		return nil

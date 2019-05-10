@@ -119,10 +119,14 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// The deducted tokens are returned to pool.NotBondedTokens.
 	// TODO: Move the token accounting outside of `RemoveValidatorTokens` so it is less confusing
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
-	pool := k.GetPool(ctx)
-	// Burn the slashed tokens, which are now loose.
-	pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
-	k.SetPool(ctx, pool)
+	// Burn the slashed tokens from the unbonded pool account and the total supply.
+	burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
+	err := k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+	if err != nil {
+		panic(nil)
+	}
+
+	k.supplyKeeper.Deflate(ctx, burnedCoins)
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
@@ -195,12 +199,16 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
 		unbondingDelegation.Entries[i] = entry
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
-		pool := k.GetPool(ctx)
 
-		// Burn not-bonded tokens
+		// Burn the slashed tokens from the unbonded pool account and the total supply.
 		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-		pool.NotBondedTokens = pool.NotBondedTokens.Sub(unbondingSlashAmount)
-		k.SetPool(ctx, pool)
+		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondingSlashAmount))
+		err := k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+		if err != nil {
+			panic(err)
+		}
+
+		k.supplyKeeper.Deflate(ctx, burnedCoins)
 	}
 
 	return totalSlashAmount
@@ -255,10 +263,14 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
 
-		// Burn not-bonded tokens
-		pool := k.GetPool(ctx)
-		pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
-		k.SetPool(ctx, pool)
+		// Burn the slashed tokens from the unbonded pool account and the total supply.
+		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
+		err = k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+		if err != nil {
+			panic(err)
+		}
+
+		k.supplyKeeper.Deflate(ctx, burnedCoins)
 	}
 
 	return totalSlashAmount

@@ -19,21 +19,21 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	// setup
 	ctx, _, keeper := CreateTestInput(t, false, power)
 	params := keeper.GetParams(ctx)
-	pool := keeper.GetPool(ctx)
 	numVals := int64(3)
 	amt := sdk.TokensFromTendermintPower(power)
-	pool.NotBondedTokens = amt.MulRaw(numVals)
+	unbondedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), amt.MulRaw(numVals)))
+
+	unbondPool, err := keeper.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
+	require.NoError(t, err)
+	unbondPool.SetCoins(unbondedCoins)
 
 	// add numVals validators
 	for i := int64(0); i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
-		pool.BondedTokens = pool.BondedTokens.Add(amt)
-		keeper.SetPool(ctx, pool)
+		validator, _ = keeper.addTokensFromDel(ctx, validator, amt)
 		validator = TestingUpdateValidator(keeper, ctx, validator, true)
 		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
-	pool = keeper.GetPool(ctx)
 
 	return ctx, keeper, params
 }

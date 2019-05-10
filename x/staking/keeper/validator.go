@@ -125,10 +125,8 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool, addedShares = validator.AddTokensFromDel(pool, tokensToAdd)
+	validator, addedShares = k.addTokensFromDel(ctx, validator, tokensToAdd)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator, addedShares
 }
@@ -138,10 +136,8 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool, removedTokens = validator.RemoveDelShares(pool, sharesToRemove)
+	validator, removedTokens = k.removeDelShares(ctx, validator, sharesToRemove)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator, removedTokens
 }
@@ -151,10 +147,8 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool = validator.RemoveTokens(pool, tokensToRemove)
+	validator = k.removeTokens(ctx, validator, tokensToRemove)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator
 }
@@ -444,16 +438,18 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 	}
 }
 
+//_______________________________________________________________________
+// private funcs
+
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
-
+func (k Keeper) updateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
 	switch v.Status {
 	case sdk.Unbonded:
 
 		switch NewStatus {
 		case sdk.Unbonded:
-			return v, pool
+			return v
 		case sdk.Bonded:
 			k.UnbondedTokensToBonded(ctx, v.Tokens)
 		}
@@ -461,7 +457,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 
 		switch NewStatus {
 		case sdk.Unbonding:
-			return v, pool
+			return v
 		case sdk.Bonded:
 			k.UnbondedTokensToBonded(ctx, v.Tokens)
 		}
@@ -469,7 +465,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 
 		switch NewStatus {
 		case sdk.Bonded:
-			return v, pool
+			return v
 		default:
 			k.BondedTokensToUnbonded(ctx, v.Tokens)
 		}
@@ -480,7 +476,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 }
 
 // RemoveTokens removes tokens from a validator
-func (k Keeper) RemoveTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int) types.Validator {
+func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int) types.Validator {
 	if tokens.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
 	}
@@ -497,7 +493,7 @@ func (k Keeper) RemoveTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 
 // AddTokensFromDel adds tokens to a validator
 // CONTRACT: Tokens are assumed to have come from not-bonded pool.
-func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
+func (k Keeper) addTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
 
 	// calculate the shares to issue
 	var issuedShares sdk.Dec
@@ -527,7 +523,7 @@ func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.
 // NOTE: because token fractions are left in the valiadator,
 //       the exchange rate of future shares of this validator can increase.
 // CONTRACT: Tokens are assumed to move to the not-bonded pool.
-func (k Keeper) RemoveDelShares(ctx sdk.Context, v types.Validator, delShares sdk.Dec) (types.Validator, sdk.Int) {
+func (k Keeper) removeDelShares(ctx sdk.Context, v types.Validator, delShares sdk.Dec) (types.Validator, sdk.Int) {
 
 	remainingShares := v.DelegatorShares.Sub(delShares)
 	var issuedTokens sdk.Int

@@ -98,7 +98,7 @@ func TestRemoveTokens(t *testing.T) {
 	pool.NotBondedTokens = sdk.NewInt(10)
 	pool.BondedTokens = validator.BondedTokens()
 
-	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
+	validator = validator.UpdateStatus(sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
 	// remove tokens and test check everything

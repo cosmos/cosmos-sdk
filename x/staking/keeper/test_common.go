@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // dummy addresses used for testing
@@ -78,14 +79,12 @@ func MakeTestCodec() *codec.Codec {
 // `initPower` is converted to an amount of tokens.
 // If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
-
-	initCoins := sdk.TokensFromTendermintPower(initPower)
-
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -94,6 +93,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -122,22 +122,32 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		bank.DefaultCodespace,
 	)
 
-	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
-	keeper.SetPool(ctx, types.InitialPool())
+	sk := supply.NewKeeper(cdc, keySupply,
+		accountKeeper, supply.DefaultCodespace,
+		pk.Subspace(supply.DefaultParamspace),
+	)
+
+	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, sk, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
+
+	// create pool accounts
+	unbondPool := supply.NewPoolHolderAccount(UnbondedTokensName)
+	bondPool := supply.NewPoolHolderAccount(BondedTokensName)
+
+	initTokens := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens.MulRaw(int64(len(Addrs)))))
+
+	unbondPool.SetCoins(totalSupply)
+	keeper.supplyKeeper.SetPoolAccount(ctx, unbondPool)
+	keeper.supplyKeeper.SetPoolAccount(ctx, bondPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
-		pool := keeper.GetPool(ctx)
-		err := error(nil)
-		if !initCoins.IsZero() {
-			_, err = ck.AddCoins(ctx, addr, sdk.Coins{
-				{keeper.BondDenom(ctx), initCoins},
-			})
+		_, err := ck.AddCoins(ctx, addr, initCoins)
+		if err != nil {
+			panic(err)
 		}
-		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
-		keeper.SetPool(ctx, pool)
 	}
 
 	return ctx, accountKeeper, keeper

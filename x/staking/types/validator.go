@@ -282,57 +282,6 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	}
 }
 
-// UpdateStatus updates the location of the shares within a validator
-// to reflect the new status
-func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
-
-	switch v.Status {
-	case sdk.Unbonded:
-
-		switch NewStatus {
-		case sdk.Unbonded:
-			return v, pool
-		case sdk.Bonded:
-			pool = pool.notBondedTokensToBonded(v.Tokens)
-		}
-	case sdk.Unbonding:
-
-		switch NewStatus {
-		case sdk.Unbonding:
-			return v, pool
-		case sdk.Bonded:
-			pool = pool.notBondedTokensToBonded(v.Tokens)
-		}
-	case sdk.Bonded:
-
-		switch NewStatus {
-		case sdk.Bonded:
-			return v, pool
-		default:
-			pool = pool.bondedTokensToNotBonded(v.Tokens)
-		}
-	}
-
-	v.Status = NewStatus
-	return v, pool
-}
-
-// removes tokens from a validator
-func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
-	if tokens.IsNegative() {
-		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
-	}
-	if v.Tokens.LT(tokens) {
-		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
-	}
-	v.Tokens = v.Tokens.Sub(tokens)
-	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToNotBonded(tokens)
-	}
-	return v, pool
-}
-
 // SetInitialCommission attempts to set a validator's initial commission. An
 // error is returned if the commission is invalid.
 func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.Error) {
@@ -342,66 +291,6 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 
 	v.Commission = commission
 	return v, nil
-}
-
-// AddTokensFromDel adds tokens to a validator
-// CONTRACT: Tokens are assumed to have come from not-bonded pool.
-func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
-
-	// calculate the shares to issue
-	var issuedShares sdk.Dec
-	if v.DelegatorShares.IsZero() {
-		// the first delegation to a validator sets the exchange rate to one
-		issuedShares = amount.ToDec()
-	} else {
-		shares, err := v.SharesFromTokens(amount)
-		if err != nil {
-			panic(err)
-		}
-
-		issuedShares = shares
-	}
-
-	if v.Status == sdk.Bonded {
-		pool = pool.notBondedTokensToBonded(amount)
-	}
-
-	v.Tokens = v.Tokens.Add(amount)
-	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
-
-	return v, pool, issuedShares
-}
-
-// RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
-//       the exchange rate of future shares of this validator can increase.
-// CONTRACT: Tokens are assumed to move to the not-bonded pool.
-func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
-
-	remainingShares := v.DelegatorShares.Sub(delShares)
-	var issuedTokens sdk.Int
-	if remainingShares.IsZero() {
-
-		// last delegation share gets any trimmings
-		issuedTokens = v.Tokens
-		v.Tokens = sdk.ZeroInt()
-	} else {
-
-		// leave excess tokens in the validator
-		// however fully use all the delegator shares
-		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
-		v.Tokens = v.Tokens.Sub(issuedTokens)
-		if v.Tokens.IsNegative() {
-			panic("attempting to remove more tokens than available in validator")
-		}
-	}
-
-	v.DelegatorShares = remainingShares
-	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToNotBonded(issuedTokens)
-	}
-
-	return v, pool, issuedTokens
 }
 
 // In some situations, the exchange rate becomes invalid, e.g. if

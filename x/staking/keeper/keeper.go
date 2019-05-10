@@ -13,7 +13,7 @@ import (
 
 const aminoCacheSize = 500
 
-// strings for pool module accounts
+// names used as root for pool module accounts
 const (
 	UnbondedTokensName = "UnbondedTokens"
 	BondedTokensName   = "BondedTokens"
@@ -88,12 +88,14 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store.Set(LastTotalPowerKey, b)
 }
 
-func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Coins) {
-	k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedTokens)
+func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Int) {
+	unbondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondedTokens))
+	k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedCoins)
 }
 
-func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Coins) {
-	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedTokens)
+func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Int) {
+	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
+	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedCoins)
 }
 
 // TODO: move to client CLI

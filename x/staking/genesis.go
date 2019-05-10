@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -28,6 +29,19 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	// TODO: create module accounts for pool
+
+	// check if the unbonded and bonded pools account exists and create it if not
+	unbondPool, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
+	if unbondPool == nil {
+		unbondPool = supply.NewPoolHolderAccount(UnbondedTokensName)
+		keeper.supplyKeeper.SetPoolAccount(ctx, unbondPool)
+	}
+
+	bondPool, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	if bondPool == nil {
+		bondPool = supply.NewPoolHolderAccount(BondedTokensName)
+		keeper.supplyKeeper.SetPoolAccount(ctx, bondPool)
+	}
 
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)

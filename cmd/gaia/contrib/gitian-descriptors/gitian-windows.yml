@@ -97,7 +97,7 @@ script: |
         -asmflags=all=-trimpath=${GOPATH} \
         -mod=readonly -tags "netgo ledger" \
         -ldflags="${LDFLAGS}" \
-        -o ${INSTALLPATH}/${prog} ./cmd/gaia/cmd/${prog}
+        -o ${INSTALLPATH}/${exe} ./cmd/gaia/cmd/${prog}
 
     done
     popd # ${distsrc}

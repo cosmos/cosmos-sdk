@@ -49,7 +49,7 @@ f_main() {
 
   pushd ${l_sdk}
   l_commit="$(git rev-parse HEAD)"
-  l_release="$(git describe --tags | sed 's/^v//')-${l_platform}"
+  l_release="$(git describe --tags --abbrev=9 | sed 's/^v//')-${l_platform}"
   popd
 
   l_descriptor=${THIS_DIR}/gitian-descriptors/gitian-${l_platform}.yml
@@ -77,7 +77,7 @@ f_main() {
     echo "Signatures in ${l_sigs_dir} have been verified"
   else
     echo "You can now sign the build with the following command:" >&2
-    echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign --armor' -s GPG_IDENTITY --release=${l_release} ${l_descriptor}" >&2
+    echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign' -s GPG_IDENTITY --release=${l_release} ${l_descriptor}" >&2
   fi
 
   return 0

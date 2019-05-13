@@ -1,0 +1,2 @@
+[#4307](https://github.com/cosmos/cosmos-sdk/pull/4307) Don't pass height to RPC calls as
+Tendermint will automatically use the latest height.

@@ -363,7 +363,7 @@ jobs:
           docker_layer_caching: true
       - run: |
           docker build -t tendermint/gaia:$CIRCLE_TAG .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
           docker push tendermint/gaia:$CIRCLE_TAG
 
 workflows:

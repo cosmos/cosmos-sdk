@@ -83,7 +83,7 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
 	// withdraw delegation rewards (which also increments period)
-	if err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
+	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		panic(err)
 	}
 }

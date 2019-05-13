@@ -303,7 +303,8 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
-	require.Nil(t, k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1))
+	_, err := k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+	require.Nil(t, err)
 
 	// historical count should still be 2 (added one record, cleared one)
 	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
@@ -316,7 +317,8 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	)
 
 	// withdraw commission
-	require.Nil(t, k.WithdrawValidatorCommission(ctx, valOpAddr1))
+	_, err = k.WithdrawValidatorCommission(ctx, valOpAddr1)
+	require.Nil(t, err)
 
 	// assert correct balance
 	exp = balanceTokens.Sub(valTokens).Add(initial)

@@ -929,11 +929,11 @@ func doBeginRedelegation(
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator
-func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []staking.Delegation {
+func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) staking.DelegationResponses {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/staking/delegators/%s/delegations", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var dels []staking.Delegation
+	var dels staking.DelegationResponses
 
 	err := cdc.UnmarshalJSON([]byte(body), &dels)
 	require.Nil(t, err)
@@ -1022,11 +1022,11 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations/{validatorAddr} Query the current delegation between a delegator and a validator
-func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) staking.Delegation {
+func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) staking.DelegationResp {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/staking/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bond staking.Delegation
+	var bond staking.DelegationResp
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 

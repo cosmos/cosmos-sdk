@@ -19,7 +19,7 @@ First, set up the address of the full-node you want to connect to:
 ```bash
 gaiacli config node <host>:<port
 
-// example: gaiacli config node https://77.87.106.33:26657
+# example: gaiacli config node https://77.87.106.33:26657
 ```
 
 If you run your own full-node, just use `tcp://localhost:26657` as the address. 
@@ -29,7 +29,7 @@ Then, let us set the default value of the `--trust-node` flag:
 ```bash
 gaiacli config trust-node true
 
-// Set to true if you trust the full-node you are connecting to, false otherwise
+# Set to true if you trust the full-node you are connecting to, false otherwise
 ```
 
 Finally, let us set the `chain-id` of the blockchain we want to interact with:

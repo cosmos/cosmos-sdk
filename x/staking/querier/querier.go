@@ -22,7 +22,6 @@ const (
 	QueryValidatorDelegations          = "validatorDelegations"
 	QueryValidatorRedelegations        = "validatorRedelegations"
 	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
-	QueryDelegator                     = "delegator"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
 	QueryDelegatorValidators           = "delegatorValidators"
@@ -37,30 +36,43 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 		switch path[0] {
 		case QueryValidators:
 			return queryValidators(ctx, cdc, req, k)
+
 		case QueryValidator:
 			return queryValidator(ctx, cdc, req, k)
+
 		case QueryValidatorDelegations:
 			return queryValidatorDelegations(ctx, cdc, req, k)
+
 		case QueryValidatorUnbondingDelegations:
 			return queryValidatorUnbondingDelegations(ctx, cdc, req, k)
+
 		case QueryDelegation:
 			return queryDelegation(ctx, cdc, req, k)
+
 		case QueryUnbondingDelegation:
 			return queryUnbondingDelegation(ctx, cdc, req, k)
+
 		case QueryDelegatorDelegations:
 			return queryDelegatorDelegations(ctx, cdc, req, k)
+
 		case QueryDelegatorUnbondingDelegations:
 			return queryDelegatorUnbondingDelegations(ctx, cdc, req, k)
+
 		case QueryRedelegations:
 			return queryRedelegations(ctx, cdc, req, k)
+
 		case QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, cdc, req, k)
+
 		case QueryDelegatorValidator:
 			return queryDelegatorValidator(ctx, cdc, req, k)
+
 		case QueryPool:
 			return queryPool(ctx, cdc, k)
+
 		case QueryParameters:
 			return queryParameters(ctx, cdc, k)
+
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
 		}
@@ -202,11 +214,16 @@ func queryValidatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	}
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(cdc, delegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
+	if err != nil {
+		return []byte{}, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, delegationResps)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 
@@ -236,11 +253,16 @@ func queryDelegatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	}
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(cdc, delegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
+	if err != nil {
+		return []byte{}, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, delegationResps)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 
@@ -313,10 +335,16 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 		return []byte{}, types.ErrNoDelegation(types.DefaultCodespace)
 	}
 
-	res, errRes = codec.MarshalJSONIndent(cdc, delegation)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResp, err := delegationToDelegationResp(ctx, k, delegation)
+	if err != nil {
+		return []byte{}, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, delegationResp)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 

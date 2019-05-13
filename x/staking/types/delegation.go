@@ -335,3 +335,39 @@ func (d Redelegations) String() (out string) {
 	}
 	return strings.TrimSpace(out)
 }
+
+// ----------------------------------------------------------------------------
+// Client Types
+
+// DelegationResp is equivalent to Delegation except that it contains a balance
+// instead of shares which is more suitable for client responses.
+type DelegationResp struct {
+	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	Balance          sdk.Int        `json:"balance"`
+}
+
+func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, b sdk.Int) DelegationResp {
+	return DelegationResp{d, v, b}
+}
+
+// String implements the Stringer interface for DelegationResp.
+func (d DelegationResp) String() string {
+	return fmt.Sprintf(`Delegation:
+  Delegator: %s
+  Validator: %s
+  Balance:   %s`,
+		d.DelegatorAddress, d.ValidatorAddress, d.Balance,
+	)
+}
+
+// Delegations is a collection of delegations
+type DelegationResponses []DelegationResp
+
+// String implements the Stringer interface for DelegationResponses.
+func (d DelegationResponses) String() (out string) {
+	for _, del := range d {
+		out += del.String() + "\n"
+	}
+	return strings.TrimSpace(out)
+}

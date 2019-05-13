@@ -153,6 +153,9 @@ func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
 }
 
 func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
 	var parent, cache types.Iterator
 
 	if ascending {
@@ -169,9 +172,6 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
-	store.mtx.Lock()
-	defer store.mtx.Unlock()
-
 	unsorted := make([]*cmn.KVPair, 0)
 
 	for key := range store.unsortedCache {
@@ -206,6 +206,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	for _, kvp := range unsorted {
 		store.sortedCache.PushBack(kvp)
 	}
+
 }
 
 //----------------------------------------

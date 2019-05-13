@@ -19,11 +19,17 @@ type memIterator struct {
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
 	itemsInDomain := make([]*cmn.KVPair, 0)
+	var entered bool
 	for e := items.Front(); e != nil; e = e.Next() {
 		item := e.Value.(*cmn.KVPair)
-		if dbm.IsKeyInDomain(item.Key, start, end) {
-			itemsInDomain = append(itemsInDomain, item)
+		if !dbm.IsKeyInDomain(item.Key, start, end) {
+			if entered {
+				break
+			}
+			continue
 		}
+		itemsInDomain = append(itemsInDomain, item)
+		entered = true
 	}
 
 	return &memIterator{

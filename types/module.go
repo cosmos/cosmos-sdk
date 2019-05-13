@@ -179,6 +179,9 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
+			if len(validatorUpdates) > 0 {
+				panic("validator InitGenesis updates already set by a previous module")
+			}
 			validatorUpdates = moduleValUpdates
 		}
 	}
@@ -221,7 +224,7 @@ func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.Re
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
 			if len(validatorUpdates) > 0 {
-				panic("validator updates already set by a previous module")
+				panic("validator EndBlock updates already set by a previous module")
 			}
 			validatorUpdates = moduleValUpdates
 		}

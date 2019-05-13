@@ -1,0 +1,116 @@
+---
+name: "gaia-windows"
+enable_cache: true
+distro: "ubuntu"
+suites:
+- "bionic"
+architectures:
+- "amd64"
+packages:
+- "bsdmainutils"
+- "build-essential"
+- "ca-certificates"
+- "curl"
+- "debhelper"
+- "dpkg-dev"
+- "devscripts"
+- "fakeroot"
+- "git"
+- "golang-any"
+- "xxd"
+- "quilt"
+remotes:
+- "url": "https://github.com/cosmos/cosmos-sdk.git"
+  "dir": "cosmos-sdk"
+files:
+- "golang-debian-1.12.5-1.tar.gz"
+script: |
+  set -e -o pipefail
+
+  GO_SRC_RELEASE=golang-debian-1.12.5-1
+  GO_SRC_TARBALL="${GO_SRC_RELEASE}.tar.gz"
+  # Compile go and configure the environment
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export BUILD_DIR=`pwd`
+  tar xf "${GO_SRC_TARBALL}"
+  rm -f "${GO_SRC_TARBALL}"
+  [ -d "${GO_SRC_RELEASE}/" ]
+  mv "${GO_SRC_RELEASE}/" go/
+  pushd go/
+  QUILT_PATCHES=debian/patches quilt push -a
+  fakeroot debian/rules build RUN_TESTS=false GOCACHE=/tmp/go-cache
+  popd
+
+  export GOROOT=${BUILD_DIR}/go
+  export GOPATH=${BUILD_DIR}/gopath
+  mkdir -p ${GOPATH}/bin
+
+  export PATH_orig=${PATH}
+  export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+  export ARCHS='386 amd64'
+  export GO111MODULE=on
+
+  # Make release tarball
+  pushd cosmos-sdk
+  VERSION=$(git describe --tags | sed 's/^v//')
+  COMMIT=$(git log -1 --format='%H')
+  DISTNAME=gaia-${VERSION}
+  git archive --format tar.gz --prefix ${DISTNAME}/ -o ${DISTNAME}.tar.gz HEAD
+  SOURCEDIST=`pwd`/`echo gaia-*.tar.gz`
+  popd
+
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf $SOURCEDIST
+  rm $SOURCEDIST
+  find gaia-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $SOURCEDIST
+  popd
+
+  # Prepare GOPATH and install deps
+  distsrc=${GOPATH}/src/github.com/cosmos/cosmos-sdk
+  mkdir -p ${distsrc}
+  pushd ${distsrc}
+  tar --strip-components=1 -xf $SOURCEDIST
+  go mod download
+  popd
+
+  # Configure LDFLAGS for reproducible builds
+  LDFLAGS="-extldflags=-static -buildid=${VERSION} -s -w \
+    -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
+    -X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
+    -X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
+    -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger"
+
+  # Extract release tarball and build
+  for arch in ${ARCHS}; do
+    INSTALLPATH=`pwd`/installed/${DISTNAME}-${arch}
+    mkdir -p ${INSTALLPATH}
+
+    # Build gaia tool suite
+    pushd ${distsrc}
+    for prog in gaiacli gaiad; do
+      exe=${prog}.exe
+      GOARCH=${arch} GOROOT_FINAL=${GOROOT} go build -a \
+        -gcflags=all=-trimpath=${GOPATH} \
+        -asmflags=all=-trimpath=${GOPATH} \
+        -mod=readonly -tags "netgo ledger" \
+        -ldflags="${LDFLAGS}" \
+        -o ${INSTALLPATH}/${exe} ./cmd/gaia/cmd/${prog}
+
+    done
+    popd # ${distsrc}
+
+    pushd ${INSTALLPATH}
+    find -type f | sort | tar \
+      --no-recursion --mode='u+rw,go+r-w,a+X' \
+      --numeric-owner --sort=name \
+      --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-windows-${arch}.tar.gz
+    popd  # installed
+  done
+
+  rm -rf ${distsrc}
+
+  mkdir -p $OUTDIR/src
+  mv $SOURCEDIST $OUTDIR/src

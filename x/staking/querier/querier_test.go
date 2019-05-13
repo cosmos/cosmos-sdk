@@ -263,14 +263,15 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationRes types.Delegation
+	var delegationRes types.DelegationResp
 	errRes = cdc.UnmarshalJSON(res, &delegationRes)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delegation, delegationRes)
+	require.Equal(t, delegation.ValidatorAddress, delegationRes.ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationRes.DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationRes.Balance)
 
 	// Query Delegator Delegations
-
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
@@ -279,11 +280,13 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegatorDelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegatorDelegations []types.Delegation
+	var delegatorDelegations types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
 	require.Nil(t, errRes)
 	require.Len(t, delegatorDelegations, 1)
-	require.Equal(t, delegation, delegatorDelegations[0])
+	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegatorDelegations[0].Balance)
 
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
@@ -304,11 +307,13 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryValidatorDelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationsRes []types.Delegation
+	var delegationsRes types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, delegationsRes[0], delegation)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationsRes[0].Balance)
 
 	// Query unbonging delegation
 	unbondingTokens := sdk.TokensFromTendermintPower(10)

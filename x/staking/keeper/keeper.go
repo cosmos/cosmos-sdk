@@ -97,17 +97,3 @@ func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
 	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedCoins)
 }
-
-// TODO: move to client CLI
-// // String returns a human readable string representation of a pool.
-// func (p Pool) String(bondDenom string) string {
-// 	return fmt.Sprintf(`Pool:
-//   Not Bonded Tokens:  %s
-//   Bonded Tokens: %s
-//   Staking Token Supply:  %s
-// 	Bonded Ratio:  %v`,
-// 		p.NotBondedTokens.GetCoins().AmountOf(bondDenom),
-// 		p.BondedTokens.GetCoins().AmountOf(bondDenom),
-// 		p.StakingTokenSupply(bondDenom),
-// 		p.BondedRatio(bondDenom))
-// }

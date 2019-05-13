@@ -370,7 +370,12 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 }
 
 func queryPool(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	pool := k.GetPool(ctx)
+	bondedPool, unbondedPool := k.GetPools(ctx)
+	if bondedPool == nil || unbondedPool == nil {
+		panic("pool accounts haven't been set")
+	}
+
+	pool := types.NewPool(unbondedPool.GetCoins(), bondedPool.GetCoins())
 
 	res, errRes := codec.MarshalJSONIndent(cdc, pool)
 	if errRes != nil {

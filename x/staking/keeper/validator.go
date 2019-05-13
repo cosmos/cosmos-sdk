@@ -125,7 +125,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	validator, addedShares = k.addTokensFromDel(ctx, validator, tokensToAdd)
+	validator, addedShares = k.AddTokensFromDel(ctx, validator, tokensToAdd)
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator, addedShares
@@ -438,12 +438,9 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 	}
 }
 
-//_______________________________________________________________________
-// private funcs
-
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (k Keeper) updateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
+func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
 	switch v.Status {
 	case sdk.Unbonded:
 
@@ -475,25 +472,9 @@ func (k Keeper) updateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 	return v
 }
 
-// RemoveTokens removes tokens from a validator
-func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int) types.Validator {
-	if tokens.IsNegative() {
-		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
-	}
-	if v.Tokens.LT(tokens) {
-		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
-	}
-	v.Tokens = v.Tokens.Sub(tokens)
-	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == sdk.Bonded {
-		k.BondedTokensToUnbonded(ctx, tokens)
-	}
-	return v
-}
-
 // AddTokensFromDel adds tokens to a validator
 // CONTRACT: Tokens are assumed to have come from not-bonded pool.
-func (k Keeper) addTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
+func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
 
 	// calculate the shares to issue
 	var issuedShares sdk.Dec
@@ -517,6 +498,25 @@ func (k Keeper) addTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, issuedShares
+}
+
+//_______________________________________________________________________
+// private funcs
+
+// RemoveTokens removes tokens from a validator
+func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int) types.Validator {
+	if tokens.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
+	}
+	if v.Tokens.LT(tokens) {
+		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
+	}
+	v.Tokens = v.Tokens.Sub(tokens)
+	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
+	if v.Status == sdk.Bonded {
+		k.BondedTokensToUnbonded(ctx, tokens)
+	}
+	return v
 }
 
 // RemoveDelShares removes delegator shares from a validator.

@@ -70,7 +70,7 @@ var (
 	ValidatorQueueKey            = keeper.ValidatorQueueKey
 	RegisterInvariants           = keeper.RegisterInvariants
 	AllInvariants                = keeper.AllInvariants
-	BondedTokensInvariants       = keeper.BondedTokensInvariants
+	BondedTokensInvariant        = keeper.BondedTokensInvariant
 	NonNegativePowerInvariant    = keeper.NonNegativePowerInvariant
 	PositiveDelegationInvariant  = keeper.PositiveDelegationInvariant
 	DelegatorSharesInvariant     = keeper.DelegatorSharesInvariant
@@ -81,7 +81,6 @@ var (
 	KeyBondDenom      = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
-	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
 	NewCommission         = types.NewCommission

@@ -22,17 +22,15 @@ var (
 func TestNewQuerier(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
-	pool := keeper.GetPool(ctx)
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
-		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], amt)
 		keeper.SetValidator(ctx, validators[i])
 		keeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
-	keeper.SetPool(ctx, pool)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -107,15 +105,16 @@ func TestQueryParametersPool(t *testing.T) {
 	require.Nil(t, err)
 
 	var pool types.Pool
+	bondedPool, unbondedPool := keeper.GetPools(ctx)
 	errRes = cdc.UnmarshalJSON(res, &pool)
 	require.Nil(t, errRes)
-	require.Equal(t, keeper.GetPool(ctx), pool)
+	require.Equal(t, bondedPool.GetCoins(), pool.BondedTokens)
+	require.Equal(t, unbondedPool.GetCoins(), pool.NotBondedTokens)
 }
 
 func TestQueryValidators(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
-	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
 
 	// Create Validators
@@ -124,8 +123,8 @@ func TestQueryValidators(t *testing.T) {
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
-		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
-		validators[i] = validators[i].UpdateStatus(status[i])
+		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], amt)
+		validators[i] = keeper.UpdateStatus(ctx, validators[i], status[i])
 	}
 
 	keeper.SetValidator(ctx, validators[0])

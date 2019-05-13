@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Implements ValidatorSet
@@ -179,4 +180,35 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []sdk.Delegat
 		delegations = append(delegations, delegation)
 	}
 	return delegations
+}
+
+// GetPools returns the bonded and unbonded tokens pool accounts
+func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, unbondedPool supply.PoolAccount) {
+	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	if err != nil {
+		return
+	}
+
+	unbondedPool, err = k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	if err != nil {
+		return
+	}
+
+	return bondedPool, unbondedPool
+}
+
+// SetBondedPool sets the bonded tokens pool account
+func (k Keeper) SetBondedPool(ctx sdk.Context, newBondPool supply.PoolAccount) {
+	if newBondPool.Name() != BondedTokensName {
+		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", BondedTokensName, newBondPool.Name()))
+	}
+	k.supplyKeeper.SetPoolAccount(ctx, newBondPool)
+}
+
+// SetUnbondedPool sets the unbonded tokens pool account
+func (k Keeper) SetUnbondedPool(ctx sdk.Context, newUnbondPool supply.PoolAccount) {
+	if newUnbondPool.Name() != UnbondedTokensName {
+		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", UnbondedTokensName, newUnbondPool.Name()))
+	}
+	k.supplyKeeper.SetPoolAccount(ctx, newUnbondPool)
 }

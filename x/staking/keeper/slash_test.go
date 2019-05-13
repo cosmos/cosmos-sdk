@@ -30,7 +30,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	// add numVals validators
 	for i := int64(0); i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validator, _ = keeper.addTokensFromDel(ctx, validator, amt)
+		validator, _ = keeper.AddTokensFromDel(ctx, validator, amt)
 		validator = TestingUpdateValidator(keeper, ctx, validator, true)
 		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
@@ -89,7 +89,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	oldPool := keeper.GetPool(ctx)
+	_, oldUnbondedPool := keeper.GetPools(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
@@ -103,8 +103,9 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// balance decreased
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
-	newPool := keeper.GetPool(ctx)
-	require.Equal(t, int64(5), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens).Int64())
+	_, newUnbondedPool := keeper.GetPools(ctx)
+	diffTokens := oldUnbondedPool.GetCoins().Sub(newUnbondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, int64(5), diffTokens.Int64())
 }
 
 // tests slashRedelegation
@@ -138,7 +139,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, oldUnbondedPool := keeper.GetPools(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetRedelegation(ctx, rd)
 	validator, found = keeper.GetValidator(ctx, addrVals[1])
@@ -162,8 +163,9 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
 
 	// pool bonded tokens decreased
-	newPool := keeper.GetPool(ctx)
-	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
+	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, int64(5), diffTokens.Int64())
 }
 
 // tests Slash at a future height (must panic)
@@ -181,7 +183,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, _ := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, -2, 10, fraction)
@@ -189,7 +191,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// read updated state
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	newPool := keeper.GetPool(ctx)
+	newBondedPool, _ := keeper.GetPools(ctx)
 
 	// end block
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -199,7 +201,8 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), diffTokens)
 }
 
 // tests Slash at the current height
@@ -208,7 +211,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, _ := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
@@ -216,7 +219,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// read updated state
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	newPool := keeper.GetPool(ctx)
+	newBondedPool, _ := keeper.GetPools(ctx)
 
 	// end block
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -226,7 +229,8 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), diffTokens)
 }
 
 // tests Slash at a previous height with an unbonding delegation
@@ -244,7 +248,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// slash validator for the first time
 	ctx = ctx.WithBlockHeight(12)
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, _ := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
@@ -260,9 +264,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance decreased
 	require.Equal(t, sdk.TokensFromTendermintPower(2), ubd.Entries[0].Balance)
 	// read updated pool
-	newPool := keeper.GetPool(ctx)
+	newBondedPool, _ := keeper.GetPools(ctx)
 	// bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(3), diffTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -281,9 +286,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance decreased again
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// bonded tokens burned again
-	require.Equal(t, sdk.TokensFromTendermintPower(6), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(6), diffTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -302,9 +308,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance unchanged
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// bonded tokens burned again
-	require.Equal(t, sdk.TokensFromTendermintPower(9), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(9), diffTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -323,9 +330,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance unchanged
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
-	require.Equal(t, sdk.TokensFromTendermintPower(10), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(10), diffTokens)
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -352,13 +360,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
-	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = pool.BondedTokens.Add(rdTokens)
-	keeper.SetPool(ctx, pool)
+	bondedPool, _ := keeper.GetPools(ctx)
+	rdCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), rdTokens))
+	bondedPool.SetCoins(bondedPool.GetCoins().Add(rdCoins))
+	keeper.SetBondedPool(ctx, bondedPool)
 
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, oldUnbondedPool := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
@@ -368,9 +377,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated pool
-	newPool := keeper.GetPool(ctx)
+	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
 	// bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(5), diffTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -391,9 +401,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// seven bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(12), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(12), diffTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -411,9 +422,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// four more bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(16), diffTokens)
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -434,9 +446,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated pool
-	newPool = keeper.GetPool(ctx)
+	newBondedPool, _ = keeper.GetPools(ctx)
 	// no more bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromTendermintPower(16), diffTokens)
 	// read updated validator
 	// power still zero, still in unbonding period
 	validator, _ = keeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -469,7 +482,7 @@ func TestSlashBoth(t *testing.T) {
 
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
-	oldPool := keeper.GetPool(ctx)
+	oldBondedPool, oldUnbondedPool := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
@@ -480,11 +493,13 @@ func TestSlashBoth(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rdA.Entries, 1)
 	// read updated pool
-	newPool := keeper.GetPool(ctx)
+	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
+	diffBondedTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
+	diffUnbondedTokens := oldUnbondedPool.GetCoins().Sub(newUnbondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	// not-bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(2), diffUnbondedTokens)
 	// bonded tokens burned
-	require.Equal(t, sdk.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
+	require.Equal(t, sdk.TokensFromTendermintPower(3), diffBondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)

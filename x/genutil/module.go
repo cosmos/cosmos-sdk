@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ sdk.AppModuleGenesis = AppModule{}
+	_ sdk.AppModuleBasic   = AppModuleBasic{}
 )
 
 // module name
@@ -53,30 +53,15 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper AccountKeeper,
-	stakingKeeper StakingKeeper, deliverTx deliverTxfn) AppModule {
+	stakingKeeper StakingKeeper, deliverTx deliverTxfn) sdk.AppModule {
 
-	return AppModule{
+	return sdk.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
 		stakingKeeper:  stakingKeeper,
 		deliverTx:      deliverTx,
-	}
+	})
 }
-
-// register invariants
-func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
-
-// module message route name
-func (AppModule) Route() string { return "" }
-
-// module handler
-func (AppModule) NewHandler() sdk.Handler { return nil }
-
-// module querier route name
-func (AppModule) QuerierRoute() string { return "" }
-
-// module querier
-func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
@@ -88,14 +73,4 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // module export genesis
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	return nil
-}
-
-// module begin-block
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
-
-// module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }

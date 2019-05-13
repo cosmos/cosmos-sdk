@@ -78,9 +78,16 @@ func (mbm ModuleBasicManager) ValidateGenesis(genesis map[string]json.RawMessage
 }
 
 //_________________________________________________________
+// AppModuleGenesis is the standard form for an application module genesis functions
+type AppModuleGenesis interface {
+	AppModuleBasic
+	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(Context) json.RawMessage
+}
+
 // AppModule is the standard form for an application module
 type AppModule interface {
-	AppModuleBasic
+	AppModuleGenesis
 
 	// registers
 	RegisterInvariants(InvariantRouter)
@@ -91,14 +98,49 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() Querier
 
-	// genesis
-	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(Context) json.RawMessage
-
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
 	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
 }
 
+//___________________________
+// app module
+type GenesisOnlyAppModule struct {
+	AppModuleGenesis
+}
+
+// NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
+func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
+	return GenesisOnlyAppModule{
+		AppModuleGenesis: amg,
+	}
+}
+
+// register invariants
+func (GenesisOnlyAppModule) RegisterInvariants(_ InvariantRouter) {}
+
+// module message route ngame
+func (GenesisOnlyAppModule) Route() string { return "" }
+
+// module handler
+func (GenesisOnlyAppModule) NewHandler() Handler { return nil }
+
+// module querier route ngame
+func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
+
+// module querier
+func (gam GenesisOnlyAppModule) NewQuerierHandler() Querier { return nil }
+
+// module begin-block
+func (gam GenesisOnlyAppModule) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
+	return EmptyTags()
+}
+
+// module end-block
+func (GenesisOnlyAppModule) EndBlock(_ Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
+	return []abci.ValidatorUpdate{}, EmptyTags()
+}
+
+//____________________________________________________________________________
 // module manager provides the high level utility for managing and executing
 // operations for a group of modules
 type ModuleManager struct {

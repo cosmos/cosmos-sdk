@@ -57,11 +57,11 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBas
 			cms := store.NewCommitMultiStore(db)
 			ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 			req := abci.RequestInitChain{AppStateBytes: defaultGenesisBytes}
-			defer func() {
-				if r := recover(); r != nil {
-					err = fmt.Errorf("InitChainer panics %s", r)
-				}
-			}()
+			//defer func() {
+			//if r := recover(); r != nil {
+			//err = fmt.Errorf("InitChainer panics %s", r)
+			//}
+			//}()
 			_ = gapp.InitChainer(ctx, req)
 
 			fmt.Printf("File at %s is a valid genesis file for gaiad\n", genesis)

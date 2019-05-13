@@ -361,13 +361,75 @@ func (d DelegationResp) String() string {
 	)
 }
 
-// Delegations is a collection of delegations
+// DelegationResponses is a collection of DelegationResp
 type DelegationResponses []DelegationResp
 
 // String implements the Stringer interface for DelegationResponses.
 func (d DelegationResponses) String() (out string) {
 	for _, del := range d {
 		out += del.String() + "\n"
+	}
+	return strings.TrimSpace(out)
+}
+
+// RedelegationResp is equivalent to a Redelegation except that its entries
+// contain a balance instead of shares which is more suitable for client
+// responses.
+type RedelegationResp struct {
+	DelegatorAddress    sdk.AccAddress          `json:"delegator_address"`
+	ValidatorSrcAddress sdk.ValAddress          `json:"validator_src_address"`
+	ValidatorDstAddress sdk.ValAddress          `json:"validator_dst_address"`
+	Entries             []RedelegationEntryResp `json:"entries"`
+}
+
+// RedelegationEntryResp is equivalent to a RedelegationEntry except that it
+// contains a balance instead of shares which is more suitable for client
+// responses.
+type RedelegationEntryResp struct {
+	CreationHeight int64     `json:"creation_height"`
+	CompletionTime time.Time `json:"completion_time"`
+	InitialBalance sdk.Int   `json:"initial_balance"`
+	Balance        sdk.Int   `json:"balance"`
+}
+
+func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, ch int64, mt time.Time, ib, b sdk.Int) RedelegationResp {
+	entry := NewRedelegationEntryResp(ch, mt, ib, b)
+	return RedelegationResp{d, vSrc, vDst, []RedelegationEntryResp{entry}}
+}
+
+func NewRedelegationEntryResp(ch int64, ct time.Time, ib, b sdk.Int) RedelegationEntryResp {
+	return RedelegationEntryResp{ch, ct, ib, b}
+}
+
+// String implements the Stringer interface for RedelegationResp.
+func (r RedelegationResp) String() string {
+	out := fmt.Sprintf(`Redelegations between:
+  Delegator:                 %s
+  Source Validator:          %s
+  Destination Validator:     %s
+  Entries:`,
+		r.DelegatorAddress, r.ValidatorSrcAddress, r.ValidatorDstAddress,
+	)
+
+	for i, entry := range r.Entries {
+		out += fmt.Sprintf(`    Redelegation %d:
+      Creation height:           %v
+      Min time to unbond (unix): %v
+      Initial Balance:           %s
+      Balance:                   %s`,
+			i, entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, entry.Balance,
+		)
+	}
+
+	return out
+}
+
+// RedelegationResponses are a collection of RedelegationResp
+type RedelegationResponses []RedelegationResp
+
+func (r RedelegationResponses) String() (out string) {
+	for _, red := range r {
+		out += red.String() + "\n"
 	}
 	return strings.TrimSpace(out)
 }

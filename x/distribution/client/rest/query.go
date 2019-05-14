@@ -223,7 +223,7 @@ func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
-		var result supply.PoolAccount
+		var result sdk.DecCoins
 		if err := cdc.UnmarshalJSON(res, &result); err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

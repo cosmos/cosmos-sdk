@@ -18,8 +18,9 @@ type (
 	GenesisState = types.GenesisState
 
 	// expected keepers
-	StakingKeeper = types.StakingKeeper
-	BankKeeper    = types.BankKeeper
+	StakingKeeper       = types.StakingKeeper
+	BankKeeper          = types.BankKeeper
+	FeeCollectionKeeper = types.FeeCollectionKeeper
 
 	// querier param types
 	QueryValidatorCommissionParams   = keeper.QueryValidatorCommissionParams
@@ -33,13 +34,12 @@ type (
 )
 
 const (
-	DefaultCodespace  = types.DefaultCodespace
-	CodeInvalidInput  = types.CodeInvalidInput
-	StoreKey          = types.StoreKey
-	TStoreKey         = types.TStoreKey
-	RouterKey         = types.RouterKey
-	QuerierRoute      = types.QuerierRoute
-	CommunityPoolName = keeper.CommunityPoolName
+	DefaultCodespace = types.DefaultCodespace
+	CodeInvalidInput = types.CodeInvalidInput
+	StoreKey         = types.StoreKey
+	TStoreKey        = types.TStoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute     = types.QuerierRoute
 )
 
 var (
@@ -74,6 +74,7 @@ var (
 	RegisterCodec       = types.RegisterCodec
 	DefaultGenesisState = types.DefaultGenesisState
 	ValidateGenesis     = types.ValidateGenesis
+	InitialFeePool      = types.InitialFeePool
 
 	// Query types
 	QueryParams                      = keeper.QueryParams

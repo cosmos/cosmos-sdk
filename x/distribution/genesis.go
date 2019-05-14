@@ -8,6 +8,7 @@ import (
 
 // InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
+	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
 	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
@@ -38,13 +39,14 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
-	// check if the deposits pool account exists and create it if not
-	poolAcc, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
+	// check if the module account exists and create it if not
+	poolAcc, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, types.ModuleName)
 	if poolAcc == nil {
-		poolAcc = supply.NewPoolHolderAccount(CommunityPoolName)
+		poolAcc = supply.NewPoolHolderAccount(types.ModuleName)
 		keeper.sk.SetPoolAccount(ctx, poolAcc)
 	}
 
+	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
 	bonusProposerRewards := keeper.GetBonusProposerReward(ctx)
@@ -121,6 +123,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
-	return types.NewGenesisState(communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
+	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
 		dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

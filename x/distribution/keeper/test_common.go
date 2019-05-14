@@ -74,7 +74,7 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
@@ -104,6 +104,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
@@ -119,8 +120,9 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	// TODO: set pool accs
-	// sk.SetPool(ctx, staking.InitialPool())
+	// TODO: set pool staking and distr module accs
+
+	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
@@ -140,7 +142,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk.SetHooks(keeper.Hooks())
 
 	// set genesis items required for distribution
-	// TODO: set community pool acc
+	keeper.SetFeePool(ctx, types.InitialFeePool())
 	keeper.SetCommunityTax(ctx, communityTax)
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))

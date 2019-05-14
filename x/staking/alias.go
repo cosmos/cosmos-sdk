@@ -25,6 +25,7 @@ type (
 	UnbondingDelegations    = types.UnbondingDelegations
 	Redelegation            = types.Redelegation
 	Redelegations           = types.Redelegations
+	RedelegationResponses   = types.RedelegationResponses
 	Params                  = types.Params
 	Pool                    = types.Pool
 	MsgCreateValidator      = types.MsgCreateValidator
@@ -99,11 +100,12 @@ var (
 	NewMsgUndelegate      = types.NewMsgUndelegate
 	NewMsgBeginRedelegate = types.NewMsgBeginRedelegate
 
-	NewQuerier               = querier.NewQuerier
-	NewQueryDelegatorParams  = querier.NewQueryDelegatorParams
-	NewQueryValidatorParams  = querier.NewQueryValidatorParams
-	NewQueryBondsParams      = querier.NewQueryBondsParams
-	NewQueryValidatorsParams = querier.NewQueryValidatorsParams
+	NewQuerier                 = querier.NewQuerier
+	NewQueryDelegatorParams    = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams    = querier.NewQueryValidatorParams
+	NewQueryBondsParams        = querier.NewQueryBondsParams
+	NewQueryValidatorsParams   = querier.NewQueryValidatorsParams
+	NewQueryRedelegationParams = querier.NewQueryRedelegationParams
 )
 
 const (

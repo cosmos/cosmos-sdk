@@ -109,7 +109,8 @@ $ gaiacli query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0z
 	}
 }
 
-// GetCmdQueryValidatorRedelegations implements the query all redelegatations from a validator command.
+// GetCmdQueryValidatorRedelegations implements the query all redelegatations
+// from a validator command.
 func GetCmdQueryValidatorRedelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
@@ -122,31 +123,31 @@ $ gaiacli query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hw
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(staking.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(staking.QueryRedelegationParams{SrcValidatorAddr: valSrcAddr})
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryValidatorRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
-			var reds staking.Redelegations
-			cdc.MustUnmarshalJSON(res, &reds)
-			return cliCtx.PrintOutput(reds)
+			var resp staking.RedelegationResponses
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }
 
 // GetCmdQueryDelegation the query delegation command.
-func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
@@ -158,34 +159,37 @@ $ gaiacli query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			valAddr, err := sdk.ValAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := cliCtx.QueryStore(staking.GetDelegationKey(delAddr, valAddr), storeName)
+			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			delegation, err := types.UnmarshalDelegation(cdc, res)
+			bz, err := cdc.MarshalJSON(staking.NewQueryBondsParams(delAddr, valAddr))
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(delegation)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryDelegation)
+			res, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
+			}
+
+			var resp staking.DelegationResp
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
-func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
@@ -197,22 +201,25 @@ $ gaiacli query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			resKVs, err := cliCtx.QuerySubspace(staking.GetDelegationsKey(delegatorAddr), storeName)
+			bz, err := cdc.MarshalJSON(staking.NewQueryDelegatorParams(delAddr))
 			if err != nil {
 				return err
 			}
 
-			var delegations staking.Delegations
-			for _, kv := range resKVs {
-				delegations = append(delegations, types.MustUnmarshalDelegation(cdc, kv.Value))
+			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryDelegatorDelegations)
+			res, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
 			}
 
-			return cliCtx.PrintOutput(delegations)
+			var resp staking.DelegationResponses
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -231,12 +238,12 @@ $ gaiacli query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2f
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(staking.NewQueryValidatorParams(validatorAddr))
+			bz, err := cdc.MarshalJSON(staking.NewQueryValidatorParams(valAddr))
 			if err != nil {
 				return err
 			}
@@ -247,9 +254,9 @@ $ gaiacli query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2f
 				return err
 			}
 
-			var dels staking.Delegations
-			cdc.MustUnmarshalJSON(res, &dels)
-			return cliCtx.PrintOutput(dels)
+			var resp staking.DelegationResponses
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -325,7 +332,7 @@ $ gaiacli query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fx
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
-func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -337,6 +344,11 @@ $ gaiacli query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
 				return err
@@ -347,24 +359,27 @@ $ gaiacli query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 				return err
 			}
 
-			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			bz, err := cdc.MarshalJSON(staking.NewQueryRedelegationParams(delAddr, valSrcAddr, valDstAddr))
 			if err != nil {
 				return err
 			}
 
-			res, err := cliCtx.QueryStore(staking.GetREDKey(delAddr, valSrcAddr, valDstAddr), storeName)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryRedelegations)
+			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(types.MustUnmarshalRED(cdc, res))
+			var resp staking.RedelegationResponses
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
-func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -376,22 +391,25 @@ $ gaiacli query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			resKVs, err := cliCtx.QuerySubspace(staking.GetREDsKey(delegatorAddr), storeName)
+			bz, err := cdc.MarshalJSON(staking.QueryRedelegationParams{DelegatorAddr: delAddr})
 			if err != nil {
 				return err
 			}
 
-			var reds staking.Redelegations
-			for _, kv := range resKVs {
-				reds = append(reds, types.MustUnmarshalRED(cdc, kv.Value))
+			route := fmt.Sprintf("custom/%s/%s", storeKey, staking.QueryRedelegations)
+			res, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
 			}
 
-			return cliCtx.PrintOutput(reds)
+			var resp staking.RedelegationResponses
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }

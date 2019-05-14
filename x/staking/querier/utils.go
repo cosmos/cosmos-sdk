@@ -15,6 +15,7 @@ func delegationToDelegationResp(ctx sdk.Context, k keeper.Keeper, del types.Dele
 	return types.NewDelegationResp(
 		del.DelegatorAddress,
 		del.ValidatorAddress,
+		del.Shares,
 		val.TokensFromShares(del.Shares).TruncateInt(),
 	), nil
 }
@@ -52,6 +53,7 @@ func redelegationsToRedelegations(
 			entryResponses[j] = types.NewRedelegationEntryResp(
 				entry.CreationHeight,
 				entry.CompletionTime,
+				entry.SharesDst,
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
 			)

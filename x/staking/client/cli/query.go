@@ -140,7 +140,10 @@ $ gaiacli query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hw
 			}
 
 			var resp staking.RedelegationResponses
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}
@@ -181,7 +184,10 @@ $ gaiacli query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			var resp staking.DelegationResp
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}
@@ -218,7 +224,10 @@ $ gaiacli query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9
 			}
 
 			var resp staking.DelegationResponses
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}
@@ -255,7 +264,10 @@ $ gaiacli query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2f
 			}
 
 			var resp staking.DelegationResponses
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}
@@ -371,7 +383,10 @@ $ gaiacli query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 			}
 
 			var resp staking.RedelegationResponses
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}
@@ -408,7 +423,10 @@ $ gaiacli query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 			}
 
 			var resp staking.RedelegationResponses
-			cdc.MustUnmarshalJSON(res, &resp)
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(resp)
 		},
 	}

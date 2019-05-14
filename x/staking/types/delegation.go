@@ -358,7 +358,7 @@ func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Int)
 	return DelegationResponse{NewDelegation(d, v, s), b}
 }
 
-// String implements the Stringer interface for DelegationResp.
+// String implements the Stringer interface for DelegationResponse.
 func (d DelegationResponse) String() string {
 	return fmt.Sprintf("%s\n  Balance:   %s", d.Delegation.String(), d.Balance)
 }

@@ -34,6 +34,7 @@ require (
 	github.com/rakyll/statik v0.1.4
 	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 // indirect
 	github.com/rs/cors v1.6.0 // indirect
+	github.com/snikch/goodman v0.0.0-20171125024755-10e37e294daa
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/cobra v0.0.3

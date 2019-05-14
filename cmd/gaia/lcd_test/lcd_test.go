@@ -1104,3 +1104,11 @@ func TestAccountBalanceQuery(t *testing.T) {
 	require.Contains(t, body, "[]")
 
 }
+
+func TestLCDContract(t *testing.T) {
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
+	cleanup, valConsPubKeys, valOperAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+}

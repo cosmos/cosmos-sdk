@@ -393,7 +393,7 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 
 	redelResponses, err := redelegationsToRedelegations(ctx, k, redels)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, redelResponses)

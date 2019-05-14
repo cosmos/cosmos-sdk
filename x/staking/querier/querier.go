@@ -337,7 +337,7 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 
 	delegationResp, err := delegationToDelegationResp(ctx, k, delegation)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, delegationResp)

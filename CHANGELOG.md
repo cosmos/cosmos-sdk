@@ -2,6 +2,16 @@
 
 ## 0.34.5
 
+### Bug Fixes
+
+#### SDK
+
+* [\#4273](https://github.com/cosmos/cosmos-sdk/issues/4273) Fix usage of `AppendTags` in x/staking/handler.go
+
+### Improvements
+
+#### Gaia CLI
+
 * [#4345](https://github.com/cosmos/cosmos-sdk/pull/4345) Update `ledger-cosmos-go`
 to v0.10.3.
 

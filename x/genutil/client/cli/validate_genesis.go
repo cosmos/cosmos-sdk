@@ -6,15 +6,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -50,19 +45,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBas
 				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 
-			// make sure initchain doesn't panic
-			db := db.NewMemDB()
-			gapp := app.NewGaiaApp(log.NewNopLogger(), db, nil, true, 0)
-			defaultGenesisBytes := cdc.MustMarshalJSON(mbm.DefaultGenesis())
-			cms := store.NewCommitMultiStore(db)
-			ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
-			req := abci.RequestInitChain{AppStateBytes: defaultGenesisBytes}
-			//defer func() {
-			//if r := recover(); r != nil {
-			//err = fmt.Errorf("InitChainer panics %s", r)
-			//}
-			//}()
-			_ = gapp.InitChainer(ctx, req)
+			// TODO test to make sure initchain doesn't panic
 
 			fmt.Printf("File at %s is a valid genesis file for gaiad\n", genesis)
 			return nil

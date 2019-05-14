@@ -383,6 +383,7 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 		if !found {
 			return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
 		}
+
 		redels = []types.Redelegation{redel}
 	} else if params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && params.DstValidatorAddr.Empty() {
 		redels = k.GetRedelegationsFromValidator(ctx, params.SrcValidatorAddr)
@@ -390,10 +391,16 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 	}
 
-	res, errRes = codec.MarshalJSONIndent(cdc, redels)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	redelResponses, err := redelegationsToRedelegations(ctx, k, redels)
+	if err != nil {
+		return []byte{}, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, redelResponses)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 

@@ -392,9 +392,8 @@ type RedelegationEntryResp struct {
 	Balance        sdk.Int   `json:"balance"`
 }
 
-func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, ch int64, mt time.Time, ib, b sdk.Int) RedelegationResp {
-	entry := NewRedelegationEntryResp(ch, mt, ib, b)
-	return RedelegationResp{d, vSrc, vDst, []RedelegationEntryResp{entry}}
+func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResp) RedelegationResp {
+	return RedelegationResp{d, vSrc, vDst, entries}
 }
 
 func NewRedelegationEntryResp(ch int64, ct time.Time, ib, b sdk.Int) RedelegationEntryResp {

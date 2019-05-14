@@ -90,10 +90,16 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 
 func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Int) {
 	unbondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondedTokens))
-	k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedCoins)
+	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedCoins)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
-	k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedCoins)
+	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedCoins)
+	if err != nil {
+		panic(err)
+	}
 }

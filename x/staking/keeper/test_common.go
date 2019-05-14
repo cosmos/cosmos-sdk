@@ -138,7 +138,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	initCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens.MulRaw(int64(len(Addrs)))))
 
-	unbondPool.SetCoins(totalSupply)
+	err = unbondPool.SetCoins(totalSupply)
+	require.NoError(t, err)
+
 	keeper.supplyKeeper.SetPoolAccount(ctx, unbondPool)
 	keeper.supplyKeeper.SetPoolAccount(ctx, bondPool)
 

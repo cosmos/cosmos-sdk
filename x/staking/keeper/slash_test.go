@@ -139,7 +139,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	oldBondedPool, oldUnbondedPool := keeper.GetPools(ctx)
+	oldBondedPool, _ := keeper.GetPools(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetRedelegation(ctx, rd)
 	validator, found = keeper.GetValidator(ctx, addrVals[1])
@@ -163,7 +163,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
 
 	// pool bonded tokens decreased
-	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
+	newBondedPool, _ := keeper.GetPools(ctx)
 	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, int64(5), diffTokens.Int64())
 }
@@ -367,7 +367,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
-	oldBondedPool, oldUnbondedPool := keeper.GetPools(ctx)
+	oldBondedPool, _ := keeper.GetPools(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
@@ -377,7 +377,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated pool
-	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
+	newBondedPool, _ := keeper.GetPools(ctx)
 	// bonded tokens burned
 	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromTendermintPower(5), diffTokens)

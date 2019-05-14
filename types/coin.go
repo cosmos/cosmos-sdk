@@ -368,6 +368,29 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
 }
 
+// IsAnyGT returns true iff for any denom in coins, the denom is present at a
+// greater amount in coinsB.
+//
+// e.g.
+// {2A, 3B}.IsAnyGT{A} = true
+// {2A, 3B}.IsAnyGT{5C} = false
+// {}.IsAnyGT{5C} = false
+// {2A, 3B}.IsAnyGT{} = false
+func (coins Coins) IsAnyGT(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GT(amt) && !amt.IsZero() {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IsAnyGTE returns true iff coins contains at least one denom that is present
 // at a greater or equal amount in coinsB; it returns false otherwise.
 //
@@ -623,11 +646,12 @@ func findDup(coins Coins) int {
 		return -1
 	}
 
-	prevDenom := coins[0]
+	prevDenom := coins[0].Denom
 	for i := 1; i < len(coins); i++ {
-		if coins[i] == prevDenom {
+		if coins[i].Denom == prevDenom {
 			return i
 		}
+		prevDenom = coins[i].Denom
 	}
 
 	return -1

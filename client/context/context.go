@@ -62,18 +62,21 @@ type CLIContext struct {
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly.
 func NewCLIContextWithFrom(from string) CLIContext {
+	var nodeURI string
 	var rpc rpcclient.Client
-
-	nodeURI := viper.GetString(client.FlagNode)
-	if nodeURI != "" {
-		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
-	}
 
 	genOnly := viper.GetBool(client.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
+	}
+
+	if !genOnly {
+		nodeURI = viper.GetString(client.FlagNode)
+		if nodeURI != "" {
+			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
+		}
 	}
 
 	// We need to use a single verifier for all contexts

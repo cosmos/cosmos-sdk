@@ -29,12 +29,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	if data.Pool.NotBondedTokens.IsZero() {
 		accountKeeper.IterateAccounts(ctx,
 			func(acc auth.Account) (stop bool) {
-				for _, coin := range acc.GetCoins() {
-					if coin.Denom == data.Params.BondDenom {
-						data.Pool.NotBondedTokens = data.Pool.NotBondedTokens.
-							Add(coin.Amount) // increase the supply
-					}
-				}
+				data.Pool.NotBondedTokens = data.Pool.NotBondedTokens.
+					Add(acc.GetCoins().AmountOf(data.Params.BondDenom))
 				return false
 			},
 		)

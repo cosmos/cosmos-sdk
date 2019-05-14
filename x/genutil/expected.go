@@ -26,7 +26,7 @@ type AccountKeeper interface {
 type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
 		cdc *codec.Codec,
-		appState map[string]json.RawMessage,
+		appGenesis map[string]json.RawMessage,
 		iterateFn func(auth.Account) (stop bool),
 	)
 }

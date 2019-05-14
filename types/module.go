@@ -1,3 +1,24 @@
+/*
+Package types contains application module patterns and associated "manager" functionality.
+The module pattern has been broken down by:
+ - independent module functionality (AppModuleBasic)
+ - inter-dependent module functionality (AppModule)
+
+inter-dependent module functionality is module functionality which somehow
+depends on other modules, typically through the module keeper.  Many of the
+module keepers are dependent on each other, thus in order to access the full
+set of module functionality we need to define all the keepers/params-store/keys
+etc. This full set of advanced functionality is defined by the AppModule interface.
+
+Independent module functions are separated to allow for the construction of the
+basic application structures required early on in the application definition
+and used to enable the definition of full module functionality later in the
+process. This separation is necessary, however we still want to allow for a
+high level pattern for modules to follow - for instance, such that we don't
+have to manually register all of the codecs for all the modules. This basic
+procedure as well as other basic patterns are handled through the use of
+ModuleBasicManager.
+*/
 package types
 
 import (
@@ -10,7 +31,7 @@ import (
 )
 
 //__________________________________________________________________________________________
-// AppModule is the standard form for basic non-dependant elements of an application module
+// AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
@@ -86,9 +107,16 @@ func (mbm ModuleBasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 }
 
 //_________________________________________________________
+// AppModuleGenesis is the standard form for an application module genesis functions
+type AppModuleGenesis interface {
+	AppModuleBasic
+	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(Context) json.RawMessage
+}
+
 // AppModule is the standard form for an application module
 type AppModule interface {
-	AppModuleBasic
+	AppModuleGenesis
 
 	// registers
 	RegisterInvariants(InvariantRouter)
@@ -99,14 +127,49 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() Querier
 
-	// genesis
-	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(Context) json.RawMessage
-
 	BeginBlock(Context, abci.RequestBeginBlock) Tags
 	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
 }
 
+//___________________________
+// app module
+type GenesisOnlyAppModule struct {
+	AppModuleGenesis
+}
+
+// NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
+func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
+	return GenesisOnlyAppModule{
+		AppModuleGenesis: amg,
+	}
+}
+
+// register invariants
+func (GenesisOnlyAppModule) RegisterInvariants(_ InvariantRouter) {}
+
+// module message route ngame
+func (GenesisOnlyAppModule) Route() string { return "" }
+
+// module handler
+func (GenesisOnlyAppModule) NewHandler() Handler { return nil }
+
+// module querier route ngame
+func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
+
+// module querier
+func (gam GenesisOnlyAppModule) NewQuerierHandler() Querier { return nil }
+
+// module begin-block
+func (gam GenesisOnlyAppModule) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
+	return EmptyTags()
+}
+
+// module end-block
+func (GenesisOnlyAppModule) EndBlock(_ Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
+	return []abci.ValidatorUpdate{}, EmptyTags()
+}
+
+//____________________________________________________________________________
 // module manager provides the high level utility for managing and executing
 // operations for a group of modules
 type ModuleManager struct {
@@ -187,6 +250,9 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
+			if len(validatorUpdates) > 0 {
+				panic("validator InitGenesis updates already set by a previous module")
+			}
 			validatorUpdates = moduleValUpdates
 		}
 	}
@@ -228,6 +294,9 @@ func (mm *ModuleManager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.Re
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
+			if len(validatorUpdates) > 0 {
+				panic("validator EndBlock updates already set by a previous module")
+			}
 			validatorUpdates = moduleValUpdates
 		}
 	}

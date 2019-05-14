@@ -815,7 +815,7 @@ func TestUnjail(t *testing.T) {
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
-	// XXX: any less than this and it fails
+	// NOTE: any less than this and it fails
 	tests.WaitForHeight(3, port)
 	pkString, _ := sdk.Bech32ifyConsPub(valPubKeys[0])
 	signingInfo := getSigningInfo(t, port, pkString)

@@ -341,7 +341,7 @@ func (d Redelegations) String() (out string) {
 // Client Types
 
 // DelegationResp is equivalent to Delegation except that it contains a balance
-// instead of shares which is more suitable for client responses.
+// in addition to shares which is more suitable for client responses.
 type DelegationResp struct {
 	Delegation
 	Balance sdk.Int `json:"balance"`
@@ -382,7 +382,7 @@ func (d DelegationResponses) String() (out string) {
 }
 
 // RedelegationResp is equivalent to a Redelegation except that its entries
-// contain a balance instead of shares which is more suitable for client
+// contain a balance in addition to shares which is more suitable for client
 // responses.
 type RedelegationResp struct {
 	Redelegation
@@ -390,7 +390,7 @@ type RedelegationResp struct {
 }
 
 // RedelegationEntryResp is equivalent to a RedelegationEntry except that it
-// contains a balance instead of shares which is more suitable for client
+// contains a balance in addition to shares which is more suitable for client
 // responses.
 type RedelegationEntryResp struct {
 	RedelegationEntry

@@ -381,7 +381,7 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 	if !params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty() {
 		redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 		if !found {
-			return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
+			return nil, types.ErrNoRedelegation(types.DefaultCodespace)
 		}
 
 		redels = []types.Redelegation{redel}

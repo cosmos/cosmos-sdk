@@ -11,8 +11,10 @@ type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
-// SupplySendKeeper defines the supply SendKeeper for module accounts
-type SupplySendKeeper interface {
+// SupplyKeeper defines the expected supply keeper
+type SupplyKeeper interface {
+	Inflate(ctx sdk.Context, amount sdk.Coins)
+
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
 	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 
@@ -20,9 +22,4 @@ type SupplySendKeeper interface {
 	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
-}
-
-// SupplyKeeper defines the expected supply keeper
-type SupplyKeeper interface {
-	Inflate(ctx sdk.Context, amount sdk.Coins)
 }

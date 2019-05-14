@@ -32,14 +32,17 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 
 		// can't calculate ratio for zero-token validators
 		// ergo we instead add to the community pool
-		communityPool := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
+		communityPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
+		if err != nil {
+			panic(err)
+		}
 		outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 
 		rewardsInt, remainder := rewards.Rewards.TruncateDecimal()
-		commmunityPool.SetCoins(commmunityPool.GetCoins().Add(rewardsInt))
+		communityPool.SetCoins(communityPool.GetCoins().Add(rewardsInt))
 		outstanding = outstanding.Sub(sdk.NewDecCoins(rewardsInt))
 
-		k.supplyKeeper.SetAccount(communityPool)
+		k.supplyKeeper.SetPoolAccount(ctx, communityPool)
 		k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 
 		current = sdk.DecCoins{}

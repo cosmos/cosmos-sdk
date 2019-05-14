@@ -409,17 +409,18 @@ $ gaiacli query staking pool
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryStore(staking.PoolKey, storeName)
+			bz, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
 			if err != nil {
 				return err
 			}
-
-			return cliCtx.PrintOutput(types.MustUnmarshalPool(cdc, res))
+			var pool staking.Pool
+			cdc.MustUnmarshalJSON(bz, &pool)
+			return cliCtx.PrintOutput(pool)
 		},
 	}
 }
 
-// GetCmdQueryPool implements the params query command.
+// GetCmdQueryParams implements the params query command.
 func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "params",

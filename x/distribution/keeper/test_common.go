@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -92,6 +93,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
@@ -114,7 +116,9 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
+
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	// TODO: set pool accs
 	// sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
@@ -130,7 +134,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 		sk.SetPool(ctx, pool)
 	}
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, supplyKeeper, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())
@@ -141,5 +145,5 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountKeeper, bankKeeper, keeper, sk, fck, pk
+	return ctx, accountKeeper, bankKeeper, keeper, sk, pk
 }

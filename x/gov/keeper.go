@@ -79,7 +79,6 @@ func NewKeeper(
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
-		ssk:          ssk,
 		sk:           sk,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),

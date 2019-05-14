@@ -60,13 +60,12 @@ func newTestInput(t *testing.T) testInput {
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, paramsKeeper.Subspace(supply.DefaultParamspace))
 	stakingKeeper := staking.NewKeeper(
-		cdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
-	supplyKeeper := supply.NewSupplyKeeper(cdc, keySupply)
-	supplySendKeeper := supply.NewBaseSendKeeper(accountKeeper, supply.DefaultCodespace, paramsKeeper.Subspace(supply.DefaultParamspace))
 	mintKeeper := NewKeeper(cdc, keyMint, paramsKeeper.Subspace(DefaultParamspace),
-		&stakingKeeper, supplySendKeeper, supplyKeeper,
+		&stakingKeeper, supplyKeeper,
 	)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))

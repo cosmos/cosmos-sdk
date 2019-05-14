@@ -46,11 +46,10 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	pk := mApp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	supplyKeeper := supply.NewSupplyKeeper(mApp.Cdc, keySupply)
-	ssk := supply.NewBaseSendKeeper(mApp.AccountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
+	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
-	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, ssk, supplyKeeper, sk, DefaultCodespace, rtr)
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, supplyKeeper, sk, DefaultCodespace, rtr)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))

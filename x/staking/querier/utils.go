@@ -50,7 +50,7 @@ func redelegationsToRedelegations(
 
 		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries), len(redel.Entries))
 		for j, entry := range redel.Entries {
-			entryResponses[j] = types.NewRedelegationEntryResp(
+			entryResponses[j] = types.NewRedelegationEntryResponse(
 				entry.CreationHeight,
 				entry.CompletionTime,
 				entry.SharesDst,
@@ -59,7 +59,7 @@ func redelegationsToRedelegations(
 			)
 		}
 
-		resp[i] = types.NewRedelegationResp(
+		resp[i] = types.NewRedelegationResponse(
 			redel.DelegatorAddress,
 			redel.ValidatorSrcAddress,
 			redel.ValidatorDstAddress,

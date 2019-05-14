@@ -415,7 +415,7 @@ func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entrie
 	}
 }
 
-func NewRedelegationEntryResp(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResponse {
+func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResponse {
 	return RedelegationEntryResponse{NewRedelegationEntry(ch, ct, ib, s), b}
 }
 

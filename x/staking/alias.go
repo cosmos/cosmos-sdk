@@ -18,7 +18,7 @@ type (
 	Commission              = types.Commission
 	CommissionMsg           = types.CommissionMsg
 	Delegation              = types.Delegation
-	DelegationResp          = types.DelegationResp
+	DelegationResp          = types.DelegationResponse
 	DelegationResponses     = types.DelegationResponses
 	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation

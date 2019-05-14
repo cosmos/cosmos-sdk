@@ -347,38 +347,38 @@ func (d Redelegations) String() (out string) {
 // ----------------------------------------------------------------------------
 // Client Types
 
-// DelegationResp is equivalent to Delegation except that it contains a balance
+// DelegationResponse is equivalent to Delegation except that it contains a balance
 // in addition to shares which is more suitable for client responses.
-type DelegationResp struct {
+type DelegationResponse struct {
 	Delegation
 	Balance sdk.Int `json:"balance"`
 }
 
-func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Int) DelegationResp {
-	return DelegationResp{NewDelegation(d, v, s), b}
+func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Int) DelegationResponse {
+	return DelegationResponse{NewDelegation(d, v, s), b}
 }
 
 // String implements the Stringer interface for DelegationResp.
-func (d DelegationResp) String() string {
+func (d DelegationResponse) String() string {
 	return fmt.Sprintf("%s\n  Balance:   %s", d.Delegation.String(), d.Balance)
 }
 
-type delegationRespAlias DelegationResp
+type delegationRespAlias DelegationResponse
 
 // MarshalJSON implements the json.Marshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
-func (d DelegationResp) MarshalJSON() ([]byte, error) {
+func (d DelegationResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal((delegationRespAlias)(d))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
-func (d *DelegationResp) UnmarshalJSON(bz []byte) error {
+func (d *DelegationResponse) UnmarshalJSON(bz []byte) error {
 	return json.Unmarshal(bz, (*delegationRespAlias)(d))
 }
 
 // DelegationResponses is a collection of DelegationResp
-type DelegationResponses []DelegationResp
+type DelegationResponses []DelegationResponse
 
 // String implements the Stringer interface for DelegationResponses.
 func (d DelegationResponses) String() (out string) {
@@ -388,24 +388,24 @@ func (d DelegationResponses) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// RedelegationResp is equivalent to a Redelegation except that its entries
+// RedelegationResponse is equivalent to a Redelegation except that its entries
 // contain a balance in addition to shares which is more suitable for client
 // responses.
-type RedelegationResp struct {
+type RedelegationResponse struct {
 	Redelegation
-	Entries []RedelegationEntryResp `json:"entries"` // nolint: structtag
+	Entries []RedelegationEntryResponse `json:"entries"` // nolint: structtag
 }
 
-// RedelegationEntryResp is equivalent to a RedelegationEntry except that it
+// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
 // contains a balance in addition to shares which is more suitable for client
 // responses.
-type RedelegationEntryResp struct {
+type RedelegationEntryResponse struct {
 	RedelegationEntry
 	Balance sdk.Int `json:"balance"`
 }
 
-func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResp) RedelegationResp {
-	return RedelegationResp{
+func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResponse) RedelegationResponse {
+	return RedelegationResponse{
 		Redelegation{
 			DelegatorAddress:    d,
 			ValidatorSrcAddress: vSrc,
@@ -415,12 +415,12 @@ func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []
 	}
 }
 
-func NewRedelegationEntryResp(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResp {
-	return RedelegationEntryResp{NewRedelegationEntry(ch, ct, ib, s), b}
+func NewRedelegationEntryResp(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResponse {
+	return RedelegationEntryResponse{NewRedelegationEntry(ch, ct, ib, s), b}
 }
 
 // String implements the Stringer interface for RedelegationResp.
-func (r RedelegationResp) String() string {
+func (r RedelegationResponse) String() string {
 	out := fmt.Sprintf(`Redelegations between:
   Delegator:                 %s
   Source Validator:          %s
@@ -445,22 +445,22 @@ func (r RedelegationResp) String() string {
 	return out
 }
 
-type redelegationRespAlias RedelegationResp
+type redelegationRespAlias RedelegationResponse
 
 // MarshalJSON implements the json.Marshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
-func (r RedelegationResp) MarshalJSON() ([]byte, error) {
+func (r RedelegationResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal((redelegationRespAlias)(r))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
-func (r *RedelegationResp) UnmarshalJSON(bz []byte) error {
+func (r *RedelegationResponse) UnmarshalJSON(bz []byte) error {
 	return json.Unmarshal(bz, (*redelegationRespAlias)(r))
 }
 
 // RedelegationResponses are a collection of RedelegationResp
-type RedelegationResponses []RedelegationResp
+type RedelegationResponses []RedelegationResponse
 
 func (r RedelegationResponses) String() (out string) {
 	for _, red := range r {

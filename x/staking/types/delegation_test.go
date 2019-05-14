@@ -78,7 +78,7 @@ func TestRedelegationString(t *testing.T) {
 	require.NotEmpty(t, r.String())
 }
 
-func TestRedelegationResp(t *testing.T) {
+func TestDelegationResponses(t *testing.T) {
 	cdc := codec.New()
 	dr1 := NewDelegationResp(sdk.AccAddress(addr1), addr2, sdk.NewDec(5), sdk.NewInt(5))
 	dr2 := NewDelegationResp(sdk.AccAddress(addr1), addr3, sdk.NewDec(5), sdk.NewInt(5))
@@ -105,7 +105,7 @@ func TestRedelegationResp(t *testing.T) {
 	require.Equal(t, drs, drs2)
 }
 
-func TestNewRedelegationEntryResp(t *testing.T) {
+func TestRedelegationResponses(t *testing.T) {
 	cdc := codec.New()
 	entries := []RedelegationEntryResp{
 		NewRedelegationEntryResp(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),

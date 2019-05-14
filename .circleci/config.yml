@@ -386,6 +386,12 @@ jobs:
               echo "Build report for ${os}"
               cat gaia-${os}-res.yml
             done
+      - store_artifacts:
+          path: /tmp/workspace/gitian-build-linux
+      - store_artifacts:
+          path: /tmp/workspace/gitian-build-windows
+      - store_artifacts:
+          path: /tmp/workspace/gitian-build-darwin
 
 workflows:
   version: 2

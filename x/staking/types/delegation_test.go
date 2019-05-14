@@ -133,5 +133,9 @@ func TestNewRedelegationEntryResp(t *testing.T) {
 
 	var rdrs2 RedelegationResponses
 	require.NoError(t, cdc.UnmarshalJSON(bz2, &rdrs2))
-	require.Equal(t, rdrs, rdrs2)
+
+	bz3, err := cdc.MarshalJSON(rdrs2)
+	require.NoError(t, err)
+
+	require.Equal(t, bz2, bz3)
 }

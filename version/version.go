@@ -6,9 +6,8 @@
 // Configure the version command
 //
 // The version command can be just added to your cobra root command.
-// At build time, the variables Name, Version, Commit, GoSumHash, and
-// BuildTags can be passed as build flags as shown in the following
-// example:
+// At build time, the variables Name, Version, Commit, and BuildTags
+// can be passed as build flags as shown in the following example:
 //
 //  go build -X github.com/cosmos/cosmos-sdk/version.Name=dapp \
 //   -X github.com/cosmos/cosmos-sdk/version.Version=1.0 \
@@ -38,7 +37,6 @@ type versionInfo struct {
 	Name      string `json:"name"`
 	Version   string `json:"version"`
 	GitCommit string `json:"commit"`
-	GoSumHash string `json:"gosum_hash"`
 	BuildTags string `json:"build_tags"`
 	GoVersion string `json:"go"`
 }
@@ -46,9 +44,8 @@ type versionInfo struct {
 func (v versionInfo) String() string {
 	return fmt.Sprintf(`%s: %s
 git commit: %s
-go.sum hash: %s
 build tags: %s
-%s`, v.Name, v.Version, v.GitCommit, v.GoSumHash, v.BuildTags, v.GoVersion)
+%s`, v.Name, v.Version, v.GitCommit, v.BuildTags, v.GoVersion)
 }
 
 func newVersionInfo() versionInfo {
@@ -56,7 +53,6 @@ func newVersionInfo() versionInfo {
 		Name,
 		Version,
 		Commit,
-		GoSumHash,
 		BuildTags,
 		fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH)}
 }

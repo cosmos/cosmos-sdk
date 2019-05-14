@@ -5,8 +5,7 @@ PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
-GOBIN ?= $(GOPATH)/bin
-GOSUM := $(shell which gosum)
+BINDIR ?= $(GOPATH)/bin
 
 export GO111MODULE = on
 
@@ -42,16 +41,17 @@ endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
+whitespace :=
+whitespace += $(whitespace)
+comma := ,
+build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
-
-ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
-endif
+  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -119,6 +119,12 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
+distclean: clean
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
 
 ########################################
 ### Documentation
@@ -164,20 +170,20 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaImportExport
+	$(BINDIR)/runsim 50 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim 50 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
 
 test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -186,8 +192,8 @@ test_sim_benchmark_invariants:
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
-runsim: $(GOBIN)/runsim
-$(GOBIN)/runsim: cmd/gaia/contrib/runsim/main.go
+runsim: $(BINDIR)/runsim
+$(BINDIR)/runsim: cmd/gaia/contrib/runsim/main.go
 	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500

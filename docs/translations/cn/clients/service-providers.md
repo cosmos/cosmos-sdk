@@ -63,19 +63,18 @@ gaiacli account <YOUR_ADDRESS>
 以下是通过 CLI 发送代币的命令：
 
 ```bash
-gaiacli tx send <destination_address> <amount> \
-    --chain-id=<name_of_testnet_chain> \
-    --from=<key_name>
+gaiacli tx send <from_key_or_address> <to_address> <amount> \
+    --chain-id=<name_of_testnet_chain> 
 ```
 
 参数：
-- `<destination_address>`: 接收者地址。
+- `<from_key_or_address>`: 发送账户的名称或地址。
+- `<to_address>`: 接收者地址。
 - `<amount>`: 接受`<value|coinName>`格式的参数，例如 `10faucetToken`。
 
 标识：
 
-- `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
-- `--from`: Name of the key of the sending account.
+- `--chain-id`: 此标志允许您指定链的ID，不同的testnet链和主链会有不同的 id。
 
 #### 帮助
 

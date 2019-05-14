@@ -61,12 +61,12 @@ func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddres
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
 // Panics if the name maps to a HolderAccount
 func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	moduleAcc, err := k.GetAccountByName(ctx, name)
+	poolAcc, err := k.GetAccountByName(ctx, name)
 	if err != nil {
 		return err
 	}
 
-	macc, isMinterAcc := moduleAcc.(types.PoolMinterAccount)
+	macc, isMinterAcc := poolAcc.(types.PoolMinterAccount)
 	if !isMinterAcc {
 		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", name))
 	}
@@ -81,12 +81,12 @@ func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 
 // BurnCoins burns coins deletes coins from the balance of the module account
 func (k Keeper) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	moduleAcc, err := k.GetPoolAccountByName(ctx, name)
+	poolAcc, err := k.GetPoolAccountByName(ctx, name)
 	if err != nil {
 		return err
 	}
 
-	_, err = subtractCoins(ctx, k.ak, moduleAcc.GetAddress(), amt)
+	_, err = subtractCoins(ctx, k.ak, poolAcc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

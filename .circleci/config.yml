@@ -374,7 +374,6 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - no_output_timeout: "20m"
       - run: |
           sudo apt-get install -y ruby
           for os in darwin linux windows; do
@@ -384,6 +383,7 @@ jobs:
             echo "Build report for ${os}"
             cat gaia-${os}-res.yml
           done
+        no_output_timeout: 20m
 
 workflows:
   version: 2

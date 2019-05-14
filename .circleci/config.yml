@@ -374,6 +374,7 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
+      - no_output_timeout: "20m"
       - run: |
           sudo apt-get install -y ruby
           for os in darwin linux windows; do

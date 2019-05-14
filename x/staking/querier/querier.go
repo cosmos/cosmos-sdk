@@ -216,7 +216,7 @@ func queryValidatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
 	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, delegationResps)

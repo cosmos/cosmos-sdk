@@ -404,7 +404,7 @@ type RedelegationEntryResponse struct {
 	Balance sdk.Int `json:"balance"`
 }
 
-func NewRedelegationResp(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResponse) RedelegationResponse {
+func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResponse) RedelegationResponse {
 	return RedelegationResponse{
 		Redelegation{
 			DelegatorAddress:    d,

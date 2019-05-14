@@ -955,7 +955,7 @@ func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr s
 }
 
 // GET /staking/redelegations?delegator=0xdeadbeef&validator_from=0xdeadbeef&validator_to=0xdeadbeef& Get redelegations filters by params passed in
-func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []staking.Redelegation {
+func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) staking.RedelegationResponses {
 	var res *http.Response
 	var body string
 	endpoint := "/staking/redelegations?"
@@ -968,11 +968,14 @@ func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, s
 	if !dstValidatorAddr.Empty() {
 		endpoint += fmt.Sprintf("validator_to=%s&", dstValidatorAddr)
 	}
+
 	res, body = Request(t, port, "GET", endpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var redels []staking.Redelegation
+
+	var redels staking.RedelegationResponses
 	err := cdc.UnmarshalJSON([]byte(body), &redels)
 	require.Nil(t, err)
+
 	return redels
 }
 

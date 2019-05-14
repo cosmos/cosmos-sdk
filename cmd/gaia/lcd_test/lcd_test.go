@@ -467,11 +467,11 @@ func TestBonding(t *testing.T) {
 
 	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
-	require.Equal(t, amt, bond.Balance)
+	require.Equal(t, amtDec, bond.Shares)
 
 	delegatorDels := getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
-	require.Equal(t, amt, delegatorDels[0].Balance)
+	require.Equal(t, amtDec, delegatorDels[0].Shares)
 
 	// query all delegations to validator
 	bonds := getValidatorDelegations(t, port, operAddrs[0])

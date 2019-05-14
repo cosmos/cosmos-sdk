@@ -216,7 +216,7 @@ func queryValidatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
 	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, delegationResps)
@@ -255,7 +255,7 @@ func queryDelegatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
 	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, delegationResps)
@@ -337,7 +337,7 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 
 	delegationResp, err := delegationToDelegationResp(ctx, k, delegation)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, delegationResp)
@@ -393,7 +393,7 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 
 	redelResponses, err := redelegationsToRedelegations(ctx, k, redels)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, redelResponses)

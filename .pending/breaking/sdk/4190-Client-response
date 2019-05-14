@@ -1,0 +1,2 @@
+#4190 Client responses that return (re)delegation(s) now return balances
+instead of shares.

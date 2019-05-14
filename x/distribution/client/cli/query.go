@@ -13,6 +13,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // GetCmdQueryParams implements the query params command.
@@ -187,7 +188,7 @@ $ gaiacli query distr community-pool
 				return err
 			}
 
-			var result sdk.DecCoins
+			var result supply.PoolAccount
 			cdc.MustUnmarshalJSON(res, &result)
 			return cliCtx.PrintOutput(result)
 		},

@@ -335,9 +335,14 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 }
 
 func queryCommunityPool(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	bz, err := k.cdc.MarshalJSON(k.GetFeePoolCommunityCoins(ctx))
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	communityPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
+	if communityPool == nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("couldn't find community pool account", err.Error()))
+	}
+
+	bz, err2 := k.cdc.MarshalJSON(communityPool)
+	if err2 != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 	}
 	return bz, nil
 }

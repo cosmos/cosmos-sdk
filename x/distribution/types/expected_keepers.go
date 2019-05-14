@@ -1,6 +1,9 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+)
 
 // expected staking keeper
 type StakingKeeper interface {
@@ -18,15 +21,22 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx sdk.Context) []sdk.Delegation
 }
 
-// expected coin keeper
+// BankKeeper defines the expected bank keeper
 type BankKeeper interface {
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 }
 
-// expected fee collection keeper
-type FeeCollectionKeeper interface {
-	GetCollectedFees(ctx sdk.Context) sdk.Coins
-	ClearCollectedFees(ctx sdk.Context)
+// SupplyKeeper defines the supply Keeper for pool accounts
+type SupplyKeeper interface {
+	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
+	SetPoolAccount(ctx sdk.Context, pacc supply.PoolAccount)
+
+	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
+	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
+
+	Deflate(ctx sdk.Context, amount sdk.Coins)
 }
 
 // expected crisis keeper

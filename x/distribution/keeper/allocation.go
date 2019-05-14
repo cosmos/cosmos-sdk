@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // allocate fees handles distribution of the collected fees
@@ -17,16 +18,13 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
+	feesCollectedInt := k.supplyKeeper.GetCoins(ctx, auth.FeeCollectorAddr)
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
-	k.feeCollectionKeeper.ClearCollectedFees(ctx)
 
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	feePool := k.GetFeePool(ctx)
 	if totalPreviousPower == 0 {
-		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected)
-		k.SetFeePool(ctx, feePool)
+		k.supplyKeeper.SendCoinsAccountToPool(ctx, auth.FeeCollectorAddr, CommunityPoolName, feesCollectedInt)
 		return
 	}
 
@@ -77,9 +75,13 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	}
 
 	// allocate community funding
-	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
-	k.SetFeePool(ctx, feePool)
+	communityPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
+	if err != nil {
+		panic(err)
+	}
 
+	communityPool.SetDecCoins(communityPool.GetDecCoins().Add(remaining))
+	k.supplyKeeper.SetPoolAccount(ctx, communityPool)
 }
 
 // allocate tokens to a particular validator, splitting according to commission

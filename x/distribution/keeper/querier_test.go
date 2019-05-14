@@ -211,5 +211,5 @@ func TestQueries(t *testing.T) {
 
 	// currently community pool hold nothing so we should return null
 	communityPool := getQueriedCommunityPool(t, ctx, cdc, querier)
-	require.Nil(t, communityPool)
+	require.True(t, communityPool.GetCoins().Empty())
 }

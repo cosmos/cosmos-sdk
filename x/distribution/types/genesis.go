@@ -54,7 +54,6 @@ type ValidatorSlashEventRecord struct {
 
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
-	FeePool                         FeePool                                `json:"fee_pool"`
 	CommunityTax                    sdk.Dec                                `json:"community_tax"`
 	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward"`
 	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward"`
@@ -69,14 +68,13 @@ type GenesisState struct {
 	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
+func NewGenesisState(communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
 	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
 	slashes []ValidatorSlashEventRecord) GenesisState {
 
 	return GenesisState{
-		FeePool:                         feePool,
 		CommunityTax:                    communityTax,
 		BaseProposerReward:              baseProposerReward,
 		BonusProposerReward:             bonusProposerReward,
@@ -95,7 +93,6 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		FeePool:                         InitialFeePool(),
 		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
 		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
@@ -131,5 +128,5 @@ func ValidateGenesis(data GenesisState) error {
 			"BonusProposerReward cannot add to be greater than one, "+
 			"adds to %s", data.BaseProposerReward.Add(data.BonusProposerReward).String())
 	}
-	return data.FeePool.ValidateGenesis()
+	return nil
 }

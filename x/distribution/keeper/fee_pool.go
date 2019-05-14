@@ -7,19 +7,25 @@ import (
 
 // DistributeFeePool distributes funds from the the community pool to a receiver address
 func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error {
-	feePool := k.GetFeePool(ctx)
-
-	poolTruncated, _ := feePool.CommunityPool.TruncateDecimal()
-	if !poolTruncated.IsAllGTE(amount) {
-		return types.ErrBadDistribution(k.codespace)
-	}
-
-	feePool.CommunityPool.Sub(sdk.NewDecCoins(amount))
-	_, err := k.bankKeeper.AddCoins(ctx, receiveAddr, amount)
+	communityPoolAcc, err := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
 	if err != nil {
 		return err
 	}
 
-	k.SetFeePool(ctx, feePool)
+	if !communityPoolAcc.GetCoins().IsAllGTE(amount) {
+		return types.ErrBadDistribution(k.codespace)
+	}
+	_, remainder := communityPoolAcc.GetDecCoins().TruncateDecimal()
+
+	err = k.supplyKeeper.SendCoinsPoolToAccount(ctx, CommunityPoolName, receiveAddr, amount)
+	if err != nil {
+		return err
+	}
+	err2 := communityPoolAcc.SetDecCoins(communityPoolAcc.GetDecCoins().Add(remainder))
+	if err2 != nil {
+		return sdk.ErrInvalidCoins(err2.Error())
+	}
+
+	k.supplyKeeper.SetPoolAccount(ctx, communityPoolAcc)
 	return nil
 }

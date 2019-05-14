@@ -11,12 +11,12 @@ import (
 
 // keeper of the staking store
 type Keeper struct {
-	storeKey            sdk.StoreKey
-	cdc                 *codec.Codec
-	paramSpace          params.Subspace
-	bankKeeper          types.BankKeeper
-	stakingKeeper       types.StakingKeeper
-	feeCollectionKeeper types.FeeCollectionKeeper
+	storeKey      sdk.StoreKey
+	cdc           *codec.Codec
+	paramSpace    params.Subspace
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+	supplyKeeper  types.SupplyKeeper
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -24,15 +24,15 @@ type Keeper struct {
 
 // create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:            key,
-		cdc:                 cdc,
-		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
-		bankKeeper:          ck,
-		stakingKeeper:       sk,
-		feeCollectionKeeper: fck,
-		codespace:           codespace,
+		storeKey:      key,
+		cdc:           cdc,
+		paramSpace:    paramSpace.WithKeyTable(ParamKeyTable()),
+		bankKeeper:    ck,
+		stakingKeeper: sk,
+		supplyKeeper:  supplyKeeper,
+		codespace:     codespace,
 	}
 	return keeper
 }

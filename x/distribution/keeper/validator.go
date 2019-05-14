@@ -34,8 +34,11 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 		// ergo we instead add to the community pool
 		communityPool := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
 		outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-		commmunityPool.SetDecCoins(commmunityPool.GetDecCoins().Add(rewards.Rewards))
-		outstanding = outstanding.Sub(rewards.Rewards)
+
+		rewardsInt, remainder := rewards.Rewards.TruncateDecimal()
+		commmunityPool.SetCoins(commmunityPool.GetCoins().Add(rewardsInt))
+		outstanding = outstanding.Sub(sdk.NewDecCoins(rewardsInt))
+
 		k.supplyKeeper.SetAccount(communityPool)
 		k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 

@@ -141,17 +141,9 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	startingPeriod := startingInfo.PreviousPeriod
 	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
 
-	// truncate coins, return remainder to community pool
-	coins, remainder := rewards.TruncateDecimal()
-	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
-
-	communityPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, CommunityPoolName)
-	if err != nil {
-		panic(err)
-	}
-
-	communityPool.SetDecCoins(communityPool.GetDecCoins().Add(remainder))
-	k.supplyKeeper.SetPoolAccount(ctx, communityPool)
+	// subtract Coins from the outstanding rewards
+	coins, _ := rewards.TruncateDecimal()
+	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(sdk.NewDecCoins(coins)))
 
 	// add coins to user account
 	if !coins.IsZero() {

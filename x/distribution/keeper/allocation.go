@@ -80,7 +80,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 		panic(err)
 	}
 
-	communityPool.SetDecCoins(communityPool.GetDecCoins().Add(remaining))
+	remainingInt, _ := remaining.TruncateDecimal()
+	communityPool.SetCoins(communityPool.GetCoins().Add(remainingInt))
 	k.supplyKeeper.SetPoolAccount(ctx, communityPool)
 }
 

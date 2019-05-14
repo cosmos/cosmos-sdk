@@ -1,9 +1,7 @@
 package types
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -15,8 +13,6 @@ type PoolAccount interface {
 	auth.Account
 
 	Name() string
-	GetDecCoins() sdk.DecCoins
-	SetDecCoins(sdk.DecCoins) error
 }
 
 //-----------------------------------------------------------------------------
@@ -26,19 +22,19 @@ var _ PoolAccount = (*PoolHolderAccount)(nil)
 
 // PoolHolderAccount defines an account for modules that holds coins on a pool
 type PoolHolderAccount struct {
-	Address       sdk.AccAddress `json:"address"`
-	Coins         sdk.DecCoins   `json:"coins"`
-	PoolName      string         `json:"name"` // name of the pool
-	AccountNumber uint64         `json:"account_number"`
+	*auth.BaseAccount
+
+	PoolName string `json:"name"` // name of the pool
 }
 
 // NewPoolHolderAccount creates a new PoolHolderAccount instance
 func NewPoolHolderAccount(name string) *PoolHolderAccount {
-	poolAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 
+	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
 	return &PoolHolderAccount{
-		Address:  poolAddress,
-		PoolName: name,
+		BaseAccount: &baseAcc,
+		PoolName:    name,
 	}
 }
 
@@ -47,72 +43,9 @@ func (pha PoolHolderAccount) Name() string {
 	return pha.PoolName
 }
 
-// GetCoins - Implements Account
-func (pha PoolHolderAccount) GetCoins() sdk.Coins {
-	coins, _ := pha.Coins.TruncateDecimal()
-	return coins
-}
-
-// SetCoins - Implements Account
-func (pha *PoolHolderAccount) SetCoins(coins sdk.Coins) error {
-	pha.Coins = sdk.NewDecCoins(coins)
-	return nil
-}
-
-// GetDecCoins - returns the account decimal coins
-func (pha PoolHolderAccount) GetDecCoins() sdk.DecCoins {
-	return pha.Coins
-}
-
-// SetDecCoins - sets decimal coins
-func (pha *PoolHolderAccount) SetDecCoins(coins sdk.DecCoins) error {
-	pha.Coins = coins
-	return nil
-}
-
-// GetAddress - Implements sdk.Account.
-func (pha PoolHolderAccount) GetAddress() sdk.AccAddress {
-	return pha.Address
-}
-
-// SetAddress - Implements sdk.Account.
-func (pha *PoolHolderAccount) SetAddress(addr sdk.AccAddress) error {
-	if len(pha.Address) != 0 {
-		return errors.New("cannot override PoolHolderAccount address")
-	}
-	pha.Address = addr
-	return nil
-}
-
-// GetPubKey - Implements Account
-func (pha PoolHolderAccount) GetPubKey() crypto.PubKey {
-	return nil
-}
-
 // SetPubKey - Implements Account
 func (pha *PoolHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return fmt.Errorf("not supported for pool accounts")
-}
-
-// GetAccountNumber - Implements Account
-func (pha PoolHolderAccount) GetAccountNumber() uint64 {
-	return pha.AccountNumber
-}
-
-// SetAccountNumber - Implements Account
-func (pha *PoolHolderAccount) SetAccountNumber(accNumber uint64) error {
-	pha.AccountNumber = accNumber
-	return nil
-}
-
-// GetSequence - Implements Account
-func (pha PoolHolderAccount) GetSequence() uint64 {
-	return uint64(0)
-}
-
-// SpendableCoins - Implements Account
-func (pha PoolHolderAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return pha.GetCoins()
 }
 
 // SetSequence - Implements Account
@@ -124,11 +57,10 @@ func (pha *PoolHolderAccount) SetSequence(seq uint64) error {
 func (pha PoolHolderAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Holder Account:
-Address:        %s
-Coins:          %s
-Name:           %s
-Account Number: %d`,
-		pha.Address, pha.Coins, pha.PoolName, pha.AccountNumber)
+Address:  %s
+Coins:    %s
+Name:     %s`,
+		pha.Address, pha.Coins, pha.PoolName)
 }
 
 //-----------------------------------------------------------------------------
@@ -152,9 +84,8 @@ func NewPoolMinterAccount(name string) *PoolMinterAccount {
 func (pma PoolMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Minter Account:
-	Address:        %s
-	Coins:          %s
-	Name:           %s
-	Account Number: %d`,
-		pma.Address, pma.Coins, pma.PoolName, pma.AccountNumber)
+Address: %s
+Coins:   %s
+Name:    %s`,
+		pma.Address, pma.Coins, pma.PoolName)
 }

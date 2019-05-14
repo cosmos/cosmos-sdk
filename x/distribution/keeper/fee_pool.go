@@ -15,17 +15,11 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr
 	if !communityPoolAcc.GetCoins().IsAllGTE(amount) {
 		return types.ErrBadDistribution(k.codespace)
 	}
-	_, remainder := communityPoolAcc.GetDecCoins().TruncateDecimal()
 
 	err = k.supplyKeeper.SendCoinsPoolToAccount(ctx, CommunityPoolName, receiveAddr, amount)
 	if err != nil {
 		return err
 	}
-	err2 := communityPoolAcc.SetDecCoins(communityPoolAcc.GetDecCoins().Add(remainder))
-	if err2 != nil {
-		return sdk.ErrInvalidCoins(err2.Error())
-	}
 
-	k.supplyKeeper.SetPoolAccount(ctx, communityPoolAcc)
 	return nil
 }

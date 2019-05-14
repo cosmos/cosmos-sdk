@@ -331,7 +331,7 @@ func (d Redelegation) String() string {
 		)
 	}
 
-	return out
+	return strings.TrimRight(out, "\n")
 }
 
 // Redelegations are a collection of Redelegation
@@ -442,7 +442,7 @@ func (r RedelegationResponse) String() string {
 		)
 	}
 
-	return out
+	return strings.TrimRight(out, "\n")
 }
 
 type redelegationRespAlias RedelegationResponse

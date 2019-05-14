@@ -386,7 +386,7 @@ func (d DelegationResponses) String() (out string) {
 // responses.
 type RedelegationResp struct {
 	Redelegation
-	Entries []RedelegationEntryResp `json:"entries"`
+	Entries []RedelegationEntryResp `json:"entries"` // nolint: structtag
 }
 
 // RedelegationEntryResp is equivalent to a RedelegationEntry except that it

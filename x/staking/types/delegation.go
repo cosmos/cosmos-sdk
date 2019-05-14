@@ -316,14 +316,21 @@ func (d Redelegation) String() string {
   Delegator:                 %s
   Source Validator:          %s
   Destination Validator:     %s
-  Entries:`, d.DelegatorAddress, d.ValidatorSrcAddress, d.ValidatorDstAddress)
+  Entries:
+`,
+		d.DelegatorAddress, d.ValidatorSrcAddress, d.ValidatorDstAddress,
+	)
+
 	for i, entry := range d.Entries {
-		out += fmt.Sprintf(`    Redelegation %d:
+		out += fmt.Sprintf(`    Redelegation Entry #%d:
       Creation height:           %v
       Min time to unbond (unix): %v
-      Dest Shares:               %s`, i, entry.CreationHeight,
-			entry.CompletionTime, entry.SharesDst)
+      Dest Shares:               %s
+`,
+			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst,
+		)
 	}
+
 	return out
 }
 
@@ -418,17 +425,19 @@ func (r RedelegationResp) String() string {
   Delegator:                 %s
   Source Validator:          %s
   Destination Validator:     %s
-  Entries:`,
+  Entries:
+`,
 		r.DelegatorAddress, r.ValidatorSrcAddress, r.ValidatorDstAddress,
 	)
 
 	for i, entry := range r.Entries {
-		out += fmt.Sprintf(`    Redelegation %d:
+		out += fmt.Sprintf(`    Redelegation Entry #%d:
       Creation height:           %v
       Min time to unbond (unix): %v
       Initial Balance:           %s
       Shares:                    %s
-      Balance:                   %s`,
+      Balance:                   %s
+`,
 			i, entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, entry.SharesDst, entry.Balance,
 		)
 	}

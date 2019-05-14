@@ -374,16 +374,18 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: |
-          sudo apt-get install -y ruby
-          for os in darwin linux windows; do
-            bash ./cmd/gaia/contrib/gitian-build.sh ${os} `pwd`
-            cp gitian-build-${os}/result/gaia-${os}-res.yml .
-            rm -rf gitian-build-${os}/
-            echo "Build report for ${os}"
-            cat gaia-${os}-res.yml
-          done
-        no_output_timeout: 20m
+      - run:
+          name: Build gaia
+          no_output_timeout: 20m
+          command: |
+            sudo apt-get install -y ruby
+            for os in darwin linux windows; do
+              bash ./cmd/gaia/contrib/gitian-build.sh ${os} `pwd`
+              cp gitian-build-${os}/result/gaia-${os}-res.yml .
+              rm -rf gitian-build-${os}/
+              echo "Build report for ${os}"
+              cat gaia-${os}-res.yml
+            done
 
 workflows:
   version: 2

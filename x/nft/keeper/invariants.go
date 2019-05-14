@@ -46,7 +46,7 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 		})
 
 		// TODO: make this invariant per collection, not in total
-		k.IterateNFTBalances(ctx, func(_ sdk.AccAddress, collection types.Collection) bool {
+		k.IterateBalances(ctx, func(_ sdk.AccAddress, collection types.Collection) bool {
 			balancesSupply += collection.Supply()
 			return false
 		})

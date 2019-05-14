@@ -69,7 +69,7 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Err
 		return err
 	}
 
-	collection.DeleteNFT(id)
+	collection.DeleteNFT(nft)
 
 	k.SetCollection(ctx, denom, collection)
 

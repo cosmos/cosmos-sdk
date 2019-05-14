@@ -14,7 +14,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case types.MsgTransferNFT:
-			return handleMsgTransferNFT(ctx, msg, k)
+			return HandleMsgTransferNFT(ctx, msg, k)
 		case types.MsgEditNFTMetadata:
 			return HandleMsgEditNFTMetadata(ctx, msg, k)
 		default:
@@ -24,7 +24,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Keeper,
+// HandleMsgTransferNFT
+func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)

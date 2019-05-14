@@ -62,9 +62,8 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			name := viper.GetString(flagName)
 			description := viper.GetString(flagDescription)
 			image := viper.GetString(flagImage)
-			tokenURI := := viper.GetString(flagTokenURI)
+			tokenURI := BadExpr
 
-			msg := nft.NewMsgEditMetadata(cliCtx.GetFromAddress(), tokenID, denom, name,description, image, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
@@ -72,6 +71,6 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(flagName, "", "Name of the NFT")
 	cmd.Flags().String(flagDescription, "", "Unique description of the NFT")
 	cmd.Flags().String(flagImage, "", "Image path")
-	cmd.Flags().String(flagTokenURI, "", "Extra properties available fo querying")
+	cmd.Flags().String(flagTokenURI, "", "Extra properties available for querying")
 	return cmd
 }

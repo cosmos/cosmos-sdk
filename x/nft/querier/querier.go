@@ -109,9 +109,9 @@ func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Req
 
 	var collections types.Collections
 	if params.Denom == "" {
-		collections, _ = k.GetBalance(ctx, params.Owner)
+		collections = k.GetOwnerBalances(ctx, params.Owner)
 	} else {
-		collection, _ := k.GetBalanceCollection(ctx, params.Owner, params.Denom)
+		collection, _ := k.GetBalance(ctx, params.Owner, params.Denom)
 		collections = types.NewCollections(collection)
 	}
 

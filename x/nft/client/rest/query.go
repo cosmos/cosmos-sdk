@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/nft/querier"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
@@ -47,11 +49,19 @@ func supplyNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute st
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/supply/%s", queryRoute, denom), nil)
+		params := querier.NewQueryCollectionParams(denom)
+		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/supply/%s", queryRoute, denom), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
 		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -64,6 +74,20 @@ func getBalanceHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute s
 			return
 		}
 
+		params := querier.NewQueryBalanceParams(address, "")
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/balance", queryRoute), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -77,7 +101,20 @@ func getBalanceCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, qu
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/balance", queryRoute), nil)
+		params := querier.NewQueryBalanceParams(address, denom)
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/balance", queryRoute), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -85,7 +122,20 @@ func getCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRout
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/collection", queryRoute), nil)
+		params := querier.NewQueryCollectionParams(denom)
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/collection", queryRoute), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -95,6 +145,25 @@ func getNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute strin
 		denom := vars["denom"]
 		tokenID := vars["id"]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), nil)
+		id, err := strconv.ParseUint(tokenID, 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		params := querier.NewQueryNFTParams(denom, id)
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

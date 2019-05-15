@@ -74,7 +74,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, paramsKeeper.Subspace(supply.DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 

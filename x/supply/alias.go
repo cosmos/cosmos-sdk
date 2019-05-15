@@ -16,11 +16,10 @@ type (
 )
 
 var (
-	NewKeeper              = keeper.NewKeeper
-	RegisterInvariants     = keeper.RegisterInvariants
-	AllInvariants          = keeper.AllInvariants
-	StakingTokensInvariant = keeper.StakingTokensInvariant
-	DefaultCodespace       = keeper.DefaultCodespace
+	NewKeeper          = keeper.NewKeeper
+	RegisterInvariants = keeper.RegisterInvariants
+	AllInvariants      = keeper.AllInvariants
+	DefaultCodespace   = keeper.DefaultCodespace
 
 	NewPoolHolderAccount = types.NewPoolHolderAccount
 	NewPoolMinterAccount = types.NewPoolMinterAccount
@@ -31,6 +30,5 @@ var (
 )
 
 const (
-	DefaultParamspace = keeper.DefaultParamspace
-	StoreKey          = keeper.StoreKey
+	StoreKey = keeper.StoreKey
 )

@@ -126,8 +126,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		panic(nil)
 	}
 
-	k.supplyKeeper.Deflate(ctx, burnedCoins)
-
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
 		"validator %s slashed by slash factor of %s; burned %v tokens",
@@ -207,8 +205,6 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		if err != nil {
 			panic(err)
 		}
-
-		k.supplyKeeper.Deflate(ctx, burnedCoins)
 	}
 
 	return totalSlashAmount
@@ -269,8 +265,6 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		if err != nil {
 			panic(err)
 		}
-
-		k.supplyKeeper.Deflate(ctx, burnedCoins)
 	}
 
 	return totalSlashAmount

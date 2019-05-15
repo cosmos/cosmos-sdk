@@ -74,7 +74,7 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
@@ -104,7 +104,6 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
@@ -117,7 +116,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, pk.Subspace(supply.DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	// TODO: set pool staking and distr module accs

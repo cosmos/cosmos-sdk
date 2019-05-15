@@ -122,10 +122,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		bank.DefaultCodespace,
 	)
 
-	sk := supply.NewKeeper(cdc, keySupply,
-		accountKeeper, supply.DefaultCodespace,
-		pk.Subspace(supply.DefaultParamspace),
-	)
+	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 
 	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, sk, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())

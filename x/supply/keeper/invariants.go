@@ -7,83 +7,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// names used as root for pool module accounts
-const (
-	UnbondedTokensName = "UnbondedTokens"
-	BondedTokensName   = "BondedTokens"
-)
-
 // RegisterInvariants register all supply invariants
-func RegisterInvariants(ck CrisisKeeper, k Keeper, dk DistributionKeeper,
-	sk StakingKeeper) {
-	ck.RegisterRoute(ModuleName, "total-supply",
-		TotalSupply(k, dk, sk))
-	ck.RegisterRoute(ModuleName, "staking-token-supply",
-		StakingTokensInvariant(k, sk))
+func RegisterInvariants(ck CrisisKeeper, k Keeper) {
+	ck.RegisterRoute(ModuleName, "total-supply", TotalSupply(k))
 }
 
 // AllInvariants runs all invariants of the supply module.
-func AllInvariants(k Keeper, dk DistributionKeeper, sk StakingKeeper) sdk.Invariant {
+func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		err := StakingTokensInvariant(k, sk)(ctx)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return TotalSupply(k)(ctx)
 	}
 }
 
-// BondedTokensInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
-func TotalSupply(k Keeper, dk DistributionKeeper, sk StakingKeeper) sdk.Invariant {
-
+// TotalSupply checks that the total supply reflects all the coins held in accounts
+func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		total := sdk.ZeroInt()
+		var expectedTotal sdk.Coins
+		supply := k.GetSupply(ctx)
 
 		k.ak.IterateAccounts(ctx, func(acc auth.Account) bool {
-			total = total.Add(acc.GetCoins().AmountOf(sk.BondDenom(ctx)))
+			expectedTotal = expectedTotal.Add(acc.GetCoins())
 			return false
 		})
 
-		sk.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
-			switch validator.GetStatus() {
-			case sdk.Bonded:
-				total = total.Add(validator.GetBondedTokens())
-			case sdk.Unbonding, sdk.Unbonded:
-				total = total.Add(validator.GetTokens())
-			}
-			// add yet-to-be-withdrawn
-			total = total.Add(dk.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(sk.BondDenom(ctx)))
-			return false
-		})
-
-		return nil
-	}
-}
-
-// StakingTokensInvariant checks that the total supply of staking tokens from the staking pool matches the total supply ones
-func StakingTokensInvariant(k Keeper, sk StakingKeeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
-		supply := k.GetSupply(ctx)
-		bondDenom := sk.BondDenom(ctx)
-
-		totalStakeSupply := supply.Total.AmountOf(bondDenom)
-		bondedPool, err := k.GetAccountByName(ctx, BondedTokensName)
-		if err != nil {
-			return err
-		}
-		unbondedPool, err := k.GetAccountByName(ctx, UnbondedTokensName)
-		if err != nil {
-			return err
-		}
-
-		stakeSupply := bondedPool.GetCoins().AmountOf(bondDenom).Add(unbondedPool.GetCoins().AmountOf(bondDenom))
-
-		// Bonded tokens should equal sum of tokens with bonded validators
-		if !totalStakeSupply.Equal(stakeSupply) {
-			return fmt.Errorf("total staking token supply invariance:\n"+
-				"\tstaking pool tokens: %v\n"+
-				"\tsupply staking tokens: %v", stakeSupply, totalStakeSupply)
+		if !expectedTotal.IsEqual(supply.Total) {
+			return fmt.Errorf("total supply invariance:\n"+
+				"\tsum of accounts coins: %v\n"+
+				"\tsupply.Total: %v", expectedTotal, supply.Total)
 		}
 
 		return nil

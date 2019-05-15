@@ -450,7 +450,6 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		if err != nil {
 			panic(err)
 		}
-		keeper.sk.Deflate(ctx, deposit.Amount)
 
 		store.Delete(depositsIterator.Key())
 	}

@@ -14,7 +14,7 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr
 		return types.ErrBadDistribution(k.codespace)
 	}
 
-	feePool.CommunityPool.Sub(sdk.NewDecCoins(amount))
+	_ = feePool.CommunityPool.Sub(sdk.NewDecCoins(amount))
 	err := k.supplyKeeper.SendCoinsPoolToAccount(ctx, types.ModuleName, receiveAddr, amount)
 	if err != nil {
 		return err

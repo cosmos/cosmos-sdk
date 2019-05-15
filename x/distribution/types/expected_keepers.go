@@ -35,8 +35,6 @@ type SupplyKeeper interface {
 	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
-
-	Deflate(ctx sdk.Context, amount sdk.Coins)
 }
 
 // expected crisis keeper

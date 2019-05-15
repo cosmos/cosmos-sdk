@@ -60,7 +60,7 @@ func newTestInput(t *testing.T) testInput {
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace, paramsKeeper.Subspace(supply.DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 	stakingKeeper := staking.NewKeeper(
 		cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)

@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-// SendCoinsPoolToAccount
+// SendCoinsPoolToAccount trasfers coins from a PoolAccount to an AccAddress
 func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	senderAcc, err := k.GetAccountByName(ctx, senderModule)
 	if err != nil {
@@ -23,7 +23,7 @@ func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, rec
 	return nil
 }
 
-// SendCoinsPoolToPool
+// SendCoinsPoolToPool trasfers coins from a PoolAccount to another
 func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
 	senderAcc, err := k.GetAccountByName(ctx, senderModule)
 	if err != nil {
@@ -43,7 +43,7 @@ func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModu
 	return nil
 }
 
-// SendCoinsAccountToPool
+// SendCoinsAccountToPool trasfers coins from an AccAddress to a PoolAccount
 func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
 	recipientAcc, err := k.GetAccountByName(ctx, recipientModule)
 	if err != nil {
@@ -76,6 +76,11 @@ func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 		return err
 	}
 
+	// update total supply
+	supply := k.GetSupply(ctx)
+	supply.Inflate(amt)
+	k.SetSupply(ctx, supply)
+
 	return nil
 }
 
@@ -90,6 +95,11 @@ func (k Keeper) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 	if err != nil {
 		return err
 	}
+
+	// update total supply
+	supply := k.GetSupply(ctx)
+	supply.Deflate(amt)
+	k.SetSupply(ctx, supply)
 
 	return nil
 }

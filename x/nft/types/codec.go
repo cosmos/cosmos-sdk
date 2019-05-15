@@ -14,6 +14,11 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgEditNFTMetadata{}, "cosmos-sdk/MsgEditNFTMetadata", nil)
 }
 
+// generic sealed codec to be used throughout this module
+var moduleCdc *codec.Codec
+
 func init() {
-	RegisterCodec(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	moduleCdc = cdc.Seal()
 }

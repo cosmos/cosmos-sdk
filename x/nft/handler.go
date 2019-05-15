@@ -24,7 +24,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-// HandleMsgTransferNFT
+// HandleMsgTransferNFT handler for MsgTransferNFT
 func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Keeper,
 ) sdk.Result {
 
@@ -33,14 +33,13 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 		return err.Result()
 	}
 
-	if !nft.Owner.Equals(msg.Sender) {
+	if !nft.GetOwner().Equals(msg.Sender) {
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Sender.String(), msg.ID)).Result()
 	}
 
-	// delete NFT from original owner balance
+	// TODO: delete NFT from original owner balance
 
-	// update NFT owner
-	nft.Owner = msg.Recipient
+	// TODO: update NFT owner
 
 	// save new NFT in the collection and balance
 	err = k.SetNFT(ctx, msg.Denom, nft)
@@ -59,6 +58,7 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	}
 }
 
+// HandleMsgEditNFTMetadata handler for MsgEditNFTMetadata
 func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k keeper.Keeper,
 ) sdk.Result {
 
@@ -68,12 +68,12 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	}
 
 	// check if msg sender is the Owner of the NFT
-	if !nft.Owner.Equals(msg.Owner) {
+	if !nft.GetOwner().Equals(msg.Owner) {
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Owner.String(), msg.ID)).Result()
 	}
 
-	nft = nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
-	err = k.SetNFT(ctx, msg.Denom, msg.ID, nft)
+	nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	err = k.SetNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()
 	}

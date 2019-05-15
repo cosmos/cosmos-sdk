@@ -32,7 +32,9 @@ var (
 	NewBalance          = types.NewBalance
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
+	ValidateGenesis     = types.ValidateGenesis
 	RegisterCodec       = types.RegisterCodec
+	ModuleCdc           = types.ModuleCdc
 )
 
 const (

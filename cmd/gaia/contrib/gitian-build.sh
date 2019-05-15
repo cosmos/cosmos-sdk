@@ -158,7 +158,7 @@ f_echo_stderr() {
 }
 
 
-while getopts ":cs:hw" opt; do
+while getopts ":cs:h" opt; do
   case "${opt}" in
     h)  f_help ; exit 0 ;;
     c)  g_flag_commit=y ;;

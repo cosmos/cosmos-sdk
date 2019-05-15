@@ -11,8 +11,8 @@ type MsgSend struct {
 
 `handleMsgSend` just runs `inputOutputCoins`.
 
-```
-handleMsgSend(msg MsgSend)
+```golang
+handleMsgSend(msg MsgSend) {
   inputSum = 0
   for input in inputs
     inputSum += input.Amount
@@ -23,4 +23,5 @@ handleMsgSend(msg MsgSend)
     fail with "input/output amount mismatch"
 
   return inputOutputCoins(msg.Inputs, msg.Outputs)
+}
 ```

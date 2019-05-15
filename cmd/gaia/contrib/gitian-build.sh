@@ -19,6 +19,7 @@ DEFAULT_SIGN_COMMAND='gpg --detach-sign'
 DEFAULT_GAIA_SIGS=${GAIA_SIGS:-'gaia.sigs'}
 DEFAULT_GITIAN_REPO='https://github.com/devrandom/gitian-builder'
 DEFAULT_GBUILD_FLAGS=''
+DEFAULT_SIGS_REPO='https://github.com/cosmos/gaia.sigs'
 
 # Overrides
 
@@ -32,6 +33,7 @@ g_workdir=''
 g_gitian_cache=''
 g_sign_identity=''
 g_gitian_skip_download=''
+g_flag_commit=''
 
 f_main() {
   local l_dirname \
@@ -71,10 +73,10 @@ f_main() {
   echo "You may find the result in $(echo ${g_workdir}/result/*.yml)" >&2
 
   if [ -n "${g_sign_identity}" ]; then
-    f_sign "${l_descriptor}" "${l_release}" "${l_sigs_dir}"
-    echo "Build signed as ${g_sign_identity}, signatures can be found in ${l_sigs_dir}"
+    f_sign "${l_descriptor}" "${l_release}" "${l_sigs_dir}" "${g_flag_commit}"
+    echo "Build signed as ${g_sign_identity}, signatures can be found in ${l_sigs_dir}" >&2
     f_verify "${l_descriptor}" "${l_release}" "${l_sigs_dir}"
-    echo "Signatures in ${l_sigs_dir} have been verified"
+    echo "Signatures in ${l_sigs_dir} have been verified" >&2
   else
     echo "You can now sign the build with the following command:" >&2
     echo "cd ${g_workdir} ; bin/gsign -p 'gpg --detach-sign' -s GPG_IDENTITY --release=${l_release} ${l_descriptor}" >&2
@@ -126,14 +128,27 @@ f_build() {
 }
 
 f_sign() {
-  local l_descriptor l_release_name l_sigs_dir
+  local l_descriptor l_release_name l_sigs_dir l_commit
 
   l_descriptor=$1
   l_release_name=$2
   l_sigs_dir=$3
+  l_commit=$4
 
   pushd ${g_workdir}
+  if [ -n "${l_commit}" -a ! -d "${l_sigs_dir}" ]; then
+    echo "Cloning ${DEFAULT_SIGS_REPO} to ${l_sigs_dir}" >&2
+    git clone ${DEFAULT_SIGS_REPO} "${l_sigs_dir}"
+  fi
+
   bin/gsign -p "${SIGN_COMMAND}" -s "${g_sign_identity}" --destination="${l_sigs_dir}" --release=${l_release_name} ${l_descriptor}
+
+  if [ -n "${l_commit}" ]; then
+    pushd "${l_sigs_dir}"
+    git add . || echo "git add failed" >&2
+    git commit -m "Add ${l_release_name} reproducible build" || echo "git commit failed" >&2
+    popd
+  fi
   popd
 }
 
@@ -170,6 +185,7 @@ Launch a gitian build from the local clone of cosmos-sdk available at GIT_REPO.
 
   Options:
    -h               display this help and exit
+   -c               clone the signatures repository and commit signatures
    -d DIRNAME       set working directory name and skip gitian-builder download
    -s IDENTITY      sign build as IDENTITY
 
@@ -183,9 +199,10 @@ variable \$SIGN_COMMAND.
 EOF
 }
 
-while getopts ":d:s:h" opt; do
+while getopts ":cd:s:h" opt; do
   case "${opt}" in
     h)  f_help ; exit 0 ;;
+    c)  g_flag_commit=y ;;
     d)  g_dirname="${OPTARG}" ;;
     s)  g_sign_identity="${OPTARG}" ;;
   esac

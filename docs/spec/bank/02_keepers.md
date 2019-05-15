@@ -43,43 +43,47 @@ type BaseKeeper interface {
 
 `setCoins` fetches an account by address, sets the coins on the account, and saves the account.
 
-```
-setCoins(addr AccAddress, amt Coins)
+```golang
+setCoins(addr AccAddress, amt Coins) {
   account = accountKeeper.getAccount(addr)
   if account == nil
     fail with "no account found"
   account.Coins = amt
   accountKeeper.setAccount(account)
+}
 ```
 
 `subtractCoins` fetches the coins of an account, subtracts the provided amount, and saves the account. This decreases the total supply.
 
-```
-subtractCoins(addr AccAddress, amt Coins)
+```golang
+subtractCoins(addr AccAddress, amt Coins) {
   oldCoins = getCoins(addr)
   newCoins = oldCoins - amt
   if newCoins < 0
     fail with "cannot end up with negative coins"
   setCoins(addr, newCoins)
+}
 ```
 
 `addCoins` fetches the coins of an account, adds the provided amount, and saves the account. This increases the total supply.
 
-```
-addCoins(addr AccAddress, amt Coins)
+```golang
+addCoins(addr AccAddress, amt Coins) {
   oldCoins = getCoins(addr)
   newCoins = oldCoins + amt
   setCoins(addr, newCoins)
+}
 ```
 
 `inputOutputCoins` transfers coins from any number of input accounts to any number of output accounts.
 
-```
-inputOutputCoins(inputs []Input, outputs []Output)
+```golang
+inputOutputCoins(inputs []Input, outputs []Output) {
   for input in inputs
     subtractCoins(input.Address, input.Coins)
   for output in outputs
     addCoins(output.Address, output.Coins)
+}
 ```
 
 ## SendKeeper
@@ -94,10 +98,11 @@ type SendKeeper interface {
 
 `sendCoins` transfers coins from one account to another.
 
-```
-sendCoins(from AccAddress, to AccAddress, amt Coins)
+```golang
+sendCoins(from AccAddress, to AccAddress, amt Coins) {
   subtractCoins(from, amt)
   addCoins(to, amt)
+}
 ```
 
 ## ViewKeeper
@@ -113,19 +118,21 @@ type ViewKeeper interface {
 
 `getCoins` returns the coins associated with an account.
 
-```
-getCoins(addr AccAddress)
+```golang
+getCoins(addr AccAddress) {
   account = accountKeeper.getAccount(addr)
   if account == nil
     return Coins{}
   return account.Coins
+}
 ```
 
 `hasCoins` returns whether or not an account has at least the provided amount of coins.
 
-```
-hasCoins(addr AccAddress, amt Coins)
+```golang
+hasCoins(addr AccAddress, amt Coins) {
   account = accountKeeper.getAccount(addr)
   coins = getCoins(addr)
   return coins >= amt 
+}
 ```

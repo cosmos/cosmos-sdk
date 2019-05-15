@@ -48,7 +48,12 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			account := args[0]
+			
+			address, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
 			denom := ""
 			if len(args) == 2 {
 				denom = args[1]
@@ -81,7 +86,6 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			denom := args[0]
-			tokenID := args[1]
 
 			params := querier.NewQueryCollectionParams(denom)
 			bz, err := cdc.MarshalJSON(params)

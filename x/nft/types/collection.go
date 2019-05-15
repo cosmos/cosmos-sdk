@@ -52,7 +52,7 @@ func (collection *Collection) AddNFT(nft NFT) {
 func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
-		ErrUnknownNFT(DefaultCodespace,
+		return ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}

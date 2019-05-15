@@ -141,7 +141,8 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
-            make test_sim_gaia_import_export
+            make runsim
+            runsim 50 5 TestGaiaImportExport
 
   test_sim_gaia_simulation_after_import:
     <<: *linux_defaults
@@ -156,7 +157,8 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
-            make test_sim_gaia_simulation_after_import
+            make runsim
+            runsim 50 5 TestGaiaSimulationAfterImport
 
   test_sim_gaia_multi_seed_long:
     <<: *linux_defaults

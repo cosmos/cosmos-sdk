@@ -54,7 +54,7 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			denom := args[0]
-			tokenID, err := strconv.ParseUint(args[1], 10, 64)
+			id, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -62,8 +62,9 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			name := viper.GetString(flagName)
 			description := viper.GetString(flagDescription)
 			image := viper.GetString(flagImage)
-			tokenURI := BadExpr
+			tokenURI := viper.GetString(flagTokenURI)
 
+			msg := nft.MsgEditNFTMetadata(cliCtx.GetFromAddress(), id, denom, name, description, image, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}

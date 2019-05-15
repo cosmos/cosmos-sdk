@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func delegationToDelegationResp(ctx sdk.Context, k keeper.Keeper, del types.Delegation) (types.DelegationResponse, sdk.Error) {
+func delegationToDelegationResponse(ctx sdk.Context, k keeper.Keeper, del types.Delegation) (types.DelegationResponse, sdk.Error) {
 	val, found := k.GetValidator(ctx, del.ValidatorAddress)
 	if !found {
 		return types.DelegationResponse{}, types.ErrNoValidatorFound(types.DefaultCodespace)
@@ -20,13 +20,13 @@ func delegationToDelegationResp(ctx sdk.Context, k keeper.Keeper, del types.Dele
 	), nil
 }
 
-func delegationsToDelegationResps(
+func delegationsToDelegationResponses(
 	ctx sdk.Context, k keeper.Keeper, delegations types.Delegations,
 ) (types.DelegationResponses, sdk.Error) {
 
 	resp := make(types.DelegationResponses, len(delegations), len(delegations))
 	for i, del := range delegations {
-		delResp, err := delegationToDelegationResp(ctx, k, del)
+		delResp, err := delegationToDelegationResponse(ctx, k, del)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +37,7 @@ func delegationsToDelegationResps(
 	return resp, nil
 }
 
-func redelegationsToRedelegations(
+func redelegationsToRedelegationResponses(
 	ctx sdk.Context, k keeper.Keeper, redels types.Redelegations,
 ) (types.RedelegationResponses, sdk.Error) {
 

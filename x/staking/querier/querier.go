@@ -214,7 +214,7 @@ func queryValidatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	}
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
-	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
+	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func queryDelegatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.Reque
 	}
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
-	delegationResps, err := delegationsToDelegationResps(ctx, k, delegations)
+	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 		return []byte{}, types.ErrNoDelegation(types.DefaultCodespace)
 	}
 
-	delegationResp, err := delegationToDelegationResp(ctx, k, delegation)
+	delegationResp, err := delegationToDelegationResponse(ctx, k, delegation)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 	}
 
-	redelResponses, err := redelegationsToRedelegations(ctx, k, redels)
+	redelResponses, err := redelegationsToRedelegationResponses(ctx, k, redels)
 	if err != nil {
 		return nil, err
 	}

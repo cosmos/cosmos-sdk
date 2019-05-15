@@ -107,12 +107,12 @@ func TestDelegationResponses(t *testing.T) {
 
 func TestRedelegationResponses(t *testing.T) {
 	cdc := codec.New()
-	entries := []RedelegationEntryResp{
-		NewRedelegationEntryResp(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
-		NewRedelegationEntryResp(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
+	entries := []RedelegationEntryResponse{
+		NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
+		NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
 	}
-	rdr1 := NewRedelegationResp(sdk.AccAddress(addr1), addr2, addr3, entries)
-	rdr2 := NewRedelegationResp(sdk.AccAddress(addr2), addr1, addr3, entries)
+	rdr1 := NewRedelegationResponse(sdk.AccAddress(addr1), addr2, addr3, entries)
+	rdr2 := NewRedelegationResponse(sdk.AccAddress(addr2), addr1, addr3, entries)
 	rdrs := RedelegationResponses{rdr1, rdr2}
 
 	bz1, err := json.Marshal(rdr1)

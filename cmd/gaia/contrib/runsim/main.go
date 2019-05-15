@@ -33,11 +33,12 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs     int
-	blocks   string
-	period   string
-	testname string
-	genesis  string
+	jobs       int
+	blocks     string
+	period     string
+	testname   string
+	genesis    string
+	exitOnFail bool
 
 	// logs temporary directory
 	tempdir string
@@ -51,10 +52,11 @@ func init() {
 	mutex = &sync.Mutex{}
 	flag.IntVar(&jobs, "j", 10, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
+	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-g genesis.json] [blocks] [period] [testname]
+			`Usage: %s [-j maxprocs] [-g genesis.json] [-e] [blocks] [period] [testname]
 Run simulations in parallel
 
 `, filepath.Base(os.Args[0]))
@@ -112,13 +114,13 @@ func main() {
 
 	// set up worker pool
 	wg := sync.WaitGroup{}
-	for workerId := 0; workerId < jobs; workerId++ {
+	for workerID := 0; workerID < jobs; workerID++ {
 		wg.Add(1)
 
-		go func(workerId int) {
+		go func(workerID int) {
 			defer wg.Done()
-			worker(workerId, queue)
-		}(workerId)
+			worker(workerID, queue)
+		}(workerID)
 	}
 
 	// idiomatic hack required to use wg.Wait() with select
@@ -172,6 +174,10 @@ func worker(id int, seeds <-chan int) {
 			results <- false
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
+			if exitOnFail {
+				log.Printf("\bERROR OUTPUT \n\n%s", err)
+				break
+			}
 		} else {
 			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
@@ -179,7 +185,7 @@ func worker(id int, seeds <-chan int) {
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }
 
-func spawnProc(workerId int, seed int) error {
+func spawnProc(workerID int, seed int) error {
 	stderrFile, _ := os.Create(filepath.Join(tempdir, makeFilename(seed)+".stderr"))
 	stdoutFile, _ := os.Create(filepath.Join(tempdir, makeFilename(seed)+".stdout"))
 	s := buildCommand(testname, blocks, period, genesis, seed)
@@ -192,7 +198,7 @@ func spawnProc(workerId int, seed int) error {
 		return err
 	}
 	log.Printf("[W%d] Spawned simulation with pid %d [seed=%d stdout=%s stderr=%s]",
-		workerId, cmd.Process.Pid, seed, stdoutFile.Name(), stderrFile.Name())
+		workerID, cmd.Process.Pid, seed, stdoutFile.Name(), stderrFile.Name())
 	pushProcess(cmd.Process)
 	defer popProcess(cmd.Process)
 	return cmd.Wait()

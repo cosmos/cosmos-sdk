@@ -174,7 +174,7 @@ test_sim_gaia_import_export: runsim
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim 25 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim -e 25 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."

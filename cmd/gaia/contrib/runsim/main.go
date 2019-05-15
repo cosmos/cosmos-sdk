@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -176,7 +178,7 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
 			if exitOnFail {
 				log.Printf("\bERROR OUTPUT \n\n%s", err)
-				break
+				panic("halting simulations")
 			}
 		} else {
 			log.Printf("[W%d] Seed %d: OK", id, seed)
@@ -191,8 +193,20 @@ func spawnProc(workerID int, seed int) error {
 	s := buildCommand(testname, blocks, period, genesis, seed)
 	cmd := makeCmd(s)
 	cmd.Stdout = stdoutFile
-	cmd.Stderr = stderrFile
-	err := cmd.Start()
+
+	var err error
+	var stderr io.ReadCloser
+	if !exitOnFail {
+		cmd.Stderr = stderrFile
+	} else {
+		stderr, err = cmd.StderrPipe()
+		if err != nil {
+			return err
+		}
+	}
+	sc := bufio.NewScanner(stderr)
+
+	err = cmd.Start()
 	if err != nil {
 		log.Printf("couldn't start %q", s)
 		return err
@@ -201,6 +215,12 @@ func spawnProc(workerID int, seed int) error {
 		workerID, cmd.Process.Pid, seed, stdoutFile.Name(), stderrFile.Name())
 	pushProcess(cmd.Process)
 	defer popProcess(cmd.Process)
+
+	if exitOnFail {
+		for sc.Scan() {
+			fmt.Printf("%s\n", sc.Text())
+		}
+	}
 	return cmd.Wait()
 }
 

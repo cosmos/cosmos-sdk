@@ -23,11 +23,11 @@ sim-gaia-fast:
 
 sim-gaia-import-export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(GOPATH)/bin/runsim 50 5 TestGaiaImportExport
+	$(GOPATH)/bin/runsim 25 5 TestGaiaImportExport
 
 sim-gaia-simulation-after-import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(GOPATH)/bin/runsim 50 5 TestGaiaSimulationAfterImport
+	$(GOPATH)/bin/runsim 25 5 TestGaiaSimulationAfterImport
 
 sim-gaia-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."

@@ -141,6 +141,7 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
+            export GO111MODULE=on
             make runsim
             runsim -j 4 50 5 TestGaiaImportExport
 
@@ -157,6 +158,7 @@ jobs:
       - run:
           name: Test Gaia import/export simulation
           command: |
+            export GO111MODULE=on
             make runsim
             runsim -j 4 50 5 TestGaiaSimulationAfterImport
 

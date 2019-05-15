@@ -170,7 +170,7 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim 25 5 TestGaiaImportExport
+	$(BINDIR)/runsim -e 25 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."

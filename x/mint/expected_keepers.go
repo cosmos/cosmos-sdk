@@ -13,8 +13,6 @@ type StakingKeeper interface {
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	Inflate(ctx sdk.Context, amount sdk.Coins)
-
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
 	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 

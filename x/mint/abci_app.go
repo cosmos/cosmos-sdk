@@ -36,7 +36,4 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	if err != nil {
 		panic(err)
 	}
-
-	// inflate the total supply tracker
-	k.supplyKeeper.Inflate(ctx, mintedCoins)
 }

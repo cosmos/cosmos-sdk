@@ -386,6 +386,12 @@ jobs:
               echo "Build report for ${os}"
               cat gaia-${os}-res.yml
             done
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-darwin-res.yml
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-linux-res.yml
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-windows-res.yml
 
 workflows:
   version: 2

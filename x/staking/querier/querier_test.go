@@ -263,7 +263,7 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationRes types.DelegationResp
+	var delegationRes types.DelegationResponse
 	errRes = cdc.UnmarshalJSON(res, &delegationRes)
 	require.Nil(t, errRes)
 

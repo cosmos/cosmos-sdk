@@ -2,25 +2,41 @@
 
 ## Gaia CLI
 
-::: 注意
-如果你收到了下面这条错误消息：
+`gaiacli`是一个工具，使您能够与 Cosmos Hub 网络中的节点进行交互，无论您是否自己运行它。 让我们恰当的设置它。 要安装它，请按照[安装步骤](./ installation.md)进行安装。
+
+### 配置 gaiacli
+
+设置`gaiacli`的主要命令如下：
 
 ```bash
-Must specify these options: --chain-id  when --trust-node is false
+gaiacli config <flag> <value>
 ```
 
-你必须选择是否要验证轻客户端的证明。如果你信任要查询的节点，则可以简单地传递`--trust-node=true` -- 否则你需要指定`--chain-id`。
-:::
+该命令能为每个标志设置默认值。
 
-`gaiacli`是管理 Cosmos 测试网上的帐户和交易的命令行操作界面。它的配置文件位于`$HOME/.gaiacli/config/config.toml`中，可以手动编辑或通过`gaiacli config`命令编辑：
+首先，设置要连接的全节点的地址：
 
 ```bash
-gaiacli config chain-id gaia-9004
+gaiacli config node <host>:<port
+
+# example: gaiacli config node https://77.87.106.33:26657
 ```
 
-有关命令用法的更多信息，请参阅其帮助信息：`gaiacli config --help`。
+如果您运行自己的全节点，只需使用`tcp://localhost:26657`地址即可。
 
-以下是有用的`gaiacli`命令列表，包括用法示例。
+然后，让我们设置`--trust-node`标志的默认值：
+
+```bash
+gaiacli config trust-node true
+
+# Set to true if you trust the full-node you are connecting to, false otherwise
+```
+
+最后，设置我们想要与之交互链的`chain-id`：
+
+```bash
+gaiacli config chain-id cosmoshub-2
+```
 
 ### Key
 
@@ -28,7 +44,7 @@ gaiacli config chain-id gaia-9004
 
 有如下类型的key：
 
-+ `cosmos` ：通过`gaiacli keys add`
++ `cosmos` 
 	+ 从通过`gaiacli keys add`生成的账户私钥中产生
 	+ 用于接收资金
 	+ 例如 `cosmos15h6vd5f0wqps26zjlwrc6chah08ryu4hzzdwhc`
@@ -44,7 +60,7 @@ gaiacli config chain-id gaia-9004
 	+ 使用`gaiad tendermint show-validator`获得该值
 	+ 例如 `cosmosvalconspub1zcjduepq0ms2738680y72v44tfyqm3c9ppduku8fs6sr73fx7m666sjztznqzp2emf`
 
-#### 生成key
+#### 生成 Key
 
 你需要一个帐户的私钥公钥对（分别称作`sk`，`pk`）才能接收资金，发送交易，绑定交易等等。
 
@@ -86,8 +102,8 @@ gaiad tendermint show-validator
 
 请注意，这是Tendermint的签名密钥，而不是你在委托交易中使用的操作员密钥。
 
-::: 警告
-我们强烈建议不要对多个密钥使用相同的密码。Tendermint团队和Interchain Foundation将不承担资金损失的责任。
+::: danger Warning
+我们强烈建议不要对多个密钥使用相同的密码。Tendermint 团队和 Interchain Foundation 将不承担资金损失的责任。
 :::
 
 #### 生成多签公钥
@@ -143,7 +159,7 @@ gaiacli tx send ... --gas-prices=0.025uatom
 
 ### 账户
 
-#### 获取token
+#### 获取 Token
 
 获取token的最佳方式是通过[Cosmos测试网水龙头](https://faucetcosmos.network)。如果水龙头对你不生效，尝试在[#cosmos-validator](https://riot.im/app/#/room/#cosmos-validators:matrix.org)上向人索要。水龙头需要你打算用于抵押股权的`cosmos`开头的地址。
 
@@ -155,11 +171,11 @@ gaiacli tx send ... --gas-prices=0.025uatom
 gaiacli query account <account_cosmos>
 ```
 
-::: warning 注意
+::: warning Note
 当你查询余额为零的帐户时，你将收到以下错误：`No account with address <account_cosmos> was found in the state.` 如果你在节点与区块链完全同步之前就查询，也会发生这种情况。这些都很正常。
 :::
 
-#### 发送 token
+#### 发送 Token
 
 你可以通过如下命令从一个账户发送资金到另一个账户：
 
@@ -169,11 +185,11 @@ gaiacli tx send <destination_cosmos> 10faucetToken \
   --from=<key_name> 
 ```
 
-::: warning 注意
+::: warning Note
 `--amount`标识接收格式：`--amount=<value|coin_name>`
 :::
 
-::: tip 注意
+::: tip Note
 你可能希望通过`--gas`标识限制交易可以消耗的最大燃料。如果你通过`--gas=auto`，将在执行交易前自动估gas。gas估算可能是不准确的，因为状态变化可能发生在模拟结束和交易的实际执行之间，因此在原始估计之上应用调整以确保能够成功地广播交易。可以通过`--gas-adjustment`标识控制调整，其默认值为1.0。
 :::
 
@@ -215,7 +231,7 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
-::: tip 注意
+::: tip Note
 标识 `--generate-only` 只能在访问本地 keybase 时使用。
 :::
 
@@ -329,7 +345,7 @@ gaiacli query staking validators
 gaiacli query staking validator <account_cosmosval>
 ```
 
-#### 绑定token
+#### 绑定 Token
 
 在Cosmos Hub主网中，我们绑定`uatom`，`1atom = 1000000uatom`。你可以把token绑定在一个测试网验证人节点上（即委托）：
 
@@ -367,7 +383,7 @@ gaiacli query staking delegations <delegator_addr>
 
 你还可以通过添加`--height`标识来获取先前的委托状态。
 
-#### 解绑token
+#### 解绑 Token
 如果出于一些原因验证人行为异常，或者你想解绑一定数量的token，请使用以下命令。
 
 ```bash
@@ -493,20 +509,73 @@ gaiacli query delegations-to <account_cosmosval>
 
 #### 创建一个治理提案
 
-要创建治理提案，你必须提交初始存款以及提案详细信息：
-+ `title` : 提案的标题
-+ `description` : 提案的描述
-+ `type` : 提案类型。值必须是 *Text*（目前还不支持*SoftwareUpgrade*和*ParameterChange*类型）。
+要创建治理提案，您必须提交初始抵押以及标题和说明。治理之外的其它模块可以实现自己的提议类型和处理程序（例如：参数更改），其中治理模块本身支持`Text`提议。治理之外的任何模块都将命令绑定在`submit-proposal`上。
+
+提交一个文本类型的提案：
 
 ```bash
 gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
-  --type=<Text/ParameterChange/SoftwareUpgrade> \
+  --type="Text" \
   --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
+
+您也可以直接通过`--proposal`指向包含提案的 JSON 文件。
+
+要提交更改参数的提案，您必须提供提案文件，因为其内容对 CLI 输入不太友好：
+
+```bash
+gaiacli tx gov submit-proposal param-change <path/to/proposal.json> \
+  --from=<name> \
+  --chain-id=<chain_id>
+```
+
+其中`proposal.json`包含以下内容：
+
+```json
+{
+  "title": "Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": 105
+    }
+  ],
+  "deposit": [
+    {
+      "denom": "stake",
+      "amount": "10000000"
+    }
+  ]
+}
+```
+
+::: danger Warning
+
+Currently parameter changes are _evaluated_ but not _validated_, so it is very important
+that any `value` change is valid (ie. correct type and within bounds) for its
+respective parameter, eg. `MaxValidators` should be an integer and not a decimal.
+
+Proper vetting of a parameter change proposal should prevent this from happening
+(no deposits should occur during the governance process), but it should be noted
+regardless. 
+
+目前，参数更改已经过*评估*但未*经过验证*，因此`value`对于其相应参数，任何更改都是有效的（即正确类型和边界内）非常重要，例如 `MaxValidators` 应该是整数而不是小数。
+
+正确审查参数变更提案应该可以防止这种情况发生（在治理过程中不会发生抵押），但无论如何都应该注意。
+
+:::
+
+::: tip Note
+
+目前不支持`SoftwareUpgrade`，因为它没有实现，目前与`Text`提议的语义没有区别。
+
+:::
 
 #### 查询提案
 
@@ -752,10 +821,10 @@ gaiad completion --zsh > gaiad_completion
 gaiacli completion --zsh > gaiacli_completion
 ```
 
-::: 注意
+::: tip Note
 在大多数UNIX系统上，可以在`.bashrc`或`.bash_profile`中加载此类脚本以启用Bash自动完成：
 
-```
+```bash
 echo '. gaiad_completion' >> ~/.bashrc
 echo '. gaiacli_completion' >> ~/.bashrc
 ```

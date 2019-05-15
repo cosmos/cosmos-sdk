@@ -46,6 +46,7 @@ module.exports = {
           "/cosmos-hub/validators/validator-faq",
           "/cosmos-hub/delegator-guide-cli",
           "/cosmos-hub/genesis",
+          "/cosmos-hub/hd-wallets",
           "/cosmos-hub/ledger",
           "/cosmos-hub/gaiacli",
           "/cosmos-hub/join-testnet",

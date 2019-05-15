@@ -22,7 +22,6 @@ const (
 	QueryValidatorDelegations          = "validatorDelegations"
 	QueryValidatorRedelegations        = "validatorRedelegations"
 	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
-	QueryDelegator                     = "delegator"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
 	QueryDelegatorValidators           = "delegatorValidators"
@@ -202,11 +201,16 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Ke
 	}
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
+	if err != nil {
+		return nil, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 
@@ -236,11 +240,16 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Ke
 	}
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
+	if err != nil {
+		return nil, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 
@@ -313,10 +322,16 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res
 		return []byte{}, types.ErrNoDelegation(types.DefaultCodespace)
 	}
 
-	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegation)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	delegationResp, err := delegationToDelegationResponse(ctx, k, delegation)
+	if err != nil {
+		return nil, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, delegationResp)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 
@@ -353,8 +368,9 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (
 	if !params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty() {
 		redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 		if !found {
-			return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
+			return nil, types.ErrNoRedelegation(types.DefaultCodespace)
 		}
+
 		redels = []types.Redelegation{redel}
 	} else if params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && params.DstValidatorAddr.Empty() {
 		redels = k.GetRedelegationsFromValidator(ctx, params.SrcValidatorAddr)
@@ -362,10 +378,16 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (
 		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 	}
 
-	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, redels)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
+	redelResponses, err := redelegationsToRedelegationResponses(ctx, k, redels)
+	if err != nil {
+		return nil, err
 	}
+
+	res, errRes = codec.MarshalJSONIndent(types.ModuleCdc, redelResponses)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errRes.Error()))
+	}
+
 	return res, nil
 }
 

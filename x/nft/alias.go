@@ -10,9 +10,11 @@ import (
 type (
 	Keeper             = keeper.Keeper
 	NFT                = types.NFT
+	BaseNFT            = types.BaseNFT
 	NFTs               = types.NFTs
 	Collection         = types.Collection
 	Collections        = types.Collections
+	Balance            = types.Balance
 	GenesisState       = types.GenesisState
 	MsgTransferNFT     = types.MsgTransferNFT
 	MsgEditNFTMetadata = types.MsgEditNFTMetadata
@@ -22,16 +24,19 @@ var (
 	NewKeeper          = keeper.NewKeeper
 	RegisterInvariants = keeper.RegisterInvariants
 
-	NewNFT              = types.NewNFT
+	NewBaseNFT          = types.NewBaseNFT
 	NewNFTs             = types.NewNFTs
 	NewCollection       = types.NewCollection
 	NewCollections      = types.NewCollections
 	EmptyCollection     = types.EmptyCollection
+	NewBalance          = types.NewBalance
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
+	RegisterCodec       = types.RegisterCodec
 )
 
 const (
 	StoreKey     = keeper.StoreKey
 	QuerierRoute = keeper.QuerierRoute
+	ModuleName   = keeper.ModuleName
 )

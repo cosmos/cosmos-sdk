@@ -122,14 +122,14 @@ func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Co
 }
 
 // IterateBalances iterates over the owners' balances of NFTs and performs a function
-func (k Keeper) IterateBalances(ctx sdk.Context, handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
+func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte, handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, BalancesKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var collection types.Collection
 
-		owner := GetNFTBalancesAddress(iterator.Key())
+		owner, _ := SplitBalanceKey(iterator.Key())
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &collection)
 
 		if handler(owner, collection) {
@@ -138,40 +138,42 @@ func (k Keeper) IterateBalances(ctx sdk.Context, handler func(owner sdk.AccAddre
 	}
 }
 
-// GetBalance gets the collection of NFTs owned by an address
-func (k Keeper) GetBalance(ctx sdk.Context, owner sdk.AccAddress) (collections types.Collections, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(BalancesKeyPrefix)
-	if b == nil {
-		return nil, false
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collections)
-	return collections, true
+// GetBalances returns all the NFT balances
+func (k Keeper) GetBalances(ctx sdk.Context) (balances []types.Balance) {
+	k.IterateBalances(ctx, BalancesKeyPrefix,
+		func(owner sdk.AccAddress, collection types.Collection) (stop bool) {
+			balances = append(balances, types.NewBalance(collection, owner))
+			return false
+		},
+	)
+	return
 }
 
-// GetBalanceCollection gets the collection of NFTs owned by an address
-func (k Keeper) GetBalanceCollection(ctx sdk.Context, owner sdk.AccAddress, denom string) (collection types.Collection, found bool) {
-	collections, found := k.GetBalance(ctx, owner)
-	if !found {
-		return collection, false
-	}
+// GetOwnerBalances gets the all the collections of NFTs owned by an address
+func (k Keeper) GetOwnerBalances(ctx sdk.Context, owner sdk.AccAddress) (collections types.Collections) {
+	k.IterateBalances(ctx, GetBalancesKey(owner),
+		func(_ sdk.AccAddress, collection types.Collection) (stop bool) {
+			collections = append(collections, collection)
+			return false
+		},
+	)
+	return
+}
 
-	sorted := collections.Sort()
-	collection, found = sorted.Find(denom)
-	if !found {
-		return collection, false
+// GetBalance gets the collection of NFTs owned by an address
+func (k Keeper) GetBalance(ctx sdk.Context, owner sdk.AccAddress, denom string) (collection types.Collection, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(GetBalanceKey(owner, denom))
+	if b == nil {
+		return types.Collection{}, false
 	}
-
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collection)
 	return collection, true
 }
 
-// SetBalance gets the collections of NFTs owned by an address
-func (k Keeper) SetBalance(ctx sdk.Context, owner sdk.AccAddress) (collections types.Collections, found bool) {
+// SetBalance sets a collection of NFTs owned by an address
+func (k Keeper) SetBalance(ctx sdk.Context, owner sdk.AccAddress, collection types.Collection) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(owner.Bytes())
-	if b == nil {
-		return nil, false
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collections)
-	return collections, true
+	key := GetBalanceKey(owner, collection.Denom)
+	store.Set(key, k.cdc.MustMarshalBinaryBare(collection))
 }

@@ -6,16 +6,16 @@ import (
 
 // InitGenesis sets distribution information for genesis.
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	for _, collection := range data.Collections {
-		k.SetCollection(ctx, collection.Denom, collection)
+	for _, c := range data.Collections {
+		k.SetCollection(ctx, c.Denom, c)
 	}
 
-	for _, balance := range data.Balance {
-		k.SetOwnerBalance(ctx, balance.Owner, balance)
+	for _, b := range data.Balances {
+		k.SetBalance(ctx, b.Owner, b.Collection)
 	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	return NewGenesisState(k.GetCollections(ctx), k.GetOwners(ctx))
+	return NewGenesisState(k.GetBalances(ctx), k.GetCollections(ctx))
 }

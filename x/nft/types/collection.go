@@ -131,12 +131,12 @@ func (collections Collections) Empty() bool {
 	return len(collections) == 0
 }
 
-func (collections Collections) find(denom string) uint {
+func (collections Collections) find(denom string) int {
 	if len(collections) == 0 {
 		return -1
 	}
 
-	midIdx := uint(len(collections)) / 2
+	midIdx := len(collections) / 2
 	midCollection := collections[midIdx]
 
 	if strings.Compare(denom, midCollection.Denom) == -1 {

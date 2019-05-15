@@ -12,7 +12,7 @@ const (
 	StoreKey = ModuleName
 
 	// QuerierRoute is the querier route for the NFT store.
-	QuerierRoute = StoreKey
+	QuerierRoute = ModuleName
 )
 
 // NFTs are stored as follow:
@@ -30,21 +30,23 @@ func GetCollectionKey(denom string) []byte {
 	return append(CollectionsKeyPrefix, []byte(denom)...)
 }
 
-// GetNFTBalancesAddress gets an address from an account NFT balance key
-func GetNFTBalancesAddress(key []byte) (address sdk.AccAddress) {
-	address = key[1:]
-	if len(address) != sdk.AddrLen {
+// SplitBalanceKey gets an address and denom from a balance key
+func SplitBalanceKey(key []byte) (sdk.AccAddress, string) {
+	address := key[1 : sdk.AddrLen+1]
+	denomBz := key[sdk.AddrLen+1:]
+
+	if len(key) <= sdk.AddrLen {
 		panic("unexpected key length")
 	}
-	return sdk.AccAddress(address)
+	return sdk.AccAddress(address), string(denomBz)
 }
 
-// GetNFTBalancesKey gets the key of the NFTs owned by an account address
-func GetNFTBalancesKey(address sdk.AccAddress) []byte {
+// GetBalancesKey gets the key prefix for all the collections owned by an account address
+func GetBalancesKey(address sdk.AccAddress) []byte {
 	return append(BalancesKeyPrefix, address.Bytes()...)
 }
 
-// GetBalancesNFTKey gets the key of a single NFT owned by an account address
-func GetBalancesNFTKey(address sdk.AccAddress, denom string) []byte {
-	return append(GetNFTBalancesKey(address), []byte(denom)...)
+// GetBalanceKey gets the key of a collection owned by an account address
+func GetBalanceKey(address sdk.AccAddress, denom string) []byte {
+	return append(GetBalancesKey(address), []byte(denom)...)
 }

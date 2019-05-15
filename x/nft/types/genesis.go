@@ -4,20 +4,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// OwnerNFTs used for import / export user NFT balances via genesis JSON
-type OwnerNFTs struct {
-	Owner   sdk.AccAddress `json:"owner"`
-	Balance Collections    `json:"balance"`
+// Balance used for import / export user NFT balances via genesis JSON
+type Balance struct {
+	Collection
+	Owner sdk.AccAddress `json:"owner"`
+}
+
+// NewBalance creates a new NFT balance instance
+func NewBalance(collection Collection, owner sdk.AccAddress) Balance {
+	return Balance{collection, owner}
 }
 
 // GenesisState is the state that must be provided at genesis.
 type GenesisState struct {
-	Balances    []OwnerNFTs `json:"balances"`
-	Collections Collections `json:"collections"`
+	Balances []Balance `json:"balances"`
+	Collections
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(balances []OwnerNFTs, collections Collections) GenesisState {
+func NewGenesisState(balances []Balance, collections Collections) GenesisState {
 	return GenesisState{
 		Balances:    balances,
 		Collections: collections,
@@ -26,7 +31,7 @@ func NewGenesisState(balances []OwnerNFTs, collections Collections) GenesisState
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState([]OwnerNFTs{}, NewCollections())
+	return NewGenesisState([]Balance{}, NewCollections())
 }
 
 // ValidateGenesis performs basic validation of nfts genesis data returning an

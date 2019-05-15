@@ -37,8 +37,8 @@ func AllInvariants(k Keeper) sdk.Invariant {
 func SupplyInvariant(k Keeper) sdk.Invariant {
 
 	return func(ctx sdk.Context) error {
-		collectionsSupply := 0
-		balancesSupply := 0
+		collectionsSupply := uint(0)
+		balancesSupply := uint(0)
 
 		k.IterateCollections(ctx, func(collection types.Collection) bool {
 			collectionsSupply += collection.Supply()

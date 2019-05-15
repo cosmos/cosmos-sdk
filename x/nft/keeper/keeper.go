@@ -26,8 +26,8 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 
 // IsNFT returns whether an NFT exists
 func (k Keeper) IsNFT(ctx sdk.Context, denom string, id uint64) (exists bool) {
-	_, error := k.GetNFT(ctx, denom, id)
-	return error == nil
+	_, err := k.GetNFT(ctx, denom, id)
+	return err == nil
 }
 
 // GetNFT gets the entire NFT metadata struct for a uint64
@@ -69,8 +69,10 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Err
 		return err
 	}
 
-	collection.DeleteNFT(nft)
-
+	err = collection.DeleteNFT(nft)
+	if err != nil {
+		return err
+	}
 	k.SetCollection(ctx, denom, collection)
 
 	return

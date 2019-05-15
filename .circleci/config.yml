@@ -379,12 +379,10 @@ jobs:
           no_output_timeout: 20m
           command: |
             sudo apt-get install -y ruby
+            bash -x ./cmd/gaia/contrib/gitian-build.sh all
             for os in darwin linux windows; do
-              bash ./cmd/gaia/contrib/gitian-build.sh ${os} `pwd`
               cp gitian-build-${os}/result/gaia-${os}-res.yml .
               rm -rf gitian-build-${os}/
-              echo "Build report for ${os}"
-              cat gaia-${os}-res.yml
             done
       - store_artifacts:
           path: /go/src/github.com/cosmos/cosmos-sdk/gaia-darwin-res.yml

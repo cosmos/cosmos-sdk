@@ -1,11 +1,13 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -74,4 +76,66 @@ func TestRedelegationString(t *testing.T) {
 		sdk.NewDec(10))
 
 	require.NotEmpty(t, r.String())
+}
+
+func TestDelegationResponses(t *testing.T) {
+	cdc := codec.New()
+	dr1 := NewDelegationResp(sdk.AccAddress(addr1), addr2, sdk.NewDec(5), sdk.NewInt(5))
+	dr2 := NewDelegationResp(sdk.AccAddress(addr1), addr3, sdk.NewDec(5), sdk.NewInt(5))
+	drs := DelegationResponses{dr1, dr2}
+
+	bz1, err := json.Marshal(dr1)
+	require.NoError(t, err)
+
+	bz2, err := cdc.MarshalJSON(dr1)
+	require.NoError(t, err)
+
+	require.Equal(t, bz1, bz2)
+
+	bz1, err = json.Marshal(drs)
+	require.NoError(t, err)
+
+	bz2, err = cdc.MarshalJSON(drs)
+	require.NoError(t, err)
+
+	require.Equal(t, bz1, bz2)
+
+	var drs2 DelegationResponses
+	require.NoError(t, cdc.UnmarshalJSON(bz2, &drs2))
+	require.Equal(t, drs, drs2)
+}
+
+func TestRedelegationResponses(t *testing.T) {
+	cdc := codec.New()
+	entries := []RedelegationEntryResponse{
+		NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
+		NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
+	}
+	rdr1 := NewRedelegationResponse(sdk.AccAddress(addr1), addr2, addr3, entries)
+	rdr2 := NewRedelegationResponse(sdk.AccAddress(addr2), addr1, addr3, entries)
+	rdrs := RedelegationResponses{rdr1, rdr2}
+
+	bz1, err := json.Marshal(rdr1)
+	require.NoError(t, err)
+
+	bz2, err := cdc.MarshalJSON(rdr1)
+	require.NoError(t, err)
+
+	require.Equal(t, bz1, bz2)
+
+	bz1, err = json.Marshal(rdrs)
+	require.NoError(t, err)
+
+	bz2, err = cdc.MarshalJSON(rdrs)
+	require.NoError(t, err)
+
+	require.Equal(t, bz1, bz2)
+
+	var rdrs2 RedelegationResponses
+	require.NoError(t, cdc.UnmarshalJSON(bz2, &rdrs2))
+
+	bz3, err := cdc.MarshalJSON(rdrs2)
+	require.NoError(t, err)
+
+	require.Equal(t, bz2, bz3)
 }

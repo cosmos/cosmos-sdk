@@ -61,8 +61,8 @@ func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
 }
 
 // Supply gets the total supply of NFTs of a collection
-func (collection Collection) Supply() int {
-	return len(collection.NFTs)
+func (collection Collection) Supply() uint {
+	return uint(len(collection.NFTs))
 }
 
 // String follows stringer interface
@@ -131,12 +131,12 @@ func (collections Collections) Empty() bool {
 	return len(collections) == 0
 }
 
-func (collections Collections) find(denom string) int {
+func (collections Collections) find(denom string) uint {
 	if len(collections) == 0 {
 		return -1
 	}
 
-	midIdx := len(collections) / 2
+	midIdx := uint(len(collections)) / 2
 	midCollection := collections[midIdx]
 
 	if strings.Compare(denom, midCollection.Denom) == -1 {
@@ -178,7 +178,7 @@ func (collections *Collections) UnmarshalJSON(b []byte) error {
 	}
 
 	for denom, collection := range collectionJSON {
-		(*collections) = append((*collections), NewCollection(denom, collection.NFTs))
+		*collections = append(*collections, NewCollection(denom, collection.NFTs))
 	}
 
 	return nil

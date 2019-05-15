@@ -20,16 +20,16 @@ const (
 	QueryNFT        = "nft"
 )
 
-// QueryColectionParams defines the params for queries:
+// QueryCollectionParams defines the params for queries:
 // - 'custom/nft/supply'
 // - 'custom/nft/collection'
-type QueryColectionParams struct {
+type QueryCollectionParams struct {
 	Denom string
 }
 
-// NewQueryColectionParams creates a new instance of QuerySupplyParams
-func NewQueryColectionParams(denom string) QueryColectionParams {
-	return QueryColectionParams{Denom: types.Denom(denom)}
+// NewQueryCollectionParams creates a new instance of QuerySupplyParams
+func NewQueryCollectionParams(denom string) QueryCollectionParams {
+	return QueryCollectionParams{Denom: denom}
 }
 
 // QueryBalanceParams params for query 'custom/nfts/balance'
@@ -83,7 +83,7 @@ func NewQuerier(k keeper.Keeper, cdc *codec.Codec) sdk.Querier {
 
 func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
-	var params QueryColectionParams
+	var params QueryCollectionParams
 	err := cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -95,7 +95,7 @@ func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Requ
 	}
 
 	bz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bz, int64(collection.Supply))
+	binary.LittleEndian.PutUint64(bz, uint64(collection.Supply()))
 	return bz, nil
 }
 
@@ -124,7 +124,7 @@ func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Req
 
 func queryCollection(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
-	var params QueryColectionParams
+	var params QueryCollectionParams
 	err := cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -135,7 +135,7 @@ func queryCollection(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	collections = types.NewCollections(collection)
+	collections := types.NewCollections(collection)
 
 	bz, err := collections.MarshalJSON()
 	if err != nil {

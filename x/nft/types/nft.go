@@ -108,7 +108,7 @@ func NewNFTs(nfts ...NFT) NFTs {
 
 // Add appends two sets of NFTs
 func (nfts *NFTs) Add(nftsB NFTs) {
-	(*nfts) = append((*nfts), nftsB...)
+	*nfts = append(*nfts, nftsB...)
 }
 
 // Find returns the searched collection from the set
@@ -195,7 +195,7 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	}
 
 	for id, nft := range nftJSON {
-		(*nfts) = append((*nfts), NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI(), nft.GetDescription(), nft.GetImage(), nft.GetName()))
+		*nfts = append(*nfts, NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI(), nft.GetDescription(), nft.GetImage(), nft.GetName()))
 	}
 
 	return nil

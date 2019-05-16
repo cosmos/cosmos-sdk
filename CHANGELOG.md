@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.34.5
+
+* [#4345](https://github.com/cosmos/cosmos-sdk/pull/4345) Update `ledger-cosmos-go`
+to v0.10.3.
+
 ## 0.34.4
 
 ### Bug Fixes
@@ -7,7 +12,7 @@
 #### SDK
 
 * [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
-actually work offline. 
+actually work offline.
 
 #### Gaia
 

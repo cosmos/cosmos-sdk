@@ -29,19 +29,31 @@ import (
 
 // server context
 type Context struct {
-	Config *cfg.Config
-	Logger log.Logger
+	Config          *cfg.Config
+	Logger          log.Logger
+	DefaultNodeHome string
+	DefaultCLIHome  string
+}
+
+// NewContext creates a new Context object
+func NewContext(config *cfg.Config, logger log.Logger,
+	defaultNodeHome string, defaultCLIHome string) *Context {
+
+	return &Context{
+		Config:          config,
+		Logger:          logger,
+		DefaultNodeHome: defaultNodeHome,
+		DefaultCLIHome:  defaultCLIHome,
+	}
 }
 
 func NewDefaultContext() *Context {
 	return NewContext(
 		cfg.DefaultConfig(),
 		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		os.ExpandEnv("$HOME/.sdkcli"),
+		os.ExpandEnv("$HOME/.sdkd"),
 	)
-}
-
-func NewContext(config *cfg.Config, logger log.Logger) *Context {
-	return &Context{config, logger}
 }
 
 //___________________________________________________________________________________

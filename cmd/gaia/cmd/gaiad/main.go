@@ -39,6 +39,9 @@ func main() {
 	config.Seal()
 
 	ctx := server.NewDefaultContext()
+	ctx.DefaultNodeHome = app.DefaultNodeHome
+	ctx.DefaultCLIHome = app.DefaultCLIHome
+
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
 		Use:               "gaiad",

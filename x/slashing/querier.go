@@ -17,28 +17,25 @@ const (
 )
 
 // NewQuerier creates a new querier for slashing clients.
-func NewQuerier(k Keeper, cdc *codec.Codec) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
 		case QueryParameters:
-			return queryParams(ctx, cdc, k)
-
+			return queryParams(ctx, k)
 		case QuerySigningInfo:
-			return querySigningInfo(ctx, cdc, req, k)
-
+			return querySigningInfo(ctx, req, k)
 		case QuerySigningInfos:
-			return querySigningInfos(ctx, cdc, req, k)
-
+			return querySigningInfos(ctx, req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
 		}
 	}
 }
 
-func queryParams(ctx sdk.Context, cdc *codec.Codec, k Keeper) ([]byte, sdk.Error) {
+func queryParams(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(cdc, params)
+	res, err := codec.MarshalJSONIndent(moduleCdc, params)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal JSON", err.Error()))
 	}
@@ -56,10 +53,10 @@ func NewQuerySigningInfoParams(consAddr sdk.ConsAddress) QuerySigningInfoParams 
 	return QuerySigningInfoParams{consAddr}
 }
 
-func querySigningInfo(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QuerySigningInfoParams
 
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := moduleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
@@ -69,7 +66,7 @@ func querySigningInfo(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, 
 		return nil, ErrNoSigningInfoFound(DefaultCodespace, params.ConsAddress)
 	}
 
-	res, err := codec.MarshalJSONIndent(cdc, signingInfo)
+	res, err := codec.MarshalJSONIndent(moduleCdc, signingInfo)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
 	}
@@ -87,10 +84,10 @@ func NewQuerySigningInfosParams(page, limit int) QuerySigningInfosParams {
 	return QuerySigningInfosParams{page, limit}
 }
 
-func querySigningInfos(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QuerySigningInfosParams
 
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := moduleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
@@ -121,7 +118,7 @@ func querySigningInfos(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery,
 		signingInfos = signingInfos[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(cdc, signingInfos)
+	res, err := codec.MarshalJSONIndent(moduleCdc, signingInfos)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
 	}

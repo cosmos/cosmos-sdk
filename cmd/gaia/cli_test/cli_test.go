@@ -24,7 +24,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {
@@ -446,16 +448,22 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 func TestGaiaCLIQueryRewards(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
+	cdc := app.MakeCodec()
 
 	genesisState := f.GenesisState()
 	inflationMin := sdk.MustNewDecFromStr("10000.0")
-	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMin = inflationMin
-	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	var mintData mint.GenesisState
+	cdc.UnmarshalJSON(genesisState[mint.ModuleName], &mintData)
+	mintData.Minter.Inflation = inflationMin
+	mintData.Params.InflationMin = inflationMin
+	mintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	mintDataBz, err := cdc.MarshalJSON(mintData)
+	require.NoError(t, err)
+	genesisState[mint.ModuleName] = mintDataBz
+
 	genFile := filepath.Join(f.GaiadHome, "config", "genesis.json")
 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 	require.NoError(t, err)
-	cdc := app.MakeCodec()
 	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
 	require.NoError(t, genDoc.SaveAs(genFile))
 
@@ -1193,10 +1201,14 @@ func TestGaiadAddGenesisAccount(t *testing.T) {
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
 	f.AddGenesisAccount(f.KeyAddress(keyBar), bazCoins)
 	genesisState := f.GenesisState()
-	require.Equal(t, genesisState.Accounts[0].Address, f.KeyAddress(keyFoo))
-	require.Equal(t, genesisState.Accounts[1].Address, f.KeyAddress(keyBar))
-	require.True(t, genesisState.Accounts[0].Coins.IsEqual(startCoins))
-	require.True(t, genesisState.Accounts[1].Coins.IsEqual(bazCoins))
+
+	cdc := app.MakeCodec()
+	accounts := genaccounts.GetGenesisStateFromAppState(cdc, genesisState).Accounts
+
+	require.Equal(t, accounts[0].Address, f.KeyAddress(keyFoo))
+	require.Equal(t, accounts[1].Address, f.KeyAddress(keyBar))
+	require.True(t, accounts[0].Coins.IsEqual(startCoins))
+	require.True(t, accounts[1].Coins.IsEqual(bazCoins))
 
 	// Cleanup testing directories
 	f.Cleanup()

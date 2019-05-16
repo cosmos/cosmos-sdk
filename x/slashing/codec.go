@@ -9,4 +9,11 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
 }
 
-var cdcEmpty = codec.New()
+var moduleCdc = codec.New()
+
+func init() {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	moduleCdc = cdc.Seal()
+}

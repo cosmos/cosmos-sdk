@@ -1,11 +1,8 @@
 package slashing
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-var cdc = codec.New()
 
 // verify interface at compile time
 var _ sdk.Msg = &MsgUnjail{}
@@ -30,7 +27,7 @@ func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnjail) GetSignBytes() []byte {
-	bz := cdc.MustMarshalJSON(msg)
+	bz := moduleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 

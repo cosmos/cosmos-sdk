@@ -12,6 +12,7 @@ type (
 	FeeCollectionKeeper     = types.FeeCollectionKeeper
 	BankKeeper              = types.BankKeeper
 	DistributionKeeper      = types.DistributionKeeper
+	AccountKeeper           = types.AccountKeeper
 	Validator               = types.Validator
 	Validators              = types.Validators
 	Description             = types.Description
@@ -28,6 +29,7 @@ type (
 	RedelegationResponses   = types.RedelegationResponses
 	Params                  = types.Params
 	Pool                    = types.Pool
+	MultiStakingHooks       = types.MultiStakingHooks
 	MsgCreateValidator      = types.MsgCreateValidator
 	MsgEditValidator        = types.MsgEditValidator
 	MsgDelegate             = types.MsgDelegate
@@ -83,7 +85,9 @@ var (
 	KeyMaxValidators  = types.KeyMaxValidators
 	KeyBondDenom      = types.KeyBondDenom
 
+	ModuleCdc             = types.ModuleCdc
 	DefaultParams         = types.DefaultParams
+	NewParams             = types.NewParams
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
@@ -93,6 +97,7 @@ var (
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
+	NewMultiStakingHooks  = types.NewMultiStakingHooks
 
 	NewMsgCreateValidator = types.NewMsgCreateValidator
 	NewMsgEditValidator   = types.NewMsgEditValidator
@@ -126,6 +131,7 @@ const (
 )
 
 const (
+	ModuleName            = types.ModuleName
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
 	QuerierRoute          = types.QuerierRoute

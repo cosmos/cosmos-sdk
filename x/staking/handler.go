@@ -249,7 +249,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	finishTime := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.DelegatorAddress.String(),
@@ -275,7 +275,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	finishTime := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.DelegatorAddress.String(),

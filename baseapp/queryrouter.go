@@ -6,15 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// QueryRouter provides queryables for each query path.
-type QueryRouter interface {
-	AddRoute(r string, h sdk.Querier) (rtr QueryRouter)
-	Route(path string) (h sdk.Querier)
-}
-
 type queryRouter struct {
 	routes map[string]sdk.Querier
 }
+
+var _ sdk.QueryRouter = NewQueryRouter()
 
 // NewQueryRouter returns a reference to a new queryRouter.
 //
@@ -27,7 +23,7 @@ func NewQueryRouter() *queryRouter { // nolint: golint
 
 // AddRoute adds a query path to the router with a given Querier. It will panic
 // if a duplicate route is given. The route must be alphanumeric.
-func (qrt *queryRouter) AddRoute(path string, q sdk.Querier) QueryRouter {
+func (qrt *queryRouter) AddRoute(path string, q sdk.Querier) sdk.QueryRouter {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}

@@ -2,23 +2,22 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// TODO: register in auth codec
-
-// RegisterCodec registers concrete types on the codec
-func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*PoolAccount)(nil), nil)
-	cdc.RegisterConcrete(&PoolHolderAccount{}, "auth/PoolHolderAccount", nil)
-	cdc.RegisterConcrete(&PoolMinterAccount{}, "auth/PoolMinterAccount", nil)
+// RegisterCodec registers the account types and interface on the auth codec
+func RegisterCodec() {
+	auth.RegisterAccountInterface((*PoolAccount)(nil))
+	auth.RegisterAccountType(&PoolHolderAccount{}, "auth/PoolHolderAccount")
+	auth.RegisterAccountType(&PoolMinterAccount{}, "auth/PoolMinterAccount")
 }
 
-// generic sealed codec to be used throughout module
+// ModuleCdc generic sealed codec to be used throughout module
 var ModuleCdc *codec.Codec
 
 func init() {
 	cdc := codec.New()
-	RegisterCodec(cdc)
+	RegisterCodec()
 	codec.RegisterCrypto(cdc)
 	ModuleCdc = cdc.Seal()
 }

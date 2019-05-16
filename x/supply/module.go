@@ -22,8 +22,8 @@ func (AppModuleBasic) Name() string {
 }
 
 // register module codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+func (AppModuleBasic) RegisterCodec(_ *codec.Codec) {
+	RegisterCodec()
 }
 
 // default genesis state

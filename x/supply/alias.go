@@ -27,6 +27,8 @@ var (
 	DefaultSupply        = types.DefaultSupply
 	NewGenesisState      = types.NewGenesisState
 	DefaultGenesisState  = types.DefaultGenesisState
+	RegisterCodec        = types.RegisterCodec
+	ModuleCdc            = types.ModuleCdc
 )
 
 const (

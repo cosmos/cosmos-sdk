@@ -55,6 +55,7 @@ func init() {
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		supply.AppModuleBasic{},
 	)
 }
 
@@ -175,6 +176,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
+		supply.NewAppModule(app.supplyKeeper),
 		distr.NewAppModule(app.distrKeeper),
 		gov.NewAppModule(app.govKeeper),
 		mint.NewAppModule(app.mintKeeper),
@@ -191,7 +193,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	// genutils must occur after staking so that pools are properly
 	// initialized with tokens from genesis accounts.
-	app.mm.SetOrderInitGenesis(genaccounts.ModuleName, distr.ModuleName,
+	app.mm.SetOrderInitGenesis(genaccounts.ModuleName, supply.ModuleName, distr.ModuleName,
 		staking.ModuleName, auth.ModuleName, bank.ModuleName, slashing.ModuleName,
 		gov.ModuleName, mint.ModuleName, crisis.ModuleName, genutil.ModuleName)
 

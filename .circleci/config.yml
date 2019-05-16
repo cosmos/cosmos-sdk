@@ -29,7 +29,7 @@ jobs:
       - run:
           name: tools
           command: |
-            make tools TOOLS_DESTDIR=/tmp/workspace/bin
+            make runsim tools TOOLS_DESTDIR=/tmp/workspace/bin
       - run:
           name: cache go modules
           command: |
@@ -108,8 +108,7 @@ jobs:
           name: Test Gaia import/export simulation
           command: |
             export GO111MODULE=on
-            make runsim
-            runsim -j 4 github.com/cosmos/cosmos-sdk/cmd/gaia/app 50 5 TestGaiaImportExport
+            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaImportExport
 
   test_sim_gaia_simulation_after_import:
     <<: *linux_defaults
@@ -125,8 +124,7 @@ jobs:
           name: Test Gaia import/export simulation
           command: |
             export GO111MODULE=on
-            make runsim
-            runsim -j 4 github.com/cosmos/cosmos-sdk/cmd/gaia/app 50 5 TestGaiaSimulationAfterImport
+            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaSimulationAfterImport
 
   test_sim_gaia_multi_seed_long:
     <<: *linux_defaults
@@ -142,8 +140,7 @@ jobs:
           name: Test multi-seed Gaia simulation long
           command: |
             export GO111MODULE=on
-            make runsim
-            runsim -j 4 github.com/cosmos/cosmos-sdk/cmd/gaia/app 500 50 TestFullGaiaSimulation
+            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -159,8 +156,7 @@ jobs:
           name: Test multi-seed Gaia simulation short
           command: |
             export GO111MODULE=on
-            make runsim
-            runsim -j 4 github.com/cosmos/cosmos-sdk/cmd/gaia/app 50 10 TestFullGaiaSimulation
+            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults

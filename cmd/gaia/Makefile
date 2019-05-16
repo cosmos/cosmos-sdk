@@ -5,7 +5,6 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 GOBIN ?= $(GOPATH)/bin
-GOSUM := $(shell which gosum)
 
 export GO111MODULE = on
 
@@ -41,15 +40,17 @@ endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
+whitespace :=
+whitespace += $(whitespace)
+comma := ,
+build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
-
-ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) ../../go.sum)
-endif
+  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -71,8 +72,6 @@ ifeq ($(OS),Windows_NT)
 else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ../../cmd/gaia/cmd/gaiad
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ../../cmd/gaia/cmd/gaiacli
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ../../cmd/gaia/cmd/gaiareplay
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiakeyutil ../../cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux: ../../go.sum
@@ -81,8 +80,6 @@ build-linux: ../../go.sum
 install: ../../go.sum check-ledger
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiad
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiacli
-	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiareplay
-	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiakeyutil
 
 install-debug: ../../go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ../../cmd/gaia/cmd/gaiadebug
@@ -132,7 +129,6 @@ check-all: check-unit check-race check-cover check-build
 lint: ci-lint
 ci-lint:
 	golangci-lint run
-	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 

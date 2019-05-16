@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"bytes"
+	"container/list"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -12,20 +13,30 @@ import (
 // Implements Iterator.
 type memIterator struct {
 	start, end []byte
-	items      []cmn.KVPair
+	items      []*cmn.KVPair
+	ascending  bool
 }
 
-func newMemIterator(start, end []byte, items []cmn.KVPair) *memIterator {
-	itemsInDomain := make([]cmn.KVPair, 0)
-	for _, item := range items {
-		if dbm.IsKeyInDomain(item.Key, start, end) {
-			itemsInDomain = append(itemsInDomain, item)
+func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
+	itemsInDomain := make([]*cmn.KVPair, 0)
+	var entered bool
+	for e := items.Front(); e != nil; e = e.Next() {
+		item := e.Value.(*cmn.KVPair)
+		if !dbm.IsKeyInDomain(item.Key, start, end) {
+			if entered {
+				break
+			}
+			continue
 		}
+		itemsInDomain = append(itemsInDomain, item)
+		entered = true
 	}
+
 	return &memIterator{
-		start: start,
-		end:   end,
-		items: itemsInDomain,
+		start:     start,
+		end:       end,
+		items:     itemsInDomain,
+		ascending: ascending,
 	}
 }
 
@@ -45,17 +56,27 @@ func (mi *memIterator) assertValid() {
 
 func (mi *memIterator) Next() {
 	mi.assertValid()
-	mi.items = mi.items[1:]
+	if mi.ascending {
+		mi.items = mi.items[1:]
+	} else {
+		mi.items = mi.items[:len(mi.items)-1]
+	}
 }
 
 func (mi *memIterator) Key() []byte {
 	mi.assertValid()
-	return mi.items[0].Key
+	if mi.ascending {
+		return mi.items[0].Key
+	}
+	return mi.items[len(mi.items)-1].Key
 }
 
 func (mi *memIterator) Value() []byte {
 	mi.assertValid()
-	return mi.items[0].Value
+	if mi.ascending {
+		return mi.items[0].Value
+	}
+	return mi.items[len(mi.items)-1].Value
 }
 
 func (mi *memIterator) Close() {

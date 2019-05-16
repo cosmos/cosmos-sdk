@@ -18,17 +18,17 @@ import (
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
+// Proposal flags
 const (
-	flagTitle        = "title"
-	flagDescription  = "description"
+	FlagTitle        = "title"
+	FlagDescription  = "description"
 	flagProposalType = "type"
-	flagDeposit      = "deposit"
+	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
-	flagOption       = "option"
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
 	flagNumLimit     = "limit"
-	flagProposal     = "proposal"
+	FlagProposal     = "proposal"
 )
 
 type proposal struct {
@@ -38,11 +38,14 @@ type proposal struct {
 	Deposit     string
 }
 
-var proposalFlags = []string{
-	flagTitle,
-	flagDescription,
+// ProposalFlags defines the core required fields of a proposal. It is used to
+// verify that these values are not provided in conjunction with a JSON proposal
+// file.
+var ProposalFlags = []string{
+	FlagTitle,
+	FlagDescription,
 	flagProposalType,
-	flagDeposit,
+	FlagDeposit,
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
@@ -69,58 +72,51 @@ is equivalent to
 $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			proposal, err := parseSubmitProposalFlags()
-			if err != nil {
-				return err
-			}
-
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			// Get proposer address
-			from := cliCtx.GetFromAddress()
+			proposal, err := parseSubmitProposalFlags()
+			if err != nil {
+				return err
+			}
 
-			// Find deposit amount
 			amount, err := sdk.ParseCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
-			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
-			if err != nil {
+			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+
+			msg := gov.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(flagTitle, "", "title of proposal")
-	cmd.Flags().String(flagDescription, "", "description of proposal")
+	cmd.Flags().String(FlagTitle, "", "title of proposal")
+	cmd.Flags().String(FlagDescription, "", "description of proposal")
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(flagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
 
 // GetCmdDeposit implements depositing tokens for an active proposal.
-func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Deposit tokens for activing proposal",
+		Short: "Deposit tokens for an active proposal",
 		Long: strings.TrimSpace(`
-Submit a deposit for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Submit a deposit for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
 
+Example:
 $ gaiacli tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -133,12 +129,6 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
-			}
-
-			// check to see if the proposal is in the store
-			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
 			// Get depositor address
@@ -156,20 +146,21 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
 
 // GetCmdVote implements creating a new vote command.
-func GetCmdVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
 		Long: strings.TrimSpace(`
-Submit a vote for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Submit a vote for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
 
+Example:
 $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -187,12 +178,6 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			// check to see if the proposal is in the store
-			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
 			// Find out which vote option user chose
 			byteVoteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(args[1]))
 			if err != nil {
@@ -206,7 +191,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }

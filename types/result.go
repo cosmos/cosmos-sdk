@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -45,7 +46,7 @@ type ABCIMessageLogs []ABCIMessageLog
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
-	MsgIndex int    `json:"msg_index"`
+	MsgIndex uint16 `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 }
@@ -229,10 +230,6 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
 	}
 
-	if len(r.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
-	}
-
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
 	}
@@ -241,12 +238,37 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
 	}
 
+	if len(r.Tags) > 0 {
+		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
+	}
+
 	return strings.TrimSpace(sb.String())
 }
 
 // Empty returns true if the response is empty
 func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
+}
+
+// SearchTxsResult defines a structure for querying txs pageable
+type SearchTxsResult struct {
+	TotalCount int          `json:"total_count"` // Count of all txs
+	Count      int          `json:"count"`       // Count of txs in current page
+	PageNumber int          `json:"page_number"` // Index of current page, start from 1
+	PageTotal  int          `json:"page_total"`  // Count of total pages
+	Limit      int          `json:"limit"`       // Max count txs per page
+	Txs        []TxResponse `json:"txs"`         // List of txs in current page
+}
+
+func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) SearchTxsResult {
+	return SearchTxsResult{
+		TotalCount: totalCount,
+		Count:      count,
+		PageNumber: page,
+		PageTotal:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		Limit:      limit,
+		Txs:        txs,
+	}
 }
 
 // ParseABCILogs attempts to parse a stringified ABCI tx log into a slice of

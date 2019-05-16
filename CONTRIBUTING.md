@@ -1,5 +1,18 @@
 # Contributing
 
+* [Pull Requests](#pull-requests)
+  * [Process for reviewing PRs](#process-for-reviewing-prs)
+  * [Updating Documentation](#updating-documentation)
+* [Forking](#forking)
+* [Dependencies](#dependencies)
+* [Testing](#testing)
+* [Branching Model and Release](#branching-model-and-release)
+  * [PR Targeting](#pr-targeting)
+  * [Development Procedure](#development-procedure)
+  * [Pull Merge Procedure](#pull-merge-procedure)
+  * [Release Procedure](#release-procedure)
+  * [Point Release Procedure](#point-release-procedure)
+
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
 
@@ -18,7 +31,9 @@ contributors, the general procedure for contributing has been established:
        make a comment on the issue to inform the community of your intentions
        to begin work,
      4. follow standard github best practices: fork the repo, branch from the
-       top of `develop`, make some commits, and submit a PR to `develop`,
+       top of `master`, make some commits, and submit a PR to `master`,
+         - for core developers working within the cosmos-sdk repo, 
+	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.  
      5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code
@@ -157,7 +172,7 @@ All feature additions should be targeted against `master`. Bug fixes for an outs
 should be targeted against the release candidate branch. Release candidate branches themselves should be the
 only pull requests targeted directly against master.
 
-### Development Procedure:
+### Development Procedure
   - the latest state of development is on `master`
   - `master` must never fail `make test` or `make test_cli`
   - `master` should not fail `make lint`
@@ -165,27 +180,34 @@ only pull requests targeted directly against master.
   - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
   - before submitting a pull request, begin `git rebase` on top of `master`
 
-### Pull Merge Procedure:
+### Pull Merge Procedure
   - ensure pull branch is rebased on `master`
   - run `make test` and `make test_cli` to ensure that all tests pass
   - merge pull request
 
-### Release Procedure:
+### Release Procedure
   - start on `master`
-  - create the release candidate branch `rcN/v*` (please start with `N=1`) (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+  - create the release candidate branch `rc/v*` (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
   - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
   - if errors are found during the simulation testing, commit the fixes to `master` and create a new `RC` branch (making sure to increment the `rcN`)
   - after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch
   - merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
   - delete the `RC` branches
  
-### Hotfix Procedure:
-  - start on `master`
-  - checkout a new branch named hotfix-vX.X.X
-  - make the required changes
-    - these changes should be small and an absolute necessity
-    - add a note to CHANGELOG.md
-  - bump versions
-  - push to hotfix-vX.X.X to run the extended integration tests on the CI
-  - merge hotfix-vX.X.X to `master` and cherry pick the commit to any release branches this applies to
-  - delete the hotfix-vX.X.X branch
+### Point Release Procedure
+
+At the moment, only a single major release will be supported, so all point
+releases will be based off of that release.
+
+  - start on `vX.XX.X`
+  - checkout a new branch `pre-rc/vX.X.X`
+  - cherry pick the desired changes from `master`
+    - these changes should be small and NON-BREAKING (both API and state machine)
+  - add entries to CHANGELOG.md and remove corresponding pending log entries
+  - checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
+  - create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
+  - run tests and simulations (noted in [Release Procedure](#release-procedure))
+  - after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
+  - delete the `pre-rc/vX.X.X` and `RC` branches
+  - create a PR into `master` containing ONLY the CHANGELOG.md updates
+  - tag and release `release/vX.XX.X`

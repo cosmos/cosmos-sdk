@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -151,72 +152,76 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	authGenesis := auth.GenesisState{
-		Params: auth.Params{
-			MaxMemoCharacters:      uint64(simulation.RandIntBetween(r, 100, 200)),
-			TxSigLimit:             uint64(r.Intn(7) + 1),
-			TxSizeCostPerByte:      uint64(simulation.RandIntBetween(r, 5, 15)),
-			SigVerifyCostED25519:   uint64(simulation.RandIntBetween(r, 500, 1000)),
-			SigVerifyCostSecp256k1: uint64(simulation.RandIntBetween(r, 500, 1000)),
+	authGenesis := auth.NewGenesisState(
+		nil,
+		auth.Params{
+			MaxMemoCharacters:      simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64),
+			TxSigLimit:             simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64),
+			TxSizeCostPerByte:      simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64),
+			SigVerifyCostED25519:   simulation.ModuleParamSimulator["SigVerifyCostED25519"](r).(uint64),
+			SigVerifyCostSecp256k1: simulation.ModuleParamSimulator["SigVerifyCostSecp256k1"](r).(uint64),
 		},
-	}
+	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
 	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
-	vp := time.Duration(r.Intn(2*172800)) * time.Second
-	govGenesis := gov.GenesisState{
-		StartingProposalID: uint64(r.Intn(100)),
-		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))},
+	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
+	govGenesis := gov.NewGenesisState(
+		uint64(r.Intn(100)),
+		gov.DepositParams{
+			MinDeposit:       simulation.ModuleParamSimulator["DepositParams/MinDeposit"](r).(sdk.Coins),
 			MaxDepositPeriod: vp,
 		},
-		VotingParams: gov.VotingParams{
+		gov.VotingParams{
 			VotingPeriod: vp,
 		},
-		TallyParams: gov.TallyParams{
-			Quorum:    sdk.NewDecWithPrec(334, 3),
-			Threshold: sdk.NewDecWithPrec(5, 1),
-			Veto:      sdk.NewDecWithPrec(334, 3),
+		gov.TallyParams{
+			Quorum:    simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
+			Threshold: simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
+			Veto:      simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
 		},
-	}
+	)
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
-	stakingGenesis := staking.GenesisState{
-		Pool: staking.InitialPool(),
-		Params: staking.Params{
-			UnbondingTime: time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
-			MaxValidators: uint16(r.Intn(250) + 1),
+	stakingGenesis := staking.NewGenesisState(
+		staking.InitialPool(),
+		staking.Params{
+			UnbondingTime: simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration),
+			MaxValidators: simulation.ModuleParamSimulator["MaxValidators"](r).(uint16),
 			BondDenom:     sdk.DefaultBondDenom,
 		},
-	}
+		nil,
+		nil,
+	)
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
 
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
 			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
-			SignedBlocksWindow:      int64(simulation.RandIntBetween(r, 10, 1000)),
-			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			DowntimeJailDuration:    time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second,
-			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
-			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
+			SignedBlocksWindow:      simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64),
+			MinSignedPerWindow:      simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec),
+			DowntimeJailDuration:    simulation.ModuleParamSimulator["DowntimeJailDuration"](r).(time.Duration),
+			SlashFractionDoubleSign: simulation.ModuleParamSimulator["SlashFractionDoubleSign"](r).(sdk.Dec),
+			SlashFractionDowntime:   simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec),
 		},
 	}
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
-	mintGenesis := mint.GenesisState{
-		Minter: mint.InitialMinter(
+	mintGenesis := mint.NewGenesisState(
+		mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
-		Params: mint.NewParams(
+		mint.NewParams(
 			sdk.DefaultBondDenom,
-			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-			sdk.NewDecWithPrec(20, 2),
-			sdk.NewDecWithPrec(7, 2),
-			sdk.NewDecWithPrec(67, 2),
-			uint64(60*60*8766/5)),
-	}
+			simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["InflationMax"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["InflationMin"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["GoalBonded"](r).(sdk.Dec),
+			uint64(60*60*8766/5),
+		),
+	)
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
 	var validators []staking.Validator
@@ -282,7 +287,8 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsim.SimulateTextProposalContent)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsim.SimulateParamChangeProposalContent)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
 		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},

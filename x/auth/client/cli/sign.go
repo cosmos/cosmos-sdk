@@ -71,7 +71,10 @@ be generated via the 'multisign' command.
 		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode; Do not query a full node")
+	cmd.Flags().Bool(
+		flagOffline, false,
+		"Offline mode; Do not query a full node. --account and --sequence options would be ignored if offline is set",
+	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	cmd = client.PostCommands(cmd)[0]

@@ -1,0 +1,2 @@
+#4235 Update the minting module params to implement params.ParamSet so
+individual keys can be set via proposals instead of passing a struct. 

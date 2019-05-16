@@ -12,13 +12,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// ContentSimulator defines a function type alias for generating random proposal
+// content.
+type ContentSimulator func(r *rand.Rand) gov.Content
+
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim ContentSimulator) simulation.Operation {
 	handler := gov.NewHandler(k)
+
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -36,61 +41,54 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Ope
 		{0, 0, 20, 30, 30, 30},
 		{0, 0, 0, 10, 10, 25},
 	})
+
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
 		sender := simulation.RandomAcc(r, accs)
-		msg, err := simulationCreateMsgSubmitProposal(r, sender)
+		content := contentSim(r)
+		msg, err := simulationCreateMsgSubmitProposal(r, content, sender)
 		if err != nil {
 			return simulation.NoOpMsg(), nil, err
 		}
+
 		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx)
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		opMsg = simulation.NewOperationMsg(msg, ok, content.ProposalType())
 		// don't schedule votes if proposal failed
 		if !ok {
 			return opMsg, nil, nil
 		}
+
 		proposalID := k.GetLastProposalID(ctx)
+
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
 		curNumVotesState = numVotesTransitionMatrix.NextState(r, curNumVotesState)
 		numVotes := int(math.Ceil(float64(len(accs)) * statePercentageArray[curNumVotesState]))
+
 		// 2.2) select who votes and when
 		whoVotes := r.Perm(len(accs))
+
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
 		votingPeriod := k.GetVotingParams(ctx).VotingPeriod
+
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simulation.FutureOperation{BlockTime: whenVote, Op: operationSimulateMsgVote(k, accs[whoVotes[i]], proposalID)}
 		}
+
 		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
 		// before and after.
 
 		return opMsg, fops, nil
-	}
-}
-
-// SimulateMsgSubmitProposal simulates a msg Submit Proposal
-// Note: Currently doesn't ensure that the proposal txt is in JSON form
-func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
-	handler := gov.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
-		sender := simulation.RandomAcc(r, accs)
-		msg, err := simulationCreateMsgSubmitProposal(r, sender)
-		if err != nil {
-			return simulation.NoOpMsg(), nil, err
-		}
-		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx)
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
 	}
 }
 
@@ -103,15 +101,16 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 	return ok
 }
 
-func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) (msg gov.MsgSubmitProposal, err error) {
-	deposit := randomDeposit(r)
-	msg = gov.NewMsgSubmitProposal(
-		simulation.RandStringOfLength(r, 5),
-		simulation.RandStringOfLength(r, 5),
-		gov.ProposalTypeText,
-		sender.Address,
-		deposit,
+// SimulateTextProposalContent returns random text proposal content.
+func SimulateTextProposalContent(r *rand.Rand) gov.Content {
+	return gov.NewTextProposal(
+		simulation.RandStringOfLength(r, 140),
+		simulation.RandStringOfLength(r, 5000),
 	)
+}
+
+func simulationCreateMsgSubmitProposal(r *rand.Rand, c gov.Content, s simulation.Account) (msg gov.MsgSubmitProposal, err error) {
+	msg = gov.NewMsgSubmitProposal(c, randomDeposit(r), s.Address)
 	if msg.ValidateBasic() != nil {
 		err = fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 	}

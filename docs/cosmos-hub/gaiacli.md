@@ -19,7 +19,7 @@ First, set up the address of the full-node you want to connect to:
 ```bash
 gaiacli config node <host>:<port
 
-// example: gaiacli config node https://77.87.106.33:26657
+# example: gaiacli config node https://77.87.106.33:26657
 ```
 
 If you run your own full-node, just use `tcp://localhost:26657` as the address. 
@@ -29,7 +29,7 @@ Then, let us set the default value of the `--trust-node` flag:
 ```bash
 gaiacli config trust-node true
 
-// Set to true if you trust the full-node you are connecting to, false otherwise
+# Set to true if you trust the full-node you are connecting to, false otherwise
 ```
 
 Finally, let us set the `chain-id` of the blockchain we want to interact with:
@@ -249,7 +249,7 @@ gaiacli tx send <sender_address> <recipient_address> 10faucetToken \
 ```bash
 gaiacli tx sign \
   --chain-id=<chain_id> \
-  --from=<key_name>
+  --from=<key_name> \
   unsignedSendTx.json > signedSendTx.json
 ```
 
@@ -536,36 +536,99 @@ You can also query all of the delegations to a particular validator:
 
 ### Governance
 
-Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
+Governance is the process from which users in the Cosmos Hub can come to consensus
+on software upgrades, parameters of the mainnet or signaling mechanisms through
+text proposals. This is done through voting on proposals, which will be submitted
+by `ATOM` holders on the mainnet.
 
 Some considerations about the voting process:
 
-- Voting is done by bonded `Atom` holders on a 1 bonded `Atom` 1 vote basis
+- Voting is done by bonded `ATOM` holders on a 1 bonded `ATOM` 1 vote basis
 - Delegators inherit the vote of their validator if they don't vote
-- **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**
-- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times to update its `Option` value (paying the transaction fee each time), only the last casted vote will count as valid
+- Votes are tallied at the end of the voting period (2 weeks on mainnet) where
+each address can vote multiple times to update its `Option` value (paying the transaction fee each time),
+only the most recently cast vote will count as valid
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
-  At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
+- At the end of the voting period, a proposal is accepted iff:
+  - `(YesVotes / (YesVotes+NoVotes+NoWithVetoVotes)) > 1/2`
+  - `(NoWithVetoVotes / (YesVotes+NoVotes+NoWithVetoVotes)) < 1/3`
+  - `((YesVotes+NoVotes+NoWithVetoVotes) / totalBondedStake) >= quorum`
 
-For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
+For more information about the governance process and how it works, please check
+out the Governance module [specification](./../spec/governance).
 
 #### Create a Governance Proposal
 
-In order to create a governance proposal, you must submit an initial deposit along with the proposal details:
+In order to create a governance proposal, you must submit an initial deposit
+along with a title and description. Various modules outside of governance may
+implement their own proposal types and handlers (eg. parameter changes), where
+the governance module itself supports `Text` proposals. Any module
+outside of governance has it's command mounted on top of `submit-proposal`.
 
-- `title`: Title of the proposal
-- `description`: Description of the proposal
-- `type`: Type of proposal. Must be of value _Text_ (types _SoftwareUpgrade_ and _ParameterChange_ not supported yet).
+To submit a `Text` proposal:
 
 ```bash
 gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
-  --type=<Text/ParameterChange/SoftwareUpgrade> \
+  --type="Text" \
   --deposit="1000000uatom" \
   --from=<name> \
   --chain-id=<chain_id>
 ```
+
+You may also provide the proposal directly through the `--proposal` flag which
+points to a JSON file containing the proposal.
+
+To submit a parameter change proposal, you must provide a proposal file as its
+contents are less friendly to CLI input:
+
+```bash
+gaiacli tx gov submit-proposal param-change <path/to/proposal.json> \
+  --from=<name> \
+  --chain-id=<chain_id>
+```
+
+Where `proposal.json` contains the following:
+
+```json
+{
+  "title": "Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": 105
+    }
+  ],
+  "deposit": [
+    {
+      "denom": "stake",
+      "amount": "10000000"
+    }
+  ]
+}
+```
+
+::: danger Warning
+
+Currently parameter changes are _evaluated_ but not _validated_, so it is very important
+that any `value` change is valid (ie. correct type and within bounds) for its
+respective parameter, eg. `MaxValidators` should be an integer and not a decimal.
+
+Proper vetting of a parameter change proposal should prevent this from happening
+(no deposits should occur during the governance process), but it should be noted
+regardless. 
+
+:::
+
+::: tip Note
+
+The `SoftwareUpgrade` is currently not supported as it's not implemented and
+currently does not differ from the semantics of a `Text` proposal.
+
+:::
 
 ##### Query Proposals
 
@@ -733,7 +796,7 @@ For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each
 by a distinct party, the user holding `p1` would require to import both `p2` and `p3` in order to
 generate the multisig account public key:
 
-```
+```bash
 gaiacli keys add \
   p2 \
   --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4
@@ -781,7 +844,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p1 \
-  --output-document=p1signature.json \
+  --output-document=p1signature.json 
 ```
 
 Once the signature is generated, `p1` transmits both `unsignedTx.json` and
@@ -793,7 +856,7 @@ gaiacli tx sign \
   unsignedTx.json \
   --multisig=<multisig_address> \
   --from=p2 \
-  --output-document=p2signature.json \
+  --output-document=p2signature.json
 ```
 
 `p1p2p3` is a 2-of-3 multisig key, therefore one additional signature

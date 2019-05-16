@@ -25,19 +25,19 @@ func TestEqualProposalID(t *testing.T) {
 
 func TestEqualProposals(t *testing.T) {
 	// Generate mock app and keepers
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
-	SortAddresses(addrs)
+	input := getMockApp(t, 2, GenesisState{}, nil)
+	SortAddresses(input.addrs)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Submit two proposals
 	proposal := testProposal()
-	proposal1, err := keeper.SubmitProposal(ctx, proposal)
+	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
-	proposal2, err := keeper.SubmitProposal(ctx, proposal)
+	proposal2, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 
 	// They are similar but their IDs should be different
@@ -67,62 +67,62 @@ func TestEqualProposals(t *testing.T) {
 
 func TestImportExportQueues(t *testing.T) {
 	// Generate mock app and keepers
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
-	SortAddresses(addrs)
+	input := getMockApp(t, 2, GenesisState{}, nil)
+	SortAddresses(input.addrs)
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Create two proposals, put the second into the voting period
 	proposal := testProposal()
-	proposal1, err := keeper.SubmitProposal(ctx, proposal)
+	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalID
 
-	proposal2, err := keeper.SubmitProposal(ctx, proposal)
+	proposal2, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID2 := proposal2.ProposalID
 
-	_, votingStarted := keeper.AddDeposit(ctx, proposalID2, addrs[0], keeper.GetDepositParams(ctx).MinDeposit)
+	_, votingStarted := input.keeper.AddDeposit(ctx, proposalID2, input.addrs[0], input.keeper.GetDepositParams(ctx).MinDeposit)
 	require.True(t, votingStarted)
 
-	proposal1, ok := keeper.GetProposal(ctx, proposalID1)
+	proposal1, ok := input.keeper.GetProposal(ctx, proposalID1)
 	require.True(t, ok)
-	proposal2, ok = keeper.GetProposal(ctx, proposalID2)
+	proposal2, ok = input.keeper.GetProposal(ctx, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal1.Status == StatusDepositPeriod)
 	require.True(t, proposal2.Status == StatusVotingPeriod)
 
-	genAccs := mapp.AccountKeeper.GetAllAccounts(ctx)
+	genAccs := input.mApp.AccountKeeper.GetAllAccounts(ctx)
 
 	// Export the state and import it into a new Mock App
-	genState := ExportGenesis(ctx, keeper)
-	mapp2, keeper2, _, _, _, _ := getMockApp(t, 2, genState, genAccs)
+	genState := ExportGenesis(ctx, input.keeper)
+	input2 := getMockApp(t, 2, genState, genAccs)
 
-	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mapp2.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header = abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input2.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx2 := mapp2.BaseApp.NewContext(false, abci.Header{})
+	ctx2 := input2.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(keeper2.GetDepositParams(ctx2).MaxDepositPeriod).Add(keeper2.GetVotingParams(ctx2).VotingPeriod))
+	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(input2.keeper.GetDepositParams(ctx2).MaxDepositPeriod).Add(input2.keeper.GetVotingParams(ctx2).VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
-	proposal1, ok = keeper2.GetProposal(ctx2, proposalID1)
+	proposal1, ok = input2.keeper.GetProposal(ctx2, proposalID1)
 	require.True(t, ok)
-	proposal2, ok = keeper2.GetProposal(ctx2, proposalID2)
+	proposal2, ok = input2.keeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal1.Status == StatusDepositPeriod)
 	require.True(t, proposal2.Status == StatusVotingPeriod)
 
 	// Run the endblocker.  Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
-	EndBlocker(ctx2, keeper2)
+	EndBlocker(ctx2, input2.keeper)
 
-	proposal1, ok = keeper2.GetProposal(ctx2, proposalID1)
+	proposal1, ok = input2.keeper.GetProposal(ctx2, proposalID1)
 	require.False(t, ok)
-	proposal2, ok = keeper2.GetProposal(ctx2, proposalID2)
+	proposal2, ok = input2.keeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal2.Status == StatusRejected)
 }

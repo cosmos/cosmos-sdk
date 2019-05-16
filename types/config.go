@@ -11,6 +11,7 @@ type Config struct {
 	sealed              bool
 	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
+	addressVerifier     func([]byte) error
 }
 
 var (
@@ -73,6 +74,13 @@ func (config *Config) SetTxEncoder(encoder TxEncoder) {
 	config.txEncoder = encoder
 }
 
+// SetAddressVerifier builds the Config with the provided function for verifying that addresses
+// have the correct format
+func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
+	config.assertNotSealed()
+	config.addressVerifier = addressVerifier
+}
+
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -115,4 +123,9 @@ func (config *Config) GetBech32ConsensusPubPrefix() string {
 // GetTxEncoder return function to encode transactions
 func (config *Config) GetTxEncoder() TxEncoder {
 	return config.txEncoder
+}
+
+// GetAddressVerifier returns the function to verify that addresses have the correct format
+func (config *Config) GetAddressVerifier() func([]byte) error {
+	return config.addressVerifier
 }

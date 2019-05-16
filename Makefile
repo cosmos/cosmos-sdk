@@ -5,8 +5,7 @@ PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
-GOBIN ?= $(GOPATH)/bin
-GOSUM := $(shell which gosum)
+BINDIR ?= $(GOPATH)/bin
 
 export GO111MODULE = on
 
@@ -42,15 +41,17 @@ endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
+whitespace :=
+whitespace += $(whitespace)
+comma := ,
+build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
-
-ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
-endif
+  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -80,8 +81,6 @@ ifeq ($(OS),Windows_NT)
 else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux: go.sum
@@ -93,8 +92,6 @@ update_gaia_lite_docs:
 install: go.sum check-ledger update_gaia_lite_docs
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
 install_debug: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
@@ -110,7 +107,7 @@ go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
 
-go.sum: tools go.mod
+go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 
@@ -122,6 +119,12 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
+distclean: clean
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
 
 ########################################
 ### Documentation
@@ -167,20 +170,20 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaImportExport
+	$(BINDIR)/runsim 50 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim 50 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
 
 test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -189,8 +192,8 @@ test_sim_benchmark_invariants:
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
-runsim: $(GOBIN)/runsim
-$(GOBIN)/runsim: cmd/gaia/contrib/runsim/main.go
+runsim: $(BINDIR)/runsim
+$(BINDIR)/runsim: cmd/gaia/contrib/runsim/main.go
 	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
@@ -212,7 +215,6 @@ test_cover:
 lint: tools ci-lint
 ci-lint:
 	golangci-lint run
-	go vet -composites=false -tests=false ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 

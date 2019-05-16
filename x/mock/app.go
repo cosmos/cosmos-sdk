@@ -65,7 +65,7 @@ func NewApp() *App {
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
 
 	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
@@ -82,7 +82,7 @@ func NewApp() *App {
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, app.FeeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultSigVerificationGasConsumer))
 
 	// Not sealing for custom extension
 

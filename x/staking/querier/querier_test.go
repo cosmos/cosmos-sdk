@@ -263,14 +263,15 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationRes types.Delegation
+	var delegationRes types.DelegationResponse
 	errRes = cdc.UnmarshalJSON(res, &delegationRes)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delegation, delegationRes)
+	require.Equal(t, delegation.ValidatorAddress, delegationRes.ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationRes.DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationRes.Balance)
 
 	// Query Delegator Delegations
-
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
@@ -279,11 +280,13 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegatorDelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegatorDelegations []types.Delegation
+	var delegatorDelegations types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
 	require.Nil(t, errRes)
 	require.Len(t, delegatorDelegations, 1)
-	require.Equal(t, delegation, delegatorDelegations[0])
+	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegatorDelegations[0].Balance)
 
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
@@ -304,11 +307,13 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryValidatorDelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationsRes []types.Delegation
+	var delegationsRes types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, delegationsRes[0], delegation)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationsRes[0].Balance)
 
 	// Query unbonging delegation
 	unbondingTokens := sdk.TokensFromTendermintPower(10)
@@ -382,11 +387,14 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var redelRes []types.Redelegation
+	var redelRes types.RedelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redel, redelRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
 func TestQueryRedelegations(t *testing.T) {
@@ -407,7 +415,7 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
 
 	// delegator redelegations
@@ -423,11 +431,14 @@ func TestQueryRedelegations(t *testing.T) {
 	res, err := queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var redsRes []types.Redelegation
-	errRes = cdc.UnmarshalJSON(res, &redsRes)
+	var redelRes types.RedelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redelegation, redsRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 
 	// validator redelegations
 	queryValidatorParams := NewQueryValidatorParams(val1.GetOperator())
@@ -442,8 +453,11 @@ func TestQueryRedelegations(t *testing.T) {
 	res, err = queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	errRes = cdc.UnmarshalJSON(res, &redsRes)
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redelegation, redsRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }

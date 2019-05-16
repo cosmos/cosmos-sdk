@@ -116,7 +116,7 @@ func addGenesisAccount(
 			EndTime:         vestingEnd,
 		}
 
-		if bvacc.OriginalVesting.IsAllGT(acc.Coins) {
+		if bvacc.OriginalVesting.IsAnyGT(acc.Coins) {
 			return appState, fmt.Errorf("vesting amount cannot be greater than total amount")
 		}
 		if vestingStart >= vestingEnd {

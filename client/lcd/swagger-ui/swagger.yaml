@@ -253,9 +253,7 @@ paths:
         200:
           description: All txs matching the provided tags
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/TxQuery"
+            $ref: "#/definitions/PaginatedQueryTxs"
         400:
           description: Invalid search tags
         500:
@@ -1122,6 +1120,51 @@ paths:
           description: Invalid query parameters
         500:
           description: Internal Server Error
+  /gov/proposals/param_change:
+    post:
+      summary: Generate a parameter change proposal transaction
+      description: Generate a parameter change proposal transaction
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - ICS22
+      parameters:
+        - description: The parameter change proposal body that contains all parameter changes
+          name: post_proposal_body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              title:
+                type: string
+                x-example: 'Param Change'
+              description:
+                type: string
+                x-example: 'Update max validators'
+              proposer:
+                $ref: "#/definitions/Address"
+              deposit:
+                type: array
+                items:
+                  $ref: "#/definitions/Coin"
+              changes:
+                type: array
+                items:
+                  $ref: "#/definitions/ParamChange"
+      responses:
+        200:
+          description: The transaction was succesfully generated
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid proposal body
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}:
     get:
       summary: Query a proposal
@@ -1918,8 +1961,10 @@ definitions:
     properties:
       hash:
         type: string
+        example: "D085138D913993919295FF4B0A9107F1F2CDE0D37A87CE0644E217CBF3B49656"
       height:
         type: number
+        example: 368
       tx:
         $ref: "#/definitions/StdTx"
       result:
@@ -1929,14 +1974,36 @@ definitions:
             type: string
           gas_wanted:
             type: string
-            example: "0"
+            example: "200000"
           gas_used:
             type: string
-            example: "0"
+            example: "26354"
           tags:
             type: array
             items:
               $ref: "#/definitions/KVPair"
+  PaginatedQueryTxs:
+    type: object
+    properties:
+      total_count:
+        type: number
+        example: 1
+      count:
+        type: number
+        example: 1
+      page_number:
+        type: number
+        example: 1
+      page_total:
+        type: number
+        example: 1
+      limit:
+        type: number
+        example: 30
+      txs:
+        type: array
+        items:
+          $ref: "#/definitions/TxQuery"
   StdTx:
     type: object
     properties:
@@ -1976,23 +2043,6 @@ definitions:
           sequence:
             type: string
             example: "0"
-  KeyOutput:
-    type: object
-    properties:
-      name:
-        type: string
-        example: Main Account
-      address:
-        type: string
-        example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
-      pub_key:
-        type: string
-        example: "cosmospub1addwnpepqtqc88gfdxyzcdm2eqr3tnlnxnelyqehy8k95qzgwdz5zccdft9rq5q7wj2"
-      type:
-        type: string
-        example: local
-      seed:
-        type: string
   BlockID:
     type: object
     properties:
@@ -2011,7 +2061,7 @@ definitions:
     properties:
       chain_id:
         type: string
-        example: gaia-2
+        example: cosmoshub-2
       height:
         type: number
         example: 1
@@ -2331,15 +2381,20 @@ definitions:
         type: string
       validator_dst_address:
         type: string
+      entries:
+        type: array
+        items:
+          $ref: "#/definitions/Redelegation"
+  RedelegationEntry:
+    type: object
+    properties:
       creation_height:
         type: integer
-      min_time:
+      completion_time:
         type: integer
       initial_balance:
         type: string
       balance:
-        type: string
-      shares_src:
         type: string
       shares_dst:
         type: string
@@ -2367,3 +2422,17 @@ definitions:
         type: string
       missed_blocks_counter:
         type: string
+  ParamChange:
+    type: object
+    properties:
+      subspace:
+        type: string
+        example: "staking"
+      key:
+        type: string
+        example: "MaxValidators"
+      subkey:
+        type: string
+        example: ""
+      value:
+        type: object

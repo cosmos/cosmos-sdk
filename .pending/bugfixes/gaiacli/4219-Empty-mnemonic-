@@ -1,0 +1,1 @@
+#4219 Return an error when an empty mnemonic is provided during key recovery.

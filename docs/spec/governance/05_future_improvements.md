@@ -21,10 +21,6 @@ governance module. Future improvements may include:
   representative before they inherit the vote of their validator. In other 
   words, they would only inherit the vote of their validator if their other 
   appointed representative did not vote.
-* **`ParameterProposals` and `WhitelistProposals`:** These proposals would 
-  automatically change pre-defined parameters and whitelists. Upon acceptance, 
-  these proposals would not require validators to do the signal and switch 
-  process.
 * **Better process for proposal review:** There would be two parts to 
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to 
   reward third party auditors.

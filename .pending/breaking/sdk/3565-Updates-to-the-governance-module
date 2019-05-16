@@ -1,0 +1,4 @@
+#3565 Updates to the governance module:
+  * Rename JSON field from `proposal_content` to `content`
+  * Rename JSON field from `proposal_id` to `id`
+  * Disable `ProposalTypeSoftwareUpgrade` temporarily

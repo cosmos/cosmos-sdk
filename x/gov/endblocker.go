@@ -52,25 +52,47 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		}
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
-		var tagValue string
+		var tagValue, logMsg string
+
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
-			activeProposal.Status = StatusPassed
-			tagValue = tags.ActionProposalPassed
+
+			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
+			cacheCtx, writeCache := ctx.CacheContext()
+
+			// The proposal handler may execute state mutating logic depending
+			// on the proposal content. If the handler fails, no state mutation
+			// is written and the error message is logged.
+			err := handler(cacheCtx, activeProposal.Content)
+			if err == nil {
+				activeProposal.Status = StatusPassed
+				tagValue = tags.ActionProposalPassed
+				logMsg = "passed"
+
+				// write state to the underlying multi-store
+				writeCache()
+			} else {
+				activeProposal.Status = StatusFailed
+				tagValue = tags.ActionProposalFailed
+				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
+			}
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+
 			activeProposal.Status = StatusRejected
 			tagValue = tags.ActionProposalRejected
+			logMsg = "rejected"
 		}
 
 		activeProposal.FinalTallyResult = tallyResults
+
 		keeper.SetProposal(ctx, activeProposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.VotingEndTime, activeProposal.ProposalID)
 
 		logger.Info(
 			fmt.Sprintf(
-				"proposal %d (%s) tallied; passed: %v",
-				activeProposal.ProposalID, activeProposal.GetTitle(), passes,
+				"proposal %d (%s) tallied; result: %s",
+				activeProposal.ProposalID, activeProposal.GetTitle(), logMsg,
 			),
 		)
 

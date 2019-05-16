@@ -63,20 +63,19 @@ gaiacli account <YOUR_ADDRESS>
 Here is the command to send coins via the CLI:
 
 ```bash
-gaiacli tx send <destination_address> <amount> \
-    --chain-id=<name_of_testnet_chain> \
-    --from=<key_name>
+gaiacli tx send <from_key_or_address> <to_address> <amount> \
+    --chain-id=<name_of_testnet_chain> 
 ```
 
 Parameters:
 
-- `<destination_address>`: Address of the recipient.
+- `<from_key_or_address>`: Key name or address of sending account.
+- `<to_address>`: Address of the recipient.
 - `<amount>`: This parameter accepts the format `<value|coinName>`, such as `10faucetToken`.
 
 Flags:
 
 - `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
-- `--from`: Name of the key of the sending account.
 
 #### Help
 

@@ -29,10 +29,6 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
-
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
@@ -46,7 +42,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := bank.NewMsgSend(cliCtx.GetFromAddress(), to, coins)
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 

@@ -5,27 +5,6 @@ defaults: &linux_defaults
   docker:
     - image: circleci/golang:1.12.5
 
-
-############
-#
-# Configure macos integration tests
-
-macos_config: &macos_defaults
-  macos:
-    xcode: "10.1.0"
-  working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
-  environment:
-    GO_VERSION: "1.12.5"
-
-set_macos_env: &macos_env
-  run:
-    name: Set environment
-    command: |
-      echo 'export PATH=$PATH:$HOME/go/bin' >> $BASH_ENV
-      echo 'export GOPATH=$HOME/project' >> $BASH_ENV
-      echo 'export PATH=$PATH:$HOME/go/bin:$GOPATH/bin' >> $BASH_ENV
-      echo 'export GO111MODULE=on'
-
 ############
 #
 # Configure docs deployment
@@ -82,21 +61,6 @@ jobs:
           command: |
             export PATH=/tmp/workspace/bin:$PATH
             make ci-lint
-
-  integration_tests:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test cli
-          command: |
-            make test_cli
 
   test_sim_gaia_nondeterminism:
     <<: *linux_defaults
@@ -304,36 +268,6 @@ jobs:
                 echo "Website build started"
             fi
 
-  macos_ci:
-    <<: *macos_defaults
-    steps:
-      - *macos_env
-      - run:
-          name: Install go
-          command: |
-            source $BASH_ENV
-            curl -L -O https://dl.google.com/go/go$GO_VERSION.darwin-amd64.tar.gz
-            tar -C $HOME -xzf go$GO_VERSION.darwin-amd64.tar.gz
-            rm go$GO_VERSION.darwin-amd64.tar.gz
-            go version
-      - checkout
-      - run:
-          name: Install SDK
-          command: |
-            source $BASH_ENV
-            make tools
-            make install
-      - run:
-          name: Integration tests
-          command:
-            source $BASH_ENV
-            make test_cli
-      - run:
-          name: Test full gaia simulation
-          command: |
-            source $BASH_ENV
-            make test_sim_gaia_fast
-
   docker_image:
     <<: *linux_defaults
     steps:
@@ -369,31 +303,6 @@ jobs:
           docker build -t tendermint/gaia:$CIRCLE_TAG .
           docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
           docker push tendermint/gaia:$CIRCLE_TAG
-
-  reproducible_builds:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run:
-          name: Build gaia
-          no_output_timeout: 20m
-          command: |
-            sudo apt-get install -y ruby
-            bash -x ./cmd/gaia/contrib/gitian-build.sh all
-            for os in darwin linux windows; do
-              cp gitian-build-${os}/result/gaia-${os}-res.yml .
-              rm -rf gitian-build-${os}/
-            done
-      - store_artifacts:
-          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-darwin-res.yml
-      - store_artifacts:
-          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-linux-res.yml
-      - store_artifacts:
-          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-windows-res.yml
 
 workflows:
   version: 2
@@ -431,9 +340,6 @@ workflows:
               only:
                 - /^v.*/
       - lint:
-          requires:
-            - setup_dependencies
-      - integration_tests:
           requires:
             - setup_dependencies
       - test_sim_gaia_nondeterminism:

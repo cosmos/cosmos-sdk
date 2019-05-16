@@ -58,6 +58,36 @@ func NewAppModule(keeper Keeper) sdk.AppModule {
 	})
 }
 
+// // Name defines module name
+func (AppModule) Name() string {
+	return ModuleName
+}
+
+// RegisterInvariants registers the nft module invariants
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+	RegisterInvariants(ir, am.keeper)
+}
+
+// Route module message route name
+func (AppModule) Route() string {
+	return RouterKey
+}
+
+// NewHandler module handler
+func (am AppModule) NewHandler() sdk.Handler {
+	return NewHandler(am.keeper)
+}
+
+// QuerierRoute module querier route name
+func (AppModule) QuerierRoute() string {
+	return QuerierRoute
+}
+
+// NewQuerierHandler module querier
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(am.keeper)
+}
+
 // InitGenesis supply module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
@@ -70,4 +100,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
 	return ModuleCdc.MustMarshalJSON(gs)
+}
+
+// BeginBlock module begin-block
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
+	return sdk.EmptyTags()
+}
+
+// EndBlock module end-block
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }

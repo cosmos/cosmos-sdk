@@ -4,17 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	// ModuleName is the name of the module
-	ModuleName = "nft"
-
-	// StoreKey is the default store key for NFT
-	StoreKey = ModuleName
-
-	// QuerierRoute is the querier route for the NFT store.
-	QuerierRoute = ModuleName
-)
-
 // NFTs are stored as follow:
 //
 // - Colections: 0x00<denom_bytes_key> :<Collection>

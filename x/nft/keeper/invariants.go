@@ -8,28 +8,17 @@ import (
 )
 
 // RegisterInvariants registers all supply invariants
-func RegisterInvariants(ck CrisisKeeper, k Keeper) {
-	ck.RegisterRoute(
-		ModuleName, "supply",
+func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
+	ir.RegisterRoute(
+		types.ModuleName, "supply",
 		SupplyInvariant(k),
 	)
 }
 
 // AllInvariants runs all invariants of the nfts module.
 func AllInvariants(k Keeper) sdk.Invariant {
-
 	return func(ctx sdk.Context) error {
-		err := SupplyInvariant(k)(ctx)
-		if err != nil {
-			return err
-		}
-
-		// err := OwnershipInvariant(k)(ctx)
-		// if err != nil {
-		// 	return err
-		// }
-
-		return nil
+		return SupplyInvariant(k)(ctx)
 	}
 }
 

@@ -38,7 +38,8 @@ var (
 )
 
 const (
-	StoreKey     = keeper.StoreKey
-	QuerierRoute = keeper.QuerierRoute
-	ModuleName   = keeper.ModuleName
+	StoreKey     = types.StoreKey
+	RouterKey    = types.RouterKey
+	QuerierRoute = types.QuerierRoute
+	ModuleName   = types.ModuleName
 )

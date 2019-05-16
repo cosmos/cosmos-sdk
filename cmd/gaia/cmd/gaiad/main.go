@@ -16,10 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
+	genaccscli "github.com/cosmos/cosmos-sdk/x/auth/genaccounts/client/cli"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 // gaiad custom flags
@@ -44,13 +46,14 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.ValidateGenesisCmd(ctx, cdc))
+	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, app.ModuleBasics))
+	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, genaccounts.AppModuleBasic{}))
+	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.ModuleBasics, genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
+	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics))
+	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc))
 	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
+	rootCmd.AddCommand(testnetCmd(ctx, cdc, app.ModuleBasics, genaccounts.AppModuleBasic{}))
+	rootCmd.AddCommand(replayCmd())
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
@@ -60,7 +63,6 @@ func main() {
 		0, "Assert registered invariants every N blocks")
 	err := executor.Execute()
 	if err != nil {
-		// handle with #870
 		panic(err)
 	}
 }

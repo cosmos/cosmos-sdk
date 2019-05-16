@@ -49,14 +49,29 @@ type Params struct {
 	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime"`
 }
 
+// NewParams creates a new Params object
+func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
+	minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
+	slashFractionDoubleSign sdk.Dec, slashFractionDowntime sdk.Dec) Params {
+
+	return Params{
+		MaxEvidenceAge:          maxEvidenceAge,
+		SignedBlocksWindow:      signedBlocksWindow,
+		MinSignedPerWindow:      minSignedPerWindow,
+		DowntimeJailDuration:    downtimeJailDuration,
+		SlashFractionDoubleSign: slashFractionDoubleSign,
+		SlashFractionDowntime:   slashFractionDowntime,
+	}
+}
+
 func (p Params) String() string {
 	return fmt.Sprintf(`Slashing Params:
   MaxEvidenceAge:          %s
   SignedBlocksWindow:      %d
   MinSignedPerWindow:      %s
   DowntimeJailDuration:    %s
-  SlashFractionDoubleSign: %d
-  SlashFractionDowntime:   %d`, p.MaxEvidenceAge,
+  SlashFractionDoubleSign: %s
+  SlashFractionDowntime:   %s`, p.MaxEvidenceAge,
 		p.SignedBlocksWindow, p.MinSignedPerWindow,
 		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
 		p.SlashFractionDowntime)

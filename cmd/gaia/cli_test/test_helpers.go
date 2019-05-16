@@ -62,6 +62,7 @@ var (
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
 	BuildDir      string
+	RootDir       string
 	GaiadBinary   string
 	GaiacliBinary string
 	ChainID       string
@@ -93,6 +94,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 	return &Fixtures{
 		T:             t,
 		BuildDir:      buildDir,
+		RootDir:       tmpDir,
 		GaiadBinary:   filepath.Join(buildDir, "gaiad"),
 		GaiacliBinary: filepath.Join(buildDir, "gaiacli"),
 		GaiadHome:     filepath.Join(tmpDir, ".gaiad"),
@@ -165,10 +167,9 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 // Cleanup is meant to be run at the end of a test to clean up an remaining test state
 func (f *Fixtures) Cleanup(dirs ...string) {
-	clean := append(dirs, f.GaiadHome, f.GaiacliHome)
+	clean := append(dirs, f.RootDir)
 	for _, d := range clean {
-		err := os.RemoveAll(d)
-		require.NoError(f.T, err)
+		require.NoError(f.T, os.RemoveAll(d))
 	}
 }
 
@@ -424,14 +425,14 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []sdk.TxResponse {
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) *sdk.SearchTxsResult {
 	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --tags='%s' %v", f.GaiacliBinary, page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var txs []sdk.TxResponse
+	var result sdk.SearchTxsResult
 	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &txs)
+	err := cdc.UnmarshalJSON([]byte(out), &result)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
-	return txs
+	return &result
 }
 
 // QueryTxsInvalid query txs with wrong parameters and compare expected error

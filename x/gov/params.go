@@ -13,6 +13,14 @@ type DepositParams struct {
 	MaxDepositPeriod time.Duration `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 
+// NewDepositParams creates a new DepositParams object
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+	return DepositParams{
+		MinDeposit:       minDeposit,
+		MaxDepositPeriod: maxDepositPeriod,
+	}
+}
+
 func (dp DepositParams) String() string {
 	return fmt.Sprintf(`Deposit Params:
   Min Deposit:        %s
@@ -27,8 +35,17 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 // Param around Tallying votes in governance
 type TallyParams struct {
 	Quorum    sdk.Dec `json:"quorum"`    //  Minimum percentage of total stake needed to vote for a result to be considered valid
-	Threshold sdk.Dec `json:"threshold"` //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+	Threshold sdk.Dec `json:"threshold"` //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
 	Veto      sdk.Dec `json:"veto"`      //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+}
+
+// NewTallyParams creates a new TallyParams object
+func NewTallyParams(quorum, threshold, veto sdk.Dec) TallyParams {
+	return TallyParams{
+		Quorum:    quorum,
+		Threshold: threshold,
+		Veto:      veto,
+	}
 }
 
 func (tp TallyParams) String() string {
@@ -42,6 +59,13 @@ func (tp TallyParams) String() string {
 // Param around Voting in governance
 type VotingParams struct {
 	VotingPeriod time.Duration `json:"voting_period"` //  Length of the voting period.
+}
+
+// NewVotingParams creates a new VotingParams object
+func NewVotingParams(votingPeriod time.Duration) VotingParams {
+	return VotingParams{
+		VotingPeriod: votingPeriod,
+	}
 }
 
 func (vp VotingParams) String() string {

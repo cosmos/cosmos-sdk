@@ -18,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -230,7 +229,7 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	var stdTx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &stdTx))
 	require.Equal(t, len(stdTx.Msgs), 1)
-	require.Equal(t, stdTx.GetMsgs()[0].Route(), "bank")
+	require.Equal(t, stdTx.GetMsgs()[0].Route(), bank.RouterKey)
 	require.Equal(t, stdTx.GetMsgs()[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(stdTx.Signatures))
 	require.Equal(t, memo, stdTx.Memo)
@@ -266,7 +265,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	var tx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &tx))
 	require.Equal(t, len(tx.Msgs), 1)
-	require.Equal(t, tx.Msgs[0].Route(), "bank")
+	require.Equal(t, tx.Msgs[0].Route(), bank.RouterKey)
 	require.Equal(t, tx.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(tx.Signatures))
 	require.Equal(t, memo, tx.Memo)
@@ -291,10 +290,9 @@ func TestEncodeTx(t *testing.T) {
 
 	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "2", 1, false, false, fees)
 	var tx auth.StdTx
-	cdc.UnmarshalJSON([]byte(body), &tx)
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &tx))
 
-	req := clienttx.EncodeReq{Tx: tx}
-	encodedJSON, _ := cdc.MarshalJSON(req)
+	encodedJSON, _ := cdc.MarshalJSON(tx)
 	res, body = Request(t, port, "POST", "/txs/encode", encodedJSON)
 
 	// Make sure it came back ok, and that we can decode it back to the transaction
@@ -324,19 +322,19 @@ func TestTxs(t *testing.T) {
 	defer cleanup()
 
 	var emptyTxs []sdk.TxResponse
-	txs := getTransactions(t, port)
-	require.Equal(t, emptyTxs, txs)
+	txResult := getTransactions(t, port)
+	require.Equal(t, emptyTxs, txResult.Txs)
 
 	// query empty
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Txs)
 
 	// also tests url decoding
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Txs)
 
-	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&sender=%s", addr.String()))
-	require.Equal(t, emptyTxs, txs)
+	txResult = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&sender=%s", addr.String()))
+	require.Equal(t, emptyTxs, txResult.Txs)
 
 	// create tx
 	receiveAddr, resultTx := doTransfer(t, port, seed, name1, memo, pw, addr, fees)
@@ -347,14 +345,14 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.TxHash, tx.TxHash)
 
 	// query sender
-	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	// query recipient
-	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	// query transaction that doesn't exist
 	validTxHash := "9ADBECAAD8DACBEC3F4F535704E7CF715C765BDCEDBEF086AFEAD31BA664FB0B"
@@ -386,8 +384,8 @@ func TestPoolParamsQuery(t *testing.T) {
 	tokens := sdk.TokensFromTendermintPower(100)
 	freeTokens := sdk.TokensFromTendermintPower(50)
 	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(tokens)
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)           // Delegate tx on GaiaAppGenState
-	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens) // freeTokensPerAcc = 50 on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens) // Delegate tx on GaiaAppGenState
+	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens)
 
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 
@@ -453,12 +451,12 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.Code)
 
 	// query tx
-	txs := getTransactions(t, port,
+	txResult := getTransactions(t, port,
 		fmt.Sprintf("action=delegate&sender=%s", addr),
 		fmt.Sprintf("destination-validator=%s", operAddrs[0]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -506,12 +504,12 @@ func TestBonding(t *testing.T) {
 	expectedBalance = coins[0]
 
 	// query tx
-	txs = getTransactions(t, port,
+	txResult = getTransactions(t, port,
 		fmt.Sprintf("action=begin_unbonding&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	ubd := getUnbondingDelegation(t, port, addr, operAddrs[0])
 	require.Len(t, ubd.Entries, 1)
@@ -543,13 +541,13 @@ func TestBonding(t *testing.T) {
 	)
 
 	// query tx
-	txs = getTransactions(t, port,
+	txResult = getTransactions(t, port,
 		fmt.Sprintf("action=begin_redelegate&sender=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 		fmt.Sprintf("destination-validator=%s", operAddrs[1]),
 	)
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
@@ -577,7 +575,7 @@ func TestBonding(t *testing.T) {
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
 
 	// query txs
-	txs = getBondingTxs(t, port, addr, "")
+	txs := getBondingTxs(t, port, addr, "")
 	require.Len(t, txs, 3, "All Txs found")
 
 	txs = getBondingTxs(t, port, addr, "bond")
@@ -709,9 +707,9 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.Sub(depositTokens), acc.GetCoins().AmountOf(sdk.DefaultBondDenom))
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&sender=%s", addr))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult := getTransactions(t, port, fmt.Sprintf("action=deposit&sender=%s", addr))
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	// query proposal
 	totalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
@@ -770,9 +768,9 @@ func TestVote(t *testing.T) {
 	expectedBalance = coins[0]
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=vote&sender=%s", addr))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	txResult := getTransactions(t, port, fmt.Sprintf("action=vote&sender=%s", addr))
+	require.Len(t, txResult.Txs, 1)
+	require.Equal(t, resultTx.Height, txResult.Txs[0].Height)
 
 	vote := getVote(t, port, proposalID, addr)
 	require.Equal(t, proposalID, vote.ProposalID)
@@ -817,7 +815,7 @@ func TestUnjail(t *testing.T) {
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
-	// XXX: any less than this and it fails
+	// NOTE: any less than this and it fails
 	tests.WaitForHeight(3, port)
 	pkString, _ := sdk.Bech32ifyConsPub(valPubKeys[0])
 	signingInfo := getSigningInfo(t, port, pkString)

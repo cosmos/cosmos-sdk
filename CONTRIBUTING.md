@@ -31,7 +31,9 @@ contributors, the general procedure for contributing has been established:
        make a comment on the issue to inform the community of your intentions
        to begin work,
      4. follow standard github best practices: fork the repo, branch from the
-       top of `develop`, make some commits, and submit a PR to `develop`,
+       top of `master`, make some commits, and submit a PR to `master`,
+         - for core developers working within the cosmos-sdk repo, 
+	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.  
      5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code
@@ -201,9 +203,11 @@ releases will be based off of that release.
   - checkout a new branch `pre-rc/vX.X.X`
   - cherry pick the desired changes from `master`
     - these changes should be small and NON-BREAKING (both API and state machine)
-  - add entries to CHANGELOG.md
-  - checkout a new branch `rc/vX.X.X`
+  - add entries to CHANGELOG.md and remove corresponding pending log entries
+  - checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
+  - create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
   - run tests and simulations (noted in [Release Procedure](#release-procedure))
   - after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
   - delete the `pre-rc/vX.X.X` and `RC` branches
+  - create a PR into `master` containing ONLY the CHANGELOG.md updates
   - tag and release `release/vX.XX.X`

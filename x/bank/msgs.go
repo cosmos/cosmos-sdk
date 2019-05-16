@@ -5,7 +5,7 @@ import (
 )
 
 // RouterKey is they name of the bank module
-const RouterKey = "bank"
+const RouterKey = ModuleName
 
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
@@ -46,7 +46,7 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(moduleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners Implements Msg.
@@ -89,7 +89,7 @@ func (msg MsgMultiSend) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgMultiSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(moduleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners Implements Msg.

@@ -4,25 +4,22 @@ This guide will explain how to install the `gaiad` and `gaiacli` entrypoints ont
 
 ### Install Go
 
-Install `go` by following the [official docs](https://golang.org/doc/install). Remember to set your `$GOPATH`, `$GOBIN`, and `$PATH` environment variables, for example:
+Install `go` by following the [official docs](https://golang.org/doc/install). Remember to set your `$GOPATH` and `$PATH` environment variables, for example:
 
 ```bash
 mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export GOBIN=\$GOPATH/bin" >> ~/.bash_profile
-echo "export PATH=\$PATH:\$GOBIN" >> ~/.bash_profile
+echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.12.1+** is required for the Cosmos SDK.
+**Go 1.12+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries
 
-Next, let's install the latest version of Gaia. Here we'll use the `master` branch, which contains the latest stable release.
-If necessary, make sure you `git checkout` the correct
-[released version](https://github.com/cosmos/cosmos-sdk/releases).
+Next, let's install the latest version of Gaia. Make sure you `git checkout` the correct [released version](https://github.com/cosmos/cosmos-sdk/releases).
 
 ::: warning
 For the mainnet, make sure your version if greater than `v0.33.0`
@@ -32,7 +29,7 @@ For the mainnet, make sure your version if greater than `v0.33.0`
 mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout master
+cd cosmos-sdk && git checkout <latest-release-tag>
 make tools install
 ```
 

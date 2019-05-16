@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
-const DefaultParamspace = "auth"
+const DefaultParamspace = ModuleName
 
 // Default parameter values
 const (
@@ -41,6 +41,19 @@ type Params struct {
 	SigVerifyCostSecp256k1 uint64 `json:"sig_verify_cost_secp256k1"`
 }
 
+// NewParams creates a new Params object
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
+	sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
+
+	return Params{
+		MaxMemoCharacters:      maxMemoCharacters,
+		TxSigLimit:             txSigLimit,
+		TxSizeCostPerByte:      txSizeCostPerByte,
+		SigVerifyCostED25519:   sigVerifyCostED25519,
+		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+	}
+}
+
 // ParamKeyTable for auth module
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})
@@ -61,8 +74,8 @@ func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 
 // Equal returns a boolean determining if two Params types are identical.
 func (p Params) Equal(p2 Params) bool {
-	bz1 := msgCdc.MustMarshalBinaryLengthPrefixed(&p)
-	bz2 := msgCdc.MustMarshalBinaryLengthPrefixed(&p2)
+	bz1 := moduleCdc.MustMarshalBinaryLengthPrefixed(&p)
+	bz2 := moduleCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 

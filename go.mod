@@ -11,9 +11,8 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.1.1
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.0
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -43,8 +42,8 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 // indirect
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/go-amino v0.14.1
-	github.com/tendermint/iavl v0.12.1
+	github.com/tendermint/go-amino v0.15.0
+	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.31.5
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect

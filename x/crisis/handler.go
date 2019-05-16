@@ -4,14 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 )
 
-// ModuleName is the module name for this module
-const (
-	ModuleName = "crisis"
-	RouterKey  = ModuleName
-)
+// RouterKey
+const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
@@ -34,7 +32,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 	if err != nil {
 		return err.Result()
 	}
-	_ = k.feeCollectionKeeper.AddCollectedFees(ctx, constantFee)
+
+	_, err = k.bankKeeper.AddCoins(ctx, auth.FeeCollectorAddr, constantFee)
+	if err != nil {
+		return err.Result()
+	}
 
 	// use a cached context to avoid gas costs during invariants
 	cacheCtx, _ := ctx.CacheContext()

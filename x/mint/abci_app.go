@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// BeginBlocker inflates every block, update inflation parameters once per hour
+// BeginBlocker mints new tokens for the previous block
 func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	// fetch stored minter & params

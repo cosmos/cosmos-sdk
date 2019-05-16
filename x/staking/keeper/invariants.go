@@ -8,18 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// RegisterInvariants register all staking invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper) {
+// RegisterInvariants registers all staking invariants
+func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
 
-	c.RegisterRoute(types.ModuleName, "bonded-tokens",
+	ir.RegisterRoute(types.ModuleName, "bonded-tokens",
 		BondedTokensInvariant(k))
-	// c.RegisterRoute(types.ModuleName, "staking-tokens-supply",
-	// 	StakingTokensInvariant(k))
-	c.RegisterRoute(types.ModuleName, "nonnegative-power",
+	ir.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
-	c.RegisterRoute(types.ModuleName, "positive-delegation",
+	ir.RegisterRoute(types.ModuleName, "positive-delegation",
 		PositiveDelegationInvariant(k))
-	c.RegisterRoute(types.ModuleName, "delegator-shares",
+	ir.RegisterRoute(types.ModuleName, "delegator-shares",
 		DelegatorSharesInvariant(k))
 }
 

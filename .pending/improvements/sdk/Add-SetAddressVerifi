@@ -1,0 +1,1 @@
+#3685  Add `SetAddressVerifier` and `GetAddressVerifier` to `sdk.Config` to allow SDK users to configure custom address format verification logic (to override the default limitation of 20-byte addresses).

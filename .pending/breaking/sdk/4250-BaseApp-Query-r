@@ -1,0 +1,3 @@
+#4250 BaseApp.Query() returns app's version string set via BaseApp.SetAppVersion()
+when handling /app/version queries instead of the version string passed as build
+flag at compile time.

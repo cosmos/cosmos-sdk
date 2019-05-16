@@ -1,76 +1,185 @@
 # Ledger Nano Support
 
-## A Note on HD Wallet
+Using a hardware wallet to store your keys greatly improves the security of your crypto assets. The Ledger device acts as an enclave of the seed and private keys, and the process of signing transaction takes place within it. No private information ever leaves the Ledger device. The following is a short tutorial on using the Cosmos Ledger app with the Gaia CLI or the [Lunie.io](https://lunie.io/#/) web wallet.
 
-HD Wallets, originally specified in Bitcoin's [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), are a special kind of wallet that let users derive any number of accounts from a single seed. To understand what that means, let us first define some terminology:
-
-- **Wallet**: Set of accounts obtained from a given seed.
-- **Account**: A pair of public key/private key. 
-- **Private Key**: A private key is a secret piece of information used to sign messages. In the blockchain context, a private key identifies the owner of an account. The private key of a user should never be revealed to others.
-- **Public Key**: A public key is a piece of information obtained by applying a one-way mathematical function on a private key. From it, an address can be derived. A private key cannot be found from a public key.
-- **Address**: An address is a public string with a human-readable prefix that identifies an account. It is obtained by applying mathematical transformations to a public key.
-- **Digital Signature**: A digital signature is a piece of cryptographic information that proves the owner of a given private key approved of a given message without revealing the private key.
-- **Seed**: Same as Mnemonic.
-- **Mnemonic**: A mnemonic is a sequence of words that is used as seed to derive private keys. The mnemonic is at the core of each wallet. NEVER LOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS.
-
-At the core of a HD wallet, there is a seed. From this seed, users can deterministically generate accounts. To generate an account from a seed, one-way mathematical transformations are applied. To decide which account to generate, the user specifies a `path`, generally an `integer` (`0`, `1`, `2`, ...). 
-
-By specifying `path` to be `0` for example, the Wallet will generate `Private Key 0` from the seed. Then, `Public Key 0` can be generated from `Private Key 0`.  Finally, `Address 0` can be generated from `Public Key 0`. All these steps are one way only, meaning the `Public Key` cannot be found from the `Address`, the `Private Key` cannot be found from the `Public Key`, ...
-
-```
-     Account 0                         Account 1                         Account 2
-
-+------------------+              +------------------+               +------------------+
-|                  |              |                  |               |                  |
-|    Address 0     |              |    Address 1     |               |    Address 2     |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Public key 0    |              |  Public key 1    |               |  Public key 2    |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Private key 0   |              |  Private key 1   |               |  Private key 2   |
-|        ^         |              |        ^         |               |        ^         |
-+------------------+              +------------------+               +------------------+
-         |                                 |                                  |
-         |                                 |                                  |
-         |                                 |                                  |
-         +--------------------------------------------------------------------+
-                                           |
-                                           |
-                                 +---------+---------+
-                                 |                   |
-                                 |  Mnemonic (Seed)  |
-                                 |                   |
-                                 +-------------------+
-```
-
-The process of derivating accounts from the seed is deterministic. This means that given the same path, the derived private key will always be the same. 
-
-The funds stored in an account are controlled by the private key. This private key is generated using a one-way function from the mnemonic. If you lose the private key, you can retrieve it using the mnemonic. However, if you lose the mnemonic, you will lose access to all the derived private keys. Likewise, if someone gains access to your mnemonic, they gain access to all the associated accounts. 
-
-## Ledger Support for Account Keys
-
-At the core of a Ledger device, there is a mnemonic that is used to generate private keys. When you initialize you Ledger, a mnemonic is generated. 
+At the core of a Ledger device there is a mnemonic seed phrase that is used to generate private keys. This phrase is generated when you initialize you Ledger. The mnemonic is compatible with Cosmos and can be used to seed new accounts.
 
 ::: danger
-**Do not lose or share your 24 words with anyone. To prevent theft or loss of funds, it is best to ensure that you keep multiple copies of your mnemonic, and store it in a safe, secure place and that only you know how to access. If someone is able to gain access to your mnemonic, they will be able to gain access to your private keys and control the accounts associated with them.**
+Do not lose or share your 24 words with anyone. To prevent theft or loss of funds, it is best to keep multiple copies of your mnemonic stored in safe, secure places. If someone is able to gain access to your mnemonic, they will fully control the accounts associated with them.
 :::
 
-This mnemonic is compatible with Cosmos accounts. The tool used to generate addresses and transactions on the Cosmos Hub network is called `gaiacli`, which supports derivation of account keys from a Ledger seed. Note that the Ledger device acts as an enclave of the seed and private keys, and the process of signing transaction takes place within it. No private information ever leaves the Ledger device. 
+## Gaia CLI + Ledger Nano
 
-To use `gaiacli` with a Ledger device you will need the following:
+The tool used to generate addresses and transactions on the Cosmos Hub network is `gaiacli`. Here is how to get started. If using a CLI tool is unfamiliar to you, scroll down and follow instructions for using the Lunie.io web wallet instead.
 
-- [A Ledger Nano with the `COSMOS` app installed and an account](./delegator-guide-cli.md#using-a-ledger-device)
-- [A running `gaiad` instance connected to the network you wish to use.](./delegator-guide-cli.md#accessing-the-cosmos-hub-network)
-- [A `gaiacli` instance configured to connect to your chosen `gaiad` instance.](./delegator-guide-cli.md#setting-up-gaiacli)
+### Before you Begin
+
+- [Install the Cosmos app onto your Ledger](https://github.com/cosmos/ledger-cosmos/blob/master/README.md#installing)
+- [Install Golang](https://golang.org/doc/install)
+- [Install Gaia](https://cosmos.network/docs/cosmos-hub/installation.html)
+
+Verify that gaiacli is installed correctly with the following command
+
+```bash
+gaiacli version --long
+
+➜ cosmos-sdk: 0.34.3
+git commit: 67ab0b1e1d1e5b898c8cbdede35ad5196dba01b2
+vendor hash: 0341b356ad7168074391ca7507f40b050e667722
+build tags: netgo ledger
+go version go1.11.5 darwin/amd64
+
+```
+
+### Add your Ledger key
+
+- Connect and unlock your Ledger device.
+- Open the Cosmos app on your Ledger.
+- Create an account in gaiacli from your ledger key.
+
+::: tip
+Be sure to change the _keyName_ parameter to be a meaningful name. The `ledger` flag tells `gaiacli` to use your Ledger to seed the account.
+:::
+
+```bash
+gaiacli keys add <keyName> --ledger
+
+➜ NAME: TYPE: ADDRESS:     PUBKEY:
+<keyName> ledger cosmos1... cosmospub1...
+```
+
+Cosmos uses [HD Wallets](./hd-wallets.md). This means you can setup many accounts using the same Ledger seed. To create another account from your Ledger device, run;
+
+```bash
+gaiacli keys add <secondKeyName> --ledger
+```
+
+### Confirm your address
+
+Run this command to display your address on the device. Use the `keyName` you gave your ledger key. The `-d` flag is supported in version `1.5.0` and higher.
+
+```bash
+gaiacli keys show <keyName> -d
+```
+
+Confirm that the address displayed on the device matches that displayed when you added the key.
+
+### Connect to a full node
+
+Next, you need to configure gaiacli with the URL of a Cosmos full node and the appropriate `chain_id`. In this example we connect to the public load balanced full node operated by Chorus One on the `cosmoshub-2` chain. But you can point your `gaiacli` to any Cosmos full node. Be sure that the `chain_id` is set to the same chain as the full node.
+
+```bash
+gaiacli config node https://cosmos.chorus.one:26657
+gaiacli config chain_id cosmoshub-2
+```
+
+Test your connection with a query such as:
+
+``` bash
+`gaiacli query staking validators`
+```
+
+::: tip
+To run your own full node locally [read more here.](https://cosmos.network/docs/cosmos-hub/join-mainnet.html#setting-up-a-new-node).
+:::
+
+### Sign a transaction
+
+You are now ready to start signing and sending transactions. Send a transaction with gaiacli using the `tx send` command.
+
+``` bash
+gaiacli tx send --help # to see all available options.
+```
+
+::: tip
+Be sure to unlock your device with the PIN and open the Cosmos app before trying to run these commands
+:::
+
+Use the `keyName` you set for your Ledger key and gaia will connect with the Cosmos Ledger app to then sign your transaction.
+
+```bash
+gaiacli tx send <keyName> <destinationAddress> <amount><denomination>
+```
+
+When prompted with `confirm transaction before signing`, Answer `Y`.
+
+Next you will be prompted to review and approve the transaction on your Ledger device. Be sure to inspect the transaction JSON displayed on the screen. You can scroll through each field and each message. Scroll down to read more about the data fields of a standard transaction object.
 
 Now, you are all set to start [sending transactions on the network](./delegator-guide-cli.md#sending-transactions).
 
+### Receive funds
 
+To receive funds to the Cosmos account on your Ledger device, retrieve the address for your Ledger account (the ones with `TYPE ledger`) with this command:
 
+```bash
+gaiacli keys list
+
+➜ NAME: TYPE: ADDRESS:     PUBKEY:
+<keyName> ledger cosmos1... cosmospub1...
+```
+
+### Further documentation
+
+Not sure what `gaiacli` can do? Simply run the command without arguments to output documentation for the commands in supports.
+
+::: tip
+The `gaiacli` help commands are nested. So `$ gaiacli` will output docs for the top level commands (status, config, query, and tx). You can access documentation for sub commands with further help commands.
+
+For example, to print the `query` commands:
+
+```bash
+gaiacli query --help
+```
+
+Or to print the `tx` (transaction) commands:
+
+```bash
+gaiacli tx --help
+```
+:::
+
+# Lunie.io
+
+The Lunie web wallet supports signing with Ledger Nano S. Here is a short intro to using your Ledger with [Lunie.io](https://lunie.io).
+
+### Connect your device
+
+- Connect your Ledger device to your computer, unlock it with the PIN and open the Cosmos app.
+- Open [https://lunie.io](https://lunie.io) in your web browser (latest version of Google Chrome preferred)
+- Click “Sign in”.
+- Choose “Sign in with Ledger Nano S”
+
+### Confirm your address
+
+Run this command to display your address on the device. Use the `keyName` you gave your ledger key. The `-d` flag is supported in version `1.5.0` and higher.
+
+```bash
+gaiacli keys show <keyName> -d
+```
+
+Confirm that the address displayed on your Ledger matches that shown on Lunie.io before proceeding.
+Now you can use your Ledger key to sign transctions on Lunie.
+
+To learn more about using Lunie, [here is a tutorial](https://medium.com/easy2stake/how-to-delegate-re-delegate-un-delegate-cosmos-atoms-with-the-lunie-web-wallet-eb72369e52db) on staking and delegating ATOMs using the Lunie web wallet.
+
+# The Cosmos Standard Transaction
+
+Transactions in Cosmos embed the [Standard Transaction type](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth#StdTx) from the Cosmos SDK. The Ledger device displays a serialized JSON representation of this object for you to review before signing the transaction. Here are the fields and what they mean:
+
+- `chain-id`: The chain to which you are broadcasting the tx, such as the `gaia-13003` testnet or `cosmoshub-2`: mainnet.
+- `account_number`: The global id of the sending account assigned when the account receives funds for the first time.
+- `sequence`: The nonce for this account, incremented with each transaction.
+- `fee`: JSON object describing the transaction fee, its gas amount and coin denomination
+- `memo`: optional text field used in various ways to tag transactions.
+- `msgs_<index>/<field>`: The array of messages included in the transaction. Double click to drill down into nested fields of the JSON.
+
+# Support
+
+For further support, start by looking over the posts in our [forum](https://forum.cosmos.network/search?q=ledger)
+
+Feel welcome to reach out in our [Telegram channel](https://t.me/cosmosproject) to ask for help.
+
+Here are a few relevant and helpful tutorials from the wonderful Cosmos community:
+
+- [Ztake](https://medium.com/@miranugumanova) - [How to Redelegate Cosmos Atoms with the Lunie Web Wallet](https://medium.com/@miranugumanova/how-to-re-delegate-cosmos-atoms-with-lunie-web-wallet-8303752832c5)
+- [Cryptium Labs](https://medium.com/cryptium-cosmos) - [How to store your ATOMS on your Ledger and delegate with the command line](https://medium.com/cryptium-cosmos/how-to-store-your-cosmos-atoms-on-your-ledger-and-delegate-with-the-command-line-929eb29705f)

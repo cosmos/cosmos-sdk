@@ -1,0 +1,1 @@
+#3685 The default signature verification gas logic (`DefaultSigVerificationGasConsumer`) now specifies explicit key types rather than string pattern matching. This means that zones that depended on string matching to allow other keys will need to write a custom `SignatureVerificationGasConsumer` function.

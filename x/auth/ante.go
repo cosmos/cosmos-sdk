@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -27,10 +28,14 @@ func init() {
 	copy(simSecp256k1Pubkey[:], bz)
 }
 
+// SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
+// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey types.
+type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -134,7 +139,7 @@ func NewAnteHandler(ak AccountKeeper) sdk.AnteHandler {
 
 			// check signature, return account with incremented nonce
 			signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
-			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params)
+			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params, sigGasConsumer)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -175,6 +180,7 @@ func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 // a pubkey, set it.
 func processSig(
 	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool, params Params,
+	sigGasConsumer SignatureVerificationGasConsumer,
 ) (updatedAcc Account, res sdk.Result) {
 
 	pubKey, res := ProcessPubKey(acc, sig, simulate)
@@ -195,7 +201,7 @@ func processSig(
 		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
 
-	if res := consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
+	if res := sigGasConsumer(ctx.GasMeter(), sig.Signature, pubKey, params); !res.IsOK() {
 		return nil, res
 	}
 
@@ -216,7 +222,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 		simSig.Signature = simSecp256k1Sig[:]
 	}
 
-	sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	sigBz := moduleCdc.MustMarshalBinaryLengthPrefixed(simSig)
 	cost := sdk.Gas(len(sigBz) + 6)
 
 	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
@@ -261,36 +267,30 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	return pubKey, sdk.Result{}
 }
 
-// consumeSigVerificationGas consumes gas for signature verification based upon
-// the public key type. The cost is fetched from the given params and is matched
+// DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
+// for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
-//
-// TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSigVerificationGas(
+func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
 ) sdk.Result {
-
-	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
-
-	switch {
-	case strings.Contains(pubkeyType, "ed25519"):
+	switch pubkey := pubkey.(type) {
+	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return sdk.ErrInvalidPubKey("ED25519 public keys are unsupported").Result()
 
-	case strings.Contains(pubkeyType, "secp256k1"):
+	case secp256k1.PubKeySecp256k1:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return sdk.Result{}
 
-	case strings.Contains(pubkeyType, "multisigthreshold"):
+	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
-		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
-		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
+		consumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return sdk.Result{}
 
 	default:
-		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %s", pubkeyType)).Result()
+		return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %T", pubkey)).Result()
 	}
 }
 
@@ -302,7 +302,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			consumeSigVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			DefaultSigVerificationGasConsumer(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
 			sigIndex++
 		}
 	}

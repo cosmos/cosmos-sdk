@@ -86,6 +86,20 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), nil
 }
 
+// VerifyAddressFormat verifies that the provided bytes form a valid address
+// according to the default address rules or a custom address verifier set by
+// GetConfig().SetAddressVerifier()
+func VerifyAddressFormat(bz []byte) error {
+	verifier := GetConfig().GetAddressVerifier()
+	if verifier != nil {
+		return verifier(bz)
+	}
+	if len(bz) != AddrLen {
+		return errors.New("Incorrect address length")
+	}
+	return nil
+}
+
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
@@ -99,8 +113,9 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
-	if len(bz) != AddrLen {
-		return nil, errors.New("Incorrect address length")
+	err = VerifyAddressFormat(bz)
+	if err != nil {
+		return nil, err
 	}
 
 	return AccAddress(bz), nil
@@ -229,8 +244,9 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return nil, err
 	}
 
-	if len(bz) != AddrLen {
-		return nil, errors.New("Incorrect address length")
+	err = VerifyAddressFormat(bz)
+	if err != nil {
+		return nil, err
 	}
 
 	return ValAddress(bz), nil
@@ -360,8 +376,9 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return nil, err
 	}
 
-	if len(bz) != AddrLen {
-		return nil, errors.New("Incorrect address length")
+	err = VerifyAddressFormat(bz)
+	if err != nil {
+		return nil, err
 	}
 
 	return ConsAddress(bz), nil

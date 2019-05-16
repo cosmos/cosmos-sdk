@@ -1,0 +1,1 @@
+#4303 Fix NewCoins() underlying function for duplicate coins detection.

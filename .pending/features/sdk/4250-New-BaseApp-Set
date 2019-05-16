@@ -1,0 +1,1 @@
+#4250 New BaseApp.{,Set}AppVersion() methods to get/set app's version string.

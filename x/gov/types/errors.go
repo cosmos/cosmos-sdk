@@ -1,5 +1,4 @@
 //nolint
-
 package types
 
 import (

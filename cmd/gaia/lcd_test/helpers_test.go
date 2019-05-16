@@ -2,7 +2,6 @@ package lcd_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -16,20 +15,17 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -38,12 +34,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	paramsrest "github.com/cosmos/cosmos-sdk/x/params/client/rest"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
@@ -69,10 +69,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-var cdc = amino.NewCodec()
+var cdc = codec.New()
 
 func init() {
-	ctypes.RegisterAmino(cdc)
+	codec.RegisterCrypto(cdc)
 }
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -239,10 +239,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.Nil(t, err)
 	genDoc.Validators = nil
 	require.NoError(t, genDoc.SaveAs(genesisFile))
-	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
-	var accs []gapp.GenesisAccount
+	var genTxs []auth.StdTx
+	var accs []genaccounts.GenesisAccount
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
@@ -269,61 +269,80 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
-		txBytes, err := cdc.MarshalJSON(tx)
-		require.Nil(t, err)
 
-		genTxs = append(genTxs, txBytes)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		genTxs = append(genTxs, tx)
+
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
 		accTokens := sdk.TokensFromTendermintPower(150)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
+		accs = append(accs, genaccounts.NewGenesisAccount(&accAuth))
 	}
 
-	appGenState := gapp.NewDefaultGenesisState()
-	appGenState.Accounts = accs
-	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
+	genesisState := gapp.NewDefaultGenesisState()
+	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
 	require.NoError(t, err)
-	genesisState, err := gapp.GaiaAppGenState(cdc, *genDoc, genTxs)
+	genesisState, err = genutil.SetGenTxsInAppGenesisState(cdc, genesisState, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts
+	stakingDataBz := genesisState[staking.ModuleName]
+	var stakingData staking.GenesisState
+	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
 		accTokens := sdk.TokensFromTendermintPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		acc := gapp.NewGenesisAccount(&accAuth)
-		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
+		acc := genaccounts.NewGenesisAccount(&accAuth)
+		accs = append(accs, acc)
 	}
 
+	// now add the account tokens to the non-bonded pool
+	for _, acc := range accs {
+		accTokens := acc.Coins.AmountOf(sdk.DefaultBondDenom)
+		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)
+	}
+	stakingDataBz = cdc.MustMarshalJSON(stakingData)
+	genesisState[staking.ModuleName] = stakingDataBz
+
+	genaccountsData := genaccounts.NewGenesisState(accs)
+	genaccountsDataBz := cdc.MustMarshalJSON(genaccountsData)
+	genesisState[genaccounts.ModuleName] = genaccountsDataBz
+
+	// mint genesis (none set within genesisState)
+	mintData := mint.DefaultGenesisState()
 	inflationMin := sdk.ZeroDec()
 	if minting {
 		inflationMin = sdk.MustNewDecFromStr("10000.0")
-		genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+		mintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
 	} else {
-		genesisState.MintData.Params.InflationMax = inflationMin
+		mintData.Params.InflationMax = inflationMin
 	}
-	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMin = inflationMin
+	mintData.Minter.Inflation = inflationMin
+	mintData.Params.InflationMin = inflationMin
+	mintDataBz := cdc.MustMarshalJSON(mintData)
+	genesisState[mint.ModuleName] = mintDataBz
 
 	// initialize crisis data
-	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	crisisDataBz := genesisState[crisis.ModuleName]
+	var crisisData crisis.GenesisState
+	cdc.MustUnmarshalJSON(crisisDataBz, &crisisData)
+	crisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	crisisDataBz = cdc.MustMarshalJSON(crisisData)
+	genesisState[crisis.ModuleName] = crisisDataBz
 
 	// double check inflation is set according to the minting boolean flag
 	if minting {
-		require.Equal(t, sdk.MustNewDecFromStr("15000.0"),
-			genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"),
-			genesisState.MintData.Params.InflationMin)
+		require.Equal(t, sdk.MustNewDecFromStr("15000.0"), mintData.Params.InflationMax)
+		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), mintData.Minter.Inflation)
+		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), mintData.Params.InflationMin)
 	} else {
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMin)
+		require.Equal(t, sdk.ZeroDec(), mintData.Params.InflationMax)
+		require.Equal(t, sdk.ZeroDec(), mintData.Minter.Inflation)
+		require.Equal(t, sdk.ZeroDec(), mintData.Params.InflationMin)
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
@@ -333,13 +352,13 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	listenAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	// XXX: Need to set this so LCD knows the tendermint node address!
+	// NOTE: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
 	viper.Set(client.FlagTrustNode, true)
 
-	node, err := startTM(config, logger, genDoc, privVal, app)
+	node := startTM(t, config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
@@ -354,6 +373,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		node.Stop() //nolint:errcheck
 		node.Wait()
 		lcd.Close()
+		os.RemoveAll(config.RootDir)
 	}
 
 	return cleanup, valConsPubKeys, valOperAddrs, port
@@ -365,16 +385,15 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 //
 // TODO: Clean up the WAL dir or enable it to be not persistent!
 func startTM(
-	tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
+	t *testing.T, tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
 	privVal tmtypes.PrivValidator, app abci.Application,
-) (*nm.Node, error) {
+) *nm.Node {
 
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
+
 	node, err := nm.NewNode(
 		tmcfg,
 		privVal,
@@ -385,19 +404,15 @@ func startTM(
 		nm.DefaultMetricsProvider(tmcfg.Instrumentation),
 		logger.With("module", "node"),
 	)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	err = node.Start()
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	tests.WaitForRPC(tmcfg.RPC.ListenAddress)
 	logger.Info("Tendermint running!")
 
-	return node, err
+	return node
 }
 
 // startLCD starts the LCD.
@@ -412,6 +427,7 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 	return listener, nil
 }
 
+// TODO generalize this with the module basic manager
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
 func registerRoutes(rs *lcd.RestServer) {
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
@@ -545,18 +561,19 @@ func getTransactionRequest(t *testing.T, port, hash string) (*http.Response, str
 // POST /txs broadcast txs
 
 // GET /txs search transactions
-func getTransactions(t *testing.T, port string, tags ...string) []sdk.TxResponse {
+func getTransactions(t *testing.T, port string, tags ...string) *sdk.SearchTxsResult {
 	var txs []sdk.TxResponse
+	result := sdk.NewSearchTxsResult(0, 0, 1, 30, txs)
 	if len(tags) == 0 {
-		return txs
+		return &result
 	}
 	queryStr := strings.Join(tags, "&")
 	res, body := Request(t, port, "GET", fmt.Sprintf("/txs?%s", queryStr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := cdc.UnmarshalJSON([]byte(body), &txs)
+	err := cdc.UnmarshalJSON([]byte(body), &result)
 	require.NoError(t, err)
-	return txs
+	return &result
 }
 
 // ----------------------------------------------------------------------
@@ -928,11 +945,11 @@ func doBeginRedelegation(
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator
-func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []staking.Delegation {
+func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) staking.DelegationResponses {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/staking/delegators/%s/delegations", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var dels []staking.Delegation
+	var dels staking.DelegationResponses
 
 	err := cdc.UnmarshalJSON([]byte(body), &dels)
 	require.Nil(t, err)
@@ -954,7 +971,7 @@ func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr s
 }
 
 // GET /staking/redelegations?delegator=0xdeadbeef&validator_from=0xdeadbeef&validator_to=0xdeadbeef& Get redelegations filters by params passed in
-func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []staking.Redelegation {
+func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) staking.RedelegationResponses {
 	var res *http.Response
 	var body string
 	endpoint := "/staking/redelegations?"
@@ -967,11 +984,14 @@ func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, s
 	if !dstValidatorAddr.Empty() {
 		endpoint += fmt.Sprintf("validator_to=%s&", dstValidatorAddr)
 	}
+
 	res, body = Request(t, port, "GET", endpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var redels []staking.Redelegation
+
+	var redels staking.RedelegationResponses
 	err := cdc.UnmarshalJSON([]byte(body), &redels)
 	require.Nil(t, err)
+
 	return redels
 }
 
@@ -1021,11 +1041,11 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations/{validatorAddr} Query the current delegation between a delegator and a validator
-func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) staking.Delegation {
+func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) staking.DelegationResp {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/staking/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bond staking.Delegation
+	var bond staking.DelegationResp
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 
@@ -1179,8 +1199,8 @@ func doSubmitParamChangeProposal(
 		Description: "test",
 		Proposer:    proposerAddr,
 		Deposit:     sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, amount)},
-		Changes: []params.ParamChange{
-			params.NewParamChange("staking", "MaxValidators", "", "105"),
+		Changes: paramscutils.ParamChangesJSON{
+			paramscutils.NewParamChangeJSON("staking", "MaxValidators", "", []byte(`105`)),
 		},
 	}
 
@@ -1188,7 +1208,6 @@ func doSubmitParamChangeProposal(
 	require.NoError(t, err)
 
 	resp, body := Request(t, port, "POST", "/gov/proposals/param_change", req)
-	fmt.Println(resp)
 	require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 	resp, body = signAndBroadcastGenTx(t, port, name, pwd, body, acc, client.DefaultGasAdjustment, false)

@@ -26,7 +26,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
 			msg := crisis.NewMsgVerifyInvariant(senderAddr, moduleName, route)
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd

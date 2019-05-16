@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
 
@@ -9,10 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // SimulateDeductFee
-func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulation.Operation {
+func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -20,7 +22,13 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		account := simulation.RandomAcc(r, accs)
 		stored := m.GetAccount(ctx, account.Address)
 		initCoins := stored.GetCoins()
-		opMsg = simulation.NewOperationMsgBasic("auth", "deduct_fee", "", false, nil)
+		opMsg = simulation.NewOperationMsgBasic(auth.ModuleName, "deduct_fee", "", false, nil)
+
+		feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte("fees")))
+		feeCollector := m.GetAccount(ctx, feeCollectorAddr)
+		if feeCollector == nil {
+			panic(fmt.Errorf("fee collector account hasn't been set"))
+		}
 
 		if len(initCoins) == 0 {
 			return opMsg, nil, nil
@@ -53,7 +61,9 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		}
 
 		m.SetAccount(ctx, stored)
-		f.AddCollectedFees(ctx, fees)
+
+		feeCollector.SetCoins(feeCollector.GetCoins().Add(fees))
+		m.SetAccount(ctx, feeCollector)
 
 		opMsg.OK = true
 		return opMsg, nil, nil

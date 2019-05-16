@@ -6,11 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-const (
-	// ModuleName is the name of the module
-	ModuleName = "mint"
+var minterKey = []byte{0x00} // the one key to use for the keeper store
 
-	// DefaultParamspace is the default paramspace for params keeper
+const (
+	// default paramspace for params keeper
 	DefaultParamspace = ModuleName
 
 	// StoreKey is the default store key for mint
@@ -42,23 +41,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	return keeper
 }
 
-//____________________________________________________________________
-// Keys
-
-var (
-	minterKey = []byte{0x00} // the one key to use for the keeper store
-
-	// params store for inflation params
-	ParamStoreKeyParams = []byte("params")
-)
-
-// ParamTable for staking module
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyParams, Params{},
-	)
-}
-
 //______________________________________________________________________
 
 // get the minter
@@ -66,7 +48,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(minterKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		panic("stored minter should not have been nil")
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &minter)
 	return
@@ -81,14 +63,13 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 
 //______________________________________________________________________
 
-// get inflation params from the global param store
-func (k Keeper) GetParams(ctx sdk.Context) Params {
-	var params Params
-	k.paramSpace.Get(ctx, ParamStoreKeyParams, &params)
+// GetParams returns the total set of minting parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
-// set inflation params from the global param store
+// SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params Params) {
-	k.paramSpace.Set(ctx, ParamStoreKeyParams, &params)
+	k.paramSpace.SetParamSet(ctx, &params)
 }

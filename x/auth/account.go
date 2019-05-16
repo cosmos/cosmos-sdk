@@ -81,6 +81,19 @@ type BaseAccount struct {
 	Sequence      uint64         `json:"sequence"`
 }
 
+// NewBaseAccount creates a new BaseAccount object
+func NewBaseAccount(address sdk.AccAddress, coins sdk.Coins,
+	pubKey crypto.PubKey, accountNumber uint64, sequence uint64) *BaseAccount {
+
+	return &BaseAccount{
+		Address:       address,
+		Coins:         coins,
+		PubKey:        pubKey,
+		AccountNumber: accountNumber,
+		Sequence:      sequence,
+	}
+}
+
 // String implements fmt.Stringer
 func (acc BaseAccount) String() string {
 	var pubkey string
@@ -188,6 +201,19 @@ type BaseVestingAccount struct {
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // coins that vesting and delegated
 
 	EndTime int64 `json:"end_time"` // when the coins become unlocked
+}
+
+// NewBaseVestingAccount creates a new BaseVestingAccount object
+func NewBaseVestingAccount(baseAccount *BaseAccount, originalVesting sdk.Coins,
+	delegatedFree sdk.Coins, delegatedVesting sdk.Coins, endTime int64) *BaseVestingAccount {
+
+	return &BaseVestingAccount{
+		BaseAccount:      baseAccount,
+		OriginalVesting:  originalVesting,
+		DelegatedFree:    delegatedFree,
+		DelegatedVesting: delegatedVesting,
+		EndTime:          endTime,
+	}
 }
 
 // String implements fmt.Stringer
@@ -352,6 +378,16 @@ type ContinuousVestingAccount struct {
 	StartTime int64 `json:"start_time"` // when the coins start to vest
 }
 
+// NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
+func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
+	startTime int64) *ContinuousVestingAccount {
+
+	return &ContinuousVestingAccount{
+		BaseVestingAccount: bva,
+		StartTime:          startTime,
+	}
+}
+
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
 func NewContinuousVestingAccount(
 	baseAcc *BaseAccount, StartTime, EndTime int64,
@@ -460,6 +496,13 @@ var _ VestingAccount = (*DelayedVestingAccount)(nil)
 // locked until a specified time.
 type DelayedVestingAccount struct {
 	*BaseVestingAccount
+}
+
+// NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
+func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
+	return &DelayedVestingAccount{
+		BaseVestingAccount: bva,
+	}
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount

@@ -12,10 +12,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -98,24 +98,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 
 		stakingGenesis := staking.DefaultGenesisState()
 
-		// create pool accounts
-		unbondPool := supply.NewPoolHolderAccount(staking.UnbondedTokensName)
-		bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)
-		govPool := supply.NewPoolHolderAccount(ModuleName)
-
-		err := unbondPool.SetCoins(initCoins)
-		if err != nil {
-			panic(err)
-		}
-
-		supplyKeeper.SetPoolAccount(ctx, unbondPool)
-		supplyKeeper.SetPoolAccount(ctx, bondPool)
-		supplyKeeper.SetPoolAccount(ctx, govPool)
-
-		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
-		if err != nil {
-			panic(err)
-		}
+		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, stakingGenesis)
 		if genState.IsEmpty() {
 			InitGenesis(ctx, keeper, DefaultGenesisState())
 		} else {
@@ -176,9 +159,8 @@ func testProposal() Content {
 
 // checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	cdc := codec.New()
-	RegisterCodec(cdc)
-	return bytes.Equal(cdc.MustMarshalBinaryBare(proposalA), cdc.MustMarshalBinaryBare(proposalB))
+	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
+		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }
 
 var (

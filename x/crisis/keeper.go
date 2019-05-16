@@ -1,31 +1,35 @@
 package crisis
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Keeper - crisis keeper
 type Keeper struct {
-	routes     []InvarRoute
-	paramSpace params.Subspace
+	routes         []InvarRoute
+	paramSpace     params.Subspace
+	invCheckPeriod uint
 
-	distrKeeper         DistrKeeper
-	bankKeeper          BankKeeper
-	feeCollectionKeeper FeeCollectionKeeper
+	distrKeeper DistrKeeper
+	bankKeeper  BankKeeper
 }
 
 // NewKeeper creates a new Keeper object
-func NewKeeper(paramSpace params.Subspace,
-	distrKeeper DistrKeeper, bankKeeper BankKeeper,
-	feeCollectionKeeper FeeCollectionKeeper) Keeper {
+func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
+	distrKeeper DistrKeeper, bankKeeper BankKeeper) Keeper {
 
 	return Keeper{
-		routes:              []InvarRoute{},
-		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
-		distrKeeper:         distrKeeper,
-		bankKeeper:          bankKeeper,
-		feeCollectionKeeper: feeCollectionKeeper,
+		routes:         []InvarRoute{},
+		paramSpace:     paramSpace.WithKeyTable(ParamKeyTable()),
+		invCheckPeriod: invCheckPeriod,
+		distrKeeper:    distrKeeper,
+		bankKeeper:     bankKeeper,
 	}
 }
 
@@ -47,6 +51,27 @@ func (k Keeper) Invariants() []sdk.Invariant {
 		invars = append(invars, route.Invar)
 	}
 	return invars
+}
+
+// assert all invariants
+func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
+
+	start := time.Now()
+	invarRoutes := k.Routes()
+	for _, ir := range invarRoutes {
+		if err := ir.Invar(ctx); err != nil {
+
+			// TODO make "gaiacli" app name a part of context to allow for this to be variable
+			panic(fmt.Errorf("invariant broken: %s\n"+
+				"\tCRITICAL please submit the following transaction:\n"+
+				"\t\t gaiacli tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
+		}
+	}
+	end := time.Now()
+	diff := end.Sub(start)
+
+	logger.With("module", "x/crisis").Info(
+		"Asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 
 // DONTCOVER

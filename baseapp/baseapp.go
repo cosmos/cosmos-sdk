@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime/debug"
+	"sort"
 	"strings"
 
 	"errors"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Key to store the consensus params in the main store.
@@ -48,8 +48,8 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
-	router      Router               // handle any kind of message
-	queryRouter QueryRouter          // router for redirecting query calls
+	router      sdk.Router           // handle any kind of message
+	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	// set upon LoadVersion or LoadLatestVersion.
@@ -85,6 +85,9 @@ type BaseApp struct {
 
 	// height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// application's version string
+	appVersion string
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -118,6 +121,11 @@ func NewBaseApp(
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// AppVersion returns the application's version string.
+func (app *BaseApp) AppVersion() string {
+	return app.appVersion
 }
 
 // Logger returns the logger of the BaseApp.
@@ -239,7 +247,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 }
 
 // Router returns the router of the BaseApp.
-func (app *BaseApp) Router() Router {
+func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
 		// We cannot return a router when the app is sealed because we can't have
 		// any routes modified which would cause unexpected routing behavior.
@@ -249,7 +257,7 @@ func (app *BaseApp) Router() Router {
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.
-func (app *BaseApp) QueryRouter() QueryRouter { return app.queryRouter }
+func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
@@ -361,6 +369,22 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(res.Validators) {
+			panic(fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(res.Validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(res.Validators))
+		for i, val := range res.Validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
+	}
+
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
 	return
@@ -439,7 +463,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
-				Value:     []byte(version.Version),
+				Value:     []byte(app.appVersion),
 			}
 
 		default:

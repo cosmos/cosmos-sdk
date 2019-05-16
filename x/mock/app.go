@@ -75,7 +75,7 @@ func NewApp() *App {
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, auth.DefaultSigVerificationGasConsumer))
 
 	// Not sealing for custom extension
 

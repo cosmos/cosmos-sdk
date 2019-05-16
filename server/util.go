@@ -216,14 +216,17 @@ func TrapSignal(cleanupFunc func()) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		switch sig {
-		case syscall.SIGTERM:
-			defer cleanupFunc()
-			os.Exit(128 + int(syscall.SIGTERM))
-		case syscall.SIGINT:
-			defer cleanupFunc()
-			os.Exit(128 + int(syscall.SIGINT))
+		if cleanupFunc != nil {
+			cleanupFunc()
 		}
+		exitCode := 128
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+		os.Exit(exitCode)
 	}()
 }
 

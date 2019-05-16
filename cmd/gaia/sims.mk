@@ -3,8 +3,8 @@
 ########################################
 ### Simulations
 
-runsim: $(GOBIN)/runsim
-$(GOBIN)/runsim: contrib/runsim/main.go
+runsim: $(GOPATH)/bin/runsim
+$(GOPATH)/bin/runsim: contrib/runsim/main.go
 	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
 
 sim-gaia-nondeterminism:
@@ -23,20 +23,20 @@ sim-gaia-fast:
 
 sim-gaia-import-export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaImportExport
+	$(GOPATH)/bin/runsim 25 5 TestGaiaImportExport
 
 sim-gaia-simulation-after-import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
+	$(GOPATH)/bin/runsim 25 5 TestGaiaSimulationAfterImport
 
 sim-gaia-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
+	$(GOPATH)/bin/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
 
 sim-gaia-multi-seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
+	$(GOPATH)/bin/runsim 400 5 TestFullGaiaSimulation
 
 sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

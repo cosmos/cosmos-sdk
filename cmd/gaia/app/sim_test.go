@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -70,7 +72,9 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *GaiaApp) (
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
-func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
+
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
 	bytes, err := ioutil.ReadFile(genesisFile)
@@ -80,8 +84,10 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState).Accounts
+
 	var newAccs []simulation.Account
-	for _, acc := range appState.Accounts {
+	for _, acc := range accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
@@ -93,9 +99,13 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	return genesis.AppState, newAccs, genesis.ChainID
 }
 
-func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+// TODO refactor out random initialization code to the modules
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
 
-	var genesisAccounts []GenesisAccount
+	var genesisAccounts []genaccounts.GenesisAccount
+	genesisState := NewDefaultGenesisState()
+	cdc := MakeCodec()
 
 	amount := int64(r.Intn(1e12))
 	numInitiallyBonded := int64(r.Intn(250))
@@ -113,7 +123,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
-		var gacc GenesisAccount
+		var gacc genaccounts.GenesisAccount
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
@@ -134,7 +144,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			}
 
 			if startTime == endTime {
-				endTime += 1
+				endTime++
 			}
 
 			if r.Intn(100) < 50 {
@@ -143,80 +153,94 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
-			gacc = NewGenesisAccountI(vacc)
+			var err error
+			gacc, err = genaccounts.NewGenesisAccountI(vacc)
+			if err != nil {
+				panic(err)
+			}
 		} else {
-			gacc = NewGenesisAccount(&bacc)
+			gacc = genaccounts.NewGenesisAccount(&bacc)
 		}
 
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	authGenesis := auth.GenesisState{
-		Params: auth.Params{
-			MaxMemoCharacters:      uint64(simulation.RandIntBetween(r, 100, 200)),
-			TxSigLimit:             uint64(r.Intn(7) + 1),
-			TxSizeCostPerByte:      uint64(simulation.RandIntBetween(r, 5, 15)),
-			SigVerifyCostED25519:   uint64(simulation.RandIntBetween(r, 500, 1000)),
-			SigVerifyCostSecp256k1: uint64(simulation.RandIntBetween(r, 500, 1000)),
-		},
-	}
+	genaccsGenesis := genaccounts.NewGenesisState(genesisAccounts)
+	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
+
+	authGenesis := auth.NewGenesisState(
+		nil,
+		auth.NewParams(
+			simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64),
+			simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64),
+			simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64),
+			simulation.ModuleParamSimulator["SigVerifyCostED25519"](r).(uint64),
+			simulation.ModuleParamSimulator["SigVerifyCostSecp256k1"](r).(uint64),
+		),
+	)
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
+	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
-	vp := time.Duration(r.Intn(2*172800)) * time.Second
-	govGenesis := gov.GenesisState{
-		StartingProposalID: uint64(r.Intn(100)),
-		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))},
-			MaxDepositPeriod: vp,
-		},
-		VotingParams: gov.VotingParams{
-			VotingPeriod: vp,
-		},
-		TallyParams: gov.TallyParams{
-			Quorum:    sdk.NewDecWithPrec(334, 3),
-			Threshold: sdk.NewDecWithPrec(5, 1),
-			Veto:      sdk.NewDecWithPrec(334, 3),
-		},
-	}
+	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
+	govGenesis := gov.NewGenesisState(
+		uint64(r.Intn(100)),
+		gov.NewDepositParams(
+			simulation.ModuleParamSimulator["DepositParams/MinDeposit"](r).(sdk.Coins),
+			vp,
+		),
+		gov.NewVotingParams(vp),
+		gov.NewTallyParams(
+			simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
+		),
+	)
+	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
-	stakingGenesis := staking.GenesisState{
-		Pool: staking.InitialPool(),
-		Params: staking.Params{
-			UnbondingTime: time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
-			MaxValidators: uint16(r.Intn(250) + 1),
-			BondDenom:     sdk.DefaultBondDenom,
-		},
-	}
+	stakingGenesis := staking.NewGenesisState(
+		staking.InitialPool(),
+		staking.NewParams(
+			simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration),
+			simulation.ModuleParamSimulator["MaxValidators"](r).(uint16),
+			7,
+			sdk.DefaultBondDenom,
+		),
+		nil,
+		nil,
+	)
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
 
-	slashingGenesis := slashing.GenesisState{
-		Params: slashing.Params{
-			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
-			SignedBlocksWindow:      int64(simulation.RandIntBetween(r, 10, 1000)),
-			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			DowntimeJailDuration:    time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second,
-			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
-			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
-		},
-	}
+	slashingParams := slashing.NewParams(
+		stakingGenesis.Params.UnbondingTime,
+		simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64),
+		simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec),
+		simulation.ModuleParamSimulator["DowntimeJailDuration"](r).(time.Duration),
+		simulation.ModuleParamSimulator["SlashFractionDoubleSign"](r).(sdk.Dec),
+		simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec),
+	)
+	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
+	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
 
-	mintGenesis := mint.GenesisState{
-		Minter: mint.InitialMinter(
+	mintGenesis := mint.NewGenesisState(
+		mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
-		Params: mint.NewParams(
+		mint.NewParams(
 			sdk.DefaultBondDenom,
-			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-			sdk.NewDecWithPrec(20, 2),
-			sdk.NewDecWithPrec(7, 2),
-			sdk.NewDecWithPrec(67, 2),
-			uint64(60*60*8766/5)),
-	}
+			simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["InflationMax"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["InflationMin"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["GoalBonded"](r).(sdk.Dec),
+			uint64(60*60*8766/5),
+		),
+	)
+	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
 	var validators []staking.Validator
@@ -238,28 +262,20 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
+	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
+	// TODO make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
 		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
 	}
+	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 
-	genesis := GenesisState{
-		Accounts:     genesisAccounts,
-		AuthData:     authGenesis,
-		BankData:     bankGenesis,
-		StakingData:  stakingGenesis,
-		MintData:     mintGenesis,
-		DistrData:    distrGenesis,
-		SlashingData: slashingGenesis,
-		GovData:      govGenesis,
-	}
-
 	// Marshal genesis
-	appState, err := MakeCodec().MarshalJSON(genesis)
+	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -267,7 +283,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	return appState, accs, "simulation"
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+) (json.RawMessage, []simulation.Account, string) {
+
 	if genesisFile != "" {
 		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
 	}
@@ -282,7 +300,8 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsim.SimulateTextProposalContent)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsim.SimulateParamChangeProposalContent)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
 		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},
@@ -419,7 +438,7 @@ func TestGaiaImportExport(t *testing.T) {
 		panic(err)
 	}
 	ctxB := newApp.NewContext(true, abci.Header{})
-	newApp.initFromGenesisState(ctxB, genesisState)
+	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})

@@ -26,7 +26,7 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]sdk.TxResponse, error) {
+func queryTxs(cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
 	page := 1
 	limit := 100
 	tags := []string{

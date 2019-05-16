@@ -253,9 +253,7 @@ paths:
         200:
           description: All txs matching the provided tags
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/TxQuery"
+            $ref: "#/definitions/PaginatedQueryTxs"
         400:
           description: Invalid search tags
         500:
@@ -1963,8 +1961,10 @@ definitions:
     properties:
       hash:
         type: string
+        example: "D085138D913993919295FF4B0A9107F1F2CDE0D37A87CE0644E217CBF3B49656"
       height:
         type: number
+        example: 368
       tx:
         $ref: "#/definitions/StdTx"
       result:
@@ -1974,14 +1974,36 @@ definitions:
             type: string
           gas_wanted:
             type: string
-            example: "0"
+            example: "200000"
           gas_used:
             type: string
-            example: "0"
+            example: "26354"
           tags:
             type: array
             items:
               $ref: "#/definitions/KVPair"
+  PaginatedQueryTxs:
+    type: object
+    properties:
+      total_count:
+        type: number
+        example: 1
+      count:
+        type: number
+        example: 1
+      page_number:
+        type: number
+        example: 1
+      page_total:
+        type: number
+        example: 1
+      limit:
+        type: number
+        example: 30
+      txs:
+        type: array
+        items:
+          $ref: "#/definitions/TxQuery"
   StdTx:
     type: object
     properties:
@@ -2359,15 +2381,20 @@ definitions:
         type: string
       validator_dst_address:
         type: string
+      entries:
+        type: array
+        items:
+          $ref: "#/definitions/Redelegation"
+  RedelegationEntry:
+    type: object
+    properties:
       creation_height:
         type: integer
-      min_time:
+      completion_time:
         type: integer
       initial_balance:
         type: string
       balance:
-        type: string
-      shares_src:
         type: string
       shares_dst:
         type: string
@@ -2408,5 +2435,4 @@ definitions:
         type: string
         example: ""
       value:
-        type: string
-        example: "105"
+        type: object

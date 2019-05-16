@@ -33,6 +33,7 @@ type (
 )
 
 const (
+	ModuleName       = types.ModuleName
 	DefaultCodespace = types.DefaultCodespace
 	CodeInvalidInput = types.CodeInvalidInput
 	StoreKey         = types.StoreKey
@@ -48,6 +49,7 @@ var (
 
 	TagValidator = tags.Validator
 
+	ModuleCdc                         = types.ModuleCdc
 	NewMsgSetWithdrawAddress          = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission = types.NewMsgWithdrawValidatorCommission

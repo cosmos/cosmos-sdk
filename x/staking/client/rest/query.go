@@ -103,7 +103,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 
 // HTTP request handler to query a delegator delegations
 func delegatorDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryDelegator(cliCtx, cdc, "custom/staking/delegatorDelegations")
+	return queryDelegator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryDelegatorDelegations))
 }
 
 // HTTP request handler to query a delegator unbonding delegations
@@ -134,7 +134,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []sdk.TxResponse{}
+		var txs []*sdk.SearchTxsResult
 		var actions []string
 
 		switch {
@@ -158,7 +158,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			if errQuery != nil {
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, errQuery.Error())
 			}
-			txs = append(txs, foundTxs...)
+			txs = append(txs, foundTxs)
 		}
 
 		res, err := cdc.MarshalJSON(txs)
@@ -228,7 +228,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 
 // HTTP request handler to query a delegation
 func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryBonds(cliCtx, cdc, "custom/staking/delegation")
+	return queryBonds(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryDelegation))
 }
 
 // HTTP request handler to query all delegator bonded validators
@@ -244,15 +244,10 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 // HTTP request handler to query list of validators
 func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgs(r)
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
-		}
-
-		// override default limit if it wasn't provided
-		if l := r.FormValue("limit"); l == "" {
-			limit = 0
 		}
 
 		status := r.FormValue("status")
@@ -284,7 +279,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 // HTTP request handler to query all unbonding delegations from a validator
 func validatorDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryValidator(cliCtx, cdc, "custom/staking/validatorDelegations")
+	return queryValidator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryValidatorDelegations))
 }
 
 // HTTP request handler to query all unbonding delegations from a validator

@@ -16,7 +16,8 @@ const (
 
 var (
 
-	// VersionCmd prints out the current sdk version
+	// VersionCmd prints out the application's version
+	// information passed via build flags.
 	VersionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Print the app version",
@@ -24,12 +25,12 @@ var (
 			verInfo := newVersionInfo()
 
 			if !viper.GetBool(flagLong) {
-				fmt.Println(verInfo.CosmosSDK)
+				fmt.Println(verInfo.Version)
 				return nil
 			}
 
 			if viper.GetString(cli.OutputFlag) != "json" {
-				fmt.Print(verInfo)
+				fmt.Println(verInfo)
 				return nil
 			}
 

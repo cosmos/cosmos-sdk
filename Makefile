@@ -61,7 +61,7 @@ ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: tools install lint test
+all: tools build lint test
 
 # The below include contains the tools target.
 include contrib/devtools/Makefile
@@ -69,32 +69,16 @@ include contrib/devtools/Makefile
 ########################################
 ### CI
 
-ci: tools install test_cover lint test
+ci: tools build test_cover lint test
 
 ########################################
-### Build/Install
+### Build
 
 build: go.sum
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-endif
-
-build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+	@go build -mod=readonly ./...
 
 update_gaia_lite_docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
-
-install: go.sum check-ledger update_gaia_lite_docs
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-
-install_debug: go.sum
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
 dist:
 	@bash publish/dist.sh
@@ -139,13 +123,10 @@ godocs:
 
 test: test_unit
 
-test_cli: build
-	@go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
+test_ledger_mock:
+		@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
 
-test_ledger:
-    # First test with mock
-	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
-    # Now test with a real device
+test_ledger: test_ledger_mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
@@ -170,20 +151,20 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -e 25 5 TestGaiaImportExport
+	$(BINDIR)/runsim -e github.com/cmd/gaia/app 25 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -e 25 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim -e github.com/cmd/gaia/app 25 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json github.com/cmd/gaia/app 400 5 TestFullGaiaSimulation
 
 test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(BINDIR)/runsim 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim github.com/cmd/gaia/app 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -194,7 +175,7 @@ test_sim_benchmark_invariants:
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
 $(BINDIR)/runsim: cmd/gaia/contrib/runsim/main.go
-	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
+	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -276,11 +257,10 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: install install_debug dist clean \
-draw_deps test test_cli test_unit \
-test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
-build-linux build-docker-gaiadnode localnet-start localnet-stop \
-format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
+.PHONY: build dist clean draw_deps test test_unit test_cover lint \
+benchmark devdoc_init devdoc devdoc_save devdoc_update \
+build-docker-gaiadnode localnet-start localnet-stop \
+format test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \
 go-mod-cache

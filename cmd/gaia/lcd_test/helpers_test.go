@@ -1,4 +1,4 @@
-package lcd_test
+package lcd
 
 import (
 	"bytes"
@@ -8,15 +8,9 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
-
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -24,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -57,7 +53,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
@@ -68,143 +63,6 @@ import (
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-var cdc = amino.NewCodec()
-
-func init() {
-	ctypes.RegisterAmino(cdc)
-}
-
-// makePathname creates a unique pathname for each test. It will panic if it
-// cannot get the current working directory.
-func makePathname() string {
-	p, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	sep := string(filepath.Separator)
-	return strings.Replace(p, sep, "_", -1)
-}
-
-// GetConfig returns a Tendermint config for the test cases.
-func GetConfig() *tmcfg.Config {
-	pathname := makePathname()
-	config := tmcfg.ResetTestRoot(pathname)
-
-	tmAddr, _, err := server.FreeTCPAddr()
-	if err != nil {
-		panic(err)
-	}
-
-	rcpAddr, _, err := server.FreeTCPAddr()
-	if err != nil {
-		panic(err)
-	}
-
-	grpcAddr, _, err := server.FreeTCPAddr()
-	if err != nil {
-		panic(err)
-	}
-
-	config.P2P.ListenAddress = tmAddr
-	config.RPC.ListenAddress = rcpAddr
-	config.RPC.GRPCListenAddress = grpcAddr
-
-	return config
-}
-
-// CreateAddr adds an address to the key store and returns an address and seed.
-// It also requires that the key could be created.
-func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.AccAddress, string) {
-	var (
-		err  error
-		info crkeys.Info
-		seed string
-	)
-
-	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
-	require.NoError(t, err)
-
-	return sdk.AccAddress(info.GetPubKey().Address()), seed
-}
-
-// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
-// It also requires that the keys could be created.
-func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
-	var (
-		err  error
-		info crkeys.Info
-		seed string
-	)
-
-	addrSeeds := AddrSeedSlice{}
-
-	for i := 0; i < numAddrs; i++ {
-		name := fmt.Sprintf("test%d", i)
-		password := "1234567890"
-		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
-		require.NoError(t, err)
-		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
-	}
-
-	sort.Sort(addrSeeds)
-
-	for i := range addrSeeds {
-		addrs = append(addrs, addrSeeds[i].Address)
-		seeds = append(seeds, addrSeeds[i].Seed)
-		names = append(names, addrSeeds[i].Name)
-		passwords = append(passwords, addrSeeds[i].Password)
-	}
-
-	return addrs, seeds, names, passwords
-}
-
-// AddrSeed combines an Address with the mnemonic of the private key to that address
-type AddrSeed struct {
-	Address  sdk.AccAddress
-	Seed     string
-	Name     string
-	Password string
-}
-
-// AddrSeedSlice implements `Interface` in sort package.
-type AddrSeedSlice []AddrSeed
-
-func (b AddrSeedSlice) Len() int {
-	return len(b)
-}
-
-// Less sorts lexicographically by Address
-func (b AddrSeedSlice) Less(i, j int) bool {
-	// bytes package already implements Comparable for []byte.
-	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
-	case -1:
-		return true
-	case 0, 1:
-		return false
-	default:
-		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
-	}
-}
-
-func (b AddrSeedSlice) Swap(i, j int) {
-	b[j], b[i] = b[i], b[j]
-}
-
-// InitClientHome initialises client home dir.
-func InitClientHome(t *testing.T, dir string) string {
-	var err error
-	if dir == "" {
-		dir, err = ioutil.TempDir("", "lcd_test")
-		require.NoError(t, err)
-	}
-	// TODO: this should be set in NewRestServer
-	// and pass down the CLIContext to achieve
-	// parallelism.
-	viper.Set(cli.HomeFlag, dir)
-	return dir
-}
 
 // TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
@@ -331,7 +189,6 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	genDoc.AppState = appState
 
 	var listenAddr string
-	var port string
 
 	if len(portExt) == 0 {
 		listenAddr, port, err = server.FreeTCPAddr()
@@ -351,7 +208,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
-	lcdInstance, err := startLCD(logger, listenAddr, cdc, t)
+	lcdInstance, err := startLCD(logger, listenAddr, cdc)
 	require.NoError(t, err)
 
 	tests.WaitForLCDStart(port)
@@ -416,7 +273,7 @@ func startTM(
 }
 
 // startLCD starts the LCD.
-func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
 	rs := lcd.NewRestServer(cdc)
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())

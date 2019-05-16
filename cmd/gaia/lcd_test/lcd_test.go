@@ -1,4 +1,4 @@
-package lcd_test
+package lcd
 
 import (
 	"encoding/base64"
@@ -101,9 +101,10 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -192,9 +193,10 @@ func TestCoinSend(t *testing.T) {
 }
 
 func TestCoinSendAccAuto(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -217,9 +219,10 @@ func TestCoinSendAccAuto(t *testing.T) {
 }
 
 func TestCoinMultiSendGenerateOnly(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -240,9 +243,10 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 
 	defer cleanup()
@@ -283,9 +287,10 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestEncodeTx(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -317,9 +322,10 @@ func TestEncodeTx(t *testing.T) {
 }
 
 func TestTxs(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -369,9 +375,10 @@ func TestTxs(t *testing.T) {
 }
 
 func TestPoolParamsQuery(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
+	addr, _, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -427,9 +434,10 @@ func TestValidatorQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
+	addr, _, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 
 	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr}, false)
 	tests.WaitForHeight(1, port)
@@ -591,9 +599,10 @@ func TestBonding(t *testing.T) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -628,9 +637,10 @@ func TestSubmitProposal(t *testing.T) {
 }
 
 func TestSubmitParamChangeProposal(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -665,9 +675,10 @@ func TestSubmitParamChangeProposal(t *testing.T) {
 }
 
 func TestDeposit(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -724,9 +735,10 @@ func TestDeposit(t *testing.T) {
 }
 
 func TestVote(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -811,9 +823,10 @@ func TestVote(t *testing.T) {
 }
 
 func TestUnjail(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
+	addr, _, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -830,9 +843,9 @@ func TestUnjail(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addrs, seeds, names, passwords := CreateAddrs(t, kb, 2)
+	addrs, seeds, names, passwords := CreateAddrs(kb, 2)
 
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]}, true)
 	defer cleanup()
@@ -981,9 +994,10 @@ func TestDistributionGetParams(t *testing.T) {
 }
 
 func TestDistributionFlow(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, seed := CreateAddr(t, name1, pw, kb)
+	addr, seed, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -1057,9 +1071,10 @@ func TestDistributionFlow(t *testing.T) {
 }
 
 func TestMintingQueries(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
+	addr, _, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -1083,9 +1098,10 @@ func TestMintingQueries(t *testing.T) {
 }
 
 func TestAccountBalanceQuery(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(""))
 	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
+	addr, _, err := CreateAddr(name1, pw, kb)
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -1102,15 +1118,4 @@ func TestAccountBalanceQuery(t *testing.T) {
 	res, body = Request(t, port, "GET", fmt.Sprintf("/bank/balances/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.Contains(t, body, "[]")
-
-}
-
-func TestLCDContract(t *testing.T) {
-	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
-	require.NoError(t, err)
-	addr, _ := CreateAddr(t, name1, pw, kb)
-	cleanup, valConsPubKeys, valOperAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true, "58645")
-	defer cleanup()
-	fmt.Println("TEST", valConsPubKeys, port, valOperAddrs)
-
 }

@@ -463,5 +463,9 @@ workflows:
           requires:
             - test_cover
       - reproducible_builds:
+          filters:
+            branches:
+              only:
+                - master
           requires:
             - setup_dependencies

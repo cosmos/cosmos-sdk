@@ -151,20 +151,20 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -e github.com/cmd/gaia/app 25 5 TestGaiaImportExport
+	$(BINDIR)/runsim -e github.com/cosmos/cosmos-sdk/cmd/gaia/app 25 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -e github.com/cmd/gaia/app 25 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim -e github.com/cosmos/cosmos-sdk/cmd/gaia/app 25 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json github.com/cmd/gaia/app 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json github.com/cosmos/cosmos-sdk/cmd/gaia/app 400 5 TestFullGaiaSimulation
 
 test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(BINDIR)/runsim github.com/cmd/gaia/app 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim github.com/cosmos/cosmos-sdk/cmd/gaia/app 400 5 TestFullGaiaSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."

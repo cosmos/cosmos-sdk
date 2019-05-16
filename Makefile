@@ -103,7 +103,7 @@ dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh
 
-build_contract_tests:
+build_contract_tests_hooks:
 ifeq ($(OS),Windows_NT)
 	go build -mod=readonly $(BUILD_FLAGS) -o build/contract_tests.exe ./cmd/gaia/cmd/contract_tests
 else
@@ -195,9 +195,9 @@ test_sim_benchmark_invariants:
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
-test_lcd_contracts: runsim
-	@echo "Running Gaia LCD contract tests. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestLCDContract
+test_contracts_tests:
+	@echo "Running Gaia LCD for contract tests. This may take several minutes..."
+	@go test -mod=readonly ./cmd/gaia/lcd_test -run TestLCDContract -v -timeout 10m
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(GOBIN)/runsim

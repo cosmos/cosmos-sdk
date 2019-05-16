@@ -396,6 +396,18 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push tendermint/gaia:$CIRCLE_TAG
 
+  dredd:
+    docker:
+      - image: 'circleci/node:latest'
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: npm install dredd@11.0.1 --global
+      - run: dredd
+
 workflows:
   version: 2
   test-suite:

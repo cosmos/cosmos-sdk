@@ -17,16 +17,16 @@ func main() {
 	h.BeforeEach(func(t *trans.Transaction) {
 		fmt.Println("before each modification")
 	})
-	h.Before("/message > GET", func(t *trans.Transaction) {
+	h.Before("/node_version > GET", func(t *trans.Transaction) {
 		fmt.Println("before modification")
 	})
 	h.BeforeEachValidation(func(t *trans.Transaction) {
 		fmt.Println("before each validation modification")
 	})
-	h.BeforeValidation("/message > GET", func(t *trans.Transaction) {
+	h.BeforeValidation("/node_version > GET", func(t *trans.Transaction) {
 		fmt.Println("before validation modification")
 	})
-	h.After("/message > GET", func(t *trans.Transaction) {
+	h.After("/node_version > GET", func(t *trans.Transaction) {
 		fmt.Println("after modification")
 	})
 	h.AfterEach(func(t *trans.Transaction) {

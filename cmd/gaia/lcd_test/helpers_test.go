@@ -211,7 +211,7 @@ func InitClientHome(t *testing.T, dir string) string {
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some stake tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool, portExt ...string) (
 	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	if nValidators < 1 {
@@ -330,8 +330,16 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.NoError(t, err)
 	genDoc.AppState = appState
 
-	listenAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
+	var listenAddr string
+	var port string
+
+	if len(portExt) == 0 {
+		listenAddr, port, err = server.FreeTCPAddr()
+		require.NoError(t, err)
+	} else {
+		listenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", portExt[0])
+		port = portExt[0]
+	}
 
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
@@ -343,7 +351,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
-	lcd, err := startLCD(logger, listenAddr, cdc, t)
+	lcdInstance, err := startLCD(logger, listenAddr, cdc, t)
 	require.NoError(t, err)
 
 	tests.WaitForLCDStart(port)
@@ -351,9 +359,16 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	cleanup = func() {
 		logger.Debug("cleaning up LCD initialization")
-		node.Stop() //nolint:errcheck
+		err = node.Stop()
+		if err != nil {
+			logger.Error(err.Error())
+		}
+
 		node.Wait()
-		lcd.Close()
+		err = lcdInstance.Close()
+		if err != nil {
+			logger.Error(err.Error())
+		}
 	}
 
 	return cleanup, valConsPubKeys, valOperAddrs, port

@@ -47,7 +47,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 				return false
 			},
 		)
-		unbondPool.SetCoins(sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens)))
+		err := unbondPool.SetCoins(sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens)))
+		if err != nil {
+			panic(err)
+		}
+
 		keeper.SetUnbondedPool(ctx, unbondPool)
 	}
 

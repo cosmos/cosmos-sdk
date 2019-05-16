@@ -62,7 +62,11 @@ func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 
 		m.SetAccount(ctx, stored)
 
-		feeCollector.SetCoins(feeCollector.GetCoins().Add(fees))
+		err = feeCollector.SetCoins(feeCollector.GetCoins().Add(fees))
+		if err != nil {
+			panic(err)
+		}
+
 		m.SetAccount(ctx, feeCollector)
 
 		opMsg.OK = true

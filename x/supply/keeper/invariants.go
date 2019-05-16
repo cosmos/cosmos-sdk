@@ -5,11 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // RegisterInvariants register all supply invariants
-func RegisterInvariants(ck CrisisKeeper, k Keeper) {
-	ck.RegisterRoute(ModuleName, "total-supply", TotalSupply(k))
+func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
+	ir.RegisterRoute(types.ModuleName, "total-supply", TotalSupply(k))
 }
 
 // AllInvariants runs all invariants of the supply module.

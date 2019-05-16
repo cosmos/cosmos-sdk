@@ -9,8 +9,3 @@ import (
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
-
-// CrisisKeeper defines the expected crisis keeper
-type CrisisKeeper interface {
-	RegisterRoute(moduleName, route string, invar sdk.Invariant)
-}

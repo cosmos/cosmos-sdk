@@ -31,15 +31,17 @@ jobs:
           command: |
             make tools TOOLS_DESTDIR=/tmp/workspace/bin
       - run:
-          name: binaries
+          name: cache go modules
           command: |
-            export PATH=/tmp/workspace/bin:$PATH
             make go-mod-cache
-            make install
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - run:
+          name: build
+          command: |
+            make build
       - persist_to_workspace:
           root: /tmp/workspace
           paths:

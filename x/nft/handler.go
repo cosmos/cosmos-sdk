@@ -37,11 +37,30 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Sender.String(), msg.ID)).Result()
 	}
 
-	// TODO: delete NFT from original owner balance
+	// delete NFT from original owner balance
+	ownerBalance, found := k.GetBalance(ctx, nft.GetOwner(), msg.Denom)
+	if !found {
+		// safety check
+		panic(fmt.Sprintf("NFT #%d is not registered in it's original owner's balance (%s)", nft.GetID(), nft.GetOwner()))
+	}
 
-	// TODO: update NFT owner
+	err = ownerBalance.DeleteNFT(nft)
+	if err != nil {
+		return err.Result()
+	}
+
+	// update NFT owner and new owner balance
+	nft.SetOwner(msg.Recipient)
+
+	recipientBalance, found := k.GetBalance(ctx, msg.Recipient, msg.Denom)
+	if !found {
+		recipientBalance = types.NewCollection(msg.Denom, types.NewNFTs(nft))
+	} else {
+		recipientBalance.AddNFT(nft)
+	}
 
 	// save new NFT in the collection and balance
+	k.SetBalance(ctx, msg.Recipient, recipientBalance)
 	err = k.SetNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()
@@ -72,7 +91,27 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Owner.String(), msg.ID)).Result()
 	}
 
+	// edit NFT
 	nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	err = k.SetNFT(ctx, msg.Denom, nft)
+	if err != nil {
+		return err.Result()
+	}
+
+	// update original NFT on the owner's balance
+	balance, found := k.GetBalance(ctx, msg.Owner, msg.Denom)
+	if !found {
+		// safety check
+		panic(fmt.Sprintf("NFT #%d is not registered in it's original owner's balance (%s)", nft.GetID(), nft.GetOwner()))
+	}
+
+	err = balance.UpdateNFT(nft)
+	if err != nil {
+		return err.Result()
+	}
+
+	// save new NFT in the collection and balance
+	k.SetBalance(ctx, msg.Owner, balance)
 	err = k.SetNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()

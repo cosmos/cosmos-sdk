@@ -14,6 +14,7 @@ import (
 type NFT interface {
 	GetID() uint64
 	GetOwner() sdk.AccAddress
+	SetOwner(address sdk.AccAddress)
 	GetName() string
 	GetDescription() string
 	GetImage() string
@@ -53,6 +54,9 @@ func (bnft BaseNFT) GetID() uint64 { return bnft.ID }
 
 // GetOwner returns the account address that owns the NFT
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
+
+// SetOwner updates the owner address of the NFT
+func (bnft BaseNFT) SetOwner(address sdk.AccAddress) { (&bnft).Owner = address }
 
 // GetName returns the name of the token
 func (bnft BaseNFT) GetName() string { return bnft.Name }
@@ -118,6 +122,16 @@ func (nfts NFTs) Find(id uint64) (nft NFT, found bool) {
 		return nft, false
 	}
 	return nfts[index], true
+}
+
+// Update removes and replaces an NFT from the set
+func (nfts NFTs) Update(id uint64, nft NFT) (NFTs, bool) {
+	index := nfts.find(id)
+	if index == -1 {
+		return nfts, false
+	}
+
+	return append(append(nfts[:index], nft), nfts[:index+1]...), true
 }
 
 // Remove removes a collection from the set of collections

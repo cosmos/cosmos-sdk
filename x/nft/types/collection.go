@@ -48,6 +48,18 @@ func (collection *Collection) AddNFT(nft NFT) {
 	collection.NFTs = append(collection.NFTs, nft)
 }
 
+// UpdateNFT updates an NFT from a collection
+func (collection *Collection) UpdateNFT(nft NFT) sdk.Error {
+	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
+	if !ok {
+		return ErrUnknownNFT(DefaultCodespace,
+			fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
+		)
+	}
+	(*collection).NFTs = nfts
+	return nil
+}
+
 // DeleteNFT deletes an NFT from a collection
 func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())

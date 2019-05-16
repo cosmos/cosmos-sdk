@@ -152,6 +152,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	input := setupTestInput()
 	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(0)
+	priv1, _, addr1 := keyPubAddr()
 	priv2, _, addr2 := keyPubAddr()
 
 	// set the accounts
@@ -209,6 +210,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	priv1, _, addr1 := keyPubAddr()
 	priv2, _, addr2 := keyPubAddr()
 	priv3, _, addr3 := keyPubAddr()
+	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
@@ -296,8 +298,8 @@ func TestAnteHandlerFees(t *testing.T) {
 	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	input.ak.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
-
-	require.True(t, input.ak.GetAccount(ctx, FeeCollectorAddr).GetCoins().IsEqual(emptyCoins))
+	
+	require.True(t, input.ak.GetAccount(ctx, FeeCollectorAddr).GetCoins().Empty())
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 
 	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
@@ -755,7 +757,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := NewAnteHandler(input.ak, input.fck, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
+	anteHandler := NewAnteHandler(input.ak, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

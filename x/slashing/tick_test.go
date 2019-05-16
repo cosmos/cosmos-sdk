@@ -24,7 +24,7 @@ func TestBeginBlocker(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 

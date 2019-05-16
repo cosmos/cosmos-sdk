@@ -256,7 +256,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 
-	macc, err := input.keeper.ssk.GetPoolAccountByName(ctx, ModuleName)
+	macc, err := input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
 	require.NoError(t, err)
 	initialModuleAccCoins := macc.GetCoins()
 
@@ -268,7 +268,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
-	macc, err = input.keeper.ssk.GetPoolAccountByName(ctx, ModuleName)
+	macc, err = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
 	require.NoError(t, err)
 	moduleAccCoins := macc.GetCoins()
 
@@ -285,7 +285,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
 
-	macc, err = input.keeper.ssk.GetPoolAccountByName(ctx, ModuleName)
+	macc, err = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
 	require.NoError(t, err)
 	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
 

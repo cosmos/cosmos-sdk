@@ -301,6 +301,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	}
 
 	// now add the account tokens to the non-bonded pool
+	// TODO: change Pool
 	for _, acc := range accs {
 		accTokens := acc.Coins.AmountOf(sdk.DefaultBondDenom)
 		stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.Add(accTokens)

@@ -37,6 +37,7 @@ import (
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var (
@@ -165,11 +166,12 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
+	totalSupply := sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+
 	genaccsGenesis := genaccounts.NewGenesisState(genesisAccounts)
 	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
 
 	authGenesis := auth.NewGenesisState(
-		nil,
 		auth.NewParams(
 			simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64),
 			simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64),
@@ -184,6 +186,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
+
+	s := supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply)))
+	supplyGenesis := supply.NewGenesisState(s)
+	genesisState[supply.ModuleName] = cdc.MustMarshalJSON(supplyGenesis)
+	fmt.Printf("Selected randomly generated supply parameters:\n\t%+v\n", supplyGenesis)
 
 	// Random genesis states
 	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
@@ -204,7 +211,6 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
 	stakingGenesis := staking.NewGenesisState(
-		staking.InitialPool(),
 		staking.NewParams(
 			simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration),
 			simulation.ModuleParamSimulator["MaxValidators"](r).(uint16),
@@ -259,12 +265,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
 	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
-	// TODO make use NewGenesisState
+	// TODO: make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
 		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
@@ -294,7 +299,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
-		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
+		{5, authsim.SimulateDeductFee(app.accountKeeper)},
 		{100, banksim.SimulateMsgSend(app.accountKeeper, app.bankKeeper)},
 		{10, banksim.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
@@ -455,7 +460,7 @@ func TestGaiaImportExport(t *testing.T) {
 		{app.keySlashing, newApp.keySlashing, [][]byte{}},
 		{app.keyMint, newApp.keyMint, [][]byte{}},
 		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keyFeeCollection, newApp.keyFeeCollection, [][]byte{}},
+		{app.keySupply, newApp.keySupply, [][]byte{}},
 		{app.keyParams, newApp.keyParams, [][]byte{}},
 		{app.keyGov, newApp.keyGov, [][]byte{}},
 	}

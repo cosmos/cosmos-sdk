@@ -24,7 +24,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -49,7 +49,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 
 	unbondAmt := sdk.NewCoin(sk.GetParams(ctx).BondDenom, sdk.OneInt())

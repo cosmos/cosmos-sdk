@@ -42,7 +42,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
-	RegisterCodec(mApp.Cdc)
+	supply.RegisterCodec()
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)

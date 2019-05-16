@@ -38,7 +38,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -99,7 +99,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -137,7 +137,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -291,7 +291,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 

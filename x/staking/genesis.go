@@ -35,6 +35,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 	if unbondPool == nil {
 		unbondPool = supply.NewPoolHolderAccount(UnbondedTokensName)
+		keeper.SetUnbondedPool(ctx, unbondPool)
 	}
 
 	// manually set the total supply for staking based on accounts if not provided

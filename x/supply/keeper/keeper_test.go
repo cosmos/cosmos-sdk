@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -45,7 +46,9 @@ func MakeTestCodec() *codec.Codec {
 	staking.RegisterCodec(cdc)
 	distribution.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
+	supply.RegisterCodec()
 	params.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
@@ -85,7 +88,6 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	fck := auth.NewFeeCollectionKeeper(cdc, keyFeeCollection)
 	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bk, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	dk := distribution.NewKeeper(cdc, keyDistr, pk.Subspace(distribution.DefaultParamspace), bk, sk, fck, distribution.DefaultCodespace)

@@ -66,7 +66,7 @@ func (msg MsgSubmitProposal) String() string {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	bz := msgCdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -116,7 +116,7 @@ func (msg MsgDeposit) String() string {
 
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := msgCdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -162,7 +162,7 @@ func (msg MsgVote) String() string {
 
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := msgCdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 

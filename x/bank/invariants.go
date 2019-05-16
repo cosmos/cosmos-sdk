@@ -9,8 +9,8 @@ import (
 )
 
 // register bank invariants
-func RegisterInvariants(c CrisisKeeper, ak auth.AccountKeeper) {
-	c.RegisterRoute("bank", "nonnegative-outstanding",
+func RegisterInvariants(ir sdk.InvariantRouter, ak auth.AccountKeeper) {
+	ir.RegisterRoute(RouterKey, "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }
 

@@ -1,6 +1,9 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
 
 // expected coin keeper
 type DistributionKeeper interface {
@@ -19,7 +22,7 @@ type BankKeeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
-// expected crisis keeper
-type CrisisKeeper interface {
-	RegisterRoute(moduleName, route string, invar sdk.Invariant)
+// expected bank keeper
+type AccountKeeper interface {
+	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }

@@ -7,6 +7,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -15,7 +16,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -24,7 +25,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	keeper.SetPool(ctx, data.Pool)
+	// manually set the total supply for staking based on accounts if not provided
+	if data.Pool.NotBondedTokens.IsZero() {
+		accountKeeper.IterateAccounts(ctx,
+			func(acc auth.Account) (stop bool) {
+				data.Pool.NotBondedTokens = data.Pool.NotBondedTokens.
+					Add(acc.GetCoins().AmountOf(data.Params.BondDenom))
+				return false
+			},
+		)
+	}
+
+	keeper.SetPool(ctx, data.Pool) // TODO remove pool from genesis data and always calculate?
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
@@ -88,7 +100,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
 
-	return
+	return res
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper. The

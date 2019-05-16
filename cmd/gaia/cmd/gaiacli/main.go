@@ -68,7 +68,7 @@ func main() {
 
 	// Module clients hold cli commnads (tx,query) and lcd routes
 	// TODO: Make the lcd command take a list of ModuleClient
-	mc := []sdk.ModuleClients{
+	mc := []sdk.ModuleClient{
 		govClient.NewModuleClient(gv.StoreKey, cdc, paramcli.GetCmdSubmitProposal(cdc)),
 		distClient.NewModuleClient(distcmd.StoreKey, cdc),
 		stakingclient.NewModuleClient(st.StoreKey, cdc),
@@ -113,7 +113,7 @@ func main() {
 	}
 }
 
-func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClient) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
@@ -139,7 +139,7 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 	return queryCmd
 }
 
-func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+func txCmd(cdc *amino.Codec, mc []sdk.ModuleClient) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "tx",
 		Short: "Transactions subcommands",

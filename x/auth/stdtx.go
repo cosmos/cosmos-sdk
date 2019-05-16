@@ -143,7 +143,7 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	bz, err := msgCdc.MarshalJSON(fee) // TODO
+	bz, err := moduleCdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +181,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := msgCdc.MarshalJSON(StdSignDoc{
+	bz, err := moduleCdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

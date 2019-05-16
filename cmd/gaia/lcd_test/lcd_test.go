@@ -229,7 +229,7 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	var stdTx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &stdTx))
 	require.Equal(t, len(stdTx.Msgs), 1)
-	require.Equal(t, stdTx.GetMsgs()[0].Route(), "bank")
+	require.Equal(t, stdTx.GetMsgs()[0].Route(), bank.RouterKey)
 	require.Equal(t, stdTx.GetMsgs()[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(stdTx.Signatures))
 	require.Equal(t, memo, stdTx.Memo)
@@ -265,7 +265,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	var tx auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &tx))
 	require.Equal(t, len(tx.Msgs), 1)
-	require.Equal(t, tx.Msgs[0].Route(), "bank")
+	require.Equal(t, tx.Msgs[0].Route(), bank.RouterKey)
 	require.Equal(t, tx.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(tx.Signatures))
 	require.Equal(t, memo, tx.Memo)
@@ -384,8 +384,8 @@ func TestPoolParamsQuery(t *testing.T) {
 	tokens := sdk.TokensFromTendermintPower(100)
 	freeTokens := sdk.TokensFromTendermintPower(50)
 	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(tokens)
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)           // Delegate tx on GaiaAppGenState
-	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens) // freeTokensPerAcc = 50 on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens) // Delegate tx on GaiaAppGenState
+	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeTokens)
 
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 
@@ -815,7 +815,7 @@ func TestUnjail(t *testing.T) {
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
-	// XXX: any less than this and it fails
+	// NOTE: any less than this and it fails
 	tests.WaitForHeight(3, port)
 	pkString, _ := sdk.Bech32ifyConsPub(valPubKeys[0])
 	signingInfo := getSigningInfo(t, port, pkString)

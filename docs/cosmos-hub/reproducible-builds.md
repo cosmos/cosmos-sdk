@@ -39,7 +39,7 @@ Run the following command to launch a build for `linux` and sign the final build
 report (replace `user@example.com` with the GPG identity you want to sign the report with):
 
 ```
-./cmd/gaia/contrib/gitian-build.sh -s user@example.com linux `pwd`
+./cmd/gaia/contrib/gitian-build.sh -s user@example.com linux
 ```
 
 The above command generates two directories in the current working directory:
@@ -57,7 +57,7 @@ for platform in darwin linux windows; do ./cmd/gaia/contrib/gitian-build.sh -s u
 If you want to generate unsigned builds, just remove the option `-s` from the command line:
 
 ```
-./cmd/gaia/contrib/gitian-build.sh linux `pwd`
+./cmd/gaia/contrib/gitian-build.sh linux
 ```
 
 At the end of the procedure, build results can be found in the `./gaia.sigs` directory:

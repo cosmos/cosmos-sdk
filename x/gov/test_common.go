@@ -21,6 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+var (
+	valTokens  = sdk.TokensFromTendermintPower(42)
+	initTokens = sdk.TokensFromTendermintPower(100000)
+	valCoins   = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
+	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+)
+
 type testInput struct {
 	mApp     *mock.App
 	keeper   Keeper
@@ -55,11 +62,9 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, genState))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genState))
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
-
-	valTokens := sdk.TokensFromTendermintPower(42)
 
 	var (
 		addrs    []sdk.AccAddress
@@ -68,8 +73,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	)
 
 	if genAccs == nil || len(genAccs) == 0 {
-		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
-			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, valCoins)
 	}
 
 	mock.SetGenesis(mApp, genAccs)
@@ -88,13 +92,25 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, genState GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
-		stakingGenesis.Pool.NotBondedTokens = tokens
+
+		// create pool accounts
+		unbondPool := supply.NewPoolHolderAccount(staking.UnbondedTokensName)
+		bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)
+		govPool := supply.NewPoolHolderAccount(ModuleName)
+
+		err := unbondPool.SetCoins(initCoins)
+		if err != nil {
+			panic(err)
+		}
+
+		supplyKeeper.SetPoolAccount(ctx, unbondPool)
+		supplyKeeper.SetPoolAccount(ctx, bondPool)
+		supplyKeeper.SetPoolAccount(ctx, govPool)
 
 		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {

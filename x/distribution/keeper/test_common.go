@@ -87,7 +87,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
 	Keeper, staking.Keeper, params.Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initTokens := sdk.TokensFromTendermintPower(initPower)
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
@@ -119,23 +119,31 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	// TODO: set pool staking and distr module accs
 
-	sk.SetPool(ctx, staking.InitialPool())
+	// create pool accounts
+	unbondPool := supply.NewPoolHolderAccount(staking.UnbondedTokensName)
+	bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)
+	distrAcc := supply.NewPoolHolderAccount(types.ModuleName)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
+
+	err = unbondPool.SetCoins(totalSupply)
+	require.NoError(t, err)
+
+	supplyKeeper.SetPoolAccount(ctx, unbondPool)
+	supplyKeeper.SetPoolAccount(ctx, bondPool)
+	supplyKeeper.SetPoolAccount(ctx, distrAcc)
+
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
-		pool := sk.GetPool(ctx)
-		_, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{
-			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
-		})
+		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
 		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
-		sk.SetPool(ctx, pool)
 	}
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, supplyKeeper, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())

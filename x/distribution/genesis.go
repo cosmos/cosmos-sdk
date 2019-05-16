@@ -40,10 +40,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	// check if the module account exists and create it if not
-	poolAcc, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, types.ModuleName)
+	poolAcc, _ := keeper.GetPoolAccountByName(ctx, types.ModuleName)
 	if poolAcc == nil {
 		poolAcc = supply.NewPoolHolderAccount(types.ModuleName)
-		keeper.sk.SetPoolAccount(ctx, poolAcc)
+		keeper.SetPoolAccount(ctx, poolAcc)
 	}
 
 	feePool := keeper.GetFeePool(ctx)

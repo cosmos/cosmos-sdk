@@ -24,10 +24,13 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	mintedCoins := sdk.NewCoins(minter.BlockProvision(params))
 
 	// we mint the coins twice to send them to fee collection and staking pool accounts
-	k.supplyKeeper.MintCoins(ctx, ModuleName, mintedCoins.Add(mintedCoins))
+	err := k.supplyKeeper.MintCoins(ctx, ModuleName, mintedCoins.Add(mintedCoins))
+	if err != nil {
+		panic(err)
+	}
 
 	// the fee collector is represented as a base account
-	err := k.supplyKeeper.SendCoinsPoolToAccount(ctx, ModuleName, auth.FeeCollectorAddr, mintedCoins)
+	err = k.supplyKeeper.SendCoinsPoolToAccount(ctx, ModuleName, auth.FeeCollectorAddr, mintedCoins)
 	if err != nil {
 		panic(err)
 	}

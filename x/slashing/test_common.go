@@ -37,7 +37,7 @@ var (
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
 	}
-	initCoins = sdk.TokensFromTendermintPower(200)
+	initTokens = sdk.TokensFromTendermintPower(200)
 )
 
 func createTestCodec() *codec.Codec {
@@ -78,16 +78,24 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
-	// TODO:
-	genesis.Pool.NotBondedTokens = initCoins.MulRaw(int64(len(addrs)))
+	// create pool accounts
+	unbondPool := supply.NewPoolHolderAccount(staking.UnbondedTokensName)
+	bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(addrs)))))
+
+	err = unbondPool.SetCoins(totalSupply)
+	require.NoError(t, err)
+
+	supplyKeeper.SetPoolAccount(ctx, unbondPool)
+	supplyKeeper.SetPoolAccount(ctx, bondPool)
 
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
-		_, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
-			{sk.GetParams(ctx).BondDenom, initCoins},
-		})
+		_, err = ck.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
 	}
 	require.Nil(t, err)
 	paramstore := paramsKeeper.Subspace(DefaultParamspace)

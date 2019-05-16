@@ -21,11 +21,6 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx sdk.Context) []sdk.Delegation
 }
 
-// BankKeeper defines the expected bank keeper
-type BankKeeper interface {
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
-}
-
 // SupplyKeeper defines the supply Keeper for pool accounts
 type SupplyKeeper interface {
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)

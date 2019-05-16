@@ -18,9 +18,8 @@ type (
 	GenesisState = types.GenesisState
 
 	// expected keepers
-	StakingKeeper       = types.StakingKeeper
-	BankKeeper          = types.BankKeeper
-	FeeCollectionKeeper = types.FeeCollectionKeeper
+	StakingKeeper = types.StakingKeeper
+	SupplyKeeper  = types.SupplyKeeper
 
 	// querier param types
 	QueryValidatorCommissionParams   = keeper.QueryValidatorCommissionParams

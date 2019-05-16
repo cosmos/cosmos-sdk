@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // get outstanding rewards
@@ -12,4 +13,14 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.Val
 // get the community coins
 func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
 	return k.GetFeePool(ctx).CommunityPool
+}
+
+// GetPoolAccountByName
+func (k Keeper) GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, error) {
+	return k.supplyKeeper.GetPoolAccountByName(ctx, name)
+}
+
+// SetPoolAccount
+func (k Keeper) SetPoolAccount(ctx sdk.Context, pAcc supply.PoolAccount) {
+	k.supplyKeeper.SetPoolAccount(ctx, pAcc)
 }

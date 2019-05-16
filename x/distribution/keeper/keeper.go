@@ -14,7 +14,6 @@ type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           *codec.Codec
 	paramSpace    params.Subspace
-	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
 
@@ -23,13 +22,12 @@ type Keeper struct {
 }
 
 // create a new keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:      key,
 		cdc:           cdc,
 		paramSpace:    paramSpace.WithKeyTable(ParamKeyTable()),
-		bankKeeper:    ck,
 		stakingKeeper: sk,
 		supplyKeeper:  supplyKeeper,
 		codespace:     codespace,
@@ -93,8 +91,8 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	if !coins.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-
-		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		err := k.supplyKeeper.SendCoinsPoolToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		if err != nil {
 			return nil, err
 		}
 	}

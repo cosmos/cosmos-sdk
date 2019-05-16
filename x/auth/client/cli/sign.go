@@ -93,10 +93,10 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) (err error) {
+	return func(cmd *cobra.Command, args []string) error {
 		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
-			return
+			return err
 		}
 
 		offline := viper.GetBool(flagOffline)
@@ -137,35 +137,14 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
-		var json []byte
-
-		switch generateSignatureOnly {
-		case true:
-			switch cliCtx.Indent {
-			case true:
-				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-
-			default:
-				json, err = cdc.MarshalJSON(newTx.Signatures[0])
-			}
-
-		default:
-			switch cliCtx.Indent {
-			case true:
-				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-
-			default:
-				json, err = cdc.MarshalJSON(newTx)
-			}
-		}
-
+		json, err := getSignatureJSON(cliCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
 
 		if viper.GetString(flagOutfile) == "" {
 			fmt.Printf("%s\n", json)
-			return
+			return nil
 		}
 
 		fp, err := os.OpenFile(
@@ -178,7 +157,28 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		defer fp.Close()
 		fmt.Fprintf(fp, "%s\n", json)
 
-		return
+		return nil
+	}
+}
+
+func getSignatureJSON(indent, generateSignatureOnly bool) ([]byte, error) {
+	switch generateSignatureOnly {
+	case true:
+		switch indent {
+		case true:
+			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+
+		default:
+			return cdc.MarshalJSON(newTx.Signatures[0])
+		}
+	default:
+		switch indent {
+		case true:
+			return cdc.MarshalJSONIndent(newTx, "", "  ")
+
+		default:
+			return cdc.MarshalJSON(newTx)
+		}
 	}
 }
 

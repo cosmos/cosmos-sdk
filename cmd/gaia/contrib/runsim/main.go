@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -33,7 +34,7 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs     int
+	jobs     int = runtime.GOMAXPROCS(0)
 	blocks   string
 	period   string
 	testname string
@@ -49,7 +50,8 @@ func init() {
 
 	procs = map[int]*os.Process{}
 	mutex = &sync.Mutex{}
-	flag.IntVar(&jobs, "j", 10, "Number of parallel processes")
+
+	flag.IntVar(&jobs, "j", jobs, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 
 	flag.Usage = func() {
@@ -111,6 +113,7 @@ func main() {
 	}
 
 	// set up worker pool
+	log.Printf("Allocating %d workers...", jobs)
 	wg := sync.WaitGroup{}
 	for workerId := 0; workerId < jobs; workerId++ {
 		wg.Add(1)

@@ -73,7 +73,7 @@ func main() {
 	var err error
 
 	flag.Parse()
-	if flag.NArg() != 3 {
+	if flag.NArg() != 4 {
 		log.Fatal("wrong number of arguments")
 	}
 

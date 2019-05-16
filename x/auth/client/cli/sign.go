@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -28,7 +28,7 @@ const (
 )
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(codec *amino.Codec) *cobra.Command {
+func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -92,7 +92,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
@@ -137,7 +137,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
-		json, err := getSignatureJSON(cliCtx.Indent, generateSignatureOnly)
+		json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 	}
 }
 
-func getSignatureJSON(indent, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
 	switch generateSignatureOnly {
 	case true:
 		switch indent {

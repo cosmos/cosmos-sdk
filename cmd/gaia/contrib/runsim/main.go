@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -35,7 +36,7 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs       int
+	jobs       int = runtime.GOMAXPROCS(0)
 	blocks     string
 	period     string
 	testname   string

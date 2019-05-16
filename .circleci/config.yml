@@ -243,59 +243,10 @@ jobs:
                 echo "Website build started"
             fi
 
-  docker_image:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run: |
-          GAIAD_VERSION=''
-          if [ "${CIRCLE_BRANCH}" = "master" ]; then
-            GAIAD_VERSION="stable"
-          elif [ "${CIRCLE_BRANCH}" = "develop" ]; then
-            GAIAD_VERSION="develop"
-          fi
-          if [ -z "${GAIAD_VERSION}" ]; then
-            docker build .
-          else
-            docker build -t tendermint/gaia:$GAIAD_VERSION .
-            docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
-            docker push tendermint/gaia:$GAIAD_VERSION
-          fi
-
-  docker_tagged:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run: |
-          docker build -t tendermint/gaia:$CIRCLE_TAG .
-          docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
-          docker push tendermint/gaia:$CIRCLE_TAG
-
 workflows:
   version: 2
   test-suite:
     jobs:
-      - docker_image:
-          requires:
-            - setup_dependencies
-      - docker_tagged:
-          filters:
-            tags:
-              only:
-                - /^v.*/
-            branches:
-              ignore:
-                - /.*/
-          requires:
-            - setup_dependencies
       - macos_ci:
           filters:
             branches:

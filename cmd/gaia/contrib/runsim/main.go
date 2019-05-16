@@ -52,7 +52,8 @@ func init() {
 
 	procs = map[int]*os.Process{}
 	mutex = &sync.Mutex{}
-	flag.IntVar(&jobs, "j", 10, "Number of parallel processes")
+
+	flag.IntVar(&jobs, "j", jobs, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
 
@@ -115,6 +116,7 @@ func main() {
 	}
 
 	// set up worker pool
+	log.Printf("Allocating %d workers...", jobs)
 	wg := sync.WaitGroup{}
 	for workerID := 0; workerID < jobs; workerID++ {
 		wg.Add(1)

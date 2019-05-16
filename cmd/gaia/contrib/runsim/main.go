@@ -216,12 +216,16 @@ func spawnProc(workerID int, seed int) error {
 	pushProcess(cmd.Process)
 	defer popProcess(cmd.Process)
 
+	err = cmd.Wait()
+	if err != nil {
+		fmt.Printf("%s\n", err)
+	}
 	if exitOnFail {
 		for sc.Scan() {
-			fmt.Printf("%s\n", sc.Text())
+			fmt.Printf("stderr: %s\n", sc.Text())
 		}
 	}
-	return cmd.Wait()
+	return err
 }
 
 func pushProcess(proc *os.Process) {

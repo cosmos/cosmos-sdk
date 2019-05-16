@@ -174,7 +174,7 @@ test_sim_benchmark_invariants:
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
-$(BINDIR)/runsim: cmd/gaia/contrib/runsim/main.go
+$(BINDIR)/runsim: contrib/runsim/main.go
 	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
@@ -258,7 +258,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build dist clean draw_deps test test_unit test_cover lint \
-benchmark devdoc_init devdoc devdoc_save devdoc_update \
+benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 build-docker-gaiadnode localnet-start localnet-stop \
 format test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \

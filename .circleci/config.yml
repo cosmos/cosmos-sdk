@@ -370,6 +370,31 @@ jobs:
           docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
           docker push tendermint/gaia:$CIRCLE_TAG
 
+  reproducible_builds:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build gaia
+          no_output_timeout: 20m
+          command: |
+            sudo apt-get install -y ruby
+            bash -x ./cmd/gaia/contrib/gitian-build.sh all
+            for os in darwin linux windows; do
+              cp gitian-build-${os}/result/gaia-${os}-res.yml .
+              rm -rf gitian-build-${os}/
+            done
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-darwin-res.yml
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-linux-res.yml
+      - store_artifacts:
+          path: /go/src/github.com/cosmos/cosmos-sdk/gaia-windows-res.yml
+
 workflows:
   version: 2
   test-suite:
@@ -441,3 +466,10 @@ workflows:
       - upload_coverage:
           requires:
             - test_cover
+      - reproducible_builds:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - setup_dependencies

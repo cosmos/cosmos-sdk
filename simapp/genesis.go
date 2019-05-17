@@ -13,7 +13,7 @@ import (
 // object provided to it during init.
 type GenesisState map[string]json.RawMessage
 
-// NewDefaultGenesisState generates the default state for gaia.
+// NewDefaultGenesisState generates the default state for the application.
 func NewDefaultGenesisState() GenesisState {
 	return ModuleBasics.DefaultGenesis()
 }

@@ -27,7 +27,7 @@ var configTemplate *template.Template
 
 func init() {
 	var err error
-	tmpl := template.New("gaiaConfigFileTemplate")
+	tmpl := template.New("appConfigFileTemplate")
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}

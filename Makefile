@@ -138,7 +138,7 @@ test_race:
 
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
-	@go test -mod=readonly ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
+	@go test -mod=readonly $(SIMAPP)-run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
 test_sim_gaia_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."

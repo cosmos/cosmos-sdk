@@ -59,7 +59,7 @@ var (
 			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
 		},
 		"VotingParams/VotingPeriod": func(r *rand.Rand) interface{} {
-			return time.Duration(r.Intn(2*172800)) * time.Second
+			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		},
 		"TallyParams/Quorum": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(334, 3)

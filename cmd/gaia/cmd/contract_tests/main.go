@@ -13,7 +13,7 @@ func main() {
 	h := hooks.NewHooks()
 	server := hooks.NewServer(hooks.NewHooksRunner(h))
 	h.BeforeAll(func(t []*trans.Transaction) {
-		time.Sleep(5 * time.Second)
+		time.Sleep(15 * time.Second)
 		fmt.Println("Sleep 5 seconds before all modification")
 	})
 	h.BeforeEach(func(t *trans.Transaction) {

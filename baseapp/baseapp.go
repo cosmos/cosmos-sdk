@@ -231,7 +231,7 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 		app.setConsensusParams(consensusParams)
 	}
 
-	// needed for `gaiad export`, which inits from store but never calls initchain
+	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
 	app.Seal()
 

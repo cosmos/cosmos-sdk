@@ -234,22 +234,6 @@ devdoc_update:
 
 
 ########################################
-### Local validator nodes using docker and docker-compose
-
-build-docker-gaiadnode:
-	$(MAKE) -C networks/local
-
-# Run a 4-node testnet locally
-localnet-start: localnet-stop
-	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 ; fi
-	docker-compose up -d
-
-# Stop testnet
-localnet-stop:
-	docker-compose down
-
-
-########################################
 ### Packaging
 
 snapcraft-local.yaml: snapcraft-local.yaml.in
@@ -260,7 +244,6 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build dist clean draw_deps test test_unit test_cover lint \
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
-build-docker-gaiadnode localnet-start localnet-stop \
 format test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \

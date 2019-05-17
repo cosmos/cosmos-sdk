@@ -1,20 +1,16 @@
-package lcd
+package lcdtest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -22,280 +18,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	mintrest "github.com/cosmos/cosmos-sdk/x/mint/client/rest"
-	paramsrest "github.com/cosmos/cosmos-sdk/x/params/client/rest"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingrest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-// TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
-// InitializeTestLCD starts Tendermint and the LCD in process, listening on
-// their respective sockets where nValidators is the total number of validators
-// and initAddrs are the accounts to initialize with some stake tokens. It
-// returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool, portExt ...string) (
-	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
-
-	if nValidators < 1 {
-		panic("InitializeTestLCD must use at least one validator")
-	}
-
-	config := GetConfig()
-	config.Consensus.TimeoutCommit = 100
-	config.Consensus.SkipTimeoutCommit = false
-	config.TxIndex.IndexAllTags = true
-
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.NewFilter(logger, log.AllowError())
-
-	privVal := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(),
-		config.PrivValidatorStateFile())
-	privVal.Reset()
-
-	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil, true, 0)
-	cdc = gapp.MakeCodec()
-
-	genesisFile := config.GenesisFile()
-	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
-	require.Nil(t, err)
-	genDoc.Validators = nil
-	require.NoError(t, genDoc.SaveAs(genesisFile))
-	genTxs := []json.RawMessage{}
-
-	// append any additional (non-proposing) validators
-	var accs []gapp.GenesisAccount
-	for i := 0; i < nValidators; i++ {
-		operPrivKey := secp256k1.GenPrivKey()
-		operAddr := operPrivKey.PubKey().Address()
-		pubKey := privVal.GetPubKey()
-
-		power := int64(100)
-		if i > 0 {
-			pubKey = ed25519.GenPrivKey().PubKey()
-			power = 1
-		}
-		startTokens := sdk.TokensFromTendermintPower(power)
-
-		msg := staking.NewMsgCreateValidator(
-			sdk.ValAddress(operAddr),
-			pubKey,
-			sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
-			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
-			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			sdk.OneInt(),
-		)
-		stdSignMsg := txbuilder.StdSignMsg{
-			ChainID: genDoc.ChainID,
-			Msgs:    []sdk.Msg{msg},
-		}
-		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
-		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
-		txBytes, err := cdc.MarshalJSON(tx)
-		require.Nil(t, err)
-
-		genTxs = append(genTxs, txBytes)
-		valConsPubKeys = append(valConsPubKeys, pubKey)
-		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
-
-		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accTokens := sdk.TokensFromTendermintPower(150)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
-	}
-
-	appGenState := gapp.NewDefaultGenesisState()
-	appGenState.Accounts = accs
-	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
-	require.NoError(t, err)
-	genesisState, err := gapp.GaiaAppGenState(cdc, *genDoc, genTxs)
-	require.NoError(t, err)
-
-	// add some tokens to init accounts
-	for _, addr := range initAddrs {
-		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accTokens := sdk.TokensFromTendermintPower(100)
-		accAuth.Coins = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, accTokens)}
-		acc := gapp.NewGenesisAccount(&accAuth)
-		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
-	}
-
-	inflationMin := sdk.ZeroDec()
-	if minting {
-		inflationMin = sdk.MustNewDecFromStr("10000.0")
-		genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
-	} else {
-		genesisState.MintData.Params.InflationMax = inflationMin
-	}
-	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMin = inflationMin
-
-	// initialize crisis data
-	genesisState.CrisisData.ConstantFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
-
-	// double check inflation is set according to the minting boolean flag
-	if minting {
-		require.Equal(t, sdk.MustNewDecFromStr("15000.0"),
-			genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.MustNewDecFromStr("10000.0"),
-			genesisState.MintData.Params.InflationMin)
-	} else {
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMax)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Minter.Inflation)
-		require.Equal(t, sdk.ZeroDec(), genesisState.MintData.Params.InflationMin)
-	}
-
-	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
-	require.NoError(t, err)
-	genDoc.AppState = appState
-
-	var listenAddr string
-
-	if len(portExt) == 0 {
-		listenAddr, port, err = server.FreeTCPAddr()
-		require.NoError(t, err)
-	} else {
-		listenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", portExt[0])
-		port = portExt[0]
-	}
-
-	// XXX: Need to set this so LCD knows the tendermint node address!
-	viper.Set(client.FlagNode, config.RPC.ListenAddress)
-	viper.Set(client.FlagChainID, genDoc.ChainID)
-	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
-	viper.Set(client.FlagTrustNode, true)
-
-	node, err := startTM(config, logger, genDoc, privVal, app)
-	require.NoError(t, err)
-
-	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
-	lcdInstance, err := startLCD(logger, listenAddr, cdc)
-	require.NoError(t, err)
-
-	tests.WaitForLCDStart(port)
-	tests.WaitForHeight(1, port)
-
-	cleanup = func() {
-		logger.Debug("cleaning up LCD initialization")
-		err = node.Stop()
-		if err != nil {
-			logger.Error(err.Error())
-		}
-
-		node.Wait()
-		err = lcdInstance.Close()
-		if err != nil {
-			logger.Error(err.Error())
-		}
-	}
-
-	return cleanup, valConsPubKeys, valOperAddrs, port
-}
-
-// startTM creates and starts an in-process Tendermint node with memDB and
-// in-process ABCI application. It returns the new node or any error that
-// occurred.
-//
-// TODO: Clean up the WAL dir or enable it to be not persistent!
-func startTM(
-	tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
-	privVal tmtypes.PrivValidator, app abci.Application,
-) (*nm.Node, error) {
-
-	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
-	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
-	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
-	if err != nil {
-		return nil, err
-	}
-	node, err := nm.NewNode(
-		tmcfg,
-		privVal,
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		dbProvider,
-		nm.DefaultMetricsProvider(tmcfg.Instrumentation),
-		logger.With("module", "node"),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = node.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	tests.WaitForRPC(tmcfg.RPC.ListenAddress)
-	logger.Info("Tendermint running!")
-
-	return node, err
-}
-
-// startLCD starts the LCD.
-func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
-	rs := lcd.NewRestServer(cdc)
-	registerRoutes(rs)
-	listener, err := tmrpc.Listen(listenAddr, tmrpc.DefaultConfig())
-	if err != nil {
-		return nil, err
-	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger, tmrpc.DefaultConfig()) //nolint:errcheck
-	return listener, nil
-}
-
-// NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
-func registerRoutes(rs *lcd.RestServer) {
-	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
-	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
-	bankrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
-	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, paramsrest.ProposalRESTHandler(rs.CliCtx, rs.Cdc))
-	mintrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-}
 
 // Request makes a test LCD test request. It returns a response object and a
 // stringified response body.

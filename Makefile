@@ -195,9 +195,9 @@ test_sim_benchmark_invariants:
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
-test_contracts_tests:
+run_lcd_contract_tests:
 	@echo "Running Gaia LCD for contract tests. This may take several minutes..."
-	@go test -mod=readonly ./cmd/gaia/lcd_test -run TestLCDContract -v -timeout 10m
+	@go run ./cmd/gaia/lcd_test/rest
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(GOBIN)/runsim
@@ -218,7 +218,7 @@ test_sim_gaia_profile:
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x tests/ .sh
 
 lint: tools ci-lint
 ci-lint:

@@ -397,14 +397,14 @@ jobs:
           docker push tendermint/gaia:$CIRCLE_TAG
 
   dredd:
-    docker:
-      - image: 'circleci/node:latest'
+    <<: *linux_defaults
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
+      - run: apk update && apk add nodejs
       - run: npm install dredd@11.0.1 --global
       - run: dredd
 

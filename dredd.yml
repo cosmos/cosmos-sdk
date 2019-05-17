@@ -3,7 +3,7 @@ dry-run: null
 hookfiles: build/contract_tests
 language: go
 require: null
-server: make test_contracts_tests
+server: make run_lcd_contract_tests
 server-wait: 3
 init: false
 custom: {}

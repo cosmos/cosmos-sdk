@@ -409,9 +409,8 @@ jobs:
           command: |
             go get github.com/snikch/goodman/cmd/goodman
             make build_contract_tests_hooks
-            ./scripts/get_node.sh
-            ~/.local/bin/dredd
-            # dredd
+            export PATH=~/.local/bin:$PATH
+            ./scripts/get_node.sh && dredd
 
 workflows:
   version: 2

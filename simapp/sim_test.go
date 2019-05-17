@@ -404,7 +404,7 @@ func TestGaiaImportExport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
-	require.Equal(t, "GaiaApp", app.Name())
+	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
@@ -431,7 +431,7 @@ func TestGaiaImportExport(t *testing.T) {
 		os.RemoveAll(newDir)
 	}()
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
-	require.Equal(t, "GaiaApp", newApp.Name())
+	require.Equal(t, "SimApp", newApp.Name())
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
 	if err != nil {
@@ -494,7 +494,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
-	require.Equal(t, "GaiaApp", app.Name())
+	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
@@ -530,7 +530,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(newDir)
 	}()
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
-	require.Equal(t, "GaiaApp", newApp.Name())
+	require.Equal(t, "SimApp", newApp.Name())
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})

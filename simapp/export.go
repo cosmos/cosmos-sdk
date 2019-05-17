@@ -13,8 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// export the state of gaia for a genesis file
-func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
+// ExportAppStateAndValidators exports the state of the application for a genesis
+// file.
+func (app *SimApp) ExportAppStateAndValidators(
+	forZeroHeight bool, jailWhiteList []string,
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 
 	// as if they could withdraw from the start of the next block
@@ -29,6 +31,7 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList
 	if err != nil {
 		return nil, nil, err
 	}
+
 	validators = staking.WriteValidators(ctx, app.stakingKeeper)
 	return appState, validators, nil
 }

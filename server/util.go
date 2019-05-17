@@ -109,13 +109,13 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	//
 	// TODO: Rename config file to server.toml as it's not particular to Gaia
 	// (REF: https://github.com/cosmos/cosmos-sdk/issues/4125).
-	gaiaConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
+	gaiaConfigFilePath := filepath.Join(rootDir, "config/app.toml")
 	if _, err := os.Stat(gaiaConfigFilePath); os.IsNotExist(err) {
-		gaiaConf, _ := config.ParseConfig()
-		config.WriteConfigFile(gaiaConfigFilePath, gaiaConf)
+		appConf, _ := config.ParseConfig()
+		config.WriteConfigFile(gaiaConfigFilePath, appConf)
 	}
 
-	viper.SetConfigName("gaiad")
+	viper.SetConfigName("app")
 	err = viper.MergeInConfig()
 
 	return

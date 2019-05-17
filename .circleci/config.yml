@@ -404,9 +404,12 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: ./scripts/get_node.sh
-      - run: npm install dredd@11.0.1 --global
-      - run: dredd
+      - run:
+          name: Get Node and test REST implementation against documentation
+          command: |
+            ./scripts/get_node.sh
+            npm install dredd@11.0.1 --global
+            dredd
 
 workflows:
   version: 2

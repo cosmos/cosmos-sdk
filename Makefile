@@ -136,36 +136,36 @@ test_unit:
 test_race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test_sim_gaia_nondeterminism:
+test_sim_app_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
 test_sim_gaia_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test -mod=readonly $(SIMAPP) -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
 		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
-test_sim_gaia_fast:
+test_sim_app_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test -mod=readonly $(SIMAPP) -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestGaiaImportExport
+	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppImportExport
 
 test_sim_gaia_simulation_after_import: runsim
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestGaiaSimulationAfterImport
+	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppSimulationAfterImport
 
 test_sim_gaia_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json $(SIMAPP) 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json $(SIMAPP) 400 5 TestFullAppSimulation
 
 test_sim_gaia_multi_seed: runsim
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(BINDIR)/runsim $(SIMAPP) 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim $(SIMAPP) 400 5 TestFullAppSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -181,14 +181,14 @@ $(BINDIR)/runsim: contrib/runsim/main.go
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
-test_sim_gaia_benchmark:
+test_sim_app_benchmark:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullGaiaSimulation$$  \
+	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
 
-test_sim_gaia_profile:
+test_sim_app_profile:
 	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullGaiaSimulation$$ \
+	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
@@ -244,7 +244,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build dist clean draw_deps test test_unit test_cover lint \
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
-format test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
+format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \
 go-mod-cache

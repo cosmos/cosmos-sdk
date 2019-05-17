@@ -322,13 +322,12 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 }
 
 // Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -SimulationCommit=true -cpuprofile cpu.out
-func BenchmarkFullGaiaSimulation(b *testing.B) {
-	// Setup Gaia application
+// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -SimulationCommit=true -cpuprofile cpu.out
+func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
 
 	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
 	db, _ = sdk.NewLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
@@ -350,25 +349,28 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	}
 }
 
-func TestFullGaiaSimulation(t *testing.T) {
+func TestFullAppSimulation(t *testing.T) {
 	if !enabled {
-		t.Skip("Skipping Gaia simulation")
+		t.Skip("Skipping application simulation")
 	}
 
-	// Setup Gaia application
 	var logger log.Logger
+
 	if verbose {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}
+
 	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
 	db, _ = sdk.NewLevelDB("Simulation", dir)
+
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
+
 	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
@@ -381,28 +383,31 @@ func TestFullGaiaSimulation(t *testing.T) {
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
+
 	require.Nil(t, err)
 }
 
-func TestGaiaImportExport(t *testing.T) {
+func TestAppImportExport(t *testing.T) {
 	if !enabled {
-		t.Skip("Skipping Gaia import/export simulation")
+		t.Skip("Skipping application import/export simulation")
 	}
 
-	// Setup Gaia application
 	var logger log.Logger
 	if verbose {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}
+
 	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
 	db, _ = sdk.NewLevelDB("Simulation", dir)
+
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
+
 	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
@@ -416,37 +421,43 @@ func TestGaiaImportExport(t *testing.T) {
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
-	require.Nil(t, err)
 
+	require.Nil(t, err)
 	fmt.Printf("Exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
 	fmt.Printf("Importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
+	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
+
 	defer func() {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
+
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
+
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
 	if err != nil {
 		panic(err)
 	}
+
 	ctxB := newApp.NewContext(true, abci.Header{})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})
+
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
 		B        sdk.StoreKey
 		Prefixes [][]byte
 	}
+
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keyMain, newApp.keyMain, [][]byte{}},
 		{app.keyAccount, newApp.keyAccount, [][]byte{}},
@@ -459,6 +470,7 @@ func TestGaiaImportExport(t *testing.T) {
 		{app.keyParams, newApp.keyParams, [][]byte{}},
 		{app.keyGov, newApp.keyGov, [][]byte{}},
 	}
+
 	for _, storeKeysPrefix := range storeKeysPrefixes {
 		storeKeyA := storeKeysPrefix.A
 		storeKeyB := storeKeysPrefix.B
@@ -475,24 +487,26 @@ func TestGaiaImportExport(t *testing.T) {
 
 }
 
-func TestGaiaSimulationAfterImport(t *testing.T) {
+func TestAppSimulationAfterImport(t *testing.T) {
 	if !enabled {
-		t.Skip("Skipping Gaia simulation after import")
+		t.Skip("Skipping application simulation after import")
 	}
 
-	// Setup Gaia application
 	var logger log.Logger
 	if verbose {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}
-	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+
+	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
 	db, _ := sdk.NewLevelDB("Simulation", dir)
+
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
+
 	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
@@ -506,6 +520,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
+
 	require.Nil(t, err)
 
 	if stopEarly {
@@ -523,12 +538,14 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("Importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
+	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
+
 	defer func() {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
+
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 	newApp.InitChain(abci.RequestInitChain{
@@ -538,14 +555,13 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation on imported app
 	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
-
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
-// and doesn't depend on gaia
+// and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
 	if !enabled {
-		t.Skip("Skipping Gaia simulation")
+		t.Skip("Skipping application simulation")
 	}
 
 	numSeeds := 3
@@ -579,7 +595,6 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 func BenchmarkInvariants(b *testing.B) {
-	// 1. Setup a simulated Gaia application
 	logger := log.NewNopLogger()
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)

@@ -65,7 +65,7 @@ jobs:
             export PATH=/tmp/workspace/bin:$PATH
             make ci-lint
 
-  test_sim_gaia_nondeterminism:
+  test_sim_app_nondeterminism:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -78,9 +78,9 @@ jobs:
       - run:
           name: Test individual module simulations
           command: |
-            make test_sim_gaia_nondeterminism
+            make test_sim_app_nondeterminism
 
-  test_sim_gaia_fast:
+  test_sim_app_fast:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -91,11 +91,11 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test full Gaia simulation
+          name: Test full application simulation
           command: |
-            make test_sim_gaia_fast
+            make test_sim_app_fast
 
-  test_sim_gaia_import_export:
+  test_sim_app_import_export:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -106,28 +106,12 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test Gaia import/export simulation
-          command: |
-            export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaImportExport
-
-  test_sim_gaia_simulation_after_import:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test Gaia import/export simulation
+          name: Test application import/export simulation
           command: |
             export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaSimulationAfterImport
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppImportExport
 
-  test_sim_gaia_multi_seed_long:
+  test_sim_app_simulation_after_import:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -138,12 +122,12 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test multi-seed Gaia simulation long
+          name: Test application import/export simulation
           command: |
             export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppSimulationAfterImport
 
-  test_sim_gaia_multi_seed:
+  test_sim_app_multi_seed_long:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -154,10 +138,26 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test multi-seed Gaia simulation short
+          name: Test multi-seed application simulation long
           command: |
             export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullAppSimulation
+
+  test_sim_app_multi_seed:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: Test multi-seed application simulation short
+          command: |
+            export GO111MODULE=on
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullAppSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -265,22 +265,22 @@ workflows:
       - lint:
           requires:
             - setup_dependencies
-      - test_sim_gaia_nondeterminism:
+      - test_sim_app_nondeterminism:
           requires:
             - setup_dependencies
-      - test_sim_gaia_fast:
+      - test_sim_app_fast:
           requires:
             - setup_dependencies
-      - test_sim_gaia_import_export:
+      - test_sim_app_import_export:
           requires:
             - setup_dependencies
-      - test_sim_gaia_simulation_after_import:
+      - test_sim_app_simulation_after_import:
           requires:
             - setup_dependencies
-      - test_sim_gaia_multi_seed:
+      - test_sim_app_multi_seed:
           requires:
             - setup_dependencies
-      - test_sim_gaia_multi_seed_long:
+      - test_sim_app_multi_seed_long:
           requires:
             - setup_dependencies
           filters:

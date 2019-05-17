@@ -35,7 +35,7 @@ Proper vetting of a parameter change proposal should prevent this from happening
 regardless. 
 
 Example:
-$ <appcli> tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
+$ version.ClientName tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:
 {
   "title": "Staking Param Change",

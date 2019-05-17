@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
@@ -19,7 +20,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query a validator's signing information",
 		Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
 
-$ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexxhmz0l8c7sgswl7ulv7aulk364x4g5xsw7sr0k2g5
+` + fmt.Sprintf("$ %v query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexxhmz0l8c7sgswl7ulv7aulk364x4g5xsw7sr0k2g5", version.ClientName) + `
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,7 +58,7 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(`Query genesis parameters for the slashing module:
 
-$ <appcli> query slashing params
+` + fmt.Sprintf("$ %v query slashing params", version.ClientName) + `
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

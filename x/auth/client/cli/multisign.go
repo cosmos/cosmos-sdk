@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
@@ -30,7 +31,7 @@ func GetMultiSignCommand(codec *amino.Codec) *cobra.Command {
 Read signature(s) from [signature] file(s), generate a multisig signature compliant to the
 multisig key [name], and attach it to the transaction read from [file]. Example:
 
-   <appcli> multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+` + fmt.Sprintf("$ %v multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json", version.ClientName) + `
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.

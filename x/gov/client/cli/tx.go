@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
@@ -56,7 +57,7 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
 
-$ <appcli> gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+` + fmt.Sprintf("$ %v gov submit-proposal --proposal=\"path/to/proposal.json\" --from mykey", version.ClientName) + `
 
 where proposal.json contains:
 
@@ -69,7 +70,7 @@ where proposal.json contains:
 
 is equivalent to
 
-$ <appcli> gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+` + fmt.Sprintf("$ %v gov submit-proposal --title=\"Test Proposal\" --description=\"My awesome proposal\" --type=\"Text\" --deposit=\"10test\" --from mykey", version.ClientName) + `
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -114,10 +115,10 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
 		Long: strings.TrimSpace(`
-Submit a deposit for an active proposal. You can find the proposal-id by running "<appcli> query gov proposals":
+Submit a deposit for an active proposal. You can find the proposal-id by running "` + fmt.Sprintf("$ %v query gov proposals", version.ClientName) + `":
 
 Example:
-$ <appcli> tx gov deposit 1 10stake --from mykey
+` + fmt.Sprintf("$ %v tx gov deposit 1 10stake --from mykey", version.ClientName) + `
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -158,10 +159,10 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
 		Long: strings.TrimSpace(`
-Submit a vote for an active proposal. You can find the proposal-id by running "<appcli> query gov proposals":
+Submit a vote for an active proposal. You can find the proposal-id by running "` + fmt.Sprintf("$ %v query gov proposals", version.ClientName) + `":
 
 Example:
-$ <appcli> tx gov vote 1 yes --from mykey
+` + fmt.Sprintf("$ %v tx gov vote 1 yes --from mykey", version.ClientName) + `
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))

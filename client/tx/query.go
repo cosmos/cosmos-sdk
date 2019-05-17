@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -37,8 +38,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 Search for transactions that match the exact given tags where results are paginated.
 
 Example:
-$ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
-`),
+` + fmt.Sprintf("$ %v query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30\n", version.ClientName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
 			tagsStr = strings.Trim(tagsStr, "'")

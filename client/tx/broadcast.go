@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"io/ioutil"
@@ -70,9 +72,7 @@ func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
 flag and signed with the sign command. Read a transaction from [file_path] and
 broadcast it to a node. If you supply a dash (-) argument in place of an input
 filename, the command reads from standard input.
-
-$ <appcli> tx broadcast ./mytxn.json
-`),
+` + fmt.Sprintf("$ %v tx broadcast ./mytxn.json\n", version.ClientName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(codec)

@@ -692,6 +692,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
+// nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
@@ -782,7 +783,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-// runTx processes a transaction. The transactions is proccessed via an
+// runTx processes a transaction. The transactions is processed via an
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
@@ -797,8 +798,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
-		return
+		return sdk.ErrOutOfGas("no block gas left to run tx").Result()
 	}
 
 	var startingGas uint64
@@ -883,7 +883,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	if mode == runTxModeCheck {
-		return
+		return result
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped
@@ -893,7 +893,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasWanted = gasWanted
 
 	if mode == runTxModeSimulate {
-		return
+		return result
 	}
 
 	// only update state if all messages pass
@@ -901,7 +901,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	return
+	return result
 }
 
 // EndBlock implements the ABCI interface.

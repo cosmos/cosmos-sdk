@@ -56,7 +56,7 @@ var (
 			return uint64(RandIntBetween(r, 500, 1000))
 		},
 		"DepositParams/MinDeposit": func(r *rand.Rand) interface{} {
-			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))}
+			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
 		},
 		"VotingParams/VotingPeriod": func(r *rand.Rand) interface{} {
 			return time.Duration(r.Intn(2*172800)) * time.Second

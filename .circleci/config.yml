@@ -404,7 +404,7 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: scripts/get_node.sh
+      - run: ./scripts/get_node.sh
       - run: npm install dredd@11.0.1 --global
       - run: dredd
 

@@ -170,6 +170,7 @@ var (
 	NewGenesisState                    = types.NewGenesisState
 	DefaultGenesisState                = types.DefaultGenesisState
 	NewMultiStakingHooks               = types.NewMultiStakingHooks
+	NewMsgCreateValidator              = types.NewMsgCreateValidator
 	NewMsgEditValidator                = types.NewMsgEditValidator
 	NewMsgDelegate                     = types.NewMsgDelegate
 	NewMsgBeginRedelegate              = types.NewMsgBeginRedelegate
@@ -219,6 +220,8 @@ type (
 	QueryBondsParams          = querier.QueryBondsParams
 	QueryRedelegationParams   = querier.QueryRedelegationParams
 	QueryValidatorsParams     = querier.QueryValidatorsParams
+	Commission                = types.Commission
+	CommissionMsg             = types.CommissionMsg
 	DVPair                    = types.DVPair
 	DVVTriplet                = types.DVVTriplet
 	Delegation                = types.Delegation

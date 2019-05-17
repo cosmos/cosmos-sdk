@@ -183,7 +183,7 @@ $ gaiacli query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			var resp staking.DelegationResp
+			var resp staking.DelegationResponse
 			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
 				return err
 			}

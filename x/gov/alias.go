@@ -106,6 +106,8 @@ type (
 	MsgVote                 = types.MsgVote
 	Proposal                = types.Proposal
 	Proposals               = types.Proposals
+	ProposalQueue           = types.ProposalQueue
+	ProposalStatus          = types.ProposalStatus
 	TallyResult             = types.TallyResult
 	TextProposal            = types.TextProposal
 	SoftwareUpgradeProposal = types.SoftwareUpgradeProposal

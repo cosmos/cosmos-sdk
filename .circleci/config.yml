@@ -407,8 +407,10 @@ jobs:
       - run:
           name: Get Node and test REST implementation against documentation
           command: |
+            go get github.com/snikch/goodman/cmd/goodman
+            make build_contract_tests_hooks
             ./scripts/get_node.sh
-            npm install dredd@11.0.1 --global
+            # ~/.local/bin/dredd
             dredd
 
 workflows:

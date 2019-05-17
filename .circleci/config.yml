@@ -109,7 +109,7 @@ jobs:
           name: Test Gaia import/export simulation
           command: |
             export GO111MODULE=on
-            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaImportExport
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaImportExport
 
   test_sim_gaia_simulation_after_import:
     <<: *linux_defaults
@@ -125,7 +125,7 @@ jobs:
           name: Test Gaia import/export simulation
           command: |
             export GO111MODULE=on
-            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaSimulationAfterImport
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestGaiaSimulationAfterImport
 
   test_sim_gaia_multi_seed_long:
     <<: *linux_defaults
@@ -141,7 +141,7 @@ jobs:
           name: Test multi-seed Gaia simulation long
           command: |
             export GO111MODULE=on
-            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -157,7 +157,7 @@ jobs:
           name: Test multi-seed Gaia simulation short
           command: |
             export GO111MODULE=on
-            runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults

@@ -114,7 +114,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
 		Long: strings.TrimSpace(`
-Submit a deposit for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
+Submit a deposit for an active proposal. You can find the proposal-id by running "<appcli> query gov proposals":
 
 Example:
 $ <appcli> tx gov deposit 1 10stake --from mykey
@@ -158,7 +158,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
 		Long: strings.TrimSpace(`
-Submit a vote for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
+Submit a vote for an active proposal. You can find the proposal-id by running "<appcli> query gov proposals":
 
 Example:
 $ <appcli> tx gov vote 1 yes --from mykey

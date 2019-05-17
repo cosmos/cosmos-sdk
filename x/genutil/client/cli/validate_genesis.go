@@ -47,7 +47,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBas
 
 			// TODO test to make sure initchain doesn't panic
 
-			fmt.Printf("File at %s is a valid genesis file for gaiad\n", genesis)
+			fmt.Printf("File at %s is a valid genesis file\n", genesis)
 			return nil
 		},
 	}

@@ -22,7 +22,7 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query details of a single proposal",
 		Long: strings.TrimSpace(`
-Query details for a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for a proposal. You can find the proposal-id by running <appcli> query gov proposals:
 
 $ <appcli> query gov proposal 1
 `),
@@ -315,7 +315,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query deposits on a proposal",
 		Long: strings.TrimSpace(`
-Query details for all deposits on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for all deposits on a proposal. You can find the proposal-id by running <appcli> query gov proposals:
 
 $ <appcli> query gov deposits 1
 `),
@@ -368,7 +368,7 @@ func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Get the tally of a proposal vote",
 		Long: strings.TrimSpace(`
-Query tally of votes on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query tally of votes on a proposal. You can find the proposal-id by running <appcli> query gov proposals:
 
 $ <appcli> query gov tally 1
 `),

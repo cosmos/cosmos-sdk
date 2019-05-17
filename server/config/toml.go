@@ -33,7 +33,8 @@ func init() {
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for Gaia.
+// ParseConfig retrieves the default environment configuration for the
+// application.
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)

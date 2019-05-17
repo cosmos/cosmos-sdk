@@ -30,7 +30,7 @@ jobs:
           name: tools
           command: |
             make runsim tools TOOLS_DESTDIR=/tmp/workspace/bin
-            cp $(GOPATH)/bin/runsim /tmp/workspace/bin
+            cp $GOPATH/bin/runsim /tmp/workspace/bin
       - run:
           name: cache go modules
           command: |

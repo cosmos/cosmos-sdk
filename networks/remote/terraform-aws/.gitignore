@@ -1,5 +1,0 @@
-.terraform
-terraform.tfstate
-terraform.tfstate.backup
-terraform.tfstate.d
-.terraform.tfstate.lock.info

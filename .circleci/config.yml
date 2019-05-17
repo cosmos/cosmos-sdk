@@ -475,6 +475,9 @@ workflows:
       - test_cover:
           requires:
             - setup_dependencies
+      - dredd:
+          requires:
+            - setup_dependencies
       - localnet
       - upload_coverage:
           requires:

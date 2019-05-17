@@ -16,6 +16,9 @@ func main() {
 		panic(err)
 	}
 	addr, p, err := lcdtest.CreateAddr("contract_tester", "contract_tester", kb)
+	if err != nil {
+		panic(err)
+	}
 	// 85B0FC5010CBAEBB58C6914DFF890982F7404374 pause fun stairs ready amount radar travel wrist present guitar awake stand speed leg local giant taxi crime dirt arrange rifle width avocado virtual
 	fmt.Println(addr, p)
 	cleanup, valConsPubKeys, valOperAddrs, port := lcdtest.InitializeLCD(1, []sdk.AccAddress{addr}, true, "58645")

@@ -143,12 +143,12 @@ test_sim_gaia_nondeterminism:
 test_sim_gaia_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+	@go test -mod=readonly $(SIMAPP) -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
 		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+	@go test -mod=readonly $(SIMAPP) -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
 test_sim_gaia_import_export: runsim
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
@@ -169,7 +169,7 @@ test_sim_gaia_multi_seed: runsim
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
-	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
+	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 

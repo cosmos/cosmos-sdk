@@ -28,6 +28,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 
 	RegisterCodec(mapp.Cdc)
 	staking.RegisterCodec(mapp.Cdc)
+	supply.RegisterCodec()
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)

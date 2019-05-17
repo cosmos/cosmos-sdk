@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -18,18 +19,21 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
 	RegisterCodec(mApp.Cdc)
+	supply.RegisterCodec()
 
 	keyStaking := sdk.NewKVStoreKey(StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(TStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, supply.DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking, keySupply))
 	return mApp, keeper
 }
 
@@ -52,9 +56,8 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
-
 		validators := InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
+
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

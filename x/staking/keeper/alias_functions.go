@@ -103,7 +103,7 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 // StakingTokenSupply total staking tokens supply bonded and unbonded
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	params := k.GetParams(ctx)
-	unbondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
+	notBondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
 	if err != nil {
 		panic(err)
 	}
@@ -113,7 +113,7 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 		panic(err)
 	}
 
-	return bondedPool.GetCoins().AmountOf(params.BondDenom).Add(unbondedPool.GetCoins().AmountOf(params.BondDenom))
+	return bondedPool.GetCoins().AmountOf(params.BondDenom).Add(notBondedPool.GetCoins().AmountOf(params.BondDenom))
 }
 
 // BondedRatio the fraction of the staking tokens which are currently bonded
@@ -183,32 +183,34 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []sdk.Delegat
 }
 
 // GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, unbondedPool supply.PoolAccount) {
+func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, notBondedPool supply.PoolAccount) {
 	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
 	if err != nil {
 		return
 	}
 
-	unbondedPool, err = k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	notBondedPool, err = k.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
 	if err != nil {
 		return
 	}
 
-	return bondedPool, unbondedPool
+	return bondedPool, notBondedPool
 }
 
 // SetBondedPool sets the bonded tokens pool account
 func (k Keeper) SetBondedPool(ctx sdk.Context, newBondPool supply.PoolAccount) {
+	// safety check
 	if newBondPool.Name() != BondedTokensName {
 		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", BondedTokensName, newBondPool.Name()))
 	}
 	k.supplyKeeper.SetPoolAccount(ctx, newBondPool)
 }
 
-// SetUnbondedPool sets the unbonded tokens pool account
-func (k Keeper) SetUnbondedPool(ctx sdk.Context, newUnbondPool supply.PoolAccount) {
-	if newUnbondPool.Name() != UnbondedTokensName {
-		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", UnbondedTokensName, newUnbondPool.Name()))
+// SetNotBondedPool sets the not bonded tokens pool account
+func (k Keeper) SetNotBondedPool(ctx sdk.Context, newNotBondedPool supply.PoolAccount) {
+	// safety check
+	if newNotBondedPool.Name() != NotBondedTokensName {
+		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", NotBondedTokensName, newNotBondedPool.Name()))
 	}
-	k.supplyKeeper.SetPoolAccount(ctx, newUnbondPool)
+	k.supplyKeeper.SetPoolAccount(ctx, newNotBondedPool)
 }

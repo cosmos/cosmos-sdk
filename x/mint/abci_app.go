@@ -35,7 +35,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 		panic(err)
 	}
 
-	err = k.supplyKeeper.SendCoinsPoolToPool(ctx, ModuleName, staking.UnbondedTokensName, mintedCoins)
+	err = k.supplyKeeper.SendCoinsPoolToPool(ctx, ModuleName, staking.NotBondedTokensName, mintedCoins)
 	if err != nil {
 		panic(err)
 	}

@@ -121,7 +121,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	// Burn the slashed tokens from the unbonded pool account and the total supply.
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
-	err := k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+	err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
 	if err != nil {
 		panic(nil)
 	}
@@ -201,7 +201,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// Burn the slashed tokens from the unbonded pool account and the total supply.
 		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
 		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondingSlashAmount))
-		err := k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+		err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
 		if err != nil {
 			panic(err)
 		}
@@ -261,7 +261,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 
 		// Burn the slashed tokens from the unbonded pool account and the total supply.
 		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
-		err = k.supplyKeeper.BurnCoins(ctx, UnbondedTokensName, burnedCoins)
+		err = k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
 		if err != nil {
 			panic(err)
 		}

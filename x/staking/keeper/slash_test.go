@@ -23,9 +23,9 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	amt := sdk.TokensFromTendermintPower(power)
 	unbondedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), amt.MulRaw(numVals)))
 
-	unbondPool, err := keeper.supplyKeeper.GetPoolAccountByName(ctx, UnbondedTokensName)
+	notBondedPool, err := keeper.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
 	require.NoError(t, err)
-	unbondPool.SetCoins(unbondedCoins)
+	notBondedPool.SetCoins(unbondedCoins)
 
 	// add numVals validators
 	for i := int64(0); i < numVals; i++ {

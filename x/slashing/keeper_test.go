@@ -173,8 +173,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// validator should be bonded still
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	pool := sk.GetPool(ctx)
-	require.True(sdk.IntEq(t, amt, pool.BondedTokens))
+	bondPool, _ := sk.GetPools(ctx)
+	require.True(sdk.IntEq(t, amt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx))))
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -230,8 +230,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-	pool = sk.GetPool(ctx)
-	require.Equal(t, amt.Int64()-slashAmt, pool.BondedTokens.Int64())
+
+	bondPool, _ = sk.GetPools(ctx)
+	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 
 	// Validator start height should not have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
@@ -310,9 +311,9 @@ func TestHandleNewValidator(t *testing.T) {
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	pool := sk.GetPool(ctx)
+	bondPool, _ := sk.GetPools(ctx)
 	expTokens := sdk.TokensFromTendermintPower(100)
-	require.Equal(t, expTokens, pool.BondedTokens)
+	require.Equal(t, expTokens.Int64(), bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 }
 
 // Test a jailed validator being "down" twice

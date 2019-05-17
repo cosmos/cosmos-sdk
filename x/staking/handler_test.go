@@ -306,8 +306,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 
-	pool := keeper.GetPool(ctx)
-	require.Equal(t, bondAmount, pool.BondedTokens)
+	bondPool, _ := keeper.GetPools(ctx)
+	require.Equal(t, bondAmount.Int64(), bondPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
 	// just send the same msgbond multiple times
 	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)

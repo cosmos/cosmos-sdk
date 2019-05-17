@@ -13,10 +13,14 @@ import (
 
 const aminoCacheSize = 500
 
-// names used as root for pool module accounts
+// names used as root for pool module accounts:
+//
+// - NotBondedPool -> "NotBondedTokens"
+//
+// - BondedPool -> "BondedTokens"
 const (
-	UnbondedTokensName = "UnbondedTokens"
-	BondedTokensName   = "BondedTokens"
+	NotBondedTokensName = "NotBondedTokens"
+	BondedTokensName    = "BondedTokens"
 )
 
 // keeper of the staking store
@@ -88,9 +92,9 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store.Set(LastTotalPowerKey, b)
 }
 
-func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Int) {
-	unbondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondedTokens))
-	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, UnbondedTokensName, BondedTokensName, unbondedCoins)
+func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
+	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
+	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +102,7 @@ func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, unbondedTokens sdk.Int) 
 
 func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
-	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, UnbondedTokensName, bondedCoins)
+	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
 	if err != nil {
 		panic(err)
 	}

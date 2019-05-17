@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -38,7 +39,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 }
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, ak, k, sk := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -72,11 +73,14 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 
 	// allocate tokens as if both had voted and second was proposer
-	fees := sdk.Coins{
-		{sdk.DefaultBondDenom, sdk.NewInt(100)},
-	}
-	// TODO:
-	fck.SetCollectedFees(fees)
+	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+	feeCollector := ak.GetAccount(ctx, auth.FeeCollectorAddr)
+	require.NotNil(t, feeCollector)
+
+	err := feeCollector.SetCoins(fees)
+	require.NoError(t, err)
+	ak.SetAccount(ctx, feeCollector)
+
 	votes := []abci.VoteInfo{
 		{
 			Validator:       abciValA,
@@ -106,7 +110,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	communityTax := sdk.NewDec(0)
-	ctx, _, _, k, sk, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
+	ctx, ak, _, k, sk, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 10% commission
@@ -151,10 +155,16 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 
 	// allocate tokens as if both had voted and second was proposer
-	fees := sdk.Coins{
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)),
-	}
-	fck.SetCollectedFees(fees)
+	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)))
+
+	feeCollector := ak.GetAccount(ctx, auth.FeeCollectorAddr)
+	require.NotNil(t, feeCollector)
+
+	err := feeCollector.SetCoins(fees)
+	require.NoError(t, err)
+
+	ak.SetAccount(ctx, feeCollector)
+
 	votes := []abci.VoteInfo{
 		{
 			Validator:       abciValA,

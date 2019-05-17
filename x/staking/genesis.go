@@ -27,19 +27,19 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
 	// check if the unbonded and bonded pools accounts exist and create them if not
-	bondPool, unbondPool := keeper.GetPools(ctx)
+	bondPool, notBondedPool := keeper.GetPools(ctx)
 	if bondPool == nil {
 		bondPool = supply.NewPoolHolderAccount(BondedTokensName)
 		keeper.SetBondedPool(ctx, bondPool)
 	}
 
-	if unbondPool == nil {
-		unbondPool = supply.NewPoolHolderAccount(UnbondedTokensName)
-		keeper.SetUnbondedPool(ctx, unbondPool)
+	if notBondedPool == nil {
+		notBondedPool = supply.NewPoolHolderAccount(NotBondedTokensName)
+		keeper.SetNotBondedPool(ctx, notBondedPool)
 	}
 
 	// manually set the total supply for staking based on accounts if not provided
-	if unbondPool.GetCoins().AmountOf(data.Params.BondDenom).IsZero() {
+	if notBondedPool.GetCoins().AmountOf(data.Params.BondDenom).IsZero() {
 		var notBondedTokens sdk.Int
 		accountKeeper.IterateAccounts(ctx,
 			func(acc auth.Account) (stop bool) {
@@ -48,12 +48,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 				return false
 			},
 		)
-		err := unbondPool.SetCoins(sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens)))
+		err := notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens)))
 		if err != nil {
 			panic(err)
 		}
 
-		keeper.SetUnbondedPool(ctx, unbondPool)
+		keeper.SetNotBondedPool(ctx, notBondedPool)
 	}
 
 	keeper.SetParams(ctx, data.Params)

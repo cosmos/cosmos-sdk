@@ -126,22 +126,24 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
 
+	initTokens := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(Addrs)))))
+
+	sk.SetSupply(ctx, supply.NewSupply(totalSupply))
+
 	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, sk, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// create pool accounts
-	unbondPool := supply.NewPoolHolderAccount(UnbondedTokensName)
+	notBondedPool := supply.NewPoolHolderAccount(NotBondedTokensName)
 	bondPool := supply.NewPoolHolderAccount(BondedTokensName)
 
-	initTokens := sdk.TokensFromTendermintPower(initPower)
-	initCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens))
-	totalSupply := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), initTokens.MulRaw(int64(len(Addrs)))))
-
-	err = unbondPool.SetCoins(totalSupply)
+	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)
 
-	keeper.supplyKeeper.SetPoolAccount(ctx, unbondPool)
-	keeper.supplyKeeper.SetPoolAccount(ctx, bondPool)
+	keeper.SetBondedPool(ctx, bondPool)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {

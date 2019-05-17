@@ -144,8 +144,8 @@ const (
 	CodeInternal          = types.CodeInternal
 	CodeUnknownRequest    = types.CodeUnknownRequest
 
-	UnbondedTokensName = keeper.UnbondedTokensName
-	BondedTokensName   = keeper.BondedTokensName
+	NotBondedTokensName = keeper.NotBondedTokensName
+	BondedTokensName    = keeper.BondedTokensName
 )
 
 var (

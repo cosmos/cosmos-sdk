@@ -134,7 +134,7 @@ func RandomParams(r *rand.Rand) Params {
 		PastEvidenceFraction:      r.Float64(),
 		NumKeys:                   RandIntBetween(r, 2, 250),
 		EvidenceFraction:          r.Float64(),
-		InitialLivenessWeightings: []int{r.Intn(80), r.Intn(10), r.Intn(10)},
+		InitialLivenessWeightings: []int{RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}

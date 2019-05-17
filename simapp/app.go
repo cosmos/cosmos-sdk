@@ -26,7 +26,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-const appName = "GaiaApp"
+const appName = "SimApp"
 
 var (
 	// default home directories for gaiacli
@@ -67,7 +67,7 @@ func MakeCodec() *codec.Codec {
 }
 
 // Extended ABCI application
-type GaiaApp struct {
+type SimApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
@@ -103,9 +103,9 @@ type GaiaApp struct {
 	mm *sdk.ModuleManager
 }
 
-// NewGaiaApp returns a reference to an initialized GaiaApp.
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
+// NewSimApp returns a reference to an initialized SimApp.
+func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
+	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp)) *SimApp {
 
 	cdc := MakeCodec()
 
@@ -113,7 +113,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 
-	var app = &GaiaApp{
+	var app = &SimApp{
 		BaseApp:          bApp,
 		cdc:              cdc,
 		invCheckPeriod:   invCheckPeriod,
@@ -218,23 +218,23 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 }
 
 // application updates every begin block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // application updates every end block
-func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // application update at chain initialization
-func (app *GaiaApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, genesisState)
 }
 
 // load a particular height
-func (app *GaiaApp) LoadHeight(height int64) error {
+func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }

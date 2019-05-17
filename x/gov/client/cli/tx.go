@@ -56,7 +56,7 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
 
-$ gaiacli gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+$ <appcli> gov submit-proposal --proposal="path/to/proposal.json" --from mykey
 
 where proposal.json contains:
 
@@ -69,7 +69,7 @@ where proposal.json contains:
 
 is equivalent to
 
-$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ <appcli> gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -117,7 +117,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 Submit a deposit for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
 
 Example:
-$ gaiacli tx gov deposit 1 10stake --from mykey
+$ <appcli> tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -161,7 +161,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 Submit a vote for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
 
 Example:
-$ gaiacli tx gov vote 1 yes --from mykey
+$ <appcli> tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))

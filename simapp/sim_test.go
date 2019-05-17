@@ -581,7 +581,7 @@ func TestAppStateDeterminism(t *testing.T) {
 func BenchmarkInvariants(b *testing.B) {
 	// 1. Setup a simulated Gaia application
 	logger := log.NewNopLogger()
-	dir, _ := ioutil.TempDir("", "goleveldb-gaia-invariant-bench")
+	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
 
 	defer func() {

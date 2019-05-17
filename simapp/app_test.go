@@ -13,7 +13,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestGaiadExport(t *testing.T) {
+func TestSimAppExport(t *testing.T) {
 	db := db.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 	setGenesis(app)
@@ -26,7 +26,7 @@ func TestGaiadExport(t *testing.T) {
 
 func setGenesis(app *SimApp) error {
 	genesisState := NewDefaultGenesisState()
-	stateBytes, err := codec.MarshalJSONIndent(gapp.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 	if err != nil {
 		return err
 	}

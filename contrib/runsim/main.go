@@ -171,7 +171,7 @@ func makeCmd(cmdStr string) *exec.Cmd {
 }
 
 func makeFilename(seed int) string {
-	return fmt.Sprintf("gaia-simulation-seed-%d-date-%s", seed, time.Now().Format("01-02-2006_15:04:05.000000000"))
+	return fmt.Sprintf("app-simulation-seed-%d-date-%s", seed, time.Now().Format("01-02-2006_15:04:05.000000000"))
 }
 
 func worker(id int, seeds <-chan int) {

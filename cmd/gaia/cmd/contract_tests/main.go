@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/snikch/goodman/hooks"
 	trans "github.com/snikch/goodman/transaction"
@@ -12,22 +13,23 @@ func main() {
 	h := hooks.NewHooks()
 	server := hooks.NewServer(hooks.NewHooksRunner(h))
 	h.BeforeAll(func(t []*trans.Transaction) {
-		fmt.Println("before all modification")
+		time.Sleep(5 * time.Second)
+		fmt.Println("Sleep 5 seconds before all modification")
 	})
 	h.BeforeEach(func(t *trans.Transaction) {
 		fmt.Println("before each modification")
 	})
 	h.Before("/node_version > GET", func(t *trans.Transaction) {
-		fmt.Println("before modification")
+		fmt.Println("before node_version TEST")
 	})
 	h.BeforeEachValidation(func(t *trans.Transaction) {
 		fmt.Println("before each validation modification")
 	})
 	h.BeforeValidation("/node_version > GET", func(t *trans.Transaction) {
-		fmt.Println("before validation modification")
+		fmt.Println("before validation node_version TEST")
 	})
 	h.After("/node_version > GET", func(t *trans.Transaction) {
-		fmt.Println("after modification")
+		fmt.Println("after node_version TEST")
 	})
 	h.AfterEach(func(t *trans.Transaction) {
 		fmt.Println("after each modification")

@@ -197,7 +197,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // PostProcessResponse performs post processing for a REST response.
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent int) {
 	var output []byte
 
 	switch response.(type) {
@@ -206,11 +206,7 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 
 	default:
 		var err error
-		if indent {
-			output, err = cdc.MarshalJSONIndent(response, "", "  ")
-		} else {
-			output, err = cdc.MarshalJSON(response)
-		}
+		output, err = cdc.MarshalJSONIndent(response, "", strings.Repeat(" ", indent))
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -54,7 +55,7 @@ type CLIContext struct {
 	GenerateOnly  bool
 	FromAddress   sdk.AccAddress
 	FromName      string
-	Indent        bool
+	Indent        int
 	SkipConfirm   bool
 }
 
@@ -102,7 +103,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
-		Indent:        viper.GetBool(client.FlagIndentResponse),
+		Indent:        viper.GetInt(client.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
 	}
 }
@@ -270,23 +271,29 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 	var out []byte
 
+	nIndentChars := ctx.Indent
 	switch ctx.OutputFormat {
-	case "text":
-		out = []byte(toPrint.String())
-
-	case "json":
-		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
-		} else {
-			out, err = ctx.Codec.MarshalJSON(toPrint)
+	case "text", "human":
+		// human readable, override 0 indent
+		if nIndentChars == 0 {
+			nIndentChars = 4
 		}
+
+	case "json", "machine":
+		// compact, byte-saving machine parseable format
+		nIndentChars = 0
+
+	default:
+		return fmt.Errorf("invalid output format: %s", ctx.OutputFormat)
 	}
 
+	indentation := strings.Repeat(" ", nIndentChars)
+	out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", indentation)
 	if err != nil {
 		return
 	}
 
-	fmt.Println(string(out))
+	_, err = fmt.Println(string(out))
 	return
 }
 

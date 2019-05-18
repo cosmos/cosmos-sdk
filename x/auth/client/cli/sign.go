@@ -161,25 +161,14 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
-	switch generateSignatureOnly {
-	case true:
-		switch indent {
-		case true:
-			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent int, generateSignatureOnly bool) ([]byte, error) {
+	indentation := strings.Repeat(" ", indent)
 
-		default:
-			return cdc.MarshalJSON(newTx.Signatures[0])
-		}
-	default:
-		switch indent {
-		case true:
-			return cdc.MarshalJSONIndent(newTx, "", "  ")
-
-		default:
-			return cdc.MarshalJSON(newTx)
-		}
+	if generateSignatureOnly {
+		return cdc.MarshalJSONIndent(newTx.GetSignatures()[0], "", indentation)
 	}
+
+	return cdc.MarshalJSONIndent(newTx, "", indentation)
 }
 
 // printAndValidateSigs will validate the signatures of a given transaction over

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -114,16 +115,13 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 		newTx := auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []auth.StdSignature{newStdSig}, stdTx.GetMemo())
 
 		sigOnly := viper.GetBool(flagSigOnly)
+		indentation := strings.Repeat(" ", cliCtx.Indent)
 		var json []byte
-		switch {
-		case sigOnly && cliCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-		case sigOnly && !cliCtx.Indent:
-			json, err = cdc.MarshalJSON(newTx.Signatures[0])
-		case !sigOnly && cliCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-		default:
-			json, err = cdc.MarshalJSON(newTx)
+
+		if sigOnly {
+			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", indentation)
+		} else {
+			json, err = cdc.MarshalJSONIndent(newTx, "", indentation)
 		}
 		if err != nil {
 			return err
@@ -144,7 +142,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 
 		fmt.Fprintf(fp, "%s\n", json)
 
-		return
+		return nil
 	}
 }
 

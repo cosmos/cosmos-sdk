@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -51,12 +52,7 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var output []byte
-	if cliCtx.Indent {
-		output, err = cdc.MarshalJSONIndent(status, "", "  ")
-	} else {
-		output, err = cdc.MarshalJSON(status)
-	}
+	output, err := cdc.MarshalJSONIndent(status, "", strings.Repeat(" ", cliCtx.Indent))
 	if err != nil {
 		return err
 	}

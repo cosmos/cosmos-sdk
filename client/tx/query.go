@@ -76,13 +76,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 				return err
 			}
 
-			var output []byte
-			if cliCtx.Indent {
-				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
-			} else {
-				output, err = cdc.MarshalJSON(txs)
-			}
-
+			output, err := cdc.MarshalJSONIndent(txs, "", strings.Repeat(" ", cliCtx.Indent))
 			if err != nil {
 				return err
 			}

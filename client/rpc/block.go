@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -63,10 +64,8 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(res, "", "  ")
-	}
-	return cdc.MarshalJSON(res)
+	indentation := strings.Repeat(" ", cliCtx.Indent)
+	return cdc.MarshalJSONIndent(res, "", indentation)
 }
 
 // get the current blockchain height

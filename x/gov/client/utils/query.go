@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -69,11 +70,7 @@ func QueryDepositsByTxQuery(
 		}
 	}
 
-	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(deposits, "", "  ")
-	}
-
-	return cdc.MarshalJSON(deposits)
+	return cdc.MarshalJSONIndent(deposits, "", strings.Repeat(" ", cliCtx.Indent))
 }
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
@@ -114,11 +111,7 @@ func QueryVotesByTxQuery(
 		}
 	}
 
-	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(votes, "", "  ")
-	}
-
-	return cdc.MarshalJSON(votes)
+	return cdc.MarshalJSONIndent(votes, "", strings.Repeat(" ", cliCtx.Indent))
 }
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
@@ -151,11 +144,7 @@ func QueryVoteByTxQuery(
 					Option:     voteMsg.Option,
 				}
 
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(vote, "", "  ")
-				}
-
-				return cdc.MarshalJSON(vote)
+				return cdc.MarshalJSONIndent(vote, "", strings.Repeat(" ", cliCtx.Indent))
 			}
 		}
 	}
@@ -194,11 +183,7 @@ func QueryDepositByTxQuery(
 					Amount:     depMsg.Amount,
 				}
 
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(deposit, "", "  ")
-				}
-
-				return cdc.MarshalJSON(deposit)
+				return cdc.MarshalJSONIndent(deposit, "", strings.Repeat(" ", cliCtx.Indent))
 			}
 		}
 	}

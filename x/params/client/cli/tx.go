@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -22,9 +24,9 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
-		Long: strings.TrimSpace(`
-Submit a parameter proposal along with an initial deposit. The proposal details
-must be supplied via a JSON file.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a parameter proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
 
 IMPORTANT: Currently parameter changes are evaluated but not validated, so it is
 very important that any "value" change is valid (ie. correct type and within bounds)
@@ -35,7 +37,7 @@ Proper vetting of a parameter change proposal should prevent this from happening
 regardless. 
 
 Example:
-$ <appcli> tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
+$ %s tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
 where proposal.json contains:
 {
   "title": "Staking Param Change",
@@ -54,7 +56,10 @@ where proposal.json contains:
     }
   ]
 }
-`),
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().

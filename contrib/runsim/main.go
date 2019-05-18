@@ -25,7 +25,7 @@ var (
 		3012, 4728, 37827, 981928, 87821, 891823782,
 		989182, 89182391, 11, 22, 44, 77, 99, 2020,
 		3232, 123123, 124124, 582582, 18931893,
-		29892989, 30123012, 47284728,
+		29892989, 30123012, 47284728, 7601778,
 	}
 
 	// goroutine-safe process map
@@ -36,7 +36,7 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs       int = runtime.GOMAXPROCS(0)
+	jobs       = runtime.GOMAXPROCS(0)
 	pkgName    string
 	blocks     string
 	period     string

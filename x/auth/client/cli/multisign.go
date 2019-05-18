@@ -30,7 +30,7 @@ func GetMultiSignCommand(codec *amino.Codec) *cobra.Command {
 Read signature(s) from [signature] file(s), generate a multisig signature compliant to the
 multisig key [name], and attach it to the transaction read from [file]. Example:
 
-   gaiacli multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+   <appcli> multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.

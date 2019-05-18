@@ -200,8 +200,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "unbond [validator-addr] [amount]",
 		Short: "Unbond shares from a validator",
 		Args:  cobra.ExactArgs(2),
-
-		RunE: func(cmd *cobra.Command, args []string) error {		Long: strings.TrimSpace(
+		Long: strings.TrimSpace(
 			fmt.Sprintf(`Unbond an amount of bonded shares from a validator.
 
 Example:
@@ -210,6 +209,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 				version.ClientName,
 			),
 		),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).

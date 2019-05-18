@@ -1,2 +1,0 @@
-#4272 Merge gaiareplay functionality into gaiad replay.
-Drop `gaiareplay` in favor of new `gaiad replay` command.

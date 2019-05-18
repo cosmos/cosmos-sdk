@@ -42,7 +42,7 @@ var (
 	defaultMinSelfDelegation       = "1"
 )
 
-// GenTxCmd builds the gaiad gentx command.
+// GenTxCmd builds the application's gentx command.
 // nolint: errcheck
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
@@ -51,7 +51,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 		Use:   "gentx",
 		Short: "Generate a genesis tx carrying a self delegation",
 		Args:  cobra.NoArgs,
-		Long: fmt.Sprintf(`This command is an alias of the 'gaiad tx create-validator' command'.
+		Long: fmt.Sprintf(`This command is an alias of the 'tx create-validator' command'.
 
 It creates a genesis piece carrying a self delegation with the
 following delegation and commission default parameters:
@@ -156,7 +156,7 @@ following delegation and commission default parameters:
 			}
 
 			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
-				fmt.Println("Offline key passed in. Use `gaiacli tx sign` command to sign:")
+				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 

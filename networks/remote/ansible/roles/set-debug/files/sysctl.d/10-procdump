@@ -1,3 +1,0 @@
-kernel.core_uses_pid = 1
-kernel.core_pattern = /tmp/core-%e-%s-%u-%g-%p-%t
-fs.suid_dumpable = 2

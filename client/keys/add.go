@@ -2,24 +2,23 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"errors"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -68,7 +67,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Uint(client.FlagIndent, client.DefaultIndent, "Add indent to JSON response")
 	return cmd
 }
 
@@ -253,44 +252,20 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 }
 
 func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
-	output := viper.Get(cli.OutputFlag)
-
-	switch output {
-	case OutputFormatText:
-		fmt.Fprintln(os.Stderr)
-		printKeyInfo(info, keys.Bech32KeyOutput)
-
-		// print mnemonic unless requested not to.
-		if showMnemonic {
-			fmt.Fprintln(os.Stderr, "\n**Important** write this mnemonic phrase in a safe place.")
-			fmt.Fprintln(os.Stderr, "It is the only way to recover your account if you ever forget your password.")
-			fmt.Fprintln(os.Stderr, "")
-			fmt.Fprintln(os.Stderr, mnemonic)
-		}
-	case OutputFormatJSON:
-		out, err := keys.Bech32KeyOutput(info)
-		if err != nil {
-			return err
-		}
-
-		if showMnemonic {
-			out.Mnemonic = mnemonic
-		}
-
-		var jsonString []byte
-		if viper.GetBool(client.FlagIndentResponse) {
-			jsonString, err = cdc.MarshalJSONIndent(out, "", "  ")
-		} else {
-			jsonString, err = cdc.MarshalJSON(out)
-		}
-
-		if err != nil {
-			return err
-		}
-		fmt.Fprintln(os.Stderr, string(jsonString))
-	default:
-		return fmt.Errorf("I can't speak: %s", output)
+	out, err := keys.Bech32KeyOutput(info)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	if showMnemonic {
+		out.Mnemonic = mnemonic
+	}
+
+	jsonString, err := cdc.MarshalJSONIndent(out, "", strings.Repeat(" ", viper.GetInt(client.FlagIndent)))
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(os.Stderr, string(jsonString))
+	return err
 }

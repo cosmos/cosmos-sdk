@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -77,13 +78,10 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		}
 
 		var json []byte
-		if viper.GetBool(client.FlagIndentResponse) {
-			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
+		json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "",
+			strings.Repeat(" ", viper.GetInt(client.FlagIndent)))
+		if err != nil {
+			panic(err)
 		}
 
 		fmt.Fprintf(os.Stderr, "%s\n\n", json)

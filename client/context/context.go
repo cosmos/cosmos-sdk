@@ -101,7 +101,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
-		Indent:        viper.GetInt(client.FlagIndentResponse),
+		Indent:        viper.GetInt(client.FlagIndent),
 		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
 	}
 }

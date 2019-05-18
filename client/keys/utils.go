@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/viper"
@@ -113,24 +114,13 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		panic(err)
 	}
 
-	switch viper.Get(cli.OutputFlag) {
-	case OutputFormatText:
-		printTextInfos([]keys.KeyOutput{ko})
-
-	case OutputFormatJSON:
-		var out []byte
-		var err error
-		if viper.GetBool(client.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
-		} else {
-			out, err = cdc.MarshalJSON(ko)
-		}
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println(string(out))
+	out, err := cdc.MarshalJSONIndent(ko, "",
+		strings.Repeat(" ", viper.GetInt(client.FlagIndent)))
+	if err != nil {
+		panic(err)
 	}
+
+	fmt.Println(string(out))
 }
 
 func printInfos(infos []keys.Info) {
@@ -139,25 +129,11 @@ func printInfos(infos []keys.Info) {
 		panic(err)
 	}
 
-	switch viper.Get(cli.OutputFlag) {
-	case OutputFormatText:
-		printTextInfos(kos)
-
-	case OutputFormatJSON:
-		var out []byte
-		var err error
-
-		if viper.GetBool(client.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
-		} else {
-			out, err = cdc.MarshalJSON(kos)
-		}
-
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(out))
+	out, err := cdc.MarshalJSONIndent(kos, "", strings.Repeat(" ", viper.GetInt(client.FlagIndent)))
+	if err != nil {
+		panic(err)
 	}
+	fmt.Println(string(out))
 }
 
 func printTextInfos(kos []keys.KeyOutput) {

@@ -46,7 +46,7 @@ const (
 	FlagPrintResponse      = "print-response"
 	FlagDryRun             = "dry-run"
 	FlagGenerateOnly       = "generate-only"
-	FlagIndentResponse     = "indent"
+	FlagIndent             = "indent"
 	FlagListenAddr         = "laddr"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
@@ -66,7 +66,7 @@ var (
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
+		c.Flags().Uint(FlagIndent, DefaultIndent, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
@@ -82,7 +82,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
+		c.Flags().Uint(FlagIndent, DefaultIndent, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 		c.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")

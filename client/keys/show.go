@@ -51,7 +51,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
-	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(client.FlagIndent, false, "Add indent to JSON response")
 
 	return cmd
 }

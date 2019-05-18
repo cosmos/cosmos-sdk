@@ -287,8 +287,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 		return fmt.Errorf("invalid output format: %s", ctx.OutputFormat)
 	}
 
-	indentation := strings.Repeat(" ", nIndentChars)
-	out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", indentation)
+	out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", strings.Repeat(" ", nIndentChars))
 	if err != nil {
 		return
 	}

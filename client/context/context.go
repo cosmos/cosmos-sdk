@@ -40,7 +40,6 @@ type CLIContext struct {
 	Client        rpcclient.Client
 	Keybase       cryptokeys.Keybase
 	Output        io.Writer
-	OutputFormat  string
 	Height        int64
 	NodeURI       string
 	From          string
@@ -92,7 +91,6 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		NodeURI:       nodeURI,
 		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
-		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
@@ -269,30 +267,12 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors
 func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
-	var out []byte
-
-	nIndentChars := ctx.Indent
-	switch ctx.OutputFormat {
-	case "text", "human":
-		// human readable, override 0 indent
-		if nIndentChars == 0 {
-			nIndentChars = 4
-		}
-
-	case "json", "machine":
-		// compact, byte-saving machine parseable format
-		nIndentChars = 0
-
-	default:
-		return fmt.Errorf("invalid output format: %s", ctx.OutputFormat)
-	}
-
-	out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", strings.Repeat(" ", nIndentChars))
+	out, err := ctx.Codec.MarshalJSONIndent(toPrint, "", strings.Repeat(" ", ctx.Indent))
 	if err != nil {
 		return
 	}
 
-	_, err = fmt.Println(string(out))
+	_, err = fmt.Fprintf(ctx.Output, "%s", out)
 	return
 }
 

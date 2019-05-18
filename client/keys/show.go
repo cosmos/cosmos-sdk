@@ -15,7 +15,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -90,18 +89,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	isShowDevice := viper.GetBool(FlagDevice)
 	isShowMultiSig := viper.GetBool(flagShowMultiSig)
 
-	isOutputSet := false
-	tmp := cmd.Flag(cli.OutputFlag)
-	if tmp != nil {
-		isOutputSet = tmp.Changed
-	}
-
 	if isShowAddr && isShowPubKey {
 		return errors.New("cannot use both --address and --pubkey at once")
-	}
-
-	if isOutputSet && (isShowAddr || isShowPubKey) {
-		return errors.New("cannot use --output with --address or --pubkey")
 	}
 
 	bechKeyOut, err := getBechKeyOut(viper.GetString(FlagBechPrefix))

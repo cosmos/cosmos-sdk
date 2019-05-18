@@ -26,7 +26,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.HomeFlag, kbHome)
 
 	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
@@ -34,7 +33,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.NoError(t, err)
 
 	/// Test Text - Replace? >> FAIL
-	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp2()
@@ -42,7 +40,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.Error(t, err)
 
 	/// Test Text - Replace? Answer >> PASS
-	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
 	defer cleanUp3()
@@ -50,7 +47,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check JSON
-	viper.Set(cli.OutputFlag, OutputFormatJSON)
 	// Now enter password
 	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp4()

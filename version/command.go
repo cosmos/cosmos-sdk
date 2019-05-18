@@ -6,8 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -26,11 +24,6 @@ var (
 
 			if !viper.GetBool(flagLong) {
 				fmt.Println(verInfo.Version)
-				return nil
-			}
-
-			if viper.GetString(cli.OutputFlag) != "json" {
-				fmt.Println(verInfo)
 				return nil
 			}
 

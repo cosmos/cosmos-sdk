@@ -32,7 +32,6 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(client.FlagUseLedger, true)
 
 	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()

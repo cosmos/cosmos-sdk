@@ -38,7 +38,9 @@ regardless.
 
 Example:
 $ %s tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
-where proposal.json contains:
+
+Where proposal.json contains:
+
 {
   "title": "Staking Param Change",
   "description": "Update max validators",

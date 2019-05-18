@@ -64,8 +64,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	indentation := strings.Repeat(" ", cliCtx.Indent)
-	return cdc.MarshalJSONIndent(res, "", indentation)
+	return cdc.MarshalJSONIndent(res, "", strings.Repeat(" ", cliCtx.Indent))
 }
 
 // get the current blockchain height

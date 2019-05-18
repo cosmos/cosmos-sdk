@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
@@ -21,11 +22,16 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "proposal [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query details of a single proposal",
-		Long: strings.TrimSpace(`
-Query details for a proposal. You can find the proposal-id by running <appcli> query gov proposals:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details for a proposal. You can find the
+proposal-id by running "%s query gov proposals".
 
-$ <appcli> query gov proposal 1
-`),
+Example:
+$ %s query gov proposal 1
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -53,13 +59,17 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",
-		Long: strings.TrimSpace(`
-Query for a all proposals. You can filter the returns with the following flags:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for a all proposals. You can filter the returns with the following flags.
 
-$ <appcli> query gov proposals --depositor cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ <appcli> query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ <appcli> query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
-`),
+Example:
+$ %s query gov proposals --depositor cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %s query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
+`,
+				version.ClientName, version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bechDepositorAddr := viper.GetString(flagDepositor)
 			bechVoterAddr := viper.GetString(flagVoter)
@@ -137,12 +147,15 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "vote [proposal-id] [voter-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
-		Long: strings.TrimSpace(`
-Query details for a single vote on a proposal given its identifier.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details for a single vote on a proposal given its identifier.
 
 Example:
-$ <appcli> query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-`),
+$ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -200,12 +213,15 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "votes [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query votes on a proposal",
-		Long: strings.TrimSpace(`
-Query vote details for a single proposal by its identifier.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query vote details for a single proposal by its identifier.
 
 Example:
-$ <appcli> query gov votes 1
-`),
+$ %s query gov votes 1
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -255,12 +271,15 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "deposit [proposal-id] [depositer-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
-		Long: strings.TrimSpace(`
-Query details for a single proposal deposit on a proposal by its identifier.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details for a single proposal deposit on a proposal by its identifier.
 
 Example:
-$ <appcli> query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-`),
+$ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -314,11 +333,16 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "deposits [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query deposits on a proposal",
-		Long: strings.TrimSpace(`
-Query details for all deposits on a proposal. You can find the proposal-id by running <appcli> query gov proposals:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details for all deposits on a proposal.
+You can find the proposal-id by running "%s query gov proposals".
 
-$ <appcli> query gov deposits 1
-`),
+Example:
+$ %s query gov deposits 1
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -337,7 +361,7 @@ $ <appcli> query gov deposits 1
 			// check to see if the proposal is in the store
 			res, err := gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal with id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal with id %d: %s", proposalID, err)
 			}
 
 			var proposal gov.Proposal
@@ -367,11 +391,16 @@ func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "tally [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Get the tally of a proposal vote",
-		Long: strings.TrimSpace(`
-Query tally of votes on a proposal. You can find the proposal-id by running <appcli> query gov proposals:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query tally of votes on a proposal. You can find
+the proposal-id by running "%s query gov proposals".
 
-$ <appcli> query gov tally 1
-`),
+Example:
+$ %s query gov tally 1
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -384,7 +413,7 @@ $ <appcli> query gov tally 1
 			// check to see if the proposal is in the store
 			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
 			// Construct query
@@ -412,10 +441,15 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "params",
 		Short: "Query the parameters of the governance process",
-		Long: strings.TrimSpace(`Query the all the parameters for the governance process:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the all the parameters for the governance process.
 
-$ <appcli> query gov params
-`),
+Example:
+$ %s query gov params
+`,
+				version.ClientName,
+			),
+		),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -450,12 +484,17 @@ func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "param [param-type]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
-		Long: strings.TrimSpace(`Query the all the parameters for the governance process:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the all the parameters for the governance process.
 
-$ <appcli> query gov param voting
-$ <appcli> query gov param tallying
-$ <appcli> query gov param deposit
-`),
+Example:
+$ %s query gov param voting
+$ %s query gov param tallying
+$ %s query gov param deposit
+`,
+				version.ClientName, version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -493,10 +532,15 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "proposer [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the proposer of a governance proposal",
-		Long: strings.TrimSpace(`Query which address proposed a proposal with a given ID:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query which address proposed a proposal with a given ID.
 
-$ <appcli> query gov proposer 1
-`),
+Example:
+$ %s query gov proposer 1
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

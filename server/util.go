@@ -51,7 +51,7 @@ func NewContext(config *cfg.Config, logger log.Logger) *Context {
 // logger and config object.
 func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if cmd.Name() == version.VersionCmd.Name() {
+		if cmd.Name() == version.Cmd.Name() {
 			return nil
 		}
 		config, err := interceptLoadConfig()
@@ -152,7 +152,7 @@ func AddCommands(
 		tendermintCmd,
 		ExportCmd(ctx, cdc, appExport),
 		client.LineBreak,
-		version.VersionCmd,
+		version.Cmd,
 	)
 }
 

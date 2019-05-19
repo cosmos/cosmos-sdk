@@ -50,13 +50,17 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		if !ok {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
-		passes, tallyResults := tally(ctx, keeper, activeProposal)
+		passes, burnDeposits, tallyResults := tally(ctx, keeper, activeProposal)
 
 		var tagValue, logMsg string
 
-		if passes {
+		if burnDeposits {
+			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+		} else {
 			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
+		}
 
+		if passes {
 			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
 			cacheCtx, writeCache := ctx.CacheContext()
 
@@ -77,8 +81,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
 			}
 		} else {
-			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
-
 			activeProposal.Status = StatusRejected
 			tagValue = tags.ActionProposalRejected
 			logMsg = "rejected"

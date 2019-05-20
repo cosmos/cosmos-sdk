@@ -26,11 +26,11 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`cosmos-hub`](../cosmos-hub/)
 
-- Synced until commit [36dcd7b7](https://github.com/cosmos/cosmos-sdk/commit/36dcd7b7ad94cf59a8471506e10b937507d1dfa5)
+- Synced until commit [7558f760](https://github.com/cosmos/cosmos-sdk/commit/7558f7607918b6337a8b58b8f956d6776f503138) (2019-05-13)
 
 ### [`intro`](../intro/)
 
-- Synced until commit [160928b8](https://github.com/cosmos/cosmos-sdk/commit/160928b8f3586a2674cca136891e2cc15d4232d9) 
+- Synced until commit [7558f760](https://github.com/cosmos/cosmos-sdk/commit/7558f7607918b6337a8b58b8f956d6776f503138) (2019-05-13)
 
 ### [`modules`](../modules/)
 
@@ -38,5 +38,5 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`clients`](../clients/)
 
-- Synced until Commit [dfe58f8d](<https://github.com/cosmos/cosmos-sdk/commit/dfe58f8d8dff662aa6ff9d29503ee3cd3c1ec48c>)
+- Synced until Commit [7558f760](https://github.com/cosmos/cosmos-sdk/commit/7558f7607918b6337a8b58b8f956d6776f503138) (2019-05-13)
 

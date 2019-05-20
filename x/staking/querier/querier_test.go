@@ -39,7 +39,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(keeper, cdc)
+	querier := NewQuerier(keeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.NotNil(t, err)
@@ -95,7 +95,7 @@ func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
-	res, err := queryParameters(ctx, cdc, keeper)
+	res, err := queryParameters(ctx, keeper)
 	require.Nil(t, err)
 
 	var params types.Params
@@ -103,7 +103,7 @@ func TestQueryParametersPool(t *testing.T) {
 	require.Nil(t, errRes)
 	require.Equal(t, keeper.GetParams(ctx), params)
 
-	res, err = queryPool(ctx, cdc, keeper)
+	res, err = queryPool(ctx, keeper)
 	require.Nil(t, err)
 
 	var pool types.Pool
@@ -138,20 +138,20 @@ func TestQueryValidators(t *testing.T) {
 
 	for i, s := range status {
 		queryValsParams := NewQueryValidatorsParams(1, int(params.MaxValidators), s.String())
-		bz, errRes := cdc.MarshalJSON(queryValsParams)
-		require.Nil(t, errRes)
+		bz, err := cdc.MarshalJSON(queryValsParams)
+		require.Nil(t, err)
 
 		req := abci.RequestQuery{
 			Path: fmt.Sprintf("/custom/%s/%s", types.QuerierRoute, QueryValidators),
 			Data: bz,
 		}
 
-		res, err := queryValidators(ctx, cdc, req, keeper)
+		res, err := queryValidators(ctx, req, keeper)
 		require.Nil(t, err)
 
 		var validatorsResp []types.Validator
-		errRes = cdc.UnmarshalJSON(res, &validatorsResp)
-		require.Nil(t, errRes)
+		err = cdc.UnmarshalJSON(res, &validatorsResp)
+		require.Nil(t, err)
 
 		require.Equal(t, 1, len(validatorsResp))
 		require.ElementsMatch(t, validators[i].OperatorAddress, validatorsResp[0].OperatorAddress)
@@ -160,19 +160,19 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query each validator
 	queryParams := NewQueryValidatorParams(addrVal1)
-	bz, errRes := cdc.MarshalJSON(queryParams)
-	require.Nil(t, errRes)
+	bz, err := cdc.MarshalJSON(queryParams)
+	require.Nil(t, err)
 
 	query := abci.RequestQuery{
 		Path: "/custom/staking/validator",
 		Data: bz,
 	}
-	res, err := queryValidator(ctx, cdc, query, keeper)
+	res, err := queryValidator(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.Validator
-	errRes = cdc.UnmarshalJSON(res, &validator)
-	require.Nil(t, errRes)
+	err = cdc.UnmarshalJSON(res, &validator)
+	require.Nil(t, err)
 
 	require.Equal(t, queriedValidators[0], validator)
 }
@@ -209,7 +209,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
 
-	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
+	res, err := queryDelegatorValidators(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.Validator
@@ -222,7 +222,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorValidators(ctx, cdc, query, keeper)
+	_, err = queryDelegatorValidators(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query bonded validator
@@ -235,7 +235,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorValidator(ctx, cdc, query, keeper)
+	res, err = queryDelegatorValidator(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.Validator
@@ -247,7 +247,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorValidator(ctx, cdc, query, keeper)
+	_, err = queryDelegatorValidator(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query delegation
@@ -260,35 +260,38 @@ func TestQueryDelegation(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryDelegation(ctx, cdc, query, keeper)
+	res, err = queryDelegation(ctx, query, keeper)
 	require.Nil(t, err)
 
-	var delegationRes types.Delegation
+	var delegationRes types.DelegationResponse
 	errRes = cdc.UnmarshalJSON(res, &delegationRes)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delegation, delegationRes)
+	require.Equal(t, delegation.ValidatorAddress, delegationRes.ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationRes.DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationRes.Balance)
 
 	// Query Delegator Delegations
-
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
 	}
 
-	res, err = queryDelegatorDelegations(ctx, cdc, query, keeper)
+	res, err = queryDelegatorDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
-	var delegatorDelegations []types.Delegation
+	var delegatorDelegations types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
 	require.Nil(t, errRes)
 	require.Len(t, delegatorDelegations, 1)
-	require.Equal(t, delegation, delegatorDelegations[0])
+	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegatorDelegations[0].Balance)
 
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegation(ctx, cdc, query, keeper)
+	_, err = queryDelegation(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query validator delegations
@@ -301,14 +304,16 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryValidatorDelegations(ctx, cdc, query, keeper)
+	res, err = queryValidatorDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
-	var delegationsRes []types.Delegation
+	var delegationsRes types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, delegationsRes[0], delegation)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
+	require.Equal(t, delegation.Shares.TruncateInt(), delegationsRes[0].Balance)
 
 	// Query unbonging delegation
 	unbondingTokens := sdk.TokensFromTendermintPower(10)
@@ -327,7 +332,7 @@ func TestQueryDelegation(t *testing.T) {
 	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
+	res, err = queryUnbondingDelegation(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var unbondRes types.UnbondingDelegation
@@ -339,7 +344,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
+	_, err = queryUnbondingDelegation(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query Delegator Delegations
@@ -349,7 +354,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
+	res, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
 	var delegatorUbds []types.UnbondingDelegation
@@ -360,7 +365,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
+	_, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	// Query redelegation
@@ -379,14 +384,17 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
-	var redelRes []types.Redelegation
+	var redelRes types.RedelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redel, redelRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
 func TestQueryRedelegations(t *testing.T) {
@@ -407,7 +415,7 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
 
 	// delegator redelegations
@@ -420,14 +428,17 @@ func TestQueryRedelegations(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err := queryRedelegations(ctx, cdc, query, keeper)
+	res, err := queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
-	var redsRes []types.Redelegation
-	errRes = cdc.UnmarshalJSON(res, &redsRes)
+	var redelRes types.RedelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redelegation, redsRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 
 	// validator redelegations
 	queryValidatorParams := NewQueryValidatorParams(val1.GetOperator())
@@ -439,11 +450,14 @@ func TestQueryRedelegations(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, query, keeper)
 	require.Nil(t, err)
 
-	errRes = cdc.UnmarshalJSON(res, &redsRes)
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
-
-	require.Equal(t, redelegation, redsRes[0])
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }

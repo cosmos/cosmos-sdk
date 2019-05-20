@@ -16,7 +16,7 @@ There are three main pieces to consider:
 
 ### Installation and configuration
 
-We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
+We will describe the steps to run and interact with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
 First, you need to [install the software](../cosmos-hub/installation.md).
 
@@ -34,7 +34,7 @@ To generate a new key (default secp256k1 elliptic curve):
 gaiacli keys add <your_key_name>
 ```
 
-You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 5 informations:
+You will be asked to create a password (at least 8 characters) for this key-pair. This will return the information listed below:
 
 - `NAME`: Name of your key
 - `TYPE`: Type of your key, always `local`. 
@@ -63,20 +63,19 @@ gaiacli account <YOUR_ADDRESS>
 Here is the command to send coins via the CLI:
 
 ```bash
-gaiacli tx send <destination_address> <amount> \
-    --chain-id=<name_of_testnet_chain> \
-    --from=<key_name>
+gaiacli tx send <from_key_or_address> <to_address> <amount> \
+    --chain-id=<name_of_testnet_chain> 
 ```
 
 Parameters:
 
-- `<destination_address>`: Address of the recipient.
+- `<from_key_or_address>`: Key name or address of sending account.
+- `<to_address>`: Address of the recipient.
 - `<amount>`: This parameter accepts the format `<value|coinName>`, such as `10faucetToken`.
 
 Flags:
 
 - `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
-- `--from`: Name of the key of the sending account.
 
 #### Help
 
@@ -119,7 +118,7 @@ The API is divided into ICS standards for each category of endpoints. For
 example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to
 interact with tokens.
 
-To give more flexibility to implementers, we have included the ability to
+To give more flexibility to developers, we have included the ability to
 generate unsigned transactions, [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign)
 and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with
 different API endpoints. This allows service providers to use their own signing

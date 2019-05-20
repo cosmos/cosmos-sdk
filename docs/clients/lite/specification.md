@@ -23,11 +23,11 @@ need to build proof from ABCI state to AppHash. The proof contains two parts:
 
 ### IAVL Proof
 
-The proof has two types: existance proof and absence proof. If the query key exists in the IAVL
-store, then it returns key-value and its existance proof. On the other hand, if the key doesn't
-exist, then it only returns absence proof which can demostrate the key definitely doesn't exist.
+The proof has two types: existence proof and absence proof. If the query key exists in the IAVL
+store, then it returns key-value and its existence proof. On the other hand, if the key doesn't
+exist, then it only returns absence proof which can demonstrate the key definitely doesn't exist.
 
-### IAVL Existance Proof
+### IAVL Existence Proof
 
 ```go
 type CommitID struct {
@@ -88,7 +88,7 @@ Steps to verify proof:
 ### IAVL Absence Proof
 
 As we all know, all IAVL leaf nodes are sorted by the key of each leaf nodes. So we can calculate
-the postition of the target key in the whole key set of this IAVL tree. As shown below, we can find
+the position of the target key in the whole key set of this IAVL tree. As shown below, we can find
 out the left key and the right key. If we can demonstrate that both left key and right key
 definitely exist, and they are adjacent nodes. Thus the target key definitely doesn't exist.
 
@@ -184,16 +184,16 @@ func SimpleHashFromHashes(hashes [][]byte) []byte {
 ## Verify block header against validator set
 
 Above sections refer appHash frequently. But where does the trusted appHash come from? Actually,
-appHash exist in block header, so next we need to verify blocks header at specific height against
+the appHash exist in block header, next we need to verify blocks header at specific height against
 LCD trusted validator set. The validation flow is shown as follows:
 
 ![commit verification](./pics/commitValidation.png)
 
 When the trusted validator set doesn't match the block header, we need to try to update our
-validator set to the height of this block. LCD have a rule that each validator set change should not
-affact more than 1/3 voting power. Compare with the trusted validator set, if the voting power of
+validator set to the height of this block. LCD has a rule that each validator set change should not
+affect more than 1/3 voting power. Compare with the trusted validator set, if the voting power of
 target validator set changes more than 1/3. We have to verify if there are hidden validator set
-change before the target validator set. Only when all validator set changes obey this rule, can our
+changes before the target validator set. Only when all validator set changes obey this rule, can our
 validator set update be accomplished.
 
 For instance:

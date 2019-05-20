@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -60,10 +61,15 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 		Use:   "commission [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
-		Long: strings.TrimSpace(`Query validator commission rewards from delegators to that validator:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query validator commission rewards from delegators to that validator.
 
-$ gaiacli query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-`),
+Example:
+$ %s query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -90,10 +96,15 @@ func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Com
 		Use:   "slashes [validator] [start-height] [end-height]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Query distribution validator slashes",
-		Long: strings.TrimSpace(`Query all slashes of a validator for a given block range:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all slashes of a validator for a given block range.
 
-$ gaiacli query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100
-`),
+Example:
+$ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -136,11 +147,16 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 		Use:   "rewards [delegator-addr] [<validator-addr>]",
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Query all distribution delegator rewards or rewards from a particular validator",
-		Long: strings.TrimSpace(`Query all rewards earned by a delegator, optionally restrict to rewards from a single validator:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.
 
-$ gaiacli query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-$ gaiacli query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-`),
+Example:
+$ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -175,10 +191,15 @@ func GetCmdQueryCommunityPool(queryRoute string, cdc *codec.Codec) *cobra.Comman
 		Use:   "community-pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the amount of coins in the community pool",
-		Long: strings.TrimSpace(`Query all coins in the community pool which is under Governance control.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all coins in the community pool which is under Governance control.
 
-$ gaiacli query distr community-pool
-`),
+Example:
+$ %s query distr community-pool
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

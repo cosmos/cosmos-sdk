@@ -9,14 +9,11 @@ import (
 var minterKey = []byte{0x00} // the one key to use for the keeper store
 
 const (
-	// ModuleName is the name of the module
-	ModuleName = "minting"
-
 	// default paramspace for params keeper
-	DefaultParamspace = "mint"
+	DefaultParamspace = ModuleName
 
 	// StoreKey is the default store key for mint
-	StoreKey = "mint"
+	StoreKey = ModuleName
 
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey
@@ -51,7 +48,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(minterKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		panic("stored minter should not have been nil")
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &minter)
 	return
@@ -66,13 +63,13 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 
 //______________________________________________________________________
 
-// GetParams returns the total set of slashing parameters.
+// GetParams returns the total set of minting parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
-// set inflation params from the global param store
+// SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }

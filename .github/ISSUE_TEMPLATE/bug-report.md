@@ -16,7 +16,7 @@ v    Please also ensure that this is not a duplicate issue :)
 
 ## Version
 
-<!-- Output from `gaiad version --long` and `gaiacli version --long` -->
+<!-- git commit hash -->
 
 ## Steps to Reproduce
 

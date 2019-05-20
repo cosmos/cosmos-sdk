@@ -48,8 +48,8 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 //_____________________________________________________________________________________
 
 // return all delegations for a delegator
-func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) (
-	delegations []types.Delegation) {
+func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
+	delegations := make([]types.Delegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
@@ -62,12 +62,13 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 		delegations = append(delegations, delegation)
 		i++
 	}
+
 	return delegations
 }
 
 // return all unbonding-delegations for a delegator
-func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) (
-	unbondingDelegations []types.UnbondingDelegation) {
+func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
+	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
@@ -80,6 +81,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
 		i++
 	}
+
 	return unbondingDelegations
 }
 

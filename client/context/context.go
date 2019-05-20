@@ -144,7 +144,7 @@ func createVerifier() tmlite.Verifier {
 	node := rpcclient.NewHTTP(nodeURI, "/websocket")
 	cacheSize := 10 // TODO: determine appropriate cache size
 	verifier, err := tmliteProxy.NewVerifier(
-		chainID, filepath.Join(home, ".gaialite"),
+		chainID, filepath.Join(home, ".lite_verifier"),
 		node, log.NewNopLogger(), cacheSize,
 	)
 

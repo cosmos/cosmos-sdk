@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -28,7 +28,7 @@ const (
 )
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(codec *amino.Codec) *cobra.Command {
+func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -71,7 +71,10 @@ be generated via the 'multisign' command.
 		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode; Do not query a full node")
+	cmd.Flags().Bool(
+		flagOffline, false,
+		"Offline mode; Do not query a full node. --account and --sequence options would be ignored if offline is set",
+	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	cmd = client.PostCommands(cmd)[0]
@@ -89,11 +92,11 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) (err error) {
+func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
 		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
-			return
+			return err
 		}
 
 		offline := viper.GetBool(flagOffline)
@@ -134,35 +137,14 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
-		var json []byte
-
-		switch generateSignatureOnly {
-		case true:
-			switch cliCtx.Indent {
-			case true:
-				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-
-			default:
-				json, err = cdc.MarshalJSON(newTx.Signatures[0])
-			}
-
-		default:
-			switch cliCtx.Indent {
-			case true:
-				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-
-			default:
-				json, err = cdc.MarshalJSON(newTx)
-			}
-		}
-
+		json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
 
 		if viper.GetString(flagOutfile) == "" {
 			fmt.Printf("%s\n", json)
-			return
+			return nil
 		}
 
 		fp, err := os.OpenFile(
@@ -175,7 +157,28 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		defer fp.Close()
 		fmt.Fprintf(fp, "%s\n", json)
 
-		return
+		return nil
+	}
+}
+
+func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
+	switch generateSignatureOnly {
+	case true:
+		switch indent {
+		case true:
+			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+
+		default:
+			return cdc.MarshalJSON(newTx.Signatures[0])
+		}
+	default:
+		switch indent {
+		case true:
+			return cdc.MarshalJSONIndent(newTx, "", "  ")
+
+		default:
+			return cdc.MarshalJSON(newTx)
+		}
 	}
 }
 

@@ -9,21 +9,20 @@
 ```bash
 mkdir -p $HOME/go/bin
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export GOBIN=\$GOPATH/bin" >> ~/.bash_profile
-echo "export PATH=\$PATH:\$GOBIN" >> ~/.bash_profile
+echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.bash_profile
 echo "export GO111MODULE=on" >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
-::: 提示
-Cosmos SDK需要安装**Go 1.12.4+**
+::: tip
+Cosmos SDK需要安装**Go 1.12+**
 :::
 
 ### 安装二进制执行程序
 
-接下来，安装最新版本的Gaia。这里我们使用`master`分支，包含了最新的稳定发布版本。如果需要，请通过`git checkout`命令确定是正确的[发布版本](https://github.com/cosmos/cosmos-sdk/releases)。
+接下来，安装最新版本的Gaia。需要确认您 `git checkout 了正确的[发布版本](https://github.com/cosmos/cosmos-sdk/releases)。
 
-::: 警告
+::: warning
 对于主网，请确保你的版本大于或等于`v0.33.0`
 :::
 
@@ -31,7 +30,7 @@ Cosmos SDK需要安装**Go 1.12.4+**
 mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout master
+cd cosmos-sdk && git checkout <latest-release-tag>
 make tools install
 ```
 
@@ -64,4 +63,4 @@ build tags指定了可执行程序具有的特殊特性。
 | ledger    | 支持Ledger设备(硬件钱包) |
 
 ### 接下来
-然后你可以选择 加入公共测试网 或是 创建私有测试网。
+然后你可以选择 加入[主网](./join-mainnet.md)、[公共测试网](./join-testnet.md) 或是 [创建私有测试网](./deploy-testnet.md)。

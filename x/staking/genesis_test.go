@@ -17,7 +17,7 @@ import (
 )
 
 func TestInitGenesis(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
 	pool.BondedTokens = sdk.TokensFromTendermintPower(2)
@@ -42,8 +42,7 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].DelegatorShares = valTokens.ToDec()
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	vals := InitGenesis(ctx, keeper, accKeeper, genesisState)
 
 	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
@@ -72,7 +71,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, keeper := keep.CreateTestInput(t, false, 1000)
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
@@ -98,8 +97,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	}
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	vals := InitGenesis(ctx, keeper, accKeeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

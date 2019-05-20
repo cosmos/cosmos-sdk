@@ -4,9 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var (
-	msgCdc = codec.New()
-)
+// module codec
+var ModuleCdc = codec.New()
 
 // RegisterCodec registers all the necessary types and interfaces for
 // governance.
@@ -22,12 +21,12 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterProposalTypeCodec registers an external proposal content type defined
-// in another module for the internal msgCdc. This allows the MsgSubmitProposal
+// in another module for the internal ModuleCdc. This allows the MsgSubmitProposal
 // to be correctly Amino encoded and decoded.
 func RegisterProposalTypeCodec(o interface{}, name string) {
-	msgCdc.RegisterConcrete(o, name, nil)
+	ModuleCdc.RegisterConcrete(o, name, nil)
 }
 
 func init() {
-	RegisterCodec(msgCdc)
+	RegisterCodec(ModuleCdc)
 }

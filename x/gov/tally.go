@@ -26,7 +26,7 @@ func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 }
 
 // TODO: Break into several smaller functions for clarity
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
+func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burnDeposits bool, tallyResults TallyResult) {
 	results := make(map[VoteOption]sdk.Dec)
 	results[OptionYes] = sdk.ZeroDec()
 	results[OptionAbstain] = sdk.ZeroDec()
@@ -105,30 +105,30 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
 	if keeper.vs.TotalBondedTokens(ctx).IsZero() {
-		return false, tallyResults
+		return false, false, tallyResults
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVotingPower.Quo(keeper.vs.TotalBondedTokens(ctx).ToDec())
 	if percentVoting.LT(tallyParams.Quorum) {
-		return false, tallyResults
+		return false, true, tallyResults
 	}
 
 	// If no one votes (everyone abstains), proposal fails
 	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
-		return false, tallyResults
+		return false, false, tallyResults
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
 	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.Veto) {
-		return false, tallyResults
+		return false, true, tallyResults
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
 	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyParams.Threshold) {
-		return true, tallyResults
+		return true, false, tallyResults
 	}
 
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
-	return false, tallyResults
+	return false, false, tallyResults
 }

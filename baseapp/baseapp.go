@@ -536,6 +536,15 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
 
+	if req.Height > 0 {
+		cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+		if err != nil {
+			return sdk.ErrUnknownRequest(fmt.Sprintf("failed to load state at height %d; %s", req.Height, err)).QueryResult()
+		}
+
+		ctx = ctx.WithMultiStore(cacheMS)
+	}
+
 	// Passes the rest of the path as an argument to the querier.
 	//
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets

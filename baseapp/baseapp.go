@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime/debug"
+	"sort"
 	"strings"
 
 	"errors"
@@ -47,8 +48,8 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
-	router      Router               // handle any kind of message
-	queryRouter QueryRouter          // router for redirecting query calls
+	router      sdk.Router           // handle any kind of message
+	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	// set upon LoadVersion or LoadLatestVersion.
@@ -230,7 +231,7 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 		app.setConsensusParams(consensusParams)
 	}
 
-	// needed for `gaiad export`, which inits from store but never calls initchain
+	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
 	app.Seal()
 
@@ -246,7 +247,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 }
 
 // Router returns the router of the BaseApp.
-func (app *BaseApp) Router() Router {
+func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
 		// We cannot return a router when the app is sealed because we can't have
 		// any routes modified which would cause unexpected routing behavior.
@@ -256,7 +257,7 @@ func (app *BaseApp) Router() Router {
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.
-func (app *BaseApp) QueryRouter() QueryRouter { return app.queryRouter }
+func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
@@ -367,6 +368,22 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
+
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(res.Validators) {
+			panic(fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(res.Validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(res.Validators))
+		for i, val := range res.Validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
+	}
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
@@ -675,6 +692,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
+// nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
@@ -765,7 +783,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-// runTx processes a transaction. The transactions is proccessed via an
+// runTx processes a transaction. The transactions is processed via an
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
@@ -780,8 +798,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
-		return
+		return sdk.ErrOutOfGas("no block gas left to run tx").Result()
 	}
 
 	var startingGas uint64
@@ -866,7 +883,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	if mode == runTxModeCheck {
-		return
+		return result
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped
@@ -876,7 +893,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasWanted = gasWanted
 
 	if mode == runTxModeSimulate {
-		return
+		return result
 	}
 
 	// only update state if all messages pass
@@ -884,7 +901,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	return
+	return result
 }
 
 // EndBlock implements the ABCI interface.

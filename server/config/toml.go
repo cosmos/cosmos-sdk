@@ -27,13 +27,14 @@ var configTemplate *template.Template
 
 func init() {
 	var err error
-	tmpl := template.New("gaiaConfigFileTemplate")
+	tmpl := template.New("appConfigFileTemplate")
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for Gaia.
+// ParseConfig retrieves the default environment configuration for the
+// application.
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)

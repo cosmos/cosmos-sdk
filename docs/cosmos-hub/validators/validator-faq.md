@@ -89,8 +89,8 @@ uses reserved prefixes solely for this purpose: `cosmosvaloper` and `cosmosvalop
 
 After a validator is created with a `create-validator` transaction, they can be in three states:
 
-- `in validator set`: Validator is in the active set and participates in consensus. Validator is earning rewards and can be slashed for misbehaviour.
-- `jailed`: Validator misbehaved and is in jail, i.e. outisde of the validator set. If the jailing is due to being offline for too long, the validator can send an `unjail` transaction in order to re-enter the validator set. If the jailing is due to double signing, the validator cannot unjail.  
+- `in validator set`: Validator is in the active set and participates in consensus. Validator is earning rewards and can be slashed for misbehavior.
+- `jailed`: Validator misbehaved and is in jail, i.e. outside of the validator set. If the jailing is due to being offline for too long, the validator can send an `unjail` transaction in order to re-enter the validator set. If the jailing is due to double signing, the validator cannot unjail.  
 - `unbonded`: Validator is not in the active set, and therefore not signing blocs. Validator cannot be slashed, and does not earn any reward. It is still possible to delegate Atoms to this validator. Un-delegating from an `unbonded` validator is immediate.
 
 
@@ -107,7 +107,7 @@ The minimum is `1 atom`.
 Delegators are free to choose validators according to their own subjective criteria. This said, criteria anticipated to be important include:
 
 * **Amount of self-delegated Atoms:** Number of Atoms a validator self-delegated to themselves. A validator with a higher amount of self-delegated Atoms has more skin in the game, making them more liable for their actions.
-* **Amount of delegated Atoms:** Total number of Atoms delegated to a validator. A high voting power shows that the community trusts this validator, but it also means that this validator is a bigger target for hackers. Bigger validators also decrease the decentralisation of the network.
+* **Amount of delegated Atoms:** Total number of Atoms delegated to a validator. A high voting power shows that the community trusts this validator, but it also means that this validator is a bigger target for hackers. Bigger validators also decrease the decentralization of the network.
 * **Commission rate:** Commission applied on revenue by validators before it is distributed to their delegators. 
 * **Track record:** Delegators will likely look at the track record of the validators they plan to delegate to. This includes seniority, past votes on proposals, historical average uptime and how often the node was compromised.
 

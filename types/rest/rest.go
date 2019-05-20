@@ -221,9 +221,10 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	_, _ = w.Write(output)
 }
 
-// ParseHTTPArgs parses the request's URL and returns a slice containing all arguments pairs.
-// It separates page and limit used for pagination
-func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
+// ParseHTTPArgsWithLimit parses the request's URL and returns a slice containing
+// all arguments pairs. It separates page and limit used for pagination where a
+// default limit can be provided.
+func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, page, limit int, err error) {
 	tags = make([]string, 0, len(r.Form))
 	for key, values := range r.Form {
 		if key == "page" || key == "limit" {
@@ -258,7 +259,7 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 
 	limitStr := r.FormValue("limit")
 	if limitStr == "" {
-		limit = DefaultLimit
+		limit = defaultLimit
 	} else {
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil {
@@ -269,4 +270,10 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 	}
 
 	return tags, page, limit, nil
+}
+
+// ParseHTTPArgs parses the request's URL and returns a slice containing all
+// arguments pairs. It separates page and limit used for pagination.
+func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
+	return ParseHTTPArgsWithLimit(r, DefaultLimit)
 }

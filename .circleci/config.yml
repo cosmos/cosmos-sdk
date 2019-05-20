@@ -3,31 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.12.4
-  environment:
-    GOBIN: /tmp/workspace/bin
-
-
-############
-#
-# Configure macos integration tests
-
-macos_config: &macos_defaults
-  macos:
-    xcode: "10.1.0"
-  working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
-  environment:
-    GO_VERSION: "1.12.4"
-
-set_macos_env: &macos_env
-  run:
-    name: Set environment
-    command: |
-      echo 'export PATH=$PATH:$HOME/go/bin' >> $BASH_ENV
-      echo 'export GOPATH=$HOME/project' >> $BASH_ENV
-      echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
-      echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
-      echo 'export GO111MODULE=on'
+    - image: circleci/golang:1.12.5
 
 ############
 #
@@ -39,12 +15,6 @@ docs_update: &docs_deploy
     - image: tendermintdev/jq_curl
   environment:
     AWS_REGION: us-east-1
-
-deps: &dependencies
-  run:
-    name: dependencies
-    command: |
-      export PATH="$GOBIN:$PATH"
 
 jobs:
   setup_dependencies:
@@ -59,19 +29,20 @@ jobs:
       - run:
           name: tools
           command: |
-            export PATH="$GOBIN:$PATH"
-            make tools
-      - *dependencies
+            make runsim tools TOOLS_DESTDIR=/tmp/workspace/bin
+            cp $GOPATH/bin/runsim /tmp/workspace/bin
       - run:
-          name: binaries
+          name: cache go modules
           command: |
-            export PATH="$GOBIN:$PATH"
             make go-mod-cache
-            make install
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - run:
+          name: build
+          command: |
+            make build
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -85,138 +56,108 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Lint source
           command: |
-            export PATH="$GOBIN:$PATH"
+            export PATH=/tmp/workspace/bin:$PATH
             make ci-lint
 
-  integration_tests:
+  test_sim_app_nondeterminism:
     <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test cli
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make test_cli
-
-  test_sim_gaia_nondeterminism:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: Test individual module simulations
           command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_gaia_nondeterminism
+            make test_sim_app_nondeterminism
 
-  test_sim_gaia_fast:
+  test_sim_app_fast:
     <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test full Gaia simulation
+          name: Test full application simulation
           command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_gaia_fast
+            make test_sim_app_fast
 
-  test_sim_gaia_import_export:
+  test_sim_app_import_export:
     <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test Gaia import/export simulation
+          name: Test application import/export simulation
           command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_gaia_import_export
-
-  test_sim_gaia_simulation_after_import:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - *dependencies
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test Gaia import/export simulation
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_gaia_simulation_after_import
-
-  test_sim_gaia_multi_seed_long:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - *dependencies
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test multi-seed Gaia simulation long
-          command: |
-            export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
-            make runsim
-            runsim 500 50 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppImportExport
 
-  test_sim_gaia_multi_seed:
+  test_sim_app_simulation_after_import:
     <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: Test multi-seed Gaia simulation short
+          name: Test application import/export simulation
           command: |
-            export PATH="$GOBIN:$PATH"
             export GO111MODULE=on
-            make runsim
-            runsim 50 10 TestFullGaiaSimulation
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppSimulationAfterImport
+
+  test_sim_app_multi_seed_long:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: Test multi-seed application simulation long
+          command: |
+            export GO111MODULE=on
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullAppSimulation
+
+  test_sim_app_multi_seed:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: Test multi-seed application simulation short
+          command: |
+            export GO111MODULE=on
+            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullAppSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -225,7 +166,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - run: mkdir -p /tmp/logs
       - restore_cache:
           keys:
@@ -233,10 +173,9 @@ jobs:
       - run:
           name: Run tests
           command: |
-            export PATH="$GOBIN:$PATH"
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             export GO111MODULE=on
-            for pkg in $(go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
+            for pkg in $(go list ./... | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(echo "$pkg" | sed 's|[/.]|_|g')
               go test -mod=readonly -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
@@ -254,7 +193,6 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - *dependencies
       - run:
           name: gather
           command: |
@@ -277,34 +215,6 @@ jobs:
       - run:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
-
-  localnet:
-      working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
-      machine:
-        image: circleci/classic:latest
-      environment:
-        GOBIN: /home/circleci/.go_workspace/bin
-        GOPATH: /home/circleci/.go_workspace/
-        GOOS: linux
-        GOARCH: amd64
-        GO_VERSION: "1.12.4"
-      parallelism: 1
-      steps:
-        - checkout
-        - run:
-            name: run localnet and exit on failure
-            command: |
-              pushd /tmp
-              wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
-              sudo tar -xvf go$GO_VERSION.linux-amd64.tar.gz
-              sudo rm -rf /usr/local/go
-              sudo mv go /usr/local
-              popd
-              set -x
-              make tools
-              make build-linux
-              make localnet-start
-              ./scripts/localnet-blocks-test.sh 40 5 10 localhost
 
   deploy_docs:
     <<: *docs_deploy
@@ -330,89 +240,10 @@ jobs:
                 echo "Website build started"
             fi
 
-  macos_ci:
-    <<: *macos_defaults
-    steps:
-      - *macos_env
-      - run:
-          name: Install go
-          command: |
-            source $BASH_ENV
-            curl -L -O https://dl.google.com/go/go$GO_VERSION.darwin-amd64.tar.gz
-            tar -C $HOME -xzf go$GO_VERSION.darwin-amd64.tar.gz
-            rm go$GO_VERSION.darwin-amd64.tar.gz
-            go version
-      - checkout
-      - run:
-          name: Install SDK
-          command: |
-            source $BASH_ENV
-            make tools
-            make install
-      - run:
-          name: Integration tests
-          command:
-            source $BASH_ENV
-            make test_cli
-      - run:
-          name: Test full gaia simulation
-          command: |
-            source $BASH_ENV
-            make test_sim_gaia_fast
-
-  docker_image:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run: |
-          GAIAD_VERSION=''
-          if [ "${CIRCLE_BRANCH}" = "master" ]; then
-            GAIAD_VERSION="stable"
-          elif [ "${CIRCLE_BRANCH}" = "develop" ]; then
-            GAIAD_VERSION="develop"
-          fi
-          if [ -z "${GAIAD_VERSION}" ]; then
-            docker build .
-          else
-            docker build -t tendermint/gaia:$GAIAD_VERSION .
-            docker login --password-stdin -u $DOCKER_USER <<<$DOCKER_PASS
-            docker push tendermint/gaia:$GAIAD_VERSION
-          fi
-
-  docker_tagged:
-    <<: *linux_defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run: |
-          docker build -t tendermint/gaia:$CIRCLE_TAG .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaia:$CIRCLE_TAG
-
 workflows:
   version: 2
   test-suite:
     jobs:
-      - docker_image:
-          requires:
-            - setup_dependencies
-      - docker_tagged:
-          filters:
-            tags:
-              only:
-                - /^v.*/
-            branches:
-              ignore:
-                - /.*/
-          requires:
-            - setup_dependencies
       - macos_ci:
           filters:
             branches:
@@ -434,25 +265,22 @@ workflows:
       - lint:
           requires:
             - setup_dependencies
-      - integration_tests:
+      - test_sim_app_nondeterminism:
           requires:
             - setup_dependencies
-      - test_sim_gaia_nondeterminism:
+      - test_sim_app_fast:
           requires:
             - setup_dependencies
-      - test_sim_gaia_fast:
+      - test_sim_app_import_export:
           requires:
             - setup_dependencies
-      - test_sim_gaia_import_export:
+      - test_sim_app_simulation_after_import:
           requires:
             - setup_dependencies
-      - test_sim_gaia_simulation_after_import:
+      - test_sim_app_multi_seed:
           requires:
             - setup_dependencies
-      - test_sim_gaia_multi_seed:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_multi_seed_long:
+      - test_sim_app_multi_seed_long:
           requires:
             - setup_dependencies
           filters:
@@ -463,7 +291,13 @@ workflows:
       - test_cover:
           requires:
             - setup_dependencies
-      - localnet
       - upload_coverage:
           requires:
             - test_cover
+      - reproducible_builds:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - setup_dependencies

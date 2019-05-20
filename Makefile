@@ -5,63 +5,12 @@ PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
-GOBIN ?= $(GOPATH)/bin
-GOSUM := $(shell which gosum)
+BINDIR ?= $(GOPATH)/bin
+SIMAPP = github.com/cosmos/cosmos-sdk/simapp
 
 export GO111MODULE = on
 
-# process build tags
-
-build_tags = netgo
-ifeq ($(LEDGER_ENABLED),true)
-  ifeq ($(OS),Windows_NT)
-    GCCEXE = $(shell where gcc.exe 2> NUL)
-    ifeq ($(GCCEXE),)
-      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
-    else
-      build_tags += ledger
-    endif
-  else
-    UNAME_S = $(shell uname -s)
-    ifeq ($(UNAME_S),OpenBSD)
-      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
-    else
-      GCC = $(shell command -v gcc 2> /dev/null)
-      ifeq ($(GCC),)
-        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
-      else
-        build_tags += ledger
-      endif
-    endif
-  endif
-endif
-
-ifeq ($(WITH_CLEVELDB),yes)
-  build_tags += gcc
-endif
-build_tags += $(BUILD_TAGS)
-build_tags := $(strip $(build_tags))
-
-# process linker flags
-
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=gaia \
-	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
-
-ifneq ($(GOSUM),)
-ldflags += -X github.com/cosmos/cosmos-sdk/version.GoSumHash=$(shell $(GOSUM) go.sum)
-endif
-
-ifeq ($(WITH_CLEVELDB),yes)
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
-ldflags += $(LDFLAGS)
-ldflags := $(strip $(ldflags))
-
-BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
-
-all: tools install lint test
+all: tools build lint test
 
 # The below include contains the tools target.
 include contrib/devtools/Makefile
@@ -69,32 +18,16 @@ include contrib/devtools/Makefile
 ########################################
 ### CI
 
-ci: tools install test_cover lint test
+ci: tools build test_cover lint test
 
 ########################################
-### Build/Install
+### Build
 
 build: go.sum
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
-	go build -mod=readonly $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
-endif
-
-build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+	@go build -mod=readonly ./...
 
 update_gaia_lite_docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
-
-install: go.sum check-ledger update_gaia_lite_docs
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
-
-install_debug: go.sum
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
 dist:
 	@bash publish/dist.sh
@@ -119,6 +52,12 @@ draw_deps: tools
 clean:
 	rm -rf snapcraft-local.yaml build/
 
+distclean: clean
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
 
 ########################################
 ### Documentation
@@ -133,13 +72,10 @@ godocs:
 
 test: test_unit
 
-test_cli: build
-	@go test -mod=readonly -p 4 `go list ./cmd/gaia/cli_test/...` -tags=cli_test
+test_ledger_mock:
+		@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
 
-test_ledger:
-    # First test with mock
-	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
-    # Now test with a real device
+test_ledger: test_ledger_mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
@@ -148,59 +84,60 @@ test_unit:
 test_race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test_sim_gaia_nondeterminism:
+test_sim_app_nondeterminism:
 	@echo "Running nondeterminism test..."
-	@go test -mod=readonly ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
+	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
-test_sim_gaia_custom_genesis_fast:
+test_sim_app_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
+	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
 		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
-test_sim_gaia_fast:
-	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test -mod=readonly ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+test_sim_app_fast:
+	@echo "Running quick application simulation. This may take several minutes..."
+	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
 
-test_sim_gaia_import_export: runsim
-	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaImportExport
+test_sim_app_import_export: runsim
+	@echo "Running application import/export simulation. This may take several minutes..."
+	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppImportExport
 
-test_sim_gaia_simulation_after_import: runsim
-	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	$(GOBIN)/runsim 50 5 TestGaiaSimulationAfterImport
+test_sim_app_simulation_after_import: runsim
+	@echo "Running application simulation-after-import. This may take several minutes..."
+	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppSimulationAfterImport
 
-test_sim_gaia_custom_genesis_multi_seed: runsim
+test_sim_app_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(GOBIN)/runsim -g ${HOME}/.gaiad/config/genesis.json 400 5 TestFullGaiaSimulation
+	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json $(SIMAPP) 400 5 TestFullAppSimulation
 
-test_sim_gaia_multi_seed: runsim
-	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	$(GOBIN)/runsim 400 5 TestFullGaiaSimulation
+test_sim_app_multi_seed: runsim
+	@echo "Running multi-seed application simulation. This may take awhile!"
+	$(BINDIR)/runsim $(SIMAPP) 400 5 TestFullAppSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
-	@go test -mod=readonly ./cmd/gaia/app -benchmem -bench=BenchmarkInvariants -run=^$ \
+	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
 	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
-runsim: $(GOBIN)/runsim
-$(GOBIN)/runsim: cmd/gaia/contrib/runsim/main.go
-	go install github.com/cosmos/cosmos-sdk/cmd/gaia/contrib/runsim
+runsim: $(BINDIR)/runsim
+$(BINDIR)/runsim: contrib/runsim/main.go
+	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
-test_sim_gaia_benchmark:
-	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$  \
+
+test_sim_app_benchmark:
+	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
 
-test_sim_gaia_profile:
-	@echo "Running Gaia benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@go test -mod=readonly -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ \
+test_sim_app_profile:
+	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
+	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
@@ -246,22 +183,6 @@ devdoc_update:
 
 
 ########################################
-### Local validator nodes using docker and docker-compose
-
-build-docker-gaiadnode:
-	$(MAKE) -C networks/local
-
-# Run a 4-node testnet locally
-localnet-start: localnet-stop
-	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 ; fi
-	docker-compose up -d
-
-# Stop testnet
-localnet-stop:
-	docker-compose down
-
-
-########################################
 ### Packaging
 
 snapcraft-local.yaml: snapcraft-local.yaml.in
@@ -270,11 +191,9 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: install install_debug dist clean \
-draw_deps test test_cli test_unit \
-test_cover lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
-build-linux build-docker-gaiadnode localnet-start localnet-stop \
-format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
-test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
-test_sim_gaia_multi_seed test_sim_gaia_import_export test_sim_benchmark_invariants \
+.PHONY: build dist clean draw_deps test test_unit test_cover lint \
+benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
+format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
+test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \
+test_sim_app_multi_seed test_sim_app_import_export test_sim_benchmark_invariants \
 go-mod-cache

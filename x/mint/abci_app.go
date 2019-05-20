@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Inflate every block, update inflation parameters once per hour
+// mint new tokens for the previous block
 func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	// fetch stored minter & params

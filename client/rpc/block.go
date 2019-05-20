@@ -137,16 +137,12 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // REST handler to get the latest block
 func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		height, err := GetChainHeight(cliCtx)
+		output, err := getBlock(cliCtx, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		output, err := getBlock(cliCtx, &height)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+
 		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

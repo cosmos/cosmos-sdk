@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -68,12 +68,8 @@ func DefaultGenesisState() GenesisState {
 
 // Checks whether 2 GenesisState structs are equivalent.
 func (data GenesisState) Equal(data2 GenesisState) bool {
-	cdc := codec.New()
-	RegisterCodec(cdc)
-
-	b1 := cdc.MustMarshalBinaryBare(data)
-	b2 := cdc.MustMarshalBinaryBare(data2)
-
+	b1 := types.ModuleCdc.MustMarshalBinaryBare(data)
+	b2 := types.ModuleCdc.MustMarshalBinaryBare(data2)
 	return bytes.Equal(b1, b2)
 }
 

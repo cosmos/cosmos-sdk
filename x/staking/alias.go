@@ -12,19 +12,24 @@ type (
 	FeeCollectionKeeper     = types.FeeCollectionKeeper
 	BankKeeper              = types.BankKeeper
 	DistributionKeeper      = types.DistributionKeeper
+	AccountKeeper           = types.AccountKeeper
 	Validator               = types.Validator
 	Validators              = types.Validators
 	Description             = types.Description
 	Commission              = types.Commission
 	CommissionMsg           = types.CommissionMsg
 	Delegation              = types.Delegation
+	DelegationResp          = types.DelegationResponse
+	DelegationResponses     = types.DelegationResponses
 	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation
 	UnbondingDelegations    = types.UnbondingDelegations
 	Redelegation            = types.Redelegation
 	Redelegations           = types.Redelegations
+	RedelegationResponses   = types.RedelegationResponses
 	Params                  = types.Params
 	Pool                    = types.Pool
+	MultiStakingHooks       = types.MultiStakingHooks
 	MsgCreateValidator      = types.MsgCreateValidator
 	MsgEditValidator        = types.MsgEditValidator
 	MsgDelegate             = types.MsgDelegate
@@ -80,7 +85,9 @@ var (
 	KeyMaxValidators  = types.KeyMaxValidators
 	KeyBondDenom      = types.KeyBondDenom
 
+	ModuleCdc             = types.ModuleCdc
 	DefaultParams         = types.DefaultParams
+	NewParams             = types.NewParams
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
@@ -90,6 +97,7 @@ var (
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
+	NewMultiStakingHooks  = types.NewMultiStakingHooks
 
 	NewMsgCreateValidator = types.NewMsgCreateValidator
 	NewMsgEditValidator   = types.NewMsgEditValidator
@@ -97,11 +105,12 @@ var (
 	NewMsgUndelegate      = types.NewMsgUndelegate
 	NewMsgBeginRedelegate = types.NewMsgBeginRedelegate
 
-	NewQuerier               = querier.NewQuerier
-	NewQueryDelegatorParams  = querier.NewQueryDelegatorParams
-	NewQueryValidatorParams  = querier.NewQueryValidatorParams
-	NewQueryBondsParams      = querier.NewQueryBondsParams
-	NewQueryValidatorsParams = querier.NewQueryValidatorsParams
+	NewQuerier                 = querier.NewQuerier
+	NewQueryDelegatorParams    = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams    = querier.NewQueryValidatorParams
+	NewQueryBondsParams        = querier.NewQueryBondsParams
+	NewQueryValidatorsParams   = querier.NewQueryValidatorsParams
+	NewQueryRedelegationParams = querier.NewQueryRedelegationParams
 )
 
 const (
@@ -122,6 +131,7 @@ const (
 )
 
 const (
+	ModuleName            = types.ModuleName
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
 	QuerierRoute          = types.QuerierRoute

@@ -102,39 +102,38 @@ func (rs *Store) LoadLatestVersion() error {
 
 // Implements CommitMultiStore.
 func (rs *Store) LoadVersion(ver int64) error {
-
-	// Special logic for version 0
 	if ver == 0 {
+		// Special logic for version 0 where there is no need to get commit
+		// information.
 		for key, storeParams := range rs.storesParams {
-			id := types.CommitID{}
-			store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
 			if err != nil {
 				return fmt.Errorf("failed to load Store: %v", err)
 			}
+
 			rs.stores[key] = store
 		}
 
 		rs.lastCommitID = types.CommitID{}
 		return nil
 	}
-	// Otherwise, version is 1 or greater
 
-	// Get commitInfo
 	cInfo, err := getCommitInfo(rs.db, ver)
 	if err != nil {
 		return err
 	}
 
-	// Convert StoreInfos slice to map
+	// convert StoreInfos slice to map
 	infos := make(map[types.StoreKey]storeInfo)
 	for _, storeInfo := range cInfo.StoreInfos {
 		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
 	}
 
-	// Load each Store
+	// load each Store
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
 		var id types.CommitID
+
 		info, ok := infos[key]
 		if ok {
 			id = info.Core.CommitID
@@ -144,12 +143,13 @@ func (rs *Store) LoadVersion(ver int64) error {
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
+
 		newStores[key] = store
 	}
 
-	// Success.
 	rs.lastCommitID = cInfo.CommitID()
 	rs.stores = newStores
+
 	return nil
 }
 
@@ -230,7 +230,48 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
+
 	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+}
+
+// CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
+// attempts to load stores at a given version (height). An error is returned if
+// any store cannot be loaded.
+//
+// TODO: Keep this method DRY and extract common functionality with regards to
+// Store#LoadVersion.
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+	cInfo, err := getCommitInfo(rs.db, version)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert StoreInfos slice to map
+	infos := make(map[types.StoreKey]storeInfo)
+	for _, storeInfo := range cInfo.StoreInfos {
+		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
+	}
+
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+
+	// load each Store
+	for key, storeParams := range rs.storesParams {
+		var id types.CommitID
+
+		info, ok := infos[key]
+		if ok {
+			id = info.Core.CommitID
+		}
+
+		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load Store: %v", err)
+		}
+
+		stores[key] = store
+	}
+
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
 // Implements MultiStore.

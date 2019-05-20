@@ -169,8 +169,8 @@ $ %s tx gov submit-proposal community-pool-spend <path/to/proposal.json> --from=
 Where proposal.json contains:
 
 {
-  "title": "Staking Param Change",
-  "description": "Update max validators",
+  "title": "Community Pool Spend",
+  "description": "Pay me some Atoms!",
   "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
   "amount": [
     {

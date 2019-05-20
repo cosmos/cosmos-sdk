@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -87,24 +88,24 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, accs []simulation.Account) gov.Content {
-	recipientAcc := simulation.RandomAcc(r, accs)
-	balance := sdk.Coins{}
-	denom := "stake"
-	amount := sdk.NewInt(0)
-	if len(balance) > 0 {
-		denomIndex := r.Intn(len(balance))
-		amt, goErr := simulation.RandPositiveInt(r, balance[denomIndex].Amount)
-		if goErr == nil {
-			amount = amt
-			denom = balance[denomIndex].Denom
+func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsim.ContentSimulator {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
+		recipientAcc := simulation.RandomAcc(r, accs)
+		coins := sdk.Coins{}
+		balance := k.GetFeePool(ctx).CommunityPool
+		if len(balance) > 0 {
+			denomIndex := r.Intn(len(balance))
+			amount, goErr := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+			if goErr == nil {
+				denom := balance[denomIndex].Denom
+				coins = sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
+			}
 		}
+		return distribution.NewCommunityPoolSpendProposal(
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 100),
+			recipientAcc.Address,
+			coins,
+		)
 	}
-	coins := sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
-	return distribution.NewCommunityPoolSpendProposal(
-		simulation.RandStringOfLength(r, 10),
-		simulation.RandStringOfLength(r, 100),
-		recipientAcc.Address,
-		coins,
-	)
 }

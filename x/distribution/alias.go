@@ -31,6 +31,9 @@ type (
 	// querier response types
 	QueryDelegatorTotalRewardsResponse = types.QueryDelegatorTotalRewardsResponse
 	DelegationDelegatorReward          = types.DelegationDelegatorReward
+
+	// proposal types
+	CommunityPoolSpendProposal = types.CommunityPoolSpendProposal
 )
 
 const (

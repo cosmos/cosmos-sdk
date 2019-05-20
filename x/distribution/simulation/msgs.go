@@ -87,11 +87,24 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(r *rand.Rand) gov.Content {
+func SimulateCommunityPoolSpendProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, accs []simulation.Account) gov.Content {
+	recipientAcc := simulation.RandomAcc(r, accs)
+	balance := sdk.Coins{}
+	denom := "stake"
+	amount := sdk.NewInt(0)
+	if len(balance) > 0 {
+		denomIndex := r.Intn(len(balance))
+		amt, goErr := simulation.RandPositiveInt(r, balance[denomIndex].Amount)
+		if goErr == nil {
+			amount = amt
+			denom = balance[denomIndex].Denom
+		}
+	}
+	coins := sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
 	return distribution.NewCommunityPoolSpendProposal(
 		simulation.RandStringOfLength(r, 10),
 		simulation.RandStringOfLength(r, 100),
-		sdk.AccAddress{},
-		sdk.Coins{},
+		recipientAcc.Address,
+		coins,
 	)
 }

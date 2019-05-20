@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -83,4 +84,14 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 		opMsg = simulation.NewOperationMsg(msg, ok, "")
 		return opMsg, nil, nil
 	}
+}
+
+// SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
+func SimulateCommunityPoolSpendProposalContent(r *rand.Rand) gov.Content {
+	return distribution.NewCommunityPoolSpendProposal(
+		simulation.RandStringOfLength(r, 10),
+		simulation.RandStringOfLength(r, 100),
+		sdk.AccAddress{},
+		sdk.Coins{},
+	)
 }

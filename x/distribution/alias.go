@@ -55,6 +55,8 @@ var (
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission = types.NewMsgWithdrawValidatorCommission
 
+	NewCommunityPoolSpendProposal = types.NewCommunityPoolSpendProposal
+
 	NewKeeper                                 = keeper.NewKeeper
 	NewQuerier                                = keeper.NewQuerier
 	NewQueryValidatorOutstandingRewardsParams = keeper.NewQueryValidatorOutstandingRewardsParams

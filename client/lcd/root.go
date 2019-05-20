@@ -69,7 +69,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	}
 	rs.log.Info(
 		fmt.Sprintf(
-			"Starting Gaia Lite REST service (chain-id: %q)...",
+			"Starting application REST service (chain-id: %q)...",
 			viper.GetString(client.FlagChainID),
 		),
 	)
@@ -77,7 +77,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
-// ServeCommand will start a Gaia Lite REST service as a blocking process. It
+// ServeCommand will start the application REST service as a blocking process. It
 // takes a codec to create a RestServer object and a function to register all
 // necessary routes.
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {

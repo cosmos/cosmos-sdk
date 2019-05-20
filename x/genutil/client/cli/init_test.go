@@ -3,7 +3,6 @@ package cli
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -16,9 +15,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
+	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -28,43 +28,42 @@ var testMbm = sdk.NewModuleBasicManager(genutil.AppModuleBasic{})
 func TestInitCmd(t *testing.T) {
 	defer server.SetupViper(t)()
 	defer setupClientHome(t)()
+	home, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 
 	ctx := server.NewContext(cfg, logger)
-	cdc := app.MakeCodec()
-	cmd := InitCmd(ctx, cdc, testMbm)
+	cdc := makeCodec()
+	cmd := InitCmd(ctx, cdc, testMbm, home)
 
-	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
+	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
 }
 
 func setupClientHome(t *testing.T) func() {
-	clientDir, err := ioutil.TempDir("", "mock-sdk-cmd")
-	require.Nil(t, err)
+	clientDir, cleanup := tests.NewTestCaseDir(t)
 	viper.Set(flagClientHome, clientDir)
-	return func() {
-		if err := os.RemoveAll(clientDir); err != nil {
-			// TODO: Handle with #870
-			panic(err)
-		}
-	}
+	return cleanup
 }
 
 func TestEmptyState(t *testing.T) {
 	defer server.SetupViper(t)()
 	defer setupClientHome(t)()
 
+	home, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 
 	ctx := server.NewContext(cfg, logger)
-	cdc := app.MakeCodec()
+	cdc := makeCodec()
 
-	cmd := InitCmd(ctx, cdc, testMbm)
-	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
+	cmd := InitCmd(ctx, cdc, testMbm, home)
+	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
@@ -93,11 +92,8 @@ func TestEmptyState(t *testing.T) {
 }
 
 func TestStartStandAlone(t *testing.T) {
-	home, err := ioutil.TempDir("", "mock-sdk-cmd")
-	require.Nil(t, err)
-	defer func() {
-		os.RemoveAll(home)
-	}()
+	home, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
 	viper.Set(cli.HomeFlag, home)
 	defer setupClientHome(t)()
 
@@ -105,9 +101,9 @@ func TestStartStandAlone(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
-	cdc := app.MakeCodec()
-	initCmd := InitCmd(ctx, cdc, testMbm)
-	require.NoError(t, initCmd.RunE(nil, []string{"gaianode-test"}))
+	cdc := makeCodec()
+	initCmd := InitCmd(ctx, cdc, testMbm, home)
+	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test"}))
 
 	app, err := mock.NewApp(home, logger)
 	require.Nil(t, err)
@@ -126,11 +122,8 @@ func TestStartStandAlone(t *testing.T) {
 }
 
 func TestInitNodeValidatorFiles(t *testing.T) {
-	home, err := ioutil.TempDir("", "mock-sdk-cmd")
-	require.Nil(t, err)
-	defer func() {
-		os.RemoveAll(home)
-	}()
+	home, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
 	viper.Set(cli.HomeFlag, home)
 	viper.Set(client.FlagName, "moniker")
 	cfg, err := tcmd.ParseConfig()
@@ -139,4 +132,12 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))
+}
+
+// custom tx codec
+func makeCodec() *codec.Codec {
+	var cdc = codec.New()
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
 }

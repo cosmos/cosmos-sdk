@@ -1,2 +1,0 @@
-#4027 gaiad and gaiacli version commands do not return the checksum of the go.sum file shipped along with the source release tarball.
-Go modules feature guarantees dependencies reproducibility and as long as binaries are built via the Makefile shipped with the sources, no dependendencies can break such guarantee.

@@ -29,7 +29,7 @@ const (
 // threat this then exposes would be something that changes this during
 // runtime before the user creates their key. This vulnerability must
 // succeed to update this to that same value before every subsequent call
-// to gaiacli keys in future startups / or the attacker must get access
+// to the keys command in future startups / or the attacker must get access
 // to the filesystem. However, with a similar threat model (changing
 // variables in runtime), one can cause the user to sign a different tx
 // than what they see, which is a significantly cheaper attack then breaking

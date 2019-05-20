@@ -17,7 +17,7 @@ func mnemonicToSeed(mnemonic string) []byte {
 	return bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
 }
 
-//nolint
+// nolint: vet
 func ExampleStringifyPathParams() {
 	path := NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
@@ -96,7 +96,7 @@ func TestParamsFromPath(t *testing.T) {
 
 }
 
-//nolint
+// nolint: vet
 func ExampleSomeBIP32TestVecs() {
 
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +

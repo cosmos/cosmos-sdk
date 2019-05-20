@@ -129,7 +129,7 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 //
 // TODO: The store implementation can possibly be modified to support this as it
 // seems safe to load previous versions (heights).
-func (cms Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, error) {
 	panic("cannot cache-wrap cached multi-store with a version")
 }
 

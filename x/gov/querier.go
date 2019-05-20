@@ -218,7 +218,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		tallyResult = proposal.FinalTallyResult
 	} else {
 		// proposal is in voting period
-		_, tallyResult = tally(ctx, keeper, proposal)
+		_, _, tallyResult = tally(ctx, keeper, proposal)
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, tallyResult)

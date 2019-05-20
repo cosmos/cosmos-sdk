@@ -79,13 +79,12 @@ func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) {
 }
 
 func (bnft BaseNFT) String() string {
-	return fmt.Sprintf(`ID: 					%d
-	Owner:        %s
-  Name:         %s
-  Description: 	%s
-  Image:        %s
-	TokenURI:   	%s
-	`,
+	return fmt.Sprintf(`ID:				%d
+Owner:			%s
+Name:			%s
+Description: 	%s
+Image:			%s
+TokenURI:		%s`,
 		bnft.ID,
 		bnft.Owner,
 		bnft.Name,

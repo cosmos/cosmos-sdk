@@ -1,7 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	bou.ke/monkey v1.0.1 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
@@ -23,16 +22,12 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
-	github.com/otiai10/copy v0.0.0-20180813032824-7e9a647135a1
-	github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95 // indirect
-	github.com/otiai10/mint v1.2.3 // indirect
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.2.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190227231451-bbced9601137 // indirect
-	github.com/rakyll/statik v0.1.4
 	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 // indirect
 	github.com/rs/cors v1.6.0 // indirect
 	github.com/spf13/afero v1.2.1 // indirect

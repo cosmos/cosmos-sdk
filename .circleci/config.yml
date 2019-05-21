@@ -244,12 +244,6 @@ workflows:
   version: 2
   test-suite:
     jobs:
-      - macos_ci:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
       - deploy_docs:
           filters:
             branches:
@@ -294,10 +288,3 @@ workflows:
       - upload_coverage:
           requires:
             - test_cover
-      - reproducible_builds:
-          filters:
-            branches:
-              only:
-                - master
-          requires:
-            - setup_dependencies

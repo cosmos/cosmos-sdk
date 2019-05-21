@@ -30,7 +30,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	nftQueryCmd.AddCommand(client.GetCommands(
 		nftcmd.GetCmdQueryCollectionSupply(mc.storeKey, mc.cdc),
 		nftcmd.GetCmdQueryBalance(mc.storeKey, mc.cdc),
-		nftcmd.GetCmdQueryNFTs(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryCollection(mc.storeKey, mc.cdc),
 		nftcmd.GetCmdQueryNFT(mc.storeKey, mc.cdc),
 	)...)
 

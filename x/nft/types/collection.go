@@ -39,7 +39,7 @@ func (collection Collection) GetNFT(id uint64) (nft NFT, err sdk.Error) {
 	}
 
 	return nil, ErrUnknownNFT(DefaultCodespace,
-		fmt.Sprintf("NFT #%d doesn't exist in collection %s", nft.GetID(), collection.Denom),
+		fmt.Sprintf("NFT #%d doesn't exist in collection %s", id, collection.Denom),
 	)
 }
 

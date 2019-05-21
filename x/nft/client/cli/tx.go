@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -36,8 +36,8 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := nft.NewMsgTransferNFT(sdk.AccAddress(args[0]), sdk.AccAddress(args[1]), nft.Denom(args[2]), tokenID)
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			msg := types.NewMsgTransferNFT(sdk.AccAddress(args[0]), sdk.AccAddress(args[1]), args[2], tokenID)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -64,8 +64,8 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := nft.MsgEditNFTMetadata(cliCtx.GetFromAddress(), id, denom, name, description, image, tokenURI)
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), id, denom, name, description, image, tokenURI)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 

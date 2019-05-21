@@ -4,6 +4,7 @@ package nft
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/querier"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
@@ -21,9 +22,9 @@ type (
 )
 
 var (
-	NewKeeper          = keeper.NewKeeper
-	RegisterInvariants = keeper.RegisterInvariants
-
+	NewKeeper           = keeper.NewKeeper
+	RegisterInvariants  = keeper.RegisterInvariants
+	NewQuerier          = querier.NewQuerier
 	NewBaseNFT          = types.NewBaseNFT
 	NewNFTs             = types.NewNFTs
 	NewCollection       = types.NewCollection

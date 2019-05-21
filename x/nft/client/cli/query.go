@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/querier"
 	"github.com/spf13/cobra"
@@ -48,7 +49,6 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			
 			address, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
@@ -70,7 +70,7 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.QueryResBalance
+			var out nft.Balance
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -98,7 +98,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.QueryResOwnerOf
+			var out nft.Collection
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -130,7 +130,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.QueryResOwnerOf
+			var out nft.NFT
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

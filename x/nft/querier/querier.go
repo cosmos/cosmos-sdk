@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
@@ -64,27 +63,27 @@ func NewQueryNFTParams(denom string, ID uint64) QueryNFTParams {
 }
 
 // NewQuerier is the module level router for state queries
-func NewQuerier(k keeper.Keeper, cdc *codec.Codec) sdk.Querier {
+func NewQuerier(k keeper.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QuerySupply:
-			return querySupply(ctx, cdc, path[1:], req, k)
+			return querySupply(ctx, path[1:], req, k)
 		case QueryBalance:
-			return queryBalance(ctx, cdc, path[1:], req, k)
+			return queryBalance(ctx, path[1:], req, k)
 		case QueryCollection:
-			return queryCollection(ctx, cdc, path[1:], req, k)
+			return queryCollection(ctx, path[1:], req, k)
 		case QueryNFT:
-			return queryNFT(ctx, cdc, path[1:], req, k)
+			return queryNFT(ctx, path[1:], req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown nft query endpoint")
 		}
 	}
 }
 
-func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
 	var params QueryCollectionParams
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
@@ -99,10 +98,10 @@ func querySupply(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Requ
 	return bz, nil
 }
 
-func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
 	var params QueryBalanceParams
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
@@ -122,10 +121,10 @@ func queryBalance(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.Req
 	return bz, nil
 }
 
-func queryCollection(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
 	var params QueryCollectionParams
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
@@ -144,10 +143,10 @@ func queryCollection(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.
 	return bz, nil
 }
 
-func queryNFT(ctx sdk.Context, cdc *codec.Codec, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
 
 	var params QueryNFTParams
-	err := cdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}

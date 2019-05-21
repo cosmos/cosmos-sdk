@@ -71,8 +71,8 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 			tags.Category, tags.TxCategory,
 			tags.Sender, msg.Sender.String(),
 			tags.Recipient, msg.Recipient.String(),
-			tags.Denom, string(msg.Denom),
-			tags.NFTID, uint64(msg.ID),
+			tags.Denom, msg.Denom,
+			tags.NFTID, msg.ID,
 		),
 	}
 }
@@ -121,7 +121,7 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 		Tags: sdk.NewTags(
 			tags.Category, tags.TxCategory,
 			tags.Sender, msg.Owner.String(),
-			tags.Denom, string(msg.Denom),
+			tags.Denom, msg.Denom,
 			tags.NFTID, msg.ID,
 		),
 	}

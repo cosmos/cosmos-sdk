@@ -61,9 +61,6 @@ func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilde
 		if err := utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk); err != nil {
 			return err
 		}
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

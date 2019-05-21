@@ -75,6 +75,29 @@ func TestGetImmutable(t *testing.T) {
 	require.Panics(t, func() { newStore.Commit() })
 }
 
+func TestTestGetImmutableIterator(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, cID := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree, 10, 10)
+
+	newStore, err := store.GetImmutable(cID.Version)
+	require.NoError(t, err)
+
+	iter := newStore.Iterator([]byte("aloha"), []byte("hellz"))
+	expected := []string{"aloha", "hello"}
+	var i int
+
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
+		i++
+	}
+
+	require.Equal(t, len(expected), i)
+}
+
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)

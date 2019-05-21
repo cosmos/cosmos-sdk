@@ -42,15 +42,15 @@ func TestBaseNFTSetMethods(t *testing.T) {
 	require.Equal(t, tokenURI, testNFT.GetTokenURI())
 
 	// TODO: fix implementation, this actually fails
-	testNFT.SetOwner(owner2)
-	require.Equal(t, owner2, testNFT.GetOwner())
+	newTestNFT := testNFT.SetOwner(owner2)
+	require.Equal(t, owner2, newTestNFT.GetOwner())
 
 	// TODO: fix implementation, this actually fails
-	testNFT.EditMetadata(name2, description2, image2, tokenURI2)
-	require.Equal(t, name2, testNFT.GetName())
-	require.Equal(t, description2, testNFT.GetDescription())
-	require.Equal(t, image2, testNFT.GetImage())
-	require.Equal(t, tokenURI2, testNFT.GetTokenURI())
+	newTestNFT2 := testNFT.EditMetadata(name2, description2, image2, tokenURI2)
+	require.Equal(t, name2, newTestNFT2.GetName())
+	require.Equal(t, description2, newTestNFT2.GetDescription())
+	require.Equal(t, image2, newTestNFT2.GetImage())
+	require.Equal(t, tokenURI2, newTestNFT2.GetTokenURI())
 }
 
 func TestBaseNFTStringFormat(t *testing.T) {

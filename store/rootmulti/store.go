@@ -238,9 +238,6 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
-//
-// CONTRACT: Currently CacheMultiStoreWithVersion expects version to be greater
-// than zero, otherwise, CacheMultiStore should be used instead.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {

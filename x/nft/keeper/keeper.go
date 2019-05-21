@@ -42,7 +42,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 	if err != nil {
 		return nil, err
 	}
-	return
+	return nft, err
 }
 
 // SetNFT sets an NFT into the store

@@ -30,7 +30,13 @@ The core parts above will generally translate to the following file tree in the 
 
 ## Core Application File
 
-In general, the core of the state-machine is defined in a file called `app.go`. 
+In general, the core of the state-machine is defined in a file called `app.go`. It mainly contains the **type definition of the application** and functions to **create and initialize it**. 
+
+### Type Definition of the Application
+
+### Constructor Function
+
+This function constructs a new application of the type defined above. It is called in the dae
 
 ## Modules (`./x/`)
 

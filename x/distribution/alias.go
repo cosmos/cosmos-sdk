@@ -97,6 +97,7 @@ var (
 	NewValidatorCurrentRewards                 = types.NewValidatorCurrentRewards
 	InitialValidatorAccumulatedCommission      = types.InitialValidatorAccumulatedCommission
 	NewValidatorSlashEvent                     = types.NewValidatorSlashEvent
+	NewCommunityPoolSpendProposal              = types.NewCommunityPoolSpendProposal
 
 	// variable aliases
 	FeePoolKey                           = keeper.FeePoolKey
@@ -145,6 +146,7 @@ type (
 	ValidatorCurrentRewardsRecord          = types.ValidatorCurrentRewardsRecord
 	DelegatorStartingInfoRecord            = types.DelegatorStartingInfoRecord
 	ValidatorSlashEventRecord              = types.ValidatorSlashEventRecord
+	CommunityPoolSpendProposal             = types.CommunityPoolSpendProposal
 	GenesisState                           = types.GenesisState
 	MsgSetWithdrawAddress                  = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorReward             = types.MsgWithdrawDelegatorReward

@@ -35,34 +35,22 @@ func TestBaseNFTSetMethods(t *testing.T) {
 	tokenURI2 := "https://google.com/token-2.json"
 
 	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
+	require.Equal(t, owner, testNFT.GetOwner())
+	require.Equal(t, name, testNFT.GetName())
+	require.Equal(t, description, testNFT.GetDescription())
+	require.Equal(t, image, testNFT.GetImage())
+	require.Equal(t, tokenURI, testNFT.GetTokenURI())
 
+	// TODO: fix implementation, this actually fails
 	testNFT.SetOwner(owner2)
-	_owner := testNFT.GetOwner()
-	if !owner2.Equals(_owner) {
-		t.Errorf("SetOwner was incorrect, want %s, got %s", owner2, _owner)
-	}
+	require.Equal(t, owner2, testNFT.GetOwner())
 
+	// TODO: fix implementation, this actually fails
 	testNFT.EditMetadata(name2, description2, image2, tokenURI2)
-
-	_name := testNFT.GetName()
-	if name2 != _name {
-		t.Errorf("EditMetadata - Name was incorrect, want %s, got %s", name2, _name)
-	}
-
-	_description := testNFT.GetDescription()
-	if description2 != _description {
-		t.Errorf("EditMetadata - Description was incorrect, want %s, got %s", description2, _description)
-	}
-
-	_image := testNFT.GetImage()
-	if image2 != _image {
-		t.Errorf("EditMetadata - Image was incorrect, want %s, got %s", image2, _image)
-	}
-
-	_tokenURI := testNFT.GetTokenURI()
-	if tokenURI2 != _tokenURI {
-		t.Errorf("EditMetadata - TokenURI was incorrect, want %s, got %s", tokenURI2, _tokenURI)
-	}
+	require.Equal(t, name2, testNFT.GetName())
+	require.Equal(t, description2, testNFT.GetDescription())
+	require.Equal(t, image2, testNFT.GetImage())
+	require.Equal(t, tokenURI2, testNFT.GetTokenURI())
 }
 
 func TestBaseNFTStringFormat(t *testing.T) {
@@ -74,8 +62,5 @@ Description: 	%s
 Image:			%s
 TokenURI:		%s`,
 		id, owner, name, description, image, tokenURI)
-	received := testNFT.String()
-	if expected != received {
-		t.Errorf("BaseNFT String was inforrect, want %s, got %s", received, expected)
-	}
+	require.Equal(t, expected, testNFT.String())
 }

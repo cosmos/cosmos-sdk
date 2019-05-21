@@ -46,8 +46,6 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 }
 
 func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
-	var lastErr error = nil
-
 	chunkSize := viper.GetInt(flagMaxMessagesPerTx)
 	totalMessages := len(msgs)
 	if chunkSize == 0 {
@@ -60,9 +58,9 @@ func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilde
 			sliceEnd = totalMessages
 		}
 		msgChunk := msgs[i:sliceEnd]
-		lastErr = utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk)
-		if lastErr != nil {
-			return lastErr
+		err = utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk)
+		if err != nil {
+			return err
 		}
 	}
 

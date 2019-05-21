@@ -106,11 +106,6 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		if stake.Equal(currentStakeRoundUp) {
 			stake = currentStake
 		} else {
-			test := currentStake.Add(sdk.SmallestDec())
-			fmt.Printf("debug test: %v\n", test)
-			fmt.Printf("\ndebug val.DelegatorShares: %v\n", val.GetDelegatorShares())
-			fmt.Printf("debug val.Tokens: %v\n", val.GetTokens())
-			fmt.Printf("debug del.Shares: %v\n", del.GetShares())
 			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
 				"\n\tfinal stake:\t%s"+
 				"\n\tcurrent stake:\t%s"+

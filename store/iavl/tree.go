@@ -55,8 +55,8 @@ func (it *immutableTree) DeleteVersion(_ int64) error {
 	panic("cannot call 'DeleteVersion' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) VersionExists(_ int64) bool {
-	panic("cannot call 'VersionExists' on an immutable IAVL tree")
+func (it *immutableTree) VersionExists(version int64) bool {
+	return it.Version() == version
 }
 
 func (it *immutableTree) GetVersioned(key []byte, version int64) (int64, []byte) {

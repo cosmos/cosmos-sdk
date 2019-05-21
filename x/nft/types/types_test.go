@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -18,36 +19,12 @@ func TestBaseNFTGetMethods(t *testing.T) {
 
 	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
 
-	_id := testNFT.GetID()
-	if id != _id {
-		t.Errorf("ID was incorrect, want: %d, got %d", id, _id)
-	}
-
-	_owner := testNFT.GetOwner()
-	if !owner.Equals(_owner) {
-		t.Errorf("GetOwner was incorrect, want %s, got %s", owner, _owner)
-	}
-
-	_name := testNFT.GetName()
-	if name != _name {
-		t.Errorf("Name was incorrect, want %s, got %s", name, _name)
-	}
-
-	_description := testNFT.GetDescription()
-	if description != _description {
-		t.Errorf("Description was incorrect, want %s, got %s", description, _description)
-	}
-
-	_image := testNFT.GetImage()
-	if image != _image {
-		t.Errorf("Image was incorrect, want %s, got %s", image, _image)
-	}
-
-	_tokenURI := testNFT.GetTokenURI()
-	if tokenURI != _tokenURI {
-		t.Errorf("TokenURI was incorrect, want %s, got %s", tokenURI, _tokenURI)
-	}
-
+	require.Equal(t, id, testNFT.GetID())
+	require.Equal(t, owner, testNFT.GetOwner())
+	require.Equal(t, name, testNFT.GetName())
+	require.Equal(t, description, testNFT.GetDescription())
+	require.Equal(t, image, testNFT.GetImage())
+	require.Equal(t, tokenURI, testNFT.GetTokenURI())
 }
 
 func TestBaseNFTSetMethods(t *testing.T) {

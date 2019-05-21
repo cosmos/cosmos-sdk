@@ -1,6 +1,8 @@
 package iavl
 
 import (
+	"fmt"
+
 	"github.com/tendermint/iavl"
 )
 
@@ -57,12 +59,20 @@ func (it *immutableTree) VersionExists(_ int64) bool {
 	panic("cannot call 'VersionExists' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) GetVersioned(_ []byte, _ int64) (int64, []byte) {
-	panic("cannot call 'GetVersioned' on an immutable IAVL tree")
+func (it *immutableTree) GetVersioned(key []byte, version int64) (int64, []byte) {
+	if it.Version() != version {
+		return -1, nil
+	}
+
+	return it.Get(key)
 }
 
-func (it *immutableTree) GetVersionedWithProof(_ []byte, _ int64) ([]byte, *iavl.RangeProof, error) {
-	panic("cannot call 'GetVersionedWithProof' on an immutable IAVL tree")
+func (it *immutableTree) GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error) {
+	if it.Version() != version {
+		return nil, nil, fmt.Errorf("version mismatch on immutable IAVL tree; got: %d, expected: %d", version, it.Version())
+	}
+
+	return it.GetWithProof(key)
 }
 
 func (it *immutableTree) GetImmutable(_ int64) (*iavl.ImmutableTree, error) {

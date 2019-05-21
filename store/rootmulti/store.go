@@ -252,7 +252,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
 	}
 
-	stores := make(map[types.StoreKey]types.CacheWrapper)
+	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 
 	// load each Store
 	for key, storeParams := range rs.storesParams {
@@ -268,10 +268,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			return nil, fmt.Errorf("failed to load Store: %v", err)
 		}
 
-		stores[key] = store
+		cachedStores[key] = store
 	}
 
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
 // Implements MultiStore.
@@ -332,6 +332,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		msg := fmt.Sprintf("no such store: %s", storeName)
 		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
+
 	queryable, ok := store.(types.Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)

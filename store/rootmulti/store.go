@@ -238,6 +238,9 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded.
 //
+// CONTRACT: Currently CacheMultiStoreWithVersion expects version to be greater
+// than zero, otherwise, CacheMultiStore should be used instead.
+//
 // TODO: Keep this method DRY and extract common functionality with regards to
 // Store#LoadVersion.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
@@ -263,6 +266,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			id = info.Core.CommitID
 		}
 
+		// TODO: Don't reload the entire tree!
 		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load Store: %v", err)

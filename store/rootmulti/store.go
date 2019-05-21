@@ -236,8 +236,8 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
-// any store cannot be loaded. This should only be used for querying at past
-// heights.
+// any store cannot be loaded. This should only be used for querying and
+// iterating at past heights.
 //
 // CONTRACT: Currently CacheMultiStoreWithVersion expects version to be greater
 // than zero, otherwise, CacheMultiStore should be used instead.
@@ -246,6 +246,8 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	for key, store := range rs.stores {
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
+			// Attempt to lazy-load an already saved IAVL store version. If the
+			// version does not exist or is pruned, an error should be returned.
 			iavlStore, err := store.(*iavl.Store).GetImmutable(version)
 			if err != nil {
 				return nil, err

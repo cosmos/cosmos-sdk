@@ -58,7 +58,9 @@ func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilde
 			sliceEnd = totalMessages
 		}
 		msgChunk := msgs[i:sliceEnd]
-		err := utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk)
+		if err := utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk); err != nil {
+			return err
+		}
 		if err != nil {
 			return err
 		}

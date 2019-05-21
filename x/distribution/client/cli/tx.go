@@ -100,7 +100,7 @@ $ <appcli> tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs
 			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx")
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
 	cmd.Flags().Bool(flagComission, false, "also withdraw validator's commission")
 	return cmd
 }
@@ -131,7 +131,7 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx [zero=unlimited]")
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
 	return cmd
 }
 
@@ -162,6 +162,6 @@ $ <appcli> tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --
 			return splitGenerateOrBroadcast(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx")
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
 	return cmd
 }

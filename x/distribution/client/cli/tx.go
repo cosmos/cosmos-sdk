@@ -23,6 +23,11 @@ var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 	flagComission         = "commission"
+	flagMaxMessagesPerTx  = "max-msgs"
+)
+
+const (
+	MaxMessagesPerTxDefault = 5
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -38,6 +43,30 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	)...)
 
 	return distTxCmd
+}
+
+func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
+	var lastErr error = nil
+
+	chunkSize := viper.GetInt(flagMaxMessagesPerTx)
+	totalMessages := len(msgs)
+	if chunkSize == 0 {
+		chunkSize = totalMessages
+	}
+
+	for i := 0; i < len(msgs); i += chunkSize {
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+		msgChunk := msgs[i:sliceEnd]
+		lastErr = utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk)
+		if lastErr != nil {
+			return lastErr
+		}
+	}
+
+	return nil
 }
 
 // command to withdraw rewards
@@ -68,16 +97,17 @@ $ <appcli> tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
+			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
 		},
 	}
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx")
 	cmd.Flags().Bool(flagComission, false, "also withdraw validator's commission")
 	return cmd
 }
 
 // command to withdraw all rewards
 func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
 		Long: strings.TrimSpace(`Withdraw all rewards for a single delegator:
@@ -98,9 +128,11 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
+			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
 		},
 	}
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx [zero=unlimited]")
+	return cmd
 }
 
 // command to replace a delegator's withdrawal address
@@ -127,8 +159,9 @@ $ <appcli> tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return splitGenerateOrBroadcast(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx")
 	return cmd
 }

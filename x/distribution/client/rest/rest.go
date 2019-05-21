@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrcutils "github.com/cosmos/cosmos-sdk/x/distribution/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
@@ -31,7 +30,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext, cdc *codec.Codec) govrest.Pr
 
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req distrcutils.CommunityPoolSpendProposalReq
+		var req CommunityPoolSpendProposalReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}

@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
-	distrcutils "github.com/cosmos/cosmos-sdk/x/distribution/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -195,7 +194,7 @@ Where proposal.json contains:
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			proposal, err := distrcutils.ParseCommunityPoolSpendProposalJSON(cdc, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, args[0])
 			if err != nil {
 				return err
 			}

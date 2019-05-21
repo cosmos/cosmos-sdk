@@ -236,43 +236,26 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
-// any store cannot be loaded.
+// any store cannot be loaded. This should only be used for querying at past
+// heights.
 //
 // CONTRACT: Currently CacheMultiStoreWithVersion expects version to be greater
 // than zero, otherwise, CacheMultiStore should be used instead.
-//
-// TODO: Keep this method DRY and extract common functionality with regards to
-// Store#LoadVersion.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
-	cInfo, err := getCommitInfo(rs.db, version)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert StoreInfos slice to map
-	infos := make(map[types.StoreKey]storeInfo)
-	for _, storeInfo := range cInfo.StoreInfos {
-		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
-	}
-
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
+	for key, store := range rs.stores {
+		switch store.GetStoreType() {
+		case types.StoreTypeIAVL:
+			iavlStore, err := store.(*iavl.Store).GetImmutable(version)
+			if err != nil {
+				return nil, err
+			}
 
-	// load each Store
-	for key, storeParams := range rs.storesParams {
-		var id types.CommitID
+			cachedStores[key] = iavlStore
 
-		info, ok := infos[key]
-		if ok {
-			id = info.Core.CommitID
+		default:
+			cachedStores[key] = store
 		}
-
-		// TODO: Don't reload the entire tree!
-		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load Store: %v", err)
-		}
-
-		cachedStores[key] = store
 	}
 
 	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil

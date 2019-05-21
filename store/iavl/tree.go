@@ -75,6 +75,10 @@ func (it *immutableTree) GetVersionedWithProof(key []byte, version int64) ([]byt
 	return it.GetWithProof(key)
 }
 
-func (it *immutableTree) GetImmutable(_ int64) (*iavl.ImmutableTree, error) {
-	panic("cannot call 'GetImmutable' on an immutable IAVL tree")
+func (it *immutableTree) GetImmutable(version int64) (*iavl.ImmutableTree, error) {
+	if it.Version() != version {
+		return nil, fmt.Errorf("version mismatch on immutable IAVL tree; got: %d, expected: %d", version, it.Version())
+	}
+
+	return it.ImmutableTree, nil
 }

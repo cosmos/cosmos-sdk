@@ -400,26 +400,20 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	switch params.typ {
 	case types.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
-		// TODO: id?
-		// return NewCommitMultiStore(db, id)
 
 	case types.StoreTypeIAVL:
-		store, err = iavl.LoadStore(db, id, rs.pruningOpts)
-		return
+		return iavl.LoadStore(db, id, rs.pruningOpts)
 
 	case types.StoreTypeDB:
-		store = commitDBStoreAdapter{dbadapter.Store{db}}
-		return
+		return commitDBStoreAdapter{dbadapter.Store{db}}, nil
 
 	case types.StoreTypeTransient:
 		_, ok := key.(*types.TransientStoreKey)
 		if !ok {
-			err = fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
-			return
+			return store, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
 		}
 
-		store = transient.NewStore()
-		return
+		return transient.NewStore(), nil
 
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))

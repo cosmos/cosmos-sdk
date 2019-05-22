@@ -45,8 +45,12 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	return distTxCmd
 }
 
-func splitGenerateOrBroadcast(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
-	chunkSize := viper.GetInt(flagMaxMessagesPerTx)
+func splitGenerateOrBroadcast(
+	cliCtx context.CLIContext,
+	txBldr authtxb.TxBuilder,
+	msgs []sdk.Msg,
+	chunkSize int) error {
+
 	totalMessages := len(msgs)
 	if chunkSize == 0 {
 		chunkSize = totalMessages
@@ -94,10 +98,9 @@ $ <appcli> tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
-			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
 	cmd.Flags().Bool(flagComission, false, "also withdraw validator's commission")
 	return cmd
 }
@@ -125,7 +128,8 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 				return err
 			}
 
-			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs)
+			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
+			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs, chunkSize)
 		},
 	}
 	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
@@ -134,7 +138,7 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 
 // command to replace a delegator's withdrawal address
 func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Long: strings.TrimSpace(`Set the withdraw address for rewards associated with a delegator address:
@@ -156,9 +160,7 @@ $ <appcli> tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-			return splitGenerateOrBroadcast(cliCtx, txBldr, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
-	return cmd
 }

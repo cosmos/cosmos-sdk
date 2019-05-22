@@ -47,9 +47,10 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 
 // SetNFT sets an NFT into the store
 func (k Keeper) SetNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
+	var collection types.Collection
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
+		collection = types.NewCollection(denom, types.NewNFTs())
 	}
 
 	collection.AddNFT(nft)

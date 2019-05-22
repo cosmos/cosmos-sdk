@@ -60,6 +60,7 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 
 func TestQueryBalances(t *testing.T) {
 	cdc := codec.New()
+	types.RegisterCodec(cdc)
 
 	addresses := createTestAddrs(5)
 	keyNFT := sdk.NewKVStoreKey(types.StoreKey)
@@ -87,6 +88,11 @@ func TestQueryBalances(t *testing.T) {
 
 	err = keeperInstance.SetNFT(ctx, sdk.DefaultBondDenom, nft)
 	require.Nil(t, err)
+
+	// TODO: fix unmarshalling,maybe need to register more codec stuff
+	// panic: Bytes left over in UnmarshalBinaryLengthPrefixed, should read 10 more bytes but have 74
+	collections := keeperInstance.GetCollections(ctx)
+	require.NotEmpty(t, collections)
 
 	balances = keeperInstance.GetBalances(ctx)
 	require.NotEmpty(t, balances)

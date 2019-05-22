@@ -98,12 +98,18 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// we had arbitrary-precision rationals.
 	currentStake := val.TokensFromShares(del.GetShares())
 	if stake.GT(currentStake) {
-		// account for rounding errors due to stake being multiplied by slash fractions
-		currentStakeRoundUp := sdk.MaxDec(
-			val.TokensFromSharesRoundUp(del.GetShares()),
-			currentStake.Add(sdk.SmallestDec()),
-		)
-		if stake.Equal(currentStakeRoundUp) {
+
+		// account for rounding inconsistencies between:
+		//     currentStake: calculated as in staking with a single computation
+		//     stake:        calculated as an accumulation of stake
+		//                   calculations across validator's distribution periods
+		// these inconsistencies are due to differing order of operations which
+		// will inevitably have  different accumulated rounding and may lead to
+		// the smallest decimal place being one greater in stake than
+		// currentStake.  This amount of error is tolerated and corrected for,
+		// however any greater amount should be considered a breach in expected
+		// behaviour.
+		if stake.Equal(currentStake.Add(sdk.SmallestDec())) {
 			stake = currentStake
 		} else {
 			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+

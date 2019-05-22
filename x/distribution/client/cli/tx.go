@@ -134,7 +134,7 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 			return splitAndApply(utils.GenerateOrBroadcastMsgs, cliCtx, txBldr, msgs, chunkSize)
 		},
 	}
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
 }
 

@@ -87,7 +87,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer Si
 		}()
 
 		if res := ValidateSigCount(stdTx, params); !res.IsOK() {
-			return
+			return newCtx, res, true
 		}
 
 		if err := tx.ValidateBasic(); err != nil {

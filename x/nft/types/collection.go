@@ -12,8 +12,8 @@ import (
 
 // Collection of non fungible tokens
 type Collection struct {
-	Denom string `json:"denom,omitempty"` // name of the collection; not exported to clients
-	NFTs  NFTs   `json:"nfts"`            // NFTs that belong to a collection
+	Denom string `json:"denom,string,omitempty"` // name of the collection; not exported to clients
+	NFTs  NFTs   `json:"nfts"`                   // NFTs that belong to a collection
 }
 
 // NewCollection creates a new NFT Collection
@@ -103,7 +103,7 @@ func NewCollections(collections ...Collection) Collections {
 
 // Add appends two sets of Collections
 func (collections *Collections) Add(collectionsB Collections) {
-	(*collections) = append((*collections), collectionsB...)
+	*collections = append(*collections, collectionsB...)
 }
 
 // Find returns the searched collection from the set

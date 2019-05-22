@@ -84,7 +84,7 @@ func TestQueryBalances(t *testing.T) {
 	balances := keeperInstance.GetBalances(ctx)
 	require.Empty(t, balances)
 
-	nft := types.NewBaseNFT(1, addresses[0], "testToken", "testDescription", "", "testName")
+	nft := types.NewBaseNFT(uint64(1), addresses[0], "test_token", "test_description", "test_image", "test_name")
 
 	err = keeperInstance.SetNFT(ctx, sdk.DefaultBondDenom, nft)
 	require.Nil(t, err)

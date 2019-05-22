@@ -12,13 +12,6 @@ import (
 // State to Unmarshal
 type GenesisState GenesisAccounts
 
-// // NewGenesisState creates a new GenesisState object
-// func NewGenesisState(accounts GenesisAccounts) GenesisState {
-// 	return GenesisState{
-// 		Accounts: accounts,
-// 	}
-// }
-
 // get the genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState

@@ -165,8 +165,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	genaccsGenesis := genesisAccounts
-	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
+	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
 
 	authGenesis := auth.NewGenesisState(
 		nil,

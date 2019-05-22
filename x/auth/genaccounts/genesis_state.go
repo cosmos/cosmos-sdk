@@ -10,16 +10,14 @@ import (
 )
 
 // State to Unmarshal
-type GenesisState struct {
-	Accounts GenesisAccounts `json:"accounts"`
-}
+type GenesisState GenesisAccounts
 
-// NewGenesisState creates a new GenesisState object
-func NewGenesisState(accounts GenesisAccounts) GenesisState {
-	return GenesisState{
-		Accounts: accounts,
-	}
-}
+// // NewGenesisState creates a new GenesisState object
+// func NewGenesisState(accounts GenesisAccounts) GenesisState {
+// 	return GenesisState{
+// 		Accounts: accounts,
+// 	}
+// }
 
 // get the genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
@@ -41,11 +39,11 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 
 // Sanitize sorts accounts and coin sets.
 func (gs GenesisState) Sanitize() {
-	sort.Slice(gs.Accounts, func(i, j int) bool {
-		return gs.Accounts[i].AccountNumber < gs.Accounts[j].AccountNumber
+	sort.Slice(gs, func(i, j int) bool {
+		return gs[i].AccountNumber < gs[j].AccountNumber
 	})
 
-	for _, acc := range gs.Accounts {
+	for _, acc := range gs {
 		acc.Coins = acc.Coins.Sort()
 	}
 }
@@ -54,8 +52,8 @@ func (gs GenesisState) Sanitize() {
 // ensures that there are no duplicate accounts in the genesis state and any
 // provided vesting accounts are valid.
 func ValidateGenesis(genesisState GenesisState) error {
-	addrMap := make(map[string]bool, len(genesisState.Accounts))
-	for _, acc := range genesisState.Accounts {
+	addrMap := make(map[string]bool, len(genesisState))
+	for _, acc := range genesisState {
 		addrStr := acc.Address.String()
 
 		// disallow any duplicate accounts

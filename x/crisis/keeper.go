@@ -61,17 +61,18 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 	for _, ir := range invarRoutes {
 		if err := ir.Invar(ctx); err != nil {
 
-			// TODO make "gaiacli" app name a part of context to allow for this to be variable
+			// TODO: Include app name as part of context to allow for this to be
+			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t gaiacli tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
+				"\t\t tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
 		}
 	}
+
 	end := time.Now()
 	diff := end.Sub(start)
 
-	logger.With("module", "x/crisis").Info(
-		"Asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+	logger.With("module", "x/crisis").Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 
 // DONTCOVER

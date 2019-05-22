@@ -79,8 +79,7 @@ to set up a script to periodically withdraw and rebond rewards.
 
 1. **[Concepts](01_concepts.md)**
     - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
-2. **[02_state.md](02_state.md)**
-    - [State](02_state.md#state)
+2. **[State](02_state.md)**
 3. **[End Block](03_end_block.md)**
 4. **[Messages](04_messages.md)**
     - [MsgWithdrawDelegationRewardsAll](04_messages.md#msgwithdrawdelegationrewardsall)

@@ -1,0 +1,1 @@
+#4351 InitCmd, AddGenesisAccountCmd, and CollectGenTxsCmd take node's and client's default home directories as arguments.

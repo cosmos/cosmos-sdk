@@ -38,21 +38,21 @@ initially support [ICS0](https://cosmos.network/rpc/#/ICS0) (TendermintAPI), [IC
 All applications are expected to only run against Gaia-lite. Gaia-lite is the only piece of software
 that offers stability guarantees around the zone API.
 
-### Comparision
+### Comparison
 
 A full node of ABCI is different from its lite client in the following ways:
 
 || Full Node | Gaia-lite | Description|
 |-| ------------- | ----- | -------------- |
-| Execute and verify transactions|Yes|No|Full node will execute and verify all transactions while Gaia-lite won't|
-| Verify and save blocks|Yes|No|Full node will verify and save all blocks while Gaia-lite won't|
-| Participate consensus| Yes|No|Only when the full node is a validtor, it will participate consensus. Lite nodes never participate consensus|
-| Bandwidth cost|Huge|Little|Full node will receive all blocks. if the bandwidth is limited, it will fall behind the main network. What's more, if it happens to be a validator,it will slow down the consensus process. Light clients requires little bandwidth. Only when serving local request, it will cost bandwidth|
-| Computing resource|Huge|Little|Full node will execute all transactions and verify all blocks which require much computing resource|
-| Storage resource|Huge|Little|Full node will save all blocks and ABCI states. Gaia-lite just saves validator sets and some checkpoints|
-| Power consume|Huge|Little|Full nodes have to be deployed on machines which have high performance and will be running all the time. So power consume will be huge. Gaia-lite can be deployed on the same machines as users' applications, or on independent machines but with poor performance. Besides, lite clients can be shutdown anytime when necessary. So Gaia-lite only consume very little power, even mobile devices can meet the power requirement|
-| Provide APIs|All cosmos APIs|Modular APIs|Full node supports all cosmos APIs. Gaia-lite provides modular APIs according to users' configuration|
-| Secuity level| High|High|Full node will verify all transactions and blocks by itself. A light client can't do this, but it can query any data from other full nodes and verify the data independently. So both full nodes and light clients don't need to trust any third nodes, they all can achieve high security|
+| Execute and verify transactions|Yes|No|A full node will execute and verify all transactions while Gaia-lite won't|
+| Verify and save blocks|Yes|No|A full node will verify and save all blocks while Gaia-lite won't|
+| Participate consensus| Yes|No|Only when the full node is a validator, it will participate consensus. Lite nodes never participate in consensus|
+| Bandwidth cost|Huge|Little|A full node will receive all blocks, if the bandwidth is limited, it will fall behind the main network. What's more, if it happens to be a validator, it will slow down the consensus process. Light clients requires little bandwidth. Only when serving local request, it will cost bandwidth|
+| Computing resource|Huge|Little|A full node will execute all transactions and verify all blocks|
+| Storage resource|Huge|Little|A full node will save all blocks and ABCI states. Gaia-lite just saves validator sets and some checkpoints|
+| Power consumption|Huge|Little|A full nodes have to be deployed on machines which have high performance and will be running all the time. So power consumption will be huge. Gaia-lite can be deployed on the same machine as user applications, or independently. There is not a requirement to run the lite-client at all times. Due to the lower power requirements of Gaia-lite, you are able to run it on mobile devices.|
+| Provide APIs|All cosmos APIs|Modular APIs|A full node supports all cosmos APIs. Gaia-lite provides modular APIs according to users' configuration|
+| Security level| High|High|A full node will verify all transactions and blocks by itself. A light client can't do this, but it can query any data from full nodes and verify the data independently. So both full nodes and light clients don't need to trust any third nodes, they can achieve high security|
 
 According to the above table, Gaia-lite can meet all users' functionality and security requirements, but
 only requires little resource on bandwidth, computing, storage and power.
@@ -67,20 +67,20 @@ The base design philosophy of Gaia-lite follows two rules:
 2. **Only trusts the whole validator set**
 
 The original trusted validator set should be prepositioned into its trust store, usually this
-validator set comes from genesis file. During runtime, if Gaia-lite detects a different validator set,
-it will verify it and save new validated validator set to the trust store.
+validator set comes from the genesis file. During runtime, if Gaia-lite detects a different validator set,
+it will verify it and save the new validated validator set to the trust store.
 
 ![validator-set-change](./pics/validatorSetChange.png)
 
 ### Trust Propagation
 
-From the above section, we come to know how to get trusted validator set and how lcd keeps track of
-validator set evolution. Validator set is the foundation of trust, and the trust can propagate to
-other blockchain data, such as block and transaction. The propagate architecture is shown as
+From the above section, we come to know how to get a trusted validator set and how lcd keeps track of
+validator set evolution. The validator set is the foundation of trust, and the trust can propagate to
+other blockchain data, such as blocks and transactions. The propagate architecture is shown as
 follows:
 
 ![change-process](./pics/trustPropagate.png)
 
-In general, by trusted validator set, a light client can verify each block commit which contains all pre-commit
+In general, with a trusted validator set, a light client can verify each block commit which contains all pre-commit
 data and block header data. Then the block hash, data hash and appHash are trusted. Based on this
 and merkle proof, all transactions data and ABCI states can be verified too.

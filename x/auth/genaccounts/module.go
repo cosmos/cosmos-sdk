@@ -77,7 +77,7 @@ func NewAppModule(accountKeeper AccountKeeper) sdk.AppModule {
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	moduleCdc.MustUnmarshalJSON(data, &genesisState)
+	moduleCdc.MustUnmarshalJSON(data, &genesisState.Accounts)
 	InitGenesis(ctx, moduleCdc, am.accountKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }

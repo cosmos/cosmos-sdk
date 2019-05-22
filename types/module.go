@@ -216,6 +216,7 @@ func (mm *ModuleManager) InitGenesis(ctx Context, genesisData map[string]json.Ra
 		if genesisData[moduleName] == nil {
 			continue
 		}
+
 		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// use these validator updates if provided, the module manager assumes

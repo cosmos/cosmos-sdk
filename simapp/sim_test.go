@@ -72,18 +72,21 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
 }
 
-func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
-) (json.RawMessage, []simulation.Account, string) {
+func appStateFromGenesisFileFn(r *rand.Rand, _ []simulation.Account, _ time.Time) (json.RawMessage, []simulation.Account, string) {
+	var (
+		genesis  tmtypes.GenesisDoc
+		appState GenesisState
+	)
 
-	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
+
 	cdc.MustUnmarshalJSON(bytes, &genesis)
-	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+
 	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState).Accounts
 
 	var newAccs []simulation.Account
@@ -92,10 +95,13 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
 		privkeySeed := make([]byte, 15)
+
 		r.Read(privkeySeed)
+
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
+
 	return genesis.AppState, newAccs, genesis.ChainID
 }
 

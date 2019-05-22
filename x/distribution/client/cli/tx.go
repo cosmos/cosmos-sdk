@@ -45,12 +45,15 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	return distTxCmd
 }
 
-func splitGenerateOrBroadcast(
+type generateOrBroadcastFunc func(context.CLIContext, authtxb.TxBuilder, []sdk.Msg) error
+
+func splitAndApply(
+	generateOrBroadcast generateOrBroadcastFunc,
 	cliCtx context.CLIContext,
 	txBldr authtxb.TxBuilder,
 	msgs []sdk.Msg,
-	chunkSize int) error {
-
+	chunkSize int,
+) error {
 	totalMessages := len(msgs)
 	if chunkSize == 0 {
 		chunkSize = totalMessages
@@ -62,11 +65,10 @@ func splitGenerateOrBroadcast(
 			sliceEnd = totalMessages
 		}
 		msgChunk := msgs[i:sliceEnd]
-		if err := utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgChunk); err != nil {
+		if err := generateOrBroadcast(cliCtx, txBldr, msgChunk); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -129,7 +131,7 @@ $ <appcli> tx distr withdraw-all-rewards --from mykey
 			}
 
 			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
-			return splitGenerateOrBroadcast(cliCtx, txBldr, msgs, chunkSize)
+			return splitAndApply(utils.GenerateOrBroadcastMsgs, cliCtx, txBldr, msgs, chunkSize)
 		},
 	}
 	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "limit the number of messages per tx. Zero for unlimited")

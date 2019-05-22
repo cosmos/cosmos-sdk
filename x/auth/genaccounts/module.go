@@ -50,7 +50,7 @@ func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[st
 	iterateFn func(auth.Account) (stop bool)) {
 
 	genesisState := GetGenesisStateFromAppState(cdc, appGenesis)
-	for _, genAcc := range genesisState.Accounts {
+	for _, genAcc := range genesisState {
 		acc := genAcc.ToAccount()
 		if iterateFn(acc) {
 			break

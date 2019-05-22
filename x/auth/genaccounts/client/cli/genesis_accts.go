@@ -73,14 +73,17 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 			}
 
 			// add genesis account to the app state
-			var genesisState genaccounts.GenesisState
-			cdc.MustUnmarshalJSON(appState[genaccounts.ModuleName], &genesisState)
-			if genesisState.Accounts.Contains(addr) {
+			var genesisAccounts genaccounts.GenesisAccounts
+
+			cdc.MustUnmarshalJSON(appState[genaccounts.ModuleName], &genesisAccounts)
+
+			if genesisAccounts.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %v", addr)
 			}
-			genesisState.Accounts = append(genesisState.Accounts, genAcc)
 
-			genesisStateBz := cdc.MustMarshalJSON(genesisState)
+			genesisAccounts = append(genesisAccounts, genAcc)
+
+			genesisStateBz := cdc.MustMarshalJSON(genaccounts.GenesisState(genesisAccounts))
 			appState[genaccounts.ModuleName] = genesisStateBz
 
 			appStateJSON, err := cdc.MarshalJSON(appState)

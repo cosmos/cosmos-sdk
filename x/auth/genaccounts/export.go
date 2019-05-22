@@ -21,5 +21,5 @@ func ExportGenesis(ctx sdk.Context, accountKeeper AccountKeeper) GenesisState {
 		},
 	)
 
-	return NewGenesisState(accounts)
+	return accounts
 }

@@ -84,7 +84,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
-	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState).Accounts
+	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
 
 	var newAccs []simulation.Account
 	for _, acc := range accounts {
@@ -165,8 +165,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	genaccsGenesis := genaccounts.NewGenesisState(genesisAccounts)
-	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
+	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
 
 	authGenesis := auth.NewGenesisState(
 		nil,

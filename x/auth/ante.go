@@ -86,6 +86,10 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer Si
 			}
 		}()
 
+		if res := ValidateSigCount(stdTx, params); !res.IsOK() {
+			return
+		}
+
 		if err := tx.ValidateBasic(); err != nil {
 			return newCtx, err.Result(), true
 		}
@@ -152,6 +156,24 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Accou
 		return acc, sdk.Result{}
 	}
 	return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr)).Result()
+}
+
+// ValidateSigCount validates that the transaction has a valid cumulative total
+// amount of signatures.
+func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
+	stdSigs := stdTx.GetSignatures()
+
+	sigCount := 0
+	for i := 0; i < len(stdSigs); i++ {
+		sigCount += countSubKeys(stdSigs[i].PubKey)
+		if uint64(sigCount) > params.TxSigLimit {
+			return sdk.ErrTooManySignatures(
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, params.TxSigLimit),
+			).Result()
+		}
+	}
+
+	return sdk.Result{}
 }
 
 // ValidateMemo validates the memo size.

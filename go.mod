@@ -26,7 +26,7 @@ require (
 	github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95 // indirect
 	github.com/otiai10/mint v1.2.3 // indirect
 	github.com/pelletier/go-toml v1.2.0
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.2.0 // indirect
@@ -40,13 +40,12 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.0.3
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 // indirect
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.14.1
 	github.com/tendermint/iavl v0.12.1
 	github.com/tendermint/tendermint v0.31.4
-	github.com/zondax/hid v0.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect

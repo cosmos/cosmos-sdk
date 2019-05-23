@@ -24,7 +24,7 @@ func setupTestInput() testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	RegisterCodec(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")

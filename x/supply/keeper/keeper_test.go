@@ -15,10 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,12 +27,10 @@ func TestSupply(t *testing.T) {
 	nAccs := int64(4)
 
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
-	balance, _, _ := keeper.AccountsSupply(ctx)
-	require.Equal(t, initTokens.MulRaw(nAccs).Int64(), balance.AmountOf(keeper.sk.BondDenom(ctx)).Int64())
 
-	total := keeper.TotalSupply(ctx)
+	total := keeper.GetSupply(ctx).Total
+	expectedTotal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(nAccs)))
 
-	expectedTotal := balance.Add(keeper.EscrowedSupply(ctx))
 	require.Equal(t, expectedTotal, total)
 }
 
@@ -43,11 +39,8 @@ func MakeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 
 	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distribution.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
-	supply.RegisterCodec()
-	params.RegisterCodec(cdc)
+	types.RegisterCodec()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
@@ -56,23 +49,17 @@ func MakeTestCodec() *codec.Codec {
 
 func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
-	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
-	keyDistr := sdk.NewKVStoreKey(distribution.StoreKey)
-	tkeyDistr := sdk.NewTransientStoreKey(distribution.TStoreKey)
+	keySupply := sdk.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyDistr, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -88,22 +75,15 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bk, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	dk := distribution.NewKeeper(cdc, keyDistr, pk.Subspace(distribution.DefaultParamspace), bk, sk, fck, distribution.DefaultCodespace)
 
 	valTokens := sdk.TokensFromTendermintPower(initPower)
-
-	pool := staking.InitialPool()
-	pool.NotBondedTokens = pool.NotBondedTokens.Add(valTokens.MulRaw(10))
-	sk.SetPool(ctx, pool)
-	sk.SetParams(ctx, staking.DefaultParams())
-	dk.SetFeePool(ctx, distribution.InitialFeePool())
 
 	initialCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
 	createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
-	keeper := NewKeeper(cdc, ak, dk, fck, sk)
+	keeper := NewKeeper(cdc, keySupply, ak, DefaultCodespace)
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
+	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 
 	return ctx, ak, keeper
 }

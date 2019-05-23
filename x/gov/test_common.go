@@ -42,6 +42,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
+	types.RegisterCodec(mApp.Cdc)
 	supply.RegisterCodec()
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
@@ -64,7 +65,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genState))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov, keySupply))
 
 	var (
 		addrs    []sdk.AccAddress

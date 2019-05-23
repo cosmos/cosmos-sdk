@@ -27,16 +27,24 @@ var (
 	_ subspace.ParamSet = (*testParams)(nil)
 
 	keyMaxValidators = "MaxValidators"
+	keySlashingRate  = "SlashingRate"
 	testSubspace     = "TestSubspace"
 )
 
+type testParamsSlashingRate struct {
+	DoubleSign uint16 `json:"double_sign,omitempty"`
+	Downtime   uint16 `json:"downtime,omitempty"`
+}
+
 type testParams struct {
-	MaxValidators uint16 `json:"max_validators"` // maximum number of validators (max uint16 = 65535)
+	MaxValidators uint16                 `json:"max_validators"` // maximum number of validators (max uint16 = 65535)
+	SlashingRate  testParamsSlashingRate `json:"slashing_rate"`
 }
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
 		{[]byte(keyMaxValidators), &tp.MaxValidators},
+		{[]byte(keySlashingRate), &tp.SlashingRate},
 	}
 }
 
@@ -96,4 +104,26 @@ func TestProposalHandlerFailed(t *testing.T) {
 	require.Error(t, hdlr(input.ctx, tp))
 
 	require.False(t, ss.Has(input.ctx, []byte(keyMaxValidators)))
+}
+
+func TestProposalHandlerUpdateOmitempty(t *testing.T) {
+	input := newTestInput(t)
+	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
+		params.NewKeyTable().RegisterParamSet(&testParams{}),
+	)
+
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
+	var param testParamsSlashingRate
+
+	tp := testProposal(params.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
+	require.NoError(t, hdlr(input.ctx, tp))
+
+	ss.Get(input.ctx, []byte(keySlashingRate), &param)
+	require.Equal(t, testParamsSlashingRate{0, 7}, param)
+
+	tp = testProposal(params.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
+	require.NoError(t, hdlr(input.ctx, tp))
+
+	ss.Get(input.ctx, []byte(keySlashingRate), &param)
+	require.Equal(t, testParamsSlashingRate{10, 7}, param)
 }

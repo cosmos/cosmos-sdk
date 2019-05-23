@@ -6,39 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
-	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
-	return ctx
-}
-
-type invalid struct{}
-
-type s struct {
-	I int
-}
-
-func createTestCodec() *codec.Codec {
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
-	cdc.RegisterConcrete(s{}, "test/s", nil)
-	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return cdc
-}
 
 func TestKeeper(t *testing.T) {
 	kvs := []struct {
@@ -66,11 +36,8 @@ func TestKeeper(t *testing.T) {
 		[]byte("extra2"), string(""),
 	)
 
-	cdc := codec.New()
-	skey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
-	ctx := defaultContext(skey, tkey)
-	keeper := NewKeeper(cdc, skey, tkey, DefaultCodespace)
+	cdc, ctx, skey, _, keeper := testComponents()
+
 	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
 	space := keeper.Subspace("test").WithKeyTable(table)
 
@@ -137,11 +104,7 @@ func indirect(ptr interface{}) interface{} {
 }
 
 func TestSubspace(t *testing.T) {
-	cdc := createTestCodec()
-	key := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
-	ctx := defaultContext(key, tkey)
-	keeper := NewKeeper(cdc, key, tkey, DefaultCodespace)
+	cdc, ctx, key, _, keeper := testComponents()
 
 	kvs := []struct {
 		key   string
@@ -223,11 +186,7 @@ type paramJSON struct {
 }
 
 func TestJSONUpdate(t *testing.T) {
-	cdc := createTestCodec()
-	mkey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
-	ctx := defaultContext(mkey, tkey)
-	keeper := NewKeeper(cdc, mkey, tkey, DefaultCodespace)
+	_, ctx, _, _, keeper := testComponents()
 
 	key := []byte("key")
 

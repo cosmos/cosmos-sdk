@@ -41,11 +41,9 @@ func TestBaseNFTSetMethods(t *testing.T) {
 	require.Equal(t, image, testNFT.GetImage())
 	require.Equal(t, tokenURI, testNFT.GetTokenURI())
 
-	// TODO: fix implementation, this actually fails
 	newTestNFT := testNFT.SetOwner(owner2)
 	require.Equal(t, owner2, newTestNFT.GetOwner())
 
-	// TODO: fix implementation, this actually fails
 	newTestNFT2 := testNFT.EditMetadata(name2, description2, image2, tokenURI2)
 	require.Equal(t, name2, newTestNFT2.GetName())
 	require.Equal(t, description2, newTestNFT2.GetDescription())

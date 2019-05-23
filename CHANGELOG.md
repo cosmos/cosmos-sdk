@@ -10,6 +10,10 @@
 
 ### Improvements
 
+### SDK
+
+* [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of `CacheKVStore` iterator.
+
 #### Gaia CLI
 
 * [#4345](https://github.com/cosmos/cosmos-sdk/pull/4345) Update `ledger-cosmos-go`

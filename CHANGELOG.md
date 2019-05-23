@@ -13,6 +13,7 @@
 ### SDK
 
 * [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of `CacheKVStore` iterator.
+* [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
 
 #### Gaia CLI
 

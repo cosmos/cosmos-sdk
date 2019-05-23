@@ -14,13 +14,13 @@ import (
 type NFT interface {
 	GetID() uint64
 	GetOwner() sdk.AccAddress
-	SetOwner(address sdk.AccAddress) BaseNFT
+	SetOwner(address sdk.AccAddress) NFT
 	GetName() string
 	GetDescription() string
 	GetImage() string
 	GetTokenURI() string
 
-	EditMetadata(name, description, image, tokenURI string) BaseNFT
+	EditMetadata(name, description, image, tokenURI string) NFT
 	String() string
 }
 
@@ -56,15 +56,8 @@ func (bnft BaseNFT) GetID() uint64 { return bnft.ID }
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
 
 // SetOwner updates the owner address of the NFT
-func (bnft BaseNFT) SetOwner(address sdk.AccAddress) BaseNFT {
-	return BaseNFT{
-		ID:          bnft.GetID(),
-		Owner:       address,
-		Name:        bnft.GetName(),
-		Description: bnft.GetDescription(),
-		Image:       bnft.GetImage(),
-		TokenURI:    bnft.GetTokenURI(),
-	}
+func (bnft BaseNFT) SetOwner(address sdk.AccAddress) NFT {
+	return NFT(NewBaseNFT(bnft.ID, address, bnft.TokenURI, bnft.Description, bnft.Image, bnft.Name))
 }
 
 // GetName returns the name of the token
@@ -80,15 +73,8 @@ func (bnft BaseNFT) GetImage() string { return bnft.Image }
 func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
 
 // EditMetadata edits metadata of an nft
-func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) BaseNFT {
-	return BaseNFT{
-		ID:          bnft.GetID(),
-		Owner:       bnft.GetOwner(),
-		Name:        name,
-		Description: description,
-		Image:       image,
-		TokenURI:    tokenURI,
-	}
+func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) NFT {
+	return NFT(NewBaseNFT(bnft.ID, bnft.Owner, tokenURI, description, image, name))
 }
 
 func (bnft BaseNFT) String() string {

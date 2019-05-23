@@ -36,6 +36,9 @@ Proper vetting of a parameter change proposal should prevent this from happening
 (no deposits should occur during the governance process), but it should be noted
 regardless. 
 
+If the type of "value" is a struct and has "omitempty" in the tag in its definition, 
+unupdated fields can be left empty. Only the denoted fields will be updated.
+
 Example:
 $ %s tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
 

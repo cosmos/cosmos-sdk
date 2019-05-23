@@ -216,3 +216,38 @@ func TestSubspace(t *testing.T) {
 		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 	}
 }
+
+type paramJSON struct {
+	Param1 int64  `json:"param1,omitempty"`
+	Param2 string `json:"param2,omitempty"`
+}
+
+func TestJSONUpdate(t *testing.T) {
+	cdc := createTestCodec()
+	mkey := sdk.NewKVStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	ctx := defaultContext(mkey, tkey)
+	keeper := NewKeeper(cdc, mkey, tkey, DefaultCodespace)
+
+	key := []byte("key")
+
+	space := keeper.Subspace("test").WithKeyTable(NewKeyTable(key, paramJSON{}))
+
+	var param paramJSON
+
+	space.Update(ctx, key, []byte(`{"param1": "10241024"}`))
+	space.Get(ctx, key, &param)
+	require.Equal(t, paramJSON{10241024, ""}, param)
+
+	space.Update(ctx, key, []byte(`{"param2": "helloworld"}`))
+	space.Get(ctx, key, &param)
+	require.Equal(t, paramJSON{10241024, "helloworld"}, param)
+
+	space.Update(ctx, key, []byte(`{"param1": "20482048"}`))
+	space.Get(ctx, key, &param)
+	require.Equal(t, paramJSON{20482048, "helloworld"}, param)
+
+	space.Update(ctx, key, []byte(`{"param1": "40964096", "param2": "goodbyeworld"}`))
+	space.Get(ctx, key, &param)
+	require.Equal(t, paramJSON{40964096, "goodbyeworld"}, param)
+}

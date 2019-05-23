@@ -126,7 +126,7 @@ func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.
 		}
 
 		paramChangesKeys[spc.compKey()] = struct{}{}
-		paramChanges[i] = params.NewParamChange(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
+		paramChanges[i] = params.NewParamChangeWithSubkey(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
 	}
 
 	return params.NewParameterChangeProposal(

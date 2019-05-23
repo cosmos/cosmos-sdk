@@ -76,7 +76,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 		params.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "", "1"))
+	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "1"))
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.NoError(t, hdlr(input.ctx, tp))
 
@@ -91,7 +91,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 		params.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "", "invalidType"))
+	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.Error(t, hdlr(input.ctx, tp))
 

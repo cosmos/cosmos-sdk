@@ -177,10 +177,10 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
-// SetRaw stores raw parameter bytes. It returns error if the stored parameter
+// Update stores raw parameter bytes. It returns error if the stored parameter
 // has a different type from the input. It also sets to the transient store to
 // record change.
-func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
+func (s Subspace) Update(ctx sdk.Context, key []byte, param []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
@@ -220,9 +220,9 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	tstore.Set(newkey, []byte{})
 }
 
-// SetRawWithSubkey stores raw parameter bytes  with a key and subkey. It checks
+// UpdateWithSubkey stores raw parameter bytes  with a key and subkey. It checks
 // the parameter type only over the key.
-func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
+func (s Subspace) UpdateWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
 	concatkey := concatKeys(key, subkey)
 
 	attr, ok := s.table.m[string(concatkey)]

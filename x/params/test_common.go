@@ -29,7 +29,10 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
-	cms.LoadLatestVersion()
+	err := cms.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
 }

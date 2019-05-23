@@ -1,108 +1,30 @@
 # SDK Intro
 
-The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is a framework for building multi-asset public Proof-of-Stake (PoS) blockchains, like the Cosmos Hub, as well as permissionned Proof-Of-Authority (PoA) blockchains.
+## What is the SDK?
 
-The goal of the Cosmos SDK is to allow developers to easily create custom  blockchains from scratch that can natively interoperate with other blockchains. We envision the SDK as the npm-like framework to build secure blockchain applications on top of [Tendermint](https://github.com/tendermint/tendermint).
+The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is a framework for building multi-asset public Proof-of-Stake (PoS) blockchains, like the Cosmos Hub, as well as permissionned Proof-Of-Authority (PoA) blockchains. Blockchains built with the Cosmos SDK are generally referred to as **application-specific blockchains**. 
 
-It is based on two major principles:
+The goal of the Cosmos SDK is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains. We envision the SDK as the Ruby-on-Rails-like framework to build secure blockchain applications on top of [Tendermint](https://github.com/tendermint/tendermint). SDK-based blockchains are built out of composable modules, most of which are open source and readily available for any developers to use. Anyone can create a module for the Cosmos-SDK, and integrating already-built modules is as simple as importing them into your blockchain application. What's more, the Cosmos SDK is a capabilities-based system, which allows developer to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [this section](./ocap.md).
 
-- **Composability:** Anyone can create a module for the Cosmos-SDK, and integrating the already-built modules is as simple as importing them into your blockchain application.
+## What are Application-Specific Blockchains?
 
-- **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on object-capabilities. In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's the developer's job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each third party module. For a deeper look at capabilities, jump to [this section](./ocap.md).
+One development paradigm in the blockchain world today is that of virtual-machine blockchains like Ethereum, where development generally revolves around building a decentralised applications on top of an existing blockchain as a set of smart contracts. While smart contracts can be very good for some use cases like single-use applications (e.g. ICOs), they often fall short for building complex decentralised platforms. More generally, smart contracts can be limiting in terms of flexibility, sovereignty and performance.
 
-## SDK Application Architecture
+Application-specific blockchains offer a radically different development paradigm than virtual-machine blockchains. An application-specific blockchain is a blockchain customized to operate a single application: developers have all the freedom to make the design decisions required for the application to run optimally. They can also provide better sovereignty, security and performance. 
 
-### State machine 
+To learn more about application-specific blockchains, [click here](./why-app-specific.md).
 
-At its core, a blockchain is a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). 
+## Why the Cosmos SDK?
 
-A state machine is a computer science concept whereby a machine can have multiple states, but only one at any given time. There is a `state`, which describes the current state of the system, and `transactions`, that trigger state transitions. 
+The Cosmos SDK is the most advanced framework for building custom application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralised application with the Cosmos SDK:
 
-Given a state S and a transaction T, the state machine will return a new state S'. 
+- The default consensus engine available within the SDK is [Tendermint Core](https://github.com/tendermint/tendermint). Tendermint is the most (and only) mature BFT consensus engine in existence. It is widely used accross the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
+- The SDK is open source and designed to make it easy to build blockchains out of composable modules. As the ecosystem of open source SDK modules grow, it will become increasingly easier to build complex decentralised platforms with it. 
+- The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains. 
+- Most importantly, the Cosmos SDK has already been used to build many application-specific blockchains that are already in production. Among others, we can cite [Cosmos Hub](https://hub.cosmos.network), [Iris](https://irisnet.org), [Binance Chain](https://docs.binance.org/), [Terra](https://terra.money/) or [Lino](https://lino.network/). Many more are building on the Cosmos SDK. You can get a view of the ecosystem [here](https://cosmos.network/ecosystem).
 
-```
-+--------+                 +--------+
-|        |                 |        |
-|   S    +---------------->+   S'   |
-|        |    apply(T)     |        |
-+--------+                 +--------+
-```
+## Getting started with the Cosmos SDK
 
-In practice, the transactions are bundled in blocks to make the process more efficient. Given a state S and a block of transactions B, the state machine will return a new state S'.
+- Learn more about the [architecture of an SDK application](./sdk-app-architecture.md)
+- Learn how to build an application-specific blockchain from scratch with the [SDK Tutorial](https://cosmos.network/docs/tutorial)
 
-```
-+--------+                              +--------+
-|        |                              |        |
-|   S    +----------------------------> |   S'   |
-|        |   For each T in B: apply(T)  |        |
-+--------+                              +--------+
-```
-
-In a blockchain context, the state machine is deterministic. This means that if you start at a given state and replay the same sequence of transactions, you will always end up with the same final state. 
-
-The Cosmos SDK gives you maximum flexibility to define the state of your application, transaction types and state transition functions. The process of building the state-machine with the SDK will be described more in depth in the following sections. But first, let us see how it is replicated using **Tendermint**. 
-
-### Tendermint
-
-As a developer, you just have to define the state machine using the Cosmos-SDK, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for you.
-
-
-```
-                ^  +-------------------------------+  ^
-                |  |                               |  |   Built with Cosmos SDK
-                |  |  State-machine = Application  |  |
-                |  |                               |  v
-                |  +-------------------------------+
-                |  |                               |  ^
-Blockchain node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   Tendermint Core
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
-```
-
-
-Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is responsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html).
-
-Tendermint consensus algorithm works with a set of special nodes called *Validators*. Validators are responsible for adding blocks of transactions to the blockchain. At any given block, there is a validator set V. A validator in V is chosen by the algorithm to be the proposer of the next block. This block is considered valid if more than two thirds of V signed a *[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)* and a *[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)* on it, and if all the transactions that it contains are valid. The validator set can be changed by rules written in the state-machine. For a deeper look at the algorithm, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview).
-
-
-The main part of a Cosmos SDK application is a blockchain daemon that is run by each node in the network locally. If less than one third of the *validator set* is byzantine (i.e. malicious), then each node should obtain the same result when querying the state at the same time. 
-
-## ABCI
-
-Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci), which the application must implement. 
-
-```
-+---------------------+
-|                     |
-|     Application     |
-|                     |
-+--------+---+--------+
-         ^   |
-         |   | ABCI
-         |   v
-+--------+---+--------+
-|                     |
-|                     |
-|     Tendermint      |
-|                     |
-|                     |
-+---------------------+
-```
-
-Note that **Tendermint only handles transaction bytes**. It has no knowledge of what these bytes mean. All Tendermint does is order these transaction bytes deterministically. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the messages contained in the transactions were successfully processed or not. 
-
-Here are the most important messages of the ABCI:
-
-- `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check if a few basic requirements are met. `CheckTx` is used to protect the mempool of full-nodes against spam. A special handler called the "Ante Handler" is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the check is valid, the transaction is added to the [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet. 
-- `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by Tendermint Core, each transaction in the given block is passed to the application via `DeliverTx` to be processed. It is during this stage that the state transitions occur. The "Ante Handler" executes again along with the actual handlers for each message in the transaction.
- - `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
-
-For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
-
-Any application built on Tendermint needs to implement the ABCI interface in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
-
-### Next, let us go into the [high-level design principles of the SDK](./sdk-design.md)

@@ -7,17 +7,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/assert"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runAddCmdLedger(t *testing.T) {
@@ -28,13 +27,13 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
-	viper.Set(cli.HomeFlag, kbHome)
-	viper.Set(client.FlagUseLedger, true)
+	viper.Set(flags.FlagHome, kbHome)
+	viper.Set(flags.FlagUseLedger, true)
 
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	cleanUp1 := input.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
 	err := runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)

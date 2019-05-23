@@ -12,8 +12,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -65,7 +65,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	rs.log.Info(
 		fmt.Sprintf(
 			"Starting application REST service (chain-id: %q)...",
-			viper.GetString(client.FlagChainID),
+			viper.GetString(flags.FlagChainID),
 		),
 	)
 
@@ -86,15 +86,15 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(
-				viper.GetString(client.FlagListenAddr),
-				viper.GetInt(client.FlagMaxOpenConnections),
-				uint(viper.GetInt(client.FlagRPCReadTimeout)),
-				uint(viper.GetInt(client.FlagRPCWriteTimeout)),
+				viper.GetString(flags.FlagListenAddr),
+				viper.GetInt(flags.FlagMaxOpenConnections),
+				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
+				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
 			)
 
 			return err
 		},
 	}
 
-	return client.RegisterRestServerFlags(cmd)
+	return flags.RegisterRestServerFlags(cmd)
 }

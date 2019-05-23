@@ -307,7 +307,7 @@ func TestParamchangeProposalPassedEndblocker(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10)))
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())

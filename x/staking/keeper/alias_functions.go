@@ -90,35 +90,21 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 
 // TotalBondedTokens total staking tokens supply which is bonded
 func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
-	params := k.GetParams(ctx)
-
 	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
 	if err != nil {
 		panic(err)
 	}
 
-	return bondedPool.GetCoins().AmountOf(params.BondDenom)
+	return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
 }
 
-// StakingTokenSupply total staking tokens supply bonded and unbonded
+// StakingTokenSupply staking tokens from the total supply
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	params := k.GetParams(ctx)
-	notBondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
-	if err != nil {
-		panic(err)
-	}
-
-	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
-	if err != nil {
-		panic(err)
-	}
-
-	return bondedPool.GetCoins().AmountOf(params.BondDenom).Add(notBondedPool.GetCoins().AmountOf(params.BondDenom))
+	return k.supplyKeeper.GetSupply(ctx).Total.AmountOf(k.BondDenom(ctx))
 }
 
 // BondedRatio the fraction of the staking tokens which are currently bonded
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
 	bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
 	if err != nil {
 		panic(err)
@@ -126,7 +112,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
-		return bondedPool.GetCoins().AmountOf(params.BondDenom).ToDec().QuoInt(stakeSupply)
+		return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec().QuoInt(stakeSupply)
 	}
 	return sdk.ZeroDec()
 }

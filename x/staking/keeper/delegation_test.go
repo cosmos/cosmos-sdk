@@ -174,6 +174,7 @@ func TestUnbondDelegation(t *testing.T) {
 	notBondedPool, err := keeper.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
 	require.NoError(t, err)
 	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})

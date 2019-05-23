@@ -448,7 +448,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 		case sdk.Unbonded:
 			return v
 		case sdk.Bonded:
-			k.UnbondedTokensToBonded(ctx, v.Tokens)
+			k.notBondedTokensToBonded(ctx, v.Tokens)
 		}
 	case sdk.Unbonding:
 
@@ -456,7 +456,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 		case sdk.Unbonding:
 			return v
 		case sdk.Bonded:
-			k.UnbondedTokensToBonded(ctx, v.Tokens)
+			k.notBondedTokensToBonded(ctx, v.Tokens)
 		}
 	case sdk.Bonded:
 
@@ -464,7 +464,7 @@ func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.B
 		case sdk.Bonded:
 			return v
 		default:
-			k.BondedTokensToUnbonded(ctx, v.Tokens)
+			k.bondedTokensToNotBonded(ctx, v.Tokens)
 		}
 	}
 
@@ -491,7 +491,7 @@ func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.
 	}
 
 	if v.Status == sdk.Bonded {
-		k.UnbondedTokensToBonded(ctx, amount)
+		k.notBondedTokensToBonded(ctx, amount)
 	}
 
 	v.Tokens = v.Tokens.Add(amount)
@@ -514,7 +514,7 @@ func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 	v.Tokens = v.Tokens.Sub(tokens)
 	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
 	if v.Status == sdk.Bonded {
-		k.BondedTokensToUnbonded(ctx, tokens)
+		k.bondedTokensToNotBonded(ctx, tokens)
 	}
 	return v
 }
@@ -545,7 +545,7 @@ func (k Keeper) removeDelShares(ctx sdk.Context, v types.Validator, delShares sd
 
 	v.DelegatorShares = remainingShares
 	if v.Status == sdk.Bonded {
-		k.BondedTokensToUnbonded(ctx, issuedTokens)
+		k.bondedTokensToNotBonded(ctx, issuedTokens)
 	}
 
 	return v, issuedTokens

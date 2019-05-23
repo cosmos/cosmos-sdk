@@ -7,7 +7,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -35,24 +34,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 	if notBondedPool == nil {
 		notBondedPool = supply.NewPoolHolderAccount(NotBondedTokensName)
-		keeper.SetNotBondedPool(ctx, notBondedPool)
-	}
-
-	// manually set the total supply for staking based on accounts if not provided
-	if notBondedPool.GetCoins().AmountOf(data.Params.BondDenom).IsZero() {
-		var notBondedTokens sdk.Int
-		accountKeeper.IterateAccounts(ctx,
-			func(acc auth.Account) (stop bool) {
-				notBondedTokens = notBondedTokens.
-					Add(acc.GetCoins().AmountOf(data.Params.BondDenom))
-				return false
-			},
-		)
-		err := notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens)))
-		if err != nil {
-			panic(err)
-		}
-
 		keeper.SetNotBondedPool(ctx, notBondedPool)
 	}
 

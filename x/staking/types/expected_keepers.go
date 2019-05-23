@@ -12,11 +12,6 @@ type DistributionKeeper interface {
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
-// expected fee collection keeper
-type FeeCollectionKeeper interface {
-	GetCollectedFees(ctx sdk.Context) sdk.Coins
-}
-
 // expected bank keeper
 type BankKeeper interface {
 	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
@@ -30,6 +25,8 @@ type AccountKeeper interface {
 
 // SupplyKeeper defines the expected supply Keeper
 type SupplyKeeper interface {
+	GetSupply(ctx sdk.Context) supply.Supply
+
 	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
 	SetPoolAccount(ctx sdk.Context, pacc supply.PoolAccount)
 

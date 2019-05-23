@@ -48,7 +48,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 type AppModule struct {
 	AppModuleBasic
 	keeper      Keeper
-	fcKeeper    FeeCollectionKeeper
 	distrKeeper DistributionKeeper
 	accKeeper   AccountKeeper
 }

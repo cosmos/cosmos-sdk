@@ -238,7 +238,6 @@ type (
 	RedelegationResponses     = types.RedelegationResponses
 	CodeType                  = types.CodeType
 	DistributionKeeper        = types.DistributionKeeper
-	FeeCollectionKeeper       = types.FeeCollectionKeeper
 	BankKeeper                = types.BankKeeper
 	AccountKeeper             = types.AccountKeeper
 	GenesisState              = types.GenesisState

@@ -92,7 +92,20 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store.Set(LastTotalPowerKey, b)
 }
 
-func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
+// freeCoinsToNotBonded adds coins to the not bonded pool of coins within the staking module
+func (k Keeper) freeCoinsToNotBonded(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	_, notBondedPool := k.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(amt))
+	if err != nil {
+		return sdk.ErrInternal(err.Error())
+	}
+
+	k.SetNotBondedPool(ctx, notBondedPool)
+	return nil
+}
+
+// notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
+func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
 	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
 	if err != nil {
@@ -100,7 +113,8 @@ func (k Keeper) UnbondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int)
 	}
 }
 
-func (k Keeper) BondedTokensToUnbonded(ctx sdk.Context, bondedTokens sdk.Int) {
+// bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
+func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
 	err := k.supplyKeeper.SendCoinsPoolToPool(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
 	if err != nil {

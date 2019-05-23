@@ -32,6 +32,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 			k.Logger(ctx).Info(
 				fmt.Sprintf("setting new parameter; key: %s, value: %s", c.Key, c.Value),
 			)
+
 			err = ss.SetRaw(ctx, []byte(c.Key), []byte(c.Value))
 		} else {
 			k.Logger(ctx).Info(

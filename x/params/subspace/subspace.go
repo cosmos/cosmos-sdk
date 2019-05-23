@@ -188,13 +188,13 @@ func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
 
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
+	s.GetIfExists(ctx, key, dest)
 	err := s.cdc.UnmarshalJSON(param, dest)
 	if err != nil {
 		return err
 	}
 
-	store := s.kvStore(ctx)
-	store.Set(key, param)
+	s.Set(ctx, key, dest)
 	tStore := s.transientStore(ctx)
 	tStore.Set(key, []byte{})
 
@@ -232,13 +232,13 @@ func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, p
 
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
-	err := s.cdc.UnmarshalJSON(param, &dest)
+	s.GetWithSubkeyIfExists(ctx, key, subkey, dest)
+	err := s.cdc.UnmarshalJSON(param, dest)
 	if err != nil {
 		return err
 	}
 
-	store := s.kvStore(ctx)
-	store.Set(concatkey, param)
+	s.SetWithSubkey(ctx, key, subkey, dest)
 	tStore := s.transientStore(ctx)
 	tStore.Set(concatkey, []byte{})
 

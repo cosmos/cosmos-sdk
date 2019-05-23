@@ -54,21 +54,26 @@ func splitAndApply(
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {
-	totalMessages := len(msgs)
+
 	if chunkSize == 0 {
-		chunkSize = totalMessages
+		return generateOrBroadcast(cliCtx, txBldr, msgs)
 	}
 
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
 	for i := 0; i < len(msgs); i += chunkSize {
+
 		sliceEnd := i + chunkSize
 		if sliceEnd > totalMessages {
 			sliceEnd = totalMessages
 		}
+
 		msgChunk := msgs[i:sliceEnd]
 		if err := generateOrBroadcast(cliCtx, txBldr, msgChunk); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

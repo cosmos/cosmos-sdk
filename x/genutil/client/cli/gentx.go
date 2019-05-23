@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -72,11 +73,11 @@ following delegation and commission default parameters:
 			}
 
 			// Read --nodeID, if empty take it from priv_validator.json
-			if nodeIDString := viper.GetString(cli.FlagNodeID); nodeIDString != "" {
+			if nodeIDString := viper.GetString(flagNodeID); nodeIDString != "" {
 				nodeID = nodeIDString
 			}
 
-			ip := viper.GetString(cli.FlagIP)
+			ip := viper.GetString(flagIP)
 			if ip == "" {
 				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
 					"the tx's memo field will be unset")
@@ -108,22 +109,22 @@ following delegation and commission default parameters:
 			}
 
 			// Read --pubkey, if empty take it from priv_validator.json
-			if valPubKeyString := viper.GetString(cli.FlagPubKey); valPubKeyString != "" {
+			if valPubKeyString := viper.GetString(flagPubKey); valPubKeyString != "" {
 				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
 				if err != nil {
 					return err
 				}
 			}
 
-			website := viper.GetString(cli.FlagWebsite)
-			details := viper.GetString(cli.FlagDetails)
-			identity := viper.GetString(cli.FlagIdentity)
+			website := viper.GetString(flagWebsite)
+			details := viper.GetString(flagDetails)
+			identity := viper.GetString(flagIdentity)
 
 			// Set flags for creating gentx
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey, website, details, identity)
 
 			// Fetch the amount of coins staked
-			amount := viper.GetString(cli.FlagAmount)
+			amount := viper.GetString(flagAmount)
 			coins, err := sdk.ParseCoins(amount)
 			if err != nil {
 				return err
@@ -144,8 +145,25 @@ following delegation and commission default parameters:
 			// favor of a 'gentx' flag in the create-validator command.
 			viper.Set(client.FlagGenerateOnly, true)
 
+			// get flag information
+			description := staking.NewDescription(
+				viper.GetString(flagMoniker),
+				viper.GetString(flagIdentity),
+				viper.GetString(flagWebsite),
+				viper.GetString(flagDetails),
+			)
+			amounstStr := viper.GetString(flagAmount)
+			pkStr := viper.GetString(flagPubKey)
+			rateStr := viper.GetString(flagCommissionRate)
+			maxRateStr := viper.GetString(flagCommissionMaxRate)
+			maxChangeRateStr := viper.GetString(flagCommissionMaxChangeRate)
+			msbStr := viper.GetString(flagMinSelfDelegation)
+			generateOnly := viper.GetBool(client.FlagGenerateOnly)
+
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr,
+				amounstStr, pkStr, rateStr, maxRateStr, maxChangeRateStr, msbStr,
+				ip, nodeID, description, generateOnly)
 			if err != nil {
 				return err
 			}
@@ -206,18 +224,36 @@ following delegation and commission default parameters:
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
-	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
-	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
-	cmd.Flags().String(cli.FlagWebsite, "", "The validator's (optional) website")
-	cmd.Flags().String(cli.FlagDetails, "", "The validator's (optional) details")
-	cmd.Flags().String(cli.FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
-	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
-	cmd.Flags().AddFlagSet(cli.FsMinSelfDelegation)
-	cmd.Flags().AddFlagSet(cli.FsAmount)
-	cmd.Flags().AddFlagSet(cli.FsPk)
+	cmd.Flags().String(flagIP, ip, "The node's public IP")
+	cmd.Flags().String(flagNodeID, "", "The node's NodeID")
+	cmd.Flags().String(flagWebsite, "", "The validator's (optional) website")
+	cmd.Flags().String(flagDetails, "", "The validator's (optional) details")
+	cmd.Flags().String(flagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
+	cmd.Flags().String(flagCommissionRate, "", "The initial commission rate percentage")
+	cmd.Flags().String(flagCommissionMaxRate, "", "The maximum commission rate percentage")
+	cmd.Flags().String(flagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
+	cmd.Flags().String(flagMinSelfDelegation, "", "The minimum self delegation required on the validator")
+	cmd.Flags().String(flagAmount, "", "Amount of coins to bond")
+	cmd.Flags().String(flagPubKey, "", "The Bech32 encoded PubKey of the validator")
+
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
+
+const (
+	flagIP                      = "ip"
+	flagNodeID                  = "node-id"
+	flagWebsite                 = "website"
+	flagDetails                 = "details"
+	flagPubKey                  = "pubkey"
+	flagAmount                  = "amount"
+	flagMoniker                 = "moniker"
+	flagIdentity                = "identity"
+	flagCommissionRate          = "commission-rate"
+	flagCommissionMaxRate       = "commission-max-rate"
+	flagCommissionMaxChangeRate = "commission-max-change-rate"
+	flagMinSelfDelegation       = "min-self-delegation"
+)
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
@@ -257,31 +293,31 @@ func prepareFlagsForTxCreateValidator(
 	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))
 	viper.Set(client.FlagChainID, chainID)
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
-	viper.Set(cli.FlagNodeID, nodeID)
-	viper.Set(cli.FlagIP, ip)
-	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
-	viper.Set(cli.FlagMoniker, config.Moniker)
-	viper.Set(cli.FlagWebsite, website)
-	viper.Set(cli.FlagDetails, details)
-	viper.Set(cli.FlagIdentity, identity)
+	viper.Set(flagNodeID, nodeID)
+	viper.Set(flagIP, ip)
+	viper.Set(flagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
+	viper.Set(flagMoniker, config.Moniker)
+	viper.Set(flagWebsite, website)
+	viper.Set(flagDetails, details)
+	viper.Set(flagIdentity, identity)
 
 	if config.Moniker == "" {
-		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
+		viper.Set(flagMoniker, viper.GetString(client.FlagName))
 	}
-	if viper.GetString(cli.FlagAmount) == "" {
-		viper.Set(cli.FlagAmount, defaultAmount)
+	if viper.GetString(flagAmount) == "" {
+		viper.Set(flagAmount, defaultAmount)
 	}
-	if viper.GetString(cli.FlagCommissionRate) == "" {
-		viper.Set(cli.FlagCommissionRate, defaultCommissionRate)
+	if viper.GetString(flagCommissionRate) == "" {
+		viper.Set(flagCommissionRate, defaultCommissionRate)
 	}
-	if viper.GetString(cli.FlagCommissionMaxRate) == "" {
-		viper.Set(cli.FlagCommissionMaxRate, defaultCommissionMaxRate)
+	if viper.GetString(flagCommissionMaxRate) == "" {
+		viper.Set(flagCommissionMaxRate, defaultCommissionMaxRate)
 	}
-	if viper.GetString(cli.FlagCommissionMaxChangeRate) == "" {
-		viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
+	if viper.GetString(flagCommissionMaxChangeRate) == "" {
+		viper.Set(flagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
 	}
-	if viper.GetString(cli.FlagMinSelfDelegation) == "" {
-		viper.Set(cli.FlagMinSelfDelegation, defaultMinSelfDelegation)
+	if viper.GetString(flagMinSelfDelegation) == "" {
+		viper.Set(flagMinSelfDelegation, defaultMinSelfDelegation)
 	}
 }
 

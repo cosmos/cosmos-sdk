@@ -10,3 +10,5 @@
     - [NextInflationRate](03_begin_block.md#nextinflationrate)
     - [NextAnnualProvisions](03_begin_block.md#nextannualprovisions)
     - [BlockProvision](03_begin_block.md#blockprovision)
+4. **[Parameters](04_params.md)**
+    

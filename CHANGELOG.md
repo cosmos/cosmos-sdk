@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.34.5
+
+### Bug Fixes
+
+#### SDK
+
+* [\#4273](https://github.com/cosmos/cosmos-sdk/issues/4273) Fix usage of `AppendTags` in x/staking/handler.go
+
+### Improvements
+
+### SDK
+
+* [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of `CacheKVStore` iterator.
+* [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
+
+#### Gaia CLI
+
+* [\#4227](https://github.com/cosmos/cosmos-sdk/issues/4227) Support for Ledger App v1.5.
+* [#4345](https://github.com/cosmos/cosmos-sdk/pull/4345) Update `ledger-cosmos-go`
+to v0.10.3.
+
 ## 0.34.4
 
 ### Bug Fixes
@@ -7,7 +28,7 @@
 #### SDK
 
 * [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
-actually work offline. 
+actually work offline.
 
 #### Gaia
 

@@ -10,7 +10,7 @@ import (
 
 // SendCoinsPoolToAccount trasfers coins from a PoolAccount to an AccAddress
 func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	senderAcc, err := k.GetAccountByName(ctx, senderModule)
+	senderAcc, err := k.GetPoolAccountByName(ctx, senderModule)
 	if err != nil {
 		return err
 	}
@@ -25,12 +25,12 @@ func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, rec
 
 // SendCoinsPoolToPool trasfers coins from a PoolAccount to another
 func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
-	senderAcc, err := k.GetAccountByName(ctx, senderModule)
+	senderAcc, err := k.GetPoolAccountByName(ctx, senderModule)
 	if err != nil {
 		return err
 	}
 
-	recipientAcc, err := k.GetAccountByName(ctx, recipientModule)
+	recipientAcc, err := k.GetPoolAccountByName(ctx, recipientModule)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModu
 
 // SendCoinsAccountToPool trasfers coins from an AccAddress to a PoolAccount
 func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
-	recipientAcc, err := k.GetAccountByName(ctx, recipientModule)
+	recipientAcc, err := k.GetPoolAccountByName(ctx, recipientModule)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddres
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
 // Panics if the name maps to a HolderAccount
 func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	poolAcc, err := k.GetAccountByName(ctx, name)
+	poolAcc, err := k.GetPoolAccountByName(ctx, name)
 	if err != nil {
 		return err
 	}

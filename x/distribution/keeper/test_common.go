@@ -129,9 +129,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 
-	err = notBondedPool.SetCoins(totalSupply)
-	require.NoError(t, err)
-
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 	supplyKeeper.SetPoolAccount(ctx, notBondedPool)
 	supplyKeeper.SetPoolAccount(ctx, bondPool)
 	supplyKeeper.SetPoolAccount(ctx, distrAcc)

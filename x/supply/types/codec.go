@@ -6,6 +6,8 @@ import (
 )
 
 // RegisterCodec registers the account types and interface on the auth codec
+// FIXME: panic: TypeInfo already exists for types.PoolAccount
+// FIXME: panic: types.PoolHolderAccount conflicts with 2 other(s). Add it to the priority list for auth.Account.
 func RegisterCodec() {
 	auth.RegisterAccountInterface((*PoolAccount)(nil))
 	auth.RegisterAccountType(&PoolHolderAccount{}, "auth/PoolHolderAccount")

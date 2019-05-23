@@ -50,18 +50,20 @@ func newTestInput(t *testing.T) testInput {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
+
 	paramsKeeper := params.NewKeeper(moduleCdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(moduleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	supplyKeeper := supply.NewKeeper(moduleCdc, keySupply, accountKeeper, supply.DefaultCodespace)
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
+
 	stakingKeeper := staking.NewKeeper(
 		moduleCdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 	mintKeeper := NewKeeper(moduleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace),
 		&stakingKeeper, supplyKeeper,
 	)
-
-	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 
 	mintKeeper.SetParams(ctx, DefaultParams())
 	mintKeeper.SetMinter(ctx, DefaultInitialMinter())

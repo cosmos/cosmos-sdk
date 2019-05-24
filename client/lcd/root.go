@@ -88,6 +88,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
+			rs.registerSwaggerUI()
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(

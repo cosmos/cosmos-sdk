@@ -23,7 +23,7 @@ ci: tools build test_cover lint test
 ########################################
 ### Build
 
-build: update-swagger-docs go.sum
+build: go.sum
 	@go build -mod=readonly ./...
 
 update-swagger-docs: tools

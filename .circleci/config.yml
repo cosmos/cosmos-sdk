@@ -255,7 +255,7 @@ jobs:
           command: |
             set -ex
 
-            make update_gaia_lite_docs
+            make update-swagger-docs
             if [ -n "$(git status --porcelain)" ]; then
               echo "there are changes";
               exit 1

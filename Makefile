@@ -23,10 +23,10 @@ ci: tools build test_cover lint test
 ########################################
 ### Build
 
-build: update_gaia_lite_docs go.sum
+build: update-swagger-docs go.sum
 	@go build -mod=readonly ./...
 
-update_gaia_lite_docs:
+update-swagger-docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
 dist:

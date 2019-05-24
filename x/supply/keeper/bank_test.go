@@ -20,9 +20,9 @@ const (
 )
 
 var (
-	fooAcc = types.NewPoolHolderAccount(foo)
-	barAcc = types.NewPoolHolderAccount(bar)
-	minterAcc = types.NewPoolMinterAccount(minter)
+	fooAcc = types.NewModuleHolderAccount(foo)
+	barAcc = types.NewModuleHolderAccount(bar)
+	minterAcc = types.NewModuleMinterAccount(minter)
 
 	initTokens = sdk.TokensFromTendermintPower(initialPower)
 	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -37,8 +37,8 @@ func TestSendCoins(t *testing.T) {
 	err := fooAcc.SetCoins(initCoins)
 	require.NoError(t, err)
 
-	keeper.SetPoolAccount(ctx, fooAcc)
-	keeper.SetPoolAccount(ctx, barAcc)
+	keeper.SetModuleAccount(ctx, fooAcc)
+	keeper.SetModuleAccount(ctx, barAcc)
 	ak.SetAccount(ctx, baseAcc)
 
 	err = keeper.SendCoinsPoolToPool(ctx, "", bar, initCoins)
@@ -73,8 +73,8 @@ func TestMintCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	keeper.SetPoolAccount(ctx, fooAcc)
-	keeper.SetPoolAccount(ctx, minterAcc)
+	keeper.SetModuleAccount(ctx, fooAcc)
+	keeper.SetModuleAccount(ctx, minterAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 
@@ -95,7 +95,7 @@ func TestBurnCoins(t *testing.T) {
 
 	err := fooAcc.SetCoins(initCoins)
 	require.NoError(t, err)
-	keeper.SetPoolAccount(ctx, fooAcc)
+	keeper.SetModuleAccount(ctx, fooAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 	initialSupply.Inflate(initCoins)

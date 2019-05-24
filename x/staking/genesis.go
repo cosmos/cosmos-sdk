@@ -89,7 +89,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	// check if the unbonded and bonded pools accounts exist and create them if not
 	bondPool, notBondedPool := keeper.GetPools(ctx)
 	if bondPool == nil {
-		bondPool = supply.NewPoolHolderAccount(BondedTokensName)
+		bondPool = supply.NewModuleHolderAccount(BondedTokensName)
 		if err := bondPool.SetCoins(bondedCoins); err != nil {
 			panic(err)
 		}
@@ -97,7 +97,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	}
 
 	if notBondedPool == nil {
-		notBondedPool = supply.NewPoolHolderAccount(NotBondedTokensName)
+		notBondedPool = supply.NewModuleHolderAccount(NotBondedTokensName)
 		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
 			panic(err)
 		}

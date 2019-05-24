@@ -7,12 +7,12 @@ import (
 )
 
 type (
-	Keeper            = keeper.Keeper
-	PoolAccount       = types.PoolAccount
-	PoolHolderAccount = types.PoolHolderAccount
-	PoolMinterAccount = types.PoolMinterAccount
-	Supply            = types.Supply
-	GenesisState      = types.GenesisState
+	Keeper              = keeper.Keeper
+	ModuleAccount       = types.ModuleAccount
+	ModuleHolderAccount = types.ModuleHolderAccount
+	ModuleMinterAccount = types.ModuleMinterAccount
+	Supply              = types.Supply
+	GenesisState        = types.GenesisState
 )
 
 var (
@@ -21,14 +21,14 @@ var (
 	AllInvariants      = keeper.AllInvariants
 	DefaultCodespace   = keeper.DefaultCodespace
 
-	NewPoolHolderAccount = types.NewPoolHolderAccount
-	NewPoolMinterAccount = types.NewPoolMinterAccount
-	NewSupply            = types.NewSupply
-	DefaultSupply        = types.DefaultSupply
-	NewGenesisState      = types.NewGenesisState
-	DefaultGenesisState  = types.DefaultGenesisState
-	RegisterCodec        = types.RegisterCodec
-	ModuleCdc            = types.ModuleCdc
+	NewModuleHolderAccount = types.NewModuleHolderAccount
+	NewModuleMinterAccount = types.NewModuleMinterAccount
+	NewSupply              = types.NewSupply
+	DefaultSupply          = types.DefaultSupply
+	NewGenesisState        = types.NewGenesisState
+	DefaultGenesisState    = types.DefaultGenesisState
+	RegisterCodec          = types.RegisterCodec
+	ModuleCdc              = types.ModuleCdc
 )
 
 const (

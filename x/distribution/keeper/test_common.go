@@ -131,17 +131,17 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create pool accounts
-	notBondedPool := supply.NewPoolHolderAccount(staking.NotBondedTokensName)
-	bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)
-	distrAcc := supply.NewPoolHolderAccount(types.ModuleName)
+	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+	distrAcc := supply.NewModuleHolderAccount(types.ModuleName)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
-	supplyKeeper.SetPoolAccount(ctx, notBondedPool)
-	supplyKeeper.SetPoolAccount(ctx, bondPool)
-	supplyKeeper.SetPoolAccount(ctx, distrAcc)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {

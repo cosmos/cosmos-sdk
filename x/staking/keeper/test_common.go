@@ -70,8 +70,8 @@ func MakeTestCodec() *codec.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
-	cdc.RegisterInterface((*supply.PoolAccount)(nil), nil)
-	cdc.RegisterConcrete(&supply.PoolHolderAccount{}, "test/staking/PoolHolderAccount", nil)
+	cdc.RegisterInterface((*supply.ModuleAccount)(nil), nil)
+	cdc.RegisterConcrete(&supply.ModuleHolderAccount{}, "test/staking/ModuleHolderAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
@@ -136,8 +136,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// create pool accounts
-	notBondedPool := supply.NewPoolHolderAccount(NotBondedTokensName)
-	bondPool := supply.NewPoolHolderAccount(BondedTokensName)
+	notBondedPool := supply.NewModuleHolderAccount(NotBondedTokensName)
+	bondPool := supply.NewModuleHolderAccount(BondedTokensName)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)

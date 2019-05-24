@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-// SendCoinsPoolToAccount trasfers coins from a PoolAccount to an AccAddress
+// SendCoinsPoolToAccount trasfers coins from a ModuleAccount to an AccAddress
 func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	senderAcc := k.GetPoolAccountByName(ctx, senderModule)
+	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
 	}
@@ -23,14 +23,14 @@ func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, rec
 	return nil
 }
 
-// SendCoinsPoolToPool trasfers coins from a PoolAccount to another
+// SendCoinsPoolToPool trasfers coins from a ModuleAccount to another
 func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
-	senderAcc := k.GetPoolAccountByName(ctx, senderModule)
+	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
 	}
 
-	recipientAcc := k.GetPoolAccountByName(ctx, recipientModule)
+	recipientAcc := k.GetModuleAccountByName(ctx, recipientModule)
 	if recipientAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))
 	}
@@ -43,9 +43,9 @@ func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModu
 	return nil
 }
 
-// SendCoinsAccountToPool trasfers coins from an AccAddress to a PoolAccount
+// SendCoinsAccountToPool trasfers coins from an AccAddress to a ModuleAccount
 func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
-	recipientAcc := k.GetPoolAccountByName(ctx, recipientModule)
+	recipientAcc := k.GetModuleAccountByName(ctx, recipientModule)
 	if recipientAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))
 	}
@@ -61,12 +61,12 @@ func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddres
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
 // Panics if the name maps to a HolderAccount
 func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	poolAcc := k.GetPoolAccountByName(ctx, name)
-	if poolAcc == nil {
+	macc := k.GetModuleAccountByName(ctx, name)
+	if macc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
 	}
 
-	macc, isMinterAcc := poolAcc.(*types.PoolMinterAccount)
+	macc, isMinterAcc := macc.(*types.ModuleMinterAccount)
 	if !isMinterAcc {
 		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", name))
 	}
@@ -86,12 +86,12 @@ func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 
 // BurnCoins burns coins deletes coins from the balance of the module account
 func (k Keeper) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error {
-	poolAcc := k.GetPoolAccountByName(ctx, name)
-	if poolAcc == nil {
+	macc := k.GetModuleAccountByName(ctx, name)
+	if macc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
 	}
 
-	_, err := bank.SubtractCoins(ctx, k.ak, poolAcc.GetAddress(), amt)
+	_, err := bank.SubtractCoins(ctx, k.ak, macc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

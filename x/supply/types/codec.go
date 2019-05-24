@@ -6,9 +6,9 @@ import (
 
 // RegisterCodec registers the account types and interface
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*PoolAccount)(nil), nil)
-	cdc.RegisterConcrete(&PoolHolderAccount{}, "cosmos-sdk/PoolHolderAccount", nil)
-	cdc.RegisterConcrete(&PoolMinterAccount{}, "cosmos-sdk/PoolMinterAccount", nil)
+	cdc.RegisterInterface((*ModuleAccount)(nil), nil)
+	cdc.RegisterConcrete(&ModuleHolderAccount{}, "cosmos-sdk/ModuleHolderAccount", nil)
+	cdc.RegisterConcrete(&ModuleMinterAccount{}, "cosmos-sdk/ModuleMinterAccount", nil)
 }
 
 // ModuleCdc generic sealed codec to be used throughout module

@@ -13,31 +13,31 @@ func (k Keeper) GetAccountByName(ctx sdk.Context, name string) auth.Account {
 	return k.ak.GetAccount(ctx, moduleAddress)
 }
 
-// GetPoolAccountByName returns a PoolAccount based on the name
-func (k Keeper) GetPoolAccountByName(ctx sdk.Context, name string) types.PoolAccount {
+// GetModuleAccountByName returns a ModuleAccount based on the name
+func (k Keeper) GetModuleAccountByName(ctx sdk.Context, name string) types.ModuleAccount {
 	acc := k.GetAccountByName(ctx, name)
 	if acc == nil {
 		return nil
 	}
 
-	pacc, isPoolAccount := acc.(types.PoolAccount)
-	if !isPoolAccount {
+	macc, isModuleAccount := acc.(types.ModuleAccount)
+	if !isModuleAccount {
 		return nil
 	}
 
-	return pacc
+	return macc
 }
 
-// SetPoolAccount sets the pool account to the auth account store
-func (k Keeper) SetPoolAccount(ctx sdk.Context, pacc types.PoolAccount) {
-	k.ak.SetAccount(ctx, pacc)
+// SetModuleAccount sets the pool account to the auth account store
+func (k Keeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount) {
+	k.ak.SetAccount(ctx, macc)
 }
 
-// GetCoinsByName returns a PoolAccount's coins
+// GetCoinsByName returns a ModuleAccount's coins
 func (k Keeper) GetCoinsByName(ctx sdk.Context, name string) sdk.Coins {
-	pacc := k.GetPoolAccountByName(ctx, name)
-	if pacc == nil {
+	macc := k.GetModuleAccountByName(ctx, name)
+	if macc == nil {
 		return sdk.Coins(nil)
 	}
-	return pacc.GetCoins()
+	return macc.GetCoins()
 }

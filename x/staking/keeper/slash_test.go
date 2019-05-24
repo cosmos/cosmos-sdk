@@ -23,7 +23,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	amt := sdk.TokensFromTendermintPower(power)
 	unbondedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), amt.MulRaw(numVals)))
 
-	notBondedPool := keeper.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
+	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
 	require.NotNil(t, notBondedPool)
 	notBondedPool.SetCoins(unbondedCoins)
 

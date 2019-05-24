@@ -90,7 +90,7 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 
 // TotalBondedTokens total staking tokens supply which is bonded
 func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
-	bondedPool := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	bondedPool := k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
 	return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
 }
 
@@ -101,7 +101,7 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 
 // BondedRatio the fraction of the staking tokens which are currently bonded
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	bondedPool := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
+	bondedPool := k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
 
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
@@ -162,26 +162,26 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []sdk.Delegat
 }
 
 // GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, notBondedPool supply.PoolAccount) {
-	bondedPool = k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
-	notBondedPool = k.supplyKeeper.GetPoolAccountByName(ctx, NotBondedTokensName)
+func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, notBondedPool supply.ModuleAccount) {
+	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
+	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
 	return bondedPool, notBondedPool
 }
 
 // SetBondedPool sets the bonded tokens pool account
-func (k Keeper) SetBondedPool(ctx sdk.Context, newBondPool supply.PoolAccount) {
+func (k Keeper) SetBondedPool(ctx sdk.Context, newBondPool supply.ModuleAccount) {
 	// safety check
 	if newBondPool.Name() != BondedTokensName {
 		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", BondedTokensName, newBondPool.Name()))
 	}
-	k.supplyKeeper.SetPoolAccount(ctx, newBondPool)
+	k.supplyKeeper.SetModuleAccount(ctx, newBondPool)
 }
 
 // SetNotBondedPool sets the not bonded tokens pool account
-func (k Keeper) SetNotBondedPool(ctx sdk.Context, newNotBondedPool supply.PoolAccount) {
+func (k Keeper) SetNotBondedPool(ctx sdk.Context, newNotBondedPool supply.ModuleAccount) {
 	// safety check
 	if newNotBondedPool.Name() != NotBondedTokensName {
 		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", NotBondedTokensName, newNotBondedPool.Name()))
 	}
-	k.supplyKeeper.SetPoolAccount(ctx, newNotBondedPool)
+	k.supplyKeeper.SetModuleAccount(ctx, newNotBondedPool)
 }

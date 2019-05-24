@@ -15,12 +15,12 @@ func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
 	return k.GetFeePool(ctx).CommunityPool
 }
 
-// GetPoolAccountByName alias for supply keeper's GetPoolAccountByName
-func (k Keeper) GetPoolAccountByName(ctx sdk.Context, name string) supply.PoolAccount {
-	return k.supplyKeeper.GetPoolAccountByName(ctx, name)
+// GetModuleAccountByName alias for supply keeper's GetModuleAccountByName
+func (k Keeper) GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount {
+	return k.supplyKeeper.GetModuleAccountByName(ctx, name)
 }
 
-// SetPoolAccount alias for supply keeper's SetPoolAccount
-func (k Keeper) SetPoolAccount(ctx sdk.Context, pAcc supply.PoolAccount) {
-	k.supplyKeeper.SetPoolAccount(ctx, pAcc)
+// SetModuleAccount alias for supply keeper's SetModuleAccount
+func (k Keeper) SetModuleAccount(ctx sdk.Context, pAcc supply.ModuleAccount) {
+	k.supplyKeeper.SetModuleAccount(ctx, pAcc)
 }

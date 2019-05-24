@@ -43,13 +43,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists and create it if not
-	moduleAcc := keeper.GetPoolAccountByName(ctx, types.ModuleName)
+	moduleAcc := keeper.GetModuleAccountByName(ctx, types.ModuleName)
 	if moduleAcc == nil {
-		moduleAcc = supply.NewPoolHolderAccount(types.ModuleName)
+		moduleAcc = supply.NewModuleHolderAccount(types.ModuleName)
 		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
 			panic(err)
 		}
-		keeper.SetPoolAccount(ctx, moduleAcc)
+		keeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 

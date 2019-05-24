@@ -1147,8 +1147,8 @@ func TestRemoveDelShares(t *testing.T) {
 	bondedPool, notBondedPool := keeper.GetPools(ctx)
 	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(10))))
 	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valA.BondedTokens())))
-	keeper.supplyKeeper.SetPoolAccount(ctx, notBondedPool)
-	keeper.supplyKeeper.SetPoolAccount(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	expectedTotal := bondedPool.GetCoins().Add(notBondedPool.GetCoins())
 
@@ -1179,8 +1179,8 @@ func TestRemoveDelShares(t *testing.T) {
 
 	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(248305))))
 	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(232147))))
-	keeper.supplyKeeper.SetPoolAccount(ctx, bondedPool)
-	keeper.supplyKeeper.SetPoolAccount(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	shares := sdk.NewDec(29)
 	_, tokens := keeper.removeDelShares(ctx, validator, shares)

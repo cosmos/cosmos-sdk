@@ -8,8 +8,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// PoolAccount defines an account type for pools that hold tokens in an escrow
-type PoolAccount interface {
+// ModuleAccount defines an account type for pools that hold tokens in an escrow
+type ModuleAccount interface {
 	auth.Account
 
 	Name() string
@@ -18,43 +18,43 @@ type PoolAccount interface {
 //-----------------------------------------------------------------------------
 // Module Holder Account
 
-var _ PoolAccount = (*PoolHolderAccount)(nil)
+var _ ModuleAccount = (*ModuleHolderAccount)(nil)
 
-// PoolHolderAccount defines an account for modules that holds coins on a pool
-type PoolHolderAccount struct {
+// ModuleHolderAccount defines an account for modules that holds coins on a pool
+type ModuleHolderAccount struct {
 	*auth.BaseAccount
 
 	PoolName string `json:"name"` // name of the pool
 }
 
-// NewPoolHolderAccount creates a new PoolHolderAccount instance
-func NewPoolHolderAccount(name string) *PoolHolderAccount {
+// NewModuleHolderAccount creates a new ModuleHolderAccount instance
+func NewModuleHolderAccount(name string) *ModuleHolderAccount {
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 
 	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
-	return &PoolHolderAccount{
+	return &ModuleHolderAccount{
 		BaseAccount: &baseAcc,
 		PoolName:    name,
 	}
 }
 
 // Name returns the the name of the holder's module
-func (pha PoolHolderAccount) Name() string {
+func (pha ModuleHolderAccount) Name() string {
 	return pha.PoolName
 }
 
 // SetPubKey - Implements Account
-func (pha *PoolHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (pha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return fmt.Errorf("not supported for pool accounts")
 }
 
 // SetSequence - Implements Account
-func (pha *PoolHolderAccount) SetSequence(seq uint64) error {
+func (pha *ModuleHolderAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for pool accounts")
 }
 
 // String follows stringer interface
-func (pha PoolHolderAccount) String() string {
+func (pha ModuleHolderAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Holder Account:
 Address:  %s
@@ -66,22 +66,22 @@ Name:     %s`,
 //-----------------------------------------------------------------------------
 // Module Minter Account
 
-var _ PoolAccount = (*PoolMinterAccount)(nil)
+var _ ModuleAccount = (*ModuleMinterAccount)(nil)
 
-// PoolMinterAccount defines an account for modules that holds coins on a pool
-type PoolMinterAccount struct {
-	*PoolHolderAccount
+// ModuleMinterAccount defines an account for modules that holds coins on a pool
+type ModuleMinterAccount struct {
+	*ModuleHolderAccount
 }
 
-// NewPoolMinterAccount creates a new  PoolMinterAccount instance
-func NewPoolMinterAccount(name string) *PoolMinterAccount {
-	moduleHolderAcc := NewPoolHolderAccount(name)
+// NewModuleMinterAccount creates a new  ModuleMinterAccount instance
+func NewModuleMinterAccount(name string) *ModuleMinterAccount {
+	moduleHolderAcc := NewModuleHolderAccount(name)
 
-	return &PoolMinterAccount{PoolHolderAccount: moduleHolderAcc}
+	return &ModuleMinterAccount{ModuleHolderAccount: moduleHolderAcc}
 }
 
 // String follows stringer interface
-func (pma PoolMinterAccount) String() string {
+func (pma ModuleMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Minter Account:
 Address: %s

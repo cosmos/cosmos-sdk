@@ -27,8 +27,8 @@ type AccountKeeper interface {
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supply.Supply
 
-	GetPoolAccountByName(ctx sdk.Context, name string) supply.PoolAccount
-	SetPoolAccount(ctx sdk.Context, pacc supply.PoolAccount)
+	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
+	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsPoolToPool(ctx sdk.Context, senderPool, recipientPool string, amt sdk.Coins) sdk.Error

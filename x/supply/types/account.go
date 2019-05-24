@@ -39,28 +39,28 @@ func NewModuleHolderAccount(name string) *ModuleHolderAccount {
 }
 
 // Name returns the the name of the holder's module
-func (pha ModuleHolderAccount) Name() string {
-	return pha.PoolName
+func (mha ModuleHolderAccount) Name() string {
+	return mha.PoolName
 }
 
 // SetPubKey - Implements Account
-func (pha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (mha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return fmt.Errorf("not supported for pool accounts")
 }
 
 // SetSequence - Implements Account
-func (pha *ModuleHolderAccount) SetSequence(seq uint64) error {
+func (mha *ModuleHolderAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for pool accounts")
 }
 
 // String follows stringer interface
-func (pha ModuleHolderAccount) String() string {
+func (mha ModuleHolderAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Holder Account:
 Address:  %s
 Coins:    %s
 Name:     %s`,
-		pha.Address, pha.Coins, pha.PoolName)
+		mha.Address, mha.Coins, mha.PoolName)
 }
 
 //-----------------------------------------------------------------------------
@@ -81,11 +81,11 @@ func NewModuleMinterAccount(name string) *ModuleMinterAccount {
 }
 
 // String follows stringer interface
-func (pma ModuleMinterAccount) String() string {
+func (mma ModuleMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
 	return fmt.Sprintf(`Pool Minter Account:
 Address: %s
 Coins:   %s
 Name:    %s`,
-		pma.Address, pma.Coins, pma.PoolName)
+		mma.Address, mma.Coins, mma.PoolName)
 }

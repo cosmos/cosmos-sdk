@@ -139,7 +139,7 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, qu
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
-	supply.RegisterCodec()
+	supply.RegisterCodec(cdc)
 	ctx, _, keeper, sk := CreateTestInputDefault(t, false, 100)
 	querier := NewQuerier(keeper)
 

@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -26,8 +27,6 @@ func (spc simParamChange) compKey() string {
 // paramChangePool defines a static slice of possible simulated parameter changes
 // where each simParamChange corresponds to a ParamChange with a simValue
 // function to generate a simulated new value.
-//
-// TODO: governance parameters (blocked on an upgrade to go-amino)
 var paramChangePool = []simParamChange{
 	// staking parameters
 	{
@@ -78,6 +77,56 @@ var paramChangePool = []simParamChange{
 		"",
 		func(r *rand.Rand) string {
 			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
+		},
+	},
+	// gov parameters
+	{
+		"gov",
+		"votingparams",
+		"",
+		func(r *rand.Rand) string {
+			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+		},
+	},
+	{
+		"gov",
+		"depositparams",
+		"",
+		func(r *rand.Rand) string {
+			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+		},
+	},
+	{
+		"gov",
+		"tallyparams",
+		"",
+		func(r *rand.Rand) string {
+			changes := map[string]sdk.Dec{
+				"quorum":    simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
+				"threshold": simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
+				"veto":      simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
+			}
+
+			pc := make(map[string]string)
+			numChanges := simulation.RandIntBetween(r, 1, len(changes))
+			for i := 0; i < numChanges; i++ {
+				var key string
+				j := r.Intn(len(changes))
+
+				for key = range changes {
+					if j == 0 {
+						break
+					}
+					j--
+				}
+
+				c := changes[key]
+				pc[key] = c.String()
+				delete(changes, key)
+			}
+
+			bz, _ := json.Marshal(pc)
+			return string(bz)
 		},
 	},
 	// auth parameters

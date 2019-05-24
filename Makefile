@@ -26,7 +26,7 @@ ci: tools build test_cover lint test
 build: update-swagger-docs go.sum
 	@go build -mod=readonly ./...
 
-update-swagger-docs:
+update-swagger-docs: tools
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
 dist:

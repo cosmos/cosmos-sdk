@@ -397,7 +397,10 @@ func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
 		panic("pool accounts haven't been set")
 	}
 
-	pool := types.NewPool(notBondedPool.GetCoins(), bondedPool.GetCoins())
+	pool := types.NewPool(
+		notBondedPool.GetCoins().AmountOf(k.BondDenom(ctx)),
+		bondedPool.GetCoins().AmountOf(k.BondDenom(ctx)),
+	)
 
 	res, errRes := codec.MarshalJSONIndent(types.ModuleCdc, pool)
 	if errRes != nil {

@@ -8,14 +8,14 @@ import (
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination
 type Pool struct {
-	NotBondedTokens sdk.Coins `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
-	BondedTokens    sdk.Coins `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
+	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
+	BondedTokens    sdk.Int `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
 }
 
-// NewPool creates a new Pool instance
-func NewPool(unbonded, bonded sdk.Coins) Pool {
+// NewPool creates a new Pool instance used for queries
+func NewPool(notBonded, bonded sdk.Int) Pool {
 	return Pool{
-		NotBondedTokens: unbonded,
+		NotBondedTokens: notBonded,
 		BondedTokens:    bonded,
 	}
 }

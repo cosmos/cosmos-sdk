@@ -93,6 +93,8 @@ func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
+	bondDenom := keeper.BondDenom(ctx)
+
 	res, err := queryParameters(ctx, keeper)
 	require.Nil(t, err)
 
@@ -108,8 +110,8 @@ func TestQueryParametersPool(t *testing.T) {
 	bondedPool, notBondedPool := keeper.GetPools(ctx)
 	errRes = cdc.UnmarshalJSON(res, &pool)
 	require.Nil(t, errRes)
-	require.Equal(t, bondedPool.GetCoins(), pool.BondedTokens)
-	require.Equal(t, notBondedPool.GetCoins(), pool.NotBondedTokens)
+	require.Equal(t, bondedPool.GetCoins().AmountOf(bondDenom), pool.BondedTokens)
+	require.Equal(t, notBondedPool.GetCoins().AmountOf(bondDenom), pool.NotBondedTokens)
 }
 
 func TestQueryValidators(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-// SendCoinsPoolToAccount trasfers coins from a ModuleAccount to an AccAddress
-func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+// SendCoinsModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
+func (k Keeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
@@ -23,8 +23,8 @@ func (k Keeper) SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, rec
 	return nil
 }
 
-// SendCoinsPoolToPool trasfers coins from a ModuleAccount to another
-func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
+// SendCoinsModuleToModule trasfers coins from a ModuleAccount to another
+func (k Keeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
 	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
@@ -43,8 +43,8 @@ func (k Keeper) SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModu
 	return nil
 }
 
-// SendCoinsAccountToPool trasfers coins from an AccAddress to a ModuleAccount
-func (k Keeper) SendCoinsAccountToPool(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
+// SendCoinsAccountToModule trasfers coins from an AccAddress to a ModuleAccount
+func (k Keeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
 	recipientAcc := k.GetModuleAccountByName(ctx, recipientModule)
 	if recipientAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))

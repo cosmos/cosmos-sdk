@@ -28,7 +28,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	}
 
 	// send the minted coins to the fee collector account
-	err = k.supplyKeeper.SendCoinsPoolToAccount(ctx, ModuleName, auth.FeeCollectorAddr, mintedCoins)
+	err = k.supplyKeeper.SendCoinsModuleToAccount(ctx, ModuleName, auth.FeeCollectorAddr, mintedCoins)
 	if err != nil {
 		panic(err)
 	}

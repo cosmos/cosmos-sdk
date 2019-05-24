@@ -383,7 +383,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.sk.SendCoinsAccountToPool(ctx, depositorAddr, ModuleName, depositAmount)
+	err := keeper.sk.SendCoinsAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -428,7 +428,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		// update the governance module account coin pool
-		err := keeper.sk.SendCoinsPoolToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
+		err := keeper.sk.SendCoinsModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

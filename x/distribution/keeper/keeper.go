@@ -91,7 +91,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	if !coins.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-		err := k.supplyKeeper.SendCoinsPoolToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		err := k.supplyKeeper.SendCoinsModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
 		if err != nil {
 			return nil, err
 		}

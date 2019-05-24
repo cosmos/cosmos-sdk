@@ -17,7 +17,7 @@ type SupplyKeeper interface {
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsPoolToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SendCoinsPoolToPool(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
+	SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }

@@ -101,28 +101,27 @@ var paramChangePool = []simParamChange{
 		"tallyparams",
 		"",
 		func(r *rand.Rand) string {
-			changes := map[string]sdk.Dec{
-				"quorum":    simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
-				"threshold": simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
-				"veto":      simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
+			changes := []struct {
+				key   string
+				value sdk.Dec
+			}{
+				{"quorum", simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec)},
+				{"threshold", simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec)},
+				{"veto", simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec)},
 			}
 
 			pc := make(map[string]string)
 			numChanges := simulation.RandIntBetween(r, 1, len(changes))
 			for i := 0; i < numChanges; i++ {
-				var key string
-				j := r.Intn(len(changes))
+				c := changes[r.Intn(len(changes))]
 
-				for key = range changes {
-					if j == 0 {
-						break
-					}
-					j--
+				_, ok := pc[c.key]
+				for ok {
+					c := changes[r.Intn(len(changes))]
+					_, ok = pc[c.key]
 				}
 
-				c := changes[key]
-				pc[key] = c.String()
-				delete(changes, key)
+				pc[c.key] = c.value.String()
 			}
 
 			bz, _ := json.Marshal(pc)

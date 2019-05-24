@@ -240,10 +240,36 @@ jobs:
                 echo "Website build started"
             fi
 
+  check_statik:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: check if statik.go is up-to-date
+          command: |
+            set -ex
+
+            make update_gaia_lite_docs
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "there are changes";
+              exit 1
+            else
+              echo "no changes";
+            fi
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - check_statik:
+          requires:
+            - setup_dependencies
       - deploy_docs:
           filters:
             branches:

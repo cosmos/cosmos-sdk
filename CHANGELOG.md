@@ -14,6 +14,7 @@
 
 * [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of `CacheKVStore` iterator.
 * [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
+* [\#4384](https://github.com/cosmos/cosmos-sdk/issues/4384) Allow splitting withdrawal transaction in several chunks.
 
 #### Gaia CLI
 

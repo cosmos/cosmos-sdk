@@ -123,6 +123,13 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
 
+	// set fee collector account
+	feeCollectorAcc := accountKeeper.GetAccount(ctx, auth.FeeCollectorAddr)
+	if feeCollectorAcc == nil {
+		feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
+		accountKeeper.SetAccount(ctx, feeCollectorAcc)
+	}
+
 	// create pool accounts
 	notBondedPool := supply.NewPoolHolderAccount(staking.NotBondedTokensName)
 	bondPool := supply.NewPoolHolderAccount(staking.BondedTokensName)

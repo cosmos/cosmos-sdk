@@ -18,6 +18,7 @@ import (
 // run the tx through the anteHandler and ensure its valid
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
 	_, result, abort := anteHandler(ctx, tx, simulate)
+	require.Equal(t, "", result.Log)
 	require.False(t, abort)
 	require.Equal(t, sdk.CodeOK, result.Code)
 	require.True(t, result.IsOK())
@@ -212,6 +213,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	priv3, _, addr3 := keyPubAddr()
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
+	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
 	input.ak.SetAccount(ctx, acc2)
@@ -298,7 +300,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	input.ak.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
-	
+
 	require.True(t, input.ak.GetAccount(ctx, FeeCollectorAddr).GetCoins().Empty())
 	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 

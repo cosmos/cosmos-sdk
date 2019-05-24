@@ -27,18 +27,18 @@ func setupTestInput() testInput {
 	RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
-	authCapKey := sdk.NewKVStoreKey("authCapKey")
+	authKey := sdk.NewKVStoreKey(StoreKey)
 	keyParams := sdk.NewKVStoreKey("subspace")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
-	ak := NewAccountKeeper(cdc, authCapKey, ps, ProtoBaseAccount)
+	ak := NewAccountKeeper(cdc, authKey, ps, ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, DefaultParams())

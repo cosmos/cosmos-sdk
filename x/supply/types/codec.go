@@ -4,14 +4,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// RegisterCodec registers the account types and interface on the auth codec
-// FIXME: panic: TypeInfo already exists for types.PoolAccount
-// FIXME: panic: types.PoolHolderAccount conflicts with 2 other(s). Add it to the priority list for auth.Account.
-// FIXME: panic: unmarshal to auth.Account failed after 4 bytes
+// RegisterCodec registers the account types and interface
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*PoolAccount)(nil), nil)
-	cdc.RegisterConcrete(&PoolHolderAccount{}, "auth/PoolHolderAccount", nil)
-	cdc.RegisterConcrete(&PoolMinterAccount{}, "auth/PoolMinterAccount", nil)
+	cdc.RegisterConcrete(&PoolHolderAccount{}, "cosmos-sdk/PoolHolderAccount", nil)
+	cdc.RegisterConcrete(&PoolMinterAccount{}, "cosmos-sdk/PoolMinterAccount", nil)
 }
 
 // ModuleCdc generic sealed codec to be used throughout module

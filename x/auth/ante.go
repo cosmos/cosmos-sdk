@@ -42,7 +42,7 @@ func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasCon
 
 		feeCollector := ak.GetAccount(ctx, FeeCollectorAddr)
 		if feeCollector == nil {
-			panic(fmt.Errorf("fee collector account hasn't been set"))
+			panic("fee collector account hasn't been set")
 		}
 		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
@@ -122,6 +122,8 @@ func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasCon
 			if err != nil {
 				return newCtx, res, true
 			}
+
+			ak.SetAccount(ctx, feeCollector)
 		}
 
 		// stdSigs contains the sequence number, account number, and signatures.

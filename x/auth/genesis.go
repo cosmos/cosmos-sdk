@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // GenesisState - all auth state that must be provided at genesis
@@ -29,12 +28,10 @@ func DefaultGenesisState() GenesisState {
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 
-	feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
-	feeCollectorAcc := ak.GetAccount(ctx, feeCollectorAddr)
+	feeCollectorAcc := ak.GetAccount(ctx, FeeCollectorAddr)
 	if feeCollectorAcc == nil {
-		feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
-		feeCollectorBAcc := NewBaseAccountWithAddress(feeCollectorAddr)
-		ak.SetAccount(ctx, &feeCollectorBAcc)
+		feeCollectorAcc = ak.NewAccountWithAddress(ctx, FeeCollectorAddr)
+		ak.SetAccount(ctx, feeCollectorAcc)
 	}
 }
 

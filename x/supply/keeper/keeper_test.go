@@ -40,7 +40,7 @@ func MakeTestCodec() *codec.Codec {
 
 	bank.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
-	types.RegisterCodec()
+	types.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 

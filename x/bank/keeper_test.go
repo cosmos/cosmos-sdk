@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -29,6 +30,7 @@ func setupTestInput() testInput {
 
 	cdc := codec.New()
 	auth.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")

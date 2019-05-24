@@ -10,19 +10,16 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -30,23 +27,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
-var (
-	defaultTokens                  = sdk.TokensFromTendermintPower(100)
-	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
-	defaultCommissionRate          = "0.1"
-	defaultCommissionMaxRate       = "0.2"
-	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
-)
+// helpers for message building gen-tx command
+type StakingMsgBuildingHelpers interface {
+	CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string)
+	PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey)
+	BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error)
+}
 
 // GenTxCmd builds the application's gentx command.
 // nolint: errcheck
-func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
+func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager, smbh StakingMsgBuildingHelpers,
 	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
+
+	ipDefault, _ := server.ExternalIP()
+	fsCreateValidator, flagNodeID, flagPubKey, flagAmount, defaultsDesc := smbh.CreateValidatorMsgHelpers(ipDefault)
 
 	cmd := &cobra.Command{
 		Use:   "gentx",
@@ -54,19 +50,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 		Args:  cobra.NoArgs,
 		Long: fmt.Sprintf(`This command is an alias of the 'tx create-validator' command'.
 
-It creates a genesis piece carrying a self delegation with the
-following delegation and commission default parameters:
+		It creates a genesis transaction to create a validator. 
+		The following default parameters are included: 
+		    %s`, defaultsDesc),
 
-	delegation amount:           %s
-	commission rate:             %s
-	commission max rate:         %s
-	commission max change rate:  %s
-	minimum self delegation:     %s
-`, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			config := ctx.Config
-			config.SetRoot(viper.GetString(tmcli.HomeFlag))
+			config.SetRoot(viper.GetString(client.FlagHome))
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(ctx.Config)
 			if err != nil {
 				return err
@@ -76,11 +67,12 @@ following delegation and commission default parameters:
 			if nodeIDString := viper.GetString(flagNodeID); nodeIDString != "" {
 				nodeID = nodeIDString
 			}
-
-			ip := viper.GetString(flagIP)
-			if ip == "" {
-				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
-					"the tx's memo field will be unset")
+			// Read --pubkey, if empty take it from priv_validator.json
+			if valPubKeyString := viper.GetString(flagPubKey); valPubKeyString != "" {
+				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
+				if err != nil {
+					return err
+				}
 			}
 
 			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
@@ -97,7 +89,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
 			}
@@ -108,20 +100,9 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			// Read --pubkey, if empty take it from priv_validator.json
-			if valPubKeyString := viper.GetString(flagPubKey); valPubKeyString != "" {
-				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
-				if err != nil {
-					return err
-				}
-			}
-
-			website := viper.GetString(flagWebsite)
-			details := viper.GetString(flagDetails)
-			identity := viper.GetString(flagIdentity)
-
 			// Set flags for creating gentx
-			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey, website, details, identity)
+			viper.Set(client.FlagHome, viper.GetString(flagClientHome))
+			smbh.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
 
 			// Fetch the amount of coins staked
 			amount := viper.GetString(flagAmount)
@@ -135,8 +116,8 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(client.GetTxEncoder(cdc))
+			cliCtx := client.NewCLIContext().WithCodec(cdc)
 
 			// XXX: Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
@@ -145,25 +126,8 @@ following delegation and commission default parameters:
 			// favor of a 'gentx' flag in the create-validator command.
 			viper.Set(client.FlagGenerateOnly, true)
 
-			// get flag information
-			description := staking.NewDescription(
-				viper.GetString(flagMoniker),
-				viper.GetString(flagIdentity),
-				viper.GetString(flagWebsite),
-				viper.GetString(flagDetails),
-			)
-			amounstStr := viper.GetString(flagAmount)
-			pkStr := viper.GetString(flagPubKey)
-			rateStr := viper.GetString(flagCommissionRate)
-			maxRateStr := viper.GetString(flagCommissionMaxRate)
-			maxChangeRateStr := viper.GetString(flagCommissionMaxChangeRate)
-			msbStr := viper.GetString(flagMinSelfDelegation)
-			generateOnly := viper.GetBool(client.FlagGenerateOnly)
-
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr,
-				amounstStr, pkStr, rateStr, maxRateStr, maxChangeRateStr, msbStr,
-				ip, nodeID, description, generateOnly)
+			txBldr, msg, err := smbh.BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
 				return err
 			}
@@ -175,14 +139,14 @@ following delegation and commission default parameters:
 
 			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
 				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
 
-			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
+			if err = client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
 				return err
 			}
 
@@ -193,7 +157,7 @@ following delegation and commission default parameters:
 			}
 
 			// sign the transaction and write it to the output file
-			signedTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
+			signedTx, err := client.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
 			if err != nil {
 				return err
 			}
@@ -217,43 +181,16 @@ following delegation and commission default parameters:
 		},
 	}
 
-	ip, _ := server.ExternalIP()
-
-	cmd.Flags().String(tmcli.HomeFlag, defaultNodeHome, "node's home directory")
+	cmd.Flags().String(client.FlagHome, defaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, defaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
-	cmd.Flags().String(flagIP, ip, "The node's public IP")
-	cmd.Flags().String(flagNodeID, "", "The node's NodeID")
-	cmd.Flags().String(flagWebsite, "", "The validator's (optional) website")
-	cmd.Flags().String(flagDetails, "", "The validator's (optional) details")
-	cmd.Flags().String(flagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
-	cmd.Flags().String(flagCommissionRate, "", "The initial commission rate percentage")
-	cmd.Flags().String(flagCommissionMaxRate, "", "The maximum commission rate percentage")
-	cmd.Flags().String(flagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
-	cmd.Flags().String(flagMinSelfDelegation, "", "The minimum self delegation required on the validator")
-	cmd.Flags().String(flagAmount, "", "Amount of coins to bond")
-	cmd.Flags().String(flagPubKey, "", "The Bech32 encoded PubKey of the validator")
+	cmd.Flags().AddFlagSet(fsCreateValidator)
 
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
-
-const (
-	flagIP                      = "ip"
-	flagNodeID                  = "node-id"
-	flagWebsite                 = "website"
-	flagDetails                 = "details"
-	flagPubKey                  = "pubkey"
-	flagAmount                  = "amount"
-	flagMoniker                 = "moniker"
-	flagIdentity                = "identity"
-	flagCommissionRate          = "commission-rate"
-	flagCommissionMaxRate       = "commission-max-rate"
-	flagCommissionMaxChangeRate = "commission-max-change-rate"
-	flagMinSelfDelegation       = "min-self-delegation"
-)
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
@@ -285,40 +222,6 @@ func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) er
 	}
 	_, err = fmt.Fprintf(outputFile, "%s\n", json)
 	return err
-}
-
-func prepareFlagsForTxCreateValidator(
-	config *cfg.Config, nodeID, ip, chainID string, valPubKey crypto.PubKey, website, details, identity string,
-) {
-	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))
-	viper.Set(client.FlagChainID, chainID)
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
-	viper.Set(flagNodeID, nodeID)
-	viper.Set(flagIP, ip)
-	viper.Set(flagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
-	viper.Set(flagMoniker, config.Moniker)
-	viper.Set(flagWebsite, website)
-	viper.Set(flagDetails, details)
-	viper.Set(flagIdentity, identity)
-
-	if config.Moniker == "" {
-		viper.Set(flagMoniker, viper.GetString(client.FlagName))
-	}
-	if viper.GetString(flagAmount) == "" {
-		viper.Set(flagAmount, defaultAmount)
-	}
-	if viper.GetString(flagCommissionRate) == "" {
-		viper.Set(flagCommissionRate, defaultCommissionRate)
-	}
-	if viper.GetString(flagCommissionMaxRate) == "" {
-		viper.Set(flagCommissionMaxRate, defaultCommissionMaxRate)
-	}
-	if viper.GetString(flagCommissionMaxChangeRate) == "" {
-		viper.Set(flagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
-	}
-	if viper.GetString(flagMinSelfDelegation) == "" {
-		viper.Set(flagMinSelfDelegation, defaultMinSelfDelegation)
-	}
 }
 
 // DONTCOVER

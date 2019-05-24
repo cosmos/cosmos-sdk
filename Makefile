@@ -26,6 +26,9 @@ ci: tools build test_cover lint test
 build: go.sum
 	@go build -mod=readonly ./...
 
+update_gaia_lite_docs:
+	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
+
 dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh

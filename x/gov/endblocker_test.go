@@ -256,8 +256,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 
-	macc, err := input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
-	require.NoError(t, err)
+	macc := input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
+	require.NotNil(t, macc)
 	initialModuleAccCoins := macc.GetCoins()
 
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
@@ -268,8 +268,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
-	macc, err = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
-	require.NoError(t, err)
+	macc = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
+	require.NotNil(t, macc)
 	moduleAccCoins := macc.GetCoins()
 
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
@@ -285,8 +285,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
 
-	macc, err = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
-	require.NoError(t, err)
+	macc = input.keeper.sk.GetPoolAccountByName(ctx, ModuleName)
+	require.NotNil(t, macc)
 	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
 
 }

@@ -16,7 +16,7 @@ type BankKeeper interface {
 
 // SupplyKeeper defines the supply Keeper for module accounts
 type SupplyKeeper interface {
-	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
+	GetPoolAccountByName(ctx sdk.Context, name string) supply.PoolAccount
 	SetPoolAccount(ctx sdk.Context, macc supply.PoolAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins

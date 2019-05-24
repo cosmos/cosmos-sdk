@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // SimulateDeductFee
@@ -24,8 +23,7 @@ func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 		initCoins := stored.GetCoins()
 		opMsg = simulation.NewOperationMsgBasic(auth.ModuleName, "deduct_fee", "", false, nil)
 
-		feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte("fees")))
-		feeCollector := m.GetAccount(ctx, feeCollectorAddr)
+		feeCollector := m.GetAccount(ctx, auth.FeeCollectorAddr)
 		if feeCollector == nil {
 			panic(fmt.Errorf("fee collector account hasn't been set"))
 		}
@@ -44,7 +42,7 @@ func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 
 		// Create a random fee and verify the fees are within the account's spendable
 		// balance.
-		fees := sdk.Coins{sdk.NewCoin(randCoin.Denom, amt)}
+		fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
 		spendableCoins := stored.SpendableCoins(ctx.BlockHeader().Time)
 		if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
 			return opMsg, nil, nil
@@ -60,13 +58,12 @@ func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 			panic(err)
 		}
 
-		m.SetAccount(ctx, stored)
-
 		err = feeCollector.SetCoins(feeCollector.GetCoins().Add(fees))
 		if err != nil {
 			panic(err)
 		}
 
+		m.SetAccount(ctx, stored)
 		m.SetAccount(ctx, feeCollector)
 
 		opMsg.OK = true

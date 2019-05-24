@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var minterKey = []byte{0x00} // the one key to use for the keeper store
@@ -18,6 +19,9 @@ const (
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey
 )
+
+// ModuleAddress distribution module account address
+var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 
 // keeper of the mint store
 type Keeper struct {

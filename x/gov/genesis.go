@@ -121,7 +121,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	}
 
 	// check if the deposits pool account exists and create it if not
-	moduleAcc, _ := k.sk.GetPoolAccountByName(ctx, ModuleName)
+	moduleAcc := k.sk.GetPoolAccountByName(ctx, ModuleName)
 	if moduleAcc == nil {
 		moduleAcc = supply.NewPoolHolderAccount(ModuleName)
 		if err := moduleAcc.SetCoins(totalDeposits); err != nil {

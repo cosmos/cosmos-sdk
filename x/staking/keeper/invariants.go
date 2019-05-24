@@ -53,10 +53,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 func BondedTokensInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		bonded := sdk.ZeroInt()
-		bondedPool, err := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
-		if err != nil {
-			return err
-		}
+		bondedPool := k.supplyKeeper.GetPoolAccountByName(ctx, BondedTokensName)
 
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {

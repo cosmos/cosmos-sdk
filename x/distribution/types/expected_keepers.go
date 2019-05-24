@@ -23,7 +23,7 @@ type StakingKeeper interface {
 
 // SupplyKeeper defines the supply Keeper for pool accounts
 type SupplyKeeper interface {
-	GetPoolAccountByName(ctx sdk.Context, name string) (supply.PoolAccount, sdk.Error)
+	GetPoolAccountByName(ctx sdk.Context, name string) supply.PoolAccount
 	SetPoolAccount(ctx sdk.Context, pacc supply.PoolAccount)
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins

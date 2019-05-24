@@ -33,13 +33,11 @@ func setupTestInput() testInput {
 	codec.RegisterCrypto(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
-	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(fckCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()

@@ -30,10 +30,10 @@ func DefaultGenesisState() GenesisState {
 // InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	// check if the module account exists and create it if not
-	poolAcc, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, ModuleName)
-	if poolAcc == nil {
-		poolAcc = supply.NewPoolMinterAccount(ModuleName)
-		keeper.supplyKeeper.SetPoolAccount(ctx, poolAcc)
+	moduleAcc, _ := keeper.supplyKeeper.GetPoolAccountByName(ctx, ModuleName)
+	if moduleAcc == nil {
+		moduleAcc = supply.NewPoolMinterAccount(ModuleName)
+		keeper.supplyKeeper.SetPoolAccount(ctx, moduleAcc)
 	}
 
 	keeper.SetMinter(ctx, data.Minter)

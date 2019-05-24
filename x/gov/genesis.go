@@ -110,19 +110,26 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(err)
 	}
 
-	// check if the deposits pool account exists and create it if not
-	poolAcc, _ := k.sk.GetPoolAccountByName(ctx, ModuleName)
-	if poolAcc == nil {
-		poolAcc = supply.NewPoolHolderAccount(ModuleName)
-		k.sk.SetPoolAccount(ctx, poolAcc)
-	}
-
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)
+
+	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
 		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositor, deposit.Deposit)
+		totalDeposits = totalDeposits.Add(deposit.Deposit.Amount)
 	}
+
+	// check if the deposits pool account exists and create it if not
+	moduleAcc, _ := k.sk.GetPoolAccountByName(ctx, ModuleName)
+	if moduleAcc == nil {
+		moduleAcc = supply.NewPoolHolderAccount(ModuleName)
+		if err := moduleAcc.SetCoins(totalDeposits); err != nil {
+			panic(err)
+		}
+		k.sk.SetPoolAccount(ctx, moduleAcc)
+	}
+
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}

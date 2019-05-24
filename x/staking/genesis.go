@@ -18,24 +18,15 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
 
+	var bondedCoins sdk.Coins
+	var notBondedCoins sdk.Coins
+
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
-
-	// check if the unbonded and bonded pools accounts exist and create them if not
-	bondPool, notBondedPool := keeper.GetPools(ctx)
-	if bondPool == nil {
-		bondPool = supply.NewPoolHolderAccount(BondedTokensName)
-		keeper.SetBondedPool(ctx, bondPool)
-	}
-
-	if notBondedPool == nil {
-		notBondedPool = supply.NewPoolHolderAccount(NotBondedTokensName)
-		keeper.SetNotBondedPool(ctx, notBondedPool)
-	}
 
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
@@ -68,12 +59,20 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
+
+		val, _ := keeper.GetValidator(ctx, delegation.ValidatorAddress)
+		tokensInt := val.TokensFromShares(delegation.GetShares()).TruncateInt()
+		bondedTokens := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, tokensInt))
+		bondedCoins = bondedCoins.Add(bondedTokens)
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
 		keeper.SetUnbondingDelegation(ctx, ubd)
 		for _, entry := range ubd.Entries {
 			keeper.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+
+			ubdTokens := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, entry.Balance))
+			notBondedCoins = notBondedCoins.Add(ubdTokens)
 		}
 	}
 
@@ -81,7 +80,28 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		keeper.SetRedelegation(ctx, red)
 		for _, entry := range red.Entries {
 			keeper.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
+
+			redTokens := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, entry.InitialBalance))
+			notBondedCoins = notBondedCoins.Add(redTokens)
 		}
+	}
+
+	// check if the unbonded and bonded pools accounts exist and create them if not
+	bondPool, notBondedPool := keeper.GetPools(ctx)
+	if bondPool == nil {
+		bondPool = supply.NewPoolHolderAccount(BondedTokensName)
+		if err := bondPool.SetCoins(bondedCoins); err != nil {
+			panic(err)
+		}
+		keeper.SetBondedPool(ctx, bondPool)
+	}
+
+	if notBondedPool == nil {
+		notBondedPool = supply.NewPoolHolderAccount(NotBondedTokensName)
+		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
+			panic(err)
+		}
+		keeper.SetNotBondedPool(ctx, notBondedPool)
 	}
 
 	// don't need to run Tendermint updates if we exported

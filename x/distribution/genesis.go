@@ -8,6 +8,8 @@ import (
 
 // InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
+	var moduleHoldings sdk.DecCoins
+
 	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
@@ -19,6 +21,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
 		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
+		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
@@ -35,17 +38,23 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	for _, evt := range data.ValidatorSlashEvents {
 		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Event)
 	}
+
+	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool)
+	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
+
+	// check if the module account exists and create it if not
+	moduleAcc, _ := keeper.GetPoolAccountByName(ctx, types.ModuleName)
+	if moduleAcc == nil {
+		moduleAcc = supply.NewPoolHolderAccount(types.ModuleName)
+		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
+			panic(err)
+		}
+		keeper.SetPoolAccount(ctx, moduleAcc)
+	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
-	// check if the module account exists and create it if not
-	poolAcc, _ := keeper.GetPoolAccountByName(ctx, types.ModuleName)
-	if poolAcc == nil {
-		poolAcc = supply.NewPoolHolderAccount(types.ModuleName)
-		keeper.SetPoolAccount(ctx, poolAcc)
-	}
-
 	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)

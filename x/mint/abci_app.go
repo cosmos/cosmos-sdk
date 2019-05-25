@@ -1,7 +1,7 @@
 package mint
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
 )
 
 // Inflate every block, update inflation parameters once per hour

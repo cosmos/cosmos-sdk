@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	keep "github.com/YunSuk-Yeo/cosmos-sdk/x/staking/keeper"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/types"
 )
 
 var (

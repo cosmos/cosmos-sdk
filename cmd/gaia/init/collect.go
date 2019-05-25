@@ -13,11 +13,11 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/server"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
 )
 
 const (

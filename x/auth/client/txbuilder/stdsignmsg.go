@@ -1,8 +1,8 @@
 package context
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
 )
 
 // StdSignMsg is a convenience structure for passing along

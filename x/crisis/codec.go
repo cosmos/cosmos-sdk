@@ -1,7 +1,7 @@
 package crisis
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
 )
 
 // Register concrete types on codec codec
@@ -17,4 +17,9 @@ func init() {
 	RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	MsgCdc = cdc.Seal()
+}
+
+// SetMsgCodex allows sdk users use custom codex at GetSignBytes
+func SetMsgCodec(cdc *codec.Codec) {
+	MsgCdc = cdc
 }

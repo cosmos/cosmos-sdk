@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	crkeys "github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client/keys"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
 
 	"errors"
 

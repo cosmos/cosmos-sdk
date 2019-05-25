@@ -14,18 +14,18 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/tests"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	clientkeys "github.com/YunSuk-Yeo/cosmos-sdk/client/keys"
+	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
+	appInit "github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/init"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
+	"github.com/YunSuk-Yeo/cosmos-sdk/server"
+	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/slashing"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking"
 )
 
 const (

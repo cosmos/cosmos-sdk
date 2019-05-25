@@ -1,10 +1,10 @@
 package distribution
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/keeper"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/tags"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {

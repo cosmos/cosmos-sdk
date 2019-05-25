@@ -7,15 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/assert"
 )

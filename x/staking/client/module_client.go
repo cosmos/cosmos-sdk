@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/client/cli"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/types"
 )
 
 // ModuleClient exports all client functionality from this module

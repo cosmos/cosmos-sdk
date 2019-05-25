@@ -11,11 +11,11 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/types/rest"
 )
 
 const (

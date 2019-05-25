@@ -3,8 +3,8 @@ package context
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
 
 	"github.com/pkg/errors"
 
@@ -18,7 +18,7 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/YunSuk-Yeo/cosmos-sdk/store/rootmulti"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an

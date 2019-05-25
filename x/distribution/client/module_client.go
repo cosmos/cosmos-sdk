@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	distCmds "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	distCmds "github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/client/cli"
 )
 
 // ModuleClient exports all client functionality from this module

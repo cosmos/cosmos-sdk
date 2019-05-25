@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/store/rootmulti"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
 )
 
 type TestStruct struct {

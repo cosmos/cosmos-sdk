@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov"
+	gcutils "github.com/YunSuk-Yeo/cosmos-sdk/x/gov/client/utils"
 )
 
 // GetCmdQueryProposal implements the query proposal command.

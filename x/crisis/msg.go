@@ -1,7 +1,7 @@
 package crisis
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
 )
 
 // MsgVerifyInvariant - message struct to verify a particular invariance

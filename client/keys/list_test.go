@@ -3,7 +3,7 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/spf13/viper"

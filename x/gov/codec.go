@@ -1,7 +1,7 @@
 package gov
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
 )
 
 var msgCdc = codec.New()
@@ -19,4 +19,9 @@ func RegisterCodec(cdc *codec.Codec) {
 
 func init() {
 	RegisterCodec(msgCdc)
+}
+
+// SetMsgCodex allows sdk users use custom codex at GetSignBytes
+func SetMsgCodec(cdc *codec.Codec) {
+	msgCdc = cdc
 }

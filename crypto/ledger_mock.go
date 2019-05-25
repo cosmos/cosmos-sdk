@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys/hd"
+	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	secp256k1 "github.com/tendermint/btcd/btcec"

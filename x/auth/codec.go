@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
 )
 
 // RegisterCodec registers concrete types on the codec
@@ -31,4 +31,9 @@ var msgCdc = codec.New()
 func init() {
 	RegisterCodec(msgCdc)
 	codec.RegisterCrypto(msgCdc)
+}
+
+// SetMsgCodex allows sdk users use custom codex at GetSignBytes
+func SetMsgCodec(cdc *codec.Codec) {
+	msgCdc = cdc
 }

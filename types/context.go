@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/store/gaskv"
+	stypes "github.com/YunSuk-Yeo/cosmos-sdk/store/types"
 )
 
 /*

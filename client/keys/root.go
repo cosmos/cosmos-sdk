@@ -3,7 +3,7 @@ package keys
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/YunSuk-Yeo/cosmos-sdk/client"
 )
 
 // Commands registers a sub-tree of commands to interact with

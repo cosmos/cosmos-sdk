@@ -11,11 +11,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/bank"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/mock"
+	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking"
 )
 
 // initialize the mock application for this module

@@ -55,11 +55,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// apply the appropriate state change if necessary
 		switch validator.Status {
-		case sdk.Unbonded:
+		case types.Unbonded:
 			validator = k.unbondedToBonded(ctx, validator)
-		case sdk.Unbonding:
+		case types.Unbonding:
 			validator = k.unbondingToBonded(ctx, validator)
-		case sdk.Bonded:
+		case types.Bonded:
 			// no state change
 		default:
 			panic("unexpected validator status")
@@ -120,21 +120,21 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 // Validator state transitions
 
 func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) types.Validator {
-	if validator.Status != sdk.Bonded {
+	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
 	}
 	return k.beginUnbondingValidator(ctx, validator)
 }
 
 func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) types.Validator {
-	if validator.Status != sdk.Unbonding {
+	if validator.Status != types.Unbonding {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 	return k.bondValidator(ctx, validator)
 }
 
 func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) types.Validator {
-	if validator.Status != sdk.Unbonded {
+	if validator.Status != types.Unbonded {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
 	return k.bondValidator(ctx, validator)
@@ -142,7 +142,7 @@ func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) typ
 
 // switches a validator from unbonding state to unbonded state
 func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
-	if validator.Status != sdk.Unbonding {
+	if validator.Status != types.Unbonding {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 	return k.completeUnbondingValidator(ctx, validator)
@@ -178,7 +178,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// set the status
 	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
+	validator, pool = validator.UpdateStatus(pool, types.Bonded)
 	k.SetPool(ctx, pool)
 
 	// save the now bonded validator record to the two referenced stores
@@ -203,13 +203,13 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
-	if validator.Status != sdk.Bonded {
+	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
 	// set the status
 	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
+	validator, pool = validator.UpdateStatus(pool, types.Unbonding)
 	k.SetPool(ctx, pool)
 
 	// set the unbonding completion time and completion height appropriately
@@ -232,7 +232,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
+	validator, pool = validator.UpdateStatus(pool, types.Unbonded)
 	k.SetPool(ctx, pool)
 	k.SetValidator(ctx, validator)
 	return validator

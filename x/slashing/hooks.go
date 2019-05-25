@@ -43,7 +43,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ sdk.StakingHooks = Hooks{}
+var _ StakingHooks = Hooks{}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {

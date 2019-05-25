@@ -536,7 +536,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// remove the shares and coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+	if validator.DelegatorShares.IsZero() && validator.Status == types.Unbonded {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.OperatorAddress)
 	}
@@ -552,17 +552,17 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 
 	switch {
 	// TODO: when would the validator not be found?
-	case !found || validator.Status == sdk.Bonded:
+	case !found || validator.Status == types.Bonded:
 
 		// the longest wait - just unbonding period from now
 		completionTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 		height = ctx.BlockHeight()
 		return completionTime, height, false
 
-	case validator.Status == sdk.Unbonded:
+	case validator.Status == types.Unbonded:
 		return completionTime, height, true
 
-	case validator.Status == sdk.Unbonding:
+	case validator.Status == types.Unbonding:
 		completionTime = validator.UnbondingCompletionTime
 		height = validator.UnbondingHeight
 		return completionTime, height, false

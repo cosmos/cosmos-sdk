@@ -9,7 +9,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ sdk.StakingHooks = Hooks{}
+var _ types.StakingHooks = Hooks{}
 
 // Create new distribution hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }

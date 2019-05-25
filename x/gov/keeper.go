@@ -42,11 +42,8 @@ type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck BankKeeper
 
-	// The ValidatorSet to get information about validators
-	vs sdk.ValidatorSet
-
-	// The reference to the DelegationSet to get information about delegators
-	ds sdk.DelegationSet
+	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
+	sk StakingKeeper
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -68,7 +65,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+	ck BankKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -81,8 +78,7 @@ func NewKeeper(
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
-		ds:           ds,
-		vs:           ds.GetValidatorSet(),
+		sk:           sk,
 		cdc:          cdc,
 		codespace:    codespace,
 		router:       rtr,

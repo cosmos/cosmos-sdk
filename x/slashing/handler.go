@@ -1,8 +1,8 @@
 package slashing
 
 import (
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/slashing/tags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/tags"
 )
 
 func NewHandler(k Keeper) sdk.Handler {

@@ -10,10 +10,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/prefix"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {

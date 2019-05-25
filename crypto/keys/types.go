@@ -6,8 +6,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys/hd"
-	"github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // Keybase exposes operations on a generic keystore

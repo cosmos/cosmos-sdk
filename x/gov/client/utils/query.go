@@ -3,11 +3,11 @@ package utils
 import (
 	"fmt"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/tx"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
 const (

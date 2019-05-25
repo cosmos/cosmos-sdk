@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys/hd"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,7 +3,7 @@ package keys
 import (
 	"fmt"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/spf13/cobra"
 )

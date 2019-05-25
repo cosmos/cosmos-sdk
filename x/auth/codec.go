@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // RegisterCodec registers concrete types on the codec

@@ -3,7 +3,7 @@ package gov
 import (
 	"fmt"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Governance message types and routes

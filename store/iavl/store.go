@@ -11,10 +11,10 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/cachekv"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/errors"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/tracekv"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (

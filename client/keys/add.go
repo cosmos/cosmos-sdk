@@ -7,10 +7,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
-	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

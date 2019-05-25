@@ -3,10 +3,10 @@ package common
 import (
 	"fmt"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	distr "github.com/YunSuk-Yeo/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 // QueryParams actually queries distribution params.

@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec" // XXX fix
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
 // GetCmdQuerySigningInfo implements the command to query signing info.

@@ -6,8 +6,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys/hd"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ Keybase = lazyKeybase{}

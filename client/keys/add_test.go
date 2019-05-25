@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -4,20 +4,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/bank"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	distr "github.com/YunSuk-Yeo/cosmos-sdk/x/distribution"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/mint"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/slashing"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

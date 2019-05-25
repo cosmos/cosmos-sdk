@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/assert"
 

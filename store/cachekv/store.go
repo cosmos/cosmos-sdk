@@ -9,9 +9,9 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the

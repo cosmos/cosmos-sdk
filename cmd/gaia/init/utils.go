@@ -15,9 +15,9 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An

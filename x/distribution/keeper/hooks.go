@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Wrapper struct

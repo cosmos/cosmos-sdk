@@ -1,9 +1,9 @@
 package rest
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/gorilla/mux"
 )

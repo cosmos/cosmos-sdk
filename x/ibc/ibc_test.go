@@ -10,12 +10,12 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/bank"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // AccountKeeper(/Keeper) and IBCMapper should use different StoreKey later

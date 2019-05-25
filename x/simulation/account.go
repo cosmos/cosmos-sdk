@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Account contains a privkey, pubkey, address tuple

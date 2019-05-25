@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	types "github.com/YunSuk-Yeo/cosmos-sdk/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height

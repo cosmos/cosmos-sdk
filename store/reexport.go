@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
-	stypes "github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.

@@ -1,4 +1,4 @@
-module github.com/YunSuk-Yeo/cosmos-sdk
+module github.com/cosmos/cosmos-sdk
 
 require (
 	bou.ke/monkey v1.0.1 // indirect

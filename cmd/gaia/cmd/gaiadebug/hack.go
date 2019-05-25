@@ -7,9 +7,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,17 +20,17 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	bam "github.com/YunSuk-Yeo/cosmos-sdk/baseapp"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/bank"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/params"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/slashing"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
-	gaia "github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
+	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
 
 func runHackCmd(cmd *cobra.Command, args []string) error {

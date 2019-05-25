@@ -11,13 +11,13 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/keys"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/utils"
-	crkeys "github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	authtxb "github.com/YunSuk-Yeo/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // GetSignCommand returns the sign command

@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 

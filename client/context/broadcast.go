@@ -3,8 +3,8 @@ package context
 import (
 	"fmt"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BroadcastTx broadcasts a transactions either synchronously or asynchronously

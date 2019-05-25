@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // create a decimal from a decimal string (ex. "1234.5678")

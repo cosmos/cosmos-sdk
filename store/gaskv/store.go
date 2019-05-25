@@ -3,7 +3,7 @@ package gaskv
 import (
 	"io"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = &Store{}

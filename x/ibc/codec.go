@@ -1,7 +1,7 @@
 package ibc
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Register concrete types on codec codec

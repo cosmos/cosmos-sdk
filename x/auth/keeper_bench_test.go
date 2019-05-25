@@ -3,7 +3,7 @@ package auth
 import (
 	"testing"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {

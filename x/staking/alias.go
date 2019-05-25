@@ -2,10 +2,10 @@
 package staking
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/keeper"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/querier"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/tags"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/querier"
+	"github.com/cosmos/cosmos-sdk/x/staking/tags"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (

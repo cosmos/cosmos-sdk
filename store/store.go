@@ -3,8 +3,8 @@ package store
 import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/rootmulti"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func NewCommitMultiStore(db dbm.DB) types.CommitMultiStore {

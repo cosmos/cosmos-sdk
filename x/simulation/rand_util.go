@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

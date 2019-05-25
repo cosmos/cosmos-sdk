@@ -10,13 +10,13 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/cachemulti"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/dbadapter"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/errors"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/iavl"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/tracekv"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/transient"
-	"github.com/YunSuk-Yeo/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/transient"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (

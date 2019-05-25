@@ -4,12 +4,12 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/utils"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	authtxb "github.com/YunSuk-Yeo/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 )
 
 // command to replace a delegator's withdrawal address

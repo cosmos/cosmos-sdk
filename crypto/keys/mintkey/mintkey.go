@@ -13,7 +13,7 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys/keyerror"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 const (

@@ -14,14 +14,14 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	keybase "github.com/YunSuk-Yeo/cosmos-sdk/crypto/keys"
-	"github.com/YunSuk-Yeo/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/server"
 
 	// Import statik for light client stuff
-	_ "github.com/YunSuk-Yeo/cosmos-sdk/client/lcd/statik"
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
 // RestServer represents the Light Client Rest server

@@ -1,7 +1,7 @@
 package bank
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (

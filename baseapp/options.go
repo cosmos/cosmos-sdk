@@ -6,8 +6,8 @@ import (
 
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/store"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // File for storing in-package BaseApp optional functions,

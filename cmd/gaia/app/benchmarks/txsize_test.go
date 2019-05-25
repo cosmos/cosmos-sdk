@@ -5,10 +5,10 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // This will fail half the time with the second output being 173

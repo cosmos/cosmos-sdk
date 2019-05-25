@@ -7,7 +7,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var testQuerier = func(_ sdk.Context, _ []string, _ abci.RequestQuery) (res []byte, err sdk.Error) {

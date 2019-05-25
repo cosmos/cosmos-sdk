@@ -1,7 +1,7 @@
 package rootmulti
 
 import (
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var cdc = codec.New()

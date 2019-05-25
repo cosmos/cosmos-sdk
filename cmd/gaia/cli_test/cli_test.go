@@ -18,12 +18,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client"
-	"github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
-	"github.com/YunSuk-Yeo/cosmos-sdk/tests"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {

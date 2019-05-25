@@ -14,9 +14,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	gaia "github.com/YunSuk-Yeo/cosmos-sdk/cmd/gaia/app"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/auth"
+	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func init() {

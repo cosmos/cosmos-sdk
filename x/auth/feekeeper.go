@@ -1,8 +1,8 @@
 package auth
 
 import (
-	codec "github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	codec "github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

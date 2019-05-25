@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Key for getting a the next available proposalID from the store

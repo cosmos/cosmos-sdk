@@ -1,6 +1,6 @@
 package ibc
 
-import sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
+import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // expected bank keeper
 type BankKeeper interface {

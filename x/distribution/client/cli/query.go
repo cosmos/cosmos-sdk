@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/YunSuk-Yeo/cosmos-sdk/client/context"
-	"github.com/YunSuk-Yeo/cosmos-sdk/codec"
-	sdk "github.com/YunSuk-Yeo/cosmos-sdk/types"
-	distr "github.com/YunSuk-Yeo/cosmos-sdk/x/distribution"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/client/common"
-	"github.com/YunSuk-Yeo/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // GetCmdQueryParams implements the query params command.

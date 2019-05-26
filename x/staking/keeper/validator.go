@@ -510,9 +510,15 @@ func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
 	switch v.Status {
 	case sdk.Bonded:
-		k.supplyKeeper.BurnCoins(ctx, BondedTokensName, coins)
+		err := k.supplyKeeper.BurnCoins(ctx, BondedTokensName, coins)
+		if err != nil {
+			panic(err)
+		}
 	default:
-		k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, coins)
+		err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, coins)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return v
 }

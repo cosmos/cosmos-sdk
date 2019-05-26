@@ -116,15 +116,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.
-	// The deducted tokens are returned to pool.NotBondedTokens.
+	// Burn the slashed tokens from the pool account and decrease the total supply.
 	// TODO: Move the token accounting outside of `RemoveValidatorTokens` so it is less confusing
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
-	// Burn the slashed tokens from the unbonded pool account and the total supply.
-	burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
-	err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
-	if err != nil {
-		panic(nil)
-	}
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(

@@ -118,9 +118,9 @@ func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasCon
 				return newCtx, res, true
 			}
 
-			err := feeCollector.SetCoins(stdTx.Fee.Amount)
+			err := feeCollector.SetCoins(feeCollector.GetCoins().Add(stdTx.Fee.Amount))
 			if err != nil {
-				return newCtx, res, true
+				return newCtx, sdk.ErrInternal(err.Error()).Result(), true
 			}
 
 			ak.SetAccount(ctx, feeCollector)

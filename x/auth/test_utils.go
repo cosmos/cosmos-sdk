@@ -20,25 +20,36 @@ type testInput struct {
 	ak  AccountKeeper
 }
 
-func setupTestInput() testInput {
-	db := dbm.NewMemDB()
-
+func makeTestCodec() *codec.Codec {
 	cdc := codec.New()
 	RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
+	return cdc
+}
 
-	authKey := sdk.NewKVStoreKey(StoreKey)
+func setupTestInput() testInput {
+
+	keyAcc := sdk.NewKVStoreKey(StoreKey)
 	keyParams := sdk.NewKVStoreKey("subspace")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
+	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
+
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.LoadLatestVersion()
+
+	err := ms.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
+
+	cdc := makeTestCodec()
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
-	ak := NewAccountKeeper(cdc, authKey, ps, ProtoBaseAccount)
+	ak := NewAccountKeeper(cdc, keyAcc, ps, ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, DefaultParams())

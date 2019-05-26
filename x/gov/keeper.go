@@ -5,7 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -90,6 +92,11 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
+
+// GetGovernanceAccount returns the governance ModuleAccount
+func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccount {
+	return keeper.sk.GetModuleAccountByName(ctx, types.ModuleName)
+}
 
 // Proposals
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal, sdk.Error) {

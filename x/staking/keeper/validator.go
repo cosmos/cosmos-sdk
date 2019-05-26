@@ -440,35 +440,30 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, NewStatus sdk.BondStatus) types.Validator {
+func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, newStatus sdk.BondStatus) types.Validator {
+	if v.Status == newStatus {
+		return v
+	}
+
 	switch v.Status {
 	case sdk.Unbonded:
 
-		switch NewStatus {
-		case sdk.Unbonded:
-			return v
-		case sdk.Bonded:
+		if newStatus == sdk.Bonded {
 			k.notBondedTokensToBonded(ctx, v.Tokens)
 		}
 	case sdk.Unbonding:
 
-		switch NewStatus {
-		case sdk.Unbonding:
-			return v
-		case sdk.Bonded:
+		if newStatus == sdk.Bonded {
 			k.notBondedTokensToBonded(ctx, v.Tokens)
 		}
 	case sdk.Bonded:
 
-		switch NewStatus {
-		case sdk.Bonded:
-			return v
-		default:
+		if newStatus == sdk.Unbonded || newStatus == sdk.Unbonding {
 			k.bondedTokensToNotBonded(ctx, v.Tokens)
 		}
 	}
 
-	v.Status = NewStatus
+	v.Status = newStatus
 	return v
 }
 

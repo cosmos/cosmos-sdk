@@ -267,11 +267,14 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	startTokens := sdk.TokensFromTendermintPower(10)
+	startTokens := sdk.TokensFromTendermintPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -295,7 +298,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.TokensFromTendermintPower(6).ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.TokensFromTendermintPower(6).ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -311,11 +314,14 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	startTokens := sdk.TokensFromTendermintPower(10)
+	startTokens := sdk.TokensFromTendermintPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -345,7 +351,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -382,10 +388,14 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1)
 	startTokens := sdk.TokensFromTendermintPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
+	
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -411,7 +421,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -455,10 +465,13 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -484,7 +497,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -597,10 +610,13 @@ func TestRedelegation(t *testing.T) {
 func TestRedelegateToSameValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(30)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -612,7 +628,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, selfDelegation)
 
-	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
 	require.Error(t, err)
 
 }
@@ -620,10 +636,13 @@ func TestRedelegateToSameValidator(t *testing.T) {
 func TestRedelegationMaxEntries(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -654,7 +673,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	}
 
 	// an additional redelegation should fail due to max entries
-	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
 	require.Error(t, err)
 
 	// mature redelegations
@@ -670,10 +689,13 @@ func TestRedelegationMaxEntries(t *testing.T) {
 func TestRedelegateSelfDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(30)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -703,7 +725,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 
-	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], delTokens.ToDec())
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], delTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -719,10 +741,13 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(30)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -758,7 +783,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -795,10 +820,13 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromTendermintPower(30)
+	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
-	notBondedPool := keeper.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	require.NotNil(t, notBondedPool)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	// add not bonded tokens to pool for delegations
+	_, notBondedPool := keeper.GetPools(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
+	require.NoError(t, err)
+	keeper.SetNotBondedPool(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -831,7 +859,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
+	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
 	require.NoError(t, err)
 
 	// end block

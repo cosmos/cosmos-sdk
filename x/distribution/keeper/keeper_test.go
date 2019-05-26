@@ -30,12 +30,19 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
+	// set module account coins
+	distrAcc := keeper.GetDistributionAccount(ctx)
+	distrAcc.SetCoins(sdk.NewCoins(
+		sdk.NewCoin("mytoken", sdk.NewInt(2)),
+		sdk.NewCoin("stake", sdk.NewInt(2)),
+	))
+	keeper.SetModuleAccount(ctx, distrAcc)
+
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
 	expTokens := sdk.TokensFromTendermintPower(1000)
-	require.Equal(t, sdk.Coins{
-		sdk.NewCoin("stake", sdk.TokensFromTendermintPower(1000)),
-	}, balance)
+	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
+	require.Equal(t, expCoins, balance)
 
 	// set outstanding rewards
 	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr3, valCommission)
@@ -48,10 +55,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check balance increase
 	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
-	require.Equal(t, sdk.Coins{
+	require.Equal(t, sdk.NewCoins(
 		sdk.NewCoin("mytoken", sdk.NewInt(1)),
 		sdk.NewCoin("stake", expTokens.AddRaw(1)),
-	}, balance)
+	), balance)
 
 	// check remainder
 	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)

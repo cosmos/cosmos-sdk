@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -15,12 +16,15 @@ func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
 	return k.GetFeePool(ctx).CommunityPool
 }
 
-// GetModuleAccountByName alias for supply keeper's GetModuleAccountByName
-func (k Keeper) GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount {
-	return k.supplyKeeper.GetModuleAccountByName(ctx, name)
+// GetDistributionAccount returns the distribution ModuleAccount
+func (k Keeper) GetDistributionAccount(ctx sdk.Context) supply.ModuleAccount {
+	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
 }
 
 // SetModuleAccount alias for supply keeper's SetModuleAccount
-func (k Keeper) SetModuleAccount(ctx sdk.Context, pAcc supply.ModuleAccount) {
-	k.supplyKeeper.SetModuleAccount(ctx, pAcc)
+func (k Keeper) SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount) {
+	if macc.Name() != types.ModuleName {
+		panic("cannot set a module account other than distribution's")
+	}
+	k.supplyKeeper.SetModuleAccount(ctx, macc)
 }

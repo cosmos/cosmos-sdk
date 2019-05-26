@@ -1081,21 +1081,23 @@ func TestRemoveTokens(t *testing.T) {
 
 	require.Equal(t, int64(90), validator.Tokens.Int64())
 	require.Equal(t, int64(90), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(10), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
+	require.Equal(t, int64(0), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
 	// update validator to from bonded -> unbonded and remove some more tokens
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Unbonded)
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(100), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
+	require.Equal(t, int64(90), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
 	validator = keeper.removeTokens(ctx, validator, sdk.NewInt(10))
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	require.Equal(t, int64(80), validator.Tokens.Int64())
 	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(100), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
+	require.Equal(t, int64(80), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
+	require.Panics(t, func() {keeper.removeTokens(ctx, validator, sdk.NewInt(-1))})
+	require.Panics(t, func() {keeper.removeTokens(ctx, validator, sdk.NewInt(100))})
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {

@@ -488,7 +488,6 @@ func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.
 	if v.Status == sdk.Bonded {
 		k.notBondedTokensToBonded(ctx, amount)
 	}
-
 	v.Tokens = v.Tokens.Add(amount)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
@@ -507,9 +506,13 @@ func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
+	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
 	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == sdk.Bonded {
-		k.bondedTokensToNotBonded(ctx, tokens)
+	switch v.Status {
+	case sdk.Bonded:
+		k.supplyKeeper.BurnCoins(ctx, BondedTokensName, coins)
+	default:
+		k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, coins)
 	}
 	return v
 }

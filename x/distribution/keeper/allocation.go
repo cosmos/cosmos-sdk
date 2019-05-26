@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,4 +102,28 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val sdk.Validator, to
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+}
+
+// Allocate the community pool from the community fee pool, burn or send to specific account
+func (k Keeper) AllocateCommunityPool(ctx sdk.Context, destAddr sdk.AccAddress, percent sdk.Dec, burn bool) {
+	logger := ctx.Logger()
+	feePool := k.GetFeePool(ctx)
+	communityPool := feePool.CommunityPool
+	allocateCoins, _ := communityPool.MulDec(percent).TruncateDecimal()
+	feePool.CommunityPool = communityPool.Sub(sdk.NewDecCoins(allocateCoins))
+	k.SetFeePool(ctx, feePool)
+
+	logger.Info("Spend community tax fund", "total_community_tax_fund", communityPool.String(), "left_community_tax_fund", feePool.CommunityPool.String())
+
+	if burn {
+		logger.Info("Burn community tax", "burn_amount", allocateCoins.String())
+	} else {
+		logger.Info("Grant community tax to account", "grant_amount", allocateCoins.String(), "grant_address", destAddr.String())
+		if !allocateCoins.IsZero() {
+			_, err := k.bankKeeper.AddCoins(ctx, destAddr, allocateCoins)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }

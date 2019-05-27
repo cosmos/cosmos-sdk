@@ -271,12 +271,14 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 func TestMsgMultiSendDependent(t *testing.T) {
 	mapp := getMockApp(t)
 
-	acc1 := &auth.BaseAccount{
-		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
-	}
+	acc1 := auth.NewBaseAccountWithAddress(addr1)
+	acc2 := auth.NewBaseAccountWithAddress(addr2)
+	err := acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 
-	mock.SetGenesis(mapp, []auth.Account{acc1})
+	mock.SetGenesis(mapp, []auth.Account{&acc1, &acc2})
 
 	testCases := []appTestCase{
 		{

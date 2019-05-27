@@ -150,7 +150,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	keeper.SetPool(ctx, pool)
 	nextCliffVal = TestingUpdateValidator(keeper, ctx, nextCliffVal, true)
 
-	expectedValStatus := map[int]sdk.BondStatus{
+	expectedValStatus := map[int]types.BondStatus{
 		9: types.Bonded, 8: types.Bonded, 7: types.Bonded, 5: types.Bonded, 4: types.Bonded,
 		0: types.Unbonding, 1: types.Unbonding, 2: types.Unbonding, 3: types.Unbonding, 6: types.Unbonding,
 	}

@@ -22,7 +22,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	// mint coins, update supply
 	mintedCoins := sdk.NewCoins(minter.BlockProvision(params))
 
-	err := k.supplyKeeper.MintCoins(ctx, ModuleName, mintedCoins.Add(mintedCoins))
+	err := k.supplyKeeper.MintCoins(ctx, ModuleName, mintedCoins)
 	if err != nil {
 		panic(err)
 	}

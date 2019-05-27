@@ -105,10 +105,16 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(newCoins())
+	err := acc1.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err = acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 
 	// msg and signatures
@@ -153,10 +159,12 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	input := setupTestInput()
 	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(0)
+
+	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
 	priv2, _, addr2 := keyPubAddr()
 
-	// set the accounts
+	// set the accounts, we don't need the acc numbers as it's genesis block
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
 	input.ak.SetAccount(ctx, acc1)
@@ -211,14 +219,25 @@ func TestAnteHandlerSequences(t *testing.T) {
 	priv1, _, addr1 := keyPubAddr()
 	priv2, _, addr2 := keyPubAddr()
 	priv3, _, addr3 := keyPubAddr()
+
+	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(newCoins())
+	err := acc1.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err = acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 	acc3 := input.ak.NewAccountWithAddress(ctx, addr3)
-	acc3.SetCoins(newCoins())
+	err = acc3.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc3.SetAccountNumber(2)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc3)
 
 	// msg and signatures
@@ -324,6 +343,8 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
+	err := acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 
 	// msg and signatures
@@ -365,13 +386,22 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(newCoins())
+	err := acc1.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err = acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 	acc3 := input.ak.NewAccountWithAddress(ctx, addr3)
-	acc3.SetCoins(newCoins())
+	err = acc3.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc3.SetAccountNumber(2)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc3)
 
 	// set up msgs and fee
@@ -411,10 +441,16 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(newCoins())
+	err := acc1.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err = acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 
 	var tx sdk.Tx
@@ -486,10 +522,16 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(newCoins())
+	err := acc1.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc1.SetAccountNumber(0)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err = acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 
 	var tx sdk.Tx
@@ -689,7 +731,10 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	acc1.SetCoins(newCoins())
 	input.ak.SetAccount(ctx, acc1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(newCoins())
+	err := acc2.SetCoins(newCoins())
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
 
 	var tx sdk.Tx
@@ -775,6 +820,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	_ = acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	input.ak.SetAccount(ctx, acc1)
+
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
@@ -788,8 +834,12 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	pub2 := priv2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	_ = acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	err := acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 	input.ak.SetAccount(ctx, acc2)
+
 	msg = newTestMsg(addr2)
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
 	fee = newStdFee()

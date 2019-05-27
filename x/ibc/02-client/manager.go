@@ -8,30 +8,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type IdentifierGenerator func(sdk.Context /*Header,*/, mapping.Value) string
+type IDGenerator func(sdk.Context /*Header,*/, mapping.Value) string
 
-func IntegerIdentifierGenerator(ctx sdk.Context, v mapping.Value) string {
+func IntegerIDGenerator(ctx sdk.Context, v mapping.Value) string {
 	id := v.Integer().Incr(ctx)
 	return strconv.FormatInt(id, 10)
 }
 
-type ClientManager struct {
+type Manager struct {
 	m     mapping.Mapping
 	idval mapping.Value
-	idgen IdentifierGenerator
-	pred  map[ClientKind]ValidityPredicate
+	idgen IDGenerator
+	pred  map[Kind]ValidityPredicate
 }
 
-func NewClientManager(protocol, free mapping.Base, idgen IdentifierGenerator) *ClientManager {
-	return &ClientManager{
+func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
+	return Manager{
 		m:     mapping.NewMapping(protocol, nil),
-		idval: mapping.NewValue(free, []byte{0x00}),
+		idval: mapping.NewValue(free, []byte("id")),
 		idgen: idgen,
-		pred:  make(map[ClientKind]ValidityPredicate),
+		pred:  make(map[Kind]ValidityPredicate),
 	}
 }
 
-func (man ClientManager) RegisterKind(kind ClientKind, pred ValidityPredicate) ClientManager {
+func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	if _, ok := man.pred[kind]; ok {
 		panic("ClientKind already registered")
 	}
@@ -39,45 +39,45 @@ func (man ClientManager) RegisterKind(kind ClientKind, pred ValidityPredicate) C
 	return man
 }
 
-func (man ClientManager) object(key string) ClientObject {
-	return ClientObject{
+func (man Manager) object(key string) Object {
+	return Object{
 		key:    key,
-		state:  man.m.Value([]byte("/" + key)),
-		freeze: man.m.Value([]byte("/" + key + "/freeze")).Boolean(),
+		client: man.m.Value([]byte(key)),
+		freeze: man.m.Value([]byte(key + "/freeze")).Boolean(),
 		pred:   man.pred,
 	}
 }
 
-func (man ClientManager) Create(ctx sdk.Context, cs ConsensusState) string {
+func (man Manager) Create(ctx sdk.Context, cs Client) string {
 	key := man.idgen(ctx, man.idval)
 	man.object(key).create(ctx, cs)
 	return key
 }
 
-func (man ClientManager) Query(ctx sdk.Context, key string) (ClientObject, bool) {
+func (man Manager) Query(ctx sdk.Context, key string) (Object, bool) {
 	res := man.object(key)
 	return res, res.exists(ctx)
 }
 
-type ClientObject struct {
+type Object struct {
 	key    string
-	state  mapping.Value
+	client mapping.Value
 	freeze mapping.Boolean
-	pred   map[ClientKind]ValidityPredicate
+	pred   map[Kind]ValidityPredicate
 }
 
-func (obj ClientObject) create(ctx sdk.Context, st ConsensusState) {
+func (obj Object) create(ctx sdk.Context, st Client) {
 	if obj.exists(ctx) {
 		panic("Create client on already existing key")
 	}
-	obj.state.Set(ctx, st)
+	obj.client.Set(ctx, st)
 }
 
-func (obj ClientObject) exists(ctx sdk.Context) bool {
-	return obj.state.Exists(ctx)
+func (obj Object) exists(ctx sdk.Context) bool {
+	return obj.client.Exists(ctx)
 }
 
-func (obj ClientObject) Update(ctx sdk.Context, header Header) error {
+func (obj Object) Update(ctx sdk.Context, header Header) error {
 	if !obj.exists(ctx) {
 		panic("should not update nonexisting client")
 	}
@@ -86,8 +86,8 @@ func (obj ClientObject) Update(ctx sdk.Context, header Header) error {
 		return errors.New("client is frozen")
 	}
 
-	var stored ConsensusState
-	obj.state.GetIfExists(ctx, &stored)
+	var stored Client
+	obj.client.GetIfExists(ctx, &stored)
 	pred := obj.pred[stored.ClientKind()]
 
 	updated, err := pred(stored, header)
@@ -95,12 +95,12 @@ func (obj ClientObject) Update(ctx sdk.Context, header Header) error {
 		return err
 	}
 
-	obj.state.Set(ctx, updated)
+	obj.client.Set(ctx, updated)
 
 	return nil
 }
 
-func (obj ClientObject) Freeze(ctx sdk.Context) error {
+func (obj Object) Freeze(ctx sdk.Context) error {
 	if !obj.exists(ctx) {
 		panic("should not freeze nonexisting client")
 	}
@@ -114,7 +114,7 @@ func (obj ClientObject) Freeze(ctx sdk.Context) error {
 	return nil
 }
 
-func (obj ClientObject) Delete(ctx sdk.Context) error {
+func (obj Object) Delete(ctx sdk.Context) error {
 	if !obj.exists(ctx) {
 		panic("should not delete nonexisting client")
 	}
@@ -123,7 +123,7 @@ func (obj ClientObject) Delete(ctx sdk.Context) error {
 		return errors.New("client is not frozen")
 	}
 
-	obj.state.Delete(ctx)
+	obj.client.Delete(ctx)
 	obj.freeze.Delete(ctx)
 
 	return nil

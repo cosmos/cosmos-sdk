@@ -1,33 +1,27 @@
 package client
 
 type ValidityPredicateBase interface {
-	ClientKind() ClientKind
+	ClientKind() Kind
 	Height() int64
 }
 
-type ConsensusState interface {
-	ClientKind() ClientKind
+type Client interface {
+	ClientKind() Kind
 	Base() ValidityPredicateBase
-	Root() CommitmentRoot
+	//	Root() CommitmentRoot
 }
 
 type Header interface {
-	ClientKind() ClientKind
-	Proof() HeaderProof
+	ClientKind() Kind
+	//	Proof() HeaderProof
 	Base() ValidityPredicateBase // can be nil
-	Root() CommitmentRoot
+	// Root() CommitmentRoot
 }
 
-type ValidityPredicate func(ConsensusState, Header) (ConsensusState, error)
+type ValidityPredicate func(Client, Header) (Client, error)
 
-type Client interface {
-	ClientKind() ClientKind
-	ValidityPredicate() ValidityPredicate
-	ConsensusState() ConsensusState
-}
-
-type ClientKind byte
+type Kind byte
 
 const (
-	Tendermint ClientKind = iota
+	Tendermint Kind = iota
 )

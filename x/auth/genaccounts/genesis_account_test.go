@@ -27,6 +27,11 @@ func TestGenesisAccountValidate(t *testing.T) {
 			nil,
 		},
 		{
+			"valid module account",
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "foo", true),
+			nil,
+		},
+		{
 			"invalid vesting amount",
 			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0, "", false),

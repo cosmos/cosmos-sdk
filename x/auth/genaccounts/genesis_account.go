@@ -26,7 +26,7 @@ type GenesisAccount struct {
 
 	// module account fields
 	ModuleName string `json:"module_name"` // name of the module account
-	IsMinter   bool   `json:"is_minter"`   // used to differenciate ModuleMinterAccount from a ModuleHolderAccount
+	IsMinter   bool   `json:"is_minter"`   // used to differentiate ModuleMinterAccount from a ModuleHolderAccount
 }
 
 // Validate checks for errors on the vesting and module account parameters

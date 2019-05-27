@@ -8,6 +8,7 @@ import (
 
 type (
 	Keeper              = keeper.Keeper
+	AccountKeeper       = keeper.AccountKeeper
 	ModuleAccount       = types.ModuleAccount
 	ModuleHolderAccount = types.ModuleHolderAccount
 	ModuleMinterAccount = types.ModuleMinterAccount

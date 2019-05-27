@@ -177,7 +177,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
-		supply.NewAppModule(app.supplyKeeper),
+		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper),
 		gov.NewAppModule(app.govKeeper),
 		mint.NewAppModule(app.mintKeeper),

@@ -66,7 +66,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 			continue
 		}
 
-		resTags.AppendTags(sdk.NewTags(
+		resTags = resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteUnbonding,
 			tags.Delegator, dvPair.DelegatorAddress.String(),
 			tags.SrcValidator, dvPair.ValidatorAddress.String(),
@@ -82,7 +82,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 			continue
 		}
 
-		resTags.AppendTags(sdk.NewTags(
+		resTags = resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteRedelegation,
 			tags.Category, tags.TxCategory,
 			tags.Delegator, dvvTriplet.DelegatorAddress.String(),
@@ -118,7 +118,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
 		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return ErrValidatorPubKeyTypeUnsupported(k.Codespace(),
+			return ErrValidatorPubKeyTypeNotSupported(k.Codespace(),
 				tmPubKey.Type,
 				ctx.ConsensusParams().Validator.PubKeyTypes).Result()
 		}
@@ -249,7 +249,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	finishTime := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.DelegatorAddress.String(),
@@ -275,7 +275,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	finishTime := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.DelegatorAddress.String(),

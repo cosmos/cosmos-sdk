@@ -3,12 +3,10 @@ package lcd
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
@@ -19,9 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
-
-	// Import statik for light client stuff
-	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
 // RestServer represents the Light Client Rest server
@@ -69,7 +64,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	}
 	rs.log.Info(
 		fmt.Sprintf(
-			"Starting Gaia Lite REST service (chain-id: %q)...",
+			"Starting application REST service (chain-id: %q)...",
 			viper.GetString(client.FlagChainID),
 		),
 	)
@@ -77,7 +72,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
-// ServeCommand will start a Gaia Lite REST service as a blocking process. It
+// ServeCommand will start the application REST service as a blocking process. It
 // takes a codec to create a RestServer object and a function to register all
 // necessary routes.
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
@@ -102,13 +97,4 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 	}
 
 	return client.RegisterRestServerFlags(cmd)
-}
-
-func (rs *RestServer) registerSwaggerUI() {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-	staticServer := http.FileServer(statikFS)
-	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }

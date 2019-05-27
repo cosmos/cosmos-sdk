@@ -63,12 +63,6 @@ func TestTxValidateBasic(t *testing.T) {
 	// keys and addresses
 	priv1, _, addr1 := keyPubAddr()
 	priv2, _, addr2 := keyPubAddr()
-	priv3, _, addr3 := keyPubAddr()
-	priv4, _, addr4 := keyPubAddr()
-	priv5, _, addr5 := keyPubAddr()
-	priv6, _, addr6 := keyPubAddr()
-	priv7, _, addr7 := keyPubAddr()
-	priv8, _, addr8 := keyPubAddr()
 
 	// msg and signatures
 	msg1 := newTestMsg(addr1, addr2)
@@ -100,17 +94,6 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
-
-	// require to fail validation when there are too many signatures
-	privs = []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8}
-	accNums, seqs = []uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
-	badMsg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
-	badMsgs := []sdk.Msg{badMsg}
-	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
-
-	err = tx.ValidateBasic()
-	require.Error(t, err)
-	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
 
 	// require to fail with invalid gas supplied
 	badFee = newStdFee()

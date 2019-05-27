@@ -12,10 +12,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -51,7 +51,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, genState))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, mApp.AccountKeeper, genState))
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
 
@@ -84,7 +84,9 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
+	accountKeeper staking.AccountKeeper, genState GenesisState) sdk.InitChainer {
+
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
@@ -92,10 +94,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		tokens := sdk.TokensFromTendermintPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
-		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
-		if err != nil {
-			panic(err)
-		}
+		validators := staking.InitGenesis(ctx, stakingKeeper, accountKeeper, stakingGenesis)
 		if genState.IsEmpty() {
 			InitGenesis(ctx, keeper, DefaultGenesisState())
 		} else {
@@ -156,9 +155,8 @@ func testProposal() Content {
 
 // checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	cdc := codec.New()
-	RegisterCodec(cdc)
-	return bytes.Equal(cdc.MustMarshalBinaryBare(proposalA), cdc.MustMarshalBinaryBare(proposalB))
+	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
+		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }
 
 var (

@@ -5,8 +5,5 @@ sections:
   bugfixes: Bugfixes
 
 tags:
-  - gaia
-  - gaiacli
-  - gaiarest
   - sdk
   - tendermint

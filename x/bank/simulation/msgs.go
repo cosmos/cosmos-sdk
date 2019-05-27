@@ -1,9 +1,7 @@
 package simulation
 
 import (
-	"errors"
 	"fmt"
-	"math/big"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -55,7 +53,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
@@ -150,7 +148,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
@@ -217,12 +215,4 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, 
 		}
 	}
 	return nil
-}
-
-func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GT(sdk.OneInt()) {
-		return sdk.Int{}, errors.New("max too small")
-	}
-	max = max.Sub(sdk.OneInt())
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
 }

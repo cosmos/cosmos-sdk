@@ -38,7 +38,7 @@ initially support [ICS0](https://cosmos.network/rpc/#/ICS0) (TendermintAPI), [IC
 All applications are expected to run only against Gaia-lite. Gaia-lite is the only piece of software
 that offers stability guarantees around the zone API.
 
-### Comparision
+### Comparison
 
 A full node of ABCI is different from a light client in the following ways:
 
@@ -76,6 +76,7 @@ it will verify it and save the new validated validator set to the trust store.
 From the above section, we come to know how to get a trusted validator set and how lcd keeps track of
 validator set evolution. The validator set is the foundation of trust, and the trust can propagate to
 other blockchain data, such as blocks and transactions. The propagation architecture is shown as
+
 follows:
 
 ![change-process](./pics/trustPropagate.png)

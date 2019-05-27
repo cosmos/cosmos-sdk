@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -38,7 +39,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(stakingKeeper))
-	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper))
+	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper))
 
 	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keySlashing))
 
@@ -57,17 +58,13 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper staking.Keeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
 		tokens := sdk.TokensFromTendermintPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
-		validators, err := staking.InitGenesis(ctx, keeper, stakingGenesis)
-		if err != nil {
-			panic(err)
-		}
-
+		validators := staking.InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

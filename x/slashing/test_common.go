@@ -2,7 +2,6 @@ package slashing
 
 import (
 	"encoding/hex"
-	"os"
 	"testing"
 	"time"
 
@@ -66,7 +65,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewNopLogger())
 	cdc := createTestCodec()
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
@@ -77,8 +76,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 
 	genesis.Pool.NotBondedTokens = initCoins.MulRaw(int64(len(addrs)))
 
-	_, err = staking.InitGenesis(ctx, sk, genesis)
-	require.Nil(t, err)
+	_ = staking.InitGenesis(ctx, sk, accountKeeper, genesis)
 
 	for _, addr := range addrs {
 		_, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
@@ -91,7 +89,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil}, genesis.Validators.ToSDKValidators())
+		InitGenesis(ctx, keeper, sk, GenesisState{defaults, nil, nil})
 	})
 
 	return ctx, ck, sk, paramstore, keeper

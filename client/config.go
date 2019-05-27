@@ -28,12 +28,12 @@ var configDefaults = map[string]string{
 	"broadcast-mode": "sync",
 }
 
-// ConfigCmd returns a CLI command to interactively create a
-// Gaia CLI config file.
+// ConfigCmd returns a CLI command to interactively create an application CLI
+// config file.
 func ConfigCmd(defaultCLIHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
-		Short: "Create or query a Gaia CLI configuration file",
+		Short: "Create or query an application CLI configuration file",
 		RunE:  runConfigCmd,
 		Args:  cobra.RangeArgs(0, 2),
 	}

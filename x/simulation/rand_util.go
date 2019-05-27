@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"errors"
 	"math/big"
 	"math/rand"
 	"time"
@@ -33,6 +34,14 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 		remain--
 	}
 	return string(b)
+}
+
+func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
+	if !max.GT(sdk.OneInt()) {
+		return sdk.Int{}, errors.New("max too small")
+	}
+	max = max.Sub(sdk.OneInt())
+	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
 }
 
 // Generate a random amount

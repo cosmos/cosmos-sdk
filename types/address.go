@@ -93,10 +93,9 @@ func VerifyAddressFormat(bz []byte) error {
 	verifier := GetConfig().GetAddressVerifier()
 	if verifier != nil {
 		return verifier(bz)
-	} else {
-		if len(bz) != AddrLen {
-			return errors.New("Incorrect address length")
-		}
+	}
+	if len(bz) != AddrLen {
+		return errors.New("Incorrect address length")
 	}
 	return nil
 }

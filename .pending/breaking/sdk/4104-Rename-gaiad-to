@@ -1,0 +1,2 @@
+#4104 Rename gaiad.toml to app.toml. The internal contents of the application
+config remain unchanged.

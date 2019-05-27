@@ -13,13 +13,14 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 	// Update the signing info start height or create a new signing info
 	_, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
-		signingInfo := ValidatorSigningInfo{
-			StartHeight:         ctx.BlockHeight(),
-			IndexOffset:         0,
-			JailedUntil:         time.Unix(0, 0),
-			Tombstoned:          false,
-			MissedBlocksCounter: 0,
-		}
+		signingInfo := NewValidatorSigningInfo(
+			address,
+			ctx.BlockHeight(),
+			0,
+			time.Unix(0, 0),
+			false,
+			0,
+		)
 		k.SetValidatorSigningInfo(ctx, address, signingInfo)
 	}
 }

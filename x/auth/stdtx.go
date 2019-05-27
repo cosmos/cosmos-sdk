@@ -56,16 +56,6 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 		return sdk.ErrUnauthorized("wrong number of signers")
 	}
 
-	sigCount := 0
-	for i := 0; i < len(stdSigs); i++ {
-		sigCount += countSubKeys(stdSigs[i].PubKey)
-		if uint64(sigCount) > DefaultTxSigLimit {
-			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
-			)
-		}
-	}
-
 	return nil
 }
 
@@ -143,7 +133,7 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	bz, err := msgCdc.MarshalJSON(fee) // TODO
+	bz, err := moduleCdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +171,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := msgCdc.MarshalJSON(StdSignDoc{
+	bz, err := moduleCdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

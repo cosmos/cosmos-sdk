@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
@@ -25,12 +27,14 @@ func GetMultiSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
-		Long: `Sign transactions created with the --generate-only flag that require multisig signatures.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Sign transactions created with the --generate-only flag that require multisig signatures.
 
 Read signature(s) from [signature] file(s), generate a multisig signature compliant to the
-multisig key [name], and attach it to the transaction read from [file]. Example:
+multisig key [name], and attach it to the transaction read from [file].
 
-   gaiacli multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+Example:
+$ %s multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
@@ -39,9 +43,13 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.
 `,
+				version.ClientName,
+			),
+		),
 		RunE: makeMultiSignCmd(codec),
 		Args: cobra.MinimumNArgs(3),
 	}
+
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")

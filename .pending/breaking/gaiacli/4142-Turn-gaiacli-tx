@@ -1,2 +1,0 @@
-#4142 Turn gaiacli tx send's --from into a required argument.
-New shorter syntax: `gaiacli tx send FROM TO AMOUNT`

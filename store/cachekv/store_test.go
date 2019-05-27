@@ -293,8 +293,8 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
 
-	start, end := 25, 75
-	max := 100
+	start, end := 25, 975
+	max := 1000
 	setRange(st, truth, start, end)
 
 	// do an op, test the iterator

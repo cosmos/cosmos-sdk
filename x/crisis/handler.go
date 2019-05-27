@@ -7,11 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 )
 
-// ModuleName is the module name for this module
-const (
-	ModuleName = "crisis"
-	RouterKey  = ModuleName
-)
+// RouterKey
+const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {

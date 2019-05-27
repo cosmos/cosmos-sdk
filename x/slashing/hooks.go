@@ -27,7 +27,7 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 
 // When a validator is created, add the address-pubkey relation.
 func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	validator := k.validatorSet.Validator(ctx, valAddr)
+	validator := k.sk.Validator(ctx, valAddr)
 	k.addPubkey(ctx, validator.GetConsPubKey())
 }
 

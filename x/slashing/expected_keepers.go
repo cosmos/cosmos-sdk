@@ -13,12 +13,6 @@ type AccountKeeper interface {
 
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
-	IterateValidators(ctx sdk.Context,
-		fn func(index int64, validator staking.ValidatorInterface) (stop bool))
-}
-
-// ValidatorSet expected properties for the set of all validators
-type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
 		func(index int64, validator staking.ValidatorInterface) (stop bool))

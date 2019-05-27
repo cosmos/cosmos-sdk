@@ -260,4 +260,5 @@ type (
 	ValidatorInterface        = types.ValidatorInterface
 	Validators                = types.Validators
 	Description               = types.Description
+	StakingHooks              = types.StakingHooks
 )

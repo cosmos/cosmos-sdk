@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // SendCoinsModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
@@ -66,8 +65,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
 	}
 
-	macc, isMinterAcc := macc.(*types.ModuleMinterAccount)
-	if !isMinterAcc {
+	if !macc.IsMinter() {
 		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", name))
 	}
 

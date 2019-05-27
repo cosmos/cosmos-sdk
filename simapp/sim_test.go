@@ -459,22 +459,23 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, abci.Header{})
 
 	type StoreKeysPrefixes struct {
+		keyName  string
 		A        sdk.StoreKey
 		B        sdk.StoreKey
 		Prefixes [][]byte
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keyMain, newApp.keyMain, [][]byte{}},
-		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
+		{"main", app.keyMain, newApp.keyMain, [][]byte{}},
+		{"account", app.keyAccount, newApp.keyAccount, [][]byte{}},
+		{"staking", app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
 			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
-		{app.keySlashing, newApp.keySlashing, [][]byte{}},
-		{app.keyMint, newApp.keyMint, [][]byte{}},
-		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keySupply, newApp.keySupply, [][]byte{}},
-		{app.keyParams, newApp.keyParams, [][]byte{}},
-		{app.keyGov, newApp.keyGov, [][]byte{}},
+		{"slashing", app.keySlashing, newApp.keySlashing, [][]byte{}},
+		{"mint", app.keyMint, newApp.keyMint, [][]byte{}},
+		{"distribution", app.keyDistr, newApp.keyDistr, [][]byte{}},
+		{"supply", app.keySupply, newApp.keySupply, [][]byte{}},
+		{"params", app.keyParams, newApp.keyParams, [][]byte{}},
+		{"gov", app.keyGov, newApp.keyGov, [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {
@@ -486,8 +487,8 @@ func TestAppImportExport(t *testing.T) {
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
-			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
-			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
+			"unequal %s stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
+			storeKeysPrefix.keyName, storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
 		)
 	}
 

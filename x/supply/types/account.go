@@ -13,6 +13,7 @@ type ModuleAccount interface {
 	auth.Account
 
 	Name() string
+	IsMinter() bool
 }
 
 //-----------------------------------------------------------------------------
@@ -24,7 +25,7 @@ var _ ModuleAccount = (*ModuleHolderAccount)(nil)
 type ModuleHolderAccount struct {
 	*auth.BaseAccount
 
-	PoolName string `json:"name"` // name of the pool
+	ModuleName string `json:"name"` // name of the module
 }
 
 // NewModuleHolderAccount creates a new ModuleHolderAccount instance
@@ -34,14 +35,17 @@ func NewModuleHolderAccount(name string) *ModuleHolderAccount {
 	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
 	return &ModuleHolderAccount{
 		BaseAccount: &baseAcc,
-		PoolName:    name,
+		ModuleName:  name,
 	}
 }
 
 // Name returns the the name of the holder's module
 func (mha ModuleHolderAccount) Name() string {
-	return mha.PoolName
+	return mha.ModuleName
 }
+
+// IsMinter false for ModuleHolderAccount
+func (mha ModuleHolderAccount) IsMinter() bool { return false }
 
 // SetPubKey - Implements Account
 func (mha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
@@ -60,7 +64,7 @@ func (mha ModuleHolderAccount) String() string {
 Address:  %s
 Coins:    %s
 Name:     %s`,
-		mha.Address, mha.Coins, mha.PoolName)
+		mha.Address, mha.Coins, mha.ModuleName)
 }
 
 //-----------------------------------------------------------------------------
@@ -80,6 +84,9 @@ func NewModuleMinterAccount(name string) *ModuleMinterAccount {
 	return &ModuleMinterAccount{ModuleHolderAccount: moduleHolderAcc}
 }
 
+// IsMinter true for ModuleMinterAccount
+func (mma ModuleMinterAccount) IsMinter() bool { return true }
+
 // String follows stringer interface
 func (mma ModuleMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
@@ -87,5 +94,5 @@ func (mma ModuleMinterAccount) String() string {
 Address: %s
 Coins:   %s
 Name:    %s`,
-		mma.Address, mma.Coins, mma.PoolName)
+		mma.Address, mma.Coins, mma.ModuleName)
 }

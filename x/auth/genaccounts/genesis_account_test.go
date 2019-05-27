@@ -11,6 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestGenesisAccountValidate(t *testing.T) {
@@ -22,13 +23,13 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}{
 		{
 			"valid account",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0),
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "", false),
 			nil,
 		},
 		{
 			"invalid vesting amount",
 			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0, "", false),
 			errors.New("vesting amount cannot be greater than total amount"),
 		},
 		{
@@ -36,14 +37,19 @@ func TestGenesisAccountValidate(t *testing.T) {
 			NewGenesisAccountRaw(addr,
 				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)),
-				0, 0),
+				0, 0, "", false),
 			errors.New("vesting amount cannot be greater than total amount"),
 		},
 		{
 			"invalid vesting times",
 			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078, "", false),
 			errors.New("vesting start-time cannot be before end-time"),
+		},
+		{
+			"invalid module account name",
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, " ", false),
+			errors.New("module account name cannot be blank"),
 		},
 	}
 	for _, tt := range tests {
@@ -57,6 +63,8 @@ func TestGenesisAccountValidate(t *testing.T) {
 func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
+
+	// base account
 	authAcc := auth.NewBaseAccountWithAddress(addr)
 	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150)))
 	genAcc := NewGenesisAccount(&authAcc)
@@ -64,6 +72,7 @@ func TestToAccount(t *testing.T) {
 	require.IsType(t, &auth.BaseAccount{}, acc)
 	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
 
+	// vesting account
 	vacc := auth.NewContinuousVestingAccount(
 		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
 	)
@@ -72,4 +81,12 @@ func TestToAccount(t *testing.T) {
 	acc = genAcc.ToAccount()
 	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
 	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
+
+	// module account
+	macc := supply.NewModuleMinterAccount("foo")
+	genAcc, err = NewGenesisAccountI(macc)
+	require.NoError(t, err)
+	acc = genAcc.ToAccount()
+	require.IsType(t, &supply.ModuleMinterAccount{}, acc)
+	require.Equal(t, macc, acc.(*supply.ModuleMinterAccount))
 }

@@ -255,6 +255,7 @@ jobs:
           name: check if statik.go is up-to-date
           command: |
             set -ex
+            export PATH=/tmp/workspace/bin:$PATH
 
             make update-swagger-docs
             if [ -n "$(git status --porcelain)" ]; then

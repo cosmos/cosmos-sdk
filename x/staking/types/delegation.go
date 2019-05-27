@@ -28,6 +28,9 @@ type DVVTriplet struct {
 	ValidatorDstAddress sdk.ValAddress
 }
 
+// Implements Delegation interface
+var _ DelegationInterface = Delegation{}
+
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one
 // validator.

@@ -13,6 +13,12 @@ import (
 
 const aminoCacheSize = 500
 
+// Implements ValidatorSet interface
+var _ types.ValidatorSet = Keeper{}
+
+// Implements DelegationSet interface
+var _ types.DelegationSet = Keeper{}
+
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey

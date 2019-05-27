@@ -63,6 +63,9 @@ func (b BondStatus) String() string {
 	}
 }
 
+// Implements Validator interface
+var _ ValidatorInterface = Validator{}
+
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
 // calculation of future undelegations without iterating over delegators.

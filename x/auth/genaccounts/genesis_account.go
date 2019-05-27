@@ -110,16 +110,14 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 
 // ToAccount converts a GenesisAccount to an Account interface
 func (ga *GenesisAccount) ToAccount() auth.Account {
-
-	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(),
-		nil, ga.AccountNumber, ga.Sequence)
+	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(), nil, ga.AccountNumber, ga.Sequence)
 
 	// vesting accounts
 	if !ga.OriginalVesting.IsZero() {
-
 		baseVestingAcc := auth.NewBaseVestingAccount(
 			bacc, ga.OriginalVesting, ga.DelegatedFree,
-			ga.DelegatedVesting, ga.EndTime)
+			ga.DelegatedVesting, ga.EndTime,
+		)
 
 		switch {
 		case ga.StartTime != 0 && ga.EndTime != 0:

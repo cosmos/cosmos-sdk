@@ -14,3 +14,4 @@ application initialization process.
     - [MsgVerifyInvariant](02_messages.md#msgverifyinvariant)
 3. **[Tags](03_tags.md)**
     - [Handlers](03_tags.md#handlers)
+4. **[Parameters](04_params.md)**

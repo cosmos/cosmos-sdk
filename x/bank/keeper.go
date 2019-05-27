@@ -26,12 +26,17 @@ type Keeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
+type BankHooks interface {
+	CanSend(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (bool, sdk.Error)
+}
+
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
 type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         auth.AccountKeeper
 	paramSpace params.Subspace
+	hooks	   BankHooks
 }
 
 // NewBaseKeeper returns a new BaseKeeper
@@ -44,7 +49,23 @@ func NewBaseKeeper(ak auth.AccountKeeper,
 		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,
 		paramSpace:     ps,
+		hooks:			nil,
 	}
+}
+
+// Set the validator hooks
+func (k *BaseKeeper) SetHooks(bh BankHooks) *BaseKeeper {
+
+	if k.BaseSendKeeper.hooks != nil {
+		panic("cannot set bank hooks twice")
+	}
+	k.BaseSendKeeper.hooks = bh
+
+	if k.hooks != nil {
+		panic("cannot set bank hooks twice")
+	}
+	k.hooks = bh
+	return k
 }
 
 // SetCoins sets the coins at the addr.
@@ -84,6 +105,23 @@ func (keeper BaseKeeper) AddCoins(
 func (keeper BaseKeeper) InputOutputCoins(
 	ctx sdk.Context, inputs []Input, outputs []Output,
 ) (sdk.Tags, sdk.Error) {
+
+	// call hooks
+	if keeper.hooks != nil {
+		for _, input := range inputs {
+			_, err := keeper.hooks.CanSend(ctx, input.Address, nil, input.Coins)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, output := range inputs {
+			_, err := keeper.hooks.CanSend(ctx, nil, output.Address, output.Coins)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
@@ -135,6 +173,7 @@ type BaseSendKeeper struct {
 
 	ak         auth.AccountKeeper
 	paramSpace params.Subspace
+	hooks		BankHooks
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
@@ -145,6 +184,7 @@ func NewBaseSendKeeper(ak auth.AccountKeeper,
 		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
 		ak:             ak,
 		paramSpace:     paramSpace,
+		hooks:			nil,
 	}
 }
 
@@ -156,6 +196,15 @@ func (keeper BaseSendKeeper) SendCoins(
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())
 	}
+
+	// call hooks
+	if keeper.hooks != nil {
+		_, err := keeper.hooks.CanSend(ctx, fromAddr, toAddr, amt)
+		if err != nil {
+			return err
+		}
+	}
+
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
 }
 

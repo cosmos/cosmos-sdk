@@ -27,7 +27,7 @@ build: go.sum
 	@go build -mod=readonly ./...
 
 update-swagger-docs:
-	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
+	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
 
 dist:
 	@bash publish/dist.sh

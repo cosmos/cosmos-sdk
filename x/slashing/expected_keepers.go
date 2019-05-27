@@ -11,30 +11,30 @@ type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 
-// expected staking keeper
+// StakingKeeper expected staking keeper
 type StakingKeeper interface {
 	IterateValidators(ctx sdk.Context,
-		fn func(index int64, validator staking.Validator) (stop bool))
+		fn func(index int64, validator staking.ValidatorInterface) (stop bool))
 }
 
 // ValidatorSet expected properties for the set of all validators
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
-		func(index int64, validator staking.Validator) (stop bool))
+		func(index int64, validator staking.ValidatorInterface) (stop bool))
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator staking.Validator) (stop bool))
+		func(index int64, validator staking.ValidatorInterface) (stop bool))
 
 	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
 	IterateLastValidators(sdk.Context,
-		func(index int64, validator staking.Validator) (stop bool))
+		func(index int64, validator staking.ValidatorInterface) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) staking.Validator            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) staking.Validator // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                              // total bonded tokens within the validator set
-	TotalTokens(sdk.Context) sdk.Int                                    // total token supply
+	Validator(sdk.Context, sdk.ValAddress) staking.ValidatorInterface            // get a particular validator by operator address
+	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) staking.ValidatorInterface // get a particular validator by consensus address
+	TotalBondedTokens(sdk.Context) sdk.Int                                       // total bonded tokens within the validator set
+	TotalTokens(sdk.Context) sdk.Int                                             // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec)
@@ -43,7 +43,7 @@ type ValidatorSet interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) staking.Delegation
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) staking.DelegationInterface
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint16

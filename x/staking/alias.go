@@ -50,6 +50,9 @@ const (
 	MaxWebsiteLength                   = types.MaxWebsiteLength
 	MaxDetailsLength                   = types.MaxDetailsLength
 	DoNotModifyDesc                    = types.DoNotModifyDesc
+	Bonded                             = types.Bonded
+	Unbonding                          = types.Unbonding
+	Unbonded                           = types.Unbonded
 )
 
 var (
@@ -225,6 +228,7 @@ type (
 	DVPair                    = types.DVPair
 	DVVTriplet                = types.DVVTriplet
 	Delegation                = types.Delegation
+	DelegationInterface       = types.DelegationInterface
 	Delegations               = types.Delegations
 	UnbondingDelegation       = types.UnbondingDelegation
 	UnbondingDelegationEntry  = types.UnbondingDelegationEntry
@@ -253,6 +257,7 @@ type (
 	Params                    = types.Params
 	Pool                      = types.Pool
 	Validator                 = types.Validator
+	ValidatorInterface        = types.ValidatorInterface
 	Validators                = types.Validators
 	Description               = types.Description
 )

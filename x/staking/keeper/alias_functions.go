@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Implements ValidatorSet interface
-var _ ValidatorSet = Keeper{}
+//_______________________________________________________________________
+// Validator Set
 
 // iterate through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator types.ValidatorInterface) (stop bool)) {
@@ -69,7 +69,7 @@ func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, vali
 	}
 }
 
-// get the sdk.validator for a particular address
+// Validator gets the Validator interface for a particular address
 func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) types.ValidatorInterface {
 	val, found := k.GetValidator(ctx, address)
 	if !found {
@@ -78,7 +78,7 @@ func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) types.Validat
 	return val
 }
 
-// get the sdk.validator for a particular pubkey
+// ValidatorByConsAddr ges the validator interface for a particular pubkey
 func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) types.ValidatorInterface {
 	val, found := k.GetValidatorByConsAddr(ctx, addr)
 	if !found {
@@ -112,17 +112,16 @@ func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
 	k.SetPool(ctx, pool)
 }
 
-// Implements DelegationSet
-
-var _ types.DelegationSet = Keeper{}
+//_______________________________________________________________________
+// Delegation Set
 
 // Returns self as it is both a validatorset and delegationset
 func (k Keeper) GetValidatorSet() types.ValidatorSet {
 	return k
 }
 
-// get the delegation for a particular set of delegator and validator addresses
-func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.Delegation {
+// Delegation get the delegation interface for a particular set of delegator and validator addresses
+func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.DelegationInterface {
 	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
 	if !ok {
 		return nil
@@ -133,7 +132,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 
 // iterate through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
-	fn func(index int64, del types.Delegation) (stop bool)) {
+	fn func(index int64, del types.DelegationInterface) (stop bool)) {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delAddr)

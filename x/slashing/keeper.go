@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // Keeper of the slashing store
@@ -72,7 +73,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Get validator and signing info
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.GetStatus() == sdk.Unbonded {
+	if validator == nil || validator.GetStatus() == staking.Unbonded {
 		// Defensive.
 		// Simulation doesn't take unbonding periods into account, and
 		// Tendermint might break this assumption at some point.

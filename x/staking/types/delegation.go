@@ -78,9 +78,6 @@ func (d Delegation) Equal(d2 Delegation) bool {
 		d.Shares.Equal(d2.Shares)
 }
 
-// ensure fulfills the sdk validator types
-var _ Delegation = Delegation{}
-
 // nolint - for Delegation
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }

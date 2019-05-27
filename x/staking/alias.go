@@ -53,6 +53,10 @@ const (
 	Bonded                             = types.Bonded
 	Unbonding                          = types.Unbonding
 	Unbonded                           = types.Unbonded
+	BondStatusUnbonded                 = types.Unbonded
+	BondStatusUnbonding                = types.BondStatusUnbonding
+	BondStatusBonded                   = types.BondStatusBonded
+	ValidatorUpdateDelay               = types.ValidatorUpdateDelay
 )
 
 var (

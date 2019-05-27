@@ -252,7 +252,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 
 		status := r.FormValue("status")
 		if status == "" {
-			status = sdk.BondStatusBonded
+			status = staking.BondStatusBonded
 		}
 
 		params := staking.NewQueryValidatorsParams(page, limit, status)

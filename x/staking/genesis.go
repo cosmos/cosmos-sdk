@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
+	ctx = ctx.WithBlockHeight(1 - ValidatorUpdateDelay)
 
 	// manually set the total supply for staking based on accounts if not provided
 	if data.Pool.NotBondedTokens.IsZero() {

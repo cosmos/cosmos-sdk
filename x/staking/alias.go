@@ -56,7 +56,7 @@ var (
 	// functions aliases
 	RegisterInvariants               = keeper.RegisterInvariants
 	AllInvariants                    = keeper.AllInvariants
-	BondedTokensInvariant            = keeper.BondedTokensInvariant
+	ModuleAccountInvariants          = keeper.ModuleAccountInvariants
 	NonNegativePowerInvariant        = keeper.NonNegativePowerInvariant
 	PositiveDelegationInvariant      = keeper.PositiveDelegationInvariant
 	DelegatorSharesInvariant         = keeper.DelegatorSharesInvariant

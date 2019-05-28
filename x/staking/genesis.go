@@ -18,8 +18,10 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
 
-	var bondedCoins sdk.Coins
-	var notBondedCoins sdk.Coins
+	var (
+		bondedCoins    sdk.Coins
+		notBondedCoins sdk.Coins
+	)
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -43,8 +45,16 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
 		}
 
-		// Set timeslice if necessary
-		if validator.Status == sdk.Unbonding {
+		validatorCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, validator.Tokens))
+
+		// update pools and set timeslice if necessary
+		switch validator.Status {
+		case sdk.Bonded:
+			bondedCoins = bondedCoins.Add(validatorCoins)
+		case sdk.Unbonded:
+			notBondedCoins = notBondedCoins.Add(validatorCoins)
+		case sdk.Unbonding:
+			notBondedCoins = notBondedCoins.Add(validatorCoins)
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
 	}
@@ -59,11 +69,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
-
-		val, _ := keeper.GetValidator(ctx, delegation.ValidatorAddress)
-		tokensInt := val.TokensFromShares(delegation.GetShares()).TruncateInt()
-		bondedTokens := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, tokensInt))
-		bondedCoins = bondedCoins.Add(bondedTokens)
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
@@ -80,9 +85,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		keeper.SetRedelegation(ctx, red)
 		for _, entry := range red.Entries {
 			keeper.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
-
-			redTokens := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, entry.InitialBalance))
-			notBondedCoins = notBondedCoins.Add(redTokens)
 		}
 	}
 
@@ -100,7 +102,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	}
 
 	// add coins if not provided on genesis
-	if notBondedPool.GetCoins().IsZero() {
+	if notBondedPool.GetCoins().IsZero() && bondPool.GetCoins().IsZero() {
 		if err := notBondedPool.SetCoins(notBondedCoins.Add(bondedCoins)); err != nil {
 			panic(err)
 		}

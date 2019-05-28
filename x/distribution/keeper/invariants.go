@@ -148,14 +148,15 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		expectedInt, _ := expectedCoins.TruncateDecimal()
+		communityPool := k.GetFeePoolCommunityCoins(ctx)
+		expectedInt, _ := expectedCoins.Add(communityPool).TruncateDecimal()
 
 		macc := k.GetDistributionAccount(ctx)
 
 		if !macc.GetCoins().IsEqual(expectedInt) {
 			return fmt.Errorf("distribution ModuleAccount coins invariance:\n"+
-				"\tdistribution ModuleAccount coins: %s\n"+
-				"\tsum of validator outstanding rewards: %s", macc.GetCoins(), expectedInt)
+				"\texpected ModuleAccount coins: %s\n"+
+				"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins())
 		}
 
 		return nil

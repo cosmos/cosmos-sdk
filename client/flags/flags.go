@@ -1,4 +1,4 @@
-package client
+package flags
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 // nolint
@@ -28,6 +30,7 @@ const (
 	// immediately.
 	BroadcastAsync = "async"
 
+	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
 	FlagNode               = "node"

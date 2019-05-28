@@ -1,19 +1,17 @@
 package context
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-
-	"errors"
-
-	"github.com/spf13/viper"
 )
 
 // TxBuilder implements a transaction context created in SDK modules.
@@ -61,17 +59,17 @@ func NewTxBuilderFromCLI() TxBuilder {
 	}
 	txbldr := TxBuilder{
 		keybase:            kb,
-		accountNumber:      uint64(viper.GetInt64(client.FlagAccountNumber)),
-		sequence:           uint64(viper.GetInt64(client.FlagSequence)),
-		gas:                client.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(client.FlagGasAdjustment),
-		simulateAndExecute: client.GasFlagVar.Simulate,
-		chainID:            viper.GetString(client.FlagChainID),
-		memo:               viper.GetString(client.FlagMemo),
+		accountNumber:      uint64(viper.GetInt64(flags.FlagAccountNumber)),
+		sequence:           uint64(viper.GetInt64(flags.FlagSequence)),
+		gas:                flags.GasFlagVar.Gas,
+		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
+		simulateAndExecute: flags.GasFlagVar.Simulate,
+		chainID:            viper.GetString(flags.FlagChainID),
+		memo:               viper.GetString(flags.FlagMemo),
 	}
 
-	txbldr = txbldr.WithFees(viper.GetString(client.FlagFees))
-	txbldr = txbldr.WithGasPrices(viper.GetString(client.FlagGasPrices))
+	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))
+	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
 
 	return txbldr
 }

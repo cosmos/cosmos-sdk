@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
@@ -53,7 +53,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := client.BufferStdin()
+	buf := input.BufferStdin()
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
 		if !viper.GetBool(flagYes) {
 			if err := confirmDeletion(buf); err != nil {
@@ -71,7 +71,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
 	if !skipPass {
-		if oldpass, err = client.GetPassword(
+		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 }
 
 func confirmDeletion(buf *bufio.Reader) error {
-	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
+	answer, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf)
 	if err != nil {
 		return err
 	}

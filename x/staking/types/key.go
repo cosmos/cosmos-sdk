@@ -1,11 +1,10 @@
-package keeper
+package types
 
 import (
 	"encoding/binary"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO remove some of these prefixes once have working multistore
@@ -36,7 +35,7 @@ var (
 )
 
 // gets the key for the validator with address
-// VALUE: staking/types.Validator
+// VALUE: staking/Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsKey, operatorAddr.Bytes()...)
 }
@@ -56,7 +55,7 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
 // VALUE: validator operator address ([]byte)
-func GetValidatorsByPowerIndexKey(validator types.Validator) []byte {
+func GetValidatorsByPowerIndexKey(validator Validator) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	return getValidatorPowerRank(validator)
 }
@@ -69,7 +68,7 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 // nolint: unparam
-func getValidatorPowerRank(validator types.Validator) []byte {
+func getValidatorPowerRank(validator Validator) []byte {
 
 	potentialPower := validator.Tokens
 
@@ -95,7 +94,8 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	return key
 }
 
-func parseValidatorPowerRankKey(key []byte) (operAddr []byte) {
+// parse the validators operator address from power rank key
+func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	powerBytesLen := 8
 	if len(key) != 1+powerBytesLen+sdk.AddrLen {
 		panic("Invalid validator power rank key length")
@@ -116,7 +116,7 @@ func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
 //______________________________________________________________________________
 
 // gets the key for delegator bond with validator
-// VALUE: staking/types.Delegation
+// VALUE: staking/Delegation
 func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), valAddr.Bytes()...)
 }
@@ -129,7 +129,7 @@ func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
 //______________________________________________________________________________
 
 // gets the key for an unbonding delegation by delegator and validator addr
-// VALUE: staking/types.UnbondingDelegation
+// VALUE: staking/UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(
 		GetUBDsKey(delAddr.Bytes()),
@@ -174,7 +174,7 @@ func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 //________________________________________________________________________________
 
 // gets the key for a redelegation
-// VALUE: staking/types.RedelegationKey
+// VALUE: staking/RedelegationKey
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
 	key := make([]byte, 1+sdk.AddrLen*3)
 

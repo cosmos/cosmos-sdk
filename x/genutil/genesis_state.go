@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // State to Unmarshal
@@ -99,6 +100,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
 
+		// TODO abstract back to staking
 		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
 			return fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)

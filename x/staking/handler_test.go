@@ -55,8 +55,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify that the by power index exists
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power := keep.GetValidatorsByPowerIndexKey(validator)
-	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
+	power := GetValidatorsByPowerIndexKey(validator)
+	require.True(t, ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// create a second validator keep it bonded
 	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, keep.PKs[2], initBond)

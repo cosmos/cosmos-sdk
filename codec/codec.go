@@ -12,8 +12,7 @@ import (
 type Codec = amino.Codec
 
 func New() *Codec {
-	cdc := amino.NewCodec()
-	return cdc
+	return amino.NewCodec()
 }
 
 // Register the go-crypto to the codec

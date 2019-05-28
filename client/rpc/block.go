@@ -9,8 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -24,10 +25,10 @@ func BlockCommand() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printBlock,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 	return cmd
 }
 
@@ -64,9 +65,9 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(res, "", "  ")
+		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
-	return cdc.MarshalJSON(res)
+	return codec.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height
@@ -130,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, codec.Cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -143,6 +144,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, codec.Cdc, output, cliCtx.Indent)
 	}
 }

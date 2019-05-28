@@ -9,14 +9,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -77,7 +76,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		}
 
 		var json []byte
-		if viper.GetBool(client.FlagIndentResponse) {
+		if viper.GetBool(flags.FlagIndentResponse) {
 			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
 			if err != nil {
 				panic(err)
@@ -88,8 +87,8 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 		fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
-		buf := client.BufferStdin()
-		ok, err := client.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		buf := input.BufferStdin()
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
 		if err != nil || !ok {
 			fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
@@ -129,7 +128,7 @@ func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []s
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
 func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error),
-	cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
+	cdc *codec.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
 
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
@@ -180,7 +179,7 @@ func SignStdTx(
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", errInvalidSigner, name)
 	}
 
 	if !offline {
@@ -207,7 +206,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", errInvalidSigner, name)
 	}
 
 	if !offline {
@@ -226,7 +225,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadStdTxFromFile(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
+func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx auth.StdTx, err error) {
 	var bytes []byte
 	if filename == "-" {
 		bytes, err = ioutil.ReadAll(os.Stdin)
@@ -284,7 +283,7 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (uint64, error) {
+func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
 	var simulationResult sdk.Result
 	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &simulationResult); err != nil {
 		return 0, err

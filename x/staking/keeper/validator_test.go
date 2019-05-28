@@ -92,7 +92,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.Equal(t, int64(100), validator.Tokens.Int64(), "\nvalidator %v\npool %v", validator, pool)
 
 	pool = keeper.GetPool(ctx)
-	power := GetValidatorsByPowerIndexKey(validator)
+	power := types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
 
 	// burn half the delegator shares
@@ -106,7 +106,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	pool = keeper.GetPool(ctx)
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	power = GetValidatorsByPowerIndexKey(validator)
+	power = types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
 }
 

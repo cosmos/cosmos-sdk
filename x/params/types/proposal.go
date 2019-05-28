@@ -85,7 +85,11 @@ type ParamChange struct {
 	Value    string `json:"value"`
 }
 
-func NewParamChange(subspace, key, subkey, value string) ParamChange {
+func NewParamChange(subspace, key, value string) ParamChange {
+	return ParamChange{subspace, key, "", value}
+}
+
+func NewParamChangeWithSubkey(subspace, key, subkey, value string) ParamChange {
 	return ParamChange{subspace, key, subkey, value}
 }
 

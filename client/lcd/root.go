@@ -20,7 +20,7 @@ import (
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	// Import statik for light client stuff
+	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 

@@ -259,7 +259,7 @@ jobs:
 
             make update-swagger-docs
             if [ -n "$(git status --porcelain)" ]; then
-              echo "there are changes";
+              echo "swagger docs out of sync";
               exit 1
             else
               echo "no changes";

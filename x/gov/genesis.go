@@ -120,14 +120,23 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		totalDeposits = totalDeposits.Add(deposit.Deposit.Amount)
 	}
 
-	// check if the deposits pool account exists and create it if not
+	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
 	if moduleAcc == nil {
 		moduleAcc = supply.NewModuleHolderAccount(ModuleName)
+	}
+
+	// add coins if not provided on genesis
+	if moduleAcc.GetCoins().IsZero() {
 		if err := moduleAcc.SetCoins(totalDeposits); err != nil {
 			panic(err)
 		}
-		k.sk.SetModuleAccount(ctx, moduleAcc)
+		k.SetGovernanceAccount(ctx, moduleAcc)
+	} else if !moduleAcc.GetCoins().IsEqual(totalDeposits) {
+		// TODO: move to governance invariants.go
+		panic(fmt.Sprint("deposits invariance:\n"+
+			"\tgov ModuleAccount coins: %s\n"+
+			"\tsum of deposit amounts: %s", moduleAcc.GetCoins(), totalDeposits))
 	}
 
 	for _, vote := range data.Votes {

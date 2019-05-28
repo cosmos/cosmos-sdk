@@ -46,10 +46,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	moduleAcc := keeper.GetDistributionAccount(ctx)
 	if moduleAcc == nil {
 		moduleAcc = supply.NewModuleHolderAccount(types.ModuleName)
+	}
+
+	if moduleAcc.GetCoins().IsZero() {
 		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
 			panic(err)
 		}
-		keeper.SetModuleAccount(ctx, moduleAcc)
+		keeper.SetDistributionAccount(ctx, moduleAcc)
 	}
 }
 

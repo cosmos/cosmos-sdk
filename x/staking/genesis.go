@@ -97,6 +97,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 	if notBondedPool == nil {
 		notBondedPool = supply.NewModuleHolderAccount(NotBondedTokensName)
+	}
+
+	// add coins if not provided on genesis
+	if notBondedPool.GetCoins().IsZero() {
 		if err := notBondedPool.SetCoins(notBondedCoins.Add(bondedCoins)); err != nil {
 			panic(err)
 		}

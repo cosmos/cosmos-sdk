@@ -123,25 +123,11 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	// set fee collector account
-	feeCollectorAcc := accountKeeper.GetAccount(ctx, auth.FeeCollectorAddr)
-	if feeCollectorAcc == nil {
-		feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
-		accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	}
-
-	// create pool accounts
-	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
-	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
-	distrAcc := supply.NewModuleHolderAccount(types.ModuleName)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
-
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
-	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-	supplyKeeper.SetModuleAccount(ctx, bondPool)
-	supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
@@ -149,7 +135,16 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 		require.Nil(t, err)
 	}
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace)
+	// create module accounts
+	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
+	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+	distrAcc := supply.NewModuleHolderAccount(types.ModuleName)
+
+	accountKeeper.SetAccount(ctx, feeCollectorAcc)
+	sk.SetNotBondedPool(ctx, notBondedPool)
+	sk.SetBondedPool(ctx, bondPool)
+	keeper.SetDistributionAccount(ctx, distrAcc)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())

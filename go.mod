@@ -1,8 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/Masterminds/glide v0.13.2
-	github.com/Masterminds/vcs v1.13.0 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
@@ -22,7 +20,6 @@ require (
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.2.0
@@ -42,14 +39,9 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 // indirect
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/ed25519 v0.0.0-20171027050219-d8387025d2b9 // indirect
 	github.com/tendermint/go-amino v0.15.0
-	github.com/tendermint/go-crypto v0.9.0
 	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.31.5
-	github.com/tendermint/tmlibs v0.9.0 // indirect
-	github.com/zondax/ledger-go v0.9.0 // indirect
-	github.com/zondax/ledger-goclient v0.9.9 // indirect
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect

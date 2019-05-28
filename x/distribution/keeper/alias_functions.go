@@ -21,8 +21,8 @@ func (k Keeper) GetDistributionAccount(ctx sdk.Context) supply.ModuleAccount {
 	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
 }
 
-// SetModuleAccount alias for supply keeper's SetModuleAccount
-func (k Keeper) SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount) {
+// SetDistributionAccount alias for supply keeper's SetModuleAccount
+func (k Keeper) SetDistributionAccount(ctx sdk.Context, macc supply.ModuleAccount) {
 	if macc.Name() != types.ModuleName {
 		panic("cannot set a module account other than distribution's")
 	}

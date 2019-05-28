@@ -1,9 +1,12 @@
 package mint
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -76,4 +79,20 @@ func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 // SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+//______________________________________________________________________
+
+// GetMinterAccount returns the mint ModuleAccount
+func (k Keeper) GetMinterAccount(ctx sdk.Context) supply.ModuleAccount {
+	return k.supplyKeeper.GetModuleAccountByName(ctx, ModuleName)
+}
+
+// SetMinterAccount stores the minter account
+func (k Keeper) SetMinterAccount(ctx sdk.Context, macc supply.ModuleAccount) {
+	if macc.Name() != ModuleName {
+		panic(fmt.Sprintf("invalid name for minter module account (%s ≠ %s)", macc.Name(), ModuleName))
+	}
+
+	k.supplyKeeper.SetModuleAccount(ctx, macc)
 }

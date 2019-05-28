@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -96,6 +97,15 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().Wi
 // GetGovernanceAccount returns the governance ModuleAccount
 func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccount {
 	return keeper.sk.GetModuleAccountByName(ctx, types.ModuleName)
+}
+
+// SetGovernanceAccount stores the governance module account
+func (keeper Keeper) SetGovernanceAccount(ctx sdk.Context, macc supply.ModuleAccount) {
+	if macc.Name() != types.ModuleName {
+		panic(fmt.Sprintf("invalid name for governance module account (%s ≠ %s)", macc.Name(), types.ModuleName))
+	}
+
+	keeper.sk.SetModuleAccount(ctx, macc)
 }
 
 // Proposals

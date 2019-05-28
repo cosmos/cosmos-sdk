@@ -135,13 +135,15 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, sk, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
 
-	// create pool accounts
+	// set module accounts
+	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
 	notBondedPool := supply.NewModuleHolderAccount(NotBondedTokensName)
 	bondPool := supply.NewModuleHolderAccount(BondedTokensName)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)
 
+	accountKeeper.SetAccount(ctx, feeCollectorAcc)
 	keeper.SetBondedPool(ctx, bondPool)
 	keeper.SetNotBondedPool(ctx, notBondedPool)
 

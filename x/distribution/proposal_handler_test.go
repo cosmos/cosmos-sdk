@@ -35,7 +35,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	err := macc.SetCoins(macc.GetCoins().Add(amount))
 	require.NoError(t, err)
 
-	keeper.SetModuleAccount(ctx, macc)
+	keeper.SetDistributionAccount(ctx, macc)
 
 	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
 	require.True(t, account.GetCoins().IsZero())

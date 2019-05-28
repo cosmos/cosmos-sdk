@@ -15,6 +15,8 @@ func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
 		CanWithdrawInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "reference-count",
 		ReferenceCountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "module-account",
+		ModuleAccountInvariant(k))
 }
 
 // AllInvariants runs all invariants of the distribution module
@@ -32,7 +34,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 		if err != nil {
 			return err
 		}
-		return nil
+		return ModuleAccountInvariant(k)(ctx)
 	}
 }
 
@@ -129,6 +131,31 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 			return fmt.Errorf("unexpected number of historical rewards records: "+
 				"expected %v (%v vals + %v dels + %v slashes), got %v",
 				expected, valCount, len(dels), slashCount, count)
+		}
+
+		return nil
+	}
+}
+
+// ModuleAccountInvariant checks that the cois held by the distr ModuleAccount
+// is consistent with the sum of validator outstanding rewards
+func ModuleAccountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+
+		var expectedCoins sdk.DecCoins
+		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			expectedCoins = expectedCoins.Add(rewards)
+			return false
+		})
+
+		expectedInt, _ := expectedCoins.TruncateDecimal()
+
+		macc := k.GetDistributionAccount(ctx)
+
+		if !macc.GetCoins().IsEqual(expectedInt) {
+			return fmt.Errorf("distribution ModuleAccount coins invariance:\n"+
+				"\tdistribution ModuleAccount coins: %s\n"+
+				"\tsum of validator outstanding rewards: %s", macc.GetCoins(), expectedInt)
 		}
 
 		return nil

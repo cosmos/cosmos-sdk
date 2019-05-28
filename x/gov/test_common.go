@@ -102,6 +102,15 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(mapp.GenesisAccounts)))))
 		supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
+		// set module accounts
+		moduleAcc := supply.NewModuleHolderAccount(ModuleName)
+		notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+		bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+
+		keeper.SetGovernanceAccount(ctx, moduleAcc)
+		stakingKeeper.SetBondedPool(ctx, bondPool)
+		stakingKeeper.SetNotBondedPool(ctx, notBondedPool)
+
 		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, stakingGenesis)
 		if genState.IsEmpty() {
 			InitGenesis(ctx, keeper, DefaultGenesisState())

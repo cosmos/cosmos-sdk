@@ -36,7 +36,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewCoin("mytoken", sdk.NewInt(2)),
 		sdk.NewCoin("stake", sdk.NewInt(2)),
 	))
-	keeper.SetModuleAccount(ctx, distrAcc)
+	keeper.SetDistributionAccount(ctx, distrAcc)
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()

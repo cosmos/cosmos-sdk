@@ -65,6 +65,17 @@ func newTestInput(t *testing.T) testInput {
 		&stakingKeeper, supplyKeeper,
 	)
 
+	// set module accounts
+	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
+	moduleAcc := supply.NewModuleMinterAccount(ModuleName)
+	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+
+	accountKeeper.SetAccount(ctx, feeCollectorAcc)
+	mintKeeper.SetMinterAccount(ctx, moduleAcc)
+	stakingKeeper.SetNotBondedPool(ctx, notBondedPool)
+	stakingKeeper.SetBondedPool(ctx, bondPool)
+
 	mintKeeper.SetParams(ctx, DefaultParams())
 	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
 

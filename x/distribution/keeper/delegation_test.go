@@ -269,7 +269,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	// set module account coins
 	distrAcc := k.GetDistributionAccount(ctx)
 	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens)))
-	k.SetModuleAccount(ctx, distrAcc)
+	k.SetDistributionAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
 	power := int64(100)
@@ -483,7 +483,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// set module account coins
 	distrAcc := k.GetDistributionAccount(ctx)
 	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))))
-	k.SetModuleAccount(ctx, distrAcc)
+	k.SetDistributionAccount(ctx, distrAcc)
 
 	totalRewards := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial*2))}
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}

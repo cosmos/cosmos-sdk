@@ -11,25 +11,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// Parameter store key
 var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
-
 	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
 	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
-
-// Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
-	)
-}
 
 // Governance Keeper
 type Keeper struct {

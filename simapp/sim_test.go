@@ -49,6 +49,7 @@ var (
 	lean        bool
 	commit      bool
 	period      int
+	onOperation bool // TODO Remove in favor of binary search for invariant violation
 )
 
 func init() {
@@ -61,15 +62,16 @@ func init() {
 	flag.BoolVar(&lean, "SimulationLean", false, "lean simulation log output")
 	flag.BoolVar(&commit, "SimulationCommit", false, "have the simulation commit")
 	flag.IntVar(&period, "SimulationPeriod", 1, "run slow invariants only once every period assertions")
+	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
 }
 
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool) {
+	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean
+		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation
 }
 
 func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
@@ -84,7 +86,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
-	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState).Accounts
+	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
 
 	var newAccs []simulation.Account
 	for _, acc := range accounts {
@@ -165,8 +167,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	genaccsGenesis := genaccounts.NewGenesisState(genesisAccounts)
-	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genaccsGenesis)
+	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
 
 	authGenesis := auth.NewGenesisState(
 		nil,
@@ -301,6 +302,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsim.SimulateTextProposalContent)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.distrKeeper))},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsim.SimulateParamChangeProposalContent)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
@@ -584,6 +586,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				100,
 				true,
 				false,
+				false,
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -609,7 +612,7 @@ func BenchmarkInvariants(b *testing.B) {
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean,
+		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation,
 	)
 	if err != nil {
 		fmt.Println(err)

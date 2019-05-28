@@ -198,6 +198,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// Need to update atomically.
 	batch := rs.db.NewBatch()
+	defer batch.Close()
 	setCommitInfo(batch, version, commitInfo)
 	setLatestVersion(batch, version)
 	batch.Write()

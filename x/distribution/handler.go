@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
@@ -75,5 +76,18 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 			tags.Category, tags.TxCategory,
 			tags.Sender, msg.ValidatorAddress.String(),
 		),
+	}
+}
+
+func NewCommunityPoolSpendProposalHandler(k Keeper) govtypes.Handler {
+	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
+		switch c := content.(type) {
+		case types.CommunityPoolSpendProposal:
+			return keeper.HandleCommunityPoolSpendProposal(ctx, k, c)
+
+		default:
+			errMsg := fmt.Sprintf("unrecognized distr proposal content type: %T", c)
+			return sdk.ErrUnknownRequest(errMsg)
+		}
 	}
 }

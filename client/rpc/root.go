@@ -13,7 +13,7 @@ import (
 )
 
 // Register REST endpoints
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func RegisterRPCRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(cliCtx)).Methods("GET")

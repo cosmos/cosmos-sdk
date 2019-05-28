@@ -9,7 +9,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // For https://github.com/cosmos/cosmos-sdk/issues/3899
@@ -19,7 +20,7 @@ func Test_runConfigCmdTwiceWithShorterNodeValue(t *testing.T) {
 	configHome, cleanup := tmpDir(t)
 	defer cleanup()
 	_ = os.RemoveAll(filepath.Join(configHome, "config"))
-	viper.Set(cli.HomeFlag, configHome)
+	viper.Set(flags.FlagHome, configHome)
 
 	// Init command config
 	cmd := ConfigCmd(configHome)

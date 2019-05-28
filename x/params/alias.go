@@ -37,6 +37,7 @@ var (
 	ErrEmptyValue              = types.ErrEmptyValue
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 	NewParamChange             = types.NewParamChange
+	NewParamChangeWithSubkey   = types.NewParamChangeWithSubkey
 	ValidateChanges            = types.ValidateChanges
 )
 

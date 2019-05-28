@@ -21,7 +21,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	pvm "github.com/tendermint/tendermint/privval"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -148,10 +148,10 @@ func AddCommands(
 	rootCmd.AddCommand(
 		StartCmd(ctx, appCreator),
 		UnsafeResetAllCmd(ctx),
-		client.LineBreak,
+		flags.LineBreak,
 		tendermintCmd,
 		ExportCmd(ctx, cdc, appExport),
-		client.LineBreak,
+		flags.LineBreak,
 		version.Cmd,
 	)
 }

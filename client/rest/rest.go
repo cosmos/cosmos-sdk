@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,12 +21,12 @@ import (
 func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 	cliCtx context.CLIContext, br rest.BaseReq, msgs []sdk.Msg) {
 
-	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
+	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
-	simAndExec, gas, err := client.ParseGas(br.Gas)
+	simAndExec, gas, err := flags.ParseGas(br.Gas)
 	if err != nil {
 		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -39,7 +39,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, errInvalidGasAdjustment.Error())
 			return
 		}
 

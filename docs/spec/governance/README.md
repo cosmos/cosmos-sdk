@@ -47,3 +47,4 @@ staking token of the chain.
     - [EndBlocker](04_tags.md#endblocker)
     - [Handlers](04_tags.md#handlers)
 5. **[Future Improvements](05_future_improvements.md)**
+6. **[Parameters](06_params.md)**

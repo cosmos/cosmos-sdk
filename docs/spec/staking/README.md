@@ -42,3 +42,4 @@ network.
 6. **[Tags](06_tags.md)**
     - [EndBlocker](06_tags.md#endblocker)
     - [Handlers](06_tags.md#handlers)
+7. **[Parameters](07_params.md)**

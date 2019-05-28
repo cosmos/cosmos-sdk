@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -16,14 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	versionString = `Tendermint: %s
-ABCI: %s
-BlockProtocol: %d
-P2PProtocol: %d
-`
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
@@ -110,9 +103,22 @@ against which this app has been compiled.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			fmt.Printf(versionString, tversion.Version, tversion.ABCIVersion,
-				tversion.BlockProtocol.Uint64(), tversion.P2PProtocol.Uint64())
+			bs, err := yaml.Marshal(&struct {
+				Tendermint    string
+				ABCI          string
+				BlockProtocol uint64
+				P2PProtocol   uint64
+			}{
+				Tendermint:    tversion.Version,
+				ABCI:          tversion.ABCIVersion,
+				BlockProtocol: tversion.BlockProtocol.Uint64(),
+				P2PProtocol:   tversion.P2PProtocol.Uint64(),
+			})
+			if err != nil {
+				return err
+			}
 
+			fmt.Println(string(bs))
 			return nil
 		},
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
@@ -272,7 +273,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	switch ctx.OutputFormat {
 	case "text":
-		out = []byte(toPrint.String())
+		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
 		if ctx.Indent {

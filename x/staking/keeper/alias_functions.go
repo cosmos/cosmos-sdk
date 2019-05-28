@@ -78,7 +78,7 @@ func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) types.Validat
 	return val
 }
 
-// ValidatorByConsAddr ges the validator interface for a particular pubkey
+// ValidatorByConsAddr gets the validator interface for a particular pubkey
 func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) types.ValidatorInterface {
 	val, found := k.GetValidatorByConsAddr(ctx, addr)
 	if !found {

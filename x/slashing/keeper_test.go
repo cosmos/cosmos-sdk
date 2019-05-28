@@ -114,7 +114,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// should still be bonded
-	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == sdk.Bonded)
+	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == staking.Bonded)
 
 	// should still have same power
 	require.Equal(t, oldPower, sk.Validator(ctx, operatorAddr).GetTendermintPower())
@@ -172,7 +172,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be bonded still
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, staking.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.True(sdk.IntEq(t, amt, pool.BondedTokens))
 
@@ -190,7 +190,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been jailed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, staking.Unbonding, validator.GetStatus())
 
 	slashAmt := amt.ToDec().Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
 
@@ -227,7 +227,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be rebonded now
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, staking.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
@@ -245,7 +245,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val.Address(), power, false)
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, staking.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
 	nextHeight := height + keeper.MinSignedPerWindow(ctx) + 1
@@ -268,7 +268,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, staking.Unbonding, validator.GetStatus())
 }
 
 // Test a new validator entering the validator set
@@ -309,7 +309,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, staking.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	expTokens := sdk.TokensFromTendermintPower(100)
 	require.Equal(t, expTokens, pool.BondedTokens)
@@ -347,7 +347,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// validator should have been jailed and slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, staking.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
 	resultingTokens := amt.Sub(sdk.TokensFromTendermintPower(1))
@@ -397,7 +397,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	validatorUpdates, _ := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, staking.Unbonding, validator.Status)
 
 	// 600 more blocks happened
 	height = int64(700)
@@ -410,7 +410,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	validatorUpdates, _ = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, staking.Bonded, validator.Status)
 	newPower := int64(103)
 
 	// validator misses a block
@@ -419,7 +419,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// shouldn't be jailed/kicked yet
 	validator, _ = sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, staking.Bonded, validator.Status)
 
 	// validator misses 500 more blocks, 501 total
 	latest := height
@@ -431,7 +431,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// should now be jailed & kicked
 	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, staking.Unbonding, validator.Status)
 
 	// check all the signing information
 	signInfo, found := keeper.getValidatorSigningInfo(ctx, consAddr)
@@ -456,7 +456,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator should not be kicked since we reset counter/array when it was jailed
 	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, staking.Bonded, validator.Status)
 
 	// validator misses 501 blocks
 	latest = height
@@ -468,6 +468,6 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator should now be jailed & kicked
 	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, staking.Unbonding, validator.Status)
 
 }

@@ -2,7 +2,7 @@
 
 ## Pre-Requisite Reading
 
-## `main.go`
+## main function
 
 TODO
 

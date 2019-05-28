@@ -262,7 +262,7 @@ jobs:
               echo "swagger docs out of sync";
               exit 1
             else
-              echo "no changes";
+              echo "swagger docs are in sync";
             fi
 
 workflows:

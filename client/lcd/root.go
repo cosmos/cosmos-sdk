@@ -3,10 +3,12 @@ package lcd
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
@@ -17,6 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+
+	// unnamed import of statik for swagger UI support
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
 // RestServer represents the Light Client Rest server
@@ -83,6 +88,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
+			rs.registerSwaggerUI()
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(
@@ -97,4 +103,13 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 	}
 
 	return flags.RegisterRestServerFlags(cmd)
+}
+
+func (rs *RestServer) registerSwaggerUI() {
+	statikFS, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+	staticServer := http.FileServer(statikFS)
+	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }

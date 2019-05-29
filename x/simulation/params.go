@@ -100,6 +100,15 @@ var (
 		"GoalBonded": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(67, 2)
 		},
+		"CommunityTax": func(r *rand.Rand) interface{} {
+			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+		},
+		"BaseProposerReward": func(r *rand.Rand) interface{} {
+			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+		},
+		"BonusProposerReward": func(r *rand.Rand) interface{} {
+			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+		},
 	}
 )
 

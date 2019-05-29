@@ -74,18 +74,20 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation
 }
 
-func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
-) (json.RawMessage, []simulation.Account, string) {
-
+func appStateFromGenesisFileFn(r *rand.Rand, _ []simulation.Account, _ time.Time) (json.RawMessage, []simulation.Account, string) {
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
+
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
+
 	cdc.MustUnmarshalJSON(bytes, &genesis)
+
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+
 	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
 
 	var newAccs []simulation.Account
@@ -95,9 +97,11 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		// and these keys are never actually used to sign by mock Tendermint.
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
+
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
+
 	return genesis.AppState, newAccs, genesis.ChainID
 }
 
@@ -268,9 +272,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	// TODO make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
-		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
-		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
-		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		CommunityTax:        simulation.ModuleParamSimulator["CommunityTax"](r).(sdk.Dec),
+		BaseProposerReward:  simulation.ModuleParamSimulator["BaseProposerReward"](r).(sdk.Dec),
+		BonusProposerReward: simulation.ModuleParamSimulator["BonusProposerReward"](r).(sdk.Dec),
 	}
 	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
@@ -284,12 +288,14 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	return appState, accs, "simulation"
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+func appStateFn(
+	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
 ) (json.RawMessage, []simulation.Account, string) {
 
 	if genesisFile != "" {
 		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
 	}
+
 	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 

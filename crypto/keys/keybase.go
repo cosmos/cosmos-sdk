@@ -115,8 +115,7 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	}
 
 	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	config := types.GetConfig()
-	fullFundraiserPath := config.GetFullFundraiserPath()
+	fullFundraiserPath := types.GetConfig().GetFullFundraiserPath()
 	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
 	return
 }

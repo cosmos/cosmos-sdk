@@ -119,9 +119,15 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-	fmt.Printf("Selected randomly generated parameters for simulated genesis:\n"+
-		"\t{amount of stake per account: %v, initially bonded validators: %v}\n",
-		amount, numInitiallyBonded)
+
+	fmt.Printf(
+		`Selected randomly generated parameters for simulated genesis:
+{
+  stake_per_account: %v,
+  initially_bonded_validators: %v
+}
+`, amount, numInitiallyBonded,
+	)
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
@@ -183,12 +189,13 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			simulation.ModuleParamSimulator["SigVerifyCostSecp256k1"](r).(uint64),
 		),
 	)
-	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
+
+	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", mustMarshalJSONIndent(cdc, authGenesis))
 	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 
 	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
-	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", mustMarshalJSONIndent(cdc, bankGenesis))
 
 	// Random genesis states
 	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
@@ -206,7 +213,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		),
 	)
 	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
-	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
+	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", mustMarshalJSONIndent(cdc, govGenesis))
 
 	stakingGenesis := staking.NewGenesisState(
 		staking.InitialPool(),
@@ -219,7 +226,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		nil,
 		nil,
 	)
-	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", mustMarshalJSONIndent(cdc, stakingGenesis))
 
 	slashingParams := slashing.NewParams(
 		stakingGenesis.Params.UnbondingTime,
@@ -229,9 +236,10 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		simulation.ModuleParamSimulator["SlashFractionDoubleSign"](r).(sdk.Dec),
 		simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec),
 	)
+
 	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
 	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
-	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
+	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", mustMarshalJSONIndent(cdc, slashingGenesis))
 
 	mintGenesis := mint.NewGenesisState(
 		mint.InitialMinter(
@@ -246,7 +254,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		),
 	)
 	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
-	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
+	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", mustMarshalJSONIndent(cdc, mintGenesis))
 
 	var validators []staking.Validator
 	var delegations []staking.Delegation
@@ -277,9 +285,8 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		BonusProposerReward: simulation.ModuleParamSimulator["BonusProposerReward"](r).(sdk.Dec),
 	}
 	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
-	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
+	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", mustMarshalJSONIndent(cdc, distrGenesis))
 
-	// Marshal genesis
 	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
 		panic(err)

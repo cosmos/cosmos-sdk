@@ -16,6 +16,10 @@ Please refer to the official english version of the documentation for the latest
 
 ## Progress by directory
 
+### README.md
+
+- Synced until commit [1c326ea5](https://github.com/cosmos/cosmos-sdk/commit/1c326ea524eade1da8771cd7e4343012203a166f) (2019-05-27)
+
 ### [`concepts`](../concepts/)
 
 - ToDo
@@ -30,7 +34,7 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`intro`](../intro/)
 
-- Synced until commit [7558f760](https://github.com/cosmos/cosmos-sdk/commit/1c326ea524eade1da8771cd7e4343012203a166f) (2019-05-27)
+- Synced until commit [1c326ea5](https://github.com/cosmos/cosmos-sdk/commit/1c326ea524eade1da8771cd7e4343012203a166f) (2019-05-27)
 
 ### [`modules`](../modules/)
 

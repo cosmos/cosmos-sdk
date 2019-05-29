@@ -226,7 +226,6 @@ type (
 	DVPair                    = types.DVPair
 	DVVTriplet                = types.DVVTriplet
 	Delegation                = types.Delegation
-	DelegationI               = types.DelegationI
 	Delegations               = types.Delegations
 	UnbondingDelegation       = types.UnbondingDelegation
 	UnbondingDelegationEntry  = types.UnbondingDelegationEntry
@@ -255,7 +254,6 @@ type (
 	Params                    = types.Params
 	Pool                      = types.Pool
 	Validator                 = types.Validator
-	ValidatorI                = types.ValidatorI
 	Validators                = types.Validators
 	Description               = types.Description
 	StakingHooks              = types.StakingHooks

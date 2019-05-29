@@ -3,7 +3,7 @@ package slashing
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 )
 
 // AccountKeeper expected account keeper
@@ -15,20 +15,20 @@ type AccountKeeper interface {
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
-		func(index int64, validator staking.ValidatorI) (stop bool))
+		func(index int64, validator expected.ValidatorI) (stop bool))
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator staking.ValidatorI) (stop bool))
+		func(index int64, validator expected.ValidatorI) (stop bool))
 
 	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
 	IterateLastValidators(sdk.Context,
-		func(index int64, validator staking.ValidatorI) (stop bool))
+		func(index int64, validator expected.ValidatorI) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) staking.ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) staking.ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                               // total bonded tokens within the validator set
-	TotalTokens(sdk.Context) sdk.Int                                     // total token supply
+	Validator(sdk.Context, sdk.ValAddress) expected.ValidatorI            // get a particular validator by operator address
+	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) expected.ValidatorI // get a particular validator by consensus address
+	TotalBondedTokens(sdk.Context) sdk.Int                                // total bonded tokens within the validator set
+	TotalTokens(sdk.Context) sdk.Int                                      // total token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec)
@@ -37,7 +37,7 @@ type StakingKeeper interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) staking.DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) expected.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint16

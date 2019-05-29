@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 )
 
 // initialize starting info for a new delegation
@@ -28,7 +28,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val staking.ValidatorI,
+func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val expected.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
@@ -53,7 +53,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val staking.V
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val staking.ValidatorI, del staking.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val expected.ValidatorI, del expected.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -133,7 +133,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val staking.Validato
 	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val staking.ValidatorI, del staking.DelegationI) (sdk.Coins, sdk.Error) {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val expected.ValidatorI, del expected.DelegationI) (sdk.Coins, sdk.Error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
 		return nil, types.ErrNoDelegationDistInfo(k.codespace)

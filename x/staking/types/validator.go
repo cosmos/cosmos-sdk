@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 )
 
 // nolint
@@ -24,7 +25,7 @@ const (
 )
 
 // Implements Validator interface
-var _ ValidatorI = Validator{}
+var _ expected.ValidatorI = Validator{}
 
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
@@ -58,7 +59,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []expected.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -486,9 +487,6 @@ func (v Validator) TendermintPower() int64 {
 func (v Validator) PotentialTendermintPower() int64 {
 	return sdk.TokensToTendermintPower(v.Tokens)
 }
-
-// ensure fulfills the sdk validator types
-var _ ValidatorI = Validator{}
 
 // nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }

@@ -44,11 +44,6 @@ go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 
-draw_deps: tools
-	@# requires brew install graphviz or apt-get install graphviz
-	go get github.com/RobotsAndPencils/goviz
-	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
-
 clean:
 	rm -rf snapcraft-local.yaml build/
 
@@ -191,7 +186,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist clean draw_deps test test_unit test_cover lint \
+.PHONY: build dist clean test test_unit test_cover lint \
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \

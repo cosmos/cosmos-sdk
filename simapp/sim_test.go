@@ -182,11 +182,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	authGenesis := auth.NewGenesisState(
 		nil,
 		auth.NewParams(
-			simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64),
-			simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64),
-			simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64),
-			simulation.ModuleParamSimulator["SigVerifyCostED25519"](r).(uint64),
-			simulation.ModuleParamSimulator["SigVerifyCostSecp256k1"](r).(uint64),
+			simulation.ModuleParamSimulator["max_memo_characters"](r).(uint64),
+			simulation.ModuleParamSimulator["tx_sig_limit"](r).(uint64),
+			simulation.ModuleParamSimulator["tx_size_cost_per_byte"](r).(uint64),
+			simulation.ModuleParamSimulator["sig_verify_cost_ed25519"](r).(uint64),
+			simulation.ModuleParamSimulator["sig_verify_cost_secp256k1"](r).(uint64),
 		),
 	)
 
@@ -198,18 +198,18 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", mustMarshalJSONIndent(cdc, bankGenesis))
 
 	// Random genesis states
-	vp := simulation.ModuleParamSimulator["VotingParamsVotingPeriod"](r).(time.Duration)
+	vp := simulation.ModuleParamSimulator["voting_params_voting_period"](r).(time.Duration)
 	govGenesis := gov.NewGenesisState(
 		uint64(r.Intn(100)),
 		gov.NewDepositParams(
-			simulation.ModuleParamSimulator["DepositParamsMinDeposit"](r).(sdk.Coins),
+			simulation.ModuleParamSimulator["deposit_params_min_deposit"](r).(sdk.Coins),
 			vp,
 		),
 		gov.NewVotingParams(vp),
 		gov.NewTallyParams(
-			simulation.ModuleParamSimulator["TallyParamsQuorum"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["TallyParamsThreshold"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["TallyParamsVeto"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["tally_params_quorum"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["tally_params_threshold"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["tally_params_veto"](r).(sdk.Dec),
 		),
 	)
 	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
@@ -218,8 +218,8 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	stakingGenesis := staking.NewGenesisState(
 		staking.InitialPool(),
 		staking.NewParams(
-			simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration),
-			simulation.ModuleParamSimulator["MaxValidators"](r).(uint16),
+			simulation.ModuleParamSimulator["unbonding_time"](r).(time.Duration),
+			simulation.ModuleParamSimulator["max_validators"](r).(uint16),
 			7,
 			sdk.DefaultBondDenom,
 		),
@@ -230,11 +230,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	slashingParams := slashing.NewParams(
 		stakingGenesis.Params.UnbondingTime,
-		simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64),
-		simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec),
-		simulation.ModuleParamSimulator["DowntimeJailDuration"](r).(time.Duration),
-		simulation.ModuleParamSimulator["SlashFractionDoubleSign"](r).(sdk.Dec),
-		simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec),
+		simulation.ModuleParamSimulator["signed_blocks_window"](r).(int64),
+		simulation.ModuleParamSimulator["min_signed_per_window"](r).(sdk.Dec),
+		simulation.ModuleParamSimulator["downtime_jail_duration"](r).(time.Duration),
+		simulation.ModuleParamSimulator["slash_fraction_double_sign"](r).(sdk.Dec),
+		simulation.ModuleParamSimulator["slash_fraction_downtime"](r).(sdk.Dec),
 	)
 
 	slashingGenesis := slashing.NewGenesisState(slashingParams, nil, nil)
@@ -246,10 +246,10 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
 		mint.NewParams(
 			sdk.DefaultBondDenom,
-			simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["InflationMax"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["InflationMin"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["GoalBonded"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["inflation_rate_change"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["inflation_max"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["inflation_min"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["goal_bonded"](r).(sdk.Dec),
 			uint64(60*60*8766/5),
 		),
 	)
@@ -280,9 +280,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	// TODO make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
-		CommunityTax:        simulation.ModuleParamSimulator["CommunityTax"](r).(sdk.Dec),
-		BaseProposerReward:  simulation.ModuleParamSimulator["BaseProposerReward"](r).(sdk.Dec),
-		BonusProposerReward: simulation.ModuleParamSimulator["BonusProposerReward"](r).(sdk.Dec),
+		CommunityTax:        simulation.ModuleParamSimulator["community_tax"](r).(sdk.Dec),
+		BaseProposerReward:  simulation.ModuleParamSimulator["base_proposer_reward"](r).(sdk.Dec),
+		BonusProposerReward: simulation.ModuleParamSimulator["bonus_proposer_eward"](r).(sdk.Dec),
 	}
 	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", mustMarshalJSONIndent(cdc, distrGenesis))

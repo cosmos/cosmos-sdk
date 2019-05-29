@@ -37,76 +37,76 @@ var (
 	// values simulated should be within valid acceptable range for the given
 	// parameter.
 	ModuleParamSimulator = map[string]func(r *rand.Rand) interface{}{
-		"MaxMemoCharacters": func(r *rand.Rand) interface{} {
+		"max_memo_characters": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 100, 200))
 		},
-		"TxSigLimit": func(r *rand.Rand) interface{} {
+		"tx_sig_limit": func(r *rand.Rand) interface{} {
 			return uint64(r.Intn(7) + 1)
 		},
-		"TxSizeCostPerByte": func(r *rand.Rand) interface{} {
+		"tx_size_cost_per_byte": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 5, 15))
 		},
-		"SigVerifyCostED25519": func(r *rand.Rand) interface{} {
+		"sig_verify_cost_ed25519": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 500, 1000))
 		},
-		"SigVerifyCostSecp256k1": func(r *rand.Rand) interface{} {
+		"sig_verify_cost_secp256k1": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 500, 1000))
 		},
-		"DepositParamsMinDeposit": func(r *rand.Rand) interface{} {
+		"deposit_params_min_deposit": func(r *rand.Rand) interface{} {
 			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
 		},
-		"VotingParamsVotingPeriod": func(r *rand.Rand) interface{} {
+		"voting_params_voting_period": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		},
-		"TallyParamsQuorum": func(r *rand.Rand) interface{} {
+		"tally_params_quorum": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
 		},
-		"TallyParamsThreshold": func(r *rand.Rand) interface{} {
+		"tally_params_threshold": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
 		},
-		"TallyParamsVeto": func(r *rand.Rand) interface{} {
+		"tally_params_veto": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
 		},
-		"UnbondingTime": func(r *rand.Rand) interface{} {
+		"unbonding_time": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 		},
-		"MaxValidators": func(r *rand.Rand) interface{} {
+		"max_validators": func(r *rand.Rand) interface{} {
 			return uint16(r.Intn(250) + 1)
 		},
-		"SignedBlocksWindow": func(r *rand.Rand) interface{} {
+		"signed_blocks_window": func(r *rand.Rand) interface{} {
 			return int64(RandIntBetween(r, 10, 1000))
 		},
-		"MinSignedPerWindow": func(r *rand.Rand) interface{} {
+		"min_signed_per_window": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 		},
-		"DowntimeJailDuration": func(r *rand.Rand) interface{} {
+		"downtime_jail_duration": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 60, 60*60*24)) * time.Second
 		},
-		"SlashFractionDoubleSign": func(r *rand.Rand) interface{} {
+		"slash_fraction_double_sign": func(r *rand.Rand) interface{} {
 			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
 		},
-		"SlashFractionDowntime": func(r *rand.Rand) interface{} {
+		"slash_fraction_downtime": func(r *rand.Rand) interface{} {
 			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
 		},
-		"InflationRateChange": func(r *rand.Rand) interface{} {
+		"inflation_rate_change": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
 		},
-		"InflationMax": func(r *rand.Rand) interface{} {
+		"inflation_max": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(20, 2)
 		},
-		"InflationMin": func(r *rand.Rand) interface{} {
+		"inflation_min": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(7, 2)
 		},
-		"GoalBonded": func(r *rand.Rand) interface{} {
+		"goal_bonded": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(67, 2)
 		},
-		"CommunityTax": func(r *rand.Rand) interface{} {
+		"community_tax": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		},
-		"BaseProposerReward": func(r *rand.Rand) interface{} {
+		"base_proposer_reward": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		},
-		"BonusProposerReward": func(r *rand.Rand) interface{} {
+		"bonus_proposer_eward": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		},
 	}

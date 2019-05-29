@@ -85,7 +85,7 @@ var paramChangePool = []simParamChange{
 		"votingparams",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator["VotingParamsVotingPeriod"](r).(time.Duration))
 		},
 	},
 	{
@@ -93,7 +93,7 @@ var paramChangePool = []simParamChange{
 		"depositparams",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator["VotingParamsVotingPeriod"](r).(time.Duration))
 		},
 	},
 	{
@@ -105,9 +105,9 @@ var paramChangePool = []simParamChange{
 				key   string
 				value sdk.Dec
 			}{
-				{"quorum", simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec)},
-				{"threshold", simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec)},
-				{"veto", simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec)},
+				{"quorum", simulation.ModuleParamSimulator["TallyParamsQuorum"](r).(sdk.Dec)},
+				{"threshold", simulation.ModuleParamSimulator["TallyParamsThreshold"](r).(sdk.Dec)},
+				{"veto", simulation.ModuleParamSimulator["TallyParamsVeto"](r).(sdk.Dec)},
 			}
 
 			pc := make(map[string]string)

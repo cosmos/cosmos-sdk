@@ -52,19 +52,19 @@ var (
 		"SigVerifyCostSecp256k1": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 500, 1000))
 		},
-		"DepositParams/MinDeposit": func(r *rand.Rand) interface{} {
+		"DepositParamsMinDeposit": func(r *rand.Rand) interface{} {
 			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
 		},
-		"VotingParams/VotingPeriod": func(r *rand.Rand) interface{} {
+		"VotingParamsVotingPeriod": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		},
-		"TallyParams/Quorum": func(r *rand.Rand) interface{} {
+		"TallyParamsQuorum": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
 		},
-		"TallyParams/Threshold": func(r *rand.Rand) interface{} {
+		"TallyParamsThreshold": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
 		},
-		"TallyParams/Veto": func(r *rand.Rand) interface{} {
+		"TallyParamsVeto": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
 		},
 		"UnbondingTime": func(r *rand.Rand) interface{} {

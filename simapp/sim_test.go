@@ -198,18 +198,18 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", mustMarshalJSONIndent(cdc, bankGenesis))
 
 	// Random genesis states
-	vp := simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration)
+	vp := simulation.ModuleParamSimulator["VotingParamsVotingPeriod"](r).(time.Duration)
 	govGenesis := gov.NewGenesisState(
 		uint64(r.Intn(100)),
 		gov.NewDepositParams(
-			simulation.ModuleParamSimulator["DepositParams/MinDeposit"](r).(sdk.Coins),
+			simulation.ModuleParamSimulator["DepositParamsMinDeposit"](r).(sdk.Coins),
 			vp,
 		),
 		gov.NewVotingParams(vp),
 		gov.NewTallyParams(
-			simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec),
-			simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["TallyParamsQuorum"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["TallyParamsThreshold"](r).(sdk.Dec),
+			simulation.ModuleParamSimulator["TallyParamsVeto"](r).(sdk.Dec),
 		),
 	)
 	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)

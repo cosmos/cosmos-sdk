@@ -87,5 +87,5 @@ func TestBeginBlocker(t *testing.T) {
 	// validator should be jailed
 	validator, found := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))
 	require.True(t, found)
-	require.Equal(t, staking.Unbonding, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }

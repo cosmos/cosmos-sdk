@@ -82,7 +82,7 @@ type Validator struct {
     ConsPubKey      crypto.PubKey  // Tendermint consensus pubkey of validator
     Jailed          bool           // has the validator been jailed?
 
-    Status          BondStatus // validator status (bonded/unbonding/unbonded)
+    Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
     Tokens          sdk.Int        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
 

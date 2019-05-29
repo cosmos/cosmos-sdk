@@ -75,7 +75,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, types.Unbonding, validator.Status)      // ensure is unbonding
+	require.Equal(t, sdk.Unbonding, validator.Status)      // ensure is unbonding
 	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
 	keeper.Unjail(ctx, consAddr0)
 
@@ -702,7 +702,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == types.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should still be unbonding at time 6 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
@@ -710,7 +710,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == types.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should be in unbonded state at time 7 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
@@ -1271,7 +1271,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator power should have been reduced to zero
 	// validator should be in unbonding state
 	validator, _ = keeper.GetValidator(ctx, valA)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }
 
 func TestInvalidMsg(t *testing.T) {

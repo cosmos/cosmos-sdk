@@ -118,7 +118,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, mapp, stakingKeeper, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
-	require.Equal(t, staking.Bonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.ConsPubKey.Address())}
 

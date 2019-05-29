@@ -57,7 +57,7 @@ func GetDelegatorEntitlement(delegatorAddr sdk.AccAddress) DecCoins
     
     return entitlement
 
-func (pc PowerChange) ProcessPowerChangeDelegation(delegation   Delegation, 
+func (pc PowerChange) ProcessPowerChangeDelegation(delegation DelegationI, 
                       DelDistr DelegationDistribution) 
 
     // get the historical scenarios

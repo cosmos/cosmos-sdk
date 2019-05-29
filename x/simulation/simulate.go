@@ -54,7 +54,7 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 
 	r := rand.New(rand.NewSource(seed))
-	params := RandomParams(r) // := DefaultParams()
+	params := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	genesisTimestamp := RandTimestamp(r)

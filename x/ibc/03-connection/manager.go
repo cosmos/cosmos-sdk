@@ -63,11 +63,23 @@ func (obj Object) OpenInit(ctx sdk.Context, desiredCounterparty, client, counter
 	return nil
 }
 
-func (obj Object) OpenTry(ctx sdk.Context, counterparty, client, counterpartyClient string /*proofInit Proof*/, timeoutHeight, nextTimeoutHeight uint64) error {
+func assertTimeout(ctx sdk.Context, timeoutHeight uint) error {
 	if ctx.BlockHeight() > int64(timeoutHeight) {
 		return errors.New("timeout")
 	}
 
+	return nil
+}
+
+func (obj Object) OpenTry(ctx sdk.Context, counterparty, client, counterpartyClient string /*proofInit Proof*/, timeoutHeight, nextTimeoutHeight uint64) error {
+	err := assertTimeout(ctx, timeoutHeight)
+	if err != nil {
+		return err
+	}
+
+	clientobj := obj.client.Query(client)
+
 	// TODO
+
 	return nil
 }

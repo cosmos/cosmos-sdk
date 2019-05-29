@@ -7,4 +7,6 @@ type Root interface {
 }
 
 type Proof interface {
+	VerifyMembership(Root, []byte, []byte)
+	VerifyNonMembership(Root, []byte)
 }

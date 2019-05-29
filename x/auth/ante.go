@@ -91,6 +91,10 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, res, true
 		}
 
+		if res := ValidateSigCount(stdTx, params); !res.IsOK() {
+			return newCtx, res, true
+		}
+
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
@@ -159,6 +163,22 @@ func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 				params.MaxMemoCharacters, memoLength,
 			),
 		).Result()
+	}
+
+	return sdk.Result{}
+}
+
+// ValidateSigCount validates the signature counts.
+func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
+	stdSigs := stdTx.GetSignatures()
+	sigCount := 0
+	for i := 0; i < len(stdSigs); i++ {
+		sigCount += countSubKeys(stdSigs[i].PubKey)
+		if uint64(sigCount) > params.TxSigLimit {
+			return sdk.ErrTooManySignatures(
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, params.TxSigLimit),
+			).Result()
+		}
 	}
 
 	return sdk.Result{}

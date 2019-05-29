@@ -109,8 +109,10 @@ func TestTxValidateBasic(t *testing.T) {
 	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
-	require.Error(t, err)
-	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
+	require.Nil(t, err)
+
+	result := ValidateSigCount(tx.(StdTx), DefaultParams())
+	require.Equal(t, sdk.CodeTooManySignatures, result.Code)
 
 	// require to fail with invalid gas supplied
 	badFee = newStdFee()

@@ -16,7 +16,7 @@ func init() {
 	RegisterCodec(msgCdc)
 }
 
-// SetMsgCodex allows sdk users use custom codex at GetSignBytes
+// SetMsgCodec allows sdk users use custom codex at GetSignBytes
 func SetMsgCodec(cdc *codec.Codec) {
 	msgCdc = cdc
 }

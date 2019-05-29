@@ -56,16 +56,6 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 		return sdk.ErrUnauthorized("wrong number of signers")
 	}
 
-	sigCount := 0
-	for i := 0; i < len(stdSigs); i++ {
-		sigCount += countSubKeys(stdSigs[i].PubKey)
-		if uint64(sigCount) > DefaultTxSigLimit {
-			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
-			)
-		}
-	}
-
 	return nil
 }
 

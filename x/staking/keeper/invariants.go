@@ -72,7 +72,7 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 			}
 			return false
 		})
-		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorInterface) bool {
+		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case types.Bonded:
 				bonded = bonded.Add(validator.GetBondedTokens().ToDec())

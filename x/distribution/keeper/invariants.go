@@ -76,7 +76,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		}
 
 		// iterate over all validators
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val staking.ValidatorInterface) (stop bool) {
+		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val staking.ValidatorI) (stop bool) {
 			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 
 			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
@@ -109,7 +109,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		valCount := uint64(0)
-		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val staking.ValidatorInterface) (stop bool) {
+		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val staking.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})

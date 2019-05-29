@@ -258,7 +258,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del staking.DelegationInterface) (stop bool) {
+		func(_ int64, del staking.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
@@ -293,7 +293,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del staking.DelegationInterface) (stop bool) {
+		func(_ int64, del staking.DelegationI) (stop bool) {
 			validators = append(validators[:], del.GetValidatorAddr())
 			return false
 		},

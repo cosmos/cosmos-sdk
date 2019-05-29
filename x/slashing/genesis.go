@@ -80,7 +80,7 @@ func ValidateGenesis(data GenesisState) error {
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper StakingKeeper, data GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator staking.ValidatorInterface) bool {
+		func(index int64, validator staking.ValidatorI) bool {
 			keeper.addPubkey(ctx, validator.GetConsPubKey())
 			return false
 		},

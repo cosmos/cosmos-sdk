@@ -64,7 +64,7 @@ func (b BondStatus) String() string {
 }
 
 // Implements Validator interface
-var _ ValidatorInterface = Validator{}
+var _ ValidatorI = Validator{}
 
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
@@ -98,7 +98,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []ValidatorInterface) {
+func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -513,9 +513,9 @@ func (v Validator) PotentialTendermintPower() int64 {
 }
 
 // ensure fulfills the sdk validator types
-var _ ValidatorInterface = Validator{}
+var _ ValidatorI = Validator{}
 
-// nolint - for ValidatorInterface
+// nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() BondStatus         { return v.Status }

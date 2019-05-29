@@ -205,19 +205,19 @@ func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
-// IsBonded check if the validator status equals Bonded
+// IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus() == sdk.Bonded
+	return v.GetStatus().Equal(sdk.Bonded)
 }
 
-// IsUnbonded check if the validator status equals Unbonded
+// IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus() == sdk.Unbonded
+	return v.GetStatus().Equal(sdk.Unbonded)
 }
 
-// IsUnbonding check if the validator status equals Unbonding
+// IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus() == sdk.Unbonding
+	return v.GetStatus().Equal(sdk.Unbonding)
 }
 
 // constant used in flags to indicate that description field should not be updated

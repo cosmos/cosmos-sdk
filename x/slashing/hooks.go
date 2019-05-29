@@ -38,7 +38,7 @@ func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) 
 
 //_________________________________________________________________________________________
 
-// Wrapper struct
+// Hooks wrapper struct for slashing keeper
 type Hooks struct {
 	k Keeper
 }

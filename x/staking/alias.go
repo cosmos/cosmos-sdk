@@ -256,5 +256,4 @@ type (
 	Validator                 = types.Validator
 	Validators                = types.Validators
 	Description               = types.Description
-	StakingHooks              = types.StakingHooks
 )

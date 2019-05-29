@@ -128,7 +128,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, addr1)
 	require.True(t, found)
-	assert.Equal(t, types.Bonded, validator.Status)
+	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr1, validator.OperatorAddress)
 	assert.Equal(t, pk1, validator.ConsPubKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
@@ -157,7 +157,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, addr2)
 
 	require.True(t, found)
-	assert.Equal(t, types.Bonded, validator.Status)
+	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr2, validator.OperatorAddress)
 	assert.Equal(t, pk2, validator.ConsPubKey)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
@@ -205,7 +205,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// verify the validator exists and has the correct attributes
 	validator, found := keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens())
 
@@ -295,7 +295,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
 
@@ -718,7 +718,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == types.Unbonded, "%v", validator)
+	require.True(t, validator.IsUnbonded(), "%v", validator)
 }
 
 func TestUnbondingPeriod(t *testing.T) {
@@ -1171,7 +1171,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.Equal(t, 2, len(vals), "vals %v", vals)
 	val1, found := keeper.GetValidator(ctx, validatorAddr1)
 	require.True(t, found)
-	require.Equal(t, types.Bonded, val1.Status, "%v", val1)
+	require.Equal(t, sdk.Bonded, val1.Status, "%v", val1)
 }
 
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {

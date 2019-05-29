@@ -74,9 +74,9 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 		})
 		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
-			case types.Bonded:
+			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetBondedTokens().ToDec())
-			case types.Unbonding, types.Unbonded:
+			case sdk.Unbonding, sdk.Unbonded:
 				loose = loose.Add(validator.GetTokens().ToDec())
 			}
 			// add yet-to-be-withdrawn

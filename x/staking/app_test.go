@@ -128,7 +128,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	header = abci.Header{Height: mApp.LastBlockHeight() + 1}

@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	ctx = ctx.WithBlockHeight(1 - ValidatorUpdateDelay)
+	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
 	// manually set the total supply for staking based on accounts if not provided
 	if data.Pool.NotBondedTokens.IsZero() {
@@ -53,7 +53,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		}
 
 		// Set timeslice if necessary
-		if validator.Status == types.Unbonding {
+		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
 	}
@@ -179,10 +179,10 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		if _, ok := addrMap[strKey]; ok {
 			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.Jailed && val.Status == types.Bonded {
+		if val.Jailed && val.IsBonded() {
 			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.DelegatorShares.IsZero() && val.Status != types.Unbonding {
+		if val.DelegatorShares.IsZero() && val.IsUnbonding() {
 			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)
 		}
 		addrMap[strKey] = true

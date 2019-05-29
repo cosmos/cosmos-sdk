@@ -39,7 +39,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index in
 		address := iterator.Value()
 		validator := k.mustGetValidator(ctx, address)
 
-		if validator.Status == types.Bonded {
+		if validator.IsBonded() {
 			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 			if stop {
 				break

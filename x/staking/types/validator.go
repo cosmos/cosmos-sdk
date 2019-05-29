@@ -23,46 +23,6 @@ const (
 	MaxDetailsLength  = 280
 )
 
-// BondStatus is the status of a validator
-type BondStatus byte
-
-// staking constants
-const (
-	Unbonded  BondStatus = 0x00
-	Unbonding BondStatus = 0x01
-	Bonded    BondStatus = 0x02
-
-	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied.
-	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
-	// if this is 1, the validator set at the end of a block will sign the block after the next.
-	// Constant as this should not change without a hard fork.
-	// TODO: Link to some Tendermint docs, this is very unobvious.
-	ValidatorUpdateDelay int64 = 1
-
-	BondStatusUnbonded  = "Unbonded"
-	BondStatusUnbonding = "Unbonding"
-	BondStatusBonded    = "Bonded"
-)
-
-// Equal compares two BondStatus instances
-func (b BondStatus) Equal(b2 BondStatus) bool {
-	return byte(b) == byte(b2)
-}
-
-// String implements the Stringer interface for BondStatus.
-func (b BondStatus) String() string {
-	switch b {
-	case 0x00:
-		return BondStatusUnbonded
-	case 0x01:
-		return BondStatusUnbonding
-	case 0x02:
-		return BondStatusBonded
-	default:
-		panic("invalid bond status")
-	}
-}
-
 // Implements Validator interface
 var _ ValidatorI = Validator{}
 
@@ -77,7 +37,7 @@ type Validator struct {
 	OperatorAddress         sdk.ValAddress `json:"operator_address"`    // address of the validator's operator; bech encoded in JSON
 	ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`    // the consensus public key of the validator; bech encoded in JSON
 	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
-	Status                  BondStatus     `json:"status"`              // validator status (bonded/unbonding/unbonded)
+	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
 	Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
 	DelegatorShares         sdk.Dec        `json:"delegator_shares"`    // total shares issued to a validator's delegators
 	Description             Description    `json:"description"`         // description terms for the validator
@@ -111,7 +71,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		OperatorAddress:         operator,
 		ConsPubKey:              pubKey,
 		Jailed:                  false,
-		Status:                  Unbonded,
+		Status:                  sdk.Unbonded,
 		Tokens:                  sdk.ZeroInt(),
 		DelegatorShares:         sdk.ZeroDec(),
 		Description:             description,
@@ -170,7 +130,7 @@ type bechValidator struct {
 	OperatorAddress         sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
 	ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator
 	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
-	Status                  BondStatus     `json:"status"`              // validator status (bonded/unbonding/unbonded)
+	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
 	Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
 	DelegatorShares         sdk.Dec        `json:"delegator_shares"`    // total shares issued to a validator's delegators
 	Description             Description    `json:"description"`         // description terms for the validator
@@ -242,6 +202,21 @@ func (v Validator) TestEquivalent(v2 Validator) bool {
 // return the TM validator address
 func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
+}
+
+// IsBonded check if the validator status equals Bonded
+func (v Validator) IsBonded() bool {
+	return v.GetStatus() == sdk.Bonded
+}
+
+// IsUnbonded check if the validator status equals Unbonded
+func (v Validator) IsUnbonded() bool {
+	return v.GetStatus() == sdk.Unbonded
+}
+
+// IsUnbonding check if the validator status equals Unbonding
+func (v Validator) IsUnbonding() bool {
+	return v.GetStatus() == sdk.Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -327,29 +302,29 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(pool Pool, NewStatus BondStatus) (Validator, Pool) {
+func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
 
 	switch v.Status {
-	case Unbonded:
+	case sdk.Unbonded:
 
 		switch NewStatus {
-		case Unbonded:
+		case sdk.Unbonded:
 			return v, pool
-		case Bonded:
+		case sdk.Bonded:
 			pool = pool.notBondedTokensToBonded(v.Tokens)
 		}
-	case Unbonding:
+	case sdk.Unbonding:
 
 		switch NewStatus {
-		case Unbonding:
+		case sdk.Unbonding:
 			return v, pool
-		case Bonded:
+		case sdk.Bonded:
 			pool = pool.notBondedTokensToBonded(v.Tokens)
 		}
-	case Bonded:
+	case sdk.Bonded:
 
 		switch NewStatus {
-		case Bonded:
+		case sdk.Bonded:
 			return v, pool
 		default:
 			pool = pool.bondedTokensToNotBonded(v.Tokens)
@@ -370,7 +345,7 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
 	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == Bonded {
+	if v.IsBonded() {
 		pool = pool.bondedTokensToNotBonded(tokens)
 	}
 	return v, pool
@@ -405,7 +380,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		issuedShares = shares
 	}
 
-	if v.Status == Bonded {
+	if v.IsBonded() {
 		pool = pool.notBondedTokensToBonded(amount)
 	}
 
@@ -440,7 +415,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	}
 
 	v.DelegatorShares = remainingShares
-	if v.Status == Bonded {
+	if v.IsBonded() {
 		pool = pool.bondedTokensToNotBonded(issuedTokens)
 	}
 
@@ -492,7 +467,7 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
 
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
-	if v.Status == Bonded {
+	if v.IsBonded() {
 		return v.Tokens
 	}
 	return sdk.ZeroInt()
@@ -501,7 +476,7 @@ func (v Validator) BondedTokens() sdk.Int {
 // get the Tendermint Power
 // a reduction of 10^6 from validator tokens is applied
 func (v Validator) TendermintPower() int64 {
-	if v.Status == Bonded {
+	if v.IsBonded() {
 		return v.PotentialTendermintPower()
 	}
 	return 0
@@ -518,7 +493,7 @@ var _ ValidatorI = Validator{}
 // nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
-func (v Validator) GetStatus() BondStatus         { return v.Status }
+func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }
 func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }

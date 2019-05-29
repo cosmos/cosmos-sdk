@@ -295,7 +295,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, sdk.TokensFromTendermintPower(14), validator.Tokens)
-	require.Equal(t, types.Unbonding, validator.Status)
+	require.Equal(t, sdk.Unbonding, validator.Status)
 	require.True(t, validator.Jailed)
 }
 
@@ -425,7 +425,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	// Make sure validator is still in state because there is still an outstanding delegation
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, types.Unbonded)
+	require.Equal(t, validator.Status, sdk.Unbonded)
 
 	// unbond some of the other delegation's shares
 	unbondTokens := sdk.TokensFromTendermintPower(6)
@@ -494,7 +494,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	// validator should still be in state and still be in unbonding state
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, types.Unbonding)
+	require.Equal(t, validator.Status, sdk.Unbonding)
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingCompletionTime)
@@ -638,7 +638,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	pool.BondedTokens = pool.BondedTokens.Add(valTokens)
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
-	require.Equal(t, types.Bonded, validator2.Status)
+	require.Equal(t, sdk.Bonded, validator2.Status)
 
 	maxEntries := keeper.MaxEntries(ctx)
 
@@ -689,7 +689,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	pool.BondedTokens = pool.BondedTokens.Add(valTokens)
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
-	require.Equal(t, types.Bonded, validator2.Status)
+	require.Equal(t, sdk.Bonded, validator2.Status)
 
 	// create a second delegation to validator 1
 	delTokens := sdk.TokensFromTendermintPower(10)
@@ -712,7 +712,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, valTokens, validator.Tokens)
-	require.Equal(t, types.Unbonding, validator.Status)
+	require.Equal(t, sdk.Unbonding, validator.Status)
 }
 
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
@@ -830,7 +830,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	keeper.SetPool(ctx, pool)
 	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
-	require.Equal(t, types.Bonded, validator2.Status)
+	require.Equal(t, sdk.Bonded, validator2.Status)
 
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))

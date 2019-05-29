@@ -336,6 +336,20 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes()), nil
 }
 
+func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+	if _, err := kb.Get(name); err == nil {
+		return errors.New("Cannot overwrite key " + name)
+	}
+
+	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	if err != nil {
+		return errors.Wrap(err, "couldn't import private key")
+	}
+
+	kb.writeLocalKey(name, privKey, passphrase)
+	return nil
+}
+
 func (kb dbKeybase) Import(name string, armor string) (err error) {
 	bz := kb.db.Get(infoKey(name))
 	if len(bz) > 0 {

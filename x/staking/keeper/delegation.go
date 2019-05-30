@@ -9,7 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const undelegatePatchHeight = 50
+// UndelegatePatchHeight reflects the height at which to switch to the
+// undelegating patch.
+const UndelegatePatchHeight = 50
 
 // return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
@@ -587,7 +589,7 @@ func (k Keeper) Undelegate(
 	// Undelegating must obey the unbonding period regardless of the validator's
 	// status for safety. Block heights prior to undelegatePatchHeight allowed
 	// delegates to unbond from an unbonded validator immediately.
-	if ctx.BlockHeight() < undelegatePatchHeight {
+	if ctx.BlockHeight() < UndelegatePatchHeight {
 		completionTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
 
 		returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)

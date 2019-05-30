@@ -335,7 +335,7 @@ func TestLazySeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, 0)
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())

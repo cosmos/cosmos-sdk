@@ -66,6 +66,10 @@ var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
 
+var _ yaml.Marshaler = AccAddress{}
+var _ yaml.Marshaler = ValAddress{}
+var _ yaml.Marshaler = ConsAddress{}
+
 // ----------------------------------------------------------------------------
 // account
 // ----------------------------------------------------------------------------
@@ -161,7 +165,7 @@ func (aa AccAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (aa AccAddress) MarshalYAML() ([]byte, error) {
+func (aa AccAddress) MarshalYAML() (interface{}, error) {
 	return yaml.Marshal(aa.String())
 }
 
@@ -314,7 +318,7 @@ func (va ValAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (va ValAddress) MarshalYAML() ([]byte, error) {
+func (va ValAddress) MarshalYAML() (interface{}, error) {
 	return yaml.Marshal(va.String())
 }
 
@@ -474,7 +478,7 @@ func (ca ConsAddress) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML marshals to YAML using Bech32.
-func (ca ConsAddress) MarshalYAML() ([]byte, error) {
+func (ca ConsAddress) MarshalYAML() (interface{}, error) {
 	return yaml.Marshal(ca.String())
 }
 

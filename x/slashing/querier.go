@@ -9,13 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Query endpoints supported by the slashing querier
-const (
-	QueryParameters   = "parameters"
-	QuerySigningInfo  = "signingInfo"
-	QuerySigningInfos = "signingInfos"
-)
-
 // NewQuerier creates a new querier for slashing clients.
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {

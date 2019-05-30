@@ -6,19 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-var minterKey = []byte{0x00} // the one key to use for the keeper store
-
-const (
-	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
-
-	// StoreKey is the default store key for mint
-	StoreKey = ModuleName
-
-	// QuerierRoute is the querier route for the minting store.
-	QuerierRoute = StoreKey
-)
-
 // keeper of the staking store
 type Keeper struct {
 	storeKey   sdk.StoreKey

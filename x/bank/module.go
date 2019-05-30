@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -33,7 +34,7 @@ func (AppModuleBasic) Name() string {
 
 // register module codec
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // default genesis state

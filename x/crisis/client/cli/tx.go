@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // command to replace a delegator's withdrawal address
@@ -26,7 +26,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
-			msg := crisis.NewMsgVerifyInvariant(senderAddr, moduleName, route)
+			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -36,7 +36,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(cdc *amino.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:   crisis.ModuleName,
+		Use:   types.ModuleName,
 		Short: "crisis transactions subcommands",
 	}
 

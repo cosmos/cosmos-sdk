@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/gorilla/mux"
 )
@@ -103,7 +103,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 
 // HTTP request handler to query a delegator delegations
 func delegatorDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryDelegator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryDelegatorDelegations))
+	return queryDelegator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorDelegations))
 }
 
 // HTTP request handler to query a delegator unbonding delegations
@@ -139,15 +139,15 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 
 		switch {
 		case isBondTx:
-			actions = append(actions, staking.MsgDelegate{}.Type())
+			actions = append(actions, types.MsgDelegate{}.Type())
 		case isUnbondTx:
-			actions = append(actions, staking.MsgUndelegate{}.Type())
+			actions = append(actions, types.MsgUndelegate{}.Type())
 		case isRedTx:
-			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.MsgBeginRedelegate{}.Type())
 		case noQuery:
-			actions = append(actions, staking.MsgDelegate{}.Type())
-			actions = append(actions, staking.MsgUndelegate{}.Type())
-			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.MsgDelegate{}.Type())
+			actions = append(actions, types.MsgUndelegate{}.Type())
+			actions = append(actions, types.MsgBeginRedelegate{}.Type())
 		default:
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -178,7 +178,7 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 // HTTP request handler to query redelegations
 func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var params staking.QueryRedelegationParams
+		var params types.QueryRedelegationParams
 
 		bechDelegatorAddr := r.URL.Query().Get("delegator")
 		bechSrcValidatorAddr := r.URL.Query().Get("validator_from")
@@ -228,7 +228,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 
 // HTTP request handler to query a delegation
 func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryBonds(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryDelegation))
+	return queryBonds(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegation))
 }
 
 // HTTP request handler to query all delegator bonded validators
@@ -255,14 +255,14 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 			status = sdk.BondStatusBonded
 		}
 
-		params := staking.NewQueryValidatorsParams(page, limit, status)
+		params := types.NewQueryValidatorsParams(page, limit, status)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryValidators)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidators)
 		res, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -279,7 +279,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 // HTTP request handler to query all unbonding delegations from a validator
 func validatorDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryValidator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", staking.QuerierRoute, staking.QueryValidatorDelegations))
+	return queryValidator(cliCtx, cdc, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorDelegations))
 }
 
 // HTTP request handler to query all unbonding delegations from a validator

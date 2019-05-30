@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -29,7 +29,7 @@ type SendReq struct {
 var moduleCdc = codec.New()
 
 func init() {
-	bank.RegisterCodec(moduleCdc)
+	types.RegisterCodec(moduleCdc)
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address.
@@ -60,7 +60,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
+		msg := types.NewMsgSend(fromAddr, toAddr, req.Amount)
 		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

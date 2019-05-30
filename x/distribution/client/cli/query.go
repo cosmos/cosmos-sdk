@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -144,7 +143,7 @@ $ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 
 				return fmt.Errorf("end-height %s not a valid uint, please input a valid end-height", args[2])
 			}
 
-			params := distr.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
+			params := types.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -199,7 +198,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 				return err
 			}
 
-			var result distr.QueryDelegatorTotalRewardsResponse
+			var result types.QueryDelegatorTotalRewardsResponse
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},

@@ -3,11 +3,12 @@ package bank
 import (
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
@@ -15,7 +16,7 @@ import (
 func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
-	RegisterCodec(mapp.Cdc)
+	types.RegisterCodec(mapp.Cdc)
 	bankKeeper := NewBaseKeeper(
 		mapp.AccountKeeper,
 		mapp.ParamsKeeper.Subspace(DefaultParamspace),

@@ -1,4 +1,4 @@
-package slashing
+package types
 
 import (
 	"testing"

@@ -1,21 +1,21 @@
 package cli
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
-		Use:   slashing.ModuleName,
+		Use:   types.ModuleName,
 		Short: "Slashing transactions subcommands",
 	}
 
@@ -44,7 +44,7 @@ $ <appcli> tx slashing unjail --from mykey
 
 			valAddr := cliCtx.GetFromAddress()
 
-			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
+			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

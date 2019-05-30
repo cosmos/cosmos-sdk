@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/spf13/viper"
 
@@ -35,7 +35,7 @@ var (
 // transaction handling and queries.
 type CLIContext struct {
 	Codec         *codec.Codec
-	AccDecoder    auth.AccountDecoder
+	AccDecoder    authtypes.AccountDecoder
 	Client        rpcclient.Client
 	Keybase       cryptokeys.Keybase
 	Output        io.Writer
@@ -89,7 +89,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  auth.StoreKey,
+		AccountStore:  authtypes.StoreKey,
 		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
@@ -164,8 +164,8 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 }
 
 // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-	return func(accBytes []byte) (acct auth.Account, err error) {
+func GetAccountDecoder(cdc *codec.Codec) authtypes.AccountDecoder {
+	return func(accBytes []byte) (acct authtypes.Account, err error) {
 		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)

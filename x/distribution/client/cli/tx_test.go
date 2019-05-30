@@ -3,13 +3,14 @@ package cli
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 func createFakeTxBuilder() authtxb.TxBuilder {

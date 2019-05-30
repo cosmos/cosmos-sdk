@@ -6,31 +6,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // QueryParams actually queries distribution params.
 func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
-	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamCommunityTax)
+	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamCommunityTax)
 
 	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBaseProposerReward)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBaseProposerReward)
 	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBonusProposerReward)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBonusProposerReward)
 	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamWithdrawAddrEnabled)
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamWithdrawAddrEnabled)
 	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
@@ -50,8 +50,8 @@ func QueryDelegatorTotalRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorTotalRewards),
-		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards),
+		cdc.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
 }
 
@@ -69,8 +69,8 @@ func QueryDelegationRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegationRewards),
-		cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegationRewards),
+		cdc.MustMarshalJSON(types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
 	)
 }
 
@@ -80,8 +80,8 @@ func QueryDelegatorValidators(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorValidators),
-		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorValidators),
+		cdc.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
 }
 
@@ -90,8 +90,8 @@ func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
 
 	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryValidatorCommission),
-		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorCommission),
+		cdc.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
 }
 
@@ -115,7 +115,7 @@ func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	// build multi-message transaction
 	var msgs []sdk.Msg
 	for _, valAddr := range validators {
-		msg := distr.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
+		msg := types.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			return nil, err
 		}
@@ -129,13 +129,13 @@ func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 // used to withdraw both validation's commission and self-delegation reward.
 func WithdrawValidatorRewardsAndCommission(validatorAddr sdk.ValAddress) ([]sdk.Msg, error) {
 
-	commissionMsg := distr.NewMsgWithdrawValidatorCommission(validatorAddr)
+	commissionMsg := types.NewMsgWithdrawValidatorCommission(validatorAddr)
 	if err := commissionMsg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
 	// build and validate MsgWithdrawDelegatorReward
-	rewardMsg := distr.NewMsgWithdrawDelegatorReward(
+	rewardMsg := types.NewMsgWithdrawDelegatorReward(
 		sdk.AccAddress(validatorAddr.Bytes()), validatorAddr)
 	if err := rewardMsg.ValidateBasic(); err != nil {
 		return nil, err

@@ -11,14 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
-		Use:   slashing.ModuleName,
+		Use:   types.ModuleName,
 		Short: "Querying commands for the slashing module",
 	}
 
@@ -52,7 +52,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			}
 
 			consAddr := sdk.ConsAddress(pk.Address())
-			key := slashing.GetValidatorSigningInfoKey(consAddr)
+			key := types.GetValidatorSigningInfoKey(consAddr)
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -63,7 +63,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 				return fmt.Errorf("Validator %s not found in slashing store", consAddr)
 			}
 
-			var signingInfo slashing.ValidatorSigningInfo
+			var signingInfo types.ValidatorSigningInfo
 			cdc.MustUnmarshalBinaryLengthPrefixed(res, &signingInfo)
 			return cliCtx.PrintOutput(signingInfo)
 		},
@@ -83,13 +83,13 @@ $ <appcli> query slashing params
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
+			route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
 			res, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
-			var params slashing.Params
+			var params types.Params
 			cdc.MustUnmarshalJSON(res, &params)
 			return cliCtx.PrintOutput(params)
 		},

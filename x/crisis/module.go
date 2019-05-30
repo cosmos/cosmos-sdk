@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 )
 
 // name of this module
-const ModuleName = "crisis"
+const ModuleName = types.ModuleName
 
 // app module basics object
 type AppModuleBasic struct{}

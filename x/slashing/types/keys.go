@@ -1,4 +1,4 @@
-package slashing
+package types
 
 import (
 	"encoding/binary"
@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint
 const (
 	// StoreKey is the store key string for slashing
 	StoreKey = ModuleName
@@ -15,6 +16,11 @@ const (
 
 	// QuerierRoute is the querier route for slashing
 	QuerierRoute = ModuleName
+
+	// Query endpoints supported by the slashing querier
+	QueryParameters   = "parameters"
+	QuerySigningInfo  = "signingInfo"
+	QuerySigningInfos = "signingInfos"
 )
 
 // key prefix bytes

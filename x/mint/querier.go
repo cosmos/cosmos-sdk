@@ -7,26 +7,20 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// Query endpoints supported by the minting querier
-const (
-	QueryParameters       = "parameters"
-	QueryInflation        = "inflation"
-	QueryAnnualProvisions = "annual_provisions"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // NewQuerier returns a minting Querier handler.
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, _ abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
-		case QueryParameters:
+		case types.QueryParameters:
 			return queryParams(ctx, k)
 
-		case QueryInflation:
+		case types.QueryInflation:
 			return queryInflation(ctx, k)
 
-		case QueryAnnualProvisions:
+		case types.QueryAnnualProvisions:
 			return queryAnnualProvisions(ctx, k)
 
 		default:

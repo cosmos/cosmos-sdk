@@ -21,7 +21,7 @@ var (
 
 // app module basics object
 type AppModuleBasic struct {
-	proposalCmds []*cobra.Command // proposal subcommands which live in goverance
+	proposalCmds []*cobra.Command // proposal subcommands which live in governance
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object

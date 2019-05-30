@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
@@ -40,7 +40,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Hand
 			return
 		}
 
-		params := slashing.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
+		params := types.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -48,7 +48,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Hand
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s", slashing.QuerierRoute, slashing.QuerySigningInfo)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySigningInfo)
 		res, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -68,14 +68,14 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		params := slashing.NewQuerySigningInfosParams(page, limit)
+		params := types.NewQuerySigningInfosParams(page, limit)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s", slashing.QuerierRoute, slashing.QuerySigningInfos)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySigningInfos)
 		res, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -88,7 +88,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
+		route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
 
 		res, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {

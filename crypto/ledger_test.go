@@ -22,7 +22,7 @@ func TestLedgerErrorHandling(t *testing.T) {
 }
 
 func TestPublicKeyUnsafe(t *testing.T) {
-	path := *hd.NewFundraiserParams(0, 0)
+	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
@@ -61,7 +61,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
-		path := *hd.NewFundraiserParams(0, i)
+		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
 		priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
@@ -97,7 +97,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 }
 
 func TestPublicKeySafe(t *testing.T) {
-	path := *hd.NewFundraiserParams(0, 0)
+	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, addr, err := NewPrivKeyLedgerSecp256k1(path, "cosmos")
 
 	require.Nil(t, err, "%s", err)
@@ -152,7 +152,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
-		path := *hd.NewFundraiserParams(0, i)
+		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
 		priv, addr, err := NewPrivKeyLedgerSecp256k1(path, "cosmos")
@@ -206,7 +206,7 @@ func TestSignaturesHD(t *testing.T) {
 	for account := uint32(0); account < 100; account += 30 {
 		msg := getFakeTx(account)
 
-		path := *hd.NewFundraiserParams(account, account/5)
+		path := *hd.NewFundraiserParams(account, sdk.CoinType, account/5)
 		fmt.Printf("Checking signature at %v    ---   PLEASE REVIEW AND ACCEPT IN THE DEVICE\n", path)
 
 		priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
@@ -223,7 +223,7 @@ func TestSignaturesHD(t *testing.T) {
 
 func TestRealLedgerSecp256k1(t *testing.T) {
 	msg := getFakeTx(50)
-	path := *hd.NewFundraiserParams(0, 0)
+	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 

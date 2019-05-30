@@ -166,7 +166,7 @@ func (aa AccAddress) MarshalJSON() ([]byte, error) {
 
 // MarshalYAML marshals to YAML using Bech32.
 func (aa AccAddress) MarshalYAML() (interface{}, error) {
-	return yaml.Marshal(aa.String())
+	return aa.String(), nil
 }
 
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
@@ -319,7 +319,7 @@ func (va ValAddress) MarshalJSON() ([]byte, error) {
 
 // MarshalYAML marshals to YAML using Bech32.
 func (va ValAddress) MarshalYAML() (interface{}, error) {
-	return yaml.Marshal(va.String())
+	return va.String(), nil
 }
 
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
@@ -479,7 +479,7 @@ func (ca ConsAddress) MarshalJSON() ([]byte, error) {
 
 // MarshalYAML marshals to YAML using Bech32.
 func (ca ConsAddress) MarshalYAML() (interface{}, error) {
-	return yaml.Marshal(ca.String())
+	return ca.String(), nil
 }
 
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.

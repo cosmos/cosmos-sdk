@@ -300,7 +300,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 
-	ctx = ctx.WithValue(contextKeyBadProposalKey, 0)
+	// Create a proposal where the handler will pass for the test proposal
+	// because the value of contextKeyBadProposal is true.
+	ctx = ctx.WithValue(contextKeyBadProposal, true)
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
 
@@ -315,8 +317,12 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
-	ctx = ctx.WithValue(contextKeyBadProposalKey, 1)
 
+	// Set the contextKeyBadProposal value to false so that the handler will fail
+	// during the processing of the proposal in the EndBlocker.
+	ctx = ctx.WithValue(contextKeyBadProposal, false)
+
+	// validate that the proposal fails/has been rejected
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalFailed), resTags[1])
 }

@@ -156,19 +156,17 @@ func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
 
-type contextKey int
-
-const contextKeyBadProposalKey contextKey = iota
+const contextKeyBadProposal = "contextKeyBadProposal"
 
 // badProposalHandler implements a governance proposal handler that is identical
-// to the actual handler except this fails if some given value in the context is
-// odd.
+// to the actual handler except this fails if the context doesn't contain a value
+// for the key contextKeyBadProposal or if the value is false.
 func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	switch c.ProposalType() {
 	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
-		v := ctx.Value(contextKeyBadProposalKey)
+		v := ctx.Value(contextKeyBadProposal)
 
-		if v == nil || v.(int)%2 == 1 {
+		if v == nil || !v.(bool) {
 			return sdk.ErrInternal("proposal failed")
 		}
 

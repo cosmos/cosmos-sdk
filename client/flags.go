@@ -15,7 +15,7 @@ const (
 	// failures due to state changes that might occur between the tx simulation
 	// and the actual run.
 	DefaultGasAdjustment = 1.0
-	DefaultGasLimit      = 200000
+	DefaultGasLimit      = 999999990000
 	GasFlagAuto          = "auto"
 
 	FlagUseLedger          = "ledger"
@@ -97,6 +97,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 
 		c.Flags().Uint64P(FlagConcurrentNumber, "c", 1, "concurrent thread number")
 		c.Flags().Uint64P(FlagTxNumber, "x", 1, "tx number each thread will commit")
+		c.Flags().MarkHidden(FlagConcurrentNumber)
+		c.Flags().MarkHidden(FlagTxNumber)
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",

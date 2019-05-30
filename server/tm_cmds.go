@@ -109,7 +109,6 @@ func VersionCmd(ctx *Context) *cobra.Command {
 against which this app has been compiled.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			fmt.Printf(versionString, tversion.Version, tversion.ABCIVersion,
 				tversion.BlockProtocol.Uint64(), tversion.P2PProtocol.Uint64())
 

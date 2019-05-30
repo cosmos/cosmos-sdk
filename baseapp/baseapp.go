@@ -786,6 +786,7 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
+	sysFee := sdk.Coins{}
 	if app.anteHandler != nil {
 		var anteCtx sdk.Context
 		var msCache sdk.CacheMultiStore
@@ -812,6 +813,7 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 
 		gasWanted = result.GasWanted
+		_, sysFee = getFeeFromTags(result)
 
 		if abort {
 			return result
@@ -833,6 +835,11 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	if mode == RunTxModeSimulate {
 		return
 	}
+
+	//set fee tags
+	i, busFee := getFeeFromTags(result)
+	//fmt.Println("sysFee:", sysFee, "busFee:", busFee, "sum=", sysFee.Add(busFee).String())
+	result.Tags = append(sdk.Tags{sdk.MakeTag(sdk.Fee_TagName, coins2str(sysFee.Add(busFee)))}, append(result.Tags[0:i], result.Tags[i+1:]...)...)
 
 	// only update state if all messages pass
 	if result.IsOK() {

@@ -1,7 +1,9 @@
 package auth
 
 import (
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"fmt"
+	
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -49,9 +51,29 @@ func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins
 
 // AddCollectedFees - add to the fee pool
 func (fck FeeCollectionKeeper) AddCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
-	newCoins := fck.GetCollectedFees(ctx).Add(coins)
+	logger := ctx.Logger().With("module", "auth")
+	oldCoins := fck.GetCollectedFees(ctx)
+	newCoins := oldCoins.Add(coins)
 	fck.setCollectedFees(ctx, newCoins)
+	logger.Debug(fmt.Sprintf("collect fee to pool, oldCoins: %v, addCoins: %v, newCoins: %v",
+		oldCoins, coins, newCoins))
+	return newCoins
+}
 
+// SubCollectedFees - sub fee from fee pool
+func (fck FeeCollectionKeeper) SubCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
+	logger := ctx.Logger().With("module", "auth")
+	oldCoins := fck.GetCollectedFees(ctx)
+	newCoins, anyNeg := oldCoins.SafeSub(coins)
+	if !anyNeg {
+		fck.setCollectedFees(ctx, newCoins)
+		logger.Debug(fmt.Sprintf("sub fee from pool, oldCoins: %v, subCoins: %v, newCoins: %v",
+			oldCoins, coins, newCoins))
+	} else {
+		logger.Error(fmt.Sprintf("sub fee from pool failed, oldCoins: %v, subCoins: %v",
+			oldCoins, coins))
+	}
+	
 	return newCoins
 }
 

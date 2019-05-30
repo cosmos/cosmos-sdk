@@ -7,6 +7,10 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
+const (
+	Fee_TagName = "fee"
+)
+
 // Type synonym for convenience
 type Tag = cmn.KVPair
 

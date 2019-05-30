@@ -21,7 +21,7 @@ var (
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
-	Fee        StdFee         `json:"fee"`
+	Fee        StdFee         `json:"-"`
 	Signatures []StdSignature `json:"signatures"`
 	Memo       string         `json:"memo"`
 }
@@ -160,7 +160,7 @@ func (fee StdFee) Bytes() []byte {
 type StdSignDoc struct {
 	AccountNumber uint64            `json:"account_number"`
 	ChainID       string            `json:"chain_id"`
-	Fee           json.RawMessage   `json:"fee"`
+	Fee           json.RawMessage   `json:"-"`
 	Memo          string            `json:"memo"`
 	Msgs          []json.RawMessage `json:"msgs"`
 	Sequence      uint64            `json:"sequence"`

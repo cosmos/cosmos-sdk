@@ -75,7 +75,7 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("couldn't create db: %v", r)
+			err = fmt.Errorf("couldn't create db<%s>, name<%s>: %v", dir, name, r)
 		}
 	}()
 	return dbm.NewDB(name, backend, dir), err

@@ -193,6 +193,7 @@ func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
 func (coins DecCoins) Add(coinsB DecCoins) DecCoins {
+	coinsB = coinsB.Sort()
 	return coins.safeAdd(coinsB)
 }
 
@@ -201,8 +202,10 @@ func (coins DecCoins) Add(coinsB DecCoins) DecCoins {
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
+
 func (coins DecCoins) safeAdd(coinsB DecCoins) DecCoins {
-	sum := ([]DecCoin)(nil)
+	//sum := ([]DecCoin)(nil)
+	var sum = make([]DecCoin, 0, 201)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
 

@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-
+	"github.com/ok-chain/okchain/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -120,6 +120,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	}
 
 	UpgradeOldPrivValFile(cfg)
+	logger :=ctx.Logger.With("module", "node")
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
@@ -129,7 +130,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
-		ctx.Logger.With("module", "node"),
+		logger,
 	)
 	if err != nil {
 		return nil, err
@@ -146,6 +147,22 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		}
 	})
 
-	// run forever (the node will not be returned)
-	select {}
+	sem = &nodeSemaphore{
+		make(chan struct{}),
+	}
+
+	select {
+	case <-sem.done:
+		logger.Info(fmt.Sprintf("[%s] The tendermint node finished.", util.GoId))
+		return nil, nil
+	}
+}
+var sem *nodeSemaphore
+
+type nodeSemaphore struct {
+	done chan struct{}
+}
+
+func Stop() {
+	sem.done <- struct{}{}
 }

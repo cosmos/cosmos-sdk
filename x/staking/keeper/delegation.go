@@ -711,7 +711,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	// create the unbonding delegation
-	completionTime, height, completeNow := k.getRedelegationBeginInfo(ctx, valSrcAddr)
+	completionTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
 		return completionTime, nil

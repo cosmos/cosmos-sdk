@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.6
+
+### Bug Fixes
+
+#### SDK
+
+* Unbonding from a validator is now only considered "complete" after the full
+unbonding period has elapsed regardless of the validator's status.
+
 ## 0.34.5
 
 ### Bug Fixes

@@ -336,6 +336,21 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes()), nil
 }
 
+// ExportPrivKey returns a private key in ASCII armored format.
+// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
+func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
+	encryptPassphrase string) (armor string, err error) {
+	priv, err := kb.ExportPrivateKeyObject(name, decryptPassphrase)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase), nil
+}
+
+// ImportPrivKey imports a private key in ASCII armor format.
+// It returns an error if a key with the same name exists or a wrong encryption passphrase is
+// supplied.
 func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
 	if _, err := kb.Get(name); err == nil {
 		return errors.New("Cannot overwrite key " + name)

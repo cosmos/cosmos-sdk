@@ -3,16 +3,16 @@ package keys
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
 func exportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
-		Long:  `Export a private key from the local keybase in ASCII armor format.`,
+		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
 		Args:  cobra.ExactArgs(1),
 		RunE:  runExportCmd,
 	}
@@ -26,18 +26,20 @@ func runExportCmd(_ *cobra.Command, args []string) error {
 	}
 
 	buf := input.BufferStdin()
-	encryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+	if err != nil {
+		return err
+	}
+	encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
 	if err != nil {
 		return err
 	}
 
-	priv, err := kb.ExportPrivateKeyObject(args[0], encryptPassword)
+	armored, err := kb.ExportPrivKey(args[0], decryptPassword, encryptPassword)
 	if err != nil {
 		return err
 	}
 
-	armored := mintkey.EncryptArmorPrivKey(priv, encryptPassword)
 	fmt.Println(armored)
-
 	return nil
 }

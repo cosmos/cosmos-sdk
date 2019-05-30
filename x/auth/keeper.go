@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -16,8 +17,8 @@ type AccountKeeper struct {
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
 
-	// The prototypical Account constructor.
-	proto func() Account
+	// The prototypical types.Account constructor.
+	proto func() types.Account
 
 	// The codec codec for binary encoding/decoding of accounts.
 	cdc *codec.Codec
@@ -29,7 +30,7 @@ type AccountKeeper struct {
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() Account,
+	cdc *codec.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() types.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
@@ -41,7 +42,7 @@ func NewAccountKeeper(
 }
 
 // NewAccountWithAddress implements sdk.AccountKeeper.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -57,7 +58,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // NewAccount creates a new account
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.Account) types.Account {
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
@@ -65,7 +66,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 }
 
 // GetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -76,9 +77,9 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) []Account {
-	accounts := []Account{}
-	appendAccount := func(acc Account) (stop bool) {
+func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) []types.Account {
+	accounts := []types.Account{}
+	appendAccount := func(acc types.Account) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	}
@@ -87,7 +88,7 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) []Account {
 }
 
 // SetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	bz, err := ak.cdc.MarshalBinaryBare(acc)
@@ -99,14 +100,14 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(AddressStoreKey(addr))
 }
 
 // IterateAccounts implements sdk.AccountKeeper.
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(types.Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iter := sdk.KVStorePrefixIterator(store, AddressStoreKeyPrefix)
 	defer iter.Close()
@@ -192,7 +193,7 @@ func (ak AccountKeeper) GetParams(ctx sdk.Context) (params Params) {
 // -----------------------------------------------------------------------------
 // Misc.
 
-func (ak AccountKeeper) decodeAccount(bz []byte) (acc Account) {
+func (ak AccountKeeper) decodeAccount(bz []byte) (acc types.Account) {
 	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)
 	if err != nil {
 		panic(err)

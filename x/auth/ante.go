@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -30,23 +31,23 @@ func init() {
 
 // SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
 // and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey types.
-type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
+type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) sdk.Result
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper, fck types.FeeCollectionKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		// all transactions must be of type auth.StdTx
-		stdTx, ok := tx.(StdTx)
+		// all transactions must be of type auth.types.StdTx
+		stdTx, ok := tx.(types.StdTx)
 		if !ok {
 			// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 			// during runTx.
 			newCtx = SetGasMeter(simulate, ctx, 0)
-			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
+			return newCtx, sdk.ErrInternal("tx must be types.StdTx").Result(), true
 		}
 
 		params := ak.GetParams(ctx)
@@ -103,7 +104,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer Si
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
-		signerAccs := make([]Account, len(signerAddrs))
+		signerAccs := make([]types.Account, len(signerAddrs))
 		isGenesis := ctx.BlockHeight() == 0
 
 		// fetch first signer, who's going to pay the fees
@@ -151,7 +152,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer Si
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Account, sdk.Result) {
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (types.Account, sdk.Result) {
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, sdk.Result{}
 	}
@@ -160,7 +161,7 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Accou
 
 // ValidateSigCount validates that the transaction has a valid cumulative total
 // amount of signatures.
-func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
+func ValidateSigCount(stdTx types.StdTx, params types.Params) sdk.Result {
 	stdSigs := stdTx.GetSignatures()
 
 	sigCount := 0
@@ -177,7 +178,7 @@ func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
 }
 
 // ValidateMemo validates the memo size.
-func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
+func ValidateMemo(stdTx types.StdTx, params types.Params) sdk.Result {
 	memoLength := len(stdTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
@@ -194,9 +195,9 @@ func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 // verify the signature and increment the sequence. If the account doesn't have
 // a pubkey, set it.
 func processSig(
-	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool, params Params,
+	ctx sdk.Context, acc types.Account, sig types.StdSignature, signBytes []byte, simulate bool, params types.Params,
 	sigGasConsumer SignatureVerificationGasConsumer,
-) (updatedAcc Account, res sdk.Result) {
+) (updatedAcc types.Account, res sdk.Result) {
 
 	pubKey, res := ProcessPubKey(acc, sig, simulate)
 	if !res.IsOK() {
@@ -211,7 +212,7 @@ func processSig(
 	if simulate {
 		// Simulated txs should not contain a signature and are not required to
 		// contain a pubkey, so we must account for tx size of including a
-		// StdSignature (Amino encoding) and simulate gas consumption
+		// types.StdSignature (Amino encoding) and simulate gas consumption
 		// (assuming a SECP256k1 simulation key).
 		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
@@ -231,8 +232,8 @@ func processSig(
 	return acc, res
 }
 
-func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignature, params Params) {
-	simSig := StdSignature{PubKey: pubkey}
+func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig types.StdSignature, params types.Params) {
+	simSig := types.StdSignature{PubKey: pubkey}
 	if len(sig.Signature) == 0 {
 		simSig.Signature = simSecp256k1Sig[:]
 	}
@@ -250,10 +251,10 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 }
 
 // ProcessPubKey verifies that the given account address matches that of the
-// StdSignature. In addition, it will set the public key of the account if it
+// types.StdSignature. In addition, it will set the public key of the account if it
 // has not been set.
-func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
-	// If pubkey is not known for account, set it from the StdSignature.
+func ProcessPubKey(acc types.Account, sig types.StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
+	// If pubkey is not known for account, set it from the types.StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
 		// In simulate mode the transaction comes with no signatures, thus if the
@@ -286,7 +287,7 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
 func DefaultSigVerificationGasConsumer(
-	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params,
+	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params,
 ) sdk.Result {
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
@@ -311,7 +312,7 @@ func DefaultSigVerificationGasConsumer(
 
 func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
-	params Params) {
+	params types.Params) {
 
 	size := sig.BitArray.Size()
 	sigIndex := 0
@@ -327,7 +328,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Result) {
+func DeductFees(blockTime time.Time, acc types.Account, fee StdFee) (types.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -403,7 +404,7 @@ func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 
 // GetSignBytes returns a slice of bytes to sign over for a given transaction
 // and an account.
-func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) []byte {
+func GetSignBytes(chainID string, stdTx types.StdTx, acc types.Account, genesis bool) []byte {
 	var accNum uint64
 	if !genesis {
 		accNum = acc.GetAccountNumber()

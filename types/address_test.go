@@ -1,4 +1,4 @@
-package types_test
+package types
 
 import (
 	"encoding/hex"

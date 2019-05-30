@@ -7,12 +7,12 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
-
 	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -102,7 +102,7 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	return sign(device, pkl, message)
 }
 
-// LedgerShowAddress triggers a ledger device to show the corresponding address.
+// LedgerShowAddress triggers a ledger device to show the corresponding sdk.
 func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) error {
 	device, err := getLedgerDevice()
 	if err != nil {
@@ -119,7 +119,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) erro
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
-	pubKey2, _, err := getPubKeyAddrSafe(device, path, types.Bech32PrefixAccAddr)
+	pubKey2, _, err := getPubKeyAddrSafe(device, path, sdk.Bech32PrefixAccAddr)
 	if err != nil {
 		return err
 	}

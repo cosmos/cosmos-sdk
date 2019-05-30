@@ -10,7 +10,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 

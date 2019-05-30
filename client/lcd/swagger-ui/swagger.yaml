@@ -464,7 +464,7 @@ paths:
                 $ref: "#/definitions/Address"
               validator_address:
                 $ref: "#/definitions/ValidatorAddress"
-              delegation:
+              amount:
                 $ref: "#/definitions/Coin"
       tags:
         - ICS21

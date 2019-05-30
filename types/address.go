@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -158,6 +160,11 @@ func (aa AccAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aa.String())
 }
 
+// MarshalYAML marshals to YAML using Bech32.
+func (aa AccAddress) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(aa.String())
+}
+
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
@@ -287,6 +294,11 @@ func (va *ValAddress) Unmarshal(data []byte) error {
 // MarshalJSON marshals to JSON using Bech32.
 func (va ValAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(va.String())
+}
+
+// MarshalYAML marshals to YAML using Bech32.
+func (va ValAddress) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(va.String())
 }
 
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
@@ -424,6 +436,11 @@ func (ca *ConsAddress) Unmarshal(data []byte) error {
 // MarshalJSON marshals to JSON using Bech32.
 func (ca ConsAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ca.String())
+}
+
+// MarshalYAML marshals to YAML using Bech32.
+func (ca ConsAddress) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(ca.String())
 }
 
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.

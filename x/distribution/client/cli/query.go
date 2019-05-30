@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +17,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+	distQueryCmd := &cobra.Command{
+		Use:   "distr",
+		Short: "Querying commands for the distribution module",
+	}
+
+	distQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryParams(storeKey, cdc),
+		GetCmdQueryValidatorOutstandingRewards(storeKey, cdc),
+		GetCmdQueryValidatorCommission(storeKey, cdc),
+		GetCmdQueryValidatorSlashes(storeKey, cdc),
+		GetCmdQueryDelegatorRewards(storeKey, cdc),
+		GetCmdQueryCommunityPool(storeKey, cdc),
+	)...)
+
+	return distQueryCmd
+}
 
 // GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {

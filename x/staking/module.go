@@ -3,6 +3,7 @@ package staking
 import (
 	"encoding/json"
 
+	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -50,6 +52,21 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 		return err
 	}
 	return ValidateGenesis(data)
+}
+
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(moduleCdc, StoreKey)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(moduleCdc, StoreKey)
 }
 
 //_____________________________________

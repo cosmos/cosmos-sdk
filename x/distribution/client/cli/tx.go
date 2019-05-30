@@ -36,13 +36,14 @@ const (
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   "dist",
+		Use:   "distr",
 		Short: "Distribution transactions subcommands",
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
+		distCmds.GetCmdWithdrawAllRewards(cdc, storeKey),
 	)...)
 
 	return distTxCmd

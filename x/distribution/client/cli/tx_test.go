@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -8,7 +10,6 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"testing"
 )
 
 func createFakeTxBuilder() authtxb.TxBuilder {
@@ -56,7 +57,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 	callCount := 0
 	err := splitAndApply(
 		func(ctx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
-			callCount += 1
+			callCount++
 
 			assert.NotNil(t, ctx)
 			assert.NotNil(t, txBldr)

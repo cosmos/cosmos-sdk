@@ -3,10 +3,15 @@ package gov
 import (
 	"encoding/json"
 
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -15,7 +20,16 @@ var (
 )
 
 // app module basics object
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	proposalCmds []*cobra.Command // proposal subcommands which live in goverance
+}
+
+// NewAppModuleBasic creates a new AppModuleBasic object
+func NewAppModuleBasic(proposalCmds []*cobra.Command) AppModuleBasic {
+	return AppModuleBasic{
+		proposalCmds: proposalCmds,
+	}
+}
 
 var _ sdk.AppModuleBasic = AppModuleBasic{}
 
@@ -42,6 +56,21 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 		return err
 	}
 	return ValidateGenesis(data)
+}
+
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(StoreKey, moduleCdc)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, moduleCdc)
 }
 
 //___________________________

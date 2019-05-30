@@ -23,6 +23,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	stakingTxCmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Staking transaction subcommands",
+	}
+
+	stakingTxCmd.AddCommand(client.PostCommands(
+		GetCmdCreateValidator(mc.cdc),
+		GetCmdEditValidator(mc.cdc),
+		GetCmdDelegate(mc.cdc),
+		GetCmdRedelegate(mc.storeKey, mc.cdc),
+		GetCmdUnbond(mc.storeKey, mc.cdc),
+	)...)
+
+	return stakingTxCmd
+}
+
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{

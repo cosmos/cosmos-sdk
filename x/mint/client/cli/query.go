@@ -11,6 +11,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
+// GetQueryCmd returns the cli query commands for the minting module.
+func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	mintingQueryCmd := &cobra.Command{
+		Use:   mint.ModuleName,
+		Short: "Querying commands for the minting module",
+	}
+
+	mintingQueryCmd.AddCommand(
+		sdkclient.GetCommands(
+			GetCmdQueryParams(cdc),
+			GetCmdQueryInflation(cdc),
+			GetCmdQueryAnnualProvisions(cdc),
+		)...,
+	)
+
+	return mintingQueryCmd
+}
+
 // GetCmdQueryParams implements a command to return the current minting
 // parameters.
 func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {

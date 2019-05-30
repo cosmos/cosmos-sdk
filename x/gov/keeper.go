@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// TODO
 var (
 	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
 	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))

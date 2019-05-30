@@ -85,11 +85,13 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.addressVerifier = addressVerifier
 }
 
+// TODO
 func (config *Config) SetCoinType(coinType uint32) {
 	config.assertNotSealed()
 	config.coinType = coinType
 }
 
+// TODO
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath
@@ -144,10 +146,12 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
 }
 
+// TODO
 func (config *Config) GetCoinType() uint32 {
 	return config.coinType
 }
 
+// TODO
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
 }

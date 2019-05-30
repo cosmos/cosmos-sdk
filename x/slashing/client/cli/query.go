@@ -6,11 +6,32 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	// Group slashing queries under a subcommand
+	slashingQueryCmd := &cobra.Command{
+		Use:   slashing.ModuleName,
+		Short: "Querying commands for the slashing module",
+	}
+
+	slashingQueryCmd.AddCommand(
+		client.GetCommands(
+			GetCmdQuerySigningInfo(storeKey, cdc),
+			GetCmdQueryParams(cdc),
+		)...,
+	)
+
+	return slashingQueryCmd
+
+}
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
 func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {

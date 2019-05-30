@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -47,6 +48,31 @@ var ProposalFlags = []string{
 	FlagDescription,
 	flagProposalType,
 	FlagDeposit,
+}
+
+// GetTxCmd returns the transaction commands for this module
+// governance ModuleClient is slightly different from other ModuleClients in that
+// it contains a slice of "proposal" child commands. These commands are respective
+// to proposal type handlers that are implemented in other modules but are mounted
+// under the governance CLI (eg. parameter change proposals).
+func GetTxCmd(storeKey string, cdc *amino.Codec, pcmds ...*cobra.Command) *cobra.Command {
+	govTxCmd := &cobra.Command{
+		Use:   gov.ModuleName,
+		Short: "Governance transactions subcommands",
+	}
+
+	cmdSubmitProp := GetCmdSubmitProposal(cdc)
+	for _, pcmd := range pcmds {
+		cmdSubmitProp.AddCommand(client.PostCommands(pcmd)[0])
+	}
+
+	govTxCmd.AddCommand(client.PostCommands(
+		GetCmdDeposit(storeKey, cdc),
+		GetCmdVote(storeKey, cdc),
+		cmdSubmitProp,
+	)...)
+
+	return govTxCmd
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.

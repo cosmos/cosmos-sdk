@@ -550,7 +550,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 // getBeginInfo returns the completion time and height of a redelegation, along
 // with a boolean signaling if the redelegation is complete based on the source
 // validator.
-func (k Keeper) getRedelegationBeginInfo(
+func (k Keeper) getBeginInfo(
 	ctx sdk.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool) {
 
@@ -575,45 +575,25 @@ func (k Keeper) getRedelegationBeginInfo(
 	}
 }
 
-func (k Keeper) getUndelegateBeginInfo(ctx sdk.Context, valAddr sdk.ValAddress) (completionTime time.Time, height int64) {
-	validator, found := k.GetValidator(ctx, valAddr)
-
-	// TODO: When would the validator not be found?
-	switch {
-	case !found || validator.Status == sdk.Bonded:
-		completionTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
-		height = ctx.BlockHeight()
-		return completionTime, height
-
-	case validator.Status == sdk.Unbonded:
-		return completionTime, height
-
-	case validator.Status == sdk.Unbonding:
-		return validator.UnbondingCompletionTime, validator.UnbondingHeight
-
-	default:
-		panic(fmt.Sprintf("unknown validator status: %s", validator.Status))
-	}
-}
-
-// begin unbonding part or all of a delegation
+// Undelegate unbonds an amount of delegator shares from a given validator. It
+// will verify that the unbonding entries between the delegator and validator
+// are not exceeded and unbond the staked tokens (based on shares) by creating
+// an unbonding object and inserting it into the unbonding queue which will be
+// processed during the staking EndBlocker.
 func (k Keeper) Undelegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
-) (completionTime time.Time, sdkErr sdk.Error) {
+) (time.Time, sdk.Error) {
 
-	// create the unbonding delegation
-	completionTime, height := k.getUndelegateBeginInfo(ctx, valAddr)
-
-	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
-	if err != nil {
-		return completionTime, err
-	}
-
+	// Undelegating must obey the unbonding period regardless of the validator's
+	// status for safety. Block heights prior to undelegatePatchHeight allowed
+	// delegates to unbond from an unbonded validator immediately.
 	if ctx.BlockHeight() < undelegatePatchHeight {
-		// Transactions prior undelegatePatchHeight must obey the previous logic
-		// where a undelegation can mature immediately if the validator is
-		// unbonded.
-		_, _, completeNow := k.getRedelegationBeginInfo(ctx, valAddr)
+		completionTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
+
+		returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
+		if err != nil {
+			return completionTime, err
+		}
 
 		// no need to create the ubd object just complete now
 		if completeNow {
@@ -628,13 +608,28 @@ func (k Keeper) Undelegate(
 
 			return completionTime, nil
 		}
+
+		if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
+			return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
+		}
+
+		ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, height, completionTime, returnAmount)
+		k.InsertUBDQueue(ctx, ubd, completionTime)
+
+		return completionTime, nil
+	}
+
+	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
+	if err != nil {
+		return time.Time{}, err
 	}
 
 	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
 		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
-	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, height, completionTime, returnAmount)
+	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
+	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
 	k.InsertUBDQueue(ctx, ubd, completionTime)
 
 	return completionTime, nil

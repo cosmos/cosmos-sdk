@@ -19,9 +19,6 @@ var (
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
-// name of this module
-const ModuleName = "bank"
-
 // app module basics object
 type AppModuleBasic struct{}
 
@@ -29,7 +26,7 @@ var _ sdk.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // register module codec

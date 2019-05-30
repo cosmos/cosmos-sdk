@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -17,15 +18,12 @@ var (
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
-// name of this module
-const ModuleName = "auth"
-
 // app module basics object
 type AppModuleBasic struct{}
 
 // module name
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // register module codec

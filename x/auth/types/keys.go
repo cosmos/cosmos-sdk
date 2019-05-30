@@ -3,6 +3,9 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 const (
+	// module name
+	ModuleName = "auth"
+
 	// StoreKey is string representation of the store key for auth
 	StoreKey = "acc"
 

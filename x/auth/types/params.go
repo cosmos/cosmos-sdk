@@ -1,11 +1,10 @@
-package auth
+package types
 
 import (
 	"bytes"
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -55,8 +54,8 @@ func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
 }
 
 // ParamKeyTable for auth module
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() subspace.KeyTable {
+	return subspace.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs

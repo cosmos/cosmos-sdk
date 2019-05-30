@@ -50,7 +50,7 @@ type Keybase interface {
 	ImportPubKey(name string, armor string) (err error)
 	Export(name string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
-	ExportPrivKey(name string, decryptPassphrase string, encryptPassphrase string) (string, error)
+	ExportPrivKey(name string, decryptPassphrase string, encryptPassphrase string) (armor string, err error)
 
 	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)

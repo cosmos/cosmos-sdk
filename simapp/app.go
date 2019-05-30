@@ -50,7 +50,7 @@ func init() {
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		gov.AppModuleBasic{},
+		gov.NewAppModuleBasic(paramcli.GetCmdSubmitProposal()),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},

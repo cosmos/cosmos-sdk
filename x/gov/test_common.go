@@ -2,6 +2,7 @@ package gov
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"sort"
 	"testing"
@@ -153,6 +154,30 @@ func SortByteArrays(src [][]byte) [][]byte {
 
 func testProposal() Content {
 	return NewTextProposal("Test", "description")
+}
+
+type contextKey int
+
+const contextKeyBadProposalKey contextKey = iota
+
+// badProposalHandler implements a governance proposal handler that is identical
+// to the actual handler except this fails if some given value in the context is
+// odd.
+func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
+	switch c.ProposalType() {
+	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
+		v := ctx.Value(contextKeyBadProposalKey)
+
+		if v == nil || v.(int)%2 == 1 {
+			return sdk.ErrInternal("proposal failed")
+		}
+
+		return nil
+
+	default:
+		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
+		return sdk.ErrUnknownRequest(errMsg)
+	}
 }
 
 // checks if two proposals are equal (note: slow, for tests only)

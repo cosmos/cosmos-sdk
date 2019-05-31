@@ -43,7 +43,7 @@ func main() {
 // do is the workhorse, broken out of main to make testing easier.
 func do(writer io.Writer, flagSet *flag.FlagSet, args []string) (err error) {
 	flagSet.Usage = usage
-	flagSet.Parse(args)
+	_ = flagSet.Parse(args)
 	var paths []string
 	var symbol, method string
 	// Loop until something is printed.

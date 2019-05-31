@@ -371,7 +371,7 @@ func (pkg *Package) oneLineNodeDepth(node ast.Node, depth int) string {
 	default:
 		// As a fallback, use default formatter for all unknown node types.
 		buf := new(bytes.Buffer)
-		format.Node(buf, pkg.fs, node)
+		_ = format.Node(buf, pkg.fs, node)
 		s := buf.String()
 		if strings.Contains(s, "\n") {
 			return dotDotDot

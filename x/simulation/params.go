@@ -1,9 +1,11 @@
 package simulation
 
 import (
+	"encoding/json"
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,6 +39,9 @@ var (
 	// values simulated should be within valid acceptable range for the given
 	// parameter.
 	ModuleParamSimulator = map[string]func(r *rand.Rand) interface{}{
+		"send_enabled": func(r *rand.Rand) interface{} {
+			return r.Int63n(2) == 0
+		},
 		"max_memo_characters": func(r *rand.Rand) interface{} {
 			return uint64(RandIntBetween(r, 100, 200))
 		},
@@ -91,6 +96,9 @@ var (
 		"inflation_rate_change": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
 		},
+		"inflation": func(r *rand.Rand) interface{} {
+			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
+		},
 		"inflation_max": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(20, 2)
 		},
@@ -106,11 +114,29 @@ var (
 		"base_proposer_reward": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		},
-		"bonus_proposer_eward": func(r *rand.Rand) interface{} {
+		"bonus_proposer_reward": func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		},
 	}
 )
+
+type (
+	// TODO: Consolidate with main simulation Param type.
+	AppParams      map[string]json.RawMessage
+	ParamSimulator func(r *rand.Rand)
+)
+
+// GetOrGenerate attempts to get a given parameter by key from the AppParams
+// object. If it exists, it'll be decoded and returned. Otherwise, the provided
+// ParamSimulator is used to generate a random value.
+func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+	if v, ok := sp[key]; ok && v != nil {
+		cdc.MustUnmarshalJSON(v, ptr)
+		return
+	}
+
+	ps(r)
+}
 
 // Simulation parameters
 type Params struct {
@@ -120,18 +146,6 @@ type Params struct {
 	InitialLivenessWeightings []int
 	LivenessTransitionMatrix  TransitionMatrix
 	BlockSizeTransitionMatrix TransitionMatrix
-}
-
-// Return default simulation parameters
-func DefaultParams() Params {
-	return Params{
-		PastEvidenceFraction:      0.5,
-		NumKeys:                   250,
-		EvidenceFraction:          0.5,
-		InitialLivenessWeightings: []int{40, 5, 5},
-		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
-		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
-	}
 }
 
 // Return random simulation parameters

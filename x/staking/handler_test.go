@@ -797,8 +797,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	got = handleMsgUndelegate(ctx, msgUndelegateDelegator, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 
-	// move the Block time forward by one second
-	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(time.Second * 1))
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(keeper.UnbondingTime(ctx)))
 
 	// Run the EndBlocker
 	EndBlocker(ctx, keeper)

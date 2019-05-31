@@ -12,7 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/gov/client"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -24,13 +25,13 @@ var (
 
 // app module basics object
 type AppModuleBasic struct {
-	proposalCmds []*cobra.Command // proposal subcommands which live in governance
+	proposalHandlers []client.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalCmds ...*cobra.Command) AppModuleBasic {
+func NewAppModuleBasic(proposalHandlers ...client.ProposalHandler) AppModuleBasic {
 	return AppModuleBasic{
-		proposalCmds: proposalCmds,
+		proposalHandlers: proposalHandlers,
 	}
 }
 
@@ -62,15 +63,25 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
 
-	// XXX include ProposalRESTHandler ??
-	rest.RegisterRoutes(ctx, rtr, cdc)
+	var proposalRESTHandlers []rest.ProposalRESTHandler
+	for _, proposalHandler := range a.proposalHandlers {
+		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx, cdc))
+	}
+
+	rest.RegisterRoutes(ctx, rtr, cdc, proposalRESTHandlers)
 }
 
 // get the root tx command of this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(StoreKey, ModuleCdc)
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+
+	var proposalCLIHandlers []*cobra.Command
+	for _, proposalHandler := range a.proposalHandlers {
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler)
+	}
+
+	return cli.GetTxCmd(StoreKey, ModuleCdc, proposalCLIHandlers)
 }
 
 // get the root query command of this module

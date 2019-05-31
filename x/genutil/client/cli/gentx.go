@@ -121,7 +121,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(client.GetTxEncoder(cdc))
 			cliCtx := client.NewCLIContext().WithCodec(cdc)
 
-			// XXX: Set the generate-only flag here after the CLI context has
+			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
 			//
 			// TODO: Consider removing the manual setting of generate-only in

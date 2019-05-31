@@ -3,6 +3,9 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -11,13 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
-	"strings"
-
-	"github.com/spf13/cobra"
-
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Proposal flags
@@ -55,9 +53,9 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds ...*cobra.Command) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:   gov.ModuleName,
+		Use:   types.ModuleName,
 		Short: "Governance transactions subcommands",
 	}
 
@@ -119,9 +117,9 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := gov.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
+			msg := types.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -176,7 +174,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			msg := gov.NewMsgDeposit(from, proposalID, amount)
+			msg := types.NewMsgDeposit(from, proposalID, amount)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -220,13 +218,13 @@ $ %s tx gov vote 1 yes --from mykey
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := types.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := gov.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

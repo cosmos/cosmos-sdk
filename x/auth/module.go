@@ -48,7 +48,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return types.ValidateGenesis(data)
 }
 
-// XXX
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
 	rest.RegisterRoutes(ctx, rtr, cdc, types.StoreKey)

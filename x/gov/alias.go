@@ -84,6 +84,11 @@ var (
 	NewMsgSubmitProposal             = types.NewMsgSubmitProposal
 	NewMsgDeposit                    = types.NewMsgDeposit
 	NewMsgVote                       = types.NewMsgVote
+	ParamKeyTable                    = types.ParamKeyTable
+	NewDepositParams                 = types.NewDepositParams
+	NewTallyParams                   = types.NewTallyParams
+	NewVotingParams                  = types.NewVotingParams
+	NewParams                        = types.NewParams
 	NewProposal                      = types.NewProposal
 	ProposalStatusFromString         = types.ProposalStatusFromString
 	ValidProposalStatus              = types.ValidProposalStatus
@@ -109,6 +114,9 @@ var (
 	KeyNextProposalID           = types.KeyNextProposalID
 	PrefixActiveProposalQueue   = types.PrefixActiveProposalQueue
 	PrefixInactiveProposalQueue = types.PrefixInactiveProposalQueue
+	ParamStoreKeyDepositParams  = types.ParamStoreKeyDepositParams
+	ParamStoreKeyVotingParams   = types.ParamStoreKeyVotingParams
+	ParamStoreKeyTallyParams    = types.ParamStoreKeyTallyParams
 )
 
 type (
@@ -119,6 +127,10 @@ type (
 	MsgSubmitProposal       = types.MsgSubmitProposal
 	MsgDeposit              = types.MsgDeposit
 	MsgVote                 = types.MsgVote
+	DepositParams           = types.DepositParams
+	TallyParams             = types.TallyParams
+	VotingParams            = types.VotingParams
+	Params                  = types.Params
 	Proposal                = types.Proposal
 	Proposals               = types.Proposals
 	ProposalQueue           = types.ProposalQueue

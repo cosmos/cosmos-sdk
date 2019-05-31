@@ -2,6 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // validatorGovInfo used for tallying
@@ -49,13 +50,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 		return false
 	})
 
-	// iterate over all the votes
-	votesIterator := keeper.GetVotes(ctx, proposal.ProposalID)
-	defer votesIterator.Close()
-	for ; votesIterator.Valid(); votesIterator.Next() {
-		vote := &Vote{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), vote)
-
+	iterator := keeper.GetProposalVotesIterator(ctx, proposal.ProposalID)
+	keeper.IterateVotes(ctx, iterator, func(vote types.Vote) bool {
 		// if validator, just record it in the map
 		// if delegator tally voting power
 		valAddrStr := sdk.ValAddress(vote.Voter).String()
@@ -83,7 +79,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 		}
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
-	}
+		return false
+	})
 
 	// iterate over the validators again to tally their voting power
 	for _, val := range currValidators {

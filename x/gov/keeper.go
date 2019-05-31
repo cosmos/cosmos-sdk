@@ -1,10 +1,12 @@
 package gov
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -119,24 +121,118 @@ func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(KeyActiveProposalQueue(proposalID, endTime), bz)
+	store.Set(types.KeyActiveProposalQueue(proposalID, endTime), bz)
 }
 
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
 func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(KeyActiveProposalQueue(proposalID, endTime))
+	store.Delete(types.KeyActiveProposalQueue(proposalID, endTime))
 }
 
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(KeyInactiveProposalQueueProposal(endTime, proposalID), bz)
+	store.Set(types.KeyInactiveProposalQueue(proposalID, endTime), bz)
 }
 
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
 func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(KeyInactiveProposalQueue(proposalID, endTime))
+	store.Delete(types.KeyInactiveProposalQueue(proposalID, endTime))
+}
+
+// Iterators
+
+// IterateProposals iterates over the all the proposals and performs a callback function
+func (keeper Keeper) IterateProposals(ctx sdk.Context, handler func(proposal types.Proposal) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var proposal types.Proposal
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
+
+		if handler(proposal) {
+			break
+		}
+	}
+}
+
+// IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
+// and performs a callback function
+func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, iterator sdk.Iterator, handler func(proposal types.Proposal) (stop bool)) {
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		proposalID, _ := types.SplitKeyActiveProposalQueue(iterator.Key())
+		proposal, found := keeper.GetProposal(ctx, proposalID)
+		if !found {
+			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
+		}
+
+		if handler(proposal) {
+			break
+		}
+	}
+}
+
+// IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
+// and performs a callback function
+func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, iterator sdk.Iterator, handler func(proposal types.Proposal) (stop bool)) {
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		proposalID, _ := types.SplitKeyInactiveProposalQueue(iterator.Key())
+		proposal, found := keeper.GetProposal(ctx, proposalID)
+		if !found {
+			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
+		}
+
+		if handler(proposal) {
+			break
+		}
+	}
+}
+
+// IterateDeposits iterates over the all the proposals deposits and performs a callback function
+func (keeper Keeper) IterateDeposits(ctx sdk.Context, iterator sdk.Iterator, handler func(deposit types.Deposit) (stop bool)) {
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var deposit types.Deposit
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+
+		if handler(deposit) {
+			break
+		}
+	}
+}
+
+// IterateVotes iterates over the all the proposals votes and performs a callback function
+func (keeper Keeper) IterateVotes(ctx sdk.Context, iterator sdk.Iterator, handler func(vote types.Vote) (stop bool)) {
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote types.Vote
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
+
+		if handler(vote) {
+			break
+		}
+	}
+}
+
+// ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
+func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(keeper.storeKey)
+	return store.Iterator(ActiveProposalQueuePrefix, sdk.PrefixEndBytes(sdk.FormatTimeBytes(endTime)))
+}
+
+// InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
+func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(keeper.storeKey)
+	return store.Iterator(InactiveProposalQueuePrefix, sdk.PrefixEndBytes(sdk.FormatTimeBytes(endTime)))
 }

@@ -30,7 +30,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	proposal := NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
 
 	keeper.SetProposal(ctx, proposal)
-	keeper.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposalID)
+	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 
 	return proposal, nil
 }
@@ -60,8 +60,8 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	if !ok {
 		panic("DeleteProposal cannot fail to GetProposal")
 	}
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.DepositEndTime, proposalID)
-	keeper.RemoveFromActiveProposalQueue(ctx, proposal.VotingEndTime, proposalID)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
+	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
 	store.Delete(KeyProposal(proposalID))
 }
 
@@ -167,6 +167,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
-	keeper.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
+	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 }

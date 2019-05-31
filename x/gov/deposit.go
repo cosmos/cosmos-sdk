@@ -2,16 +2,17 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
-func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (Deposit, bool) {
+func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyDeposit(proposalID, depositorAddr))
+	bz := store.Get(types.KeyProposalDeposit(proposalID, depositorAddr))
 	if bz == nil {
-		return Deposit{}, false
+		return deposit, false
 	}
-	var deposit Deposit
+
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &deposit)
 	return deposit, true
 }
@@ -19,7 +20,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, deposit Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
-	store.Set(KeyDeposit(proposalID, depositorAddr), bz)
+	store.Set(types.KeyProposalDeposit(proposalID, depositorAddr), bz)
 }
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
@@ -57,7 +58,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Add or update deposit object
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
 	if !found {
-		newDeposit := Deposit{depositorAddr, proposalID, depositAmount}
+		newDeposit := NewDeposit(proposalID, depositorAddr, depositAmount)
 		keeper.setDeposit(ctx, proposalID, depositorAddr, newDeposit)
 	} else {
 		currDeposit.Amount = currDeposit.Amount.Add(depositAmount)
@@ -67,45 +68,62 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return nil, activatedVotingPeriod
 }
 
-// GetDeposits gets all the deposits on a specific proposal as an sdk.Iterator
-func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterator {
+// GetDeposits returns all the deposits from the store
+func (keeper Keeper) GetDeposits(ctx sdk.Context) (deposits Deposits) {
 	store := ctx.KVStore(keeper.storeKey)
-	return sdk.KVStorePrefixIterator(store, KeyDepositsSubspace(proposalID))
+	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
+
+	keeper.IterateDeposits(ctx, iterator, func(deposit Deposit) bool {
+		deposits = append(deposits, deposit)
+		return false
+	})
+	return
 }
 
-// RefundDeposits refunds and deletes all the deposits on a specific proposal
-func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
-	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-	defer depositsIterator.Close()
-	for ; depositsIterator.Valid(); depositsIterator.Next() {
-		deposit := &Deposit{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
+// GetProposalDeposits returns all the deposits from a proposal
+func (keeper Keeper) GetProposalDeposits(ctx sdk.Context, proposalID uint64) (deposits Deposits) {
+	iterator := keeper.GetProposalDepositsIterator(ctx, proposalID)
 
+	keeper.IterateDeposits(ctx, iterator, func(deposit Deposit) bool {
+		deposits = append(deposits, deposit)
+		return false
+	})
+	return
+}
+
+// GetProposalDepositsIterator gets all the deposits on a specific proposal as an sdk.Iterator
+func (keeper Keeper) GetProposalDepositsIterator(ctx sdk.Context, proposalID uint64) sdk.Iterator {
+	store := ctx.KVStore(keeper.storeKey)
+	return sdk.KVStorePrefixIterator(store, types.KeyProposalDeposits(proposalID))
+}
+
+// RefundProposalDeposits refunds and deletes all the deposits on a specific proposal
+func (keeper Keeper) RefundProposalDeposits(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := keeper.GetProposalDepositsIterator(ctx, proposalID)
+
+	keeper.IterateDeposits(ctx, iterator, func(deposit Deposit) bool {
 		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
-
-		store.Delete(depositsIterator.Key())
-	}
+		store.Delete(iterator.Key())
+		return false
+	})
 }
 
-// DeleteDeposits deletes all the deposits on a specific proposal without refunding them
-func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
+// DeleteProposalDeposits deletes all the deposits on a specific proposal without refunding them
+func (keeper Keeper) DeleteProposalDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-	defer depositsIterator.Close()
-	for ; depositsIterator.Valid(); depositsIterator.Next() {
-		deposit := &Deposit{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
+	iterator := keeper.GetProposalDepositsIterator(ctx, proposalID)
 
-		// TODO: Find a way to do this without using accounts.
+	keeper.IterateDeposits(ctx, iterator, func(deposit Deposit) bool {
 		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
 
-		store.Delete(depositsIterator.Key())
-	}
+		store.Delete(iterator.Key())
+		return false
+	})
 }

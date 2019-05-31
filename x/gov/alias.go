@@ -48,52 +48,54 @@ const (
 
 var (
 	// functions aliases
-	RegisterCodec                    = types.RegisterCodec
-	RegisterProposalTypeCodec        = types.RegisterProposalTypeCodec
-	ValidateAbstract                 = types.ValidateAbstract
-	ErrUnknownProposal               = types.ErrUnknownProposal
-	ErrInactiveProposal              = types.ErrInactiveProposal
-	ErrAlreadyActiveProposal         = types.ErrAlreadyActiveProposal
-	ErrAlreadyFinishedProposal       = types.ErrAlreadyFinishedProposal
-	ErrAddressNotStaked              = types.ErrAddressNotStaked
-	ErrInvalidProposalContent        = types.ErrInvalidProposalContent
-	ErrInvalidProposalType           = types.ErrInvalidProposalType
-	ErrInvalidVote                   = types.ErrInvalidVote
-	ErrInvalidGenesis                = types.ErrInvalidGenesis
-	ErrNoProposalHandlerExists       = types.ErrNoProposalHandlerExists
-	KeyProposal                      = types.KeyProposal
-	KeyDeposit                       = types.KeyDeposit
-	KeyVote                          = types.KeyVote
-	KeyDepositsSubspace              = types.KeyDepositsSubspace
-	KeyVotesSubspace                 = types.KeyVotesSubspace
-	PrefixActiveProposalQueueTime    = types.PrefixActiveProposalQueueTime
-	KeyActiveProposalQueueProposal   = types.KeyActiveProposalQueueProposal
-	PrefixInactiveProposalQueueTime  = types.PrefixInactiveProposalQueueTime
-	KeyInactiveProposalQueueProposal = types.KeyInactiveProposalQueueProposal
-	NewMsgSubmitProposal             = types.NewMsgSubmitProposal
-	NewMsgDeposit                    = types.NewMsgDeposit
-	NewMsgVote                       = types.NewMsgVote
-	NewProposal                      = types.NewProposal
-	ProposalStatusFromString         = types.ProposalStatusFromString
-	ValidProposalStatus              = types.ValidProposalStatus
-	NewTallyResult                   = types.NewTallyResult
-	NewTallyResultFromMap            = types.NewTallyResultFromMap
-	EmptyTallyResult                 = types.EmptyTallyResult
-	NewTextProposal                  = types.NewTextProposal
-	NewSoftwareUpgradeProposal       = types.NewSoftwareUpgradeProposal
-	RegisterProposalType             = types.RegisterProposalType
-	ContentFromProposalType          = types.ContentFromProposalType
-	IsValidProposalType              = types.IsValidProposalType
-	ProposalHandler                  = types.ProposalHandler
-	VoteOptionFromString             = types.VoteOptionFromString
-	ValidVoteOption                  = types.ValidVoteOption
+	RegisterCodec              = types.RegisterCodec
+	RegisterProposalTypeCodec  = types.RegisterProposalTypeCodec
+	ValidateAbstract           = types.ValidateAbstract
+	ErrUnknownProposal         = types.ErrUnknownProposal
+	ErrInactiveProposal        = types.ErrInactiveProposal
+	ErrAlreadyActiveProposal   = types.ErrAlreadyActiveProposal
+	ErrAlreadyFinishedProposal = types.ErrAlreadyFinishedProposal
+	ErrAddressNotStaked        = types.ErrAddressNotStaked
+	ErrInvalidProposalContent  = types.ErrInvalidProposalContent
+	ErrInvalidProposalType     = types.ErrInvalidProposalType
+	ErrInvalidVote             = types.ErrInvalidVote
+	ErrInvalidGenesis          = types.ErrInvalidGenesis
+	ErrNoProposalHandlerExists = types.ErrNoProposalHandlerExists
+	KeyProposal                = types.KeyProposal
+	KeyActiveProposalQueue     = types.KeyActiveProposalQueue
+	KeyInactiveProposalQueue   = types.KeyInactiveProposalQueue
+	KeyProposalDeposits        = types.KeyProposalDeposits
+	KeyProposalDeposit         = types.KeyProposalDeposit
+	KeyProposalVotes           = types.KeyProposalVotes
+	KeyProposalVote            = types.KeyProposalVote
+	NewMsgSubmitProposal       = types.NewMsgSubmitProposal
+	NewMsgDeposit              = types.NewMsgDeposit
+	NewMsgVote                 = types.NewMsgVote
+	NewProposal                = types.NewProposal
+	NewDeposit                 = types.NewDeposit
+	NewVote                    = types.NewVote
+	ProposalStatusFromString   = types.ProposalStatusFromString
+	ValidProposalStatus        = types.ValidProposalStatus
+	NewTallyResult             = types.NewTallyResult
+	NewTallyResultFromMap      = types.NewTallyResultFromMap
+	EmptyTallyResult           = types.EmptyTallyResult
+	NewTextProposal            = types.NewTextProposal
+	NewSoftwareUpgradeProposal = types.NewSoftwareUpgradeProposal
+	RegisterProposalType       = types.RegisterProposalType
+	ContentFromProposalType    = types.ContentFromProposalType
+	IsValidProposalType        = types.IsValidProposalType
+	ProposalHandler            = types.ProposalHandler
+	VoteOptionFromString       = types.VoteOptionFromString
+	ValidVoteOption            = types.ValidVoteOption
 
 	// variable aliases
 	ModuleCdc                   = types.ModuleCdc
-	KeyDelimiter                = types.KeyDelimiter
 	KeyNextProposalID           = types.KeyNextProposalID
-	PrefixActiveProposalQueue   = types.PrefixActiveProposalQueue
-	PrefixInactiveProposalQueue = types.PrefixInactiveProposalQueue
+	ProposalsKeyPrefix          = types.ProposalsKeyPrefix
+	ActiveProposalQueuePrefix   = types.ActiveProposalQueuePrefix
+	InactiveProposalQueuePrefix = types.InactiveProposalQueuePrefix
+	DepositsKeyPrefix           = types.DepositsKeyPrefix
+	VotesKeyPrefix              = types.VotesKeyPrefix
 )
 
 type (

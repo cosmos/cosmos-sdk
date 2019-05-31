@@ -37,6 +37,7 @@ const (
 	TStoreKey                        = types.TStoreKey
 	RouterKey                        = types.RouterKey
 	QuerierRoute                     = types.QuerierRoute
+	ProposalTypeCommunityPoolSpend   = types.ProposalTypeCommunityPoolSpend
 )
 
 var (
@@ -46,6 +47,7 @@ var (
 	NonNegativeOutstandingInvariant            = keeper.NonNegativeOutstandingInvariant
 	CanWithdrawInvariant                       = keeper.CanWithdrawInvariant
 	ReferenceCountInvariant                    = keeper.ReferenceCountInvariant
+	ModuleAccountInvariant                     = keeper.ModuleAccountInvariant
 	NewKeeper                                  = keeper.NewKeeper
 	GetValidatorOutstandingRewardsAddress      = keeper.GetValidatorOutstandingRewardsAddress
 	GetDelegatorWithdrawInfoAddress            = keeper.GetDelegatorWithdrawInfoAddress
@@ -64,6 +66,7 @@ var (
 	GetValidatorSlashEventPrefix               = keeper.GetValidatorSlashEventPrefix
 	GetValidatorSlashEventKey                  = keeper.GetValidatorSlashEventKey
 	ParamKeyTable                              = keeper.ParamKeyTable
+	HandleCommunityPoolSpendProposal           = keeper.HandleCommunityPoolSpendProposal
 	NewQuerier                                 = keeper.NewQuerier
 	NewQueryValidatorOutstandingRewardsParams  = keeper.NewQueryValidatorOutstandingRewardsParams
 	NewQueryValidatorCommissionParams          = keeper.NewQueryValidatorCommissionParams
@@ -84,6 +87,8 @@ var (
 	ErrNoValidatorCommission                   = types.ErrNoValidatorCommission
 	ErrSetWithdrawAddrDisabled                 = types.ErrSetWithdrawAddrDisabled
 	ErrBadDistribution                         = types.ErrBadDistribution
+	ErrInvalidProposalAmount                   = types.ErrInvalidProposalAmount
+	ErrEmptyProposalRecipient                  = types.ErrEmptyProposalRecipient
 	InitialFeePool                             = types.InitialFeePool
 	NewGenesisState                            = types.NewGenesisState
 	DefaultGenesisState                        = types.DefaultGenesisState
@@ -91,13 +96,13 @@ var (
 	NewMsgSetWithdrawAddress                   = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward              = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission          = types.NewMsgWithdrawValidatorCommission
+	NewCommunityPoolSpendProposal              = types.NewCommunityPoolSpendProposal
 	NewQueryDelegatorTotalRewardsResponse      = types.NewQueryDelegatorTotalRewardsResponse
 	NewDelegationDelegatorReward               = types.NewDelegationDelegatorReward
 	NewValidatorHistoricalRewards              = types.NewValidatorHistoricalRewards
 	NewValidatorCurrentRewards                 = types.NewValidatorCurrentRewards
 	InitialValidatorAccumulatedCommission      = types.InitialValidatorAccumulatedCommission
 	NewValidatorSlashEvent                     = types.NewValidatorSlashEvent
-	NewCommunityPoolSpendProposal              = types.NewCommunityPoolSpendProposal
 
 	// variable aliases
 	FeePoolKey                           = keeper.FeePoolKey
@@ -121,6 +126,7 @@ var (
 	Category                             = tags.Category
 	Sender                               = tags.Sender
 	ModuleCdc                            = types.ModuleCdc
+	ModuleAddress                        = types.ModuleAddress
 )
 
 type (
@@ -135,8 +141,8 @@ type (
 	DelegatorStartingInfo                  = types.DelegatorStartingInfo
 	CodeType                               = types.CodeType
 	StakingKeeper                          = types.StakingKeeper
-	FeePool                                = types.FeePool
 	SupplyKeeper                           = types.SupplyKeeper
+	FeePool                                = types.FeePool
 	DelegatorWithdrawInfo                  = types.DelegatorWithdrawInfo
 	ValidatorOutstandingRewardsRecord      = types.ValidatorOutstandingRewardsRecord
 	ValidatorAccumulatedCommissionRecord   = types.ValidatorAccumulatedCommissionRecord
@@ -144,11 +150,11 @@ type (
 	ValidatorCurrentRewardsRecord          = types.ValidatorCurrentRewardsRecord
 	DelegatorStartingInfoRecord            = types.DelegatorStartingInfoRecord
 	ValidatorSlashEventRecord              = types.ValidatorSlashEventRecord
-	CommunityPoolSpendProposal             = types.CommunityPoolSpendProposal
 	GenesisState                           = types.GenesisState
 	MsgSetWithdrawAddress                  = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorReward             = types.MsgWithdrawDelegatorReward
 	MsgWithdrawValidatorCommission         = types.MsgWithdrawValidatorCommission
+	CommunityPoolSpendProposal             = types.CommunityPoolSpendProposal
 	QueryDelegatorTotalRewardsResponse     = types.QueryDelegatorTotalRewardsResponse
 	DelegationDelegatorReward              = types.DelegationDelegatorReward
 	ValidatorHistoricalRewards             = types.ValidatorHistoricalRewards

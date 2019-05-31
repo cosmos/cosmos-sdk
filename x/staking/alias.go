@@ -13,6 +13,8 @@ import (
 )
 
 const (
+	NotBondedTokensName                = keeper.NotBondedTokensName
+	BondedTokensName                   = keeper.BondedTokensName
 	DefaultParamspace                  = keeper.DefaultParamspace
 	QueryValidators                    = querier.QueryValidators
 	QueryValidator                     = querier.QueryValidator
@@ -54,56 +56,53 @@ const (
 
 var (
 	// functions aliases
-	RegisterInvariants               = keeper.RegisterInvariants
-	AllInvariants                    = keeper.AllInvariants
-	ModuleAccountInvariants          = keeper.ModuleAccountInvariants
-	NonNegativePowerInvariant        = keeper.NonNegativePowerInvariant
-	PositiveDelegationInvariant      = keeper.PositiveDelegationInvariant
-	DelegatorSharesInvariant         = keeper.DelegatorSharesInvariant
-	NewKeeper                        = keeper.NewKeeper
-	GetValidatorKey                  = keeper.GetValidatorKey
-	GetValidatorByConsAddrKey        = keeper.GetValidatorByConsAddrKey
-	AddressFromLastValidatorPowerKey = keeper.AddressFromLastValidatorPowerKey
-	GetValidatorsByPowerIndexKey     = keeper.GetValidatorsByPowerIndexKey
-	GetLastValidatorPowerKey         = keeper.GetLastValidatorPowerKey
-	GetValidatorQueueTimeKey         = keeper.GetValidatorQueueTimeKey
-	GetDelegationKey                 = keeper.GetDelegationKey
-	GetDelegationsKey                = keeper.GetDelegationsKey
-	GetUBDKey                        = keeper.GetUBDKey
-	GetUBDByValIndexKey              = keeper.GetUBDByValIndexKey
-	GetUBDKeyFromValIndexKey         = keeper.GetUBDKeyFromValIndexKey
-	GetUBDsKey                       = keeper.GetUBDsKey
-	GetUBDsByValIndexKey             = keeper.GetUBDsByValIndexKey
-	GetUnbondingDelegationTimeKey    = keeper.GetUnbondingDelegationTimeKey
-	GetREDKey                        = keeper.GetREDKey
-	GetREDByValSrcIndexKey           = keeper.GetREDByValSrcIndexKey
-	GetREDByValDstIndexKey           = keeper.GetREDByValDstIndexKey
-	GetREDKeyFromValSrcIndexKey      = keeper.GetREDKeyFromValSrcIndexKey
-	GetREDKeyFromValDstIndexKey      = keeper.GetREDKeyFromValDstIndexKey
-	GetRedelegationTimeKey           = keeper.GetRedelegationTimeKey
-	GetREDsKey                       = keeper.GetREDsKey
-	GetREDsFromValSrcIndexKey        = keeper.GetREDsFromValSrcIndexKey
-	GetREDsToValDstIndexKey          = keeper.GetREDsToValDstIndexKey
-	GetREDsByDelToValDstIndexKey     = keeper.GetREDsByDelToValDstIndexKey
-	ParamKeyTable                    = keeper.ParamKeyTable
-	ValEq                            = keeper.ValEq
-	MakeTestCodec                    = keeper.MakeTestCodec
-	CreateTestInput                  = keeper.CreateTestInput
-	NewPubKey                        = keeper.NewPubKey
-	TestAddr                         = keeper.TestAddr
-	ValidatorByPowerIndexExists      = keeper.ValidatorByPowerIndexExists
-	TestingUpdateValidator           = keeper.TestingUpdateValidator
-	RandomValidator                  = keeper.RandomValidator
-	RandomBondedValidator            = keeper.RandomBondedValidator
-	NotBondedTokensName              = keeper.NotBondedTokensName
-	BondedTokensName                 = keeper.BondedTokensName
-	NewQuerier                       = querier.NewQuerier
-	NewQueryDelegatorParams          = querier.NewQueryDelegatorParams
-	NewQueryValidatorParams          = querier.NewQueryValidatorParams
-	NewQueryBondsParams              = querier.NewQueryBondsParams
-	NewQueryRedelegationParams       = querier.NewQueryRedelegationParams
-	NewQueryValidatorsParams         = querier.NewQueryValidatorsParams
-
+	RegisterInvariants                 = keeper.RegisterInvariants
+	AllInvariants                      = keeper.AllInvariants
+	ModuleAccountInvariants            = keeper.ModuleAccountInvariants
+	NonNegativePowerInvariant          = keeper.NonNegativePowerInvariant
+	PositiveDelegationInvariant        = keeper.PositiveDelegationInvariant
+	DelegatorSharesInvariant           = keeper.DelegatorSharesInvariant
+	NewKeeper                          = keeper.NewKeeper
+	GetValidatorKey                    = keeper.GetValidatorKey
+	GetValidatorByConsAddrKey          = keeper.GetValidatorByConsAddrKey
+	AddressFromLastValidatorPowerKey   = keeper.AddressFromLastValidatorPowerKey
+	GetValidatorsByPowerIndexKey       = keeper.GetValidatorsByPowerIndexKey
+	GetLastValidatorPowerKey           = keeper.GetLastValidatorPowerKey
+	GetValidatorQueueTimeKey           = keeper.GetValidatorQueueTimeKey
+	GetDelegationKey                   = keeper.GetDelegationKey
+	GetDelegationsKey                  = keeper.GetDelegationsKey
+	GetUBDKey                          = keeper.GetUBDKey
+	GetUBDByValIndexKey                = keeper.GetUBDByValIndexKey
+	GetUBDKeyFromValIndexKey           = keeper.GetUBDKeyFromValIndexKey
+	GetUBDsKey                         = keeper.GetUBDsKey
+	GetUBDsByValIndexKey               = keeper.GetUBDsByValIndexKey
+	GetUnbondingDelegationTimeKey      = keeper.GetUnbondingDelegationTimeKey
+	GetREDKey                          = keeper.GetREDKey
+	GetREDByValSrcIndexKey             = keeper.GetREDByValSrcIndexKey
+	GetREDByValDstIndexKey             = keeper.GetREDByValDstIndexKey
+	GetREDKeyFromValSrcIndexKey        = keeper.GetREDKeyFromValSrcIndexKey
+	GetREDKeyFromValDstIndexKey        = keeper.GetREDKeyFromValDstIndexKey
+	GetRedelegationTimeKey             = keeper.GetRedelegationTimeKey
+	GetREDsKey                         = keeper.GetREDsKey
+	GetREDsFromValSrcIndexKey          = keeper.GetREDsFromValSrcIndexKey
+	GetREDsToValDstIndexKey            = keeper.GetREDsToValDstIndexKey
+	GetREDsByDelToValDstIndexKey       = keeper.GetREDsByDelToValDstIndexKey
+	ParamKeyTable                      = keeper.ParamKeyTable
+	ValEq                              = keeper.ValEq
+	MakeTestCodec                      = keeper.MakeTestCodec
+	CreateTestInput                    = keeper.CreateTestInput
+	NewPubKey                          = keeper.NewPubKey
+	TestAddr                           = keeper.TestAddr
+	ValidatorByPowerIndexExists        = keeper.ValidatorByPowerIndexExists
+	TestingUpdateValidator             = keeper.TestingUpdateValidator
+	RandomValidator                    = keeper.RandomValidator
+	RandomBondedValidator              = keeper.RandomBondedValidator
+	NewQuerier                         = querier.NewQuerier
+	NewQueryDelegatorParams            = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams            = querier.NewQueryValidatorParams
+	NewQueryBondsParams                = querier.NewQueryBondsParams
+	NewQueryRedelegationParams         = querier.NewQueryRedelegationParams
+	NewQueryValidatorsParams           = querier.NewQueryValidatorsParams
 	RegisterCodec                      = types.RegisterCodec
 	NewCommissionMsg                   = types.NewCommissionMsg
 	NewCommission                      = types.NewCommission
@@ -182,6 +181,7 @@ var (
 	DefaultParams                      = types.DefaultParams
 	MustUnmarshalParams                = types.MustUnmarshalParams
 	UnmarshalParams                    = types.UnmarshalParams
+	NewPool                            = types.NewPool
 	NewValidator                       = types.NewValidator
 	MustMarshalValidator               = types.MustMarshalValidator
 	MustUnmarshalValidator             = types.MustUnmarshalValidator
@@ -189,6 +189,7 @@ var (
 	NewDescription                     = types.NewDescription
 
 	// variable aliases
+	PoolKey                          = keeper.PoolKey
 	LastValidatorPowerKey            = keeper.LastValidatorPowerKey
 	LastTotalPowerKey                = keeper.LastTotalPowerKey
 	ValidatorsKey                    = keeper.ValidatorsKey
@@ -240,6 +241,7 @@ type (
 	DistributionKeeper        = types.DistributionKeeper
 	BankKeeper                = types.BankKeeper
 	AccountKeeper             = types.AccountKeeper
+	SupplyKeeper              = types.SupplyKeeper
 	GenesisState              = types.GenesisState
 	LastValidatorPower        = types.LastValidatorPower
 	MultiStakingHooks         = types.MultiStakingHooks

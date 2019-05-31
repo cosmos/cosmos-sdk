@@ -78,7 +78,7 @@ var (
 	NewQueryRedelegationParams         = querier.NewQueryRedelegationParams
 	NewQueryValidatorsParams           = querier.NewQueryValidatorsParams
 	RegisterCodec                      = types.RegisterCodec
-	NewCommissionMsg                   = types.NewCommissionMsg
+	NewCommissionRates                 = types.NewCommissionRates
 	NewCommission                      = types.NewCommission
 	NewCommissionWithTime              = types.NewCommissionWithTime
 	NewDelegation                      = types.NewDelegation
@@ -222,7 +222,7 @@ type (
 	QueryRedelegationParams   = querier.QueryRedelegationParams
 	QueryValidatorsParams     = querier.QueryValidatorsParams
 	Commission                = types.Commission
-	CommissionMsg             = types.CommissionMsg
+	CommissionRates           = types.CommissionRates
 	DVPair                    = types.DVPair
 	DVVTriplet                = types.DVVTriplet
 	Delegation                = types.Delegation

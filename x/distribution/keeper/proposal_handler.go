@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// TODO
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p types.CommunityPoolSpendProposal) sdk.Error {
 	feePool := k.GetFeePool(ctx)
 	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoins(p.Amount))

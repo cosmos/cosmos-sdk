@@ -7,13 +7,14 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
-		signingInfo := NewValidatorSigningInfo(
+		signingInfo := types.NewValidatorSigningInfo(
 			address,
 			ctx.BlockHeight(),
 			0,

@@ -3,19 +3,21 @@ package auth
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
@@ -28,28 +30,28 @@ func (AppModuleBasic) Name() string {
 
 // register module codec
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // default genesis state
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+	return types.ModuleCdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	var data GenesisState
-	err := moduleCdc.UnmarshalJSON(bz, &data)
+	var data types.GenesisState
+	err := types.ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
-	return ValidateGenesis(data)
+	return types.ValidateGenesis(data)
 }
 
 // XXX
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+	rest.RegisterRoutes(ctx, rtr, cdc, types.StoreKey)
 }
 
 // TODO
@@ -65,12 +67,12 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 	accountKeeper       AccountKeeper
-	feeCollectionKeeper FeeCollectionKeeper
+	feeCollectionKeeper types.FeeCollectionKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper AccountKeeper,
-	feeCollectionKeeper FeeCollectionKeeper) AppModule {
+	feeCollectionKeeper types.FeeCollectionKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		accountKeeper:       accountKeeper,
@@ -80,7 +82,7 @@ func NewAppModule(accountKeeper AccountKeeper,
 
 // module name
 func (AppModule) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // register invariants
@@ -94,7 +96,7 @@ func (AppModule) NewHandler() sdk.Handler { return nil }
 
 // module querier route name
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
 // module querier
@@ -104,8 +106,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState GenesisState
-	moduleCdc.MustUnmarshalJSON(data, &genesisState)
+	var genesisState types.GenesisState
+	types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.feeCollectionKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
@@ -113,7 +115,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // module export genesis
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper, am.feeCollectionKeeper)
-	return moduleCdc.MustMarshalJSON(gs)
+	return types.ModuleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

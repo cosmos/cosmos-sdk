@@ -43,7 +43,7 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	distTxCmd.AddCommand(client.PostCommands(
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
-		distCmds.GetCmdWithdrawAllRewards(cdc, storeKey),
+		GetCmdWithdrawAllRewards(cdc, storeKey),
 	)...)
 
 	return distTxCmd

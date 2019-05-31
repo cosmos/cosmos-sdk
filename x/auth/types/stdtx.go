@@ -59,8 +59,8 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// countSubKeys counts the total number of keys for a multi-sig public key.
-func countSubKeys(pub crypto.PubKey) int {
+// CountSubKeys counts the total number of keys for a multi-sig public key.
+func CountSubKeys(pub crypto.PubKey) int {
 	v, ok := pub.(multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
@@ -68,7 +68,7 @@ func countSubKeys(pub crypto.PubKey) int {
 
 	numKeys := 0
 	for _, subkey := range v.PubKeys {
-		numKeys += countSubKeys(subkey)
+		numKeys += CountSubKeys(subkey)
 	}
 
 	return numKeys
@@ -133,7 +133,7 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	bz, err := moduleCdc.MarshalJSON(fee) // TODO
+	bz, err := ModuleCdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +171,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := moduleCdc.MarshalJSON(StdSignDoc{
+	bz, err := ModuleCdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

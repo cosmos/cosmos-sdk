@@ -30,6 +30,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 //__________________________________________________________________________________________
@@ -112,8 +113,8 @@ func (mbm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	InitGenesis(Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(Context) json.RawMessage
+	InitGenesis(sdk.Context, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(sdk.Context) json.RawMessage
 }
 
 // AppModule is the standard form for an application module
@@ -121,16 +122,16 @@ type AppModule interface {
 	AppModuleGenesis
 
 	// registers
-	RegisterInvariants(InvariantRouter)
+	RegisterInvariants(sdk.InvariantRouter)
 
 	// routes
 	Route() string
-	NewHandler() Handler
+	NewHandler() sdk.Handler
 	QuerierRoute() string
-	NewQuerierHandler() Querier
+	NewQuerierHandler() sdk.Querier
 
-	BeginBlock(Context, abci.RequestBeginBlock) Tags
-	EndBlock(Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags)
+	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
+	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
 }
 
 //___________________________
@@ -147,28 +148,28 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 }
 
 // register invariants
-func (GenesisOnlyAppModule) RegisterInvariants(_ InvariantRouter) {}
+func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
 
 // module message route ngame
 func (GenesisOnlyAppModule) Route() string { return "" }
 
 // module handler
-func (GenesisOnlyAppModule) NewHandler() Handler { return nil }
+func (GenesisOnlyAppModule) NewHandler() sdk.Handler { return nil }
 
 // module querier route ngame
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
 // module querier
-func (gam GenesisOnlyAppModule) NewQuerierHandler() Querier { return nil }
+func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx Context, req abci.RequestBeginBlock) Tags {
-	return EmptyTags()
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
+	return sdk.EmptyTags()
 }
 
 // module end-block
-func (GenesisOnlyAppModule) EndBlock(_ Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, Tags) {
-	return []abci.ValidatorUpdate{}, EmptyTags()
+func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }
 
 //____________________________________________________________________________
@@ -222,14 +223,14 @@ func (mm *Manager) SetOrderEndBlockers(moduleNames ...string) {
 }
 
 // register all module routes and module querier routes
-func (mm *Manager) RegisterInvariants(invarRouter InvariantRouter) {
+func (mm *Manager) RegisterInvariants(invarRouter sdk.InvariantRouter) {
 	for _, module := range mm.Modules {
 		module.RegisterInvariants(invarRouter)
 	}
 }
 
 // register all module routes and module querier routes
-func (mm *Manager) RegisterRoutes(router Router, queryRouter QueryRouter) {
+func (mm *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range mm.Modules {
 		if module.Route() != "" {
 			router.AddRoute(module.Route(), module.NewHandler())
@@ -241,7 +242,7 @@ func (mm *Manager) RegisterRoutes(router Router, queryRouter QueryRouter) {
 }
 
 // perform init genesis functionality for modules
-func (mm *Manager) InitGenesis(ctx Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
+func (mm *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range mm.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
@@ -264,7 +265,7 @@ func (mm *Manager) InitGenesis(ctx Context, genesisData map[string]json.RawMessa
 }
 
 // perform export genesis functionality for modules
-func (mm *Manager) ExportGenesis(ctx Context) map[string]json.RawMessage {
+func (mm *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, moduleName := range mm.OrderExportGenesis {
 		genesisData[moduleName] = mm.Modules[moduleName].ExportGenesis(ctx)
@@ -273,8 +274,8 @@ func (mm *Manager) ExportGenesis(ctx Context) map[string]json.RawMessage {
 }
 
 // perform begin block functionality for modules
-func (mm *Manager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := EmptyTags()
+func (mm *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	tags := sdk.EmptyTags()
 	for _, moduleName := range mm.OrderBeginBlockers {
 		moduleTags := mm.Modules[moduleName].BeginBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
@@ -286,9 +287,9 @@ func (mm *Manager) BeginBlock(ctx Context, req abci.RequestBeginBlock) abci.Resp
 }
 
 // perform end block functionality for modules
-func (mm *Manager) EndBlock(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (mm *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := []abci.ValidatorUpdate{}
-	tags := EmptyTags()
+	tags := sdk.EmptyTags()
 	for _, moduleName := range mm.OrderEndBlockers {
 		moduleValUpdates, moduleTags := mm.Modules[moduleName].EndBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)

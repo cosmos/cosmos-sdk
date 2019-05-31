@@ -3,6 +3,7 @@ package staking
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
@@ -20,14 +22,14 @@ import (
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
 type AppModuleBasic struct{}
 
-var _ sdk.AppModuleBasic = AppModuleBasic{}
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -56,17 +58,17 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+	rest.RegisterRoutes(ctx, rtr, cdc)
 }
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(moduleCdc, StoreKey)
+	return cli.GetTxCmd(StoreKey, ModuleCdc)
 }
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(moduleCdc, StoreKey)
+	return cli.GetQueryCmd(StoreKey, ModuleCdc)
 }
 
 //_____________________________________

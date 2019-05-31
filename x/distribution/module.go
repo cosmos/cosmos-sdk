@@ -3,19 +3,22 @@ package distribution
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object

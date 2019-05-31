@@ -8,13 +8,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // Have to change these parameters for tests
 // lest the tests take forever
-func keeperTestParams() Params {
-	params := DefaultParams()
+func keeperTestParams() types.Params {
+	params := types.DefaultParams()
 	params.SignedBlocksWindow = 1000
 	params.DowntimeJailDuration = 60 * 60
 	return params
@@ -67,7 +68,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
 
 	// Still shouldn't be able to unjail
-	msgUnjail := NewMsgUnjail(operatorAddr)
+	msgUnjail := types.NewMsgUnjail(operatorAddr)
 	res := handleMsgUnjail(ctx, msgUnjail, keeper)
 	require.False(t, res.IsOK())
 

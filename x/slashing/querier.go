@@ -36,16 +36,6 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	return res, nil
 }
 
-// QuerySigningInfoParams defines the params for the following queries:
-// - 'custom/slashing/signingInfo'
-type QuerySigningInfoParams struct {
-	ConsAddress sdk.ConsAddress
-}
-
-func NewQuerySigningInfoParams(consAddr sdk.ConsAddress) QuerySigningInfoParams {
-	return QuerySigningInfoParams{consAddr}
-}
-
 func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QuerySigningInfoParams
 
@@ -65,16 +55,6 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	}
 
 	return res, nil
-}
-
-// QuerySigningInfosParams defines the params for the following queries:
-// - 'custom/slashing/signingInfos'
-type QuerySigningInfosParams struct {
-	Page, Limit int
-}
-
-func NewQuerySigningInfosParams(page, limit int) QuerySigningInfosParams {
-	return QuerySigningInfosParams{page, limit}
 }
 
 func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {

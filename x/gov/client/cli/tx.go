@@ -55,7 +55,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func GetTxCmd(storeKey string, cdc *amino.Codec, pcmds ...*cobra.Command) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds ...*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:   gov.ModuleName,
 		Short: "Governance transactions subcommands",
@@ -67,8 +67,8 @@ func GetTxCmd(storeKey string, cdc *amino.Codec, pcmds ...*cobra.Command) *cobra
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(
-		GetCmdDeposit(storeKey, cdc),
-		GetCmdVote(storeKey, cdc),
+		GetCmdDeposit(cdc),
+		GetCmdVote(cdc),
 		cmdSubmitProp,
 	)...)
 

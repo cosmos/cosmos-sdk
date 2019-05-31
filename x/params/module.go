@@ -3,6 +3,10 @@ package params
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
@@ -32,3 +36,12 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(_ json.RawMessage) error { return nil }
+
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }

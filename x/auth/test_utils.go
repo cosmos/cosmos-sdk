@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -16,14 +17,14 @@ type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
 	ak  AccountKeeper
-	fck FeeCollectionKeeper
+	fck types.FeeCollectionKeeper
 }
 
 func setupTestInput() testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	types.RegisterBaseAccount(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
@@ -37,12 +38,12 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
-	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, DefaultParamspace)
-	ak := NewAccountKeeper(cdc, authCapKey, ps, ProtoBaseAccount)
-	fck := NewFeeCollectionKeeper(cdc, fckCapKey)
+	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, types.DefaultParamspace)
+	ak := NewAccountKeeper(cdc, authCapKey, ps, types.ProtoBaseAccount)
+	fck := types.NewFeeCollectionKeeper(cdc, fckCapKey)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	ak.SetParams(ctx, DefaultParams())
+	ak.SetParams(ctx, types.DefaultParams())
 
 	return testInput{cdc: cdc, ctx: ctx, ak: ak, fck: fck}
 }

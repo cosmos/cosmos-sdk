@@ -14,7 +14,7 @@ import (
 func NewQuerier(keeper AccountKeeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
-		case QueryAccount:
+		case types.QueryAccount:
 			return queryAccount(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown auth query endpoint")

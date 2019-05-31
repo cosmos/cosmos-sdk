@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Keeper of the slashing store
@@ -29,7 +30,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 		storeKey:     key,
 		cdc:          cdc,
 		validatorSet: vs,
-		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
+		paramspace:   paramspace.WithKeyTable(types.ParamKeyTable()),
 		codespace:    codespace,
 	}
 	return keeper
@@ -120,7 +121,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	signInfo.Tombstoned = true
 
 	// Set jailed until to be forever (max time)
-	signInfo.JailedUntil = DoubleSignJailEndTime
+	signInfo.JailedUntil = types.DoubleSignJailEndTime
 
 	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
@@ -215,7 +216,7 @@ func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 	var pubkey crypto.PubKey
-	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
 		return nil, fmt.Errorf("address %v not found", address)
 	}
@@ -225,10 +226,10 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(pubkey)
-	store.Set(getAddrPubkeyRelationKey(addr), bz)
+	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(getAddrPubkeyRelationKey(addr))
+	store.Delete(types.GetAddrPubkeyRelationKey(addr))
 }

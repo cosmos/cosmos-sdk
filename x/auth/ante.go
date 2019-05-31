@@ -166,7 +166,7 @@ func ValidateSigCount(stdTx types.StdTx, params types.Params) sdk.Result {
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
-		sigCount += countSubKeys(stdSigs[i].PubKey)
+		sigCount += types.CountSubKeys(stdSigs[i].PubKey)
 		if uint64(sigCount) > params.TxSigLimit {
 			return sdk.ErrTooManySignatures(
 				fmt.Sprintf("signatures: %d, limit: %d", sigCount, params.TxSigLimit),
@@ -238,7 +238,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig types.Std
 		simSig.Signature = simSecp256k1Sig[:]
 	}
 
-	sigBz := moduleCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	sigBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
 	cost := sdk.Gas(len(sigBz) + 6)
 
 	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
@@ -328,7 +328,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(blockTime time.Time, acc types.Account, fee StdFee) (types.Account, sdk.Result) {
+func DeductFees(blockTime time.Time, acc types.Account, fee types.StdFee) (types.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -366,7 +366,7 @@ func DeductFees(blockTime time.Time, acc types.Account, fee StdFee) (types.Accou
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
-func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
+func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee types.StdFee) sdk.Result {
 	minGasPrices := ctx.MinGasPrices()
 	if !minGasPrices.IsZero() {
 		requiredFees := make(sdk.Coins, len(minGasPrices))
@@ -410,7 +410,7 @@ func GetSignBytes(chainID string, stdTx types.StdTx, acc types.Account, genesis 
 		accNum = acc.GetAccountNumber()
 	}
 
-	return StdSignBytes(
+	return types.StdSignBytes(
 		chainID, accNum, acc.GetSequence(), stdTx.Fee, stdTx.Msgs, stdTx.Memo,
 	)
 }

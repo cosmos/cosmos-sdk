@@ -31,11 +31,11 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(client.PostCommands(
-		GetCmdCreateValidator(mc.cdc),
-		GetCmdEditValidator(mc.cdc),
-		GetCmdDelegate(mc.cdc),
-		GetCmdRedelegate(mc.storeKey, mc.cdc),
-		GetCmdUnbond(mc.storeKey, mc.cdc),
+		GetCmdCreateValidator(cdc),
+		GetCmdEditValidator(cdc),
+		GetCmdDelegate(cdc),
+		GetCmdRedelegate(storeKey, cdc),
+		GetCmdUnbond(storeKey, cdc),
 	)...)
 
 	return stakingTxCmd

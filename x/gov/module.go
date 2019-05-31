@@ -3,20 +3,23 @@ package gov
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
@@ -31,7 +34,7 @@ func NewAppModuleBasic(proposalCmds []*cobra.Command) AppModuleBasic {
 	}
 }
 
-var _ sdk.AppModuleBasic = AppModuleBasic{}
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -60,17 +63,19 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc, StoreKey)
+
+	// XXX include ProposalRESTHandler ??
+	rest.RegisterRoutes(ctx, rtr, cdc)
 }
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(StoreKey, moduleCdc)
+	return cli.GetTxCmd(StoreKey, ModuleCdc)
 }
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, moduleCdc)
+	return cli.GetQueryCmd(StoreKey, ModuleCdc)
 }
 
 //___________________________

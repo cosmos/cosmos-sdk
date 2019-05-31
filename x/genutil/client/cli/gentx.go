@@ -24,6 +24,7 @@ import (
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -39,7 +40,7 @@ type StakingMsgBuildingHelpers interface {
 
 // GenTxCmd builds the application's gentx command.
 // nolint: errcheck
-func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager, smbh StakingMsgBuildingHelpers,
+func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, smbh StakingMsgBuildingHelpers,
 	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 
 	ipDefault, _ := server.ExternalIP()

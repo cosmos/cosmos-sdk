@@ -37,7 +37,7 @@ func NewAccountKeeper(
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
-		paramSubspace: paramstore.WithKeyTable(ParamKeyTable()),
+		paramSubspace: paramstore.WithKeyTable(types.ParamKeyTable()),
 	}
 }
 
@@ -68,7 +68,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.Account) types.Acc
 // GetAccount implements sdk.AccountKeeper.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	store := ctx.KVStore(ak.key)
-	bz := store.Get(AddressStoreKey(addr))
+	bz := store.Get(types.AddressStoreKey(addr))
 	if bz == nil {
 		return nil
 	}
@@ -95,7 +95,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
 	if err != nil {
 		panic(err)
 	}
-	store.Set(AddressStoreKey(addr), bz)
+	store.Set(types.AddressStoreKey(addr), bz)
 }
 
 // RemoveAccount removes an account for the account mapper store.
@@ -103,13 +103,13 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
 func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
-	store.Delete(AddressStoreKey(addr))
+	store.Delete(types.AddressStoreKey(addr))
 }
 
 // IterateAccounts implements sdk.AccountKeeper.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(types.Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
-	iter := sdk.KVStorePrefixIterator(store, AddressStoreKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 	defer iter.Close()
 	for {
 		if !iter.Valid() {
@@ -160,7 +160,7 @@ func (ak AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64
 	store := ctx.KVStore(ak.key)
-	bz := store.Get(globalAccountNumberKey)
+	bz := store.Get(types.GlobalAccountNumberKey)
 	if bz == nil {
 		accNumber = 0
 	} else {
@@ -171,21 +171,21 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	}
 
 	bz = ak.cdc.MustMarshalBinaryLengthPrefixed(accNumber + 1)
-	store.Set(globalAccountNumberKey, bz)
+	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber
 }
 
 // -----------------------------------------------------------------------------
-// Params
+// types.Params
 
 // SetParams sets the auth module's parameters.
-func (ak AccountKeeper) SetParams(ctx sdk.Context, params Params) {
+func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	ak.paramSubspace.SetParamSet(ctx, &params)
 }
 
 // GetParams gets the auth module's parameters.
-func (ak AccountKeeper) GetParams(ctx sdk.Context) (params Params) {
+func (ak AccountKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	ak.paramSubspace.GetParamSet(ctx, &params)
 	return
 }

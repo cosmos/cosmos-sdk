@@ -6,11 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // register bank invariants
 func RegisterInvariants(ir sdk.InvariantRouter, ak auth.AccountKeeper) {
-	ir.RegisterRoute(RouterKey, "nonnegative-outstanding",
+	ir.RegisterRoute(types.RouterKey, "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }
 

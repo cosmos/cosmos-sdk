@@ -18,7 +18,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
 		Use:   gov.ModuleName,

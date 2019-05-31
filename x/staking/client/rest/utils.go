@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/staking/querier"
 	"github.com/cosmos/cosmos-sdk/x/staking/tags"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // contains checks if the a given query contains one of the tx types
@@ -50,7 +50,7 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			return
 		}
 
-		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
+		params := querier.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -78,7 +78,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := types.NewQueryDelegatorParams(delegatorAddr)
+		params := querier.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -106,7 +106,7 @@ func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := types.NewQueryValidatorParams(validatorAddr)
+		params := querier.NewQueryValidatorParams(validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {

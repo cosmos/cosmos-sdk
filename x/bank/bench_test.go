@@ -19,10 +19,10 @@ func getBenchmarkMockApp() (*mock.App, error) {
 	types.RegisterCodec(mapp.Cdc)
 	bankKeeper := NewBaseKeeper(
 		mapp.AccountKeeper,
-		mapp.ParamsKeeper.Subspace(DefaultParamspace),
-		DefaultCodespace,
+		mapp.ParamsKeeper.Subspace(types.DefaultParamspace),
+		types.DefaultCodespace,
 	)
-	mapp.Router().AddRoute(RouterKey, NewHandler(bankKeeper))
+	mapp.Router().AddRoute(types.RouterKey, NewHandler(bankKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, bankKeeper))
 
 	err := mapp.CompleteSetup()

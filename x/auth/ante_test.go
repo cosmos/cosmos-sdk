@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // run the tx through the anteHandler and ensure its valid
@@ -32,8 +33,8 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
 
 	if code == sdk.CodeOutOfGas {
-		stdTx, ok := tx.(StdTx)
-		require.True(t, ok, "tx must be in form auth.StdTx")
+		stdTx, ok := tx.(types.StdTx)
+		require.True(t, ok, "tx must be in form auth.types.StdTx")
 		// GasWanted set correctly
 		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
 		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
@@ -68,7 +69,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 	expectedSigners := []sdk.AccAddress{addr1, addr2, addr3}
-	stdTx := tx.(StdTx)
+	stdTx := tx.(types.StdTx)
 	require.Equal(t, expectedSigners, stdTx.GetSigners())
 
 	// Check no signatures fails
@@ -512,7 +513,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	msg = newTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	sigs := tx.(StdTx).GetSignatures()
+	sigs := tx.(types.StdTx).GetSignatures()
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
@@ -666,7 +667,7 @@ func TestCountSubkeys(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(T *testing.T) {
-			require.Equal(t, tt.want, countSubKeys(tt.args.pub))
+			require.Equal(t, tt.want, CountSubKeys(tt.args.pub))
 		})
 	}
 }

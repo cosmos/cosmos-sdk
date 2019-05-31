@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // expected coin keeper
@@ -24,5 +24,5 @@ type BankKeeper interface {
 
 // expected bank keeper
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
+	IterateAccounts(ctx sdk.Context, process func(types.Account) (stop bool))
 }

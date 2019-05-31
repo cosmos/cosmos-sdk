@@ -8,6 +8,8 @@ import (
 
 // nolint
 const (
+	ModuleName = "slashing"
+
 	// StoreKey is the store key string for slashing
 	StoreKey = ModuleName
 
@@ -70,6 +72,7 @@ func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte 
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 
-func getAddrPubkeyRelationKey(address []byte) []byte {
+// TODO
+func GetAddrPubkeyRelationKey(address []byte) []byte {
 	return append(AddrPubkeyRelationKey, address...)
 }

@@ -22,19 +22,19 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "Querying commands for the staking module",
 	}
 	stakingQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryDelegation(mc.storeKey, mc.cdc),
-		GetCmdQueryDelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryUnbondingDelegation(mc.storeKey, mc.cdc),
-		GetCmdQueryUnbondingDelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryRedelegation(mc.storeKey, mc.cdc),
-		GetCmdQueryRedelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryValidator(mc.storeKey, mc.cdc),
-		GetCmdQueryValidators(mc.storeKey, mc.cdc),
-		GetCmdQueryValidatorDelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryValidatorUnbondingDelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryValidatorRedelegations(mc.storeKey, mc.cdc),
-		GetCmdQueryParams(mc.storeKey, mc.cdc),
-		GetCmdQueryPool(mc.storeKey, mc.cdc))...)
+		GetCmdQueryDelegation(storeKey, cdc),
+		GetCmdQueryDelegations(storeKey, cdc),
+		GetCmdQueryUnbondingDelegation(storeKey, cdc),
+		GetCmdQueryUnbondingDelegations(storeKey, cdc),
+		GetCmdQueryRedelegation(storeKey, cdc),
+		GetCmdQueryRedelegations(storeKey, cdc),
+		GetCmdQueryValidator(storeKey, cdc),
+		GetCmdQueryValidators(storeKey, cdc),
+		GetCmdQueryValidatorDelegations(storeKey, cdc),
+		GetCmdQueryValidatorUnbondingDelegations(storeKey, cdc),
+		GetCmdQueryValidatorRedelegations(storeKey, cdc),
+		GetCmdQueryParams(storeKey, cdc),
+		GetCmdQueryPool(storeKey, cdc))...)
 
 	return stakingQueryCmd
 

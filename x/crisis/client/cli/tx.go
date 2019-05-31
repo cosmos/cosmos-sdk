@@ -34,7 +34,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(cdc *amino.Codec) *cobra.Command {
+func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "crisis transactions subcommands",

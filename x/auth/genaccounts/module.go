@@ -3,18 +3,21 @@ package genaccounts
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
-	_ sdk.AppModuleGenesis = AppModule{}
-	_ sdk.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // module name
@@ -47,8 +50,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {
-}
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {}
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
@@ -79,9 +81,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) sdk.AppModule {
+func NewAppModule(accountKeeper AccountKeeper) module.AppModule {
 
-	return sdk.NewGenesisOnlyAppModule(AppModule{
+	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
 	})

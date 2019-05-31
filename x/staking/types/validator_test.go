@@ -12,13 +12,13 @@ import (
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
-	val1 := NewValidator(addr1, pk1, Description{})
-	val2 := NewValidator(addr1, pk1, Description{})
+	val1 := NewValidator(valAddr1, pk1, Description{})
+	val2 := NewValidator(valAddr1, pk1, Description{})
 
 	ok := val1.TestEquivalent(val2)
 	require.True(t, ok)
 
-	val2 = NewValidator(addr2, pk2, Description{})
+	val2 = NewValidator(valAddr2, pk2, Description{})
 
 	ok = val1.TestEquivalent(val2)
 	require.False(t, ok)
@@ -54,7 +54,7 @@ func TestUpdateDescription(t *testing.T) {
 }
 
 func TestABCIValidatorUpdate(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
 	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
@@ -62,7 +62,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdateZero()
 	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
@@ -71,7 +71,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 
 func TestShareTokens(t *testing.T) {
 	validator := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -87,7 +87,7 @@ func TestShareTokens(t *testing.T) {
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -122,7 +122,7 @@ func TestRemoveTokens(t *testing.T) {
 func TestAddTokensValidatorBonded(t *testing.T) {
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(10)
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
@@ -134,7 +134,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 func TestAddTokensValidatorUnbonding(t *testing.T) {
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(10)
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
@@ -147,7 +147,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(10)
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
@@ -160,7 +160,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -187,7 +187,7 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewInt(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
@@ -208,7 +208,7 @@ func TestRemoveDelShares(t *testing.T) {
 }
 
 func TestAddTokensFromDel(t *testing.T) {
-	val := NewValidator(addr1, pk1, Description{})
+	val := NewValidator(valAddr1, pk1, Description{})
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(10)
 
@@ -231,7 +231,7 @@ func TestUpdateStatus(t *testing.T) {
 	pool := InitialPool()
 	pool.NotBondedTokens = sdk.NewInt(100)
 
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
@@ -255,7 +255,7 @@ func TestPossibleOverflow(t *testing.T) {
 	poolTokens := sdk.NewInt(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
@@ -273,7 +273,7 @@ func TestPossibleOverflow(t *testing.T) {
 }
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	js, err := codec.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
@@ -285,7 +285,7 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 }
 
 func TestValidatorSetInitialCommission(t *testing.T) {
-	val := NewValidator(addr1, pk1, Description{})
+	val := NewValidator(valAddr1, pk1, Description{})
 	testCases := []struct {
 		validator   Validator
 		commission  Commission

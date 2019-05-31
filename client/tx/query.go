@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -92,10 +92,10 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
 	cmd.Flags().Uint32(flagPage, rest.DefaultPage, "Query a specific page of paginated results")
@@ -127,10 +127,10 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 
 	return cmd
 }

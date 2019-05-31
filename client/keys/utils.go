@@ -9,7 +9,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
@@ -62,10 +63,10 @@ func GetPassphrase(name string) (string, error) {
 // ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
 // error upon failure.
 func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := client.BufferStdin()
+	buf := input.BufferStdin()
 	prompt := fmt.Sprintf("Password to sign with '%s':", name)
 
-	passphrase, err := client.GetPassword(prompt, buf)
+	passphrase, err := input.GetPassword(prompt, buf)
 	if err != nil {
 		return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
 	}
@@ -75,7 +76,7 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
 func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
-	rootDir := viper.GetString(cli.HomeFlag)
+	rootDir := viper.GetString(flags.FlagHome)
 	return NewKeyBaseFromDir(rootDir)
 }
 
@@ -120,7 +121,7 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	case OutputFormatJSON:
 		var out []byte
 		var err error
-		if viper.GetBool(client.FlagIndentResponse) {
+		if viper.GetBool(flags.FlagIndentResponse) {
 			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
 		} else {
 			out, err = cdc.MarshalJSON(ko)
@@ -147,7 +148,7 @@ func printInfos(infos []keys.Info) {
 		var out []byte
 		var err error
 
-		if viper.GetBool(client.FlagIndentResponse) {
+		if viper.GetBool(flags.FlagIndentResponse) {
 			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
 		} else {
 			out, err = cdc.MarshalJSON(kos)

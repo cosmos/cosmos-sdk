@@ -31,6 +31,7 @@ jobs:
           command: |
             make runsim tools TOOLS_DESTDIR=/tmp/workspace/bin
             cp $GOPATH/bin/runsim /tmp/workspace/bin
+            cp $GOPATH/bin/statik /tmp/workspace/bin
       - run:
           name: cache go modules
           command: |
@@ -240,10 +241,37 @@ jobs:
                 echo "Website build started"
             fi
 
+  check_statik:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: check if statik.go is up-to-date
+          command: |
+            set -ex
+            export PATH=/tmp/workspace/bin:$PATH
+
+            make update-swagger-docs
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "swagger docs out of sync";
+              exit 1
+            else
+              echo "swagger docs are in sync";
+            fi
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - check_statik:
+          requires:
+            - setup_dependencies
       - deploy_docs:
           filters:
             branches:

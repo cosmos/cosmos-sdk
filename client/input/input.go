@@ -1,12 +1,11 @@
-package client
+package input
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
-
-	"errors"
 
 	"github.com/bgentry/speakeasy"
 	isatty "github.com/mattn/go-isatty"

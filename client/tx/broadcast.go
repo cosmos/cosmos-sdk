@@ -7,13 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -92,5 +92,5 @@ $ <appcli> tx broadcast ./mytxn.json
 		},
 	}
 
-	return client.PostCommands(cmd)[0]
+	return flags.PostCommands(cmd)[0]
 }

@@ -59,13 +59,13 @@ var (
 			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		},
 		"TallyParams/Quorum": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(334, 3)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
 		},
 		"TallyParams/Threshold": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(5, 1)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
 		},
 		"TallyParams/Veto": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(334, 3)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
 		},
 		"UnbondingTime": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second

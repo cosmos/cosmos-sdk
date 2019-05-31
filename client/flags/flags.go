@@ -1,4 +1,4 @@
-package client
+package flags
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 // nolint
@@ -28,6 +30,7 @@ const (
 	// immediately.
 	BroadcastAsync = "async"
 
+	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
 	FlagNode               = "node"
@@ -68,7 +71,9 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
-		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
+		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
+
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))

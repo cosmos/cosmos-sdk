@@ -1,0 +1,2 @@
+#4259 `Coins` that are `nil` are now JSON encoded as an empty array `[]`.
+Decoding remains unchanged and behavior is left intact.

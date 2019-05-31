@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -617,6 +618,38 @@ func TestFindDup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := findDup(tt.args.coins); got != tt.want {
 				t.Errorf("findDup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMarshalJSONCoins(t *testing.T) {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+
+	testCases := []struct {
+		name      string
+		input     Coins
+		strOutput string
+	}{
+		{"nil coins", nil, `[]`},
+		{"empty coins", Coins{}, `[]`},
+		{"non-empty coins", NewCoins(NewInt64Coin("foo", 50)), `[{"denom":"foo","amount":"50"}]`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bz, err := cdc.MarshalJSON(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.strOutput, string(bz))
+
+			var newCoins Coins
+			require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+
+			if tc.input.Empty() {
+				require.Nil(t, newCoins)
+			} else {
+				require.Equal(t, tc.input, newCoins)
 			}
 		})
 	}

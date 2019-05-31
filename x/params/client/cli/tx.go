@@ -12,9 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter
@@ -75,7 +74,7 @@ Where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
+			content := types.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
 			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

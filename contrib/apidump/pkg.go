@@ -750,36 +750,29 @@ func (pkg *Package) typeDoc(typ *doc.Type) {
 	pkg.emit("", decl)
 	pkg.newlines(2)
 	// Show associated methods, constants, etc.
-	if true {
-		printed := make(map[*ast.GenDecl]bool)
-		// We can use append here to print consts, then vars. Ditto for funcs and methods.
-		values := typ.Consts
-		values = append(values, typ.Vars...)
-		for _, value := range values {
-			value.Doc = ""
-			for _, name := range value.Names {
-				if isExported(name) {
-					value.Doc = ""
-					pkg.valueDoc(value, printed)
-					break
-				}
+	printed := make(map[*ast.GenDecl]bool)
+	// We can use append here to print consts, then vars. Ditto for funcs and methods.
+	values := typ.Consts
+	values = append(values, typ.Vars...)
+	for _, value := range values {
+		value.Doc = ""
+		for _, name := range value.Names {
+			if isExported(name) {
+				value.Doc = ""
+				pkg.valueDoc(value, printed)
+				break
 			}
 		}
-		funcs := typ.Funcs
-		funcs = append(funcs, typ.Methods...)
-		for _, fun := range funcs {
-			if isExported(fun.Name) {
-				fun.Doc = ""
-				fun.Decl.Doc = nil
-				//pkg.emit(fun.Doc, fun.Decl)
-				pkg.emit("", fun.Decl)
-			}
+	}
+	funcs := typ.Funcs
+	funcs = append(funcs, typ.Methods...)
+	for _, fun := range funcs {
+		if isExported(fun.Name) {
+			fun.Doc = ""
+			fun.Decl.Doc = nil
+			//pkg.emit(fun.Doc, fun.Decl)
+			pkg.emit("", fun.Decl)
 		}
-	} else {
-		pkg.valueSummary(typ.Consts, true)
-		pkg.valueSummary(typ.Vars, true)
-		pkg.funcSummary(typ.Funcs, true)
-		pkg.funcSummary(typ.Methods, true)
 	}
 }
 

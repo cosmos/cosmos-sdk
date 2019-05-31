@@ -627,22 +627,30 @@ func TestMarshalJSONCoins(t *testing.T) {
 	cdc := codec.New()
 	RegisterCodec(cdc)
 
-	var coins Coins
+	testCases := []struct {
+		name      string
+		input     Coins
+		strOutput string
+	}{
+		{"nil coins", nil, `[]`},
+		{"empty coins", Coins{}, `[]`},
+		{"non-empty coins", NewCoins(NewInt64Coin("foo", 50)), `[{"denom":"foo","amount":"50"}]`},
+	}
 
-	bz, err := cdc.MarshalJSON(coins)
-	require.NoError(t, err)
-	require.Equal(t, `[]`, string(bz))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bz, err := cdc.MarshalJSON(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.strOutput, string(bz))
 
-	var newCoins Coins
+			var newCoins Coins
+			require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
 
-	require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
-	require.Nil(t, newCoins)
-
-	coins = NewCoins(NewInt64Coin("foo", 50))
-	bz, err = cdc.MarshalJSON(coins)
-	require.NoError(t, err)
-	require.Equal(t, `[{"denom":"foo","amount":"50"}]`, string(bz))
-
-	require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
-	require.Equal(t, coins, newCoins)
+			if tc.input.Empty() {
+				require.Nil(t, newCoins)
+			} else {
+				require.Equal(t, tc.input, newCoins)
+			}
+		})
+	}
 }

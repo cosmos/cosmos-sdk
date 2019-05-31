@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-var testMbm = module.BasicManager(genutil.AppModuleBasic{})
+var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
 	defer server.SetupViper(t)()

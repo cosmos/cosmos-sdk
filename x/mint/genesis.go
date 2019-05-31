@@ -44,11 +44,11 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants holds.
 func ValidateGenesis(data GenesisState) error {
-	err := validateParams(data.Params)
+	err := ValidateParams(data.Params)
 	if err != nil {
 		return err
 	}
-	err = validateMinter(data.Minter)
+	err = ValidateMinter(data.Minter)
 	if err != nil {
 		return err
 	}

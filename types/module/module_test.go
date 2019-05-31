@@ -8,7 +8,7 @@ import (
 )
 
 func TestSetOrderBeginBlockers(t *testing.T) {
-	mm := NewModuleManager()
+	mm := NewManager()
 	mm.SetOrderBeginBlockers("a", "b", "c")
 	obb := mm.OrderBeginBlockers
 	require.Equal(t, 3, len(obb))

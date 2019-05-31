@@ -18,8 +18,8 @@ var (
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
-	_, pub1, addr1 := keyPubAddr()
-	_, pub2, addr2 := keyPubAddr()
+	_, pub1, addr1 := KeyTestPubAddr()
+	_, pub2, addr2 := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
@@ -51,7 +51,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 }
 
 func TestBaseAccountCoins(t *testing.T) {
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
@@ -62,7 +62,7 @@ func TestBaseAccountCoins(t *testing.T) {
 }
 
 func TestBaseAccountSequence(t *testing.T) {
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	seq := uint64(7)
@@ -73,7 +73,7 @@ func TestBaseAccountSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
-	_, pub, addr := keyPubAddr()
+	_, pub, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
@@ -109,7 +109,7 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -136,7 +136,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -159,7 +159,7 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -199,7 +199,7 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -246,7 +246,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -302,7 +302,7 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -321,7 +321,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -340,7 +340,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -381,7 +381,7 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
@@ -427,7 +427,7 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)

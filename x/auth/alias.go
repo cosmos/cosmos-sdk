@@ -49,6 +49,13 @@ var (
 	StdSignBytes                   = types.StdSignBytes
 	DefaultTxDecoder               = types.DefaultTxDecoder
 	DefaultTxEncoder               = types.DefaultTxEncoder
+	NewTestMsg                     = types.NewTestMsg
+	NewTestStdFee                  = types.NewTestStdFee
+	NewTestCoins                   = types.NewTestCoins
+	KeyTestPubAddr                 = types.KeyTestPubAddr
+	NewTestTx                      = types.NewTestTx
+	NewTestTxWithMemo              = types.NewTestTxWithMemo
+	NewTestTxWithSignBytes         = types.NewTestTxWithSignBytes
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc

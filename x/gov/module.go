@@ -28,7 +28,7 @@ type AppModuleBasic struct {
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalCmds []*cobra.Command) AppModuleBasic {
+func NewAppModuleBasic(proposalCmds ...*cobra.Command) AppModuleBasic {
 	return AppModuleBasic{
 		proposalCmds: proposalCmds,
 	}

@@ -1,4 +1,4 @@
-package keeper
+package slashing
 
 import (
 	"testing"
@@ -44,12 +44,12 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
 	// handle a signature to set signing info
-	keeper.handleValidatorSignature(ctx, val.Address(), amt.Int64(), true)
+	keeper.HandleValidatorSignature(ctx, val.Address(), amt.Int64(), true)
 
 	oldTokens := sk.Validator(ctx, operatorAddr).GetTokens()
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
+	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// should be jailed
 	require.True(t, sk.Validator(ctx, operatorAddr).IsJailed())
@@ -59,7 +59,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.True(t, newTokens.LT(oldTokens))
 
 	// New evidence
-	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
+	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// tokens should be the same (capped slash)
 	require.True(t, sk.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
@@ -105,14 +105,14 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
 	// handle a signature to set signing info
-	keeper.handleValidatorSignature(ctx, val.Address(), power, true)
+	keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
 
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	oldPower := sk.Validator(ctx, operatorAddr).GetTendermintPower()
 
 	// double sign past max age
-	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
+	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// should still be bonded
 	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == sdk.Bonded)
@@ -154,7 +154,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// 1000 first blocks OK
 	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, true)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
 	}
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
@@ -164,7 +164,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// 500 blocks missed
 	for ; height < keeper.SignedBlocksWindow(ctx)+(keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)); height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
@@ -179,7 +179,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
-	keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
@@ -201,7 +201,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
 	height++
 	ctx = ctx.WithBlockHeight(height)
-	keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
@@ -244,7 +244,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// validator should not be immediately jailed again
 	height++
 	ctx = ctx.WithBlockHeight(height)
-	keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
@@ -252,7 +252,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	nextHeight := height + keeper.MinSignedPerWindow(ctx) + 1
 	for ; height < nextHeight; height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
 
 	// end block
@@ -262,7 +262,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	nextHeight = height + keeper.MinSignedPerWindow(ctx) + 1
 	for ; height <= nextHeight; height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
 
 	// end block
@@ -297,9 +297,9 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
 	// Now a validator, for two blocks
-	keeper.handleValidatorSignature(ctx, val.Address(), 100, true)
+	keeper.HandleValidatorSignature(ctx, val.Address(), 100, true)
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 2)
-	keeper.handleValidatorSignature(ctx, val.Address(), 100, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), 100, false)
 
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
@@ -334,13 +334,13 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	height := int64(0)
 	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, true)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
 	}
 
 	// 501 blocks missed
 	for ; height < keeper.SignedBlocksWindow(ctx)+(keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx))+1; height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
 
 	// end block
@@ -356,7 +356,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// another block missed
 	ctx = ctx.WithBlockHeight(height)
-	keeper.handleValidatorSignature(ctx, val.Address(), power, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 
 	// validator should not have been slashed twice
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -388,7 +388,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height := int64(0)
 	for ; height < int64(100); height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), power, true)
+		keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
 	}
 
 	// validator kicked out of validator set
@@ -415,7 +415,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newPower := int64(103)
 
 	// validator misses a block
-	keeper.handleValidatorSignature(ctx, val.Address(), newPower, false)
+	keeper.HandleValidatorSignature(ctx, val.Address(), newPower, false)
 	height++
 
 	// shouldn't be jailed/kicked yet
@@ -426,7 +426,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	latest := height
 	for ; height < latest+500; height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), newPower, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), newPower, false)
 	}
 
 	// should now be jailed & kicked
@@ -451,7 +451,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator rejoins and starts signing again
 	sk.Unjail(ctx, consAddr)
-	keeper.handleValidatorSignature(ctx, val.Address(), newPower, true)
+	keeper.HandleValidatorSignature(ctx, val.Address(), newPower, true)
 	height++
 
 	// validator should not be kicked since we reset counter/array when it was jailed
@@ -463,7 +463,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	latest = height
 	for ; height < latest+501; height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), newPower, false)
+		keeper.HandleValidatorSignature(ctx, val.Address(), newPower, false)
 	}
 
 	// validator should now be jailed & kicked

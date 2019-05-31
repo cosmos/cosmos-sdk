@@ -5,10 +5,9 @@ import (
 )
 
 // generic sealed codec to be used throughout this module
-var moduleCdc *codec.Codec
+var moduleCdc = codec.New()
 
 func init() {
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	moduleCdc = cdc.Seal()
+	codec.RegisterCrypto(moduleCdc)
+	moduleCdc.Seal()
 }

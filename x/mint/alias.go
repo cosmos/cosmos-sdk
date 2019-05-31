@@ -20,12 +20,18 @@ const (
 
 var (
 	// functions aliases
-	ParamKeyTable = types.ParamKeyTable
-	NewParams     = types.NewParams
-	DefaultParams = types.DefaultParams
+	NewMinter            = types.NewMinter
+	InitialMinter        = types.InitialMinter
+	DefaultInitialMinter = types.DefaultInitialMinter
+	ValidateMinter       = types.ValidateMinter
+	ParamKeyTable        = types.ParamKeyTable
+	NewParams            = types.NewParams
+	DefaultParams        = types.DefaultParams
+	ValidateParams       = types.ValidateParams
 
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc
+	MinterKey              = types.MinterKey
 	KeyMintDenom           = types.KeyMintDenom
 	KeyInflationRateChange = types.KeyInflationRateChange
 	KeyInflationMax        = types.KeyInflationMax
@@ -35,5 +41,6 @@ var (
 )
 
 type (
+	Minter = types.Minter
 	Params = types.Params
 )

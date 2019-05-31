@@ -21,7 +21,7 @@ var (
 
 func TestStdTx(t *testing.T) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	fee := newStdFee()
+	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -41,7 +41,7 @@ func TestStdSignBytes(t *testing.T) {
 		msgs     []sdk.Msg
 		memo     string
 	}
-	defaultFee := newStdFee()
+	defaultFee := NewTestStdFee()
 	tests := []struct {
 		args args
 		want string
@@ -61,19 +61,19 @@ func TestTxValidateBasic(t *testing.T) {
 	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, _, addr1 := keyPubAddr()
-	priv2, _, addr2 := keyPubAddr()
+	priv1, _, addr1 := KeyTestPubAddr()
+	priv2, _, addr2 := KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := newTestMsg(addr1, addr2)
-	fee := newStdFee()
+	msg1 := NewTestMsg(addr1, addr2)
+	fee := NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
 
 	// require to fail validation upon invalid fee
-	badFee := newStdFee()
+	badFee := NewTestStdFee()
 	badFee.Amount[0].Amount = sdk.NewInt(-5)
-	tx := newTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx := NewTestTx(ctx, nil, nil, nil, nil, badFee)
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
@@ -81,7 +81,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -89,16 +89,16 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
 
 	// require to fail with invalid gas supplied
-	badFee = newStdFee()
+	badFee = NewTestStdFee()
 	badFee.Gas = 9223372036854775808
-	tx = newTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx = NewTestTx(ctx, nil, nil, nil, nil, badFee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -106,7 +106,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)
@@ -120,7 +120,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 	encoder := DefaultTxEncoder(cdc)
 
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	fee := newStdFee()
+	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")

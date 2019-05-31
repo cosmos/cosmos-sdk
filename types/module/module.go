@@ -52,7 +52,7 @@ type AppModuleBasic interface {
 // collections of AppModuleBasic
 type BasicManager []AppModuleBasic
 
-func NewModuleBasicManager(modules ...AppModuleBasic) BasicManager {
+func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return modules
 }
 
@@ -184,7 +184,7 @@ type Manager struct {
 }
 
 // NewModuleManager creates a new Manager object
-func NewModuleManager(modules ...AppModule) *Manager {
+func NewManager(modules ...AppModule) *Manager {
 
 	moduleMap := make(map[string]AppModule)
 	var modulesStr []string

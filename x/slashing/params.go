@@ -1,4 +1,4 @@
-package keeper
+package slashing
 
 import (
 	"time"

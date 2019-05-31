@@ -1,6 +1,7 @@
 package types
 
-var minterKey = []byte{0x00} // the one key to use for the keeper store
+// the one key to use for the keeper store
+var MinterKey = []byte{0x00}
 
 // nolint
 const (

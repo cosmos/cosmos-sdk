@@ -33,7 +33,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(minterKey)
+	b := store.Get(MinterKey)
 	if b == nil {
 		panic("stored minter should not have been nil")
 	}
@@ -45,7 +45,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(minter)
-	store.Set(minterKey, b)
+	store.Set(MinterKey, b)
 }
 
 //______________________________________________________________________

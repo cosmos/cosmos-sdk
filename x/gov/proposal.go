@@ -2,6 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // SubmitProposal create new proposal given a content
@@ -63,6 +64,15 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
 	store.Delete(KeyProposal(proposalID))
+}
+
+// GetProposals returns all the proposals from store
+func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals Proposals) {
+	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {
+		proposals = append(proposals, proposal)
+		return false
+	})
+	return
 }
 
 // GetProposalsFiltered get Proposals from store by ProposalID

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -620,4 +621,28 @@ func TestFindDup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMarshalJSONCoins(t *testing.T) {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+
+	var coins Coins
+
+	bz, err := cdc.MarshalJSON(coins)
+	require.NoError(t, err)
+	require.Equal(t, `[]`, string(bz))
+
+	var newCoins Coins
+
+	require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+	require.Nil(t, newCoins)
+
+	coins = NewCoins(NewInt64Coin("foo", 50))
+	bz, err = cdc.MarshalJSON(coins)
+	require.NoError(t, err)
+	require.Equal(t, `[{"denom":"foo","amount":"50"}]`, string(bz))
+
+	require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+	require.Equal(t, coins, newCoins)
 }

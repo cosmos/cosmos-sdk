@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -149,6 +150,16 @@ func NewCoins(coins ...Coin) Coins {
 	}
 
 	return newCoins
+}
+
+type coinsJSON Coins
+
+func (coins Coins) MarshalJSON() ([]byte, error) {
+	if coins == nil {
+		return json.Marshal(coinsJSON(Coins{}))
+	}
+
+	return json.Marshal(coinsJSON(coins))
 }
 
 func (coins Coins) String() string {

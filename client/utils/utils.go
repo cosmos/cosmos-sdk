@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/common"
@@ -351,4 +352,20 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 	}
 
 	return false
+}
+
+func ValidateCmd(cmd *cobra.Command, args []string) error {
+	if len(args) > 0 {
+		err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", args[0], cmd.CalledAs())
+
+		if suggestions := cmd.SuggestionsFor(args[0]); len(suggestions) > 0 {
+			err += "\n\nDid you mean this?\n"
+			for _, s := range suggestions {
+				err += fmt.Sprintf("\t%v\n", s)
+			}
+		}
+		return errors.New(err)
+	}
+
+	return cmd.Help()
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -544,16 +545,18 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	return amount, nil
 }
 
-// get info for begin functions: completionTime and CreationHeight
-func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
-	completionTime time.Time, height int64, completeNow bool) {
+// getBeginInfo returns the completion time and height of a redelegation, along
+// with a boolean signaling if the redelegation is complete based on the source
+// validator.
+func (k Keeper) getBeginInfo(
+	ctx sdk.Context, valSrcAddr sdk.ValAddress,
+) (completionTime time.Time, height int64, completeNow bool) {
 
 	validator, found := k.GetValidator(ctx, valSrcAddr)
 
+	// TODO: When would the validator not be found?
 	switch {
-	// TODO: when would the validator not be found?
 	case !found || validator.Status == sdk.Bonded:
-
 		// the longest wait - just unbonding period from now
 		completionTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 		height = ctx.BlockHeight()
@@ -563,48 +566,35 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 		return completionTime, height, true
 
 	case validator.Status == sdk.Unbonding:
-		completionTime = validator.UnbondingCompletionTime
-		height = validator.UnbondingHeight
-		return completionTime, height, false
+		return validator.UnbondingCompletionTime, validator.UnbondingHeight, false
 
 	default:
-		panic("unknown validator status")
+		panic(fmt.Sprintf("unknown validator status: %s", validator.Status))
 	}
 }
 
-// begin unbonding part or all of a delegation
-func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
-	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (completionTime time.Time, sdkErr sdk.Error) {
-
-	// create the unbonding delegation
-	completionTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
+// Undelegate unbonds an amount of delegator shares from a given validator. It
+// will verify that the unbonding entries between the delegator and validator
+// are not exceeded and unbond the staked tokens (based on shares) by creating
+// an unbonding object and inserting it into the unbonding queue which will be
+// processed during the staking EndBlocker.
+func (k Keeper) Undelegate(
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
+) (time.Time, sdk.Error) {
 
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
-		return completionTime, err
-	}
-	balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
-
-	// no need to create the ubd object just complete now
-	if completeNow {
-		// track undelegation only when remaining or truncated shares are non-zero
-		if !balance.IsZero() {
-			if _, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance}); err != nil {
-				return completionTime, err
-			}
-		}
-
-		return completionTime, nil
+		return time.Time{}, err
 	}
 
 	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
 		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
-	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr,
-		valAddr, height, completionTime, returnAmount)
-
+	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
+	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
 	k.InsertUBDQueue(ctx, ubd, completionTime)
+
 	return completionTime, nil
 }
 

@@ -4,14 +4,17 @@ package crypto
 
 import (
 	"fmt"
-
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
-	bip39 "github.com/cosmos/go-bip39"
-	"github.com/pkg/errors"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/go-bip39"
+
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
+	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
@@ -30,6 +33,8 @@ func (mock LedgerSECP256K1Mock) Close() error {
 	return nil
 }
 
+// GetPublicKeySECP256K1 mocks a ledger device
+// as per the original API, it returns an uncompressed key
 func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) ([]byte, error) {
 	if derivationPath[0] != 44 {
 		return nil, errors.New("Invalid derivation path")
@@ -53,6 +58,28 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), derivedPriv[:])
 
 	return pubkeyObject.SerializeUncompressed(), nil
+}
+
+// GetAddressPubKeySECP256K1 mocks a ledger device
+// as per the original API, it returns a compressed key and a bech32 address
+func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint32, hrp string) ([]byte, string, error) {
+	pk, err := mock.GetPublicKeySECP256K1(derivationPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// re-serialize in the 33-byte compressed format
+	cmp, err := btcec.ParsePubKey(pk[:], btcec.S256())
+	if err != nil {
+		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+	}
+
+	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
+	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+
+	// Generate the bech32 addr using existing tmcrypto/etc.
+	addr := types.AccAddress(compressedPublicKey.Address()).String()
+	return pk, addr, err
 }
 
 func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message []byte) ([]byte, error) {

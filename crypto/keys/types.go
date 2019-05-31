@@ -35,7 +35,7 @@ type Keybase interface {
 	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
-	CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error)
+	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)

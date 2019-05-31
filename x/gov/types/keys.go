@@ -1,15 +1,14 @@
 package types
 
 import (
-	"bytes"
-	"fmt"
+	"encoding/binary"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	// ModuleKey is the name of the module
+	// ModuleName is the name of the module
 	ModuleName = "gov"
 
 	// StoreKey is the store key string for gov
@@ -21,74 +20,61 @@ const (
 	// QuerierRoute is the querier route for gov
 	QuerierRoute = ModuleName
 
-	// Parameter store default namestore
+	// DefaultParamspace default name for parameter store
 	DefaultParamspace = ModuleName
 )
 
-// Key for getting a the next available proposalID from the store
+// Keys for governance store
 var (
-	KeyDelimiter = []byte(":")
+	ProposalsKeyPrefix          = []byte{0x00}
+	ActiveProposalQueuePrefix   = []byte{0x01}
+	InactiveProposalQueuePrefix = []byte{0x02}
 
-	KeyNextProposalID           = []byte("newProposalID")
-	PrefixActiveProposalQueue   = []byte("activeProposalQueue")
-	PrefixInactiveProposalQueue = []byte("inactiveProposalQueue")
+	DepositsKeyPrefix = []byte{0x10}
+
+	VotesKeyPrefix = []byte{0x20}
 )
 
-// Key for getting a specific proposal from the store
+// KeyProposal gets a specific proposal from the store
 func KeyProposal(proposalID uint64) []byte {
-	return []byte(fmt.Sprintf("proposals:%d", proposalID))
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, proposalID)
+	return append(ProposalsKeyPrefix, bz...)
 }
 
-// Key for getting a specific deposit from the store
+// KeyDeposit gets a specific deposit from the store
 func KeyDeposit(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("deposits:%d:%d", proposalID, depositorAddr))
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, proposalID)
+	return append(append(DepositsKeyPrefix, bz...), depositorAddr.Bytes()...)
 }
 
-// Key for getting a specific vote from the store
+// KeyVote gets  a specific vote from the store
 func KeyVote(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("votes:%d:%d", proposalID, voterAddr))
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, proposalID)
+	return append(append(VotesKeyPrefix, bz...), voterAddr.Bytes()...)
 }
 
-// Key for getting all deposits on a proposal from the store
-func KeyDepositsSubspace(proposalID uint64) []byte {
-	return []byte(fmt.Sprintf("deposits:%d:", proposalID))
+// KeyActiveProposalQueue returns the key for a proposalID in the activeProposalQueue
+func KeyActiveProposalQueue(proposalID uint64, endTime time.Time) []byte {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, proposalID)
+
+	return append(
+		append(ActiveProposalQueuePrefix, bz...),
+		sdk.FormatTimeBytes(endTime)...,
+	)
 }
 
-// Key for getting all votes on a proposal from the store
-func KeyVotesSubspace(proposalID uint64) []byte {
-	return []byte(fmt.Sprintf("votes:%d:", proposalID))
-}
+// KeyInactiveProposalQueueProposal returns the key for a proposalID in the inactiveProposalQueue
+func KeyInactiveProposalQueueProposal(proposalID uint64, endTime time.Time) []byte {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, proposalID)
 
-// Returns the key for a proposalID in the activeProposalQueue
-func PrefixActiveProposalQueueTime(endTime time.Time) []byte {
-	return bytes.Join([][]byte{
-		PrefixActiveProposalQueue,
-		sdk.FormatTimeBytes(endTime),
-	}, KeyDelimiter)
-}
+	return append(
+		append(InactiveProposalQueuePrefix, bz...),
+		sdk.FormatTimeBytes(endTime)...,
+	)
 
-// Returns the key for a proposalID in the activeProposalQueue
-func KeyActiveProposalQueueProposal(endTime time.Time, proposalID uint64) []byte {
-	return bytes.Join([][]byte{
-		PrefixActiveProposalQueue,
-		sdk.FormatTimeBytes(endTime),
-		sdk.Uint64ToBigEndian(proposalID),
-	}, KeyDelimiter)
-}
-
-// Returns the key for a proposalID in the activeProposalQueue
-func PrefixInactiveProposalQueueTime(endTime time.Time) []byte {
-	return bytes.Join([][]byte{
-		PrefixInactiveProposalQueue,
-		sdk.FormatTimeBytes(endTime),
-	}, KeyDelimiter)
-}
-
-// Returns the key for a proposalID in the activeProposalQueue
-func KeyInactiveProposalQueueProposal(endTime time.Time, proposalID uint64) []byte {
-	return bytes.Join([][]byte{
-		PrefixInactiveProposalQueue,
-		sdk.FormatTimeBytes(endTime),
-		sdk.Uint64ToBigEndian(proposalID),
-	}, KeyDelimiter)
 }

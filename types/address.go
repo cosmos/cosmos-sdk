@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -70,6 +72,10 @@ type Address interface {
 var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
+
+var _ yaml.Marshaler = AccAddress{}
+var _ yaml.Marshaler = ValAddress{}
+var _ yaml.Marshaler = ConsAddress{}
 
 // ----------------------------------------------------------------------------
 // account
@@ -165,10 +171,32 @@ func (aa AccAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aa.String())
 }
 
+// MarshalYAML marshals to YAML using Bech32.
+func (aa AccAddress) MarshalYAML() (interface{}, error) {
+	return aa.String(), nil
+}
+
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	aa2, err := AccAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*aa = aa2
+	return nil
+}
+
+// UnmarshalYAML unmarshals from JSON assuming Bech32 encoding.
+func (aa *AccAddress) UnmarshalYAML(data []byte) error {
+	var s string
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -296,11 +324,34 @@ func (va ValAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(va.String())
 }
 
+// MarshalYAML marshals to YAML using Bech32.
+func (va ValAddress) MarshalYAML() (interface{}, error) {
+	return va.String(), nil
+}
+
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (va *ValAddress) UnmarshalJSON(data []byte) error {
 	var s string
 
 	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	va2, err := ValAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*va = va2
+	return nil
+}
+
+// UnmarshalYAML unmarshals from YAML assuming Bech32 encoding.
+func (va *ValAddress) UnmarshalYAML(data []byte) error {
+	var s string
+
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -433,11 +484,34 @@ func (ca ConsAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ca.String())
 }
 
+// MarshalYAML marshals to YAML using Bech32.
+func (ca ConsAddress) MarshalYAML() (interface{}, error) {
+	return ca.String(), nil
+}
+
 // UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 	var s string
 
 	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	ca2, err := ConsAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*ca = ca2
+	return nil
+}
+
+// UnmarshalYAML unmarshals from YAML assuming Bech32 encoding.
+func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
+	var s string
+
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}

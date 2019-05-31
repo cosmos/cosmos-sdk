@@ -45,7 +45,7 @@ require (
 	github.com/tendermint/tendermint v0.31.5
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
 	google.golang.org/grpc v1.19.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )
 
 replace golang.org/x/crypto => github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5

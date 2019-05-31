@@ -26,6 +26,19 @@ const (
 )
 
 // Keys for governance store
+// Items are stored with the following key: values
+//
+// - 0x00<proposalID_Bytes>: Proposal
+//
+// - 0x01<endTime_Bytes><proposalID_Bytes>: activeProposalID
+//
+// - 0x02<endTime_Bytes><proposalID_Bytes>: inactiveProposalID
+//
+// - 0x03: nextProposalID
+//
+// - 0x10<proposalID_Bytes><depositorAddr_Bytes>: Deposit
+//
+// - 0x20<proposalID_Bytes><voterAddr_Bytes>: Voter
 var (
 	ProposalsKeyPrefix          = []byte{0x00}
 	ActiveProposalQueuePrefix   = []byte{0x01}
@@ -44,26 +57,30 @@ func KeyProposal(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, bz...)
 }
 
+// KeyActiveProposalByTime gets the active proposal queue key by endTime
+func KeyActiveProposalByTime(endTime time.Time) []byte {
+	return append(ActiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)
+}
+
 // KeyActiveProposalQueue returns the key for a proposalID in the activeProposalQueue
 func KeyActiveProposalQueue(proposalID uint64, endTime time.Time) []byte {
 	bz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bz, proposalID)
 
-	return append(
-		append(ActiveProposalQueuePrefix, bz...),
-		sdk.FormatTimeBytes(endTime)...,
-	)
+	return append(KeyActiveProposalByTime(endTime), bz...)
 }
 
-// KeyInactiveProposalQueueProposal returns the key for a proposalID in the inactiveProposalQueue
+// KeyInactiveProposalByTime gets the inactive proposal queue key by endTime
+func KeyInactiveProposalByTime(endTime time.Time) []byte {
+	return append(InactiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...)
+}
+
+// KeyInactiveProposalQueue returns the key for a proposalID in the inactiveProposalQueue
 func KeyInactiveProposalQueue(proposalID uint64, endTime time.Time) []byte {
 	bz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(bz, proposalID)
 
-	return append(
-		append(InactiveProposalQueuePrefix, bz...),
-		sdk.FormatTimeBytes(endTime)...,
-	)
+	return append(KeyInactiveProposalByTime(endTime), bz...)
 }
 
 // KeyProposalDeposits gets the first part of the deposits key based on the proposalID
@@ -98,8 +115,7 @@ func SplitKeyProposal(key []byte) (proposalID uint64) {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ 8)", len(key)))
 	}
 
-	binary.LittleEndian.PutUint64(key[1:], proposalID)
-	return
+	return binary.LittleEndian.Uint64(key[1:])
 }
 
 // SplitKeyActiveProposalQueue split the active proposal key and returns the proposal id and endTime
@@ -130,20 +146,20 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), lenTime+8))
 	}
 
-	binary.LittleEndian.PutUint64(key[1:], proposalID)
-	endTime, err := sdk.ParseTimeBytes(key[9:])
+	endTime, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
 	if err != nil {
 		panic(err)
 	}
+	proposalID = binary.LittleEndian.Uint64(key[1+lenTime:])
 	return
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
 	if len(key[1:]) != 8+sdk.AddrLen {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ 28)", len(key)))
+		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), 8+sdk.AddrLen))
 	}
-	binary.LittleEndian.PutUint64(key[1:9], proposalID)
 
+	proposalID = binary.LittleEndian.Uint64(key[1:9])
 	addr = sdk.AccAddress(key[9:])
 	return
 }

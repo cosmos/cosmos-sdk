@@ -597,10 +597,10 @@ func (k Keeper) Undelegate(
 			return completionTime, err
 		}
 
+		balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
+
 		// no need to create the ubd object just complete now
 		if completeNow {
-			balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
-
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !balance.IsZero() {
 				if _, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance}); err != nil {

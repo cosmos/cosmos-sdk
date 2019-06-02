@@ -9,21 +9,31 @@ import (
 )
 
 type Manager struct {
-	m      mapping.Mapping
+	protocol mapping.Mapping
+
+	states mapping.Indexer
+
 	client client.Manager
 }
 
-func NewManager(protocol, free mapping.Base) Manager {
+func NewManager(protocol, free mapping.Base, client client.Manager) Manager {
 	return Manager{
-		m: mapping.NewMapping(protocol, nil),
+		protocol: mapping.NewMapping(protocol, []byte("/")),
+
+		states: mapping.NewIndexer(free, []byte("/states"), mapping.Dec),
+
+		client: client,
 	}
 }
 
 func (man Manager) object(key string) Object {
 	return Object{
 		key:        key,
-		connection: man.m.Value([]byte(key)),
-		state:      man.m.Value([]byte(key + "/state")).Enum(),
+		connection: man.protocol.Value([]byte(key)),
+		state:      man.protocol.Value([]byte(key + "/state")).Enum(),
+
+		states: man.states,
+		client: man.client,
 	}
 }
 
@@ -37,7 +47,9 @@ type Object struct {
 	key        string
 	connection mapping.Value
 	state      mapping.Enum
-	client     client.Manager
+
+	states mapping.Indexer
+	client client.Manager
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {

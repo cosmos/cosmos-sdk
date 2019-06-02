@@ -9,9 +9,9 @@ import (
 type IndexEncoding byte
 
 const (
-	DecIndexerEnc IndexEncoding = iota
-	HexIndexerEnc
-	BinIndexerEnc
+	Dec IndexEncoding = iota
+	Hex
+	Bin
 )
 
 type Indexer struct {
@@ -30,11 +30,11 @@ func NewIndexer(base Base, prefix []byte, enc IndexEncoding) Indexer {
 // Identical length independent from the index, ensure ordering
 func EncodeIndex(index uint64, enc IndexEncoding) (res []byte) {
 	switch enc {
-	case DecIndexerEnc:
+	case Dec:
 		return []byte(fmt.Sprintf("%020d", index))
-	case HexIndexerEnc:
+	case Hex:
 		return []byte(fmt.Sprintf("%020x", index))
-	case BinIndexerEnc:
+	case Bin:
 		res = make([]byte, 8)
 		binary.BigEndian.PutUint64(res, index)
 		return
@@ -45,11 +45,11 @@ func EncodeIndex(index uint64, enc IndexEncoding) (res []byte) {
 
 func DecodeIndex(bz []byte, enc IndexEncoding) (res uint64, err error) {
 	switch enc {
-	case DecIndexerEnc:
+	case Dec:
 		return strconv.ParseUint(string(bz), 10, 64)
-	case HexIndexerEnc:
+	case Hex:
 		return strconv.ParseUint(string(bz), 16, 64)
-	case BinIndexerEnc:
+	case Bin:
 		return binary.BigEndian.Uint64(bz), nil
 	default:
 		panic("invalid IndexEncoding")

@@ -22,13 +22,13 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Ke
 func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerator) (k Keeper) {
 	k = Keeper{
 		client: client.NewManager(
-			protocol.Prefix([]byte("clients/")),
-			free.Prefix([]byte("clients/")),
+			protocol.Prefix([]byte("clients")),
+			free.Prefix([]byte("clients")),
 			cidgen,
 		),
 		connection: connection.NewManager(
-			protocol.Prefix([]byte("connections/")),
-			free.Prefix([]byte("connections/")),
+			protocol.Prefix([]byte("connections")),
+			free.Prefix([]byte("connections")),
 		),
 	}
 

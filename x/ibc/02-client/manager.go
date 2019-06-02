@@ -16,7 +16,8 @@ func IntegerIDGenerator(ctx sdk.Context, v mapping.Value) string {
 }
 
 type Manager struct {
-	m     mapping.Mapping
+	protocol mapping.Mapping
+
 	idval mapping.Value
 	idgen IDGenerator
 	pred  map[Kind]ValidityPredicate
@@ -24,10 +25,10 @@ type Manager struct {
 
 func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
 	return Manager{
-		m:     mapping.NewMapping(protocol, nil),
-		idval: mapping.NewValue(free, []byte("id")),
-		idgen: idgen,
-		pred:  make(map[Kind]ValidityPredicate),
+		protocol: mapping.NewMapping(protocol, []byte("/")),
+		idval:    mapping.NewValue(free, []byte("/id")),
+		idgen:    idgen,
+		pred:     make(map[Kind]ValidityPredicate),
 	}
 }
 
@@ -42,8 +43,8 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 func (man Manager) object(key string) Object {
 	return Object{
 		key:    key,
-		client: man.m.Value([]byte(key)),
-		freeze: man.m.Value([]byte(key + "/freeze")).Boolean(),
+		client: man.protocol.Value([]byte(key)),
+		freeze: man.protocol.Value([]byte(key + "/freeze")).Boolean(),
 		pred:   man.pred,
 	}
 }

@@ -40,7 +40,7 @@ func (keeper Keeper) GetVotes(ctx sdk.Context) (votes Votes) {
 // GetProposalVotes returns all the votes from a proposal
 func (keeper Keeper) GetProposalVotes(ctx sdk.Context, proposalID uint64) (votes Votes) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyProposalVotes(proposalID))
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 
 	keeper.IterateVotes(ctx, iterator, func(vote Vote) bool {
 		votes = append(votes, vote)
@@ -52,7 +52,7 @@ func (keeper Keeper) GetProposalVotes(ctx sdk.Context, proposalID uint64) (votes
 // GetVote gets the vote from an address on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote Vote, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.KeyProposalVote(proposalID, voterAddr))
+	bz := store.Get(types.VoteKey(proposalID, voterAddr))
 	if bz == nil {
 		return vote, false
 	}
@@ -64,16 +64,16 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 func (keeper Keeper) setVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, vote Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(vote)
-	store.Set(types.KeyProposalVote(proposalID, voterAddr), bz)
+	store.Set(types.VoteKey(proposalID, voterAddr), bz)
 }
 
 // GetProposalVotesIterator gets all the votes on a specific proposal as an sdk.Iterator
 func (keeper Keeper) GetProposalVotesIterator(ctx sdk.Context, proposalID uint64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.KeyProposalVotes(proposalID))
+	return sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 }
 
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(types.KeyProposalVote(proposalID, voterAddr))
+	store.Delete(types.VoteKey(proposalID, voterAddr))
 }

@@ -8,7 +8,7 @@ import (
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.KeyProposalDeposit(proposalID, depositorAddr))
+	bz := store.Get(types.DepositKey(proposalID, depositorAddr))
 	if bz == nil {
 		return deposit, false
 	}
@@ -20,7 +20,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, deposit Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
-	store.Set(types.KeyProposalDeposit(proposalID, depositorAddr), bz)
+	store.Set(types.DepositKey(proposalID, depositorAddr), bz)
 }
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
@@ -94,7 +94,7 @@ func (keeper Keeper) GetProposalDeposits(ctx sdk.Context, proposalID uint64) (de
 // GetProposalDepositsIterator gets all the deposits on a specific proposal as an sdk.Iterator
 func (keeper Keeper) GetProposalDepositsIterator(ctx sdk.Context, proposalID uint64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.KeyProposalDeposits(proposalID))
+	return sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
 }
 
 // RefundProposalDeposits refunds and deletes all the deposits on a specific proposal

@@ -121,26 +121,26 @@ func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(types.KeyActiveProposalQueue(proposalID, endTime), bz)
+	store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
 func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(types.KeyActiveProposalQueue(proposalID, endTime))
+	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(types.KeyInactiveProposalQueue(proposalID, endTime), bz)
+	store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
 func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(types.KeyInactiveProposalQueue(proposalID, endTime))
+	store.Delete(types.InactiveProposalQueueKey(proposalID, endTime))
 }
 
 // Iterators
@@ -167,7 +167,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, iterator sdk.I
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		proposalID, _ := types.SplitKeyActiveProposalQueue(iterator.Key())
+		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
 		proposal, found := keeper.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
@@ -185,7 +185,7 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, iterator sdk
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		proposalID, _ := types.SplitKeyInactiveProposalQueue(iterator.Key())
+		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
 		proposal, found := keeper.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
@@ -228,11 +228,11 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, iterator sdk.Iterator, handle
 // ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
 func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.KeyActiveProposalByTime(endTime)))
+	return store.Iterator(ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
 }
 
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.KeyInactiveProposalByTime(endTime)))
+	return store.Iterator(InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }

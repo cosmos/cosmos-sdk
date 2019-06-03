@@ -39,7 +39,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 // GetProposal get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal Proposal, ok bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyProposal(proposalID))
+	bz := store.Get(ProposalKey(proposalID))
 	if bz == nil {
 		return
 	}
@@ -51,7 +51,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal P
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
-	store.Set(KeyProposal(proposal.ProposalID), bz)
+	store.Set(ProposalKey(proposal.ProposalID), bz)
 }
 
 // DeleteProposal deletes a proposal from store
@@ -63,7 +63,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
-	store.Delete(KeyProposal(proposalID))
+	store.Delete(ProposalKey(proposalID))
 }
 
 // GetProposals returns all the proposals from store
@@ -137,32 +137,32 @@ func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID uint64) {
 // Gets the next available ProposalID and increments it
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyNextProposalID)
+	bz := store.Get(NextProposalIDKey)
 	if bz == nil {
 		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)
-	store.Set(KeyNextProposalID, bz)
+	store.Set(NextProposalIDKey, bz)
 	return proposalID, nil
 }
 
 // Set the initial proposal ID
 func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sdk.Error {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyNextProposalID)
+	bz := store.Get(NextProposalIDKey)
 	if bz != nil {
 		return ErrInvalidGenesis(keeper.codespace, "initial proposal ID already set")
 	}
 	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(KeyNextProposalID, bz)
+	store.Set(NextProposalIDKey, bz)
 	return nil
 }
 
 // Peeks the next available ProposalID without incrementing it
 func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyNextProposalID)
+	bz := store.Get(NextProposalIDKey)
 	if bz == nil {
 		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
 	}

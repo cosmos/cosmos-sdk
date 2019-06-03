@@ -26,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -57,25 +58,25 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 }
 
 // RegisterCodecs registers all module codecs
-func (mbm BasicManager) RegisterCodec(cdc *codec.Codec) {
-	for _, mb := range mbm {
-		mb.RegisterCodec(cdc)
+func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
+	for _, b := range bm {
+		b.RegisterCodec(cdc)
 	}
 }
 
 // Provided default genesis information for all modules
-func (mbm BasicManager) DefaultGenesis() map[string]json.RawMessage {
+func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
-	for _, mb := range mbm {
-		genesis[mb.Name()] = mb.DefaultGenesis()
+	for _, b := range bm {
+		genesis[b.Name()] = b.DefaultGenesis()
 	}
 	return genesis
 }
 
 // Provided default genesis information for all modules
-func (mbm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
-	for _, mb := range mbm {
-		if err := mb.ValidateGenesis(genesis[mb.Name()]); err != nil {
+func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
+	for _, b := range bm {
+		if err := b.ValidateGenesis(genesis[b.Name()]); err != nil {
 			return err
 		}
 	}
@@ -83,27 +84,27 @@ func (mbm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) erro
 }
 
 // RegisterRestRoutes registers all module rest routes
-func (mbm BasicManager) RegisterRESTRoutes(
+func (bm BasicManager) RegisterRESTRoutes(
 	ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
 
-	for _, mb := range mbm {
-		mb.RegisterRESTRoutes(ctx, rtr, cdc)
+	for _, b := range bm {
+		b.RegisterRESTRoutes(ctx, rtr, cdc)
 	}
 }
 
 // add all tx commands to the rootTxCmd
-func (mbm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, mb := range mbm {
-		if cmd := mb.GetTxCmd(); cmd != nil {
+func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
+	for _, b := range bm {
+		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
 	}
 }
 
 // add all query commands to the rootQueryCmd
-func (mbm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, mb := range mbm {
-		if cmd := mb.GetQueryCmd(); cmd != nil {
+func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
+	for _, b := range bm {
+		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
 	}
@@ -203,35 +204,35 @@ func NewManager(modules ...AppModule) *Manager {
 }
 
 // set the order of init genesis calls
-func (mm *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	mm.OrderInitGenesis = moduleNames
+func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
+	m.OrderInitGenesis = moduleNames
 }
 
 // set the order of export genesis calls
-func (mm *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	mm.OrderExportGenesis = moduleNames
+func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
+	m.OrderExportGenesis = moduleNames
 }
 
 // set the order of set begin-blocker calls
-func (mm *Manager) SetOrderBeginBlockers(moduleNames ...string) {
-	mm.OrderBeginBlockers = moduleNames
+func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
+	m.OrderBeginBlockers = moduleNames
 }
 
 // set the order of set end-blocker calls
-func (mm *Manager) SetOrderEndBlockers(moduleNames ...string) {
-	mm.OrderEndBlockers = moduleNames
+func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
+	m.OrderEndBlockers = moduleNames
 }
 
 // register all module routes and module querier routes
-func (mm *Manager) RegisterInvariants(invarRouter sdk.InvariantRouter) {
-	for _, module := range mm.Modules {
+func (m *Manager) RegisterInvariants(invarRouter sdk.InvariantRouter) {
+	for _, module := range m.Modules {
 		module.RegisterInvariants(invarRouter)
 	}
 }
 
 // register all module routes and module querier routes
-func (mm *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
-	for _, module := range mm.Modules {
+func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
+	for _, module := range m.Modules {
 		if module.Route() != "" {
 			router.AddRoute(module.Route(), module.NewHandler())
 		}
@@ -242,13 +243,13 @@ func (mm *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter
 }
 
 // perform init genesis functionality for modules
-func (mm *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
+func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
-	for _, moduleName := range mm.OrderInitGenesis {
+	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
-		moduleValUpdates := mm.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
+		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -265,19 +266,19 @@ func (mm *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawM
 }
 
 // perform export genesis functionality for modules
-func (mm *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
+func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, moduleName := range mm.OrderExportGenesis {
-		genesisData[moduleName] = mm.Modules[moduleName].ExportGenesis(ctx)
+	for _, moduleName := range m.OrderExportGenesis {
+		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx)
 	}
 	return genesisData
 }
 
 // perform begin block functionality for modules
-func (mm *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	tags := sdk.EmptyTags()
-	for _, moduleName := range mm.OrderBeginBlockers {
-		moduleTags := mm.Modules[moduleName].BeginBlock(ctx, req)
+	for _, moduleName := range m.OrderBeginBlockers {
+		moduleTags := m.Modules[moduleName].BeginBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 	}
 
@@ -287,11 +288,11 @@ func (mm *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.
 }
 
 // perform end block functionality for modules
-func (mm *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := []abci.ValidatorUpdate{}
 	tags := sdk.EmptyTags()
-	for _, moduleName := range mm.OrderEndBlockers {
-		moduleValUpdates, moduleTags := mm.Modules[moduleName].EndBlock(ctx, req)
+	for _, moduleName := range m.OrderEndBlockers {
+		moduleValUpdates, moduleTags := m.Modules[moduleName].EndBlock(ctx, req)
 		tags = tags.AppendTags(moduleTags)
 
 		// use these validator updates if provided, the module manager assumes

@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// nolint
 const (
+	// module name
 	ModuleName = "slashing"
 
 	// StoreKey is the store key string for slashing
@@ -18,8 +18,10 @@ const (
 
 	// QuerierRoute is the querier route for slashing
 	QuerierRoute = ModuleName
+)
 
-	// Query endpoints supported by the slashing querier
+// Query endpoints supported by the slashing querier
+const (
 	QueryParameters   = "parameters"
 	QuerySigningInfo  = "signingInfo"
 	QuerySigningInfos = "signingInfos"
@@ -72,7 +74,7 @@ func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte 
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 
-// TODO
+// get pubkey relation key used to get the pubkey from the address
 func GetAddrPubkeyRelationKey(address []byte) []byte {
 	return append(AddrPubkeyRelationKey, address...)
 }

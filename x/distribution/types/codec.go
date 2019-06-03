@@ -13,9 +13,10 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 // generic sealed codec to be used throughout module
-var ModuleCdc = codec.New()
+var ModuleCdc *codec.Codec
 
 func init() {
+	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
 	codec.RegisterCrypto(ModuleCdc)
 	ModuleCdc.Seal()

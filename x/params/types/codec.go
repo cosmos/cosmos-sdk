@@ -5,9 +5,10 @@ import (
 )
 
 // module codec
-var ModuleCdc = codec.New()
+var ModuleCdc *codec.Codec
 
 func init() {
+	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
 	ModuleCdc.Seal()
 }

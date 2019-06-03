@@ -57,11 +57,9 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 	rest.RegisterRoutes(ctx, rtr, cdc)
 }
 
-// TODO
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
-// TODO
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 

@@ -8,11 +8,12 @@ import (
 )
 
 // generic sealed codec to be used throughout this module
-var moduleCdc = codec.New()
+var moduleCdc *codec.Codec
 
 // TODO abstract genesis transactions registration back to staking
 // required for genesis transactions
 func init() {
+	moduleCdc = codec.New()
 	staking.RegisterCodec(moduleCdc)
 	auth.RegisterCodec(moduleCdc)
 	sdk.RegisterCodec(moduleCdc)

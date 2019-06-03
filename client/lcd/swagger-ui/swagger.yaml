@@ -164,7 +164,7 @@ paths:
             type: object
             properties:
               block_height:
-                type: number
+                type: string
               validators:
                 type: array
                 items:
@@ -192,7 +192,7 @@ paths:
             type: object
             properties:
               block_height:
-                type: number
+                type: string
               validators:
                 type: array
                 items:
@@ -216,7 +216,7 @@ paths:
           description: Tx hash
           required: true
           type: string
-          x-example: 88D6B85EAB87D43CDF50F39C22FC2237A37FEDC4CE723200AD0AF48CBEDBC317
+          x-example: BCBE20E8D46758B96AE5883B792858296AC06E51435490FBDCAE25A72B3CC76B
       responses:
         200:
           description: Tx with the provided hash
@@ -234,11 +234,17 @@ paths:
         - application/json
       parameters:
         - in: query
-          name: tag
+          name: action
           type: string
-          description: "transaction tags such as 'action=submit-proposal' and 'sender=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc' which results in the following endpoint: 'GET /txs?action=submit-proposal&sender=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'"
+          description: "transaction tags such as 'action=send' which results in the following endpoint: 'GET /txs?action=send'"
           required: true
-          x-example: 'TODO'
+          x-example: 'send'
+        - in: query
+          name: sender
+          type: string
+          description: "transaction tags with sender: 'GET /txs?action=send&sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
+          required: true
+          x-example: 'cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'
         - in: query
           name: page
           description: Page number
@@ -333,7 +339,7 @@ paths:
           description: Account address in bech32 format
           required: true
           type: string
-          x-example: cosmos16gdxm24ht2mxtpz9cma6tr6a6d47x63hlq4pxt
+          x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
         200:
           description: Account balances
@@ -341,8 +347,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Coin"
-        204:
-          description: There is no data for the requested account
         500:
           description: Server internal error
   /bank/accounts/{address}/transfers:
@@ -360,7 +364,7 @@ paths:
           description: Account address in bech32 format
           required: true
           type: string
-          x-example: cosmos16gdxm24ht2mxtpz9cma6tr6a6d47x63hlq4pxt
+          x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
         - in: body
           name: account
           description: The sender and tx information
@@ -396,7 +400,7 @@ paths:
           description: Account address
           required: true
           type: string
-          x-example: cosmos16gdxm24ht2mxtpz9cma6tr6a6d47x63hlq4pxt
+          x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
         200:
           description: Account information on the blockchain
@@ -417,11 +421,9 @@ paths:
                     items:
                       $ref: "#/definitions/Coin"
                   public_key:
-                    type: string
+                    $ref: "#/definitions/PublicKey"
                   sequence:
                     type: string
-        204:
-          description: No content about this account address
         500:
           description: Server internel error
   /staking/delegators/{delegatorAddr}/delegations:
@@ -431,7 +433,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
       summary: Get all delegations from a delegator
       tags:
@@ -464,7 +466,7 @@ paths:
                 $ref: "#/definitions/Address"
               validator_address:
                 $ref: "#/definitions/ValidatorAddress"
-              amount:
+              delegation:
                 $ref: "#/definitions/Coin"
       tags:
         - ICS21
@@ -490,13 +492,13 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       - in: path
         name: validatorAddr
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Query the current delegation between a delegator and a validator
       tags:
@@ -519,7 +521,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
       summary: Get all unbonding delegations from a delegator
       tags:
@@ -579,13 +581,13 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       - in: path
         name: validatorAddr
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Query all unbonding delegations between a delegator and a validator
       tags:
@@ -596,9 +598,7 @@ paths:
         200:
           description: OK
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/UnbondingDelegation"
+            $ref: "#/definitions/UnbondingDelegationPair"
         400:
           description: Invalid delegator address or validator address
         500:
@@ -642,7 +642,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     post:
       summary: Submit a redelegation
       parameters:
@@ -685,7 +685,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
       summary: Query all validators that a delegator is bonded to
       tags:
@@ -710,13 +710,13 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       - in: path
         name: validatorAddr
         description: Bech32 ValAddress of Delegator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Query a validator that a delegator is bonded to
       tags:
@@ -739,7 +739,7 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
       summary: Get all staking txs (i.e msgs) from a delegator
       tags:
@@ -753,8 +753,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/TxQuery"
-        204:
-          description: No staking transaction about this delegator address
         400:
           description: Invalid delegator address
         500:
@@ -798,7 +796,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Query the information from a single validator
       tags:
@@ -821,7 +819,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Get all delegations from a validator
       tags:
@@ -846,7 +844,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Get all unbonding delegations from a validator
       tags:
@@ -920,32 +918,30 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /slashing/validators/{validatorPubKey}/signing_info:
-    get:
-      summary: Get sign info of given validator
-      description: Get sign info of given validator
-      produces:
-        - application/json
-      tags:
-        - ICS23
-      parameters:
-        - type: string
-          description: Bech32 validator public key
-          name: validatorPubKey
-          required: true
-          in: path
-          x-example: cosmosvalconspub1zcjduepq7mft6gfls57a0a42d7uhx656cckhfvtrlmw744jv4q0mvlv0dypskehfk8
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/SigningInfo"
-        204:
-          description: No sign info of this validator
-        400:
-          description: Invalid validator public key
-        500:
-          description: Internal Server Error
+  #  /slashing/validators/{validatorPubKey}/signing_info:
+  #    get:
+  #      summary: Get sign info of given validator
+  #      description: Get sign info of given validator
+  #      produces:
+  #        - application/json
+  #      tags:
+  #        - ICS23
+  #      parameters:
+  #        - type: string
+  #          description: Bech32 validator public key
+  #          name: validatorPubKey
+  #          required: true
+  #          in: path
+  #          x-example: cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
+  #      responses:
+  #        200:
+  #          description: OK
+  #          schema:
+  #            $ref: "#/definitions/SigningInfo"
+  #        400:
+  #          description: Invalid validator public key
+  #        500:
+  #          description: Internal Server Error
   /slashing/signing_infos:
     get:
       summary: Get sign info of given all validators
@@ -974,8 +970,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/SigningInfo"
-        204:
-          description: No validators with sign info
         400:
           description: Invalid validator public key for one of the validators
         500:
@@ -996,7 +990,7 @@ paths:
           name: validatorAddr
           required: true
           in: path
-          x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+          x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
         - description: ""
           name: UnjailBody
           in: body
@@ -1029,19 +1023,19 @@ paths:
             type: object
             properties:
               max_evidence_age:
-                type: integer
+                type: string
               signed_blocks_window:
-                type: integer
+                type: string
               min_signed_per_window:
-                type: integer
+                type: string
               double_sign_unbond_duration:
-                type: integer
+                type: string
               downtime_unbond_duration:
-                type: integer
+                type: string
               slash_fraction_double_sign:
-                type: integer
+                type: string
               slash_fraction_downtime:
-                type: integer
+                type: string
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -1178,7 +1172,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
       responses:
         200:
           description: OK
@@ -1201,7 +1195,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
       responses:
         200:
           description: OK
@@ -1224,7 +1218,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
       responses:
         200:
           description: OK
@@ -1251,7 +1245,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
         - description: ""
           name: post_deposit_body
           in: body
@@ -1292,13 +1286,13 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
         - type: string
           description: Bech32 depositor address
           name: depositor
           required: true
           in: path
-          x-example: cosmos1xl6453f6q6dv5770c9ue6hspdc0vxfuqtudkhz
+          x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
         200:
           description: OK
@@ -1324,7 +1318,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
       responses:
         200:
           description: OK
@@ -1351,7 +1345,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
         - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
           name: post_vote_body
           in: body
@@ -1391,13 +1385,13 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
         - type: string
           description: Bech32 voter address
           name: voter
           required: true
           in: path
-          x-example: cosmos1qwl879nx9t6kef4supyazayf7vjhennyjqwjgr
+          x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
         200:
           description: OK
@@ -1423,7 +1417,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '1'
+          x-example: '2'
       responses:
         200:
           description: OK
@@ -1568,13 +1562,13 @@ paths:
         description: Bech32 AccAddress of Delegator
         required: true
         type: string
-        x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       - in: path
         name: validatorAddr
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Query a delegation reward
       description: Query a single delegation reward by a delegator
@@ -1680,7 +1674,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Validator distribution information
       description: Query the distribution information of a single validator
@@ -1704,7 +1698,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Fee distribution outstanding rewards of a single validator
       tags:
@@ -1727,7 +1721,7 @@ paths:
         description: Bech32 OperatorAddress of validator
         required: true
         type: string
-        x-example: cosmosvaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys
+        x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
       summary: Commission and self-delegation rewards of a single validator
       description: Query the commission and self-delegation rewards of validator.
@@ -1830,7 +1824,7 @@ paths:
               goal_bonded:
                 type: string
               blocks_per_year:
-                type: integer
+                type: string
         500:
           description: Internal Server Error
   /minting/inflation:
@@ -1943,7 +1937,7 @@ definitions:
   ValidatorAddress:
     type: string
     description: bech32 encoded address
-    example: cosmosvaloper1depk54cuajgkzea6zpgkq36tnjwdzv4avv9cxd
+    example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
   Coin:
     type: object
     properties:
@@ -2220,7 +2214,7 @@ definitions:
         $ref: "#/definitions/ValidatorAddress"
       pub_key:
         type: string
-        example: cosmosvalconspub1zcjduepq7sjfglw7ra4mjxpw4ph7dtdhdheh7nz8dfgl6t8u2n5szuuql9mqsrwquu
+        example: cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
       voting_power:
         type: string
         example: "1000"
@@ -2254,7 +2248,7 @@ definitions:
     type: object
     properties:
       proposal_id:
-        type: integer
+        type: string
       proposer:
         type: string
   Deposit:
@@ -2265,7 +2259,7 @@ definitions:
         items:
           $ref: "#/definitions/Coin"
       proposal_id:
-        type: integer
+        type: string
       depositor:
         $ref: "#/definitions/Address"
   TallyResult:
@@ -2289,7 +2283,7 @@ definitions:
       voter:
         type: string
       proposal_id:
-        type: integer
+        type: string
       option:
         type: string
   Validator:
@@ -2299,7 +2293,7 @@ definitions:
         $ref: "#/definitions/ValidatorAddress"
       consensus_pubkey:
         type: string
-        example: cosmosvalconspub1zcjduepq7sjfglw7ra4mjxpw4ph7dtdhdheh7nz8dfgl6t8u2n5szuuql9mqsrwquu
+        example: cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
       jailed:
         type: boolean
       status:
@@ -2357,6 +2351,28 @@ definitions:
         type: string
       height:
         type: integer
+  UnbondingDelegationPair:
+    type: object
+    properties:
+      delegator_address:
+        type: string
+      validator_address:
+        type: string
+      entries:
+        type: array
+        items:
+          $ref: "#/definitions/UnbondingEntries"
+  UnbondingEntries:
+    type: object
+    properties:
+      initial_balance:
+        type: string
+      balance:
+        type: string
+      creation_height:
+        type: string
+      min_time:
+        type: string
   UnbondingDelegation:
     type: object
     properties:
@@ -2411,6 +2427,13 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
+  PublicKey:
+    type: object
+    properties:
+      type:
+        type: string
+      value:
+        type: string
   SigningInfo:
     type: object
     properties:

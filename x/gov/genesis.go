@@ -110,17 +110,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	}
 
 	var totalDeposits sdk.Coins
+
 	for _, deposit := range data.Deposits {
 		k.setDeposit(ctx, deposit.ProposalID, deposit.Depositor, deposit)
 		totalDeposits = totalDeposits.Add(deposit.Amount)
 	}
-
-	// else if !moduleAcc.GetCoins().IsEqual(totalDeposits) {
-	// 	// TODO: move to governance invariants.go
-	// 	panic(fmt.Sprint("deposits invariance:\n"+
-	// 		"\tgov ModuleAccount coins: %s\n"+
-	// 		"\tsum of deposit amounts: %s", moduleAcc.GetCoins(), totalDeposits))
-	// }
 
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Voter, vote)

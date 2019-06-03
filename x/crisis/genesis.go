@@ -1,6 +1,8 @@
 package crisis
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,5 +38,8 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 
 // ValidateGenesis - placeholder function
 func ValidateGenesis(data GenesisState) error {
+	if !data.ConstantFee.IsPositive() {
+		return fmt.Errorf("constant fee must be positive: %s", data.ConstantFee)
+	}
 	return nil
 }

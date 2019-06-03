@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/bech32"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -112,23 +113,26 @@ func runFromHex(hexstr string) bool {
 }
 
 func displayParseKeyInfo(stringer fmt.Stringer) {
+	var out []byte
+	var err error
+
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		fmt.Printf("%s\n", stringer)
+		out, err = yaml.Marshal(&stringer)
 
 	case OutputFormatJSON:
-		var out []byte
-		var err error
 
 		if viper.GetBool(flags.FlagIndentResponse) {
 			out, err = cdc.MarshalJSONIndent(stringer, "", "  ")
-			if err != nil {
-				panic(err)
-			}
 		} else {
 			out = cdc.MustMarshalJSON(stringer)
 		}
 
-		fmt.Println(string(out))
 	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(out))
 }

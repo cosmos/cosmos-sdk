@@ -156,6 +156,16 @@ func (lkb lazyKeybase) Import(name string, armor string) (err error) {
 	return newDbKeybase(db).Import(name, armor)
 }
 
+func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return newDbKeybase(db).ImportPrivKey(name, armor, passphrase)
+}
+
 func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
@@ -194,6 +204,18 @@ func (lkb lazyKeybase) ExportPrivateKeyObject(name string, passphrase string) (c
 	defer db.Close()
 
 	return newDbKeybase(db).ExportPrivateKeyObject(name, passphrase)
+}
+
+func (lkb lazyKeybase) ExportPrivKey(name string, decryptPassphrase string,
+	encryptPassphrase string) (armor string, err error) {
+
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	return newDbKeybase(db).ExportPrivKey(name, decryptPassphrase, encryptPassphrase)
 }
 
 func (lkb lazyKeybase) CloseDB() {}

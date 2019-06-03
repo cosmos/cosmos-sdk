@@ -12,13 +12,13 @@ import (
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
-	val1 := NewValidator(addr1, pk1, Description{})
-	val2 := NewValidator(addr1, pk1, Description{})
+	val1 := NewValidator(valAddr1, pk1, Description{})
+	val2 := NewValidator(valAddr1, pk1, Description{})
 
 	ok := val1.TestEquivalent(val2)
 	require.True(t, ok)
 
-	val2 = NewValidator(addr2, pk2, Description{})
+	val2 = NewValidator(valAddr2, pk2, Description{})
 
 	ok = val1.TestEquivalent(val2)
 	require.False(t, ok)
@@ -54,7 +54,7 @@ func TestUpdateDescription(t *testing.T) {
 }
 
 func TestABCIValidatorUpdate(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
 	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
@@ -62,7 +62,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdateZero()
 	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
@@ -71,7 +71,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 
 func TestShareTokens(t *testing.T) {
 	validator := Validator{
-		OperatorAddress: addr1,
+		OperatorAddress: valAddr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -85,7 +85,7 @@ func TestShareTokens(t *testing.T) {
 }
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
+	validator := NewValidator(valAddr1, pk1, Description{})
 	js, err := codec.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
@@ -97,7 +97,7 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 }
 
 func TestValidatorSetInitialCommission(t *testing.T) {
-	val := NewValidator(addr1, pk1, Description{})
+	val := NewValidator(valAddr1, pk1, Description{})
 	testCases := []struct {
 		validator   Validator
 		commission  Commission

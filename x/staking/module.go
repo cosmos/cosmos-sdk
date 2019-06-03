@@ -3,10 +3,18 @@ package staking
 import (
 	"encoding/json"
 
+	flag "github.com/spf13/pflag"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -42,6 +50,27 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 		return err
 	}
 	return ValidateGenesis(data)
+}
+
+//_____________________________________
+// extra helpers
+
+// CreateValidatorMsgHelpers - used for gen-tx
+func (AppModuleBasic) CreateValidatorMsgHelpers(ipDefault string) (
+	fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string) {
+	return cli.CreateValidatorMsgHelpers(ipDefault)
+}
+
+// PrepareFlagsForTxCreateValidator - used for gen-tx
+func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID,
+	chainID string, valPubKey crypto.PubKey) {
+	cli.PrepareFlagsForTxCreateValidator(config, nodeID, chainID, valPubKey)
+}
+
+// BuildCreateValidatorMsg - used for gen-tx
+func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
+	txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error) {
+	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 }
 
 // app module

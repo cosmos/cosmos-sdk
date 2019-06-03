@@ -77,7 +77,7 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(LastTotalPowerKey)
+	b := store.Get(types.LastTotalPowerKey)
 	if b == nil {
 		return sdk.ZeroInt()
 	}
@@ -89,7 +89,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
-	store.Set(LastTotalPowerKey, b)
+	store.Set(types.LastTotalPowerKey, b)
 }
 
 // freeCoinsToNotBonded adds coins to the not bonded pool of coins within the staking module

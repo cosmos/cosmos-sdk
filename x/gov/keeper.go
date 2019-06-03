@@ -13,21 +13,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// Parameter store key
 var (
 	ParamStoreKeyDepositParams = []byte("depositparams")
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
 )
-
-// Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
-	)
-}
 
 // Governance Keeper
 type Keeper struct {

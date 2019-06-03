@@ -7,18 +7,15 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/tendermint/tendermint/libs/cli"
-
 	toml "github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 const (
 	flagGet = "get"
-
-	// DefaultKeyPass contains the default key password for genesis transactions
-	DefaultKeyPass = "12345678"
 )
 
 var configDefaults = map[string]string{
@@ -38,7 +35,7 @@ func ConfigCmd(defaultCLIHome string) *cobra.Command {
 		Args:  cobra.RangeArgs(0, 2),
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultCLIHome,
+	cmd.Flags().String(flags.FlagHome, defaultCLIHome,
 		"set client's home directory for configuration")
 	cmd.Flags().Bool(flagGet, false,
 		"print configuration value or its default if unset")
@@ -46,7 +43,7 @@ func ConfigCmd(defaultCLIHome string) *cobra.Command {
 }
 
 func runConfigCmd(cmd *cobra.Command, args []string) error {
-	cfgFile, err := ensureConfFile(viper.GetString(cli.HomeFlag))
+	cfgFile, err := ensureConfFile(viper.GetString(flags.FlagHome))
 	if err != nil {
 		return err
 	}

@@ -101,7 +101,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	power = GetValidatorsByPowerIndexKey(validator)
+	power = types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
 }
 
@@ -1096,8 +1096,8 @@ func TestRemoveTokens(t *testing.T) {
 	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 	require.Equal(t, int64(80), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
-	require.Panics(t, func() {keeper.removeTokens(ctx, validator, sdk.NewInt(-1))})
-	require.Panics(t, func() {keeper.removeTokens(ctx, validator, sdk.NewInt(100))})
+	require.Panics(t, func() { keeper.removeTokens(ctx, validator, sdk.NewInt(-1)) })
+	require.Panics(t, func() { keeper.removeTokens(ctx, validator, sdk.NewInt(100)) })
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {
@@ -1268,7 +1268,6 @@ func TestUpdateStatus(t *testing.T) {
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	require.Equal(t, int64(100), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 	require.Equal(t, int64(0), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-
 
 }
 

@@ -9,13 +9,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
@@ -65,7 +66,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
-	genOnly := viper.GetBool(client.FlagGenerateOnly)
+	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
@@ -73,16 +74,16 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	}
 
 	if !genOnly {
-		nodeURI = viper.GetString(client.FlagNode)
+		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
 			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 		}
 	}
 
 	// We need to use a single verifier for all contexts
-	if verifier == nil || verifierHome != viper.GetString(cli.HomeFlag) {
+	if verifier == nil || verifierHome != viper.GetString(flags.FlagHome) {
 		verifier = createVerifier()
-		verifierHome = viper.GetString(cli.HomeFlag)
+		verifierHome = viper.GetString(flags.FlagHome)
 	}
 
 	return CLIContext{
@@ -90,41 +91,41 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		AccountStore:  auth.StoreKey,
-		From:          viper.GetString(client.FlagFrom),
+		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
-		Height:        viper.GetInt64(client.FlagHeight),
-		TrustNode:     viper.GetBool(client.FlagTrustNode),
-		UseLedger:     viper.GetBool(client.FlagUseLedger),
-		BroadcastMode: viper.GetString(client.FlagBroadcastMode),
-		PrintResponse: viper.GetBool(client.FlagPrintResponse),
+		Height:        viper.GetInt64(flags.FlagHeight),
+		TrustNode:     viper.GetBool(flags.FlagTrustNode),
+		UseLedger:     viper.GetBool(flags.FlagUseLedger),
+		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
+		PrintResponse: viper.GetBool(flags.FlagPrintResponse),
 		Verifier:      verifier,
-		Simulate:      viper.GetBool(client.FlagDryRun),
+		Simulate:      viper.GetBool(flags.FlagDryRun),
 		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
-		Indent:        viper.GetBool(client.FlagIndentResponse),
-		SkipConfirm:   viper.GetBool(client.FlagSkipConfirmation),
+		Indent:        viper.GetBool(flags.FlagIndentResponse),
+		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
-func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(client.FlagFrom)) }
+func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
 
 func createVerifier() tmlite.Verifier {
-	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	trustNodeDefined := viper.IsSet(flags.FlagTrustNode)
 	if !trustNodeDefined {
 		return nil
 	}
 
-	trustNode := viper.GetBool(client.FlagTrustNode)
+	trustNode := viper.GetBool(flags.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
 
-	chainID := viper.GetString(client.FlagChainID)
-	home := viper.GetString(cli.HomeFlag)
-	nodeURI := viper.GetString(client.FlagNode)
+	chainID := viper.GetString(flags.FlagChainID)
+	home := viper.GetString(flags.FlagHome)
+	nodeURI := viper.GetString(flags.FlagNode)
 
 	var errMsg bytes.Buffer
 	if chainID == "" {
@@ -272,7 +273,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	switch ctx.OutputFormat {
 	case "text":
-		out = []byte(toPrint.String())
+		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
 		if ctx.Indent {

@@ -103,6 +103,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
 	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
+	coinsToBurn := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.GT(sdk.ZeroInt()) {
@@ -117,8 +118,13 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
-	// TODO: Move the token accounting outside of `RemoveValidatorTokens` so it is less confusing
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+
+	if validator.Status == sdk.Bonded {
+		if err := k.burnBondedCoins(ctx, coinsToBurn); err != nil {
+			panic(err)
+		}
+	}
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
@@ -195,7 +201,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// Burn the slashed tokens from the unbonded pool account and the total supply.
 		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
 		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondingSlashAmount))
-		err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
+		err := k.burnNotBondedCoins(ctx, burnedCoins)
 		if err != nil {
 			panic(err)
 		}
@@ -248,16 +254,10 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			sharesToUnbond = delegation.Shares
 		}
 
-		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
+		// we don't burn tokens here as they are burned upsteam on the main Slash function
+		_, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
-		}
-
-		// Burn the slashed tokens from the unbonded pool account and the total supply.
-		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
-		err = k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, burnedCoins)
-		if err != nil {
-			panic(err)
 		}
 	}
 

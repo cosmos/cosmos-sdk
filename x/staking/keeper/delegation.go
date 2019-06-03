@@ -25,16 +25,26 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 	return delegation, true
 }
 
-// return all delegations used during genesis dump
-func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
+// IterateAllDelegations iterate through all of the delegations
+func (k Keeper) IterateAllDelegations(ctx sdk.Context, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-		delegations = append(delegations, delegation)
+		if cb(delegation) {
+			break
+		}
 	}
+}
+
+// GetAllDelegations returns all delegations used during genesis dump
+func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
+	k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
+		delegations = append(delegations, delegation)
+		return false
+	})
 	return delegations
 }
 
@@ -468,15 +478,16 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 		k.BeforeDelegationCreated(ctx, delAddr, validator.OperatorAddress)
 	}
 
-	// add coins to the bonded staking pool
-	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-	err = k.freeCoinsToNotBonded(ctx, bondedCoins)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
+	// don't subtract coins from account balance if the action is a redelegation
 	if subtractAccount {
+		bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
 		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, bondedCoins)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		// add coins to the bonded staking pool
+		err = k.freeCoinsToBonded(ctx, bondedCoins)
 		if err != nil {
 			return sdk.Dec{}, err
 		}
@@ -521,7 +532,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// subtract shares from delegation
 	delegation.Shares = delegation.Shares.Sub(shares)
 
-	isValidatorOperator := bytes.Equal(delegation.DelegatorAddress, validator.OperatorAddress)
+	isValidatorOperator := delegation.DelegatorAddress.Equals(validator.OperatorAddress)
 
 	// if the delegation is the operator of the validator and undelegating will decrease the validator's self delegation below their minimum
 	// trigger a jail validator
@@ -598,6 +609,8 @@ func (k Keeper) Undelegate(
 		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
+	k.bondedTokensToNotBonded(ctx, returnAmount)
+
 	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
 	k.InsertUBDQueue(ctx, ubd, completionTime)
@@ -625,16 +638,16 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 			i--
 
 			// track undelegation only when remaining or truncated shares are non-zero
-			var amt sdk.Coins
+
 			if !entry.Balance.IsZero() {
-				amt = sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
+				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
 				_, err := k.bankKeeper.UndelegateCoins(ctx, ubd.DelegatorAddress, amt)
 				if err != nil {
 					return err
 				}
 
 				// remove the coins from the not bonded pool
-				err = k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, amt)
+				err = k.burnNotBondedCoins(ctx, amt)
 				if err != nil {
 					return err
 				}

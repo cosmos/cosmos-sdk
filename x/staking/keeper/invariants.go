@@ -51,11 +51,12 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		bonded := sdk.ZeroInt()
 		notBonded := sdk.ZeroInt()
 		bondedPool, notBondedPool := k.GetPools(ctx)
+		bondDenom := k.BondDenom(ctx)
 
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetBondedTokens())
+				bonded = bonded.Add(validator.GetTokens())
 			case sdk.Unbonding, sdk.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
 			}
@@ -69,21 +70,18 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		expectedBonded := bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
-		expectedNotBonded := notBondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
-
-		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
-		if !expectedNotBonded.Equal(notBonded) {
-			return fmt.Errorf("not bonded token invariance:\n"+
-				"\tPool's not bonded tokens: %v\n"+
-				"\tsum of not bonded tokens: %v", expectedBonded, notBonded)
-		}
+		poolBonded := bondedPool.GetCoins().AmountOf(bondDenom)
+		poolNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !expectedBonded.Equal(bonded) {
+		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
+		if !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tPool's bonded tokens: %v\n"+
-				"\tsum of bonded tokens from delegations: %v", expectedBonded, bonded)
+				"\tsum of bonded tokens from delegations: %v\n"+
+				"not bonded token invariance:\n"+
+				"\tPool's not bonded tokens: %v\n"+
+				"\tsum of not bonded tokens: %v", poolBonded, bonded, poolNotBonded, notBonded)
 		}
 
 		return nil

@@ -441,34 +441,11 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
 func (k Keeper) UpdateStatus(ctx sdk.Context, v types.Validator, newStatus sdk.BondStatus) types.Validator {
-	if v.Status == newStatus {
-		return v
-	}
-
-	switch v.Status {
-	case sdk.Unbonded:
-
-		if newStatus == sdk.Bonded {
-			k.notBondedTokensToBonded(ctx, v.Tokens)
-		}
-	case sdk.Unbonding:
-
-		if newStatus == sdk.Bonded {
-			k.notBondedTokensToBonded(ctx, v.Tokens)
-		}
-	case sdk.Bonded:
-
-		if newStatus == sdk.Unbonded || newStatus == sdk.Unbonding {
-			k.bondedTokensToNotBonded(ctx, v.Tokens)
-		}
-	}
-
 	v.Status = newStatus
 	return v
 }
 
 // AddTokensFromDel adds tokens to a validator
-// CONTRACT: Tokens are assumed to have come from not-bonded pool.
 func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.Int) (types.Validator, sdk.Dec) {
 
 	// calculate the shares to issue
@@ -485,9 +462,6 @@ func (k Keeper) AddTokensFromDel(ctx sdk.Context, v types.Validator, amount sdk.
 		issuedShares = shares
 	}
 
-	if v.Status == sdk.Bonded {
-		k.notBondedTokensToBonded(ctx, amount)
-	}
 	v.Tokens = v.Tokens.Add(amount)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
@@ -506,20 +480,6 @@ func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
-	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
-	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	switch v.Status {
-	case sdk.Bonded:
-		err := k.supplyKeeper.BurnCoins(ctx, BondedTokensName, coins)
-		if err != nil {
-			panic(err)
-		}
-	default:
-		err := k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, coins)
-		if err != nil {
-			panic(err)
-		}
-	}
 	return v
 }
 
@@ -548,9 +508,5 @@ func (k Keeper) removeDelShares(ctx sdk.Context, v types.Validator, delShares sd
 	}
 
 	v.DelegatorShares = remainingShares
-	if v.Status == sdk.Bonded {
-		k.bondedTokensToNotBonded(ctx, issuedTokens)
-	}
-
 	return v, issuedTokens
 }

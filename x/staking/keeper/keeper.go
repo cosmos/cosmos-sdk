@@ -92,25 +92,16 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store.Set(types.LastTotalPowerKey, b)
 }
 
-// freeCoinsToNotBonded adds coins to the not bonded pool of coins within the staking module
-func (k Keeper) freeCoinsToNotBonded(ctx sdk.Context, amt sdk.Coins) sdk.Error {
-	_, notBondedPool := k.GetPools(ctx)
-	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(amt))
+// freeCoinsToBonded adds coins to the bonded pool of coins within the staking module
+func (k Keeper) freeCoinsToBonded(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	bondedPool, _ := k.GetPools(ctx)
+	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(amt))
 	if err != nil {
 		return sdk.ErrInternal(err.Error())
 	}
 
-	k.SetNotBondedPool(ctx, notBondedPool)
+	k.SetBondedPool(ctx, bondedPool)
 	return nil
-}
-
-// notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
-func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
-	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
-	err := k.supplyKeeper.SendCoinsModuleToModule(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
-	if err != nil {
-		panic(err)
-	}
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
@@ -120,4 +111,14 @@ func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// burnBondedCoins burns coins from the bonded pool module account
+func (k Keeper) burnBondedCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	return k.supplyKeeper.BurnCoins(ctx, BondedTokensName, amt)
+}
+
+// burnNotBondedCoins burns coins from the not bonded pool module account
+func (k Keeper) burnNotBondedCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	return k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, amt)
 }

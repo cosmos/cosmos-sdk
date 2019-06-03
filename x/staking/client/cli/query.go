@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/staking/querier"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -133,12 +132,12 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryValidatorUnbondingDelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryValidatorUnbondingDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -175,12 +174,12 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.QueryRedelegationParams{SrcValidatorAddr: valSrcAddr})
+			bz, err := cdc.MarshalJSON(types.QueryRedelegationParams{SrcValidatorAddr: valSrcAddr})
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -224,12 +223,12 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.NewQueryBondsParams(delAddr, valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryBondsParams(delAddr, valAddr))
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryDelegation)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryDelegation)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -269,12 +268,12 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.NewQueryDelegatorParams(delAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryDelegatorParams(delAddr))
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryDelegatorDelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryDelegatorDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -314,12 +313,12 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryValidatorDelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryValidatorDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -448,12 +447,12 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.NewQueryRedelegationParams(delAddr, valSrcAddr, valDstAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryRedelegationParams(delAddr, valSrcAddr, valDstAddr))
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -493,12 +492,12 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(querier.QueryRedelegationParams{DelegatorAddr: delAddr})
+			bz, err := cdc.MarshalJSON(types.QueryRedelegationParams{DelegatorAddr: delAddr})
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -560,7 +559,7 @@ $ %s query staking params
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/%s", storeName, querier.QueryParameters)
+			route := fmt.Sprintf("custom/%s/%s", storeName, types.QueryParameters)
 			bz, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err

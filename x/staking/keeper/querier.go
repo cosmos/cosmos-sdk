@@ -1,4 +1,4 @@
-package querier
+package keeper
 
 import (
 	"fmt"
@@ -8,57 +8,38 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// query endpoints supported by the staking Querier
-const (
-	QueryValidators                    = "validators"
-	QueryValidator                     = "validator"
-	QueryDelegatorDelegations          = "delegatorDelegations"
-	QueryDelegatorUnbondingDelegations = "delegatorUnbondingDelegations"
-	QueryRedelegations                 = "redelegations"
-	QueryValidatorDelegations          = "validatorDelegations"
-	QueryValidatorRedelegations        = "validatorRedelegations"
-	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
-	QueryDelegation                    = "delegation"
-	QueryUnbondingDelegation           = "unbondingDelegation"
-	QueryDelegatorValidators           = "delegatorValidators"
-	QueryDelegatorValidator            = "delegatorValidator"
-	QueryPool                          = "pool"
-	QueryParameters                    = "parameters"
-)
-
 // creates a querier for staking REST endpoints
-func NewQuerier(k keep.Keeper) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case QueryValidators:
+		case types.QueryValidators:
 			return queryValidators(ctx, req, k)
-		case QueryValidator:
+		case types.QueryValidator:
 			return queryValidator(ctx, req, k)
-		case QueryValidatorDelegations:
+		case types.QueryValidatorDelegations:
 			return queryValidatorDelegations(ctx, req, k)
-		case QueryValidatorUnbondingDelegations:
+		case types.QueryValidatorUnbondingDelegations:
 			return queryValidatorUnbondingDelegations(ctx, req, k)
-		case QueryDelegation:
+		case types.QueryDelegation:
 			return queryDelegation(ctx, req, k)
-		case QueryUnbondingDelegation:
+		case types.QueryUnbondingDelegation:
 			return queryUnbondingDelegation(ctx, req, k)
-		case QueryDelegatorDelegations:
+		case types.QueryDelegatorDelegations:
 			return queryDelegatorDelegations(ctx, req, k)
-		case QueryDelegatorUnbondingDelegations:
+		case types.QueryDelegatorUnbondingDelegations:
 			return queryDelegatorUnbondingDelegations(ctx, req, k)
-		case QueryRedelegations:
+		case types.QueryRedelegations:
 			return queryRedelegations(ctx, req, k)
-		case QueryDelegatorValidators:
+		case types.QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, req, k)
-		case QueryDelegatorValidator:
+		case types.QueryDelegatorValidator:
 			return queryDelegatorValidator(ctx, req, k)
-		case QueryPool:
+		case types.QueryPool:
 			return queryPool(ctx, k)
-		case QueryParameters:
+		case types.QueryParameters:
 			return queryParameters(ctx, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
@@ -66,70 +47,8 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 	}
 }
 
-// defines the params for the following queries:
-// - 'custom/staking/delegatorDelegations'
-// - 'custom/staking/delegatorUnbondingDelegations'
-// - 'custom/staking/delegatorRedelegations'
-// - 'custom/staking/delegatorValidators'
-type QueryDelegatorParams struct {
-	DelegatorAddr sdk.AccAddress
-}
-
-func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
-	return QueryDelegatorParams{
-		DelegatorAddr: delegatorAddr,
-	}
-}
-
-// defines the params for the following queries:
-// - 'custom/staking/validator'
-// - 'custom/staking/validatorDelegations'
-// - 'custom/staking/validatorUnbondingDelegations'
-// - 'custom/staking/validatorRedelegations'
-type QueryValidatorParams struct {
-	ValidatorAddr sdk.ValAddress
-}
-
-func NewQueryValidatorParams(validatorAddr sdk.ValAddress) QueryValidatorParams {
-	return QueryValidatorParams{
-		ValidatorAddr: validatorAddr,
-	}
-}
-
-// defines the params for the following queries:
-// - 'custom/staking/delegation'
-// - 'custom/staking/unbondingDelegation'
-// - 'custom/staking/delegatorValidator'
-type QueryBondsParams struct {
-	DelegatorAddr sdk.AccAddress
-	ValidatorAddr sdk.ValAddress
-}
-
-func NewQueryBondsParams(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) QueryBondsParams {
-	return QueryBondsParams{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-	}
-}
-
-// defines the params for the following queries:
-// - 'custom/staking/redelegation'
-type QueryRedelegationParams struct {
-	DelegatorAddr    sdk.AccAddress
-	SrcValidatorAddr sdk.ValAddress
-	DstValidatorAddr sdk.ValAddress
-}
-
-func NewQueryRedelegationParams(delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) QueryRedelegationParams {
-	return QueryRedelegationParams{
-		DelegatorAddr:    delegatorAddr,
-		SrcValidatorAddr: srcValidatorAddr,
-		DstValidatorAddr: dstValidatorAddr,
-	}
-}
-
-func queryValidators(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) ([]byte, sdk.Error) {
-	var params QueryValidatorsParams
+func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryValidatorsParams
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -172,8 +91,8 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) ([]b
 	return res, nil
 }
 
-func queryValidator(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryValidatorParams
+func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryValidatorParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -192,8 +111,8 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res 
 	return res, nil
 }
 
-func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryValidatorParams
+func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryValidatorParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -214,8 +133,8 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Ke
 	return res, nil
 }
 
-func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryValidatorParams
+func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryValidatorParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -231,8 +150,8 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	return res, nil
 }
 
-func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryDelegatorParams
+func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryDelegatorParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -253,8 +172,8 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Ke
 	return res, nil
 }
 
-func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryDelegatorParams
+func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryDelegatorParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -270,8 +189,8 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	return res, nil
 }
 
-func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryDelegatorParams
+func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryDelegatorParams
 
 	stakingParams := k.GetParams(ctx)
 
@@ -289,8 +208,8 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k keep.Kee
 	return res, nil
 }
 
-func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryBondsParams
+func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryBondsParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -309,8 +228,8 @@ func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k keep.Keep
 	return res, nil
 }
 
-func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryBondsParams
+func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryBondsParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -335,8 +254,8 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res
 	return res, nil
 }
 
-func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryBondsParams
+func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryBondsParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -355,8 +274,8 @@ func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k keep.Kee
 	return res, nil
 }
 
-func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryRedelegationParams
+func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) (res []byte, err sdk.Error) {
+	var params types.QueryRedelegationParams
 
 	errRes := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -391,7 +310,7 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k keep.Keeper) (
 	return res, nil
 }
 
-func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryPool(ctx sdk.Context, k Keeper) (res []byte, err sdk.Error) {
 	pool := k.GetPool(ctx)
 
 	res, errRes := codec.MarshalJSONIndent(types.ModuleCdc, pool)
@@ -401,7 +320,7 @@ func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
 	return res, nil
 }
 
-func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryParameters(ctx sdk.Context, k Keeper) (res []byte, err sdk.Error) {
 	params := k.GetParams(ctx)
 
 	res, errRes := codec.MarshalJSONIndent(types.ModuleCdc, params)
@@ -411,13 +330,69 @@ func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error)
 	return res, nil
 }
 
-// QueryValidatorsParams defines the params for the following queries:
-// - 'custom/staking/validators'
-type QueryValidatorsParams struct {
-	Page, Limit int
-	Status      string
+//______________________________________________________
+// util
+
+func delegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, sdk.Error) {
+	val, found := k.GetValidator(ctx, del.ValidatorAddress)
+	if !found {
+		return types.DelegationResponse{}, types.ErrNoValidatorFound(types.DefaultCodespace)
+	}
+
+	return types.NewDelegationResp(
+		del.DelegatorAddress,
+		del.ValidatorAddress,
+		del.Shares,
+		val.TokensFromShares(del.Shares).TruncateInt(),
+	), nil
 }
 
-func NewQueryValidatorsParams(page, limit int, status string) QueryValidatorsParams {
-	return QueryValidatorsParams{page, limit, status}
+func delegationsToDelegationResponses(
+	ctx sdk.Context, k Keeper, delegations types.Delegations,
+) (types.DelegationResponses, sdk.Error) {
+
+	resp := make(types.DelegationResponses, len(delegations), len(delegations))
+	for i, del := range delegations {
+		delResp, err := delegationToDelegationResponse(ctx, k, del)
+		if err != nil {
+			return nil, err
+		}
+
+		resp[i] = delResp
+	}
+
+	return resp, nil
+}
+
+func redelegationsToRedelegationResponses(
+	ctx sdk.Context, k Keeper, redels types.Redelegations,
+) (types.RedelegationResponses, sdk.Error) {
+
+	resp := make(types.RedelegationResponses, len(redels), len(redels))
+	for i, redel := range redels {
+		val, found := k.GetValidator(ctx, redel.ValidatorDstAddress)
+		if !found {
+			return nil, types.ErrNoValidatorFound(types.DefaultCodespace)
+		}
+
+		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries), len(redel.Entries))
+		for j, entry := range redel.Entries {
+			entryResponses[j] = types.NewRedelegationEntryResponse(
+				entry.CreationHeight,
+				entry.CompletionTime,
+				entry.SharesDst,
+				entry.InitialBalance,
+				val.TokensFromShares(entry.SharesDst).TruncateInt(),
+			)
+		}
+
+		resp[i] = types.NewRedelegationResponse(
+			redel.DelegatorAddress,
+			redel.ValidatorSrcAddress,
+			redel.ValidatorDstAddress,
+			entryResponses,
+		)
+	}
+
+	return resp, nil
 }

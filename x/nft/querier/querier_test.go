@@ -84,7 +84,7 @@ func TestQueryBalances(t *testing.T) {
 	balances := keeperInstance.GetBalances(ctx)
 	require.Empty(t, balances)
 
-	nft := types.NewBaseNFT(uint64(1), addresses[0], "test_token", "test_description", "test_image", "test_name")
+	nft := types.NFT(types.NewBaseNFT(uint64(1), addresses[0], "test_token", "test_description", "test_image", "test_name"))
 
 	err = keeperInstance.SetNFT(ctx, sdk.DefaultBondDenom, nft)
 	require.Nil(t, err)
@@ -92,8 +92,8 @@ func TestQueryBalances(t *testing.T) {
 	// BROKEN TESTS
 	// TODO: fix unmarshalling,maybe need to register more codec stuff
 	// panic: Bytes left over in UnmarshalBinaryLengthPrefixed, should read 10 more bytes but have 74
-	//collections := keeperInstance.GetCollections(ctx)
-	//require.NotEmpty(t, collections)
+	collections := keeperInstance.GetCollections(ctx)
+	require.NotEmpty(t, collections)
 
 	balances = keeperInstance.GetBalances(ctx)
 	// IS EMPTY

@@ -49,11 +49,11 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 func (k Keeper) SetNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
 	var collection types.Collection
 	collection, found := k.GetCollection(ctx, denom)
-	if !found {
-		collection = types.NewCollection(denom, types.NewNFTs())
+	if found {
+		collection.AddNFT(nft)
+	} else {
+		collection = types.NewCollection(denom, types.NewNFTs(nft))
 	}
-
-	collection.AddNFT(nft)
 	k.SetCollection(ctx, denom, collection)
 
 	return
@@ -107,7 +107,8 @@ func (k Keeper) GetCollections(ctx sdk.Context) (collections []types.Collection)
 // GetCollection returns a collection of NFTs
 func (k Keeper) GetCollection(ctx sdk.Context, denom string) (collection types.Collection, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(denom))
+	collectionKey := GetCollectionKey(denom)
+	b := store.Get(collectionKey)
 	if b == nil {
 		return collection, false
 	}

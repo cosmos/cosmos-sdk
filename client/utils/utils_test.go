@@ -141,14 +141,15 @@ func TestValidateCmd(t *testing.T) {
 		args    []string
 		wantErr bool
 	}{
-		{"valid command call", []string{"commission"}, false},
 		{"misspelled command", []string{"comission"}, true},
-		{"no command provided", []string{""}, true},
+		{"no command provided", []string{}, false},
+		{"help flag", []string{"comission", "--help"}, false},
+		{"shorthand help flag", []string{"comission", "-h"}, false},
 	}
 
 	for _, tt := range tests {
 		err := ValidateCmd(distCmd, tt.args)
-		assert.True(t, err != nil, tt.wantErr, tt.reason)
+		assert.Equal(t, tt.wantErr, err != nil, tt.reason)
 	}
 
 }

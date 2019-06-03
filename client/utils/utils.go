@@ -354,11 +354,14 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 	return false
 }
 
+// ValidateCmd returns unknown command error or Help display if help flag set
 func ValidateCmd(cmd *cobra.Command, args []string) error {
-	if len(args) > 0 {
-		err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", args[0], cmd.CalledAs())
+	cmds, help := parseArgs(args)
 
-		if suggestions := cmd.SuggestionsFor(args[0]); len(suggestions) > 0 {
+	if !help && len(cmds) > 0 {
+		err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", cmds[0], cmd.CalledAs())
+
+		if suggestions := cmd.SuggestionsFor(cmds[0]); len(suggestions) > 0 {
 			err += "\n\nDid you mean this?\n"
 			for _, s := range suggestions {
 				err += fmt.Sprintf("\t%v\n", s)
@@ -368,4 +371,17 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	return cmd.Help()
+}
+
+// parseArgs places command line arguments into an array of unknown commands
+// returns true if the help flag was set
+func parseArgs(args []string) (cmds []string, help bool) {
+	for _, arg := range args {
+		if arg == "--help" || arg == "-h" {
+			help = true
+		} else if len(arg) > 0 && !(arg[0] == '-') {
+			cmds = append(cmds, arg)
+		}
+	}
+	return cmds, help
 }

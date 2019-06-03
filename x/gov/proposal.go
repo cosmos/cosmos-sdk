@@ -113,10 +113,8 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 			continue
 		}
 
-		if ValidProposalStatus(status) {
-			if proposal.Status != status {
-				continue
-			}
+		if ValidProposalStatus(status) && proposal.Status != status {
+			continue
 		}
 
 		matchingProposals = append(matchingProposals, proposal)
@@ -124,14 +122,14 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 	return matchingProposals
 }
 
-// GetLastProposalID gets the last used proposal ID
+// GetLastProposalID gets the last used proposal ID. Returns 0 if the current proposal ID is 0
+// or if the initial proposal ID hasn't been set.
 func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID uint64) {
 	proposalID, err := keeper.peekCurrentProposalID(ctx)
-	if err != nil {
+	if err != nil || proposalID == 0 {
 		return 0
 	}
-	proposalID--
-	return
+	return proposalID - 1
 }
 
 // Gets the next available ProposalID and increments it

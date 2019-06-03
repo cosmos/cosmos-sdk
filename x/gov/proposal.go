@@ -113,7 +113,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 			continue
 		}
 
-		if ValidProposalStatus(status); proposal.Status != status {
+		if ValidProposalStatus(status) && proposal.Status != status {
 			continue
 		}
 

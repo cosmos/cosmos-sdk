@@ -26,6 +26,13 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Conten
 // Implements Proposal Interface
 var _ gov.Content = SoftwareUpgradeProposal{}
 
+func init() {
+	gov.RegisterProposalType(ProposalTypeSoftwareUpgrade)
+	gov.RegisterProposalTypeCodec(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal")
+	gov.RegisterProposalType(ProposalTypeCancelSoftwareUpgrade)
+	gov.RegisterProposalTypeCodec(CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
+}
+
 // nolint
 func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }

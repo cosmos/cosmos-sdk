@@ -157,7 +157,7 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 
 	upgradeTime := keeper.plan.Time
 	upgradeHeight := keeper.plan.Height
-	if (!upgradeTime.IsZero() && !blockTime.Before(upgradeTime)) || upgradeHeight <= blockHeight {
+	if (!upgradeTime.IsZero() && !blockTime.Before(upgradeTime)) || (upgradeHeight > 0 && upgradeHeight <= blockHeight) {
 		handler, ok := keeper.upgradeHandlers[keeper.plan.Name]
 		if ok {
 			// We have an upgrade handler for this upgrade name, so apply the upgrade

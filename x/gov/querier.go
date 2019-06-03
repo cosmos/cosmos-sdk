@@ -179,7 +179,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	deposits := keeper.GetProposalDeposits(ctx, params.ProposalID)
+	deposits := keeper.GetDeposits(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
 	if err != nil {
@@ -230,7 +230,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	votes := keeper.GetProposalVotes(ctx, params.ProposalID)
+	votes := keeper.GetVotes(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
 	if err != nil {

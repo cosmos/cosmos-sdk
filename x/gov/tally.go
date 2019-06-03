@@ -50,8 +50,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 		return false
 	})
 
-	iterator := keeper.GetProposalVotesIterator(ctx, proposal.ProposalID)
-	keeper.IterateVotes(ctx, iterator, func(vote types.Vote) bool {
+	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
 		// if validator, just record it in the map
 		// if delegator tally voting power
 		valAddrStr := sdk.ValAddress(vote.Voter).String()

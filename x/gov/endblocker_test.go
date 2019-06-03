@@ -232,7 +232,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)
-	depositsIterator := input.keeper.GetProposalDepositsIterator(ctx, proposalID)
+	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	depositsIterator.Close()
 	activeQueue.Close()

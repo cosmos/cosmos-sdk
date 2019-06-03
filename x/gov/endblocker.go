@@ -13,10 +13,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	resTags := sdk.NewTags()
 
 	// delete inactive proposal from store and its deposits
-	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	keeper.IterateInactiveProposalsQueue(ctx, inactiveIterator, func(proposal Proposal) bool {
+	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.ProposalID)
-		keeper.DeleteProposalDeposits(ctx, proposal.ProposalID)
+		keeper.DeleteDeposits(ctx, proposal.ProposalID)
 
 		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID))
 		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
@@ -33,16 +32,15 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	keeper.IterateActiveProposalsQueue(ctx, activeIterator, func(proposal Proposal) bool {
+	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
 		var tagValue, logMsg string
 
 		passes, burnDeposits, tallyResults := tally(ctx, keeper, proposal)
 
 		if burnDeposits {
-			keeper.DeleteProposalDeposits(ctx, proposal.ProposalID)
+			keeper.DeleteDeposits(ctx, proposal.ProposalID)
 		} else {
-			keeper.RefundProposalDeposits(ctx, proposal.ProposalID)
+			keeper.RefundDeposits(ctx, proposal.ProposalID)
 		}
 
 		if passes {

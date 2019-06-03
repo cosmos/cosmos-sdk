@@ -157,7 +157,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
-	depositsIterator := input.keeper.GetProposalDepositsIterator(ctx, proposalID)
+	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, input.addrs[0], deposit.Depositor)
@@ -174,7 +174,7 @@ func TestDeposits(t *testing.T) {
 	deposit, found = input.keeper.GetDeposit(ctx, proposalID, input.addrs[1])
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
-	input.keeper.RefundProposalDeposits(ctx, proposalID)
+	input.keeper.RefundDeposits(ctx, proposalID)
 	deposit, found = input.keeper.GetDeposit(ctx, proposalID, input.addrs[1])
 	require.False(t, found)
 	require.Equal(t, addr0Initial, input.keeper.ck.GetCoins(ctx, input.addrs[0]))
@@ -224,7 +224,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
-	votesIterator := input.keeper.GetProposalVotesIterator(ctx, proposalID)
+	votesIterator := input.keeper.GetVotesIterator(ctx, proposalID)
 	require.True(t, votesIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())

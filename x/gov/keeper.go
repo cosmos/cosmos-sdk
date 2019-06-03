@@ -146,7 +146,7 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 // Iterators
 
 // IterateProposals iterates over the all the proposals and performs a callback function
-func (keeper Keeper) IterateProposals(ctx sdk.Context, handler func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 
@@ -155,7 +155,7 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, handler func(proposal typ
 		var proposal types.Proposal
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
 
-		if handler(proposal) {
+		if cb(proposal) {
 			break
 		}
 	}
@@ -163,7 +163,8 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, handler func(proposal typ
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, iterator sdk.Iterator, handler func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -173,7 +174,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, iterator sdk.I
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
 
-		if handler(proposal) {
+		if cb(proposal) {
 			break
 		}
 	}
@@ -181,7 +182,8 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, iterator sdk.I
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, iterator sdk.Iterator, handler func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -191,35 +193,69 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, iterator sdk
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
 
-		if handler(proposal) {
+		if cb(proposal) {
 			break
 		}
 	}
 }
 
-// IterateDeposits iterates over the all the proposals deposits and performs a callback function
-func (keeper Keeper) IterateDeposits(ctx sdk.Context, iterator sdk.Iterator, handler func(deposit types.Deposit) (stop bool)) {
+// IterateAllDeposits iterates over the all the stored deposits and performs a callback function
+func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
 
-		if handler(deposit) {
+		if cb(deposit) {
 			break
 		}
 	}
 }
 
-// IterateVotes iterates over the all the proposals votes and performs a callback function
-func (keeper Keeper) IterateVotes(ctx sdk.Context, iterator sdk.Iterator, handler func(vote types.Vote) (stop bool)) {
+// IterateDeposits iterates over the all the proposals deposits and performs a callback function
+func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit types.Deposit) (stop bool)) {
+	iterator := keeper.GetDepositsIterator(ctx, proposalID)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var deposit types.Deposit
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+
+		if cb(deposit) {
+			break
+		}
+	}
+}
+
+// IterateAllVotes iterates over the all the stored votes and performs a callback function
+func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var vote types.Vote
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
 
-		if handler(vote) {
+		if cb(vote) {
+			break
+		}
+	}
+}
+
+// IterateVotes iterates over the all the proposals votes and performs a callback function
+func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote types.Vote) (stop bool)) {
+	iterator := keeper.GetVotesIterator(ctx, proposalID)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote types.Vote
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
+
+		if cb(vote) {
 			break
 		}
 	}

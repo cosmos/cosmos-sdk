@@ -129,10 +129,10 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	var proposalsDeposits Deposits
 	var proposalsVotes Votes
 	for _, proposal := range proposals {
-		deposits := k.GetProposalDeposits(ctx, proposal.ProposalID)
+		deposits := k.GetDeposits(ctx, proposal.ProposalID)
 		proposalsDeposits = append(proposalsDeposits, deposits...)
 
-		votes := k.GetProposalVotes(ctx, proposal.ProposalID)
+		votes := k.GetVotes(ctx, proposal.ProposalID)
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 

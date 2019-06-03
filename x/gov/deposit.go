@@ -56,14 +56,14 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Add or update deposit object
-	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
-	if !found {
-		newDeposit := NewDeposit(proposalID, depositorAddr, depositAmount)
-		keeper.setDeposit(ctx, proposalID, depositorAddr, newDeposit)
+	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
+	if found {
+		deposit.Amount = deposit.Amount.Add(depositAmount)
 	} else {
-		currDeposit.Amount = currDeposit.Amount.Add(depositAmount)
-		keeper.setDeposit(ctx, proposalID, depositorAddr, currDeposit)
+		deposit = NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
+
+	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
 
 	return nil, activatedVotingPeriod
 }
@@ -99,7 +99,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
 		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
 		store.Delete(DepositKey(proposalID, deposit.Depositor))
 		return false
@@ -113,7 +113,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
 		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
 		if err != nil {
-			panic("should not happen")
+			panic(err)
 		}
 
 		store.Delete(DepositKey(proposalID, deposit.Depositor))

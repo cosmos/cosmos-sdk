@@ -20,7 +20,7 @@ import (
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	distQueryCmd := &cobra.Command{
-		Use:   "distr",
+		Use:   types.ModuleName,
 		Short: "Querying commands for the distribution module",
 	}
 

@@ -918,6 +918,7 @@ paths:
                 type: string
         500:
           description: Internal Server Error
+  # TODO: We need to either fix this route when the validator is not found or add a slashed validator in the contract tests
   #  /slashing/validators/{validatorPubKey}/signing_info:
   #    get:
   #      summary: Get sign info of given validator

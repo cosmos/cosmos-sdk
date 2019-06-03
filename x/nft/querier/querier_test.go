@@ -2,6 +2,9 @@ package querier
 
 import (
 	"bytes"
+	"strconv"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +15,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"strconv"
-	"testing"
 )
 
 // for incode address generation
@@ -61,9 +62,11 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 func TestQueryBalances(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 
 	addresses := createTestAddrs(5)
 	keyNFT := sdk.NewKVStoreKey(types.StoreKey)
+
 	keeperInstance := keeper.NewKeeper(keyNFT, cdc)
 
 	db := dbm.NewMemDB()
@@ -84,16 +87,20 @@ func TestQueryBalances(t *testing.T) {
 	balances := keeperInstance.GetBalances(ctx)
 	require.Empty(t, balances)
 
-	nft := types.NewBaseNFT(uint64(1), addresses[0], "test_token", "test_description", "test_image", "test_name")
+	denom := sdk.DefaultBondDenom
+	id := uint64(1)
 
-	err = keeperInstance.SetNFT(ctx, sdk.DefaultBondDenom, nft)
+	nft := types.NFT(types.NewBaseNFT(id, addresses[0], "test_token", "test_description", "test_image", "test_name"))
+	err = keeperInstance.SetNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
+	nft, err = keeperInstance.GetNFT(ctx, denom, id)
+	require.Nil(t, err)
 	// BROKEN TESTS
-	// TODO: fix unmarshalling,maybe need to register more codec stuff
+	// TODO: fix unmarshalling, maybe need to register more codec stuff
 	// panic: Bytes left over in UnmarshalBinaryLengthPrefixed, should read 10 more bytes but have 74
-	//collections := keeperInstance.GetCollections(ctx)
-	//require.NotEmpty(t, collections)
+	collections := keeperInstance.GetCollections(ctx)
+	require.NotEmpty(t, collections)
 
 	balances = keeperInstance.GetBalances(ctx)
 	// IS EMPTY

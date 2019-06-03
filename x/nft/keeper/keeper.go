@@ -33,12 +33,12 @@ func (k Keeper) IsNFT(ctx sdk.Context, denom string, id uint64) (exists bool) {
 // GetNFT gets the entire NFT metadata struct for a uint64
 func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 ) (nft types.NFT, err sdk.Error) {
-
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
 	nft, err = collection.GetNFT(id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +50,12 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Er
 	var collection types.Collection
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
-		collection = types.NewCollection(denom, types.NewNFTs())
+		collection = types.NewCollection(denom, []types.NFT{nft})
+		k.SetCollection(ctx, denom, collection)
+	} else {
+		collection.AddNFT(nft)
+		k.SetCollection(ctx, denom, collection)
 	}
-
-	collection.AddNFT(nft)
-	k.SetCollection(ctx, denom, collection)
-
 	return
 }
 
@@ -106,20 +106,24 @@ func (k Keeper) GetCollections(ctx sdk.Context) (collections []types.Collection)
 
 // GetCollection returns a collection of NFTs
 func (k Keeper) GetCollection(ctx sdk.Context, denom string) (collection types.Collection, found bool) {
+	fmt.Println("GetCollection", denom)
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(denom))
-	if b == nil {
-		return collection, false
+	collectionKey := GetCollectionKey(denom)
+	bz := store.Get(collectionKey)
+	if bz == nil {
+		return
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, collection)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &collection)
 	return collection, true
 }
 
 // SetCollection sets the entire collection of a single denom
 func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Collection) {
+	fmt.Println("SetCollection", denom, collection)
 	store := ctx.KVStore(k.storeKey)
 	collectionKey := GetCollectionKey(denom)
-	store.Set(collectionKey, k.cdc.MustMarshalBinaryBare(collection))
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(collection)
+	store.Set(collectionKey, bz)
 }
 
 // IterateBalances iterates over the owners' balances of NFTs and performs a function

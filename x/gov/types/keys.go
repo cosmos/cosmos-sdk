@@ -50,6 +50,8 @@ var (
 	VotesKeyPrefix = []byte{0x20}
 )
 
+var lenTime = len(sdk.FormatTimeBytes(time.Now()))
+
 // ProposalKey gets a specific proposal from the store
 func ProposalKey(proposalID uint64) []byte {
 	bz := make([]byte, 8)
@@ -141,7 +143,6 @@ func SplitKeyVote(key []byte) (proposalID uint64, voterAddr sdk.AccAddress) {
 // private functions
 
 func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
-	lenTime := len(sdk.FormatTimeBytes(time.Now()))
 	if len(key[1:]) != 8+lenTime {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
 	}

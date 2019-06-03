@@ -92,3 +92,4 @@ to set up a script to periodically withdraw and rebond rewards.
     - [Change in Validator State](05_hooks.md#change-in-validator-state)
 6. **[Tags](06_tags.md)**
     - [Handlers](06_tags.md#handlers)
+7. **[Parameters](07_params.md)**

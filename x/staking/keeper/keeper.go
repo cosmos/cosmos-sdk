@@ -65,7 +65,7 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 // get the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(PoolKey)
+	b := store.Get(types.PoolKey)
 	if b == nil {
 		panic("stored pool should not have been nil")
 	}
@@ -77,13 +77,13 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
-	store.Set(PoolKey, b)
+	store.Set(types.PoolKey, b)
 }
 
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(LastTotalPowerKey)
+	b := store.Get(types.LastTotalPowerKey)
 	if b == nil {
 		return sdk.ZeroInt()
 	}
@@ -95,5 +95,5 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
-	store.Set(LastTotalPowerKey, b)
+	store.Set(types.LastTotalPowerKey, b)
 }

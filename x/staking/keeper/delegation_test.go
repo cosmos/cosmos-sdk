@@ -350,13 +350,10 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	params := keeper.GetParams(ctx)
 	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingCompletionTime))
 
-	//change the context
-	header = ctx.BlockHeader()
 	blockHeight2 := int64(20)
-	header.Height = blockHeight2
-	blockTime2 := time.Unix(444, 0)
-	header.Time = blockTime2
-	ctx = ctx.WithBlockHeader(header)
+	blockTime2 := time.Unix(444, 0).UTC()
+	ctx = ctx.WithBlockHeight(blockHeight2)
+	ctx = ctx.WithBlockTime(blockTime2)
 
 	// unbond some of the other delegation's shares
 	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
@@ -367,8 +364,8 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	require.True(t, ubd.Entries[0].Balance.Equal(sdk.NewInt(6)))
-	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
-	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
+	assert.Equal(t, blockHeight2, ubd.Entries[0].CreationHeight)
+	assert.True(t, blockTime2.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
 
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
@@ -377,7 +374,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	startTokens := sdk.TokensFromTendermintPower(20)
 	pool.NotBondedTokens = startTokens
 
-	//create a validator with a self-delegation
+	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 
 	valTokens := sdk.TokensFromTendermintPower(10)
@@ -431,10 +428,6 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	unbondTokens := sdk.TokensFromTendermintPower(6)
 	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], unbondTokens.ToDec())
 	require.NoError(t, err)
-
-	// no ubd should have been found, coins should have been returned direcly to account
-	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
-	require.False(t, found, "%v", ubd)
 
 	// unbond rest of the other delegation's shares
 	remainingTokens := delTokens.Sub(unbondTokens)

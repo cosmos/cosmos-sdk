@@ -15,13 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
@@ -77,7 +70,7 @@ func TestCalculateGas(t *testing.T) {
 }
 
 func TestDefaultTxEncoder(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc := makeCodec()
 
 	defaultEncoder := auth.DefaultTxEncoder(cdc)
 	encoder := GetTxEncoder(cdc)
@@ -86,7 +79,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestConfiguredTxEncoder(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc := makeCodec()
 
 	customEncoder := func(tx sdk.Tx) ([]byte, error) {
 		return json.Marshal(tx)
@@ -144,21 +137,9 @@ func writeToNewTempFile(t *testing.T, data string) *os.File {
 
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
-	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distribution.RegisterCodec(cdc)
-	slashing.RegisterCodec(cdc)
-	params.RegisterCodec(cdc)
-	gov.RegisterCodec(cdc)
-	auth.RegisterCodec(cdc)
-	crisis.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
-func makeTestCodec() *codec.Codec {
-	cdc := makeCodec()
+	auth.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

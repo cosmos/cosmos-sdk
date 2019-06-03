@@ -24,12 +24,15 @@ const (
 // load the iavl store
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions) (types.CommitStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
+
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
+
 	iavl := UnsafeNewStore(tree, int64(0), int64(0))
 	iavl.SetPruning(pruning)
+
 	return iavl, nil
 }
 
@@ -41,8 +44,7 @@ var _ types.Queryable = (*Store)(nil)
 
 // Store Implements types.KVStore and CommitStore.
 type Store struct {
-	// The underlying tree.
-	tree *iavl.MutableTree
+	tree Tree
 
 	// How many old versions we hold onto.
 	// A value of 0 means keep no recent states.
@@ -66,6 +68,28 @@ func UnsafeNewStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *
 		storeEvery: storeEvery,
 	}
 	return st
+}
+
+// GetImmutable returns a reference to a new store backed by an immutable IAVL
+// tree at a specific version (height) without any pruning options. This should
+// be used for querying and iteration only. If the version does not exist or has
+// been pruned, an error will be returned. Any mutable operations executed will
+// result in a panic.
+func (st *Store) GetImmutable(version int64) (*Store, error) {
+	if !st.VersionExists(version) {
+		return nil, iavl.ErrVersionDoesNotExist
+	}
+
+	iTree, err := st.tree.GetImmutable(version)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Store{
+		tree:       &immutableTree{iTree},
+		numRecent:  0,
+		storeEvery: 0,
+	}, nil
 }
 
 // Implements Committer.
@@ -153,16 +177,34 @@ func (st *Store) Delete(key []byte) {
 
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
-	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)
+	var iTree *iavl.ImmutableTree
+
+	switch tree := st.tree.(type) {
+	case *immutableTree:
+		iTree = tree.ImmutableTree
+	case *iavl.MutableTree:
+		iTree = tree.ImmutableTree
+	}
+
+	return newIAVLIterator(iTree, start, end, true)
 }
 
 // Implements types.KVStore.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
-	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
+	var iTree *iavl.ImmutableTree
+
+	switch tree := st.tree.(type) {
+	case *immutableTree:
+		iTree = tree.ImmutableTree
+	case *iavl.MutableTree:
+		iTree = tree.ImmutableTree
+	}
+
+	return newIAVLIterator(iTree, start, end, false)
 }
 
 // Handle gatest the latest height, if height is 0
-func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
+func getHeight(tree Tree, req abci.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
 		latest := tree.Version()

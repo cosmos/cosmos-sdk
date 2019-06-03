@@ -33,3 +33,5 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
     - [Handlers](06_tags.md#handlers)
 7. **[Staking Tombstone](07_tombstone.md)**
     - [Abstract](07_tombstone.md#abstract)
+8. **[Parameters](08_params.md)**
+

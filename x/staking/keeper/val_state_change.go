@@ -35,7 +35,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	last := k.getLastValidatorsByAddr(ctx)
 
 	// Iterate over validators, highest power to lowest.
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
@@ -245,7 +245,7 @@ type validatorsByAddr map[[sdk.AddrLen]byte][]byte
 func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) validatorsByAddr {
 	last := make(validatorsByAddr)
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
 	defer iterator.Close()
 	// iterate over the last validator set index
 	for ; iterator.Valid(); iterator.Next() {

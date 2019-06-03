@@ -23,6 +23,11 @@ var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 	flagComission         = "commission"
+	flagMaxMessagesPerTx  = "max-msgs"
+)
+
+const (
+	MaxMessagesPerTxDefault = 5
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -38,6 +43,39 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	)...)
 
 	return distTxCmd
+}
+
+type generateOrBroadcastFunc func(context.CLIContext, authtxb.TxBuilder, []sdk.Msg, bool) error
+
+func splitAndApply(
+	generateOrBroadcast generateOrBroadcastFunc,
+	cliCtx context.CLIContext,
+	txBldr authtxb.TxBuilder,
+	msgs []sdk.Msg,
+	chunkSize int,
+	offline bool,
+) error {
+
+	if chunkSize == 0 {
+		return generateOrBroadcast(cliCtx, txBldr, msgs, offline)
+	}
+
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
+	for i := 0; i < len(msgs); i += chunkSize {
+
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+
+		msgChunk := msgs[i:sliceEnd]
+		if err := generateOrBroadcast(cliCtx, txBldr, msgChunk, offline); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // command to withdraw rewards
@@ -77,7 +115,7 @@ $ hashgardcli distribution withdraw-rewards gardvaloper1gghjut3ccd8ay0zduzj64hwr
 
 // command to withdraw all rewards
 func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
 		Long: strings.TrimSpace(`Withdraw all rewards for a single delegator:
@@ -98,14 +136,18 @@ $ hashgardcli distribution withdraw-all-rewards --from mykey
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs, false)
+			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
+			return splitAndApply(utils.GenerateOrBroadcastMsgs, cliCtx, txBldr, msgs, chunkSize, false)
 		},
 	}
+
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
+	return cmd
 }
 
 // command to replace a delegator's withdrawal address
 func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Long: strings.TrimSpace(`Set the withdraw address for rewards associated with a delegator address:
@@ -130,5 +172,4 @@ $ hashgardcli set-withdraw-addr gard1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --fr
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-	return cmd
 }

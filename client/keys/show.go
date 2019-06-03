@@ -24,7 +24,7 @@ const (
 	FlagPublicKey = "pubkey"
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagBechPrefix = "bech"
-	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
+	// FlagDevice indicates that the information should be shown in the device
 	FlagDevice = "device"
 
 	flagMultiSigThreshold = "multisig-threshold"
@@ -47,7 +47,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
-	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in the device")
+	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().BoolP(flagShowMultiSig, "m", false, "Output multisig pubkey constituents, threshold, and weights")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")

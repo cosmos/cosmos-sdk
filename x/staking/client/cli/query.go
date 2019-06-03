@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/querier"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -511,7 +510,7 @@ $ %s query staking pool
 			if err != nil {
 				return err
 			}
-			var pool staking.Pool
+			var pool types.Pool
 			cdc.MustUnmarshalJSON(bz, &pool)
 			return cliCtx.PrintOutput(pool)
 		},

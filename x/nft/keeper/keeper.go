@@ -49,13 +49,13 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
 func (k Keeper) SetNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
 	var collection types.Collection
 	collection, found := k.GetCollection(ctx, denom)
-	if !found {
-		collection = types.NewCollection(denom, []types.NFT{nft})
-		k.SetCollection(ctx, denom, collection)
-	} else {
+	if found {
 		collection.AddNFT(nft)
-		k.SetCollection(ctx, denom, collection)
+	} else {
+		collection = types.NewCollection(denom, types.NewNFTs(nft))
 	}
+	k.SetCollection(ctx, denom, collection)
+
 	return
 }
 
@@ -180,5 +180,5 @@ func (k Keeper) GetBalance(ctx sdk.Context, owner sdk.AccAddress, denom string) 
 func (k Keeper) SetBalance(ctx sdk.Context, owner sdk.AccAddress, collection types.Collection) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetBalanceKey(owner, collection.Denom)
-	store.Set(key, k.cdc.MustMarshalBinaryBare(collection))
+	store.Set(key, k.cdc.MustMarshalBinaryLengthPrefixed(collection))
 }

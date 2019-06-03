@@ -96,13 +96,9 @@ func TestQueryBalances(t *testing.T) {
 
 	nft, err = keeperInstance.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
-	// BROKEN TESTS
-	// TODO: fix unmarshalling, maybe need to register more codec stuff
-	// panic: Bytes left over in UnmarshalBinaryLengthPrefixed, should read 10 more bytes but have 74
 	collections := keeperInstance.GetCollections(ctx)
 	require.NotEmpty(t, collections)
 
 	balances = keeperInstance.GetBalances(ctx)
-	// IS EMPTY
-	//require.NotEmpty(t, balances)
+	require.NotEmpty(t, balances)
 }

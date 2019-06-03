@@ -9,3 +9,5 @@ TODO
 ## `start` command
 
 TODO
+
+## LCD

@@ -35,15 +35,15 @@ The core parts listed above will generally translate to the following directory 
 The Daemon, or Full-Node Client, is the core process of an SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes and update their state-machine as new blocks come in. 
 
 ```
-                   +-------------------------------+
-                   |                               |
-                ^  |  State+machine = Application  |  ^
+                ^  +-------------------------------+  ^
+                |  |                               |  |
+                |  |  State+machine = Application  |  |
                 |  |                               |  |   Built with Cosmos SDK
                 |  |            ^      +           |  |
                 |  +----------- | ABCI | ----------+  v
-                |  |            +      v           |
-                |  |                               |  ^
-Blockchain node |  |           Consensus           |  |
+                |  |            +      v           |  ^
+                |  |                               |  |
+Blockchain Node |  |           Consensus           |  |
                 |  |                               |  |
                 |  +-------------------------------+  |   Tendermint Core
                 |  |                               |  |
@@ -163,11 +163,36 @@ The `Querier` of a module are defined in a file called `querier.go`, and consist
 
 To learn more about `queriers`, [click here](./querier.md).
 
-## Interfaces
+### Command-Line and REST Interfaces
 
-### Module Intefaces
+Each module defines command-line commands and REST routes to be exposed to end-user via the [application's interfaces](#application-interfaces). This enables end-users to create messages of the types defined in the module, or to query the subset of the state managed by the module. 
 
-### Application Interfaces
+#### CLI
+
+Generally, the commands related to a module are defined in a folder called `client/cli` in the module's folder. The CLI divides commands in two category, transactions and queries, defined in `client/cli/tx.go` and `client/cli/query.go` respectively. Both build commands on top of the [Cobra Library](https://github.com/spf13/cobra):
+
+- Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The SDK handles signing and the addition of other transaction metadata. See examples of transactions commands [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/client/cli/tx.go).
+- Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](./baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied. See examples of query commands [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/client/cli/query.go).
+
+To learn more about modules CLI, [click here](./module-interfaces.md#cli).
+
+#### REST
+
+
+
+## Application Interfaces
+
+Developers build interfaces to let end-users interract with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block. 
+
+### Command-Line Interface (CLI)
+
+The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI of an SDK application is built from aggregating commands defined in each of the modules used by the application.
+
+### REST Interface
+
+A second important interface is the [REST interface](./interfaces.md#rest). It interract with the [Light Client Daemon](./node.md#lcd)
+
+To learn more about interfaces, [click here](./interfaces.md)
 
 ## Dependencies and Makefile 
 

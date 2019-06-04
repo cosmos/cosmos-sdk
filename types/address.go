@@ -25,8 +25,8 @@ const (
 	//	config.SetBech32PrefixForAccount(yourBech32PrefixAccAddr, yourBech32PrefixAccPub)
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
-	//  config.SetCoinType(yourCoinType)
-	//  config.SetFullFundraiserPath(yourFullFundraiserPath)
+	//	config.SetCoinType(yourCoinType)
+	//	config.SetFullFundraiserPath(yourFullFundraiserPath)
 	//	config.Seal()
 
 	// AddrLen defines a valid address length

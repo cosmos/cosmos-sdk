@@ -35,8 +35,11 @@ const (
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Distribution transactions subcommands",
+		Use:                        types.ModuleName,
+		Short:                      "Distribution transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(

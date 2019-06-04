@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,8 +14,11 @@ import (
 // GetTxCmd returns the transaction commands for this module
 func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Querying commands for the auth module",
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the auth module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 	cmd.AddCommand(GetAccountCmd(cdc))
 	return cmd

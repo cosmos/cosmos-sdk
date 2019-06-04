@@ -187,7 +187,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 		return
 	}
 
-	if validator.Status != sdk.Unbonded {
+	if !validator.IsUnbonded() {
 		panic("cannot call RemoveValidator on bonded or unbonding validators")
 	}
 	if validator.Tokens.IsPositive() {
@@ -253,7 +253,7 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 		address := iterator.Value()
 		validator := k.mustGetValidator(ctx, address)
 
-		if validator.Status == sdk.Bonded {
+		if validator.IsBonded() {
 			validators[i] = validator
 			i++
 		}
@@ -432,7 +432,7 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 			if !found {
 				panic("validator in the unbonding queue was not found")
 			}
-			if val.GetStatus() != sdk.Unbonding {
+			if !val.IsUnbonding() {
 				panic("unexpected validator in unbonding queue, status was not unbonding")
 			}
 			k.unbondingToUnbonded(ctx, val)

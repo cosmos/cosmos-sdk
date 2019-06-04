@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,8 +19,11 @@ import (
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Querying commands for the slashing module",
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the slashing module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	slashingQueryCmd.AddCommand(

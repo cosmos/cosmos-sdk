@@ -115,7 +115,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
 
 	// should still be bonded
-	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == sdk.Bonded)
+	require.True(t, sk.Validator(ctx, operatorAddr).IsBonded())
 
 	// should still have same power
 	require.Equal(t, oldPower, sk.Validator(ctx, operatorAddr).GetTendermintPower())

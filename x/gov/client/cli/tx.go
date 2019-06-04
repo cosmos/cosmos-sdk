@@ -55,8 +55,11 @@ var ProposalFlags = []string{
 // under the governance CLI (eg. parameter change proposals).
 func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Governance transactions subcommands",
+		Use:                        types.ModuleName,
+		Short:                      "Governance transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	cmdSubmitProp := GetCmdSubmitProposal(cdc)

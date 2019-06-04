@@ -15,8 +15,11 @@ import (
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Slashing transactions subcommands",
+		Use:                        types.ModuleName,
+		Short:                      "Slashing transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	slashingTxCmd.AddCommand(client.PostCommands(

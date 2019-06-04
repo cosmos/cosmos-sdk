@@ -71,7 +71,7 @@ var (
 	RandomValidator                    = keeper.RandomValidator
 	RandomBondedValidator              = keeper.RandomBondedValidator
 	RegisterCodec                      = types.RegisterCodec
-	NewCommissionMsg                   = types.NewCommissionMsg
+	NewCommissionRates                 = types.NewCommissionRates
 	NewCommission                      = types.NewCommission
 	NewCommissionWithTime              = types.NewCommissionWithTime
 	NewDelegation                      = types.NewDelegation
@@ -215,7 +215,7 @@ var (
 type (
 	Keeper                    = keeper.Keeper
 	Commission                = types.Commission
-	CommissionMsg             = types.CommissionMsg
+	CommissionRates           = types.CommissionRates
 	DVPair                    = types.DVPair
 	DVVTriplet                = types.DVVTriplet
 	Delegation                = types.Delegation

@@ -15,23 +15,23 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey     sdk.StoreKey
-	cdc          *codec.Codec
-	validatorSet sdk.ValidatorSet
-	paramspace   params.Subspace
+	storeKey   sdk.StoreKey
+	cdc        *codec.Codec
+	sk         StakingKeeper
+	paramspace params.Subspace
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk StakingKeeper, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:     key,
-		cdc:          cdc,
-		validatorSet: vs,
-		paramspace:   paramspace.WithKeyTable(types.ParamKeyTable()),
-		codespace:    codespace,
+		storeKey:   key,
+		cdc:        cdc,
+		sk:         sk,
+		paramspace: paramspace.WithKeyTable(ParamKeyTable()),
+		codespace:  codespace,
 	}
 	return keeper
 }
@@ -72,8 +72,8 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	}
 
 	// Get validator and signing info
-	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.GetStatus() == sdk.Unbonded {
+	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+	if validator == nil || validator.IsUnbonded() {
 		// Defensive.
 		// Simulation doesn't take unbonding periods into account, and
 		// Tendermint might break this assumption at some point.
@@ -109,12 +109,12 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
 	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
-	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
 	if !validator.IsJailed() {
-		k.validatorSet.Jail(ctx, consAddr)
+		k.sk.Jail(ctx, consAddr)
 	}
 
 	// Set tombstoned to be true
@@ -176,7 +176,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.IsJailed() {
 
 			// Downtime confirmed: slash and jail the validator
@@ -189,8 +189,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
-			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
-			k.validatorSet.Jail(ctx, consAddr)
+			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+			k.sk.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -19,8 +20,11 @@ import (
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distQueryCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Querying commands for the distribution module",
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the distribution module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	distQueryCmd.AddCommand(client.GetCommands(

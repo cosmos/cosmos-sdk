@@ -79,8 +79,8 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 			case sdk.Unbonding, sdk.Unbonded:
 				loose = loose.Add(validator.GetTokens().ToDec())
 			}
-			// add yet-to-be-withdrawn
-			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
+			//// add yet-to-be-withdrawn
+			//loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
 

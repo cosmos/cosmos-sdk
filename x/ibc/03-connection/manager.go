@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 )
 
-// TODO: should we separate object into two types, one for init/try and one for ack/confirm?
-// man.Create() will return the first type and Query() will return the second
 // XXX: all panic -> err
 // XXX: Try -> TryOpen
+// XXX: rename remote to something else
+// XXX: all code using external KVStore should be defer-recovered in case of missing proofs
 
 type Manager struct {
 	protocol mapping.Mapping
@@ -59,19 +59,22 @@ func (man Manager) object(id string) Object {
 	}
 }
 
-// Init Try
-func (man Manager) Create(ctx sdk.Context, id string, connection Connection, client client.Object, remote Object) (Object, error) {
+func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (nobj NihiloObject, err error) {
 	obj := man.object(id)
 	if obj.exists(ctx) {
-		return Object{}, errors.New("connection already exists for the provided id")
+		err = errors.New("connection already exists for the provided id")
+		return
 	}
 	obj.connection.Set(ctx, connection)
-	obj.client = client
+	obj.client, err = man.client.Query(ctx, connection.Client)
+	if err != nil {
+		return
+	}
+	remote := man.remote.object(connection.Counterparty)
 	obj.remote = &remote
-	return obj, nil
+	return NihiloObject(obj), nil
 }
 
-// Ack Confirm
 func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	obj = man.object(key)
 	if !obj.exists(ctx) {
@@ -87,6 +90,8 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	return
 }
 
+type NihiloObject Object
+
 type Object struct {
 	id          string
 	connection  mapping.Value
@@ -100,14 +105,6 @@ type Object struct {
 	self   mapping.Indexer
 }
 
-func (obj Object) create(ctx sdk.Context, c Connection) error {
-	if obj.exists(ctx) {
-		return errors.New("Create connection on already existing id")
-	}
-	obj.connection.Set(ctx, c)
-	return nil
-}
-
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.connection.Exists(ctx)
 }
@@ -119,12 +116,7 @@ func (obj Object) remove(ctx sdk.Context) {
 }
 
 func (obj Object) assertSymmetric(ctx sdk.Context) error {
-	conn := obj.Value(ctx)
-	if !obj.remote.Value(ctx).Equal(Connection{
-		Counterparty:       obj.id,
-		Client:             conn.CounterpartyClient,
-		CounterpartyClient: conn.Client,
-	}) {
+	if !obj.Value(ctx).Symmetric(obj.id, obj.remote.Value(ctx)) {
 		return errors.New("unexpected counterparty connection value")
 	}
 
@@ -144,7 +136,8 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 	return
 }
 
-func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
+func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
+	obj := Object(nobj)
 	if obj.exists(ctx) {
 		panic("init on existing connection")
 	}
@@ -163,7 +156,8 @@ func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 	return nil
 }
 
-func (obj Object) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+	obj := Object(nobj)
 	if !obj.state.Transit(ctx, Idle, Try) {
 		return errors.New("invalid state")
 	}

@@ -22,3 +22,15 @@ func (conn Connection) Equal(conn0 Connection) bool {
 		conn.Client == conn0.Client &&
 		conn.CounterpartyClient == conn0.CounterpartyClient
 }
+
+func (conn Connection) Symmetric(id string, conn0 Connection) bool {
+	return conn0.Equal(conn.Symmetry(id))
+}
+
+func (conn Connection) Symmetry(id string) Connection {
+	return Connection{
+		Counterparty:       id,
+		Client:             conn.CounterpartyClient,
+		CounterpartyClient: conn.Client,
+	}
+}

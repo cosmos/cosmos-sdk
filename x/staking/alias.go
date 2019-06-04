@@ -3,9 +3,11 @@
 // aliases generated for the following subdirectories:
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/keeper
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/types
+// ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/expected
 package staking
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -236,6 +238,9 @@ type (
 	FeeCollectionKeeper       = types.FeeCollectionKeeper
 	BankKeeper                = types.BankKeeper
 	AccountKeeper             = types.AccountKeeper
+	ValidatorSet              = types.ValidatorSet
+	DelegationSet             = types.DelegationSet
+	StakingHooks              = types.StakingHooks
 	GenesisState              = types.GenesisState
 	LastValidatorPower        = types.LastValidatorPower
 	MultiStakingHooks         = types.MultiStakingHooks
@@ -254,4 +259,6 @@ type (
 	Validator                 = types.Validator
 	Validators                = types.Validators
 	Description               = types.Description
+	DelegationI               = expected.DelegationI
+	ValidatorI                = expected.ValidatorI
 )

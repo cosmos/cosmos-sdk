@@ -17,7 +17,7 @@ type AccountKeeper struct {
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
 
-	// The prototypical types.Account constructor.
+	// The prototypical Account constructor.
 	proto func() types.Account
 
 	// The codec codec for binary encoding/decoding of accounts.

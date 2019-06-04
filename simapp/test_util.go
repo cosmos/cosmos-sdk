@@ -1,15 +1,32 @@
 package simapp
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
+
+const (
+	mainStore         = "main"
+	accountStore      = "account"
+	stakingStore      = "staking"
+	slashingStore     = "slashing"
+	mintStore         = "mint"
+	distributionStore = "distribution"
+	supplyStore       = "supply"
+	paramStore        = "params"
+	govStore          = "gov"
+)
+
+// DONTCOVER
 
 // NewSimAppUNSAFE is used for debugging purposes only.
 //
@@ -20,4 +37,21 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 
 	gapp = NewSimApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
+}
+
+func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (log string) {
+	switch storeName {
+	case accountStore:
+		var accA auth.Account
+		var accB auth.Account
+		appA.cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)
+		appB.cdc.MustUnmarshalBinaryBare(kvB.Value, &accB)
+		log = fmt.Sprintf("%v\n%v", accA, accB)
+
+	default:
+		// TODO: unmarshal based on the key prefix bytes
+		log = fmt.Sprintf("store A %X => %X\n"+
+			"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+	}
+	return log
 }

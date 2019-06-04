@@ -169,7 +169,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
 
-	// pool bonded tokens should not decrease as they are burned upsteam
+	// pool bonded tokens should not decrease as they are burned upstream
 	newBondedPool, _ := keeper.GetPools(ctx)
 	require.Equal(t, newBondedPool.GetCoins(), bondedPool.GetCoins())
 }

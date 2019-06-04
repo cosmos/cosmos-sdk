@@ -53,10 +53,10 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {}
 
 // get the root tx command of this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // get the root query command of this module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // extra function from sdk.AppModuleBasic
 // iterate the genesis accounts and perform an operation at each of them

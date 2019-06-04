@@ -74,19 +74,19 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 }
 
 // get the root tx command of this module
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	var proposalCLIHandlers []*cobra.Command
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler)
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(cdc))
 	}
 
-	return cli.GetTxCmd(StoreKey, ModuleCdc, proposalCLIHandlers)
+	return cli.GetTxCmd(StoreKey, cdc, proposalCLIHandlers)
 }
 
 // get the root query command of this module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, ModuleCdc)
+func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
 //___________________________

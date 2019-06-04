@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -18,7 +17,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distQueryCmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "Querying commands for the distribution module",

@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -34,7 +33,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "Distribution transactions subcommands",
@@ -193,7 +192,7 @@ $ %s tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from m
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
-func GetCmdSubmitProposal() *cobra.Command {
+func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -229,12 +228,12 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(types.ModuleCdc))
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
-				WithCodec(types.ModuleCdc).
-				WithAccountDecoder(types.ModuleCdc)
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
 
-			proposal, err := ParseCommunityPoolSpendProposalJSON(types.ModuleCdc, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, args[0])
 			if err != nil {
 				return err
 			}

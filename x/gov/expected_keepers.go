@@ -5,6 +5,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+// AccountKeeper defines the expected account keeper
+type AccountKeeper interface {
+	GetNextAccountNumber(ctx sdk.Context) uint64
+}
+
 // expected bank keeper
 type BankKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins

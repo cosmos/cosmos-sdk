@@ -92,7 +92,7 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState) {
 	err := k.setInitialProposalID(ctx, data.StartingProposalID)
 	if err != nil {
 		// TODO: Handle this with #870
@@ -107,6 +107,9 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	moduleAcc := k.GetGovernanceAccount(ctx)
 	if moduleAcc == nil {
 		moduleAcc = supply.NewModuleHolderAccount(ModuleName)
+		if err := moduleAcc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
 	}
 
 	var totalDeposits sdk.Coins

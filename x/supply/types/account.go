@@ -60,11 +60,12 @@ func (mha *ModuleHolderAccount) SetSequence(seq uint64) error {
 // String follows stringer interface
 func (mha ModuleHolderAccount) String() string {
 	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Pool Holder Account:
-Address:  %s
-Coins:    %s
-Name:     %s`,
-		mha.Address, mha.Coins, mha.ModuleName)
+	return fmt.Sprintf(`Module Holder Account:
+Name:     			%s
+Address:  			%s
+Coins:    			%s
+Account Number: %d`,
+		mha.ModuleName, mha.Address, mha.Coins, mha.AccountNumber)
 }
 
 //-----------------------------------------------------------------------------
@@ -90,9 +91,10 @@ func (mma ModuleMinterAccount) IsMinter() bool { return true }
 // String follows stringer interface
 func (mma ModuleMinterAccount) String() string {
 	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Pool Minter Account:
-Address: %s
-Coins:   %s
-Name:    %s`,
-		mma.Address, mma.Coins, mma.ModuleName)
+	return fmt.Sprintf(`Module Minter Account:
+Name:    				%s
+Address: 				%s
+Coins:   				%s
+Account Number: %d`,
+		mma.ModuleName, mma.Address, mma.Coins, mma.AccountNumber)
 }

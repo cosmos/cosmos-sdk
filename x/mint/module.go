@@ -49,13 +49,15 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
+	ak     AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, ak AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		ak:             ak,
 	}
 }
 
@@ -87,7 +89,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	InitGenesis(ctx, am.keeper, am.ak, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

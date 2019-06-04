@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -45,13 +46,15 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
+	ak     types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		ak:             ak,
 	}
 }
 
@@ -89,7 +92,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	InitGenesis(ctx, am.keeper, am.ak, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -18,8 +18,9 @@ type BankKeeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
-// expected bank keeper
+// AccountKeeper defines the expected account keeper
 type AccountKeeper interface {
+	GetNextAccountNumber(ctx sdk.Context) uint64
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 

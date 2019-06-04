@@ -28,11 +28,14 @@ func DefaultGenesisState() GenesisState {
 }
 
 // InitGenesis new mint genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, ak AccountKeeper, data GenesisState) {
 	// check if the module account exists and create it if not
 	moduleAcc := keeper.GetMinterAccount(ctx)
 	if moduleAcc == nil {
 		moduleAcc = supply.NewModuleMinterAccount(ModuleName)
+		if err := moduleAcc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
 		keeper.SetMinterAccount(ctx, moduleAcc)
 	}
 

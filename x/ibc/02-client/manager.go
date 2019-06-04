@@ -19,7 +19,7 @@ type Manager struct {
 	protocol mapping.Mapping
 
 	idval mapping.Value
-	idgen IDGenerator
+	idgen IDGenerator // TODO: should be hard coded enum, defined in protocol
 	pred  map[Kind]ValidityPredicate
 }
 
@@ -51,13 +51,19 @@ func (man Manager) object(id string) Object {
 
 func (man Manager) Create(ctx sdk.Context, cs Client) string {
 	id := man.idgen(ctx, man.idval)
-	man.object(id).create(ctx, cs)
+	err := man.object(id).create(ctx, cs)
+	if err != nil {
+		panic(err)
+	}
 	return id
 }
 
-func (man Manager) Query(ctx sdk.Context, id string) (Object, bool) {
+func (man Manager) Query(ctx sdk.Context, id string) (Object, error) {
 	res := man.object(id)
-	return res, res.exists(ctx)
+	if !res.exists(ctx) {
+		return Object{}, errors.New("client not exists")
+	}
+	return res, nil
 }
 
 type Object struct {
@@ -67,11 +73,12 @@ type Object struct {
 	pred   map[Kind]ValidityPredicate
 }
 
-func (obj Object) create(ctx sdk.Context, st Client) {
+func (obj Object) create(ctx sdk.Context, st Client) error {
 	if obj.exists(ctx) {
-		panic("Create client on already existing id")
+		return errors.New("Create client on already existing id")
 	}
 	obj.client.Set(ctx, st)
+	return nil
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {

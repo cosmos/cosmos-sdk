@@ -29,6 +29,10 @@ type Base struct {
 	//	keypath keypath // temporal
 }
 
+func EmptyBase() Base {
+	return NewBase(nil, nil)
+}
+
 func NewBase(cdc *codec.Codec, key sdk.StoreKey) Base {
 	return Base{
 		cdc:     cdc,

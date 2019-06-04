@@ -311,7 +311,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
-func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -338,20 +338,25 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			res, err := cliCtx.QueryStore(types.GetUBDKey(delAddr, valAddr), storeName)
+			bz, err := cdc.MarshalJSON(querier.NewQueryBondsParams(delAddr, valAddr))
+			if err != nil {
+				return err
+			}
+
+			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryUnbondingDelegation)
+			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			return cliCtx.PrintOutput(types.MustUnmarshalUBD(cdc, res))
-
 		},
 	}
 }
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
-func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -373,14 +378,20 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			resKVs, err := cliCtx.QuerySubspace(types.GetUBDsKey(delegatorAddr), storeName)
+			bz, err := cdc.MarshalJSON(querier.NewQueryDelegatorParams(delegatorAddr))
+			if err != nil {
+				return err
+			}
+
+			route := fmt.Sprintf("custom/%s/%s", storeKey, querier.QueryDelegatorUnbondingDelegations)
+			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			var ubds types.UnbondingDelegations
-			for _, kv := range resKVs {
-				ubds = append(ubds, types.MustUnmarshalUBD(cdc, kv.Value))
+			if err = cdc.UnmarshalJSON(res, &ubds); err != nil {
+				return err
 			}
 
 			return cliCtx.PrintOutput(ubds)

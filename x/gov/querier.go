@@ -179,14 +179,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	var deposits []Deposit
-	depositsIterator := keeper.GetDeposits(ctx, params.ProposalID)
-	defer depositsIterator.Close()
-	for ; depositsIterator.Valid(); depositsIterator.Next() {
-		deposit := Deposit{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-		deposits = append(deposits, deposit)
-	}
+	deposits := keeper.GetDeposits(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
 	if err != nil {
@@ -237,14 +230,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	var votes []Vote
-	votesIterator := keeper.GetVotes(ctx, params.ProposalID)
-	defer votesIterator.Close()
-	for ; votesIterator.Valid(); votesIterator.Next() {
-		vote := Vote{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
-		votes = append(votes, vote)
-	}
+	votes := keeper.GetVotes(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
 	if err != nil {

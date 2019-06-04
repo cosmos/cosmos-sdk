@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 )
 
+// TODO: should we separate object into two types, one for init/try and one for ack/confirm?
+// man.Create() will return the first type and Query() will return the second
 // XXX: all panic -> err
 // XXX: Try -> TryOpen
 
@@ -58,11 +60,12 @@ func (man Manager) object(id string) Object {
 }
 
 // Init Try
-func (man Manager) Create(ctx sdk.Context, id string, client client.Object, remote Object) (Object, error) {
+func (man Manager) Create(ctx sdk.Context, id string, connection Connection, client client.Object, remote Object) (Object, error) {
 	obj := man.object(id)
 	if obj.exists(ctx) {
 		return Object{}, errors.New("connection already exists for the provided id")
 	}
+	obj.connection.Set(ctx, connection)
 	obj.client = client
 	obj.remote = &remote
 	return obj, nil
@@ -141,7 +144,7 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 	return
 }
 
-func (obj Object) OpenInit(ctx sdk.Context, desiredCounterparty, client, counterpartyClient string, nextTimeoutHeight uint64) error {
+func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 	if obj.exists(ctx) {
 		panic("init on existing connection")
 	}
@@ -150,11 +153,10 @@ func (obj Object) OpenInit(ctx sdk.Context, desiredCounterparty, client, counter
 		panic("init on non-idle connection")
 	}
 
-	obj.connection.Set(ctx, Connection{
-		Counterparty:       desiredCounterparty,
-		Client:             client,
-		CounterpartyClient: counterpartyClient,
-	})
+	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
+	// which will ensure
+	// assert(get("connections/{identifier}") === null) and
+	// set("connections{identifier}", connection)
 
 	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
 

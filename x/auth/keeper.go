@@ -177,7 +177,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 }
 
 // -----------------------------------------------------------------------------
-// types.Params
+// Params
 
 // SetParams sets the auth module's parameters.
 func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) {

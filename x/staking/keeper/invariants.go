@@ -83,7 +83,7 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
-		
+
 		//// add outstanding fees
 		//loose = loose.Add(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx)).ToDec())
 		//

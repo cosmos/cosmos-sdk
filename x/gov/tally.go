@@ -2,6 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -38,7 +39,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 	currValidators := make(map[string]validatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
+	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator expected.ValidatorI) (stop bool) {
 		currValidators[validator.GetOperator().String()] = newValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
@@ -59,7 +60,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 			currValidators[valAddrStr] = val
 		} else {
 			// iterate over all delegations from voter, deduct from any delegated-to validators
-			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
+			keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation expected.DelegationI) (stop bool) {
 				valAddrStr := delegation.GetValidatorAddr().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
@@ -100,12 +101,12 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	if keeper.vs.TotalBondedTokens(ctx).IsZero() {
+	if keeper.sk.TotalBondedTokens(ctx).IsZero() {
 		return false, false, tallyResults
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(keeper.vs.TotalBondedTokens(ctx).ToDec())
+	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, true, tallyResults
 	}

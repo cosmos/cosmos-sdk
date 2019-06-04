@@ -21,10 +21,10 @@ const (
 	TimeFormat = "2006-01-02T15:04:05Z"
 )
 
-// GetCmdSubmitProposal implements a command handler for submitting a software upgrade proposal transaction.
-func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
+// GetCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
+func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade --upgrade-name [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info])",
+		Use:   "software-upgrade --upgrade-name [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long: strings.TrimSpace(
@@ -116,6 +116,63 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().Int64("upgrade-height", 0, "The height at which the upgrade must happen (not to be used together with --upgrade-time)")
 	cmd.Flags().String("upgrade-time", "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
 	cmd.Flags().String("upgrade-info", "", "Optional info for the planned upgrade such as commit hash, etc.")
+
+	return cmd
+}
+
+// GetCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
+func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-software-upgrade [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a software upgrade proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a software upgrade along with an initial deposit.
+`,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
+
+			from := cliCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString("deposit")
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoins(depositStr)
+			if err != nil {
+				return err
+			}
+
+			title, err := cmd.Flags().GetString("title")
+			if err != nil {
+				return err
+			}
+
+			description, err := cmd.Flags().GetString("description")
+			if err != nil {
+				return err
+			}
+
+			content := upgrade.NewCancelSoftwareUpgradeProposal(title, description)
+
+			msg := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
 }

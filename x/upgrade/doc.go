@@ -46,7 +46,10 @@ to lose connectivity with the exiting nodes, thus this module prefers to just ha
 
 Will Upgrade and On Upgrade Callbacks
 
-The upgrade keeper has two methods for setting callbacks - SetWillUpgrader and SetOnUpgrader. The will upgrade
+The upgrade keeper has two methods for setting callbacks - SetWillUpgrader and SetOnUpgrader. Custom callbacks can be
+configured or the default ones will be used. DefaultWillUpgrader and DefaultOnUpgrader will call scripts
+called prepare-upgrade and do-upgrade respectively in the config directory of the running daemon if such files exist with
+the JSON-serialized upgrade plan as the first argument and the current block height as the second argument. The will upgrade
 callback will be called in the BeginBlocker of the first block after an upgrade is scheduled. The on upgrade callback
 will be called in the BeginBlocker at the block where an upgrade is needed right before the state machine is halted.
 The will upgrade callback can be used to notify some external process that an upgrade is needed so that it can

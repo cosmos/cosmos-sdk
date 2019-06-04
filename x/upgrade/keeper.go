@@ -1,10 +1,16 @@
 package upgrade
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 // Keeper of the upgrade module
@@ -138,16 +144,15 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 	blockTime := ctx.BlockHeader().Time
 	blockHeight := ctx.BlockHeight()
 
+	justRetrievedFromCache := false
+
 	if !keeper.haveCache {
 		plan, found := keeper.GetUpgradePlan(ctx)
 		keeper.haveCachedPlan = found
 		keeper.plan = plan
 		keeper.haveCache = true
 		if found {
-			willUpgrader := keeper.willUpgrader
-			if willUpgrader != nil {
-				willUpgrader(ctx, keeper.plan)
-			}
+			justRetrievedFromCache = true
 		}
 	}
 
@@ -171,11 +176,87 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", keeper.plan.Name, blockHeight, keeper.plan.Info))
-			onUpgrader := keeper.onUpgrader
-			if onUpgrader != nil {
-				onUpgrader(ctx, keeper.plan)
+			if keeper.onUpgrader != nil {
+				keeper.onUpgrader(ctx, keeper.plan)
+			} else {
+				DefaultOnUpgrader(ctx, keeper.plan)
 			}
 			panic("UPGRADE REQUIRED!")
 		}
+	} else if justRetrievedFromCache {
+		// In this case we are notifying the system that an upgrade is planned but not scheduled to happen yet
+		if keeper.willUpgrader != nil {
+			keeper.willUpgrader(ctx, keeper.plan)
+		} else {
+			DefaultWillUpgrader(ctx, keeper.plan)
+		}
 	}
+}
+
+
+// DefaultWillUpgrader asynchronously runs a script called prepare-upgrade from $COSMOS_HOME/config if such a script exists,
+// with plan serialized to JSON as the first argument and the current block height as the second argument.
+// The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
+func DefaultWillUpgrader(ctx sdk.Context, plan Plan) {
+	CallUpgradeScript(ctx, plan, "prepare-upgrade", true)
+}
+
+// DefaultOnUpgrader synchronously runs a script called do-upgrade from $COSMOS_HOME/config if such a script exists,
+// with plan serialized to JSON as the first argument and the current block height as the second argument.
+// The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
+func DefaultOnUpgrader(ctx sdk.Context, plan Plan) {
+	CallUpgradeScript(ctx, plan, "do-upgrade", false)
+}
+
+// CallUpgradeScript runs a script called script from $COSMOS_HOME/config if such a script exists,
+// with plan serialized to JSON as the first argument and the current block height as the second argument.
+// The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
+// If async is true, the command will be run in a separate go-routine.
+func CallUpgradeScript(ctx sdk.Context, plan Plan, script string, async bool) {
+	f := func() {
+		home := viper.GetString(cli.HomeFlag)
+		file := filepath.Join(home, "config", script)
+		ctx.Logger().Info(fmt.Sprintf("Looking for upgrade script %s", file))
+		if _, err := os.Stat(file); err == nil {
+			ctx.Logger().Info(fmt.Sprintf("Applying upgrade script %s", file))
+			err = os.Setenv("COSMOS_HOME", home)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error setting env var COSMOS_HOME: %v", err))
+			}
+
+
+			planJson, err := json.Marshal(plan)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error marshaling upgrade plan to JSON: %v", err))
+			}
+			cmd := exec.Command(file, string(planJson), fmt.Sprintf("%d", ctx.BlockHeight()))
+			cmd.Stdout = logWriter{ctx, script, false}
+			cmd.Stderr = logWriter{ctx, script, false}
+			err = cmd.Run()
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Error running script %s: %v", file, err))
+			}
+		}
+	}
+	if async {
+		go f()
+	} else {
+		f()
+	}
+}
+
+type logWriter struct {
+	sdk.Context
+	script string
+	err    bool
+}
+
+func (w logWriter) Write(p []byte) (n int, err error) {
+	s := fmt.Sprintf("script %s: %s", w.script, p)
+	if w.err {
+		w.Logger().Error(s)
+	} else {
+		w.Logger().Info(s)
+	}
+	return len(p), nil
 }

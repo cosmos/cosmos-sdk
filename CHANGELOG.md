@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.35.0
+
+### Bug Fixes
+
+#### SDK
+
+* Fix for the `x/staking` module security advisory for downstream consumers of the
+SDK. This fix was introduced in v0.34.6 for the Cosmos Hub.
+
+## 0.34.7
+
+### Bug Fixes
+
+#### SDK
+
+* Fix gas consumption bug in `Undelegate` preventing the ability to sync from
+genesis.
+
 ## 0.34.6
 
 ### Bug Fixes

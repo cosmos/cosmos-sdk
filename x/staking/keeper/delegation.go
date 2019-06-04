@@ -9,10 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// UndelegatePatchHeight reflects the height at which to switch to the
-// undelegating patch.
-const UndelegatePatchHeight = 482100
-
 // return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
@@ -585,41 +581,6 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (time.Time, sdk.Error) {
-
-	// Undelegating must obey the unbonding period regardless of the validator's
-	// status for safety. Block heights prior to undelegatePatchHeight allowed
-	// delegates to unbond from an unbonded validator immediately.
-	if ctx.BlockHeight() < UndelegatePatchHeight {
-		completionTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
-
-		returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
-		if err != nil {
-			return completionTime, err
-		}
-
-		// no need to create the ubd object just complete now
-		if completeNow {
-			balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
-
-			// track undelegation only when remaining or truncated shares are non-zero
-			if !balance.IsZero() {
-				if _, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance}); err != nil {
-					return completionTime, err
-				}
-			}
-
-			return completionTime, nil
-		}
-
-		if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-			return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
-		}
-
-		ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, height, completionTime, returnAmount)
-		k.InsertUBDQueue(ctx, ubd, completionTime)
-
-		return completionTime, nil
-	}
 
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {

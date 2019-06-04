@@ -83,12 +83,12 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 			loose = loose.Add(d.GetValidatorOutstandingRewardsCoins(ctx, validator.GetOperator()).AmountOf(k.BondDenom(ctx)))
 			return false
 		})
-
-		// add outstanding fees
-		loose = loose.Add(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx)).ToDec())
-
-		// add community pool
-		loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
+		
+		//// add outstanding fees
+		//loose = loose.Add(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx)).ToDec())
+		//
+		//// add community pool
+		//loose = loose.Add(d.GetFeePoolCommunityCoins(ctx).AmountOf(k.BondDenom(ctx)))
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

@@ -25,7 +25,7 @@ def migrate_gov_data(gov_data):
 
 if __name__ == '__main__':
     parser = lib.init_default_argument_parser(
-        prog_desc='Convert genesis.json from v0.34.x to v0.35.0',
+        prog_desc='Convert genesis.json from v0.34.x to v0.36.0',
         default_chain_id='cosmoshub-3',
         default_start_time='2019-02-11T12:00:00Z',
     )

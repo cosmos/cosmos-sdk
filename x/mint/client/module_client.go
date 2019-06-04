@@ -5,6 +5,7 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 )
@@ -21,8 +22,11 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 // GetQueryCmd returns the cli query commands for the minting module.
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	mintingQueryCmd := &cobra.Command{
-		Use:   mint.ModuleName,
-		Short: "Querying commands for the minting module",
+		Use:                        mint.ModuleName,
+		Short:                      "Querying commands for the minting module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	mintingQueryCmd.AddCommand(
@@ -39,8 +43,11 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for the minting module.
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	mintTxCmd := &cobra.Command{
-		Use:   mint.ModuleName,
-		Short: "Minting transaction subcommands",
+		Use:                        mint.ModuleName,
+		Short:                      "Minting transaction subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	return mintTxCmd

@@ -5,6 +5,7 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 )
@@ -31,8 +32,11 @@ func (ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:   crisis.ModuleName,
-		Short: "crisis transactions subcommands",
+		Use:                        crisis.ModuleName,
+		Short:                      "crisis transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	txCmd.AddCommand(client.PostCommands(

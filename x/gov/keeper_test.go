@@ -157,7 +157,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
-	depositsIterator := input.keeper.GetDeposits(ctx, proposalID)
+	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, input.addrs[0], deposit.Depositor)
@@ -224,7 +224,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
-	votesIterator := input.keeper.GetVotes(ctx, proposalID)
+	votesIterator := input.keeper.GetVotesIterator(ctx, proposalID)
 	require.True(t, votesIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())

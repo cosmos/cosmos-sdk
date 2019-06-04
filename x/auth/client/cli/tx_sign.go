@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -77,8 +77,8 @@ be generated via the 'multisign' command.
 	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
-	cmd = client.PostCommands(cmd)[0]
-	cmd.MarkFlagRequired(client.FlagFrom)
+	cmd = flags.PostCommands(cmd)[0]
+	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }
@@ -87,8 +87,8 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
 	if viper.GetBool(flagOffline) {
-		cmd.MarkFlagRequired(client.FlagAccountNumber)
-		cmd.MarkFlagRequired(client.FlagSequence)
+		cmd.MarkFlagRequired(flags.FlagAccountNumber)
+		cmd.MarkFlagRequired(flags.FlagSequence)
 	}
 }
 
@@ -112,7 +112,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		}
 
 		// if --signature-only is on, then override --append
-		var newTx auth.StdTx
+		var newTx types.StdTx
 		generateSignatureOnly := viper.GetBool(flagSigOnly)
 		multisigAddrStr := viper.GetString(flagMultisig)
 
@@ -161,7 +161,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
 	switch generateSignatureOnly {
 	case true:
 		switch indent {
@@ -186,7 +186,7 @@ func getSignatureJSON(cdc *codec.Codec, newTx auth.StdTx, indent, generateSignat
 // its expected signers. In addition, if offline has not been supplied, the
 // signature is verified over the transaction sign bytes.
 func printAndValidateSigs(
-	cliCtx context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
+	cliCtx context.CLIContext, chainID string, stdTx types.StdTx, offline bool,
 ) bool {
 
 	fmt.Println("Signers:")
@@ -229,7 +229,7 @@ func printAndValidateSigs(
 				return false
 			}
 
-			sigBytes := auth.StdSignBytes(
+			sigBytes := types.StdSignBytes(
 				chainID, acc.GetAccountNumber(), acc.GetSequence(),
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)

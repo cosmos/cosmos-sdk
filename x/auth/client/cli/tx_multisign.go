@@ -8,22 +8,23 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	amino "github.com/tendermint/go-amino"
+
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetSignCommand returns the sign command
-func GetMultiSignCommand(codec *amino.Codec) *cobra.Command {
+func GetMultiSignCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
@@ -46,7 +47,7 @@ recommended to set such parameters manually.
 				version.ClientName,
 			),
 		),
-		RunE: makeMultiSignCmd(codec),
+		RunE: makeMultiSignCmd(cdc),
 		Args: cobra.MinimumNArgs(3),
 	}
 
@@ -55,10 +56,10 @@ recommended to set such parameters manually.
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	// Add the flags here and return the command
-	return client.PostCommands(cmd)[0]
+	return flags.PostCommands(cmd)[0]
 }
 
-func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
@@ -106,7 +107,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 			}
 
 			// Validate each signature
-			sigBytes := auth.StdSignBytes(
+			sigBytes := types.StdSignBytes(
 				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
@@ -118,8 +119,8 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 			}
 		}
 
-		newStdSig := auth.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub}
-		newTx := auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []auth.StdSignature{newStdSig}, stdTx.GetMemo())
+		newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub}
+		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo())
 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
@@ -156,7 +157,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 	}
 }
 
-func readAndUnmarshalStdSignature(cdc *amino.Codec, filename string) (stdSig auth.StdSignature, err error) {
+func readAndUnmarshalStdSignature(cdc *codec.Codec, filename string) (stdSig types.StdSignature, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

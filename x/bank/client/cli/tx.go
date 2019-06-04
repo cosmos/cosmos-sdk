@@ -1,21 +1,33 @@
 package cli
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
 	flagTo     = "to"
 	flagAmount = "amount"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(cdc *codec.Codec) *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Bank transaction subcommands",
+	}
+	txCmd.AddCommand(
+		SendTxCmd(cdc),
+	)
+	return txCmd
+}
 
 // SendTxCmd will create a send tx and sign it with the given key.
 func SendTxCmd(cdc *codec.Codec) *cobra.Command {
@@ -41,7 +53,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := bank.NewMsgSend(cliCtx.GetFromAddress(), to, coins)
+			msg := types.NewMsgSend(cliCtx.GetFromAddress(), to, coins)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -58,7 +59,9 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // get the root tx command of this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ModuleCdc)
+}
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }

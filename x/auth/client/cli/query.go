@@ -3,16 +3,27 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Querying commands for the auth module",
+	}
+	cmd.AddCommand(GetAccountCmd(cdc))
+	return cmd
+}
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
 // nolint: unparam
-func GetAccountCmd(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query account balance",
@@ -38,5 +49,5 @@ func GetAccountCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			return cliCtx.PrintOutput(acc)
 		},
 	}
-	return client.GetCommands(cmd)[0]
+	return flags.GetCommands(cmd)[0]
 }

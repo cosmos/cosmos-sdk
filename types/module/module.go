@@ -57,10 +57,14 @@ type AppModuleBasic interface {
 }
 
 // collections of AppModuleBasic
-type BasicManager []AppModuleBasic
+type BasicManager map[string]AppModuleBasic
 
 func NewBasicManager(modules ...AppModuleBasic) BasicManager {
-	return modules
+	moduleMap := make(map[string]AppModuleBasic)
+	for _, module := range modules {
+		moduleMap[module.Name()] = module
+	}
+	return moduleMap
 }
 
 // RegisterCodecs registers all module codecs

@@ -37,7 +37,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   types.ModuleName,
-		Short: "crisis transactions subcommands",
+		Short: "Crisis transactions subcommands",
 	}
 
 	txCmd.AddCommand(client.PostCommands(

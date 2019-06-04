@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -54,10 +55,14 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // get the root tx command of this module
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(ModuleCdc)
+}
 
 // get the root query command of this module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(ModuleCdc)
+}
 
 //___________________________
 // app module object

@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -165,10 +165,10 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 // Don't perform online validation or lookups if offline is true.
 func SignStdTx(
 	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
-	stdTx auth.StdTx, appendSig bool, offline bool,
-) (auth.StdTx, error) {
+	stdTx authtypes.StdTx, appendSig bool, offline bool,
+) (authtypes.StdTx, error) {
 
-	var signedStdTx auth.StdTx
+	var signedStdTx authtypes.StdTx
 
 	info, err := txBldr.Keybase().Get(name)
 	if err != nil {
@@ -201,8 +201,8 @@ func SignStdTx(
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress, name string, stdTx auth.StdTx,
-	offline bool) (signedStdTx auth.StdTx, err error) {
+	addr sdk.AccAddress, name string, stdTx authtypes.StdTx,
+	offline bool) (signedStdTx authtypes.StdTx, err error) {
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
@@ -225,7 +225,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx auth.StdTx, err error) {
+func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
 	var bytes []byte
 	if filename == "-" {
 		bytes, err = ioutil.ReadAll(os.Stdin)
@@ -263,7 +263,7 @@ func populateAccountFromState(
 func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 	encoder = sdk.GetConfig().GetTxEncoder()
 	if encoder == nil {
-		encoder = auth.DefaultTxEncoder(cdc)
+		encoder = authtypes.DefaultTxEncoder(cdc)
 	}
 	return
 }
@@ -321,7 +321,7 @@ func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 	return txBldr, nil
 }
 
-func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
 	if txBldr.SimulateAndExecute() {
 		if cliCtx.GenerateOnly {
 			return stdTx, errors.New("cannot estimate gas with generate-only")
@@ -340,7 +340,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return stdTx, nil
 	}
 
-	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
+	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }
 
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {

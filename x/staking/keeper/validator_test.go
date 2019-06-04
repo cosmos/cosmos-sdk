@@ -168,6 +168,10 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromTendermintPower(100)
+	bondedPool, _ := keeper.GetPools(ctx)
+	err := bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens)))
+	require.NoError(t, err)
+	keeper.SetBondedPool(ctx, bondedPool)
 	validator, _ = keeper.AddTokensFromDel(ctx, validator, valTokens)
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, valTokens, validator.Tokens)
@@ -197,6 +201,7 @@ func TestValidatorBasics(t *testing.T) {
 		validators[i].Status = sdk.Unbonded
 		validators[i].Tokens = sdk.ZeroInt()
 		tokens := sdk.TokensFromTendermintPower(power)
+		
 		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], tokens)
 	}
 	assert.Equal(t, sdk.TokensFromTendermintPower(9), validators[0].Tokens)
@@ -211,9 +216,6 @@ func TestValidatorBasics(t *testing.T) {
 
 	resVals = keeper.GetValidators(ctx, 2)
 	require.Zero(t, len(resVals))
-
-	bondedPool, _ := keeper.GetPools(ctx)
-	assert.True(sdk.IntEq(t, sdk.ZeroInt(), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx))))
 
 	// set and retrieve a record
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
@@ -235,9 +237,6 @@ func TestValidatorBasics(t *testing.T) {
 	assert.True(ValEq(t, validators[0], resVals[0]))
 	assert.Equal(t, sdk.Bonded, validators[0].Status)
 	assert.True(sdk.IntEq(t, sdk.TokensFromTendermintPower(9), validators[0].BondedTokens()))
-
-	bondedPool, _ = keeper.GetPools(ctx)
-	assert.True(sdk.IntEq(t, bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = sdk.Bonded
@@ -1067,35 +1066,15 @@ func TestRemoveTokens(t *testing.T) {
 		DelegatorShares: sdk.NewDec(100),
 	}
 
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
-	err := bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), validator.BondedTokens())))
-	require.NoError(t, err)
-	err = notBondedPool.SetCoins(sdk.NewCoins())
-	require.NoError(t, err)
-	keeper.SetBondedPool(ctx, bondedPool)
-	keeper.SetNotBondedPool(ctx, notBondedPool)
-
 	// remove tokens and test check everything
 	validator = keeper.removeTokens(ctx, validator, sdk.NewInt(10))
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-
 	require.Equal(t, int64(90), validator.Tokens.Int64())
-	require.Equal(t, int64(90), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(0), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
-	// update validator to from bonded -> unbonded and remove some more tokens
+	// update validator to from bonded -> unbonded
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Unbonded)
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(90), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
 	validator = keeper.removeTokens(ctx, validator, sdk.NewInt(10))
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.Equal(t, int64(80), validator.Tokens.Int64())
-	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(80), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-
 	require.Panics(t, func() { keeper.removeTokens(ctx, validator, sdk.NewInt(-1)) })
 	require.Panics(t, func() { keeper.removeTokens(ctx, validator, sdk.NewInt(100)) })
 }
@@ -1149,27 +1128,11 @@ func TestRemoveDelShares(t *testing.T) {
 		DelegatorShares: sdk.NewDec(100),
 	}
 
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(10))))
-	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valA.BondedTokens())))
-	keeper.SetBondedPool(ctx, bondedPool)
-	keeper.SetNotBondedPool(ctx, notBondedPool)
-
-	expectedTotal := bondedPool.GetCoins().Add(notBondedPool.GetCoins())
-
 	// Remove delegator shares
 	valB, coinsB := keeper.removeDelShares(ctx, valA, sdk.NewDec(10))
 	require.Equal(t, int64(10), coinsB.Int64())
 	require.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
 	require.Equal(t, int64(90), valB.BondedTokens().Int64())
-
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.Equal(t, int64(90), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(20), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-
-	newTotal := bondedPool.GetCoins().Add(notBondedPool.GetCoins())
-	// conservation of tokens
-	require.True(t, expectedTotal.IsEqual(newTotal))
 
 	// specific case from random tests
 	poolTokens := sdk.NewInt(5102)
@@ -1182,22 +1145,10 @@ func TestRemoveDelShares(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 
-	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(248305))))
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(232147))))
-	keeper.SetBondedPool(ctx, bondedPool)
-	keeper.SetNotBondedPool(ctx, notBondedPool)
-
 	shares := sdk.NewDec(29)
 	_, tokens := keeper.removeDelShares(ctx, validator, shares)
 
 	require.True(sdk.IntEq(t, sdk.NewInt(1286), tokens))
-
-	newBondedPool, newUnbondedPool := keeper.GetPools(ctx)
-
-	require.True(t,
-		bondedPool.GetCoins().Add(notBondedPool.GetCoins()).IsEqual(
-			newBondedPool.GetCoins().Add(newUnbondedPool.GetCoins()),
-		))
 }
 
 func TestAddTokensFromDel(t *testing.T) {
@@ -1205,37 +1156,19 @@ func TestAddTokensFromDel(t *testing.T) {
 
 	val := types.NewValidator(sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0], types.Description{})
 
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(10))))
-	keeper.SetNotBondedPool(ctx, notBondedPool)
-
 	val, shares := keeper.AddTokensFromDel(ctx, val, sdk.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), val.DelegatorShares))
 	require.True(sdk.IntEq(t, sdk.NewInt(6), val.Tokens))
 
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.True(sdk.IntEq(t, sdk.NewInt(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx))))
-	require.True(sdk.IntEq(t, sdk.NewInt(10), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx))))
-
 	val, shares = keeper.AddTokensFromDel(ctx, val, sdk.NewInt(3))
 	require.True(sdk.DecEq(t, sdk.NewDec(3), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(9), val.DelegatorShares))
 	require.True(sdk.IntEq(t, sdk.NewInt(9), val.Tokens))
-
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.True(sdk.IntEq(t, sdk.NewInt(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx))))
-	require.True(sdk.IntEq(t, sdk.NewInt(10), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx))))
 }
 
 func TestUpdateStatus(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
-
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.NewInt(100))))
-	bondedPool.SetCoins(sdk.Coins{})
-	keeper.SetNotBondedPool(ctx, notBondedPool)
-	keeper.SetBondedPool(ctx, bondedPool)
 
 	validator := types.NewValidator(sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0], types.Description{})
 	validator, _ = keeper.AddTokensFromDel(ctx, validator, sdk.NewInt(100))
@@ -1245,30 +1178,14 @@ func TestUpdateStatus(t *testing.T) {
 	// Unbonded to Bonded
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.Int64())
-
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.Equal(t, int64(100), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(0), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-
+	
 	// Bonded to Unbonding
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Unbonding)
 	require.Equal(t, sdk.Unbonding, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.Int64())
-
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.Equal(t, int64(0), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(100), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
 
 	// Unbonding to Bonded
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.Int64())
-
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
-	require.Equal(t, int64(100), bondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-	require.Equal(t, int64(0), notBondedPool.GetCoins().AmountOf(keeper.BondDenom(ctx)).Int64())
-
 }
 
 func TestPossibleOverflow(t *testing.T) {

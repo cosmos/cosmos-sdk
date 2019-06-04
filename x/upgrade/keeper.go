@@ -51,8 +51,8 @@ type keeper struct {
 	cdc             *codec.Codec
 	upgradeHandlers map[string]Handler
 	haveCache       bool
-	haveCachedPlan  bool
-	plan            Plan
+	//haveCachedPlan  bool
+	//plan            Plan
 	willUpgrader    func(ctx sdk.Context, plan Plan)
 	onUpgrader      func(ctx sdk.Context, plan Plan)
 }
@@ -144,53 +144,45 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 	blockTime := ctx.BlockHeader().Time
 	blockHeight := ctx.BlockHeight()
 
-	justRetrievedFromCache := false
+	plan, found := keeper.GetUpgradePlan(ctx)
 
-	if !keeper.haveCache {
-		plan, found := keeper.GetUpgradePlan(ctx)
-		keeper.haveCachedPlan = found
-		keeper.plan = plan
-		keeper.haveCache = true
-		if found {
-			justRetrievedFromCache = true
-		}
-	}
-
-	if !keeper.haveCachedPlan {
+	if !found {
 		return
 	}
 
-	upgradeTime := keeper.plan.Time
-	upgradeHeight := keeper.plan.Height
+	upgradeTime := plan.Time
+	upgradeHeight := plan.Height
 	if (!upgradeTime.IsZero() && !blockTime.Before(upgradeTime)) || (upgradeHeight > 0 && upgradeHeight <= blockHeight) {
-		handler, ok := keeper.upgradeHandlers[keeper.plan.Name]
+		handler, ok := keeper.upgradeHandlers[plan.Name]
 		if ok {
 			// We have an upgrade handler for this upgrade name, so apply the upgrade
-			ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at height %d", keeper.plan.Name, blockHeight))
-			handler(ctx, keeper.plan)
+			ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at height %d", plan.Name, blockHeight))
+			handler(ctx, plan)
 			keeper.ClearUpgradePlan(ctx)
 			// Mark this upgrade name as being done so the name can't be reused accidentally
 			store := ctx.KVStore(keeper.storeKey)
 			bz := keeper.cdc.MustMarshalBinaryBare(blockHeight)
-			store.Set(DoneHeightKey(keeper.plan.Name), bz)
+			store.Set(DoneHeightKey(plan.Name), bz)
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", keeper.plan.Name, blockHeight, keeper.plan.Info))
+			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", plan.Name, blockHeight, plan.Info))
 			if keeper.onUpgrader != nil {
-				keeper.onUpgrader(ctx, keeper.plan)
+				keeper.onUpgrader(ctx, plan)
 			} else {
-				DefaultOnUpgrader(ctx, keeper.plan)
+				DefaultOnUpgrader(ctx, plan)
 			}
 			panic("UPGRADE REQUIRED!")
 		}
-	} else if justRetrievedFromCache {
-		// In this case we are notifying the system that an upgrade is planned but not scheduled to happen yet
-		if keeper.willUpgrader != nil {
-			keeper.willUpgrader(ctx, keeper.plan)
-		} else {
-			DefaultWillUpgrader(ctx, keeper.plan)
-		}
 	}
+	// TODO will upgraded is disabled for now because of inconsistent behavior
+	//else if justRetrievedFromCache {
+	//	// In this case we are notifying the system that an upgrade is planned but not scheduled to happen yet
+	//	if keeper.willUpgrader != nil {
+	//		keeper.willUpgrader(ctx, keeper.plan)
+	//	} else {
+	//		DefaultWillUpgrader(ctx, keeper.plan)
+	//	}
+	//}
 }
 
 

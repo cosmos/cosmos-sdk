@@ -5,9 +5,9 @@ type State = byte
 const (
 	Idle State = iota
 	Init
-	TryOpen
-	CloseTry
+	Try
 	Open
+	CloseTry
 	Closed
 )
 
@@ -15,5 +15,10 @@ type Connection struct {
 	Counterparty       string
 	Client             string
 	CounterpartyClient string
-	NextTimeoutHeight  uint64
+}
+
+func (conn Connection) Equal(conn0 Connection) bool {
+	return conn.Counterparty == conn0.Counterparty &&
+		conn.Client == conn0.Client &&
+		conn.CounterpartyClient == conn0.CounterpartyClient
 }

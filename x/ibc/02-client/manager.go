@@ -40,28 +40,28 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	return man
 }
 
-func (man Manager) object(key string) Object {
+func (man Manager) object(id string) Object {
 	return Object{
-		key:    key,
-		client: man.protocol.Value([]byte(key)),
-		freeze: man.protocol.Value([]byte(key + "/freeze")).Boolean(),
+		id:     id,
+		client: man.protocol.Value([]byte(id)),
+		freeze: man.protocol.Value([]byte(id + "/freeze")).Boolean(),
 		pred:   man.pred,
 	}
 }
 
 func (man Manager) Create(ctx sdk.Context, cs Client) string {
-	key := man.idgen(ctx, man.idval)
-	man.object(key).create(ctx, cs)
-	return key
+	id := man.idgen(ctx, man.idval)
+	man.object(id).create(ctx, cs)
+	return id
 }
 
-func (man Manager) Query(ctx sdk.Context, key string) (Object, bool) {
-	res := man.object(key)
+func (man Manager) Query(ctx sdk.Context, id string) (Object, bool) {
+	res := man.object(id)
 	return res, res.exists(ctx)
 }
 
 type Object struct {
-	key    string
+	id     string
 	client mapping.Value
 	freeze mapping.Boolean
 	pred   map[Kind]ValidityPredicate
@@ -69,13 +69,22 @@ type Object struct {
 
 func (obj Object) create(ctx sdk.Context, st Client) {
 	if obj.exists(ctx) {
-		panic("Create client on already existing key")
+		panic("Create client on already existing id")
 	}
 	obj.client.Set(ctx, st)
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.client.Exists(ctx)
+}
+
+func (obj Object) ID() string {
+	return obj.id
+}
+
+func (obj Object) Value(ctx sdk.Context) (res Client) {
+	obj.client.Get(ctx, &res)
+	return
 }
 
 func (obj Object) Update(ctx sdk.Context, header Header) error {

@@ -8,52 +8,66 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 )
 
-type Manager struct {
+type HandshakeManager struct {
 	protocol mapping.Mapping
 
-	states mapping.Indexer
+	self mapping.Indexer
 
 	client client.Manager
 }
 
-func NewManager(protocol, free mapping.Base, client client.Manager) Manager {
-	return Manager{
+func NewHandshakeManager(protocol, free mapping.Base, client client.Manager) HandshakeManager {
+	return HandshakeManager{
 		protocol: mapping.NewMapping(protocol, []byte("/")),
 
-		states: mapping.NewIndexer(free, []byte("/states"), mapping.Dec),
+		self: mapping.NewIndexer(free, []byte("/self"), mapping.Dec),
 
 		client: client,
 	}
 }
 
-func (man Manager) object(key string) Object {
+func (man HandshakeManager) object(id string) Object {
 	return Object{
-		key:        key,
-		connection: man.protocol.Value([]byte(key)),
-		state:      man.protocol.Value([]byte(key + "/state")).Enum(),
+		id:         id,
+		connection: man.protocol.Value([]byte(id)),
+		state:      man.protocol.Value([]byte(id + "/state")).Enum(),
 
-		states: man.states,
-		client: man.client,
+		self: man.self,
 	}
 }
 
-func (man Manager) Query(ctx sdk.Context, key string) (res Object, st State) {
+func (man HandshakeManager) Query(ctx sdk.Context, key string) (res Object, st State) {
 	res = man.object(key)
 	st = res.state.Get(ctx)
 	return
 }
 
 type Object struct {
-	key        string
-	connection mapping.Value
-	state      mapping.Enum
+	id           string
+	counterparty string
+	connection   mapping.Value
+	state        mapping.Enum
+	nexttimeout  mapping.Integer
+	client       client.Object
 
-	states mapping.Indexer
-	client client.Manager
+	self mapping.Indexer
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.connection.Exists(ctx)
+}
+
+func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
+	if ctx.BlockHeight() > int64(timeoutHeight) {
+		return errors.New("timeout")
+	}
+
+	return nil
+}
+
+func (obj Object) Value(ctx sdk.Context) (res Connection) {
+	obj.connection.Get(ctx, &res)
+	return
 }
 
 func (obj Object) OpenInit(ctx sdk.Context, desiredCounterparty, client, counterpartyClient string, nextTimeoutHeight uint64) error {
@@ -69,29 +83,119 @@ func (obj Object) OpenInit(ctx sdk.Context, desiredCounterparty, client, counter
 		Counterparty:       desiredCounterparty,
 		Client:             client,
 		CounterpartyClient: counterpartyClient,
-		NextTimeoutHeight:  nextTimeoutHeight,
 	})
+	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
 
 	return nil
 }
 
-func assertTimeout(ctx sdk.Context, timeoutHeight uint) error {
-	if ctx.BlockHeight() > int64(timeoutHeight) {
-		return errors.New("timeout")
+func (obj Object) OpenAck(ctx sdk.Context, remote Object, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+	if obj.counterparty != remote.id {
+		panic("invalid remote connection")
 	}
 
-	return nil
-}
+	if !obj.state.Transit(ctx, Init, Open) {
+		panic("ack on non-init connection")
+	}
 
-func (obj Object) OpenTry(ctx sdk.Context, counterparty, client, counterpartyClient string /*proofInit Proof*/, timeoutHeight, nextTimeoutHeight uint64) error {
 	err := assertTimeout(ctx, timeoutHeight)
 	if err != nil {
 		return err
 	}
 
+	if remote.state.Get(ctx) != Try {
+		return errors.New("counterparty state not try")
+	}
+
+	conn := obj.Value(ctx)
+
+	if !remote.Value(ctx).Equal(Connection{
+		Counterparty:       obj.id,
+		Client:             conn.CounterpartyClient,
+		CounterpartyClient: conn.Client,
+	}) {
+		return errors.New("unexpected counterparty connection value")
+	}
+	if remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+		return errors.New("unexpected counterparty timeout value")
+	}
+
+	if remote.client.ID() != conn.CounterpartyClient {
+		panic("invalid remote client")
+	}
+
+	var expected client.Client
+	obj.self.Get(ctx, expheight, &expected)
+	if !client.Equal(remote.client.Value(ctx), expected) {
+		return errors.New("unexpected counterparty client value")
+	}
+
+	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
+
+	return nil
+}
+
+func (obj Object) OpenTry(ctx sdk.Context, remote Object, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+	if obj.counterparty != remote.id {
+		panic("invalid remote connection")
+	}
+
+	if !obj.state.Transit(ctx, Idle, Try) {
+		panic("ack on non-init connection")
+	}
+
+	err := assertTimeout(ctx, timeoutHeight)
+	if err != nil {
+		return err
+	}
+
+	if remote.state.Get(ctx) != Init {
+		return errors.New("counterparty state not init")
+	}
+
+	conn := obj.Value(ctx)
+
+	if !remote.Value(ctx).Equal(Connection{
+		Counterparty: obj.id,
+		Client: conn.CounterpartyClient,
+		CounterpartyClient: conn.Client,
+	}) {
+		return errors.New("unexpected counterparty connection value")
+	}
+	if remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+		return errors.New("unexpected counterparty timeout value")
+	}
+
+	if remote.client.ID() != conn.CounterpartyClient {
+		panic("invalid remote client")
+	}
+
+	var  
+	
+	
+	
+	
+	
+	/*
+		// XXX: move to the keeper entry point handlers
+		err := assertTimeout(ctx, timeoutHeight)
+		if err !Manager{
+			return err
+		}
+	*/
+
+	// assert(verifyMembership(consensusState.getRoot(), prootInit, "connections/{counterPartyIdentifier}", expected))
+	robj, rst := remote.Query(ctx, counterparty)
+	if rst != Init {
+		return errors.New("not init")
+	}
+
+	//robj.
+
 	clientobj := obj.client.Query(client)
 
-	// TODO
+	var expectedConsensusState client.Client
+	expectedConsensusState := obj.self.Get(ctx, 0 /*height*/, &expectedConsensusState)
 
 	return nil
 }

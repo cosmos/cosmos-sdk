@@ -13,6 +13,7 @@ This document describes the core parts of a Cosmos SDK application. The placehol
 - [Core Application File](#core-application-file)
 - [Modules](#modules)
 - [Intefaces](#interfaces)
+- [Dependencies and Makefile](#dependencies-and-makefile)
 
 The core parts listed above will generally translate to the following directory tree:
 
@@ -29,7 +30,7 @@ The core parts listed above will generally translate to the following directory 
 └── Makefile
 ``` 
 
-## Node Client (Daemon)
+## Node Client 
 
 The Daemon, or Full-Node Client, is the core process of an SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes and update their state-machine as new blocks come in. 
 
@@ -200,7 +201,13 @@ The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI
 
 See an example of an application's main command-line file [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go).
 
-To learn more about interfaces, [click here](./interfaces.md)
+To learn more about interfaces, [click here](./interfaces.md).
+
+## Dependencies and Makefile
+
+This section is optional, as developers are free to choose their depencency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version. An example can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/go.mod).
+
+For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appcli`](#application-interface). An example of Makefile can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/Makefile).
 
 ## Next
 

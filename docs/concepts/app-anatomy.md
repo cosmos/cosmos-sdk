@@ -12,7 +12,7 @@ This document describes the core parts of a Cosmos SDK application. The placehol
 - [Node Client](#node-client)
 - [Core Application File](#core-application-file)
 - [Modules](#modules)
-- [Intefaces](#interfaces)
+- [Interfaces](#interfaces)
 - [Dependencies and Makefile](#dependencies-and-makefile)
 
 The core parts listed above will generally translate to the following directory tree:
@@ -51,7 +51,7 @@ Blockchain Node |  |           Consensus           |  |
                 |  |                               |  |
                 v  +-------------------------------+  v
 ```
-The blockchain full-node presents itself as a binary, generally suffixed by `-d` (e.g. `appd` for `app` or `gaiad` for the `gaia`) for "daemon". This binary is built by running a simple `main.go` function placed in `cmd/appd/`. This operation usually happens through the [Makefil](#dependencies-and-makefile).
+The blockchain full-node presents itself as a binary, generally suffixed by `-d` (e.g. `appd` for `app` or `gaiad` for the `gaia`) for "daemon". This binary is built by running a simple `main.go` function placed in `cmd/appd/`. This operation usually happens through the [Makefile](#dependencies-and-makefile).
 
 To learn more about the `main.go` function, [click here](./node.md#main-function).
 
@@ -73,7 +73,7 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-- **A reference to [`baseapp`](./baseapp.md).** The custom application defined in `app.go` is a golang embedding of the `baseapp` type. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the routing logic. When a transaction is relayed by Tendermint to the application, the latter uses `baseapp`'s methods to route them to the appropriate module. 
+- **A reference to [`baseapp`](./baseapp.md).** The custom application defined in `app.go` is a Golang embedding of the `baseapp` type. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the routing logic. When a transaction is relayed by Tendermint to the application, the latter uses `baseapp`'s methods to route them to the appropriate module. 
 - **A list of store keys**. The [store](./store.md), which contains the entire state, is implemented as a multistore (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../intro/ocap.md) of the Cosmos SDK.  
 - **A list of module's `keepers`.** Each module defines an abstraction called `keeper`, which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type. 
 - **A reference to a `codec`.** The Cosmos SDK gives developers the freedom to choose the encoding framework for their application. The application's `codec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The `codec` must be deterministic. Most SDK application use [amino](./amino.md) as their `codec`. 
@@ -82,10 +82,10 @@ You can see an example of application type definition [here](https://github.com/
 
 ### Constructor Function
 
-This function constructs a new application of the type defined above. It is [called](https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L117) everytime the full-node is started with the `start` command. Here are the main actions performed by this function:
+This function constructs a new application of the type defined above. It is [called](https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L117) every time the full-node is started with the `start` command. Here are the main actions performed by this function:
 
 - Instanciate a new application with a reference to a `baseapp` instance, a codec and all the appropriate store keys.
-- Instanciate all the `keepers` defined in the application's `type`.
+- Instantiate all the `keepers` defined in the application's `type`.
 - Initialize the application's [`routes`](./baseapp.md#routing) with the [`handlers`](#handler) of each one of the application's modules. When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's handler using the routes defined here. 
 - Initialize the application's [query routes](./baseapp.md#query-routing) with the [`queriers`](#querier) of each of the application's modules. When a user query comes in, it is routed to the appropriate module using the query routes defined here. 
 - Set the application's [`initChainer`](#initchainer) and mount the stores. 
@@ -103,7 +103,7 @@ You can see an example of an `initChainer` [here](https://github.com/cosmos/sdk-
 
 ### Register Codec
 
-The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instanciate a codec `cdc` (e.g. [amino](./amino.md)) and calls the `RegisterCodec(*codec.Codec)` method of each module used within the application to register `cdc` to each module. 
+The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a codec `cdc` (e.g. [amino](./amino.md)) and calls the `RegisterCodec(*codec.Codec)` method of each module used within the application to register `cdc` to each module. 
 
 In turn, the `RegisterCodec` function of each module register the custom interfaces and type structures of their respective module so that they can be marhsaled and unmarshaled. 
 
@@ -117,7 +117,7 @@ To learn more about modules, [click here](./modules.md)
 
 ### Message Types
 
-A message is a custom type defined by each module that implements the [`message`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L8-L29) interface. Each `transaction` contains one or multiple `messages`. When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Upon receiving the transaction, the application first unmarshalls it. Then, it extracts the message(s) contained in the application. With the [`Type()`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L16) method, `baseapp` is able to know which modules defines the message. It is then able to route it to the appropriate module's [handler](#handler) in order for the message to be processed. If the message is succesfully processed, the state is updated. 
+A message is a custom type defined by each module that implements the [`message`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L8-L29) interface. Each `transaction` contains one or multiple `messages`. When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Upon receiving the transaction, the application first unmarshalls it. Then, it extracts the message(s) contained in the application. With the [`Type()`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L16) method, `baseapp` is able to know which modules defines the message. It is then able to route it to the appropriate module's [handler](#handler) in order for the message to be processed. If the message is successfully processed, the state is updated. 
 
 Module developers create custom message types when they build their own module. The general practice is to prefix the type declaration of the message with `Msg`. For example, the message type `MsgSend` allows users to transfer tokens. It is processed by the handler of the `bank` module, which ultimately calls the `keeper` of the `auth` module in order to update the state.
 
@@ -125,14 +125,14 @@ To learn more about messages, [click here](./tx-msgs.md)
 
 ### Handler
 
-The `handler` refers to the part of the module responsible for processing the message after it is routed by `baseapp`. `handler` functions of modules (except those of the `auth` module) are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is realyed by `CheckTx`, only stateless checks and fee-related (i.e. `auth` module-related) stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
+The `handler` refers to the part of the module responsible for processing the message after it is routed by `baseapp`. `handler` functions of modules (except those of the `auth` module) are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is relayed by `CheckTx`, only stateless checks and fee-related (i.e. `auth` module-related) stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
 
 The handler of a module is generally defined in a file called `handler.go` and consists of:
 
 - A **switch function** `NewHandler` to route the message to the appropriate handler function. This function returns a `handler` function, and is used in `app.go` to initialize the [application's router](./baseapp.md#routing). See an example of such a switch [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/handler.go#L10-L22).
 - **One handler function for each message type defined by the module**. Developers write the message processing logic in these functions. This generally involves doing stateful checks to ensure the message is valid and calling [`keeper`](#keeper)'s methods to update the state. 
 
-Handler functions return a result of type [`sdk.Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L37), which informs the application on wether the message was succesfully processed and.
+Handler functions return a result of type [`sdk.Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L37), which informs the application on wether the message was successfully processed and.
 
 To learn more about handlers, [click here](./handler.md).
 
@@ -146,7 +146,7 @@ The `keeper` type definition generally consists of:
 
 - **Key(s)** to the module's store(s) in the multistore. 
 - Reference to **other module's `keepers`**. Only needed if the `keeper` needs to access other module's store(s) (either to read or write from them).
-- A reference to the application's **codec**. The `keeper` needs it to marshal structs before storing them, or to unmarhsal them when it retrieves them, because stores only accept `[]bytes` as value. 
+- A reference to the application's **codec**. The `keeper` needs it to marshal structs before storing them, or to unmarshal them when it retrieves them, because stores only accept `[]bytes` as value. 
 
 The rest of the file defines the `keeper`'s methods, primarily getters and setters. You can check an example of a `keeper` implementation [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/keeper.go).
 
@@ -190,7 +190,7 @@ To learn more about modules REST interface, [click here](./module-interfaces.md#
 
 ## Application Interface
 
-Interfaces let end-users interract with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block. 
+Interfaces let end-users interact with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block. 
 
 The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI of an SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application generally has the `-cli` suffix (e.g. `appcli`), and defined in a file called `cmd/appcli/main.go`. The file contains:
 

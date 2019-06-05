@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -74,4 +75,13 @@ func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sd
 		outInvariants = append(outInvariants, outInvariant)
 	}
 	return outInvariants
+}
+
+func mustMarshalJSONIndent(o interface{}) []byte {
+	bz, err := json.MarshalIndent(o, "", "  ")
+	if err != nil {
+		panic(fmt.Sprintf("failed to JSON encode: %s", err))
+	}
+
+	return bz
 }

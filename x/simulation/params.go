@@ -121,7 +121,6 @@ var (
 )
 
 type (
-	// TODO: Consolidate with main simulation Param type.
 	AppParams      map[string]json.RawMessage
 	ParamSimulator func(r *rand.Rand)
 )

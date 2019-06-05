@@ -29,8 +29,10 @@ module.exports = {
         collapsable: true,
         children: [
           "/intro/",
+          "/intro/why-app-specific",
+          "/intro/sdk-app-architecture",
           "/intro/sdk-design",
-          "/intro/ocap"
+          "intro/ocap"
         ]
       },
       {

@@ -178,23 +178,34 @@ To learn more about modules CLI, [click here](./module-interfaces.md#cli).
 
 #### REST
 
+The module's REST interface lets users generate transactions and query the state through REST calls to the application's [light-client daemon](./node.md#lcd). REST routes are defined in a file `client/rest/rest.go`, which is composed of:
 
+- A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
+- Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the [base `request` type](https://github.com/cosmos/cosmos-sdk/blob/master/types/rest/rest.go#L32-L43) of the Cosmos SDK. 
+- One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
 
-## Application Interfaces
+See an example of a module's `rest.go` file [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/client/rest/rest.go).
 
-Developers build interfaces to let end-users interract with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block. 
+To learn more about modules REST interface, [click here](./module-interfaces.md#rest).
 
-### Command-Line Interface (CLI)
+## Application Interface
 
-The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI of an SDK application is built from aggregating commands defined in each of the modules used by the application.
+Interfaces let end-users interract with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block. 
 
-### REST Interface
+The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI of an SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application generally has the `-cli` suffix (e.g. `appcli`), and defined in a file called `cmd/appcli/main.go`. The file contains:
 
-A second important interface is the [REST interface](./interfaces.md#rest). It interract with the [Light Client Daemon](./node.md#lcd)
+- **A `main()` function**, which is executed to build the `appcli` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appCli`, the function adds generic commands like `status`, `keys` and `config`, query commands, tx commands and `rest-server`.
+- **Query commands** are added by calling the `queryCmd` function, also defined in `appcli/main.go`. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appcli query [query]` of the CLI. 
+- **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function  returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appcli tx [tx]` of the CLI.
+- **A `registerRoutes` function**, which is called from the `main()` function when initializing the [application's light-client daemon (LCD)](./node.md#lcd) (i.e. `rest-server`). `registerRoutes` calls the `RegisterRoutes` function of each of the application's module, thereby registering the routes of the module to the lcd's router. The LCD can be started by running the following command `appcli rest-server`. 
+
+See an example of an application's main command-line file [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go).
 
 To learn more about interfaces, [click here](./interfaces.md)
 
 ## Dependencies and Makefile 
+
+
 
 ## Next
 

@@ -15,6 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,7 +56,7 @@ func SimulateFromSeed(
 
 	r := rand.New(rand.NewSource(seed))
 	params := RandomParams(r)
-	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", codec.MustMarshalJSONIndent(params))
 
 	genesisTimestamp := RandTimestamp(r)
 	fmt.Printf(

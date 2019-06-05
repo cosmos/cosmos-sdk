@@ -212,7 +212,7 @@ func genAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 		),
 	)
 
-	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", mustMarshalJSONIndent(cdc, authGenesis.Params))
+	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, authGenesis.Params))
 	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 }
 
@@ -225,7 +225,7 @@ func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 		}(r),
 	)
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", mustMarshalJSONIndent(cdc, bankGenesis))
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, bankGenesis))
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 }
 
@@ -321,7 +321,7 @@ func genGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams,
 		),
 	)
 
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", mustMarshalJSONIndent(cdc, govGenesis))
+	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, govGenesis))
 	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 }
 
@@ -360,7 +360,7 @@ func genMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 		),
 	)
 
-	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", mustMarshalJSONIndent(cdc, mintGenesis.Params))
+	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, mintGenesis.Params))
 	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 }
 
@@ -385,7 +385,7 @@ func genDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParam
 		}(r),
 	}
 
-	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", mustMarshalJSONIndent(cdc, distrGenesis))
+	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, distrGenesis))
 	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 }
 
@@ -426,7 +426,7 @@ func genSlashingGenesisState(
 		nil,
 	)
 
-	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", mustMarshalJSONIndent(cdc, slashingGenesis.Params))
+	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, slashingGenesis.Params))
 	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 }
 
@@ -477,7 +477,7 @@ func genStakingGenesisState(
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", mustMarshalJSONIndent(cdc, stakingGenesis.Params))
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, stakingGenesis.Params))
 	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
 	return stakingGenesis

@@ -11,7 +11,7 @@ import (
 
 // register bank invariants
 func RegisterInvariants(ir sdk.InvariantRouter, ak auth.AccountKeeper) {
-	ir.RegisterRoute(types.RouterKey, "nonnegative-outstanding",
+	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }
 

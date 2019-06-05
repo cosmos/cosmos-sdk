@@ -18,7 +18,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	distQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the distribution module",
@@ -28,12 +28,12 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	distQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryParams(storeKey, cdc),
-		GetCmdQueryValidatorOutstandingRewards(storeKey, cdc),
-		GetCmdQueryValidatorCommission(storeKey, cdc),
-		GetCmdQueryValidatorSlashes(storeKey, cdc),
-		GetCmdQueryDelegatorRewards(storeKey, cdc),
-		GetCmdQueryCommunityPool(storeKey, cdc),
+		GetCmdQueryParams(queryRoute, cdc),
+		GetCmdQueryValidatorOutstandingRewards(queryRoute, cdc),
+		GetCmdQueryValidatorCommission(queryRoute, cdc),
+		GetCmdQueryValidatorSlashes(queryRoute, cdc),
+		GetCmdQueryDelegatorRewards(queryRoute, cdc),
+		GetCmdQueryCommunityPool(queryRoute, cdc),
 	)...)
 
 	return distQueryCmd

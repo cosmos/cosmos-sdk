@@ -1,4 +1,4 @@
-package context
+package types
 
 import (
 	"errors"
@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TxBuilder implements a transaction context created in SDK modules.
@@ -203,7 +202,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 		Sequence:      bldr.sequence,
 		Memo:          bldr.memo,
 		Msgs:          msgs,
-		Fee:           types.NewStdFee(bldr.gas, fees),
+		Fee:           NewStdFee(bldr.gas, fees),
 	}, nil
 }
 
@@ -215,7 +214,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.txEncoder(types.NewStdTx(msg.Msgs, msg.Fee, []types.StdSignature{sig}, msg.Memo))
+	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -238,15 +237,15 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 	}
 
 	// the ante handler will populate with a sentinel pubkey
-	sigs := []types.StdSignature{{}}
-	return bldr.txEncoder(types.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
+	sigs := []StdSignature{{}}
+	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If append
 // is false, it replaces the signatures already attached with the new signature.
-func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx types.StdTx, appendSig bool) (signedStdTx types.StdTx, err error) {
+func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig bool) (signedStdTx StdTx, err error) {
 	if bldr.chainID == "" {
-		return types.StdTx{}, fmt.Errorf("chain ID required but not specified")
+		return StdTx{}, fmt.Errorf("chain ID required but not specified")
 	}
 
 	stdSignature, err := MakeSignature(bldr.keybase, name, passphrase, StdSignMsg{
@@ -263,17 +262,17 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx types.StdTx, appe
 
 	sigs := stdTx.GetSignatures()
 	if len(sigs) == 0 || !appendSig {
-		sigs = []types.StdSignature{stdSignature}
+		sigs = []StdSignature{stdSignature}
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
-	signedStdTx = types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	signedStdTx = NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
 	return
 }
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
 func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
-	msg StdSignMsg) (sig types.StdSignature, err error) {
+	msg StdSignMsg) (sig StdSignature, err error) {
 	if keybase == nil {
 		keybase, err = keys.NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -285,7 +284,7 @@ func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
 	if err != nil {
 		return
 	}
-	return types.StdSignature{
+	return StdSignature{
 		PubKey:    pubkey,
 		Signature: sigBytes,
 	}, nil

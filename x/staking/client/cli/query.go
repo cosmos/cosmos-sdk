@@ -16,7 +16,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	stakingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the staking module",
@@ -25,19 +25,19 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       utils.ValidateCmd,
 	}
 	stakingQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryDelegation(storeKey, cdc),
-		GetCmdQueryDelegations(storeKey, cdc),
-		GetCmdQueryUnbondingDelegation(storeKey, cdc),
-		GetCmdQueryUnbondingDelegations(storeKey, cdc),
-		GetCmdQueryRedelegation(storeKey, cdc),
-		GetCmdQueryRedelegations(storeKey, cdc),
-		GetCmdQueryValidator(storeKey, cdc),
-		GetCmdQueryValidators(storeKey, cdc),
-		GetCmdQueryValidatorDelegations(storeKey, cdc),
-		GetCmdQueryValidatorUnbondingDelegations(storeKey, cdc),
-		GetCmdQueryValidatorRedelegations(storeKey, cdc),
-		GetCmdQueryParams(storeKey, cdc),
-		GetCmdQueryPool(storeKey, cdc))...)
+		GetCmdQueryDelegation(queryRoute, cdc),
+		GetCmdQueryDelegations(queryRoute, cdc),
+		GetCmdQueryUnbondingDelegation(queryRoute, cdc),
+		GetCmdQueryUnbondingDelegations(queryRoute, cdc),
+		GetCmdQueryRedelegation(queryRoute, cdc),
+		GetCmdQueryRedelegations(queryRoute, cdc),
+		GetCmdQueryValidator(queryRoute, cdc),
+		GetCmdQueryValidators(queryRoute, cdc),
+		GetCmdQueryValidatorDelegations(queryRoute, cdc),
+		GetCmdQueryValidatorUnbondingDelegations(queryRoute, cdc),
+		GetCmdQueryValidatorRedelegations(queryRoute, cdc),
+		GetCmdQueryParams(queryRoute, cdc),
+		GetCmdQueryPool(queryRoute, cdc))...)
 
 	return stakingQueryCmd
 
@@ -114,7 +114,7 @@ $ %s query staking validators
 }
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
-func GetCmdQueryValidatorUnbondingDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
@@ -141,7 +141,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryValidatorUnbondingDelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorUnbondingDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -156,7 +156,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
 // from a validator command.
-func GetCmdQueryValidatorRedelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
@@ -183,7 +183,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -200,7 +200,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 }
 
 // GetCmdQueryDelegation the query delegation command.
-func GetCmdQueryDelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
@@ -232,7 +232,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryDelegation)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegation)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -250,7 +250,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
-func GetCmdQueryDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
@@ -277,7 +277,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryDelegatorDelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -295,7 +295,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
-func GetCmdQueryValidatorDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
@@ -322,7 +322,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryValidatorDelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -340,7 +340,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
-func GetCmdQueryUnbondingDelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -372,7 +372,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryUnbondingDelegation)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryUnbondingDelegation)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -385,7 +385,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
-func GetCmdQueryUnbondingDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -412,7 +412,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryDelegatorUnbondingDelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorUnbondingDelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -430,7 +430,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
-func GetCmdQueryRedelegation(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -467,7 +467,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
@@ -485,7 +485,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
-func GetCmdQueryRedelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -512,7 +512,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", storeKey, types.QueryRedelegations)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
 			res, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err

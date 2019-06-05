@@ -1,4 +1,4 @@
-package context
+package types
 
 import (
 	"reflect"
@@ -6,16 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-)
-
-var (
-	priv = ed25519.GenPrivKey()
-	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestTxBuilderBuild(t *testing.T) {
@@ -42,7 +34,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		{
 			"builder with fees",
 			fields{
-				TxEncoder:     types.DefaultTxEncoder(codec.New()),
+				TxEncoder:     DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -59,14 +51,14 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 		{
 			"builder with gas prices",
 			fields{
-				TxEncoder:     types.DefaultTxEncoder(codec.New()),
+				TxEncoder:     DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -83,14 +75,14 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 2!",
 				Msgs:          defaultMsg,
-				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 		{
 			"no chain-id supplied",
 			fields{
-				TxEncoder:     types.DefaultTxEncoder(codec.New()),
+				TxEncoder:     DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -107,14 +99,14 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			true,
 		},
 		{
 			"builder w/ fees and gas prices",
 			fields{
-				TxEncoder:     types.DefaultTxEncoder(codec.New()),
+				TxEncoder:     DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -132,7 +124,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			true,
 		},

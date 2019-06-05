@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -88,7 +88,7 @@ func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeI
 
 // BuildCreateValidatorMsg - used for gen-tx
 func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
-	txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error) {
+	txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
 	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 }
 

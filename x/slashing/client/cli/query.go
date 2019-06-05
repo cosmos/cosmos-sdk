@@ -16,7 +16,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -28,7 +28,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	slashingQueryCmd.AddCommand(
 		client.GetCommands(
-			GetCmdQuerySigningInfo(storeKey, cdc),
+			GetCmdQuerySigningInfo(queryRoute, cdc),
 			GetCmdQueryParams(cdc),
 		)...,
 	)

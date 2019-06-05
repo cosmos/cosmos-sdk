@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -101,7 +100,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 
 		offline := viper.GetBool(flagOffline)
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-		txBldr := authtxb.NewTxBuilderFromCLI()
+		txBldr := types.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
 			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {

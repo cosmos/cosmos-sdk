@@ -10,12 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func createFakeTxBuilder() authtxb.TxBuilder {
+func createFakeTxBuilder() auth.TxBuilder {
 	cdc := codec.New()
-	return authtxb.NewTxBuilder(
+	return auth.NewTxBuilder(
 		utils.GetTxEncoder(cdc),
 		123,
 		9876,
@@ -57,7 +57,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
+		func(ctx context.CLIContext, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
 			callCount++
 
 			assert.NotNil(t, ctx)

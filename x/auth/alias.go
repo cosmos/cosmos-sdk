@@ -56,6 +56,9 @@ var (
 	NewTestTx                      = types.NewTestTx
 	NewTestTxWithMemo              = types.NewTestTxWithMemo
 	NewTestTxWithSignBytes         = types.NewTestTxWithSignBytes
+	NewTxBuilder                   = types.NewTxBuilder
+	NewTxBuilderFromCLI            = types.NewTxBuilderFromCLI
+	MakeSignature                  = types.MakeSignature
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -80,8 +83,10 @@ type (
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
 	QueryAccountParams       = types.QueryAccountParams
+	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee
 	StdSignDoc               = types.StdSignDoc
 	StdSignature             = types.StdSignature
+	TxBuilder                = types.TxBuilder
 )

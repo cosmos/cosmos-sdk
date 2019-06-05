@@ -19,7 +19,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -30,16 +30,16 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	govQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryProposal(storeKey, cdc),
-		GetCmdQueryProposals(storeKey, cdc),
-		GetCmdQueryVote(storeKey, cdc),
-		GetCmdQueryVotes(storeKey, cdc),
-		GetCmdQueryParam(storeKey, cdc),
-		GetCmdQueryParams(storeKey, cdc),
-		GetCmdQueryProposer(storeKey, cdc),
-		GetCmdQueryDeposit(storeKey, cdc),
-		GetCmdQueryDeposits(storeKey, cdc),
-		GetCmdQueryTally(storeKey, cdc))...)
+		GetCmdQueryProposal(queryRoute, cdc),
+		GetCmdQueryProposals(queryRoute, cdc),
+		GetCmdQueryVote(queryRoute, cdc),
+		GetCmdQueryVotes(queryRoute, cdc),
+		GetCmdQueryParam(queryRoute, cdc),
+		GetCmdQueryParams(queryRoute, cdc),
+		GetCmdQueryProposer(queryRoute, cdc),
+		GetCmdQueryDeposit(queryRoute, cdc),
+		GetCmdQueryDeposits(queryRoute, cdc),
+		GetCmdQueryTally(queryRoute, cdc))...)
 
 	return govQueryCmd
 }

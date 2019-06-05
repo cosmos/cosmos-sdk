@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -82,7 +81,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-		txBldr := authtxb.NewTxBuilderFromCLI()
+		txBldr := types.NewTxBuilderFromCLI()
 
 		if !viper.GetBool(flagOffline) {
 			addr := multisigInfo.GetAddress()

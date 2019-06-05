@@ -104,4 +104,14 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
+
+	if val.GetAutoRedelegateCommission() {
+		coins, err := WithdrawValidatorCommission(ctx, val.GetOperator())
+		// TODO(roman): What should be done with this error?
+
+		accAddr := sdk.AccAddress(valAddr)
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
+
+		k.GetStakingKeeper().Delegate(ctx, withdrawAddr, coins, val, true /* what is the purpose of this bool parameter? */)
+	}
 }

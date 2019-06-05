@@ -31,7 +31,8 @@ module.exports = {
           "/intro/",
           "/intro/why-app-specific",
           "/intro/sdk-app-architecture",
-          "/intro/sdk-design"
+          "/intro/sdk-design",
+          "intro/ocap"
         ]
       },
       {

@@ -7,14 +7,37 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	distQueryCmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the distribution module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
+	}
+
+	distQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryParams(queryRoute, cdc),
+		GetCmdQueryValidatorOutstandingRewards(queryRoute, cdc),
+		GetCmdQueryValidatorCommission(queryRoute, cdc),
+		GetCmdQueryValidatorSlashes(queryRoute, cdc),
+		GetCmdQueryDelegatorRewards(queryRoute, cdc),
+		GetCmdQueryCommunityPool(queryRoute, cdc),
+	)...)
+
+	return distQueryCmd
+}
 
 // GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -123,7 +146,7 @@ $ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 
 				return fmt.Errorf("end-height %s not a valid uint, please input a valid end-height", args[2])
 			}
 
-			params := distr.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
+			params := types.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -178,7 +201,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 				return err
 			}
 
-			var result distr.QueryDelegatorTotalRewardsResponse
+			var result types.QueryDelegatorTotalRewardsResponse
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},

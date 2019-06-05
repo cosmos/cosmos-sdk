@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	"github.com/stretchr/testify/require"
@@ -45,43 +46,43 @@ var (
 	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
 	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
-	sendMsg1 = NewMsgSend(addr1, addr2, coins)
+	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
 
-	multiSendMsg1 = MsgMultiSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
-		Outputs: []Output{NewOutput(addr2, coins)},
+	multiSendMsg1 = types.MsgMultiSend{
+		Inputs:  []types.Input{types.NewInput(addr1, coins)},
+		Outputs: []types.Output{types.NewOutput(addr2, coins)},
 	}
-	multiSendMsg2 = MsgMultiSend{
-		Inputs: []Input{NewInput(addr1, coins)},
-		Outputs: []Output{
-			NewOutput(addr2, halfCoins),
-			NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr1, coins),
-			NewInput(addr4, coins),
-		},
-		Outputs: []Output{
-			NewOutput(addr2, coins),
-			NewOutput(addr3, coins),
+	multiSendMsg2 = types.MsgMultiSend{
+		Inputs: []types.Input{types.NewInput(addr1, coins)},
+		Outputs: []types.Output{
+			types.NewOutput(addr2, halfCoins),
+			types.NewOutput(addr3, halfCoins),
 		},
 	}
-	multiSendMsg4 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr2, coins),
+	multiSendMsg3 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr1, coins),
+			types.NewInput(addr4, coins),
 		},
-		Outputs: []Output{
-			NewOutput(addr1, coins),
+		Outputs: []types.Output{
+			types.NewOutput(addr2, coins),
+			types.NewOutput(addr3, coins),
 		},
 	}
-	multiSendMsg5 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr1, manyCoins),
+	multiSendMsg4 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr2, coins),
 		},
-		Outputs: []Output{
-			NewOutput(addr2, manyCoins),
+		Outputs: []types.Output{
+			types.NewOutput(addr1, coins),
+		},
+	}
+	multiSendMsg5 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr1, manyCoins),
+		},
+		Outputs: []types.Output{
+			types.NewOutput(addr2, manyCoins),
 		},
 	}
 )
@@ -122,7 +123,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	sendMsg := NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 

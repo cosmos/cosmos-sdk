@@ -8,13 +8,41 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	// Group gov queries under a subcommand
+	govQueryCmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the governance module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
+	}
+
+	govQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryProposal(queryRoute, cdc),
+		GetCmdQueryProposals(queryRoute, cdc),
+		GetCmdQueryVote(queryRoute, cdc),
+		GetCmdQueryVotes(queryRoute, cdc),
+		GetCmdQueryParam(queryRoute, cdc),
+		GetCmdQueryParams(queryRoute, cdc),
+		GetCmdQueryProposer(queryRoute, cdc),
+		GetCmdQueryDeposit(queryRoute, cdc),
+		GetCmdQueryDeposits(queryRoute, cdc),
+		GetCmdQueryTally(queryRoute, cdc))...)
+
+	return govQueryCmd
+}
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -47,7 +75,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			var proposal gov.Proposal
+			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 			return cliCtx.PrintOutput(proposal) // nolint:errcheck
 		},
@@ -78,9 +106,9 @@ $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 
 			var depositorAddr sdk.AccAddress
 			var voterAddr sdk.AccAddress
-			var proposalStatus gov.ProposalStatus
+			var proposalStatus types.ProposalStatus
 
-			params := gov.NewQueryProposalsParams(proposalStatus, numLimit, voterAddr, depositorAddr)
+			params := types.NewQueryProposalsParams(proposalStatus, numLimit, voterAddr, depositorAddr)
 
 			if len(bechDepositorAddr) != 0 {
 				depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
@@ -99,7 +127,7 @@ $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 			}
 
 			if len(strProposalStatus) != 0 {
-				proposalStatus, err := gov.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
 				if err != nil {
 					return err
 				}
@@ -118,7 +146,7 @@ $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 				return err
 			}
 
-			var matchingProposals gov.Proposals
+			var matchingProposals types.Proposals
 			err = cdc.UnmarshalJSON(res, &matchingProposals)
 			if err != nil {
 				return err
@@ -176,7 +204,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			params := gov.NewQueryVoteParams(proposalID, voterAddr)
+			params := types.NewQueryVoteParams(proposalID, voterAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -187,7 +215,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			var vote gov.Vote
+			var vote types.Vote
 			if err := cdc.UnmarshalJSON(res, &vote); err != nil {
 				return err
 			}
@@ -231,7 +259,7 @@ $ %s query gov votes 1
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			params := gov.NewQueryProposalParams(proposalID)
+			params := types.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -243,11 +271,11 @@ $ %s query gov votes 1
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			var proposal gov.Proposal
+			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
 			propStatus := proposal.Status
-			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
 			} else {
 				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
@@ -257,7 +285,7 @@ $ %s query gov votes 1
 				return err
 			}
 
-			var votes gov.Votes
+			var votes types.Votes
 			cdc.MustUnmarshalJSON(res, &votes)
 			return cliCtx.PrintOutput(votes)
 		},
@@ -300,7 +328,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			params := gov.NewQueryDepositParams(proposalID, depositorAddr)
+			params := types.NewQueryDepositParams(proposalID, depositorAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -311,7 +339,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			var deposit gov.Deposit
+			var deposit types.Deposit
 			cdc.MustUnmarshalJSON(res, &deposit)
 
 			if deposit.Empty() {
@@ -352,7 +380,7 @@ $ %s query gov deposits 1
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
-			params := gov.NewQueryProposalParams(proposalID)
+			params := types.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -364,11 +392,11 @@ $ %s query gov deposits 1
 				return fmt.Errorf("failed to fetch proposal with id %d: %s", proposalID, err)
 			}
 
-			var proposal gov.Proposal
+			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
 			propStatus := proposal.Status
-			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 			} else {
 				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
@@ -378,7 +406,7 @@ $ %s query gov deposits 1
 				return err
 			}
 
-			var dep gov.Deposits
+			var dep types.Deposits
 			cdc.MustUnmarshalJSON(res, &dep)
 			return cliCtx.PrintOutput(dep)
 		},
@@ -417,7 +445,7 @@ $ %s query gov tally 1
 			}
 
 			// Construct query
-			params := gov.NewQueryProposalParams(proposalID)
+			params := types.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -429,7 +457,7 @@ $ %s query gov tally 1
 				return err
 			}
 
-			var tally gov.TallyResult
+			var tally types.TallyResult
 			cdc.MustUnmarshalJSON(res, &tally)
 			return cliCtx.PrintOutput(tally)
 		},
@@ -466,14 +494,14 @@ $ %s query gov params
 				return err
 			}
 
-			var tallyParams gov.TallyParams
+			var tallyParams types.TallyParams
 			cdc.MustUnmarshalJSON(tp, &tallyParams)
-			var depositParams gov.DepositParams
+			var depositParams types.DepositParams
 			cdc.MustUnmarshalJSON(dp, &depositParams)
-			var votingParams gov.VotingParams
+			var votingParams types.VotingParams
 			cdc.MustUnmarshalJSON(vp, &votingParams)
 
-			return cliCtx.PrintOutput(gov.NewParams(votingParams, tallyParams, depositParams))
+			return cliCtx.PrintOutput(types.NewParams(votingParams, tallyParams, depositParams))
 		},
 	}
 }
@@ -506,15 +534,15 @@ $ %s query gov param deposit
 			var out fmt.Stringer
 			switch args[0] {
 			case "voting":
-				var param gov.VotingParams
+				var param types.VotingParams
 				cdc.MustUnmarshalJSON(res, &param)
 				out = param
 			case "tallying":
-				var param gov.TallyParams
+				var param types.TallyParams
 				cdc.MustUnmarshalJSON(res, &param)
 				out = param
 			case "deposit":
-				var param gov.DepositParams
+				var param types.DepositParams
 				cdc.MustUnmarshalJSON(res, &param)
 				out = param
 			default:

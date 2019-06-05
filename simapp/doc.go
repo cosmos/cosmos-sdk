@@ -4,7 +4,7 @@ simulation test suites.
 
 Simulation App
 
-The SimApp defines an application used for running extensive simulation
+The SimApp type defines an application used for running extensive simulation
 testing suites. It contains all core modules, including governance, staking,
 slashing, and distribution.
 

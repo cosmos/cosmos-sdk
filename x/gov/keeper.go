@@ -13,12 +13,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
-)
-
 // Governance Keeper
 type Keeper struct {
 	// The reference to the Param Keeper to get and set Global Params

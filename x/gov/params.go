@@ -8,6 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+// Parameter store key
+var (
+	ParamStoreKeyDepositParams = []byte("depositparams")
+	ParamStoreKeyVotingParams  = []byte("votingparams")
+	ParamStoreKeyTallyParams   = []byte("tallyparams")
+)
+
 // Key declaration for parameters
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(

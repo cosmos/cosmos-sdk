@@ -401,7 +401,7 @@ func queryPool(ctx sdk.Context, k keep.Keeper) ([]byte, sdk.Error) {
 	bondDenom := k.BondDenom(ctx)
 	bondedPool, notBondedPool := k.GetPools(ctx)
 	if bondedPool == nil || notBondedPool == nil {
-		panic("pool accounts haven't been set")
+		return nil, sdk.ErrInternal("pool accounts haven't been set")
 	}
 
 	pool := types.NewPool(

@@ -13,7 +13,6 @@ This document describes the core parts of a Cosmos SDK application. The placehol
 - [Core Application File](#core-application-file)
 - [Modules](#modules)
 - [Intefaces](#interfaces)
-- [Dependencies and Makefile](#dependencies-and-makefile)
 
 The core parts listed above will generally translate to the following directory tree:
 
@@ -26,7 +25,7 @@ The core parts listed above will generally translate to the following directory 
 ├── x/
 │   ├── auth
 │   └── bank
-├── Gopkg.toml
+├── go.mod
 └── Makefile
 ``` 
 
@@ -202,10 +201,6 @@ The main interface is the [Command-Line Interface](./interfaces.md#cli). The CLI
 See an example of an application's main command-line file [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go).
 
 To learn more about interfaces, [click here](./interfaces.md)
-
-## Dependencies and Makefile 
-
-
 
 ## Next
 

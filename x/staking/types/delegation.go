@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/expected"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // DVPair is struct that just has a delegator-validator pair with no other data.
@@ -30,7 +30,7 @@ type DVVTriplet struct {
 }
 
 // Implements Delegation interface
-var _ expected.DelegationI = Delegation{}
+var _ exported.DelegationI = Delegation{}
 
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one

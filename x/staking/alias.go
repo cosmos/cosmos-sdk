@@ -3,11 +3,11 @@
 // aliases generated for the following subdirectories:
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/keeper
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/types
-// ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/expected
+// ALIASGEN: github.com/cosmos/cosmos-sdk/x/staking/exported
 package staking
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/staking/expected"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -259,6 +259,6 @@ type (
 	Validator                 = types.Validator
 	Validators                = types.Validators
 	Description               = types.Description
-	DelegationI               = expected.DelegationI
-	ValidatorI                = expected.ValidatorI
+	DelegationI               = exported.DelegationI
+	ValidatorI                = exported.ValidatorI
 )

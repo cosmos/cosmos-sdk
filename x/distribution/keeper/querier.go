@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/expected"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 func NewQuerier(k Keeper) sdk.Querier {
@@ -174,7 +174,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del expected.DelegationI) (stop bool) {
+		func(_ int64, del exported.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
@@ -209,7 +209,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del expected.DelegationI) (stop bool) {
+		func(_ int64, del exported.DelegationI) (stop bool) {
 			validators = append(validators[:], del.GetValidatorAddr())
 			return false
 		},

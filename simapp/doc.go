@@ -14,15 +14,15 @@ checking period, and a seed which is used as a source of pseudo-randomness.
 
 In addition to the various inputs, simulation runs mainly in three modes:
 
-1.) Completely random where the initial state, module parameters and simulation
+1. Completely random where the initial state, module parameters and simulation
 parameters are pseudo-randomly generated.
 
-2.) From a genesis file where the initial state and the module parameters are defined.
+2. From a genesis file where the initial state and the module parameters are defined.
 This mode is helpful for running simulations on a known state such as a live
 network export where a new (mostly likely breaking) version of the application
 needs to be tested.
 
-3.) From a params file where the initial state is pseudo-randomly generated but the
+3. From a params file where the initial state is pseudo-randomly generated but the
 module and simulation parameters can be provided manually. This allows for a more
 controlled and deterministic simulation setup while allowing the state space to
 still be pseudo-randomly simulated.

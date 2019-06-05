@@ -92,13 +92,10 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState) {
-	err := k.setInitialProposalID(ctx, data.StartingProposalID)
-	if err != nil {
-		// TODO: Handle this with #870
-		panic(err)
-	}
 
+func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState) {
+
+	k.setProposalID(ctx, data.StartingProposalID)
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)
@@ -144,7 +141,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState)
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	startingProposalID, _ := k.peekCurrentProposalID(ctx)
+	startingProposalID, _ := k.GetProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)

@@ -38,7 +38,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.sk.SendCoinsAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
+	err := keeper.supplyKeeper.SendCoinsAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -55,14 +55,14 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Add or update deposit object
-	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
-	if !found {
-		newDeposit := NewDeposit(proposalID, depositorAddr, depositAmount)
-		keeper.setDeposit(ctx, proposalID, depositorAddr, newDeposit)
+	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
+	if found {
+		deposit.Amount = deposit.Amount.Add(depositAmount)
 	} else {
-		currDeposit.Amount = currDeposit.Amount.Add(depositAmount)
-		keeper.setDeposit(ctx, proposalID, depositorAddr, currDeposit)
+		deposit = NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
+
+	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
 
 	return nil, activatedVotingPeriod
 }
@@ -96,7 +96,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
-		err := keeper.sk.SendCoinsModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
+		err := keeper.supplyKeeper.SendCoinsModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -111,7 +111,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
-		err := keeper.sk.BurnCoins(ctx, ModuleName, deposit.Amount)
+		err := keeper.supplyKeeper.BurnCoins(ctx, ModuleName, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -53,7 +54,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		bondedPool, notBondedPool := k.GetPools(ctx)
 		bondDenom := k.BondDenom(ctx)
 
-		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
+		k.IterateValidators(ctx, func(_ int64, validator expected.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetTokens())

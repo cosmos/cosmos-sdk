@@ -31,13 +31,10 @@ type Keeper struct {
 	ck BankKeeper
 
 	// The SupplyKeeper to reduce the supply of the network
-	sk SupplyKeeper
+	supplyKeeper SupplyKeeper
 
-	// The ValidatorSet to get information about validators
-	vs sdk.ValidatorSet
-
-	// The reference to the DelegationSet to get information about delegators
-	ds sdk.DelegationSet
+	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
+	sk StakingKeeper
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -59,7 +56,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, sk SupplyKeeper, ds sdk.DelegationSet, codespace sdk.CodespaceType, rtr Router,
+	ck BankKeeper, supplyKeeper SupplyKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -72,9 +69,8 @@ func NewKeeper(
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
+		supplyKeeper: supplyKeeper,
 		sk:           sk,
-		ds:           ds,
-		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
 		codespace:    codespace,
 		router:       rtr,
@@ -86,7 +82,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().Wi
 
 // GetGovernanceAccount returns the governance ModuleAccount
 func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccount {
-	return keeper.sk.GetModuleAccountByName(ctx, types.ModuleName)
+	return keeper.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
 }
 
 // SetGovernanceAccount stores the governance module account
@@ -95,7 +91,7 @@ func (keeper Keeper) SetGovernanceAccount(ctx sdk.Context, macc supply.ModuleAcc
 		panic(fmt.Sprintf("invalid name for governance module account (%s ≠ %s)", macc.Name(), types.ModuleName))
 	}
 
-	keeper.sk.SetModuleAccount(ctx, macc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, macc)
 }
 
 // Params

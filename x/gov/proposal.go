@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -20,7 +22,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 		return Proposal{}, ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
 	}
 
-	proposalID, err := keeper.getNewProposalID(ctx)
+	proposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
 		return Proposal{}, err
 	}
@@ -32,6 +34,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
+	keeper.setProposalID(ctx, proposalID+1)
 
 	return proposal, nil
 }
@@ -59,7 +62,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		panic("DeleteProposal cannot fail to GetProposal")
+		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
@@ -82,9 +85,9 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals Proposals) {
 // numLatest will fetch a specified number of the most recent proposals, or 0 for all proposals
 func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status ProposalStatus, numLatest uint64) []Proposal {
 
-	maxProposalID, err := keeper.peekCurrentProposalID(ctx)
+	maxProposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
-		return nil
+		return []Proposal{}
 	}
 
 	matchingProposals := []Proposal{}
@@ -122,50 +125,22 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 	return matchingProposals
 }
 
-// GetLastProposalID gets the last used proposal ID. Returns 0 if the current proposal ID is 0
-// or if the initial proposal ID hasn't been set.
-func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID uint64) {
-	proposalID, err := keeper.peekCurrentProposalID(ctx)
-	if err != nil || proposalID == 0 {
-		return 0
-	}
-	return proposalID - 1
-}
-
-// Gets the next available ProposalID and increments it
-func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
+// GetProposalID gets the highest proposal ID
+func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(NextProposalIDKey)
+	bz := store.Get(ProposalIDKey)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
-	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
-	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)
-	store.Set(NextProposalIDKey, bz)
-	return proposalID, nil
-}
-
-// Set the initial proposal ID
-func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sdk.Error {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(NextProposalIDKey)
-	if bz != nil {
-		return ErrInvalidGenesis(keeper.codespace, "initial proposal ID already set")
-	}
-	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(NextProposalIDKey, bz)
-	return nil
-}
-
-// Peeks the next available ProposalID without incrementing it
-func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(NextProposalIDKey)
-	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID never set")
+		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID hasn't been set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	return proposalID, nil
+}
+
+// Set the proposal ID
+func (keeper Keeper) setProposalID(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
+	store.Set(ProposalIDKey, bz)
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/expected"
 )
 
 // nolint
@@ -22,6 +23,9 @@ const (
 	MaxWebsiteLength  = 140
 	MaxDetailsLength  = 280
 )
+
+// Implements Validator interface
+var _ expected.ValidatorI = Validator{}
 
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
@@ -55,7 +59,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+func (v Validators) ToSDKValidators() (validators []expected.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -201,6 +205,21 @@ func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
+// IsBonded checks if the validator status equals Bonded
+func (v Validator) IsBonded() bool {
+	return v.GetStatus().Equal(sdk.Bonded)
+}
+
+// IsUnbonded checks if the validator status equals Unbonded
+func (v Validator) IsUnbonded() bool {
+	return v.GetStatus().Equal(sdk.Unbonded)
+}
+
+// IsUnbonding checks if the validator status equals Unbonding
+func (v Validator) IsUnbonding() bool {
+	return v.GetStatus().Equal(sdk.Unbonding)
+}
+
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
@@ -338,7 +357,7 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
 
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		return v.Tokens
 	}
 	return sdk.ZeroInt()
@@ -347,7 +366,7 @@ func (v Validator) BondedTokens() sdk.Int {
 // get the Tendermint Power
 // a reduction of 10^6 from validator tokens is applied
 func (v Validator) TendermintPower() int64 {
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		return v.PotentialTendermintPower()
 	}
 	return 0
@@ -358,10 +377,7 @@ func (v Validator) PotentialTendermintPower() int64 {
 	return sdk.TokensToTendermintPower(v.Tokens)
 }
 
-// ensure fulfills the sdk validator types
-var _ sdk.Validator = Validator{}
-
-// nolint - for sdk.Validator
+// nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }

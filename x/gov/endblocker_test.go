@@ -307,7 +307,6 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	valAddr := sdk.ValAddress(input.addrs[0])
 
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 

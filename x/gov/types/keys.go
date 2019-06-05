@@ -47,7 +47,7 @@ var (
 	ProposalsKeyPrefix          = []byte{0x00}
 	ActiveProposalQueuePrefix   = []byte{0x01}
 	InactiveProposalQueuePrefix = []byte{0x02}
-	NextProposalIDKey           = []byte{0x03}
+	ProposalIDKey               = []byte{0x03}
 
 	DepositsKeyPrefix = []byte{0x10}
 

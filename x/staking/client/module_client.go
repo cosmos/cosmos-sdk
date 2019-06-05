@@ -5,6 +5,7 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -22,8 +23,11 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 // GetQueryCmd returns the cli query commands for this module
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	stakingQueryCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Querying commands for the staking module",
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the staking module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 	stakingQueryCmd.AddCommand(client.GetCommands(
 		cli.GetCmdQueryDelegation(mc.storeKey, mc.cdc),
@@ -47,8 +51,11 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	stakingTxCmd := &cobra.Command{
-		Use:   types.ModuleName,
-		Short: "Staking transaction subcommands",
+		Use:                        types.ModuleName,
+		Short:                      "Staking transaction subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
 	}
 
 	stakingTxCmd.AddCommand(client.PostCommands(

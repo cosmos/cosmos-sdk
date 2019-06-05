@@ -94,7 +94,7 @@ func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 
 	if params.Limit == 0 {
 		// set the default limit to max bonded if no limit was provided
-		params.Limit = int(k.validatorSet.MaxValidators(ctx))
+		params.Limit = int(k.sk.MaxValidators(ctx))
 	}
 
 	var signingInfos []ValidatorSigningInfo

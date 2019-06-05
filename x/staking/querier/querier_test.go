@@ -461,3 +461,94 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
+
+func TestQueryUnbondingDelegation(t *testing.T) {
+	cdc := codec.New()
+	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
+	keeper.SetValidator(ctx, val1)
+
+	// delegate
+	delAmount := sdk.TokensFromTendermintPower(100)
+	_, err := keeper.Delegate(ctx, addrAcc1, delAmount, val1, true)
+	require.NoError(t, err)
+	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// undelegate
+	undelAmount := sdk.TokensFromTendermintPower(20)
+	_, err = keeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
+	require.NoError(t, err)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	_, found := keeper.GetUnbondingDelegation(ctx, addrAcc1, val1.OperatorAddress)
+	require.True(t, found)
+
+	//
+	// found: query unbonding delegation by delegator and validator
+	//
+	queryValidatorParams := NewQueryBondsParams(addrAcc1, val1.GetOperator())
+	bz, errRes := cdc.MarshalJSON(queryValidatorParams)
+	require.Nil(t, errRes)
+	query := abci.RequestQuery{
+		Path: "/custom/staking/unbondingDelegation",
+		Data: bz,
+	}
+	res, err := queryUnbondingDelegation(ctx, query, keeper)
+	require.Nil(t, err)
+	require.NotNil(t, res)
+	var ubDel types.UnbondingDelegation
+	require.NoError(t, cdc.UnmarshalJSON(res, &ubDel))
+	require.Equal(t, addrAcc1, ubDel.DelegatorAddress)
+	require.Equal(t, val1.OperatorAddress, ubDel.ValidatorAddress)
+	require.Equal(t, 1, len(ubDel.Entries))
+
+	//
+	// not found: query unbonding delegation by delegator and validator
+	//
+	queryValidatorParams = NewQueryBondsParams(addrAcc2, val1.GetOperator())
+	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
+	require.Nil(t, errRes)
+	query = abci.RequestQuery{
+		Path: "/custom/staking/unbondingDelegation",
+		Data: bz,
+	}
+	res, err = queryUnbondingDelegation(ctx, query, keeper)
+	require.NotNil(t, err)
+
+	//
+	// found: query unbonding delegation by delegator and validator
+	//
+	queryDelegatorParams := NewQueryDelegatorParams(addrAcc1)
+	bz, errRes = cdc.MarshalJSON(queryDelegatorParams)
+	require.Nil(t, errRes)
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegatorUnbondingDelegations",
+		Data: bz,
+	}
+	res, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
+	require.Nil(t, err)
+	require.NotNil(t, res)
+	var ubDels []types.UnbondingDelegation
+	require.NoError(t, cdc.UnmarshalJSON(res, &ubDels))
+	require.Equal(t, 1, len(ubDels))
+	require.Equal(t, addrAcc1, ubDels[0].DelegatorAddress)
+	require.Equal(t, val1.OperatorAddress, ubDels[0].ValidatorAddress)
+
+	//
+	// not found: query unbonding delegation by delegator and validator
+	//
+	queryDelegatorParams = NewQueryDelegatorParams(addrAcc2)
+	bz, errRes = cdc.MarshalJSON(queryDelegatorParams)
+	require.Nil(t, errRes)
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegatorUnbondingDelegations",
+		Data: bz,
+	}
+	res, err = queryDelegatorUnbondingDelegations(ctx, query, keeper)
+	require.Nil(t, err)
+	require.NotNil(t, res)
+	require.NoError(t, cdc.UnmarshalJSON(res, &ubDels))
+	require.Equal(t, 0, len(ubDels))
+}

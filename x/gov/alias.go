@@ -100,7 +100,7 @@ var (
 	ProposalsKeyPrefix          = types.ProposalsKeyPrefix
 	ActiveProposalQueuePrefix   = types.ActiveProposalQueuePrefix
 	InactiveProposalQueuePrefix = types.InactiveProposalQueuePrefix
-	NextProposalIDKey           = types.NextProposalIDKey
+	ProposalIDKey               = types.ProposalIDKey
 	DepositsKeyPrefix           = types.DepositsKeyPrefix
 	VotesKeyPrefix              = types.VotesKeyPrefix
 )

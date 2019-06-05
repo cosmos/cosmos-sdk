@@ -365,7 +365,6 @@ func genMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 }
 
 func genDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
-	// TODO: make use NewGenesisState
 	distrGenesis := distr.GenesisState{
 		FeePool: distr.InitialFeePool(),
 		CommunityTax: func(r *rand.Rand) sdk.Dec {

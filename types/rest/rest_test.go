@@ -109,6 +109,7 @@ func TestParseQueryHeight(t *testing.T) {
 	req0 := mustNewRequest(t, "", "/", nil)
 	req1 := mustNewRequest(t, "", "/?height=1256756", nil)
 	req2 := mustNewRequest(t, "", "/?height=456yui4567", nil)
+	req3 := mustNewRequest(t, "", "/?height=-1", nil)
 
 	tests := []struct {
 		name           string
@@ -121,6 +122,7 @@ func TestParseQueryHeight(t *testing.T) {
 		{"no height", req0, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
 		{"height", req1, httptest.NewRecorder(), context.CLIContext{}, height, true},
 		{"invalid height", req2, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
+		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

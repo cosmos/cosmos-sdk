@@ -5,7 +5,7 @@ type State = byte
 const (
 	Idle State = iota
 	Init
-	Try
+	OpenTry
 	Open
 	CloseTry
 	Closed

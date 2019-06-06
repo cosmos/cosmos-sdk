@@ -9,7 +9,7 @@ import (
 )
 
 // XXX: all panic -> err
-// XXX: Try -> TryOpen
+// XXX: OpenTry -> OpenTryOpen
 // XXX: rename remote to something else
 // XXX: all code using external KVStore should be defer-recovered in case of missing proofs
 
@@ -158,7 +158,7 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 
 func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
 	obj := Object(nobj)
-	if !obj.state.Transit(ctx, Idle, Try) {
+	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("invalid state")
 	}
 
@@ -206,7 +206,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != Try {
+	if obj.remote.state.Get(ctx) != OpenTry {
 		return errors.New("counterparty state not try")
 	}
 
@@ -231,7 +231,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 }
 
 func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, Try, Open) {
+	if !obj.state.Transit(ctx, OpenTry, Open) {
 		return errors.New("confirm on non-try connection")
 	}
 
@@ -265,16 +265,27 @@ func (obj Object) OpenTimeout(ctx sdk.Context) error {
 
 	switch obj.state.Get(ctx) {
 	case Init:
+		// XXX: check if exists compatible with remote KVStore
 		if obj.remote.exists(ctx) {
 			return errors.New("counterparty connection existw")
 		}
-	case Try:
-		// XXX
+	case OpenTry:
+		if !(obj.remote.state.Get(ctx) == Init ||
+			obj.remote.exists(ctx)) {
+			return errors.New("counterparty connection state not init")
+		}
+		// XXX: check if we need to verify symmetricity for timeout (already proven in OpenTry)
 	case Open:
-		// XXX
+		if obj.remote.state.Get(ctx) == OpenTry {
+			return errors.New("counterparty connection state not tryopen")
+		}
 	}
 
 	obj.remove(ctx)
 
 	return nil
+}
+
+func (obj Object) CloseInit(ctx sdk.Context) error {
+
 }

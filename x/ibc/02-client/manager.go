@@ -34,7 +34,7 @@ func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
 
 func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	if _, ok := man.pred[kind]; ok {
-		panic("ClientKind already registered")
+		panic("Kind already registered")
 	}
 	man.pred[kind] = pred
 	return man
@@ -105,7 +105,7 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 
 	var stored Client
 	obj.client.GetIfExists(ctx, &stored)
-	pred := obj.pred[stored.ClientKind()]
+	pred := obj.pred[stored.Kind()]
 
 	updated, err := pred(stored, header)
 	if err != nil {

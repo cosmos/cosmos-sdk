@@ -59,20 +59,36 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryValidatorOutstandingRewards implements the query validator outstanding rewards command.
 func GetCmdQueryValidatorOutstandingRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "validator-outstanding-rewards",
-		Args:  cobra.NoArgs,
+		Use:   "validator-outstanding-rewards [validator]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute)
-			res, err := cliCtx.QueryWithData(route, []byte{})
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			params := types.NewQueryValidatorOutstandingRewardsParams(valAddr)
+			bz, err := cdc.MarshalJSON(params)
+			if err != nil {
+				return err
+			}
+
+			resp, err := cliCtx.QueryWithData(
+				fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorOutstandingRewards),
+				bz,
+			)
 			if err != nil {
 				return err
 			}
 
 			var outstandingRewards types.ValidatorOutstandingRewards
-			cdc.MustUnmarshalJSON(res, &outstandingRewards)
+			if err := cdc.UnmarshalJSON(resp, &outstandingRewards); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(outstandingRewards)
 		},
 	}

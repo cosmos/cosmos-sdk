@@ -5,15 +5,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -62,7 +61,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 }
 
 // GetBroadcastCommand returns the tx broadcast command.
-func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
+func GetBroadcastCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broadcast [file_path]",
 		Short: "Broadcast transactions generated offline",
@@ -71,11 +70,11 @@ flag and signed with the sign command. Read a transaction from [file_path] and
 broadcast it to a node. If you supply a dash (-) argument in place of an input
 filename, the command reads from standard input.
 
-$ gaiacli tx broadcast ./mytxn.json
+$ <appcli> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(codec)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			stdTx, err := utils.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return
@@ -92,5 +91,5 @@ $ gaiacli tx broadcast ./mytxn.json
 		},
 	}
 
-	return client.PostCommands(cmd)[0]
+	return flags.PostCommands(cmd)[0]
 }

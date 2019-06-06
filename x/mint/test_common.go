@@ -49,15 +49,15 @@ func newTestInput(t *testing.T) testInput {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	paramsKeeper := params.NewKeeper(moduleCdc, keyParams, tkeyParams, params.DefaultCodespace)
-	feeCollectionKeeper := auth.NewFeeCollectionKeeper(moduleCdc, keyFeeCollection)
-	accountKeeper := auth.NewAccountKeeper(moduleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	paramsKeeper := params.NewKeeper(ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
+	feeCollectionKeeper := auth.NewFeeCollectionKeeper(ModuleCdc, keyFeeCollection)
+	accountKeeper := auth.NewAccountKeeper(ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	stakingKeeper := staking.NewKeeper(
-		moduleCdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		ModuleCdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 	mintKeeper := NewKeeper(
-		moduleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
+		ModuleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
 	)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
@@ -65,5 +65,5 @@ func newTestInput(t *testing.T) testInput {
 	mintKeeper.SetParams(ctx, DefaultParams())
 	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
 
-	return testInput{ctx, moduleCdc, mintKeeper}
+	return testInput{ctx, ModuleCdc, mintKeeper}
 }

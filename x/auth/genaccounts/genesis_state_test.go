@@ -28,17 +28,17 @@ func TestSanitize(t *testing.T) {
 	})
 	genAcc2 := NewGenesisAccount(&authAcc2)
 
-	genesisState := NewGenesisState([]GenesisAccount{genAcc1, genAcc2})
+	genesisState := GenesisState([]GenesisAccount{genAcc1, genAcc2})
 	require.NoError(t, ValidateGenesis(genesisState))
-	require.True(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
-	require.Equal(t, genesisState.Accounts[0].Coins[0].Denom, "bcoin")
-	require.Equal(t, genesisState.Accounts[0].Coins[1].Denom, "acoin")
-	require.Equal(t, genesisState.Accounts[1].Address, addr2)
+	require.True(t, genesisState[0].AccountNumber > genesisState[1].AccountNumber)
+	require.Equal(t, genesisState[0].Coins[0].Denom, "bcoin")
+	require.Equal(t, genesisState[0].Coins[1].Denom, "acoin")
+	require.Equal(t, genesisState[1].Address, addr2)
 	genesisState.Sanitize()
-	require.False(t, genesisState.Accounts[0].AccountNumber > genesisState.Accounts[1].AccountNumber)
-	require.Equal(t, genesisState.Accounts[1].Address, addr1)
-	require.Equal(t, genesisState.Accounts[1].Coins[0].Denom, "acoin")
-	require.Equal(t, genesisState.Accounts[1].Coins[1].Denom, "bcoin")
+	require.False(t, genesisState[0].AccountNumber > genesisState[1].AccountNumber)
+	require.Equal(t, genesisState[1].Address, addr1)
+	require.Equal(t, genesisState[1].Coins[0].Denom, "acoin")
+	require.Equal(t, genesisState[1].Coins[1].Denom, "bcoin")
 }
 
 var (
@@ -57,7 +57,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	genAccs[0] = NewGenesisAccount(&acc1)
 	genAccs[1] = NewGenesisAccount(&acc1)
 
-	genesisState := NewGenesisState(genAccs)
+	genesisState := GenesisState(genAccs)
 	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
 }
@@ -73,13 +73,13 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	genAccs[0] = NewGenesisAccount(&acc1)
 	genAccs[1] = NewGenesisAccount(&acc2)
 
-	genesisState := NewGenesisState(genAccs)
-	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins
+	genesisState := GenesisState(genAccs)
+	genesisState[0].OriginalVesting = genesisState[0].Coins
 	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
 
-	genesisState.Accounts[0].StartTime = 1548888000
-	genesisState.Accounts[0].EndTime = 1548775410
+	genesisState[0].StartTime = 1548888000
+	genesisState[0].EndTime = 1548775410
 	err = ValidateGenesis(genesisState)
 	require.Error(t, err)
 }

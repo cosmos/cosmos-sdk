@@ -24,3 +24,4 @@ This module will be used in the Cosmos Hub.
     - [MsgSend](03_messages.md#msgsend)
 4. **[Tags](04_tags.md)**
     - [Handlers](04_tags.md#handlers)
+5. **[Parameters](05_params.md)**

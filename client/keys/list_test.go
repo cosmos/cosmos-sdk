@@ -3,14 +3,12 @@ package keys
 import (
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/spf13/cobra"
 )
 
 func Test_runListCmd(t *testing.T) {
@@ -28,7 +26,7 @@ func Test_runListCmd(t *testing.T) {
 
 	kbHome2, cleanUp2 := tests.NewTestCaseDir(t)
 	defer cleanUp2()
-	viper.Set(cli.HomeFlag, kbHome2)
+	viper.Set(flags.FlagHome, kbHome2)
 
 	kb, err := NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
@@ -47,7 +45,7 @@ func Test_runListCmd(t *testing.T) {
 	}
 	for _, tt := range testData {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.Set(cli.HomeFlag, tt.kbDir)
+			viper.Set(flags.FlagHome, tt.kbDir)
 			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}

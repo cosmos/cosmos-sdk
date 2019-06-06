@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // State to Unmarshal
@@ -54,8 +55,9 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 	return appState
 }
 
-// Create the core parameters for genesis initialization for gaia
-// note that the pubkey input is this machines pubkey
+// Create the core parameters for genesis initialization for the application.
+//
+// NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
 ) (genesisState map[string]json.RawMessage, err error) {
 
@@ -65,14 +67,15 @@ func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
 	return genesisState, nil
 }
 
-// Create the core parameters for genesis initialization for gaia
-// note that the pubkey input is this machines pubkey
+// Create the core parameters for genesis initialization for the application.
+//
+// NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
 ) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
 
 	if !common.FileExists(genFile) {
 		return genesisState, genDoc,
-			fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
+			fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}
 	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
 	if err != nil {
@@ -97,6 +100,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
 
+		// TODO abstract back to staking
 		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
 			return fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)

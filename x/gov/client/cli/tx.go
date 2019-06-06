@@ -3,19 +3,19 @@ package cli
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Proposal flags
@@ -48,17 +48,47 @@ var ProposalFlags = []string{
 	FlagDeposit,
 }
 
+// GetTxCmd returns the transaction commands for this module
+// governance ModuleClient is slightly different from other ModuleClients in that
+// it contains a slice of "proposal" child commands. These commands are respective
+// to proposal type handlers that are implemented in other modules but are mounted
+// under the governance CLI (eg. parameter change proposals).
+func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds []*cobra.Command) *cobra.Command {
+	govTxCmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      "Governance transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       utils.ValidateCmd,
+	}
+
+	cmdSubmitProp := GetCmdSubmitProposal(cdc)
+	for _, pcmd := range pcmds {
+		cmdSubmitProp.AddCommand(client.PostCommands(pcmd)[0])
+	}
+
+	govTxCmd.AddCommand(client.PostCommands(
+		GetCmdDeposit(cdc),
+		GetCmdVote(cdc),
+		cmdSubmitProp,
+	)...)
+
+	return govTxCmd
+}
+
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
 func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
-		Long: strings.TrimSpace(`
-Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a proposal along with an initial deposit.
+Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
 
-$ gaiacli gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+Example:
+$ %s tx gov submit-proposal --proposal="path/to/proposal.json" --from mykey
 
-where proposal.json contains:
+Where proposal.json contains:
 
 {
   "title": "Test Proposal",
@@ -67,12 +97,15 @@ where proposal.json contains:
   "deposit": "10test"
 }
 
-is equivalent to
+Which is equivalent to:
 
-$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
-`),
+$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -87,9 +120,9 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			content := gov.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := gov.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
+			msg := types.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -113,14 +146,18 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
-		Long: strings.TrimSpace(`
-Submit a deposit for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a deposit for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
 
 Example:
-$ gaiacli tx gov deposit 1 10stake --from mykey
-`),
+$ %s tx gov deposit 1 10stake --from mykey
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -140,7 +177,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			msg := gov.NewMsgDeposit(from, proposalID, amount)
+			msg := types.NewMsgDeposit(from, proposalID, amount)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -157,14 +194,19 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
-		Long: strings.TrimSpace(`
-Submit a vote for an active proposal. You can find the proposal-id by running "gaiacli query gov proposals":
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a vote for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
 
 Example:
-$ gaiacli tx gov vote 1 yes --from mykey
-`),
+$ %s tx gov vote 1 yes --from mykey
+`,
+				version.ClientName, version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -179,13 +221,13 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := types.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := gov.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

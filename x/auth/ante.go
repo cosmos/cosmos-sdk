@@ -29,7 +29,7 @@ func init() {
 }
 
 // SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
-// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey types.
+// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -85,6 +85,10 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper, sigGasConsumer Si
 				}
 			}
 		}()
+
+		if res := ValidateSigCount(stdTx, params); !res.IsOK() {
+			return newCtx, res, true
+		}
 
 		if err := tx.ValidateBasic(); err != nil {
 			return newCtx, err.Result(), true
@@ -154,6 +158,24 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Accou
 	return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr)).Result()
 }
 
+// ValidateSigCount validates that the transaction has a valid cumulative total
+// amount of signatures.
+func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
+	stdSigs := stdTx.GetSignatures()
+
+	sigCount := 0
+	for i := 0; i < len(stdSigs); i++ {
+		sigCount += CountSubKeys(stdSigs[i].PubKey)
+		if uint64(sigCount) > params.TxSigLimit {
+			return sdk.ErrTooManySignatures(
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, params.TxSigLimit),
+			).Result()
+		}
+	}
+
+	return sdk.Result{}
+}
+
 // ValidateMemo validates the memo size.
 func ValidateMemo(stdTx StdTx, params Params) sdk.Result {
 	memoLength := len(stdTx.GetMemo())
@@ -199,7 +221,7 @@ func processSig(
 	}
 
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
+		return nil, sdk.ErrUnauthorized("signature verification failed; verify correct account sequence and chain-id").Result()
 	}
 
 	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
@@ -215,7 +237,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 		simSig.Signature = simSecp256k1Sig[:]
 	}
 
-	sigBz := moduleCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	sigBz := ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
 	cost := sdk.Gas(len(sigBz) + 6)
 
 	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

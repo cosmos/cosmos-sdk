@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // DVPair is struct that just has a delegator-validator pair with no other data.
@@ -27,6 +28,9 @@ type DVVTriplet struct {
 	ValidatorSrcAddress sdk.ValAddress
 	ValidatorDstAddress sdk.ValAddress
 }
+
+// Implements Delegation interface
+var _ exported.DelegationI = Delegation{}
 
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one
@@ -75,10 +79,7 @@ func (d Delegation) Equal(d2 Delegation) bool {
 		d.Shares.Equal(d2.Shares)
 }
 
-// ensure fulfills the sdk validator types
-var _ sdk.Delegation = Delegation{}
-
-// nolint - for sdk.Delegation
+// nolint - for Delegation
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
 func (d Delegation) GetShares() sdk.Dec               { return d.Shares }

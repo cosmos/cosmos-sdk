@@ -37,6 +37,46 @@ func TestStoreMount(t *testing.T) {
 	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
 }
 
+func TestCacheMultiStoreWithVersion(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	if useDebugDB {
+		db = dbm.NewDebugDB("CMS", db)
+	}
+	ms := newMultiStoreWithMounts(db)
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	commitID := types.CommitID{}
+	checkStore(t, ms, commitID, commitID)
+
+	k, v := []byte("wind"), []byte("blows")
+
+	store1 := ms.getStoreByName("store1").(types.KVStore)
+	store1.Set(k, v)
+
+	cID := ms.Commit()
+	require.Equal(t, int64(1), cID.Version)
+
+	// require failure when given an invalid or pruned version
+	_, err = ms.CacheMultiStoreWithVersion(cID.Version + 1)
+	require.Error(t, err)
+
+	// require a valid version can be cache-loaded
+	cms, err := ms.CacheMultiStoreWithVersion(cID.Version)
+	require.NoError(t, err)
+
+	// require a valid key lookup yields the correct value
+	kvStore := cms.GetKVStore(ms.keysByName["store1"])
+	require.NotNil(t, kvStore)
+	require.Equal(t, kvStore.Get(k), v)
+
+	// require we cannot commit (write) to a cache-versioned multi-store
+	require.Panics(t, func() {
+		kvStore.Set(k, []byte("newValue"))
+		cms.Write()
+	})
+}
+
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	if useDebugDB {

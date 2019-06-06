@@ -47,7 +47,7 @@ func createLogFile() *os.File {
 	var f *os.File
 	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))
 
-	folderPath := os.ExpandEnv("$HOME/.gaiad/simulations")
+	folderPath := os.ExpandEnv("$HOME/.simapp/simulations")
 	filePath := path.Join(folderPath, fileName)
 
 	err := os.MkdirAll(folderPath, os.ModePerm)

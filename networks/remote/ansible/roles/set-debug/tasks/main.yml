@@ -1,9 +1,0 @@
----
-# Based on https://www.cyberciti.biz/tips/linux-core-dumps.html
-
-- name: Copy sysctl and sysconfig files to enable app and daemon core dumps
-  file: src=. dest=/etc/
-  notify: reload sysctl
-
-- name: Enable debugging for all apps
-  lineinfile: create=yes line="DAEMON_COREFILE_LIMIT='unlimited'" path=/etc/sysconfig/init regexp=^DAEMON_COREFILE_LIMIT=

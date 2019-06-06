@@ -209,6 +209,35 @@ func TestLazyExportImport(t *testing.T) {
 	require.Equal(t, john, john2)
 }
 
+func TestLazyExportImportPrivKey(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := New("keybasename", dir)
+
+	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+	priv1, err := kb.Get("john")
+	require.NoError(t, err)
+
+	// decrypt local private key, and produce encrypted ASCII armored output
+	armored, err := kb.ExportPrivKey("john", "secretcpw", "new_secretcpw")
+	require.NoError(t, err)
+
+	// delete exported key
+	require.NoError(t, kb.Delete("john", "", true))
+	_, err = kb.Get("john")
+	require.Error(t, err)
+
+	// import armored key
+	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw"))
+
+	// ensure old and new keys match
+	priv2, err := kb.Get("john")
+	require.NoError(t, err)
+	require.True(t, priv1.GetPubKey().Equals(priv2.GetPubKey()))
+}
+
 func TestLazyExportImportPubKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
@@ -335,7 +364,7 @@ func TestLazySeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, 0)
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())

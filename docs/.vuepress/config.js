@@ -34,32 +34,13 @@ module.exports = {
         ]
       },
       {
-        title: "Cosmos Hub",
-        collapsable: true,
-        children: [
-          "/cosmos-hub/what-is-gaia",
-          "/cosmos-hub/installation",
-          "/cosmos-hub/join-mainnet",
-          "/cosmos-hub/validators/validator-setup",
-          "/cosmos-hub/validators/overview",
-          "/cosmos-hub/validators/security",
-          "/cosmos-hub/validators/validator-faq",
-          "/cosmos-hub/delegator-guide-cli",
-          "/cosmos-hub/genesis",
-          "/cosmos-hub/hd-wallets",
-          "/cosmos-hub/ledger",
-          "/cosmos-hub/gaiacli",
-          "/cosmos-hub/join-testnet",
-          "/cosmos-hub/deploy-testnet"
-        ]
-      },
-      {
         title: "Tutorial",
         collapsable: true,
         children: [
           "/tutorial/",
           "/tutorial/app-design",
           "/tutorial/app-init",
+          "/tutorial/types",
           "/tutorial/keeper",
           "/tutorial/msgs-handlers",
           "/tutorial/set-name",
@@ -68,9 +49,11 @@ module.exports = {
           "/tutorial/codec",
           "/tutorial/cli",
           "/tutorial/rest",
+          "/tutorial/module",
+          "/tutorial/genesis",
           "/tutorial/app-complete",
           "/tutorial/entrypoint",
-          "/tutorial/dep",
+          "/tutorial/gomod",
           "/tutorial/build-run",
           "/tutorial/run-rest"
         ]

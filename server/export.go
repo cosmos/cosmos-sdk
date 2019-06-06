@@ -11,10 +11,10 @@ import (
 
 	"io/ioutil"
 
-	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -31,7 +31,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(cli.HomeFlag))
+			config.SetRoot(viper.GetString(flags.FlagHome))
 
 			traceWriterFile := viper.GetString(flagTraceStore)
 

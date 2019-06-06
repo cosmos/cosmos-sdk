@@ -7,12 +7,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Keeper - crisis keeper
 type Keeper struct {
-	routes         []InvarRoute
+	routes         []types.InvarRoute
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
@@ -27,8 +28,8 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 	feeCollectionKeeper FeeCollectionKeeper) Keeper {
 
 	return Keeper{
-		routes:              []InvarRoute{},
-		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
+		routes:              []types.InvarRoute{},
+		paramSpace:          paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod:      invCheckPeriod,
 		distrKeeper:         distrKeeper,
 		bankKeeper:          bankKeeper,
@@ -38,12 +39,12 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 
 // register routes for the
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
-	invarRoute := NewInvarRoute(moduleName, route, invar)
+	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
 
 // Routes - return the keeper's invariant routes
-func (k Keeper) Routes() []InvarRoute {
+func (k Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 
@@ -64,17 +65,18 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 	for _, ir := range invarRoutes {
 		if err := ir.Invar(ctx); err != nil {
 
-			// TODO make "gaiacli" app name a part of context to allow for this to be variable
+			// TODO: Include app name as part of context to allow for this to be
+			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t gaiacli tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
+				"\t\t tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
 		}
 	}
+
 	end := time.Now()
 	diff := end.Sub(start)
 
-	logger.With("module", "x/crisis").Info(
-		"Asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+	logger.With("module", "x/crisis").Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 
 // DONTCOVER

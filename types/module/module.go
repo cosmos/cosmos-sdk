@@ -131,7 +131,7 @@ type AppModule interface {
 	AppModuleGenesis
 
 	// registers
-	RegisterInvariants(sdk.InvariantRouter)
+	RegisterInvariants(sdk.InvariantRegistry)
 
 	// routes
 	Route() string
@@ -157,7 +157,7 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 }
 
 // register invariants
-func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module message route ngame
 func (GenesisOnlyAppModule) Route() string { return "" }
@@ -232,7 +232,7 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 }
 
 // register all module routes and module querier routes
-func (m *Manager) RegisterInvariants(invarRouter sdk.InvariantRouter) {
+func (m *Manager) RegisterInvariants(invarRouter sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
 		module.RegisterInvariants(invarRouter)
 	}

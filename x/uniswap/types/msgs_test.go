@@ -1,4 +1,4 @@
-package uniswap
+package types
 
 import (
 	"testing"

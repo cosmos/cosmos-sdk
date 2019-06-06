@@ -1,4 +1,4 @@
-package uniswap
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,14 +54,23 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 	if msg.SwapDenom == "" {
 		return ErrNoDenom(DefaultCodespace)
 	}
+	if msg.Coin.IsZero() {
+		return sdk.ErrInsufficientCoins("coin has zero value")
+	}
+	if msg.Coin.Denom == "" {
+		return sdk.ErrInvalidCoins("coin has no denomination")
+	}
+	if msg.Coin.Denom == msg.SwapDenom {
+		return ErrEqualDenom(DefaultCodespace)
+	}
+	if !msg.Bound.IsPositive() {
+		return Err(DefaultCodespace)
+	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
 	}
 	if msg.Recipient.Empty() {
 		return sdk.ErrInvalidAddress("invalid recipient address")
-	}
-	if msg.Coin.IsZero() {
-		return ErrZeroCoin()
 	}
 }
 
@@ -113,9 +122,25 @@ func (msg MsgAddLiquidity) Type() string { return "add_liquidity" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgAddLiquidity) ValidateBasic() sdk.Error {
+	if !msg.DepositAmount.IsPositive() {
+		return ErrInsufficientAmount("deposit amount provided is not positive")
+	}
+	if msg.ExchangeDenom == "" {
+		return ErrNoDenom(DefaultCodespace)
+	}
+	if !msg.MinLiquidity.IsPositive() {
+		return
+	}
+	if !msg.MaxCoins.IsPositive() {
+		return
+	}
+	if msg.Deadline {
+
+	}
 	if msg.Sender.Empty() {
 		return sdk.InvalidAddress("invalid sender address")
 	}
+
 }
 
 // GetSignBytes Implements Msg.
@@ -166,8 +191,17 @@ func (msg MsgRemoveLiquidity) Type() string { return "remove_liquidity" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRemoveLiquidity) ValidateBasic() sdk.Error {
+	if !msg.WithdrawAmount.IsPositive() {
+		return ErrInsufficientAmount("withdraw amount is not positive")
+	}
 	if msg.ExchangeDenom == "" {
 		return ErrNoDenom(DefaultCodespace)
+	}
+	if !msg.MinNative.IsPositive() {
+		return
+	}
+	if !msg.MinCoins.IsPositive() {
+		return
 	}
 	if msg.Sender.Empty() {
 		return sdk.InvalidAddress("invalid sender address")

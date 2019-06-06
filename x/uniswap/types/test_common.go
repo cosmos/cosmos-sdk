@@ -1,4 +1,4 @@
-package uniswap
+package types
 
 import (
 	"github.com/tendermint/tendermint/crypto/ed25519"

@@ -1,4 +1,4 @@
-package uniswap
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

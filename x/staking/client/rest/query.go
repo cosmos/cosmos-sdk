@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -303,7 +302,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the staking params values
-func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
 		if err != nil {

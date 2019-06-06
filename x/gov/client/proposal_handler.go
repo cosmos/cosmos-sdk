@@ -9,7 +9,7 @@ import (
 )
 
 // function to create the rest handler
-type RESTHandlerFn func(context.CLIContext, *codec.Codec) rest.ProposalRESTHandler
+type RESTHandlerFn func(context.CLIContext) rest.ProposalRESTHandler
 
 // function to create the cli handler
 type CLIHandlerFn func(*codec.Codec) *cobra.Command

@@ -34,7 +34,7 @@ func TotalSupply(k Keeper) sdk.Invariant {
 		if !expectedTotal.IsEqual(supply.Total) {
 			return fmt.Errorf("total supply invariance:\n"+
 				"\tsum of accounts coins: %v\n"+
-				"\tsupply.Total: %v", expectedTotal, supply.Total)
+				"\tsupply.Total:          %v", expectedTotal, supply.Total)
 		}
 
 		return nil

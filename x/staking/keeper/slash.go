@@ -199,7 +199,6 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 
 		// Burn the slashed tokens from the unbonded pool account and the total supply.
-		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
 		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondingSlashAmount))
 		err := k.burnNotBondedCoins(ctx, burnedCoins)
 		if err != nil {
@@ -254,7 +253,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			sharesToUnbond = delegation.Shares
 		}
 
-		// we don't burn tokens here as they are burned upstream on the main Slash function
+		// we don't burn tokens as the tokens remain on the bonded pool
 		_, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))

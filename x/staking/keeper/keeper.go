@@ -3,6 +3,7 @@ package keeper
 import (
 	"container/list"
 
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -114,6 +115,15 @@ func (k Keeper) freeCoinsToBonded(ctx sdk.Context, amt sdk.Coins) sdk.Error {
 func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
 	err := k.supplyKeeper.SendCoinsModuleToModule(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
+func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
+	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
+	err := k.supplyKeeper.SendCoinsModuleToModule(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
 	if err != nil {
 		panic(err)
 	}

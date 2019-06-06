@@ -55,10 +55,12 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		bondDenom := k.BondDenom(ctx)
 
 		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
-			switch validator.GetStatus() {
-			case sdk.Bonded:
+			switch {
+			case validator.IsBonded():
 				bonded = bonded.Add(validator.GetTokens())
-			case sdk.Unbonding, sdk.Unbonded:
+			case validator.IsUnbonding():
+				notBonded = notBonded.Add(validator.GetTokens())
+			case validator.IsUnbonded():
 				notBonded = notBonded.Add(validator.GetTokens())
 			}
 			return false
@@ -79,10 +81,14 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		if !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tPool's bonded tokens: %v\n"+
-				"\tsum of bonded tokens from delegations: %v\n"+
+				"\tsum of bonded tokens: %v\n"+
 				"not bonded token invariance:\n"+
 				"\tPool's not bonded tokens: %v\n"+
-				"\tsum of not bonded tokens: %v", poolBonded, bonded, poolNotBonded, notBonded)
+				"\tsum of not bonded tokens: %v\n"+
+				"module accounts total (bonded + not bonded):\n"+
+				"\tModule Accounts' tokens: %v\n"+
+				"\tsum tokens:              %v",
+				poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded))
 		}
 
 		return nil

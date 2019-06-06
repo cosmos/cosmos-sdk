@@ -54,12 +54,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// apply the appropriate state change if necessary
-		switch validator.Status {
-		case sdk.Unbonded:
+		switch {
+		case validator.IsUnbonded():
 			validator = k.unbondedToBonded(ctx, validator)
-		case sdk.Unbonding:
+		case validator.IsUnbonding():
 			validator = k.unbondingToBonded(ctx, validator)
-		case sdk.Bonded:
+		case validator.IsBonded():
 			// no state change
 		default:
 			panic("unexpected validator status")
@@ -100,10 +100,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 
 		// bonded to unbonding
-		k.bondedToUnbonding(ctx, validator)
+		validator = k.bondedToUnbonding(ctx, validator)
 
 		// delete from the bonded validator index
-		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))
+		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())

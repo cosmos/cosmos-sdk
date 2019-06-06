@@ -429,7 +429,7 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 			if !val.IsUnbonding() {
 				panic("unexpected validator in unbonding queue, status was not unbonding")
 			}
-			k.unbondingToUnbonded(ctx, val)
+			val = k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {
 				k.RemoveValidator(ctx, val.OperatorAddress)
 			}

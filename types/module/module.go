@@ -51,7 +51,7 @@ type AppModuleBasic interface {
 	ValidateGenesis(json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router, *codec.Codec)
+	RegisterRESTRoutes(context.CLIContext, *mux.Router)
 	GetTxCmd(*codec.Codec) *cobra.Command
 	GetQueryCmd(*codec.Codec) *cobra.Command
 }
@@ -94,11 +94,9 @@ func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error
 }
 
 // RegisterRestRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(
-	ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-
+func (bm BasicManager) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	for _, b := range bm {
-		b.RegisterRESTRoutes(ctx, rtr, cdc)
+		b.RegisterRESTRoutes(ctx, rtr)
 	}
 }
 

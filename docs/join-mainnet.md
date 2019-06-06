@@ -37,11 +37,11 @@ $ gaiacli version --long
 `gaiacli` for instance should output something similar to:
 
 ```
-cosmos-sdk: 0.33.0
-git commit: 7b4104aced52aa5b59a96c28b5ebeea7877fc4f0
-vendor hash: 5db0df3e24cf10545c84f462a24ddc61882aa58f
+cosmos-sdk: 0.34.7
+git commit: f783cb71e7fe976bc01273ad652529650142139b
+vendor hash: f60176672270c09455c01e9d880079ba36130df4f5cd89df58b6701f50b13aad
 build tags: netgo ledger
-go version go1.12 linux/amd64
+go version go1.12.5 darwin/amd64
 ```
 
 
@@ -81,11 +81,10 @@ You can edit the `~/.gaiad/config/gaiad.toml` file in order to enable the anti s
 minimum-gas-prices = ""
 ```
 
-Your full node has been initialized! 
-
 ## Genesis & Seeds
 
 ### Copy the Genesis File
+To start syncing blocks on the Cosmos mainnet or testnet, you need to download the genesis file and connect to peers to sync up to the latest block. 
 
 #### Mainnet: 
 Fetch the mainnet's `genesis.json` file into `gaiad`'s config directory.
@@ -95,8 +94,8 @@ mkdir -p $HOME/.gaiad/config
 curl https://raw.githubusercontent.com/cosmos/launch/master/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
-#### Public Testnet:
-(Latest testnet: Gaia 13003 Testnet as of April 08, 2019 22:00 GMT) 
+#### Public Testnet (Latest testnet is Gaia-13003 as of *April 08, 2019*):
+
 Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
@@ -112,7 +111,7 @@ gaiad start
 
 ### Add Seed Nodes
 
-Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. The [`launch`](https://github.com/cosmos/launch) repo contains links to some seed nodes.
+Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. The [`launch`](https://github.com/cosmos/launch) repo contains links to some seed nodes for mainnet, and [`testnet`](https://github.com/cosmos/testnets) repo contains links to seeds for the testnets. 
 
 If those seeds aren't working, you can find more seeds and persistent peers on a Cosmos Hub explorer (a list can be found on the [launch page](https://cosmos.network/launch)). 
 

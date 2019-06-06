@@ -71,7 +71,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 			limit := viper.GetInt(flagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, limit)
+			txs, err := SearchTxs(cliCtx, tmTags, page, limit)
 			if err != nil {
 				return err
 			}
@@ -114,7 +114,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, args[0])
+			output, err := queryTx(cliCtx, args[0])
 			if err != nil {
 				return err
 			}
@@ -141,7 +141,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 
 // QueryTxsByTagsRequestHandlerFn implements a REST handler that searches for
 // transactions by tags.
-func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			tags        []string
@@ -157,7 +157,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 		}
 
 		if len(r.Form) == 0 {
-			rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+			rest.PostProcessResponse(w, cliCtx, txs)
 			return
 		}
 
@@ -167,24 +167,24 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 			return
 		}
 
-		searchResult, err := SearchTxs(cliCtx, cdc, tags, page, limit)
+		searchResult, err := SearchTxs(cliCtx, tags, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, searchResult, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, searchResult)
 	}
 }
 
 // QueryTxRequestHandlerFn implements a REST handler that queries a transaction
 // by hash in a committed block.
-func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr)
+		output, err := queryTx(cliCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -198,6 +198,6 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

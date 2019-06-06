@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,7 +28,7 @@ type (
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,
 // it takes a json-formatted transaction, encodes it to the Amino wire protocol,
 // and responds with base64-encoded bytes.
-func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req auth.StdTx
 
@@ -39,7 +38,7 @@ func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 			return
 		}
 
-		err = cdc.UnmarshalJSON(body, &req)
+		err = cliCtx.Codec.UnmarshalJSON(body, &req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -56,7 +55,7 @@ func EncodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 		response := EncodeResp{Tx: txBytesBase64}
-		rest.PostProcessResponse(w, cdc, response, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, response)
 	}
 }
 
@@ -69,7 +68,7 @@ func (txr txEncodeRespStr) String() string {
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
-func GetEncodeCommand(codec *amino.Codec) *cobra.Command {
+func GetEncodeCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
@@ -78,7 +77,7 @@ Read a transaction from <file>, serialize it to the Amino wire protocol, and out
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(codec)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			stdTx, err := utils.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {

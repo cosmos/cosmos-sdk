@@ -7,31 +7,30 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(
 		"/minting/parameters",
-		queryParamsHandlerFn(cdc, cliCtx),
+		queryParamsHandlerFn(cliCtx),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/minting/inflation",
-		queryInflationHandlerFn(cdc, cliCtx),
+		queryInflationHandlerFn(cliCtx),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/minting/annual-provisions",
-		queryAnnualProvisionsHandlerFn(cdc, cliCtx),
+		queryAnnualProvisionsHandlerFn(cliCtx),
 	).Methods("GET")
 }
 
-func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryParameters)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
 
 		res, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
@@ -39,13 +38,13 @@ func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Hand
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
-func queryInflationHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryInflation)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
 
 		res, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
@@ -53,13 +52,13 @@ func queryInflationHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
-func queryAnnualProvisionsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func queryAnnualProvisionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryAnnualProvisions)
+		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
 
 		res, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
@@ -67,6 +66,6 @@ func queryAnnualProvisionsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext)
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

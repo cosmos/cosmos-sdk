@@ -702,7 +702,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should still be unbonding at time 6 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
@@ -710,7 +710,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should be in unbonded state at time 7 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
@@ -718,7 +718,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonded, "%v", validator)
+	require.True(t, validator.IsUnbonded(), "%v", validator)
 }
 
 func TestUnbondingPeriod(t *testing.T) {

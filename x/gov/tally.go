@@ -2,6 +2,8 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // validatorGovInfo used for tallying
@@ -37,7 +39,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 	currValidators := make(map[string]validatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
+	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator exported.ValidatorI) (stop bool) {
 		currValidators[validator.GetOperator().String()] = newValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
@@ -49,13 +51,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 		return false
 	})
 
-	// iterate over all the votes
-	votesIterator := keeper.GetVotes(ctx, proposal.ProposalID)
-	defer votesIterator.Close()
-	for ; votesIterator.Valid(); votesIterator.Next() {
-		vote := &Vote{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), vote)
-
+	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
 		// if validator, just record it in the map
 		// if delegator tally voting power
 		valAddrStr := sdk.ValAddress(vote.Voter).String()
@@ -64,7 +60,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 			currValidators[valAddrStr] = val
 		} else {
 			// iterate over all delegations from voter, deduct from any delegated-to validators
-			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
+			keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation exported.DelegationI) (stop bool) {
 				valAddrStr := delegation.GetValidatorAddr().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
@@ -83,7 +79,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 		}
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
-	}
+		return false
+	})
 
 	// iterate over the validators again to tally their voting power
 	for _, val := range currValidators {
@@ -104,12 +101,12 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burn
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
-	if keeper.vs.TotalBondedTokens(ctx).IsZero() {
+	if keeper.sk.TotalBondedTokens(ctx).IsZero() {
 		return false, false, tallyResults
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(keeper.vs.TotalBondedTokens(ctx).ToDec())
+	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, true, tallyResults
 	}

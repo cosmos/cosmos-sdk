@@ -27,6 +27,7 @@ func RegisterProposalTypeCodec(o interface{}, name string) {
 	ModuleCdc.RegisterConcrete(o, name, nil)
 }
 
+// TODO determine a good place to seal this codec
 func init() {
 	RegisterCodec(ModuleCdc)
 }

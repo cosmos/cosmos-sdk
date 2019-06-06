@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -72,7 +73,7 @@ func TestCalculateGas(t *testing.T) {
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
-	defaultEncoder := auth.DefaultTxEncoder(cdc)
+	defaultEncoder := authtypes.DefaultTxEncoder(cdc)
 	encoder := GetTxEncoder(cdc)
 
 	compareEncoders(t, defaultEncoder, encoder)
@@ -98,8 +99,8 @@ func TestReadStdTxFromFile(t *testing.T) {
 	sdk.RegisterCodec(cdc)
 
 	// Build a test transaction
-	fee := auth.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := auth.NewStdTx([]sdk.Msg{}, fee, []auth.StdSignature{}, "foomemo")
+	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
 	// Write it to the file
 	encodedTx, _ := cdc.MarshalJSON(stdTx)
@@ -112,11 +113,52 @@ func TestReadStdTxFromFile(t *testing.T) {
 	require.Equal(t, decodedTx.Memo, "foomemo")
 }
 
+func TestValidateCmd(t *testing.T) {
+	// Setup root and subcommands
+	rootCmd := &cobra.Command{
+		Use: "root",
+	}
+	queryCmd := &cobra.Command{
+		Use: "query",
+	}
+	rootCmd.AddCommand(queryCmd)
+
+	// Command being tested
+	distCmd := &cobra.Command{
+		Use:                        "distr",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+	}
+	queryCmd.AddCommand(distCmd)
+
+	commissionCmd := &cobra.Command{
+		Use: "commission",
+	}
+	distCmd.AddCommand(commissionCmd)
+
+	tests := []struct {
+		reason  string
+		args    []string
+		wantErr bool
+	}{
+		{"misspelled command", []string{"comission"}, true},
+		{"no command provided", []string{}, false},
+		{"help flag", []string{"comission", "--help"}, false},
+		{"shorthand help flag", []string{"comission", "-h"}, false},
+	}
+
+	for _, tt := range tests {
+		err := ValidateCmd(distCmd, tt.args)
+		assert.Equal(t, tt.wantErr, err != nil, tt.reason)
+	}
+
+}
+
 // aux functions
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	tx := auth.NewStdTx(msgs, auth.StdFee{}, []auth.StdSignature{}, "")
+	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)
@@ -139,7 +181,7 @@ func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	auth.RegisterCodec(cdc)
+	authtypes.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

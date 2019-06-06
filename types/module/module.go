@@ -232,9 +232,9 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 }
 
 // register all module routes and module querier routes
-func (m *Manager) RegisterInvariants(invarRouter sdk.InvariantRegistry) {
+func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
-		module.RegisterInvariants(invarRouter)
+		module.RegisterInvariants(ir)
 	}
 }
 

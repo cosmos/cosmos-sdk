@@ -68,6 +68,11 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 // HTTP request handler to query the total rewards balance from all delegations
 func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		// query for rewards from a particular delegator
 		res, ok := checkResponseQueryDelegatorTotalRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"])
 		if !ok {
@@ -81,6 +86,11 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 // HTTP request handler to query a delegation rewards
 func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		// query for rewards from a particular delegation
 		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
 		if !ok {
@@ -95,6 +105,11 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
@@ -137,6 +152,11 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 			return
 		}
 
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		// query commission
 		commissionRes, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
 		if err != nil {
@@ -172,6 +192,11 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		delAddr := sdk.AccAddress(validatorAddr).String()
 		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr, valAddr)
 		if !ok {
@@ -185,6 +210,11 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 // HTTP request handler to query the distribution params values
 func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params, err := common.QueryParams(cliCtx, queryRoute)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -197,6 +227,11 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 
 func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -217,6 +252,11 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}

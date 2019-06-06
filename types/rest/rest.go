@@ -197,6 +197,22 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	return n, true
 }
 
+// ParseQueryHeightOrReturnBadRequest sets the height to execute a query if set by the http request.
+func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (context.CLIContext, bool) {
+	heightStr := r.FormValue("height")
+	if heightStr != "" {
+		height, err := strconv.Atoi(heightStr)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return cliCtx, false
+		}
+
+		cliCtx = cliCtx.WithHeight(int64(height))
+	}
+
+	return cliCtx, true
+}
+
 // PostProcessResponse performs post processing for a REST response.
 func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
 	var output []byte

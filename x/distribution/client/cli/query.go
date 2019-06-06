@@ -127,7 +127,7 @@ $ %s query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			res, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
+			res, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 
 			if len(args) == 2 {
 				// query for rewards from a particular delegation
-				resp, err := common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
+				resp, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
 				if err != nil {
 					return err
 				}
@@ -222,7 +222,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 			}
 
 			// query for delegator total rewards
-			resp, err := common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
+			resp, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, args[0])
 			if err != nil {
 				return err
 			}

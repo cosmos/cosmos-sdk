@@ -147,7 +147,7 @@ $ %s tx distr withdraw-all-rewards --from mykey
 				WithAccountDecoder(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
-			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, cdc, queryRoute, delAddr)
+			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
 			if err != nil {
 				return err
 			}

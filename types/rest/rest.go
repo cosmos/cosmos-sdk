@@ -13,6 +13,7 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -197,7 +198,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // PostProcessResponse performs post processing for a REST response.
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
 	var output []byte
 
 	switch response.(type) {
@@ -206,10 +207,10 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 
 	default:
 		var err error
-		if indent {
-			output, err = cdc.MarshalJSONIndent(response, "", "  ")
+		if cliCtx.Indent {
+			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
 		} else {
-			output, err = cdc.MarshalJSON(response)
+			output, err = cliCtx.Codec.MarshalJSON(response)
 		}
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

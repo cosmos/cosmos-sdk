@@ -10,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// XXX: all panic -> err
-// XXX: OpenTry -> OpenTryOpen
 // XXX: rename remote to something else
 // XXX: all code using external KVStore should be defer-recovered in case of missing proofs
 
@@ -164,12 +162,12 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 	keylog := commitment.IsKeyLog(ctx)
 
 	obj := Object(nobj)
-	if !obj.state.Transit(ctx, Idle, OpenTry) && !keylog {
+	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("invalid state")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil && !keylog {
+	if err != nil {
 		return err
 	}
 
@@ -205,12 +203,12 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
 	keylog := commitment.IsKeyLog(ctx)
 
-	if !obj.state.Transit(ctx, Init, Open) && !keylog {
-		panic("ack on non-init connection")
+	if !obj.state.Transit(ctx, Init, Open) {
+		return errors.New("ack on non-init connection")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil && !keylog {
+	if err != nil {
 		return err
 	}
 
@@ -241,12 +239,12 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 	keylog := commitment.IsKeyLog(ctx)
 
-	if !obj.state.Transit(ctx, OpenTry, Open) && !keylog {
+	if !obj.state.Transit(ctx, OpenTry, Open) {
 		return errors.New("confirm on non-try connection")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil && !keylog {
+	if err != nil {
 		return err
 	}
 
@@ -271,7 +269,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
 	keylog := commitment.IsKeyLog(ctx)
 
-	if !(obj.client.Value(ctx).GetBase().GetHeight() > obj.nexttimeout.Get(ctx)) && !keylog {
+	if !(obj.client.Value(ctx).GetBase().GetHeight() > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

@@ -19,15 +19,15 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Ke
 	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), cidgen)
 }
 
-type ContextKeyRemoteKVStore struct {}
+type ContextKeyRemoteKVStore struct{}
 
 func newRemoteKeeper(cdc *codec.Codec) Keeper {
 	return newKeeper(
 		mapping.NewBaseWithGetter(cdc, func(ctx sdk.Context) sdk.KVStore {
-		return ctx.Value(ContextKeyRemoteKVStore{}.(sdk.KVStore))
-	}),
-	nil, // Will cause panic when trying to access on non-protocol states
-)
+			return ctx.Value(ContextKeyRemoteKVStore{}.(sdk.KVStore))
+		}),
+		nil, // Will cause panic when trying to access on non-protocol states
+	)
 }
 
 func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerator) (k Keeper) {
@@ -45,5 +45,3 @@ func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerat
 
 	return
 }
-
-func (k Keeper) 

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
@@ -51,13 +50,8 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		tokenID, err := strconv.ParseUint(req.TokenID, 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		// create the message
-		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, req.Denom, tokenID)
+		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, req.Denom, req.TokenID)
 
 		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
 	}
@@ -84,14 +78,9 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		tokenID, err := strconv.ParseUint(req.TokenID, 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 
 		// create the message
-		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, req.Denom,
+		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), req.TokenID, req.Denom,
 			req.Name, req.Description, req.Image, req.TokenURI,
 		)
 

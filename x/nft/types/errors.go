@@ -9,7 +9,7 @@ type CodeType = sdk.CodeType
 
 // NFT error code
 const (
-	DefaultCodespace sdk.CodespaceType = "nfts"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeInvalidCollection CodeType = 650
 	CodeUnknownCollection CodeType = 651

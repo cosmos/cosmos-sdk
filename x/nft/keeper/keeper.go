@@ -25,14 +25,13 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
 }
 
 // IsNFT returns whether an NFT exists
-func (k Keeper) IsNFT(ctx sdk.Context, denom string, id uint64) (exists bool) {
+func (k Keeper) IsNFT(ctx sdk.Context, denom, id string) (exists bool) {
 	_, err := k.GetNFT(ctx, denom, id)
 	return err == nil
 }
 
 // GetNFT gets the entire NFT metadata struct for a uint64
-func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
-) (nft types.NFT, err sdk.Error) {
+func (k Keeper) GetNFT(ctx sdk.Context, denom, id string) (nft types.NFT, err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
@@ -60,7 +59,7 @@ func (k Keeper) SetNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Er
 }
 
 // DeleteNFT deletes an existing NFT from store
-func (k Keeper) DeleteNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {
+func (k Keeper) DeleteNFT(ctx sdk.Context, denom, id string) (err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
@@ -127,7 +126,9 @@ func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Co
 }
 
 // IterateBalances iterates over the owners' balances of NFTs and performs a function
-func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte, handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
+func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte,
+	handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
+
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()

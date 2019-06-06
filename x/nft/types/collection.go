@@ -30,7 +30,7 @@ func EmptyCollection() Collection {
 }
 
 // GetNFT gets a NFT from the collection
-func (collection Collection) GetNFT(id uint64) (nft NFT, err sdk.Error) {
+func (collection Collection) GetNFT(id string) (nft NFT, err sdk.Error) {
 
 	for _, nft := range collection.NFTs {
 		if nft.GetID() == id {
@@ -39,7 +39,7 @@ func (collection Collection) GetNFT(id uint64) (nft NFT, err sdk.Error) {
 	}
 
 	return nil, ErrUnknownNFT(DefaultCodespace,
-		fmt.Sprintf("NFT #%d doesn't exist in collection %s", id, collection.Denom),
+		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
 	)
 }
 
@@ -53,7 +53,7 @@ func (collection *Collection) UpdateNFT(nft NFT) sdk.Error {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
 	if !ok {
 		return ErrUnknownNFT(DefaultCodespace,
-			fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
+			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
 	(*collection).NFTs = nfts
@@ -65,7 +65,7 @@ func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
 		return ErrUnknownNFT(DefaultCodespace,
-			fmt.Sprintf("NFT #%d doesn't exist on collection %s", nft.GetID(), collection.Denom),
+			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
 	(*collection).NFTs = nfts
@@ -143,7 +143,7 @@ func (collections Collections) Empty() bool {
 	return len(collections) == 0
 }
 
-func (collections Collections) find(denom string) int {
+func (collections Collections) find(denom string) (idx int) {
 	if len(collections) == 0 {
 		return -1
 	}

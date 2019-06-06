@@ -15,16 +15,16 @@ type MsgTransferNFT struct {
 	Sender    sdk.AccAddress
 	Recipient sdk.AccAddress
 	Denom     string
-	ID        uint64
+	ID        string
 }
 
 // NewMsgTransferNFT is a constructor function for MsgSetName
-func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom string, id uint64) MsgTransferNFT {
+func NewMsgTransferNFT(sender, recipient sdk.AccAddress, denom, id string) MsgTransferNFT {
 	return MsgTransferNFT{
 		Sender:    sender,
 		Recipient: recipient,
 		Denom:     strings.TrimSpace(denom),
-		ID:        id,
+		ID:        strings.TrimSpace(id),
 	}
 }
 
@@ -67,7 +67,7 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
 	Owner       sdk.AccAddress
-	ID          uint64
+	ID          string
 	Denom       string
 	Name        string
 	Description string
@@ -76,12 +76,12 @@ type MsgEditNFTMetadata struct {
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
-func NewMsgEditNFTMetadata(owner sdk.AccAddress, id uint64,
+func NewMsgEditNFTMetadata(owner sdk.AccAddress, id,
 	denom, name, description, image, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
 		Owner:       owner,
-		ID:          id,
+		ID:          strings.TrimSpace(id),
 		Denom:       strings.TrimSpace(denom),
 		Name:        strings.TrimSpace(name),
 		Description: strings.TrimSpace(description),

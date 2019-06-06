@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,12 +27,8 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			tokenID, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
+			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			tokenID := args[3]
 
 			msg := types.NewMsgTransferNFT(sdk.AccAddress(args[0]), sdk.AccAddress(args[1]), args[2], tokenID)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -51,20 +45,17 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			denom := args[0]
-			id, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
+			tokenID := args[1]
 
 			name := viper.GetString(flagName)
 			description := viper.GetString(flagDescription)
 			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), id, denom, name, description, image, tokenURI)
+			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, denom, name, description, image, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

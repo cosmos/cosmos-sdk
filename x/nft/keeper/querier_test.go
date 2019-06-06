@@ -1,4 +1,4 @@
-package querier
+package keeper
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -67,7 +66,7 @@ func TestQueryBalances(t *testing.T) {
 	addresses := createTestAddrs(5)
 	keyNFT := sdk.NewKVStoreKey(types.StoreKey)
 
-	keeperInstance := keeper.NewKeeper(keyNFT, cdc)
+	keeperInstance := NewKeeper(cdc, keyNFT)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -88,7 +87,7 @@ func TestQueryBalances(t *testing.T) {
 	require.Empty(t, balances)
 
 	denom := sdk.DefaultBondDenom
-	id := uint64(1)
+	id := "1"
 
 	nft := types.NFT(types.NewBaseNFT(id, addresses[0], "test_token", "test_description", "test_image", "test_name"))
 	err = keeperInstance.SetNFT(ctx, denom, nft)

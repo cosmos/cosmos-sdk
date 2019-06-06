@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -57,26 +56,6 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 	return
 }
 
-// GetAccount queries for an account given an address and a block height. An
-// error is returned if the query or decoding fails.
-func (ctx CLIContext) GetAccount(address []byte) (authtypes.Account, error) {
-	if ctx.AccDecoder == nil {
-		return nil, errors.New("account decoder required but not provided")
-	}
-
-	res, err := ctx.queryAccount(address)
-	if err != nil {
-		return nil, err
-	}
-
-	var account authtypes.Account
-	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
-		return nil, err
-	}
-
-	return account, nil
-}
-
 // GetFromAddress returns the from address from the context's name.
 func (ctx CLIContext) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
@@ -85,61 +64,6 @@ func (ctx CLIContext) GetFromAddress() sdk.AccAddress {
 // GetFromName returns the key name for the current context.
 func (ctx CLIContext) GetFromName() string {
 	return ctx.FromName
-}
-
-// GetAccountNumber returns the next account number for the given account
-// address.
-func (ctx CLIContext) GetAccountNumber(address []byte) (uint64, error) {
-	account, err := ctx.GetAccount(address)
-	if err != nil {
-		return 0, err
-	}
-
-	return account.GetAccountNumber(), nil
-}
-
-// GetAccountSequence returns the sequence number for the given account
-// address.
-func (ctx CLIContext) GetAccountSequence(address []byte) (uint64, error) {
-	account, err := ctx.GetAccount(address)
-	if err != nil {
-		return 0, err
-	}
-
-	return account.GetSequence(), nil
-}
-
-// EnsureAccountExists ensures that an account exists for a given context. An
-// error is returned if it does not.
-func (ctx CLIContext) EnsureAccountExists() error {
-	addr := ctx.GetFromAddress()
-	return ctx.EnsureAccountExistsFromAddr(addr)
-}
-
-// EnsureAccountExistsFromAddr ensures that an account exists for a given
-// address. Instead of using the context's from name, a direct address is
-// given. An error is returned if it does not.
-func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
-	_, err := ctx.queryAccount(addr)
-	return err
-}
-
-// queryAccount queries an account using custom query endpoint of auth module
-// returns an error if result is `null` otherwise account data
-func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
-	bz, err := ctx.Codec.MarshalJSON(authtypes.NewQueryAccountParams(addr))
-	if err != nil {
-		return nil, err
-	}
-
-	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, authtypes.QueryAccount)
-
-	res, err := ctx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }
 
 // query performs a query from a Tendermint node with the provided store name

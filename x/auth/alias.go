@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/internal/context"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -69,6 +70,9 @@ var (
 	KeyTxSizeCostPerByte      = types.KeyTxSizeCostPerByte
 	KeySigVerifyCostED25519   = types.KeySigVerifyCostED25519
 	KeySigVerifyCostSecp256k1 = types.KeySigVerifyCostSecp256k1
+
+	NewCLIAuthContextFromCLIContext = context.NewCLIAuthContextFromCLIContext
+	GetAccountDecoder               = context.GetAccountDecoder
 )
 
 type (
@@ -89,4 +93,6 @@ type (
 	StdSignDoc               = types.StdSignDoc
 	StdSignature             = types.StdSignature
 	TxBuilder                = types.TxBuilder
+	CLIAuthContext           = context.CLIAuthContext
+	AuthContext              = context.AuthContext
 )

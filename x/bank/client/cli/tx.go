@@ -41,8 +41,8 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithFrom(args[0]).
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+				WithCodec(cdc)
+			authCtx := auth.NewCLIAuthContextFromCLIContext(cliCtx).WithAccountDecoder(cdc)
 
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {

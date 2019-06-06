@@ -1,4 +1,4 @@
-# Join the mainnet or public testnet
+# Join the Mainnet or Public Testnet
 
 ### Install Go
 

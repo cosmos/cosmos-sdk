@@ -45,6 +45,7 @@ func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 // ProposalType returns the type of a parameter change proposal.
 func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
+// ValidateBasic validates the parameter change proposal
 func (pcp ParameterChangeProposal) ValidateBasic() sdk.Error {
 	err := govtypes.ValidateAbstract(DefaultCodespace, pcp)
 	if err != nil {
@@ -84,7 +85,11 @@ type ParamChange struct {
 	Value    string `json:"value"`
 }
 
-func NewParamChange(subspace, key, subkey, value string) ParamChange {
+func NewParamChange(subspace, key, value string) ParamChange {
+	return ParamChange{subspace, key, "", value}
+}
+
+func NewParamChangeWithSubkey(subspace, key, subkey, value string) ParamChange {
 	return ParamChange{subspace, key, subkey, value}
 }
 

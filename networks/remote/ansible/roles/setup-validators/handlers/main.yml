@@ -1,5 +1,0 @@
----
-
-- name: reload systemd
-  systemd: name=gaiad enabled=yes daemon_reload=yes
-

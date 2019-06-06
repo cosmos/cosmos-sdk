@@ -36,7 +36,7 @@ foundation of an object capability system.
 >     to another object only through a preexisting chain of references.
 >     In short, "Only connectivity begets connectivity."
 
-For an introduction to object-capabilities, see [this article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
+For an introduction to object-capabilities, see [this article](https://en.wikipedia.org/wiki/Object-capability_model).
 
 Strictly speaking, Golang does not implement object capabilities
 completely, because of several issues:

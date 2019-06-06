@@ -9,7 +9,7 @@ block.
 ### SDK specifications:
 
 - [Store](./store) - The core Merkle store that holds the state.
-- [Bech32](./other/bech32.md) - Address format for Cosmos SDK applications.
+- [Bech32](./addresses/bech32.md) - Address format for Cosmos SDK applications.
 
 ### Modules specifications:
 
@@ -18,13 +18,15 @@ block.
 - [Governance](./governance) - Proposals and voting.
 - [Staking](./staking) - Proof-of-stake bonding, delegation, etc.
 - [Slashing](./slashing) - Validator punishment mechanisms.
-- [Distribution](./distribution) - Fee distribution, and staking token provision distribution .
-- [Inflation](./inflation) - Staking token provision creation
+- [Distribution](./distribution) - Fee distribution, and staking token provision distribution.
+- [Crisis](./crisis) - Halting the blockchain under certain circumstances.
+- [Mint](./mint) - Staking token provision creation.
+- [Params](./params) - Globally available parameter store.
 - [IBC](./ibc) - Inter-Blockchain Communication (IBC) protocol.
 
 ### Interchain standards
 
-- [ICS30](./ics/ics-030-signed-messages.md) - Signed messages standard.
+- [ICS30](./_ics/ics-030-signed-messages.md) - Signed messages standard.
 -
 
 For details on the underlying blockchain and p2p protocols, see

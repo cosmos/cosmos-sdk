@@ -167,7 +167,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 				"each genesis transaction must provide a single genesis message")
 		}
 
-		// TODO abstract out staking reference here through the expected staking keeper
+		// TODO abstract out staking message validation back to staking
 		msg := msgs[0].(staking.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
 		delAddr := msg.DelegatorAddress.String()

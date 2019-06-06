@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,10 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/version"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter
@@ -22,9 +24,10 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
-		Long: strings.TrimSpace(`
-Submit a parameter proposal along with an initial deposit. The proposal details
-must be supplied via a JSON file.
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a parameter proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file. For values that contains
+objects, only non-empty fields will be updated.
 
 IMPORTANT: Currently parameter changes are evaluated but not validated, so it is
 very important that any "value" change is valid (ie. correct type and within bounds)
@@ -32,11 +35,13 @@ for its respective parameter, eg. "MaxValidators" should be an integer and not a
 
 Proper vetting of a parameter change proposal should prevent this from happening
 (no deposits should occur during the governance process), but it should be noted
-regardless. 
+regardless.
 
 Example:
-$ gaiacli tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
-where proposal.json contains:
+$ %s tx gov submit-proposal param-change <path/to/proposal.json> --from=<key_or_address>
+
+Where proposal.json contains:
+
 {
   "title": "Staking Param Change",
   "description": "Update max validators",
@@ -54,9 +59,12 @@ where proposal.json contains:
     }
   ]
 }
-`),
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -67,7 +75,7 @@ where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
+			content := types.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
 			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

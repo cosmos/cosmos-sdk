@@ -3,15 +3,21 @@ package genaccounts
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
-	_ sdk.AppModuleGenesis = AppModule{}
-	_ sdk.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // module name
@@ -43,6 +49,15 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router, _ *codec.Codec) {}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+
 // extra function from sdk.AppModuleBasic
 // iterate the genesis accounts and perform an operation at each of them
 // - to used by other modules
@@ -50,7 +65,7 @@ func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[st
 	iterateFn func(auth.Account) (stop bool)) {
 
 	genesisState := GetGenesisStateFromAppState(cdc, appGenesis)
-	for _, genAcc := range genesisState.Accounts {
+	for _, genAcc := range genesisState {
 		acc := genAcc.ToAccount()
 		if iterateFn(acc) {
 			break
@@ -66,9 +81,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) sdk.AppModule {
+func NewAppModule(accountKeeper AccountKeeper) module.AppModule {
 
-	return sdk.NewGenesisOnlyAppModule(AppModule{
+	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
 	})

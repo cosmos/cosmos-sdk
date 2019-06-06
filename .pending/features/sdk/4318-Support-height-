@@ -1,0 +1,2 @@
+#4318 Support height queries. Queries against nodes that have the queried
+height pruned will return an error.

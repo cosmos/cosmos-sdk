@@ -2,10 +2,13 @@
 
 ## Contents
 
-1. **[State](01_state.md)**
-    - [Minter](01_state.md#minter)
-    - [Params](01_state.md#params)
-2. **[Begin-Block](02_begin_block.md)**
-    - [NextInflationRate](02_begin_block.md#nextinflationrate)
-    - [NextAnnualProvisions](02_begin_block.md#nextannualprovisions)
-    - [BlockProvision](02_begin_block.md#blockprovision)
+1. **[Concept](01_concept.md)**
+2. **[State](02_state.md)**
+    - [Minter](02_state.md#minter)
+    - [Params](02_state.md#params)
+3. **[Begin-Block](03_begin_block.md)**
+    - [NextInflationRate](03_begin_block.md#nextinflationrate)
+    - [NextAnnualProvisions](03_begin_block.md#nextannualprovisions)
+    - [BlockProvision](03_begin_block.md#blockprovision)
+4. **[Parameters](04_params.md)**
+    

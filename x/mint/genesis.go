@@ -3,12 +3,13 @@ package mint
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // GenesisState - minter state
 type GenesisState struct {
-	Minter Minter `json:"minter"` // minter object
-	Params Params `json:"params"` // inflation params
+	Minter Minter       `json:"minter"` // minter object
+	Params types.Params `json:"params"` // inflation params
 }
 
 // NewGenesisState creates a new GenesisState object
@@ -54,11 +55,11 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants holds.
 func ValidateGenesis(data GenesisState) error {
-	err := validateParams(data.Params)
+	err := ValidateParams(data.Params)
 	if err != nil {
 		return err
 	}
-	err = validateMinter(data.Minter)
+	err = ValidateMinter(data.Minter)
 	if err != nil {
 		return err
 	}

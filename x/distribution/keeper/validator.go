@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/expected"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // initialize rewards for a new validator
-func (k Keeper) initializeValidator(ctx sdk.Context, val expected.ValidatorI) {
+func (k Keeper) initializeValidator(ctx sdk.Context, val exported.ValidatorI) {
 	// set initial historical rewards (period 0) with reference count of 1
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 
@@ -23,7 +23,7 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val expected.ValidatorI) {
 }
 
 // increment validator period, returning the period just ended
-func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val expected.ValidatorI) uint64 {
+func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val exported.ValidatorI) uint64 {
 	// fetch current rewards
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 

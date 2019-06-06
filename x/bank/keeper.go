@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/tags"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -20,7 +21,7 @@ type Keeper interface {
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
+	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error)
 
 	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
@@ -39,7 +40,7 @@ func NewBaseKeeper(ak auth.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
-	ps := paramSpace.WithKeyTable(ParamKeyTable())
+	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
 	return BaseKeeper{
 		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,
@@ -70,7 +71,7 @@ func (keeper BaseKeeper) AddCoins(
 
 // InputOutputCoins handles a list of inputs and outputs
 func (keeper BaseKeeper) InputOutputCoins(
-	ctx sdk.Context, inputs []Input, outputs []Output,
+	ctx sdk.Context, inputs []types.Input, outputs []types.Output,
 ) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
@@ -138,13 +139,13 @@ func (keeper BaseSendKeeper) SendCoins(
 // nolint: errcheck
 func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 	var enabled bool
-	keeper.paramSpace.Get(ctx, ParamStoreKeySendEnabled, &enabled)
+	keeper.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)
 	return enabled
 }
 
 // SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
+	keeper.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
@@ -302,10 +303,10 @@ func SendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, 
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error) {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
-	if err := ValidateInputsOutputs(inputs, outputs); err != nil {
+	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
 		return nil, err
 	}
 

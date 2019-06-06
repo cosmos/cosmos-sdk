@@ -7,12 +7,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Keeper - crisis keeper
 type Keeper struct {
-	routes         []InvarRoute
+	routes         []types.InvarRoute
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
@@ -25,8 +26,8 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 	distrKeeper DistrKeeper, bankKeeper BankKeeper) Keeper {
 
 	return Keeper{
-		routes:         []InvarRoute{},
-		paramSpace:     paramSpace.WithKeyTable(ParamKeyTable()),
+		routes:         []types.InvarRoute{},
+		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod: invCheckPeriod,
 		distrKeeper:    distrKeeper,
 		bankKeeper:     bankKeeper,
@@ -35,12 +36,12 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 
 // register routes for the
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
-	invarRoute := NewInvarRoute(moduleName, route, invar)
+	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
 
 // Routes - return the keeper's invariant routes
-func (k Keeper) Routes() []InvarRoute {
+func (k Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 

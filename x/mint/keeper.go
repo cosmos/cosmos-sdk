@@ -7,26 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/tendermint/tendermint/crypto"
 )
 
-var minterKey = []byte{0x00} // the one key to use for the keeper store
-
-const (
-	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
-
-	// StoreKey is the default store key for mint
-	StoreKey = ModuleName
-
-	// QuerierRoute is the querier route for the minting store.
-	QuerierRoute = StoreKey
-)
-
-// ModuleAddress distribution module account address
-var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
-
-// keeper of the mint store
+// keeper of the staking store
 type Keeper struct {
 	storeKey     sdk.StoreKey
 	cdc          *codec.Codec
@@ -53,7 +36,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(minterKey)
+	b := store.Get(MinterKey)
 	if b == nil {
 		panic("stored minter should not have been nil")
 	}
@@ -65,7 +48,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(minter)
-	store.Set(minterKey, b)
+	store.Set(MinterKey, b)
 }
 
 //______________________________________________________________________

@@ -8,15 +8,15 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
+	secp256k1 "github.com/tendermint/btcd/btcec"
+	"github.com/tendermint/tendermint/crypto"
+	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+
 	bip39 "github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/types"
-
-	secp256k1 "github.com/tendermint/btcd/btcec"
-	"github.com/tendermint/tendermint/crypto"
-	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
@@ -41,7 +41,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 	if derivationPath[0] != 44 {
 		return nil, errors.New("Invalid derivation path")
 	}
-	if derivationPath[1] != types.CoinType {
+	if derivationPath[1] != sdk.CoinType {
 		return nil, errors.New("Invalid derivation path")
 	}
 
@@ -80,7 +80,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	copy(compressedPublicKey[:], cmp.SerializeCompressed())
 
 	// Generate the bech32 addr using existing tmcrypto/etc.
-	addr := types.AccAddress(compressedPublicKey.Address()).String()
+	addr := sdk.AccAddress(compressedPublicKey.Address()).String()
 	return pk, addr, err
 }
 

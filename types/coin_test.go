@@ -201,7 +201,7 @@ func TestEqualCoins(t *testing.T) {
 			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+			require.Equal(t, tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 		}
 	}
 }

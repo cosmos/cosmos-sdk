@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -56,7 +57,7 @@ func setupTestInput() testInput {
 func TestKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -112,18 +113,18 @@ func TestKeeper(t *testing.T) {
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10))))
 
 	// Test InputOutputCoins
-	input1 := NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
-	output1 := NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
-	bankKeeper.InputOutputCoins(ctx, []Input{input1}, []Output{output1})
+	input1 := types.NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
+	output1 := types.NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
+	bankKeeper.InputOutputCoins(ctx, []types.Input{input1}, []types.Output{output1})
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 7))))
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8))))
 
-	inputs := []Input{
+	inputs := []types.Input{
 		NewInput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 3))),
-		NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 3), sdk.NewInt64Coin("foocoin", 2))),
+		types.NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 3), sdk.NewInt64Coin("foocoin", 2))),
 	}
 
-	outputs := []Output{
+	outputs := []types.Output{
 		NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))),
 		NewOutput(addr3, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))),
 	}
@@ -136,8 +137,8 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
-	paramSpace := input.pk.Subspace(DefaultParamspace)
-	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
+	paramSpace := input.pk.Subspace(types.DefaultParamspace)
+	bankKeeper := NewBaseKeeper(input.ak, paramSpace, types.DefaultCodespace)
 	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 

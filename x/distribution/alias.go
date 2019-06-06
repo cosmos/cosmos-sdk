@@ -14,19 +14,6 @@ import (
 
 const (
 	DefaultParamspace                = keeper.DefaultParamspace
-	QueryParams                      = keeper.QueryParams
-	QueryValidatorOutstandingRewards = keeper.QueryValidatorOutstandingRewards
-	QueryValidatorCommission         = keeper.QueryValidatorCommission
-	QueryValidatorSlashes            = keeper.QueryValidatorSlashes
-	QueryDelegationRewards           = keeper.QueryDelegationRewards
-	QueryDelegatorTotalRewards       = keeper.QueryDelegatorTotalRewards
-	QueryDelegatorValidators         = keeper.QueryDelegatorValidators
-	QueryWithdrawAddr                = keeper.QueryWithdrawAddr
-	QueryCommunityPool               = keeper.QueryCommunityPool
-	ParamCommunityTax                = keeper.ParamCommunityTax
-	ParamBaseProposerReward          = keeper.ParamBaseProposerReward
-	ParamBonusProposerReward         = keeper.ParamBonusProposerReward
-	ParamWithdrawAddrEnabled         = keeper.ParamWithdrawAddrEnabled
 	DefaultCodespace                 = types.DefaultCodespace
 	CodeInvalidInput                 = types.CodeInvalidInput
 	CodeNoDistributionInfo           = types.CodeNoDistributionInfo
@@ -38,6 +25,19 @@ const (
 	RouterKey                        = types.RouterKey
 	QuerierRoute                     = types.QuerierRoute
 	ProposalTypeCommunityPoolSpend   = types.ProposalTypeCommunityPoolSpend
+	QueryParams                      = types.QueryParams
+	QueryValidatorOutstandingRewards = types.QueryValidatorOutstandingRewards
+	QueryValidatorCommission         = types.QueryValidatorCommission
+	QueryValidatorSlashes            = types.QueryValidatorSlashes
+	QueryDelegationRewards           = types.QueryDelegationRewards
+	QueryDelegatorTotalRewards       = types.QueryDelegatorTotalRewards
+	QueryDelegatorValidators         = types.QueryDelegatorValidators
+	QueryWithdrawAddr                = types.QueryWithdrawAddr
+	QueryCommunityPool               = types.QueryCommunityPool
+	ParamCommunityTax                = types.ParamCommunityTax
+	ParamBaseProposerReward          = types.ParamBaseProposerReward
+	ParamBonusProposerReward         = types.ParamBonusProposerReward
+	ParamWithdrawAddrEnabled         = types.ParamWithdrawAddrEnabled
 )
 
 var (
@@ -68,12 +68,6 @@ var (
 	ParamKeyTable                              = keeper.ParamKeyTable
 	HandleCommunityPoolSpendProposal           = keeper.HandleCommunityPoolSpendProposal
 	NewQuerier                                 = keeper.NewQuerier
-	NewQueryValidatorOutstandingRewardsParams  = keeper.NewQueryValidatorOutstandingRewardsParams
-	NewQueryValidatorCommissionParams          = keeper.NewQueryValidatorCommissionParams
-	NewQueryValidatorSlashesParams             = keeper.NewQueryValidatorSlashesParams
-	NewQueryDelegationRewardsParams            = keeper.NewQueryDelegationRewardsParams
-	NewQueryDelegatorParams                    = keeper.NewQueryDelegatorParams
-	NewQueryDelegatorWithdrawAddrParams        = keeper.NewQueryDelegatorWithdrawAddrParams
 	MakeTestCodec                              = keeper.MakeTestCodec
 	CreateTestInputDefault                     = keeper.CreateTestInputDefault
 	CreateTestInputAdvanced                    = keeper.CreateTestInputAdvanced
@@ -97,6 +91,12 @@ var (
 	NewMsgWithdrawDelegatorReward              = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission          = types.NewMsgWithdrawValidatorCommission
 	NewCommunityPoolSpendProposal              = types.NewCommunityPoolSpendProposal
+	NewQueryValidatorOutstandingRewardsParams  = types.NewQueryValidatorOutstandingRewardsParams
+	NewQueryValidatorCommissionParams          = types.NewQueryValidatorCommissionParams
+	NewQueryValidatorSlashesParams             = types.NewQueryValidatorSlashesParams
+	NewQueryDelegationRewardsParams            = types.NewQueryDelegationRewardsParams
+	NewQueryDelegatorParams                    = types.NewQueryDelegatorParams
+	NewQueryDelegatorWithdrawAddrParams        = types.NewQueryDelegatorWithdrawAddrParams
 	NewQueryDelegatorTotalRewardsResponse      = types.NewQueryDelegatorTotalRewardsResponse
 	NewDelegationDelegatorReward               = types.NewDelegationDelegatorReward
 	NewValidatorHistoricalRewards              = types.NewValidatorHistoricalRewards
@@ -132,12 +132,6 @@ var (
 type (
 	Hooks                                  = keeper.Hooks
 	Keeper                                 = keeper.Keeper
-	QueryValidatorOutstandingRewardsParams = keeper.QueryValidatorOutstandingRewardsParams
-	QueryValidatorCommissionParams         = keeper.QueryValidatorCommissionParams
-	QueryValidatorSlashesParams            = keeper.QueryValidatorSlashesParams
-	QueryDelegationRewardsParams           = keeper.QueryDelegationRewardsParams
-	QueryDelegatorParams                   = keeper.QueryDelegatorParams
-	QueryDelegatorWithdrawAddrParams       = keeper.QueryDelegatorWithdrawAddrParams
 	DelegatorStartingInfo                  = types.DelegatorStartingInfo
 	CodeType                               = types.CodeType
 	StakingKeeper                          = types.StakingKeeper
@@ -155,7 +149,11 @@ type (
 	MsgWithdrawDelegatorReward             = types.MsgWithdrawDelegatorReward
 	MsgWithdrawValidatorCommission         = types.MsgWithdrawValidatorCommission
 	CommunityPoolSpendProposal             = types.CommunityPoolSpendProposal
-	QueryDelegatorTotalRewardsResponse     = types.QueryDelegatorTotalRewardsResponse
+	QueryValidatorCommissionParams         = types.QueryValidatorCommissionParams
+	QueryValidatorSlashesParams            = types.QueryValidatorSlashesParams
+	QueryDelegationRewardsParams           = types.QueryDelegationRewardsParams
+	QueryDelegatorParams                   = types.QueryDelegatorParams
+	QueryDelegatorWithdrawAddrParams       = types.QueryDelegatorWithdrawAddrParams
 	DelegationDelegatorReward              = types.DelegationDelegatorReward
 	ValidatorHistoricalRewards             = types.ValidatorHistoricalRewards
 	ValidatorCurrentRewards                = types.ValidatorCurrentRewards

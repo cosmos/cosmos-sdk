@@ -16,7 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -59,7 +59,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
+func (ctx CLIContext) GetAccount(address []byte) (authtypes.Account, error) {
 	if ctx.AccDecoder == nil {
 		return nil, errors.New("account decoder required but not provided")
 	}
@@ -69,7 +69,7 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 		return nil, err
 	}
 
-	var account auth.Account
+	var account authtypes.Account
 	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
 		return nil, err
 	}
@@ -127,12 +127,12 @@ func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 // queryAccount queries an account using custom query endpoint of auth module
 // returns an error if result is `null` otherwise account data
 func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
-	bz, err := ctx.Codec.MarshalJSON(auth.NewQueryAccountParams(addr))
+	bz, err := ctx.Codec.MarshalJSON(authtypes.NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, err
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, auth.QueryAccount)
+	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, authtypes.QueryAccount)
 
 	res, err := ctx.QueryWithData(route, bz)
 	if err != nil {

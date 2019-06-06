@@ -2,7 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/expected"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -31,10 +31,10 @@ type SupplyKeeper interface {
 type StakingKeeper interface {
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator expected.ValidatorI) (stop bool))
+		func(index int64, validator exported.ValidatorI) (stop bool))
 
 	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
 
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		cb func(index int64, delegation expected.DelegationI) (stop bool))
+		fn func(index int64, delegation exported.DelegationI) (stop bool))
 }

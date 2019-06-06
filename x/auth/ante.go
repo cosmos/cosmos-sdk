@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -29,7 +30,7 @@ func init() {
 }
 
 // SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
-// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey types.
+// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -40,7 +41,7 @@ func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasCon
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		feeCollector := ak.GetAccount(ctx, FeeCollectorAddr)
+		feeCollector := ak.GetAccount(ctx, types.FeeCollectorAddr)
 		if feeCollector == nil {
 			panic("fee collector account hasn't been set")
 		}
@@ -174,7 +175,7 @@ func ValidateSigCount(stdTx StdTx, params Params) sdk.Result {
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
-		sigCount += countSubKeys(stdSigs[i].PubKey)
+		sigCount += CountSubKeys(stdSigs[i].PubKey)
 		if uint64(sigCount) > params.TxSigLimit {
 			return sdk.ErrTooManySignatures(
 				fmt.Sprintf("signatures: %d, limit: %d", sigCount, params.TxSigLimit),
@@ -246,7 +247,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 		simSig.Signature = simSecp256k1Sig[:]
 	}
 
-	sigBz := moduleCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	sigBz := ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
 	cost := sdk.Gas(len(sigBz) + 6)
 
 	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

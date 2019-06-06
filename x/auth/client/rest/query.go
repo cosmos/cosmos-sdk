@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // register REST routes
@@ -29,7 +29,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
 	storeName string, cdc *codec.Codec,
-	decoder auth.AccountDecoder, cliCtx context.CLIContext,
+	decoder types.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -41,7 +41,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
+		res, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -49,7 +49,7 @@ func QueryAccountRequestHandlerFn(
 
 		// the query will return empty account if there is no data
 		if len(res) == 0 {
-			rest.PostProcessResponse(w, cdc, auth.BaseAccount{}, cliCtx.Indent)
+			rest.PostProcessResponse(w, cdc, types.BaseAccount{}, cliCtx.Indent)
 			return
 		}
 
@@ -67,7 +67,7 @@ func QueryAccountRequestHandlerFn(
 // query accountREST Handler
 func QueryBalancesRequestHandlerFn(
 	storeName string, cdc *codec.Codec,
-	decoder auth.AccountDecoder, cliCtx context.CLIContext,
+	decoder types.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -80,7 +80,7 @@ func QueryBalancesRequestHandlerFn(
 			return
 		}
 
-		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
+		res, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

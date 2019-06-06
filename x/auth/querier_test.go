@@ -24,7 +24,7 @@ func Test_queryAccount(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, res)
 
-	_, _, addr := keyPubAddr()
+	_, _, addr := KeyTestPubAddr()
 	req.Data = input.cdc.MustMarshalJSON(NewQueryAccountParams(addr))
 	res, err = queryAccount(input.ctx, req, input.ak)
 	require.NotNil(t, err)

@@ -28,9 +28,9 @@ If you want to get started quickly and learn how to build on top of the SDK, ple
 
 For more, please go to the [Cosmos SDK Docs](./docs/README.md)
 
-## Cosmos Hub Mainnet
+## Join the Cosmos Hub Mainnet or Public Testnet
 
-The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
+To run a full-node for the mainnet of the Cosmos Hub or the public testnet, follow [the guide](./docs/join-mainnet.md).
 
 ## Disambiguation
 

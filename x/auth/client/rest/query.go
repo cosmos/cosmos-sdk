@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
@@ -14,23 +13,23 @@ import (
 )
 
 // register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
+		QueryAccountRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
+		QueryBalancesRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
 	).Methods("GET")
 }
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
-	storeName string, cdc *codec.Codec,
-	decoder types.AccountDecoder, cliCtx context.CLIContext,
+	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
@@ -49,7 +48,7 @@ func QueryAccountRequestHandlerFn(
 
 		// the query will return empty account if there is no data
 		if len(res) == 0 {
-			rest.PostProcessResponse(w, cdc, types.BaseAccount{}, cliCtx.Indent)
+			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{})
 			return
 		}
 
@@ -60,15 +59,15 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, account, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, account)
 	}
 }
 
 // query accountREST Handler
 func QueryBalancesRequestHandlerFn(
-	storeName string, cdc *codec.Codec,
-	decoder types.AccountDecoder, cliCtx context.CLIContext,
+	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -88,7 +87,7 @@ func QueryBalancesRequestHandlerFn(
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			rest.PostProcessResponse(w, cdc, sdk.Coins{}, cliCtx.Indent)
+			rest.PostProcessResponse(w, cliCtx, sdk.Coins{})
 			return
 		}
 
@@ -99,6 +98,6 @@ func QueryBalancesRequestHandlerFn(
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, account.GetCoins(), cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, account.GetCoins())
 	}
 }

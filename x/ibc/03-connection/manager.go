@@ -5,7 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/mapping"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // XXX: all panic -> err
@@ -137,13 +139,15 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 }
 
 func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
+	keylog := commitment.IsKeyLog(ctx)
+
 	obj := Object(nobj)
-	if obj.exists(ctx) {
-		panic("init on existing connection")
+	if obj.exists(ctx) && !keylog {
+		return errors.New("init on existing connection")
 	}
 
-	if !obj.state.Transit(ctx, Idle, Init) {
-		panic("init on non-idle connection")
+	if !obj.state.Transit(ctx, Idle, Init) && !keylog {
+		return errors.New("init on non-idle connection")
 	}
 
 	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
@@ -157,32 +161,34 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 }
 
 func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+	keylog := commitment.IsKeyLog(ctx)
+
 	obj := Object(nobj)
-	if !obj.state.Transit(ctx, Idle, OpenTry) {
+	if !obj.state.Transit(ctx, Idle, OpenTry) && !keylog {
 		return errors.New("invalid state")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil {
+	if err != nil && !keylog {
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != Init {
+	if obj.remote.state.Get(ctx) != Init && !keylog {
 		return errors.New("counterparty state not init")
 	}
 
 	err = obj.assertSymmetric(ctx)
-	if err != nil {
+	if err != nil && !keylog {
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) && !keylog {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !client.Equal(obj.remote.client.Value(ctx), expected) {
+	if !client.Equal(obj.remote.client.Value(ctx), expected) && !keylog {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -197,16 +203,18 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 }
 
 func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, Init, Open) {
+	keylog := commitment.IsKeyLog(ctx)
+
+	if !obj.state.Transit(ctx, Init, Open) && !keylog {
 		panic("ack on non-init connection")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil {
+	if err != nil && !keylog {
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != OpenTry {
+	if obj.remote.state.Get(ctx) != OpenTry && !keylog {
 		return errors.New("counterparty state not try")
 	}
 
@@ -215,13 +223,13 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) && !keylog {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !client.Equal(obj.remote.client.Value(ctx), expected) {
+	if !client.Equal(obj.remote.client.Value(ctx), expected) && !keylog {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -231,25 +239,27 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 }
 
 func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, OpenTry, Open) {
+	keylog := commitment.IsKeyLog(ctx)
+
+	if !obj.state.Transit(ctx, OpenTry, Open) && !keylog {
 		return errors.New("confirm on non-try connection")
 	}
 
 	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil {
+	if err != nil && !keylog {
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != Open {
+	if obj.remote.state.Get(ctx) != Open && !keylog {
 		return errors.New("counterparty state not open")
 	}
 
 	err = obj.assertSymmetric(ctx)
-	if err != nil {
+	if err != nil && !keylog {
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) && !keylog {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -259,24 +269,26 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-	if !(obj.client.Value(ctx).Base().Height() > obj.nexttimeout.Get(ctx)) {
+	keylog := commitment.IsKeyLog(ctx)
+
+	if !(obj.client.Value(ctx).GetBase().GetHeight() > obj.nexttimeout.Get(ctx)) && !keylog {
 		return errors.New("timeout height not yet reached")
 	}
 
 	switch obj.state.Get(ctx) {
 	case Init:
 		// XXX: check if exists compatible with remote KVStore
-		if obj.remote.exists(ctx) {
+		if obj.remote.exists(ctx) && !keylog {
 			return errors.New("counterparty connection existw")
 		}
 	case OpenTry:
 		if !(obj.remote.state.Get(ctx) == Init ||
-			obj.remote.exists(ctx)) {
+			obj.remote.exists(ctx)) && !keylog {
 			return errors.New("counterparty connection state not init")
 		}
 		// XXX: check if we need to verify symmetricity for timeout (already proven in OpenTry)
 	case Open:
-		if obj.remote.state.Get(ctx) == OpenTry {
+		if obj.remote.state.Get(ctx) == OpenTry && !keylog {
 			return errors.New("counterparty connection state not tryopen")
 		}
 	}
@@ -287,5 +299,5 @@ func (obj Object) OpenTimeout(ctx sdk.Context) error {
 }
 
 func (obj Object) CloseInit(ctx sdk.Context) error {
-
+	return nil // XXX
 }

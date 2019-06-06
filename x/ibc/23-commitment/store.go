@@ -86,3 +86,72 @@ type MutableMethodError struct {
 
 type IteratorMethodError struct {
 }
+
+// OperationType might be useful in future but not currently
+/*
+type OperationType byte
+
+const (
+	Get OperationType = iota
+	Set
+	Has
+	Delete
+)
+*/
+
+type Operation struct {
+	// Type OperationType
+	Key []byte
+}
+
+var _ types.KVStore = (*KeyLoggerStore)(nil)
+
+// TraceStore is a dummy KVStore which logs all method call on it
+// but returns empty vaule all times
+type KeyLoggerStore struct {
+	ops []Operation
+}
+
+func (*KeyLoggerStore) GetStoreType() types.StoreType {
+	return types.StoreTypeTransient
+}
+
+func (store *KeyLoggerStore) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(store)
+}
+
+func (store *KeyLoggerStore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	// FIXME
+	return store.CacheWrap()
+}
+
+func (store *KeyLoggerStore) log(key []byte) {
+	store.ops = append(store.ops, Operation{key})
+}
+
+func (store *KeyLoggerStore) Get(key []byte) []byte {
+	store.log(key)
+	return nil
+}
+
+func (store *KeyLoggerStore) Set(key, value []byte) {
+	store.log(key)
+}
+
+func (store *KeyLoggerStore) Has(key []byte) bool {
+	store.log(key)
+	return false
+}
+
+func (store *KeyLoggerStore) Delete(key []byte) {
+	store.log(key)
+}
+
+func (store *KeyLoggerStore) Iterator(begin, end []byte) types.Iterator {
+	// XXX: should return empty iterator instead of nil
+	return nil
+}
+
+func (store *KeyLoggerStore) ReverseIterator(begin, end []byte) types.Iterator {
+	return nil
+}

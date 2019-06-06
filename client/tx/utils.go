@@ -140,7 +140,7 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
+func queryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return sdk.TxResponse{}, err
@@ -167,7 +167,7 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sd
 		return sdk.TxResponse{}, err
 	}
 
-	out, err := formatTxResult(cdc, resTx, resBlocks[resTx.Height])
+	out, err := formatTxResult(cliCtx.Codec, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}

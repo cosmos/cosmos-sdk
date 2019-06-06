@@ -114,7 +114,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, args[0])
+			output, err := queryTx(cliCtx, args[0])
 			if err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 		}
 
 		if len(r.Form) == 0 {
-			rest.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
+			rest.PostProcessResponse(w, cliCtx, txs)
 			return
 		}
 
@@ -173,18 +173,18 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec)
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, searchResult, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, searchResult)
 	}
 }
 
 // QueryTxRequestHandlerFn implements a REST handler that queries a transaction
 // by hash in a committed block.
-func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr)
+		output, err := queryTx(cliCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -198,6 +198,6 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

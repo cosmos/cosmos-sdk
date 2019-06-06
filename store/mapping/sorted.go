@@ -3,10 +3,10 @@ package mapping
 type Sorted struct {
 	m Mapping
 
-	enc IndexEncoding
+	enc IntEncoding
 }
 
-func NewSorted(base Base, prefix []byte, enc IndexEncoding) Sorted {
+func NewSorted(base Base, prefix []byte, enc IntEncoding) Sorted {
 	return Sorted{
 		m: NewMapping(base, prefix),
 
@@ -15,7 +15,7 @@ func NewSorted(base Base, prefix []byte, enc IndexEncoding) Sorted {
 }
 
 func (s Sorted) key(power uint64, key []byte) []byte {
-	return append(EncodeIndex(power, s.enc), key...)
+	return append(EncodeInt(power, s.enc), key...)
 }
 
 func (s Sorted) Value(power uint64, key []byte) Value {

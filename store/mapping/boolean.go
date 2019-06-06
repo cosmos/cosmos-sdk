@@ -1,36 +1,34 @@
 package mapping
 
 type Boolean struct {
-	Value
+	Enum
 }
 
 func NewBoolean(base Base, key []byte) Boolean {
 	return Boolean{
-		Value: NewValue(base, key),
+		Enum: NewEnum(base, key),
 	}
 }
 
-func (v Value) Boolean() Boolean {
-	return Boolean{v}
+func (v Boolean) Get(ctx Context) bool {
+	return v.Enum.Get(ctx) != 0x00
 }
 
-func (v Boolean) Get(ctx Context) (res bool) {
-	v.Value.Get(ctx, &res)
-	return
+func (v Boolean) GetIfExists(ctx Context) bool {
+	return v.Enum.GetIfExists(ctx) != 0x00
 }
 
-func (v Boolean) GetIfExists(ctx Context) (res bool) {
-	v.Value.GetIfExists(ctx, &res)
-	return
-}
-
-func (v Boolean) GetSafe(ctx Context) (res bool, err error) {
-	err = v.Value.GetSafe(ctx, &res)
-	return
+func (v Boolean) GetSafe(ctx Context) (bool, error) {
+	res, err := v.Enum.GetSafe(ctx)
+	return res != 0x00, err
 }
 
 func (v Boolean) Set(ctx Context, value bool) {
-	v.Value.Set(ctx, value)
+	if value {
+		v.Enum.Set(ctx, 0x01)
+	} else {
+		v.Enum.Set(ctx, 0x00)
+	}
 }
 
 func (v Boolean) Flip(ctx Context) (res bool) {
@@ -39,6 +37,8 @@ func (v Boolean) Flip(ctx Context) (res bool) {
 	return
 }
 
+/*
 func (v Boolean) Key() []byte {
 	return v.base.key(v.key)
 }
+*/

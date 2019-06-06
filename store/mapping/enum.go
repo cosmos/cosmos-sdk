@@ -10,27 +10,33 @@ func NewEnum(base Base, key []byte) Enum {
 	}
 }
 
+/*
 func (v Value) Enum() Enum {
 	return Enum{v}
 }
-
-func (v Enum) Get(ctx Context) (res byte) {
-	v.Value.Get(ctx, &res)
-	return
+*/
+func (v Enum) Get(ctx Context) byte {
+	return v.Value.GetRaw(ctx)[0]
 }
 
-func (v Enum) GetIfExists(ctx Context) (res byte) {
-	v.Value.GetIfExists(ctx, &res)
-	return
+func (v Enum) GetIfExists(ctx Context) byte {
+	res := v.Value.GetRaw(ctx)
+	if res != nil {
+		return res[0]
+	}
+	return 0x00
 }
 
-func (v Enum) GetSafe(ctx Context) (res byte, err error) {
-	err = v.Value.GetSafe(ctx, &res)
-	return
+func (v Enum) GetSafe(ctx Context) (byte, error) {
+	res := v.Value.GetRaw(ctx)
+	if res == nil {
+		return 0x00, &GetSafeError{}
+	}
+	return res[0], nil
 }
 
 func (v Enum) Set(ctx Context, value byte) {
-	v.Value.Set(ctx, value)
+	v.Value.SetRaw(ctx, []byte{value})
 }
 
 func (v Enum) Incr(ctx Context) (res byte) {
@@ -47,6 +53,8 @@ func (v Enum) Transit(ctx Context, from, to byte) bool {
 	return true
 }
 
+/*
 func (v Enum) Key() []byte {
 	return v.base.key(v.key)
 }
+*/

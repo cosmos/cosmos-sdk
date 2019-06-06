@@ -172,6 +172,8 @@ func (m Mapping) Clear(ctx Context) {
 	}
 }
 
+/*
 func (m Mapping) Key(key []byte) []byte {
 	return m.Value(key).Key()
 }
+*/

@@ -1,46 +1,65 @@
 package mapping
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-type Value struct {
+type Value interface {
+	Get(Context, interface{})
+	GetIfExists(Context, interface{})
+	GetSafe(Context, interface{}) error
+	GetRaw(Context) []byte
+	Set(Context, interface{})
+	SetRaw(Context, []byte)
+	Exists(Context) bool
+	Delete(Context)
+	Equal(Context, interface{}) bool
+	Key() []byte
+
+	// XXX: unsafe
+	KVStore(Context) KVStore
+}
+
+var _ Value = value{}
+
+type value struct {
 	base Base
 	key  []byte
 }
 
 func NewValue(base Base, key []byte) Value {
-	return Value{
+	return value{
 		base: base,
 		key:  key,
 	}
 }
 
-func (v Value) store(ctx Context) KVStore {
+func (v value) store(ctx Context) KVStore {
 	return v.base.store(ctx)
 }
 
-func (v Value) Cdc() *codec.Codec {
+func (v value) Cdc() *codec.Codec {
 	return v.base.Cdc()
 }
 
-func (v Value) Get(ctx Context, ptr interface{}) {
+func (v value) Get(ctx Context, ptr interface{}) {
 	v.base.cdc.MustUnmarshalBinaryBare(v.store(ctx).Get(v.key), ptr)
 }
 
-func (v Value) GetIfExists(ctx Context, ptr interface{}) {
+func (v value) GetIfExists(ctx Context, ptr interface{}) {
 	bz := v.store(ctx).Get(v.key)
 	if bz != nil {
 		v.base.cdc.MustUnmarshalBinaryBare(bz, ptr)
 	}
 }
 
-func (v Value) GetSafe(ctx Context, ptr interface{}) error {
+func (v value) GetSafe(ctx Context, ptr interface{}) error {
 	bz := v.store(ctx).Get(v.key)
 	if bz == nil {
-		return ErrEmptyValue()
+		return ErrEmptyvalue()
 	}
 	err := v.base.cdc.UnmarshalBinaryBare(bz, ptr)
 	if err != nil {
@@ -49,45 +68,53 @@ func (v Value) GetSafe(ctx Context, ptr interface{}) error {
 	return nil
 }
 
-func (v Value) GetRaw(ctx Context) []byte {
+func (v value) GetRaw(ctx Context) []byte {
 	return v.store(ctx).Get(v.key)
 }
 
-func (v Value) Set(ctx Context, o interface{}) {
+func (v value) Set(ctx Context, o interface{}) {
 	v.store(ctx).Set(v.key, v.base.cdc.MustMarshalBinaryBare(o))
 }
 
-func (v Value) SetRaw(ctx Context, bz []byte) {
+func (v value) SetRaw(ctx Context, bz []byte) {
 	v.store(ctx).Set(v.key, bz)
 }
 
-func (v Value) Exists(ctx Context) bool {
+func (v value) Exists(ctx Context) bool {
 	return v.store(ctx).Has(v.key)
 }
 
-func (v Value) Delete(ctx Context) {
+func (v value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.key)
 }
 
-func (v Value) Key() []byte {
+func (v value) Equal(ctx Context, o interface{}) bool {
+	return bytes.Equal(v.GetRaw(ctx), v.base.cdc.MustMarshalBinaryBare(o))
+}
+
+func (v value) Key() []byte {
 	return v.base.key(v.key)
 }
 
+func (v value) KVStore(ctx Context) KVStore {
+	return v.store(ctx)
+}
+
 /*
-func (v Value) KeyPath() KeyPath {
+func (v value) KeyPath() KeyPath {
 	return v.base.KeyPath().AppendKey(v.key, KeyEncodingHex)
 }
 */
 type GetSafeErrorType byte
 
 const (
-	ErrTypeEmptyValue GetSafeErrorType = iota
+	ErrTypeEmptyvalue GetSafeErrorType = iota
 	ErrTypeUnmarshal
 )
 
 func (ty GetSafeErrorType) Format(msg string) (res string) {
 	switch ty {
-	case ErrTypeEmptyValue:
+	case ErrTypeEmptyvalue:
 		res = fmt.Sprintf("Empty value found")
 	case ErrTypeUnmarshal:
 		res = fmt.Sprintf("Error while unmarshal")
@@ -116,9 +143,9 @@ func (err *GetSafeError) Error() string {
 	return err.ty.Format(err.inner.Error())
 }
 
-func ErrEmptyValue() *GetSafeError {
+func ErrEmptyvalue() *GetSafeError {
 	return &GetSafeError{
-		ty: ErrTypeEmptyValue,
+		ty: ErrTypeEmptyvalue,
 	}
 }
 

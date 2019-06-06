@@ -9,28 +9,25 @@ import (
 
 var _ types.KVStore = Store{}
 
-// Store is a simple []byte to []byte map
-// panics when there is no corresponding value(to be compatible with KVSTore interface)
-// Set/Delete/Iterator/ReverseIterator method should not be used
+// Panics when there is no corresponding proof or the proof is invalid
+// (to be compatible with KVStore interface)
+// The semantics of the methods are redefined and does not compatible(should be improved)
+// Set -> Proof corresponding to the provided key is verified with the provided value
+// Has -> Returns true if the proof is verified, returns false in any other case
+// Other methods should not be used
 type Store struct {
-	m map[string][]byte
+	root     Root
+	proofs   map[string]Proof
+	verified map[string]struct{}
 }
 
-func NewStore(root Root, proofs []FullProof) (store Store, err error) {
-	for _, proof := range proofs {
-		err = proof.Verify(root)
-		if err != nil {
-			return
-		}
+// Proofs must be provided
+func NewStore(root Root, proofs []Proof) Store {
+	return Store{
+		root:     root,
+		proofs:   proofs,
+		verified: make(map[string]struct{}),
 	}
-
-	store.m = make(map[string][]byte)
-
-	for _, proof := range proofs {
-		store.m[string(proof.Key)] = proof.Value
-	}
-
-	return
 }
 
 func (store Store) GetStoreType() types.StoreType {
@@ -47,111 +44,45 @@ func (store Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.
 }
 
 func (store Store) Get(key []byte) []byte {
-	res, ok := store.m[string(key)]
-	if !ok {
-		panic(NoProofError{})
-	}
-	return res
+	panic(MethodError{})
 }
 
 func (store Store) Set(key, value []byte) {
-	panic(MutableMethodError{})
+	proof, ok := store.proofs[string(key)]
+	if !ok {
+		return
+	}
+	err := proof.Verify(store.root, key, value)
+	if err == nil {
+		store.verified[string(key)] = struct{}{}
+	}
+
+	return
 }
 
 // TODO: consider using this method to check whether the proof provided or not
 // which may violate KVStore semantics
 func (store Store) Has(key []byte) bool {
-	return store.Get(key) != nil
+	_, ok := store.verified[string(key)]
+	return ok
 }
 
 func (store Store) Delete(key []byte) {
-	panic(MutableMethodError{})
+	panic(MethodError{})
 }
 
 func (store Store) Iterator(begin, end []byte) types.Iterator {
-	panic(IteratorMethodError{})
+	panic(MethodError{})
 }
 
 func (store Store) ReverseIterator(begin, end []byte) types.Iterator {
-	panic(IteratorMethodError{})
+	panic(MethodError{})
 }
 
 type NoProofError struct {
 	// XXX
 }
 
-type MutableMethodError struct {
+type MethodError struct {
 	// XXX
-}
-
-type IteratorMethodError struct {
-}
-
-// OperationType might be useful in future but not currently
-/*
-type OperationType byte
-
-const (
-	Get OperationType = iota
-	Set
-	Has
-	Delete
-)
-*/
-
-type Operation struct {
-	// Type OperationType
-	Key []byte
-}
-
-var _ types.KVStore = (*KeyLoggerStore)(nil)
-
-// TraceStore is a dummy KVStore which logs all method call on it
-// but returns empty vaule all times
-type KeyLoggerStore struct {
-	ops []Operation
-}
-
-func (*KeyLoggerStore) GetStoreType() types.StoreType {
-	return types.StoreTypeTransient
-}
-
-func (store *KeyLoggerStore) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(store)
-}
-
-func (store *KeyLoggerStore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	// FIXME
-	return store.CacheWrap()
-}
-
-func (store *KeyLoggerStore) log(key []byte) {
-	store.ops = append(store.ops, Operation{key})
-}
-
-func (store *KeyLoggerStore) Get(key []byte) []byte {
-	store.log(key)
-	return nil
-}
-
-func (store *KeyLoggerStore) Set(key, value []byte) {
-	store.log(key)
-}
-
-func (store *KeyLoggerStore) Has(key []byte) bool {
-	store.log(key)
-	return false
-}
-
-func (store *KeyLoggerStore) Delete(key []byte) {
-	store.log(key)
-}
-
-func (store *KeyLoggerStore) Iterator(begin, end []byte) types.Iterator {
-	// XXX: should return empty iterator instead of nil
-	return nil
-}
-
-func (store *KeyLoggerStore) ReverseIterator(begin, end []byte) types.Iterator {
-	return nil
 }

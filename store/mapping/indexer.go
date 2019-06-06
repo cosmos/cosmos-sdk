@@ -6,10 +6,10 @@ import (
 	"strconv"
 )
 
-type IndexEncoding byte
+type IntEncoding byte
 
 const (
-	Dec IndexEncoding = iota
+	Dec IntEncoding = iota
 	Hex
 	Bin
 )
@@ -17,10 +17,10 @@ const (
 type Indexer struct {
 	m Mapping
 
-	enc IndexEncoding
+	enc IntEncoding
 }
 
-func NewIndexer(base Base, prefix []byte, enc IndexEncoding) Indexer {
+func NewIndexer(base Base, prefix []byte, enc IntEncoding) Indexer {
 	return Indexer{
 		m:   NewMapping(base, prefix),
 		enc: enc,
@@ -28,7 +28,7 @@ func NewIndexer(base Base, prefix []byte, enc IndexEncoding) Indexer {
 }
 
 // Identical length independent from the index, ensure ordering
-func EncodeIndex(index uint64, enc IndexEncoding) (res []byte) {
+func EncodeInt(index uint64, enc IntEncoding) (res []byte) {
 	switch enc {
 	case Dec:
 		return []byte(fmt.Sprintf("%020d", index))
@@ -39,11 +39,11 @@ func EncodeIndex(index uint64, enc IndexEncoding) (res []byte) {
 		binary.BigEndian.PutUint64(res, index)
 		return
 	default:
-		panic("invalid IndexEncoding")
+		panic("invalid IntEncoding")
 	}
 }
 
-func DecodeIndex(bz []byte, enc IndexEncoding) (res uint64, err error) {
+func DecodeInt(bz []byte, enc IntEncoding) (res uint64, err error) {
 	switch enc {
 	case Dec:
 		return strconv.ParseUint(string(bz), 10, 64)
@@ -52,12 +52,12 @@ func DecodeIndex(bz []byte, enc IndexEncoding) (res uint64, err error) {
 	case Bin:
 		return binary.BigEndian.Uint64(bz), nil
 	default:
-		panic("invalid IndexEncoding")
+		panic("invalid IntEncoding")
 	}
 }
 
 func (ix Indexer) Value(index uint64) Value {
-	return ix.m.Value(EncodeIndex(index, ix.enc))
+	return ix.m.Value(EncodeInt(index, ix.enc))
 }
 
 func (ix Indexer) Get(ctx Context, index uint64, ptr interface{}) {
@@ -98,7 +98,7 @@ func (ix Indexer) Prefix(prefix []byte) Indexer {
 
 func (ix Indexer) Range(start, end uint64) Indexer {
 	return Indexer{
-		m: ix.m.Range(EncodeIndex(start, ix.enc), EncodeIndex(end, ix.enc)),
+		m: ix.m.Range(EncodeInt(start, ix.enc), EncodeInt(end, ix.enc)),
 
 		enc: ix.enc,
 	}
@@ -106,7 +106,7 @@ func (ix Indexer) Range(start, end uint64) Indexer {
 
 func (ix Indexer) IterateAscending(ctx Context, ptr interface{}, fn func(uint64) bool) {
 	ix.m.Iterate(ctx, ptr, func(bz []byte) bool {
-		key, err := DecodeIndex(bz, ix.enc)
+		key, err := DecodeInt(bz, ix.enc)
 		if err != nil {
 			panic(err)
 		}
@@ -116,7 +116,7 @@ func (ix Indexer) IterateAscending(ctx Context, ptr interface{}, fn func(uint64)
 
 func (ix Indexer) IterateDescending(ctx Context, ptr interface{}, fn func(uint64) bool) {
 	ix.m.ReverseIterate(ctx, ptr, func(bz []byte) bool {
-		key, err := DecodeIndex(bz, ix.enc)
+		key, err := DecodeInt(bz, ix.enc)
 		if err != nil {
 			panic(err)
 		}
@@ -130,7 +130,7 @@ func (ix Indexer) First(ctx Context, ptr interface{}) (key uint64, ok bool) {
 		return
 	}
 	if len(keybz) != 0 {
-		key, err := DecodeIndex(keybz, ix.enc)
+		key, err := DecodeInt(keybz, ix.enc)
 		if err != nil {
 			return key, false
 		}
@@ -144,7 +144,7 @@ func (ix Indexer) Last(ctx Context, ptr interface{}) (key uint64, ok bool) {
 		return
 	}
 	if len(keybz) != 0 {
-		key, err := DecodeIndex(keybz, ix.enc)
+		key, err := DecodeInt(keybz, ix.enc)
 		if err != nil {
 			return key, false
 		}
@@ -152,6 +152,8 @@ func (ix Indexer) Last(ctx Context, ptr interface{}) (key uint64, ok bool) {
 	return
 }
 
+/*
 func (ix Indexer) Key(index uint64) []byte {
-	return ix.m.Key(EncodeIndex(index, ix.enc))
+	return ix.m.Key(EncodeInt(index, ix.enc))
 }
+*/

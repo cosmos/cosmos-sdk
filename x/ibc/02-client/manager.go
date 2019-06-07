@@ -91,6 +91,10 @@ func (obj Object) Value(ctx sdk.Context) (res Client) {
 	return
 }
 
+func (obj Object) Is(ctx sdk.Context, client Client) bool {
+	return obj.client.Is(ctx, client)
+}
+
 func (obj Object) Update(ctx sdk.Context, header Header) error {
 	if !obj.exists(ctx) {
 		panic("should not update nonexisting client")

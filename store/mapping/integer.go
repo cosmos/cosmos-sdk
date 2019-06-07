@@ -7,7 +7,7 @@ type Integer interface {
 	GetSafe(Context) (uint64, error)
 	Set(Context, uint64)
 	Incr(Context) uint64
-	Equal(Context, uint64) bool
+	Is(Context, uint64) bool
 }
 
 var _ Integer = integer{}
@@ -72,7 +72,7 @@ func (v integer) Incr(ctx Context) (res uint64) {
 	return
 }
 
-func (v integer) Equal(ctx Context, value uint64) bool {
+func (v integer) Is(ctx Context, value uint64) bool {
 	return v.Get(ctx) == value
 }
 

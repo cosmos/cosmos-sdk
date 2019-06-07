@@ -15,6 +15,7 @@ var _ types.KVStore = Store{}
 // Get -> Returns the value if the corresponding proof is already verified
 // Set -> Proof corresponding to the provided key is verified with the provided value
 // Has -> Returns true if the proof is verified, returns false in any other case
+// Delete -> Proof corresponding to the provided key is verified with nil value
 // Other methods should not be used
 type Store struct {
 	root     Root
@@ -87,7 +88,7 @@ func (store Store) Has(key []byte) bool {
 }
 
 func (store Store) Delete(key []byte) {
-	panic(MethodError{})
+	store.Set(key, nil)
 }
 
 func (store Store) Iterator(begin, end []byte) types.Iterator {

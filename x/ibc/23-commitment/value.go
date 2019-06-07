@@ -16,7 +16,7 @@ func Value(base mapping.Base, key []byte) mapping.Value {
 	return value{mapping.NewValue(base, key)}
 }
 
-func (v value) Equal(ctx sdk.Context, value interface{}) bool {
+func (v value) Is(ctx sdk.Context, value interface{}) bool {
 	// CONTRACT: commitment.value must be used with commitment.Store as its underlying KVStore
 	// TODO: enforce it
 
@@ -34,7 +34,7 @@ func Enum(v mapping.Value) mapping.Enum {
 	return enum{mapping.NewEnum(v)}
 }
 
-func (v enum) Equal(ctx sdk.Context, value byte) bool {
+func (v enum) Is(ctx sdk.Context, value byte) bool {
 	// CONTRACT: commitment.enum must be used with commitment.Store as its underlying KVStore
 	// TODO: enforce it
 
@@ -52,7 +52,7 @@ func Integer(v mapping.Value, enc mapping.IntEncoding) mapping.Integer {
 	return integer{mapping.NewInteger(v, enc)}
 }
 
-func (v integer) Equal(ctx sdk.Context, value uint64) bool {
+func (v integer) Is(ctx sdk.Context, value uint64) bool {
 	// CONTRACT: commitment.integer must be used with commitment.Store as its underlying KVStore
 	// TODO: enforce it
 

@@ -23,7 +23,7 @@ type Value interface {
 	GetIfExists(Context, interface{})
 	GetSafe(Context, interface{}) error
 	Set(Context, interface{})
-	Equal(Context, interface{}) bool
+	Is(Context, interface{}) bool
 }
 
 var _ Value = value{}
@@ -91,7 +91,7 @@ func (v value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.key)
 }
 
-func (v value) Equal(ctx Context, o interface{}) bool {
+func (v value) Is(ctx Context, o interface{}) bool {
 	return bytes.Equal(v.GetRaw(ctx), v.base.cdc.MustMarshalBinaryBare(o))
 }
 

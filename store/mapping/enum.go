@@ -7,7 +7,7 @@ type Enum interface {
 	GetSafe(Context) (byte, error)
 	Set(Context, byte)
 	Transit(Context, byte, byte) bool
-	Equal(Context, byte) bool
+	Is(Context, byte) bool
 }
 
 var _ Enum = enum{}
@@ -63,7 +63,7 @@ func (v enum) Transit(ctx Context, from, to byte) bool {
 	return true
 }
 
-func (v enum) Equal(ctx Context, value byte) bool {
+func (v enum) Is(ctx Context, value byte) bool {
 	return v.Get(ctx) == value
 }
 

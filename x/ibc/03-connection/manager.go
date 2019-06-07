@@ -186,7 +186,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != Init {
+	if !obj.remote.state.Is(ctx, Init) {
 		return errors.New("counterparty state not init")
 	}
 
@@ -195,13 +195,13 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
+	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !client.Equal(obj.remote.client.Value(ctx), expected) {
+	if !obj.remote.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -226,7 +226,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != OpenTry {
+	if !obj.remote.state.Is(ctx, OpenTry) {
 		return errors.New("counterparty state not try")
 	}
 
@@ -235,13 +235,13 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
+	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !client.Equal(obj.remote.client.Value(ctx), expected) {
+	if !obj.remote.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -251,7 +251,6 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 }
 
 func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
-
 	if !obj.state.Transit(ctx, OpenTry, Open) {
 		return errors.New("confirm on non-try connection")
 	}
@@ -261,7 +260,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if obj.remote.state.Get(ctx) != Open {
+	if !obj.remote.state.Is(ctx, Open) {
 		return errors.New("counterparty state not open")
 	}
 
@@ -270,7 +269,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
+	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -284,20 +283,20 @@ func (obj Object) OpenTimeout(ctx sdk.Context) error {
 		return errors.New("timeout height not yet reached")
 	}
 
+	// XXX: double check if a user can bypass the verification logic somehow
 	switch obj.state.Get(ctx) {
 	case Init:
-		// XXX: check if exists compatible with remote KVStore
-		if obj.remote.exists(ctx) {
-			return errors.New("counterparty connection existw")
+		if !obj.remote.connection.Is(ctx, nil) {
+			return errors.New("counterparty connection exists")
 		}
 	case OpenTry:
-		if !(obj.remote.state.Get(ctx) == Init ||
+		if !(obj.remote.state.Is(ctx, Init) ||
 			obj.remote.exists(ctx)) {
 			return errors.New("counterparty connection state not init")
 		}
 		// XXX: check if we need to verify symmetricity for timeout (already proven in OpenTry)
 	case Open:
-		if obj.remote.state.Get(ctx) == OpenTry {
+		if obj.remote.state.Is(ctx, OpenTry) {
 			return errors.New("counterparty connection state not tryopen")
 		}
 	}
@@ -307,6 +306,82 @@ func (obj Object) OpenTimeout(ctx sdk.Context) error {
 	return nil
 }
 
-func (obj Object) CloseInit(ctx sdk.Context) error {
-	return nil // XXX
+func (obj Object) CloseInit(ctx sdk.Context, nextTimeout uint64) error {
+	if !obj.state.Transit(ctx, Open, CloseTry) {
+		return errors.New("closeinit on non-open connection")
+	}
+
+	obj.nexttimeout.Set(ctx, nextTimeout)
+
+	return nil
+}
+
+func (obj Object) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
+	if !obj.state.Transit(ctx, Open, Closed) {
+		return errors.New("closetry on non-open connection")
+	}
+
+	err := assertTimeout(ctx, timeoutHeight)
+	if err != nil {
+		return err
+	}
+
+	if !obj.remote.state.Is(ctx, CloseTry) {
+		return errors.New("unexpected counterparty state value")
+	}
+
+	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
+		return errors.New("unexpected counterparty timeout value")
+	}
+
+	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
+
+	return nil
+}
+
+func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
+	if !obj.state.Transit(ctx, CloseTry, Closed) {
+		return errors.New("closeack on non-closetry connection")
+	}
+
+	err := assertTimeout(ctx, timeoutHeight)
+	if err != nil {
+		return err
+	}
+
+	if !obj.remote.state.Is(ctx, Closed) {
+		return errors.New("unexpected counterparty state value")
+	}
+
+	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
+		return errors.New("unexpected counterparty timeout value")
+	}
+
+	obj.nexttimeout.Set(ctx, 0)
+
+	return nil
+}
+
+func (obj Object) CloseTimeout(ctx sdk.Context) error {
+	if !(uint64(obj.client.Value(ctx).GetBase().GetHeight()) > obj.nexttimeout.Get(ctx)) {
+		return errors.New("timeout height not yet reached")
+	}
+
+	// XXX: double check if the user can bypass the verification logic somehow
+	switch obj.state.Get(ctx) {
+	case CloseTry:
+		if !obj.remote.state.Is(ctx, Open) {
+			return errors.New("counterparty connection state not open")
+		}
+	case Closed:
+		if !obj.remote.state.Is(ctx, CloseTry) {
+			return errors.New("counterparty connection state not closetry")
+		}
+	}
+
+	obj.state.Set(ctx, Open)
+	obj.nexttimeout.Set(ctx, 0)
+
+	return nil
+
 }

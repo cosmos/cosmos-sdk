@@ -50,6 +50,10 @@ func (m Mapping) GetSafe(ctx Context, key []byte, ptr interface{}) error {
 }
 
 func (m Mapping) Set(ctx Context, key []byte, o interface{}) {
+	if o == nil {
+		m.Delete(ctx, key)
+		return
+	}
 	m.Value(key).Set(ctx, o)
 }
 

@@ -478,7 +478,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 		k.BeforeDelegationCreated(ctx, delAddr, validator.OperatorAddress)
 	}
 
-	// don't subtract coins from account balance if the action is a redelegation
 	if subtractAccount {
 		bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
 		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, bondedCoins)
@@ -486,11 +485,8 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 			return sdk.Dec{}, err
 		}
 
-		// add coins to the bonded staking pool
-		err = k.freeCoinsToBonded(ctx, bondedCoins)
-		if err != nil {
-			return sdk.Dec{}, err
-		}
+		// update pool when bond amount doesn't come from redelegation
+		k.freeTokensToBonded(ctx, bondAmt)
 	}
 
 	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
@@ -610,6 +606,7 @@ func (k Keeper) Undelegate(
 		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
+	// transfer the validator tokens to the not bonded pool
 	k.bondedTokensToNotBonded(ctx, returnAmount)
 
 	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
@@ -630,6 +627,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	ctxTime := ctx.BlockHeader().Time
+	removedAmt := sdk.ZeroInt()
 
 	// loop through all the entries and complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
@@ -646,12 +644,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 				if err != nil {
 					return err
 				}
-
-				// remove the coins from the not bonded pool
-				err = k.burnNotBondedCoins(ctx, amt)
-				if err != nil {
-					return err
-				}
+				removedAmt = removedAmt.Add(entry.Balance)
 			}
 		}
 	}
@@ -661,6 +654,12 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		k.RemoveUnbondingDelegation(ctx, ubd)
 	} else {
 		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
+	// remove the coins from the not bonded pool as they were transfered to the account
+	err := k.removeNotBondedTokens(ctx, removedAmt)
+	if err != nil {
+		return err
 	}
 
 	return nil

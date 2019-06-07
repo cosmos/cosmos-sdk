@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -54,15 +53,12 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		bondedPool, notBondedPool := k.GetPools(ctx)
 		bondDenom := k.BondDenom(ctx)
 
-		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
-			switch {
-			case validator.IsBonded():
-				bonded = bonded.Add(validator.GetTokens())
-			case validator.IsUnbonding():
-				notBonded = notBonded.Add(validator.GetTokens())
-			case validator.IsUnbonded():
-				notBonded = notBonded.Add(validator.GetTokens())
+		k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
+			validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
+			if !found {
+				panic(fmt.Sprintf("validator %s not found", delegation.ValidatorAddress))
 			}
+			bonded = bonded.Add(validator.TokensFromShares(delegation.Shares).TruncateInt())
 			return false
 		})
 
@@ -79,16 +75,18 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
 		if !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded) {
-			return fmt.Errorf("bonded token invariance:\n"+
-				"\tPool's bonded tokens: %v\n"+
-				"\tsum of bonded tokens: %v\n"+
-				"not bonded token invariance:\n"+
-				"\tPool's not bonded tokens: %v\n"+
-				"\tsum of not bonded tokens: %v\n"+
-				"module accounts total (bonded + not bonded):\n"+
-				"\tModule Accounts' tokens: %v\n"+
-				"\tsum tokens:              %v",
-				poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded))
+			return fmt.Errorf(
+				"bonded token invariance:\n"+
+					"\tPool's bonded tokens: %v\n"+
+					"\tsum of bonded tokens: %v\n"+
+					"not bonded token invariance:\n"+
+					"\tPool's not bonded tokens: %v\n"+
+					"\tsum of not bonded tokens: %v\n"+
+					"module accounts total (bonded + not bonded):\n"+
+					"\tModule Accounts' tokens: %v\n"+
+					"\tsum tokens:              %v\n",
+				poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded),
+			)
 		}
 
 		return nil

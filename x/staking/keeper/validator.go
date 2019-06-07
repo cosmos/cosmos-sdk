@@ -486,7 +486,6 @@ func (k Keeper) removeTokens(ctx sdk.Context, v types.Validator, tokens sdk.Int)
 // RemoveDelShares removes delegator shares from a validator.
 // NOTE: because token fractions are left in the valiadator,
 //       the exchange rate of future shares of this validator can increase.
-// CONTRACT: Tokens are assumed to move to the not-bonded pool.
 func (k Keeper) removeDelShares(ctx sdk.Context, v types.Validator, delShares sdk.Dec) (types.Validator, sdk.Int) {
 
 	remainingShares := v.DelegatorShares.Sub(delShares)

@@ -3,7 +3,6 @@ package keeper
 import (
 	"container/list"
 
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -100,15 +99,15 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 }
 
 // freeCoinsToBonded adds coins to the bonded pool of coins within the staking module
-func (k Keeper) freeCoinsToBonded(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+func (k Keeper) freeTokensToBonded(ctx sdk.Context, amt sdk.Int) {
+	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
 	bondedPool, _ := k.GetPools(ctx)
-	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(amt))
+	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(bondedCoins))
 	if err != nil {
-		return sdk.ErrInternal(err.Error())
+		panic(err.Error())
 	}
 
 	k.SetBondedPool(ctx, bondedPool)
-	return nil
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
@@ -129,12 +128,14 @@ func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int
 	}
 }
 
-// burnBondedCoins burns coins from the bonded pool module account
-func (k Keeper) burnBondedCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
-	return k.supplyKeeper.BurnCoins(ctx, BondedTokensName, amt)
+// removeBondedTokens removes coins from the bonded pool module account
+func (k Keeper) removeBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
+	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
+	return k.supplyKeeper.BurnCoins(ctx, BondedTokensName, bondedCoins)
 }
 
-// burnNotBondedCoins burns coins from the not bonded pool module account
-func (k Keeper) burnNotBondedCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
-	return k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, amt)
+// removeNotBondedTokens removes coins from the not bonded pool module account
+func (k Keeper) removeNotBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
+	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
+	return k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, notBondedCoins)
 }

@@ -635,7 +635,9 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.crisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if err := cr.Invar(ctx); err != nil {
-				fmt.Println(err)
+
+				fmt.Printf("broken invariant at block %d of %d\n"+
+					"%s", ctx.BlockHeight()-1, numBlocks, err)
 				b.FailNow()
 			}
 		})

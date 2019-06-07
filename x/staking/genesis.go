@@ -45,13 +45,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		}
 
 		// update pools and update timeslice if necessary
-		switch {
-		case validator.IsBonded():
-			bondedTokens = bondedTokens.Add(validator.GetTokens())
-		case validator.IsUnbonded():
-			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
-		case validator.IsUnbonding():
-			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
+		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
 	}
@@ -66,6 +60,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
+
+		validator, found := keeper.GetValidator(ctx, delegation.ValidatorAddress)
+		if !found {
+			panic(fmt.Sprintf("validator %s not found", delegation.ValidatorAddress))
+		}
+		bondedTokens = bondedTokens.Add(validator.TokensFromShares(delegation.Shares).TruncateInt())
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
@@ -123,7 +123,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
 			validator, found := keeper.GetValidator(ctx, lv.Address)
 			if !found {
-				panic("expected validator, not found")
+				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 			update := validator.ABCIValidatorUpdate()
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block

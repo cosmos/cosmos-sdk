@@ -103,7 +103,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
 	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
-	coinsToBurn := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokensToBurn))
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.GT(sdk.ZeroInt()) {
@@ -120,8 +119,17 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// Burn the slashed tokens from the pool account and decrease the total supply.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
-	if validator.Status == sdk.Bonded {
-		if err := k.burnBondedCoins(ctx, coinsToBurn); err != nil {
+	switch {
+	case validator.IsBonded():
+		if err := k.removeBondedTokens(ctx, tokensToBurn); err != nil {
+			panic(err)
+		}
+	case validator.IsUnbonding():
+		if err := k.removeNotBondedTokens(ctx, tokensToBurn); err != nil {
+			panic(err)
+		}
+	case validator.IsUnbonded():
+		if err := k.removeNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
 	}
@@ -165,6 +173,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
+	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
@@ -189,6 +198,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// have been slashed, and slash amounts are calculated
 		// according to stake held at time of infraction
 		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance)
+		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 
 		// Update unbonding delegation if necessary
 		if unbondingSlashAmount.IsZero() {
@@ -197,13 +207,10 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
 		unbondingDelegation.Entries[i] = entry
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+	}
 
-		// Burn the slashed tokens from the unbonded pool account and the total supply.
-		burnedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), unbondingSlashAmount))
-		err := k.burnNotBondedCoins(ctx, burnedCoins)
-		if err != nil {
-			panic(err)
-		}
+	if err := k.removeNotBondedTokens(ctx, burnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount
@@ -220,6 +227,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
+	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
@@ -254,10 +262,15 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		}
 
 		// we don't burn tokens as the tokens remain on the bonded pool
-		_, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
+		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
+		burnedAmount = burnedAmount.Add(tokensToBurn)
+	}
+
+	if err := k.removeBondedTokens(ctx, burnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount

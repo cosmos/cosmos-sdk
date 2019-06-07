@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,6 +47,39 @@ type Validator struct {
 	UnbondingCompletionTime time.Time      `json:"unbonding_time"`      // if unbonding, min time for the validator to complete unbonding
 	Commission              Commission     `json:"commission"`          // commission parameters
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // validator's self declared minimum self delegation
+}
+
+func (v Validator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		OperatorAddress         sdk.ValAddress
+		ConsPubKey              string
+		Jailed                  bool
+		Status                  sdk.BondStatus
+		Tokens                  sdk.Int
+		DelegatorShares         sdk.Dec
+		Description             Description
+		UnbondingHeight         int64
+		UnbondingCompletionTime time.Time
+		Commission              Commission
+		MinSelfDelegation       sdk.Int
+	}{
+		OperatorAddress:         v.OperatorAddress,
+		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		Jailed:                  v.Jailed,
+		Status:                  v.Status,
+		Tokens:                  v.Tokens,
+		DelegatorShares:         v.DelegatorShares,
+		Description:             v.Description,
+		UnbondingHeight:         v.UnbondingHeight,
+		UnbondingCompletionTime: v.UnbondingCompletionTime,
+		Commission:              v.Commission,
+		MinSelfDelegation:       v.MinSelfDelegation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
 }
 
 // Validators is a collection of Validator

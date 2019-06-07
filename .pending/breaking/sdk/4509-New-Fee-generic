@@ -1,0 +1,3 @@
+#4509 New `Fee` generic interface available in the top level types package.
+`auth.StdFee` implements such interface. User defined auth module can now
+define their own custom fee types.

@@ -11,6 +11,7 @@ const (
 	Closed
 )
 
+// TODO: Connection is amino marshaled currently, need to implement MarshalBinary manually
 type Connection struct {
 	Counterparty       string
 	Client             string

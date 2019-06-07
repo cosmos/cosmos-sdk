@@ -12,22 +12,37 @@ var _ types.KVStore = Store{}
 // Panics when there is no corresponding proof or the proof is invalid
 // (to be compatible with KVStore interface)
 // The semantics of the methods are redefined and does not compatible(should be improved)
+// Get -> Returns the value if the corresponding proof is already verified
 // Set -> Proof corresponding to the provided key is verified with the provided value
 // Has -> Returns true if the proof is verified, returns false in any other case
 // Other methods should not be used
 type Store struct {
 	root     Root
 	proofs   map[string]Proof
-	verified map[string]struct{}
+	verified map[string][]byte
 }
 
 // Proofs must be provided
-func NewStore(root Root, proofs []Proof) Store {
-	return Store{
+func NewStore(root Root, proofs []Proof, fullProofs []FullProof) (store Store, err error) {
+	store = Store{
 		root:     root,
-		proofs:   proofs,
-		verified: make(map[string]struct{}),
+		proofs:   make(map[string]Proof),
+		verified: make(map[string][]byte),
 	}
+
+	for _, proof := range proofs {
+		store.proofs[string(proof.Key())] = proof
+	}
+
+	for _, proof := range fullProofs {
+		err = proof.Verify(root)
+		if err != nil {
+			return
+		}
+		store.verified[string(proof.Proof.Key())] = proof.Value
+	}
+
+	return
 }
 
 func (store Store) GetStoreType() types.StoreType {
@@ -44,7 +59,11 @@ func (store Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.
 }
 
 func (store Store) Get(key []byte) []byte {
-	panic(MethodError{})
+	res, ok := store.verified[string(key)]
+	if !ok {
+		panic(UnverifiedKeyError{})
+	}
+	return res
 }
 
 func (store Store) Set(key, value []byte) {
@@ -54,7 +73,7 @@ func (store Store) Set(key, value []byte) {
 	}
 	err := proof.Verify(store.root, key, value)
 	if err == nil {
-		store.verified[string(key)] = struct{}{}
+		store.verified[string(key)] = value
 	}
 
 	return
@@ -84,5 +103,9 @@ type NoProofError struct {
 }
 
 type MethodError struct {
+	// XXX
+}
+
+type UnverifiedKeyError struct {
 	// XXX
 }

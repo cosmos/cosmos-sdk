@@ -11,8 +11,8 @@ import (
 type IDGenerator func(sdk.Context /*Header,*/, mapping.Value) string
 
 func IntegerIDGenerator(ctx sdk.Context, v mapping.Value) string {
-	id := v.Integer().Incr(ctx)
-	return strconv.FormatInt(id, 10)
+	id := mapping.NewInteger(v, mapping.Dec).Incr(ctx)
+	return strconv.FormatUint(id, 10)
 }
 
 type Manager struct {
@@ -44,7 +44,7 @@ func (man Manager) object(id string) Object {
 	return Object{
 		id:     id,
 		client: man.protocol.Value([]byte(id)),
-		freeze: man.protocol.Value([]byte(id + "/freeze")).Boolean(),
+		freeze: mapping.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
 		pred:   man.pred,
 	}
 }

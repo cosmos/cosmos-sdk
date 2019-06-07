@@ -1,13 +1,12 @@
 package mapping
 
+// XXX: interface
 type Boolean struct {
 	Enum
 }
 
-func NewBoolean(base Base, key []byte) Boolean {
-	return Boolean{
-		Enum: NewEnum(base, key),
-	}
+func NewBoolean(v Value) Boolean {
+	return Boolean{NewEnum(v)}
 }
 
 func (v Boolean) Get(ctx Context) bool {

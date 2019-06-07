@@ -52,10 +52,19 @@ func (man Manager) object(id string) Object {
 	return Object{
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
-		state:       man.protocol.Value([]byte(id + "/state")).Enum(),
-		nexttimeout: man.protocol.Value([]byte(id + "/timeout")).Integer(),
+		state:       mapping.NewEnum(man.protocol.Value([]byte(id + "/state"))),
+		nexttimeout: mapping.NewInteger(man.protocol.Value([]byte(id+"/timeout")), mapping.Dec),
 
 		self: man.self,
+	}
+}
+
+func (man Manager) remoteobject(id string) Object {
+	return Object{
+		id:          id,
+		connection:  man.remote.protocol.Value([]byte(id), commitment.Value),
+		state:       commitment.Enum(man.protocol.Value([]byte(id+"/state"), commitment.Value)),
+		nexttimeout: commitment.Integer(man.protocol.Value([]byte(id+"/timeout"), commitment.Value), mapping.Dec),
 	}
 }
 
@@ -124,7 +133,7 @@ func (obj Object) assertSymmetric(ctx sdk.Context) error {
 }
 
 func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
-	if ctx.BlockHeight() > int64(timeoutHeight) {
+	if uint64(ctx.BlockHeight()) > timeoutHeight {
 		return errors.New("timeout")
 	}
 
@@ -152,7 +161,7 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return nil
 }
@@ -178,7 +187,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -193,7 +202,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return nil
 }
@@ -218,7 +227,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -228,7 +237,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return errors.New("unexpected counterparty client value")
 	}
 
-	obj.nexttimeout.Set(ctx, int64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return nil
 }
@@ -253,7 +262,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if obj.remote.nexttimeout.Get(ctx) != int64(timeoutHeight) {
+	if obj.remote.nexttimeout.Get(ctx) != uint64(timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -263,8 +272,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-
-	if !(obj.client.Value(ctx).GetBase().GetHeight() > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.Value(ctx).GetBase().GetHeight()) > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

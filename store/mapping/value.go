@@ -7,20 +7,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+// TODO: expose
+type coreValue interface {
+	// Corresponds to the KVStore methods
+	GetRaw(Context) []byte  // Get
+	SetRaw(Context, []byte) // Set
+	Exists(Context) bool    // Has
+	Delete(Context)         // Delete
+	Key() []byte
+}
+
 type Value interface {
+	coreValue
 	Get(Context, interface{})
 	GetIfExists(Context, interface{})
 	GetSafe(Context, interface{}) error
-	GetRaw(Context) []byte
 	Set(Context, interface{})
-	SetRaw(Context, []byte)
-	Exists(Context) bool
-	Delete(Context)
 	Equal(Context, interface{}) bool
-	Key() []byte
-
-	// XXX: unsafe
-	KVStore(Context) KVStore
 }
 
 var _ Value = value{}
@@ -94,10 +97,6 @@ func (v value) Equal(ctx Context, o interface{}) bool {
 
 func (v value) Key() []byte {
 	return v.base.key(v.key)
-}
-
-func (v value) KVStore(ctx Context) KVStore {
-	return v.store(ctx)
 }
 
 /*

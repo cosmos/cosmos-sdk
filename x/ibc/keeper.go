@@ -45,3 +45,5 @@ func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerat
 
 	return
 }
+
+func (k Keeper) exec(ctx sdk.Context, proofs []commitment.Proof, values [][]byte)

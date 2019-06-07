@@ -30,7 +30,10 @@ func (m Mapping) keyPath() (res KeyPath) {
 	return m.base.KeyPath()
 }
 */
-func (m Mapping) Value(key []byte) Value {
+func (m Mapping) Value(key []byte, constructor ...func(Base, []byte) Value) Value {
+	if len(constructor) == 1 {
+		return constructor[0](m.base, key)
+	}
 	return NewValue(m.base, key)
 }
 

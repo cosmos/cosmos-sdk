@@ -122,7 +122,7 @@ func TestParseQueryHeight(t *testing.T) {
 		{"no height", req0, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
 		{"height", req1, httptest.NewRecorder(), context.CLIContext{}, height, true},
 		{"invalid height", req2, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
-		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
+		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

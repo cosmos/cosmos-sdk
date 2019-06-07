@@ -18,7 +18,7 @@ var (
 // MsgSwap Order - struct for swapping a coin
 type MsgSwapOrder struct {
 	SwapDenom  string         // The desired denomination either to be bought or sold
-	Coin       sdk.Coin       // The specified amount to be either bought or sold
+	Amount     sdk.Coins      // The specified amount to be either bought or sold
 	Bound      sdk.Int        // If buy order, maximum amount of coins to be sold; otherwise minimum amount of coins to be bought
 	Deadline   time.Time      // deadline for the transaction to still be considered valid
 	Sender     sdk.AccAddress // address swapping coin
@@ -28,13 +28,13 @@ type MsgSwapOrder struct {
 
 // NewMsgSwapOrder is a constructor function for MsgSwapOrder
 func NewMsgSwapOrder(
-	swapDenom string, coin sdk.Coin, bound sdk.Int, deadline time.Time,
+	swapDenom string, amt sdk.Coins, bound sdk.Int, deadline time.Time,
 	sender, recipient sdk.AccAddress, isBuyOrder bool,
 ) MsgSwapOrder {
 
 	return MsgSwapOrder{
 		SwapDenom:  swapDenom,
-		Coin:       coin,
+		Amount:     amt,
 		Bound:      bound,
 		Deadline:   deadline,
 		Sender:     sender,
@@ -43,7 +43,7 @@ func NewMsgSwapOrder(
 	}
 }
 
-// Type Implements Msg
+// Route Implements Msg
 func (msg MsgSwapOrder) Route() string { return RouterKey }
 
 // Type Implements Msg
@@ -54,17 +54,21 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 	if msg.SwapDenom == "" {
 		return ErrNoDenom(DefaultCodespace)
 	}
-	if msg.Coin.IsZero() {
-		return sdk.ErrInsufficientCoins("coin has zero value")
+	// initially only support trading 1 coin only
+	if len(msg.Amount) != 1 {
+		return sdk.ErrInvalidCoins("must provide a single coin")
 	}
-	if msg.Coin.Denom == "" {
-		return sdk.ErrInvalidCoins("coin has no denomination")
+	if !msg.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("coin is invalid: " + msg.Amount.String())
 	}
-	if msg.Coin.Denom == msg.SwapDenom {
+	if msg.Amount[0].Denom == msg.SwapDenom {
 		return ErrEqualDenom(DefaultCodespace)
 	}
 	if !msg.Bound.IsPositive() {
-		return Err(DefaultCodespace)
+		return ErrInvalidBound(DefaultCodespace, "")
+	}
+	if msg.Deadline.IsZero() {
+		return ErrInvalidDeadline(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -72,11 +76,12 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 	if msg.Recipient.Empty() {
 		return sdk.ErrInvalidAddress("invalid recipient address")
 	}
+	return nil
 }
 
 // GetSignBytes Implements Msg.
 func (msg MsgSwapOrder) GetSignBytes() []byte {
-	return sdk.MustSortJSON(moduleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners Implements Msg.
@@ -90,8 +95,8 @@ func (msg MsgSwapOrder) GetSigners() []sdk.AccAddress {
 
 // MsgAddLiquidity - struct for adding liquidity to an exchange
 type MsgAddLiquidity struct {
-	DepositAmount sdk.Int // exact amount of native asset being add to the liquidity pool
 	ExchangeDenom string  // denomination of the exchange being added to
+	DepositAmount sdk.Int // exact amount of native asset being add to the liquidity pool
 	MinLiquidity  sdk.Int // lower bound UNI sender is willing to accept for deposited coins
 	MaxCoins      sdk.Int // maximum amount of the coin the sender is willing to deposit.
 	Deadline      time.Time
@@ -100,8 +105,8 @@ type MsgAddLiquidity struct {
 
 // NewMsgAddLiquidity is a constructor function for MsgAddLiquidity
 func NewMsgAddLiquidity(
-	depositAmount, minLiquidity, maxCoins sdk.Int,
-	exchangeDenom string, deadline time.Time, sender sdk.AccAddress,
+	exchangeDenom string, depositAmount, minLiquidity, maxCoins sdk.Int,
+	deadline time.Time, sender sdk.AccAddress,
 ) MsgAddLiquidity {
 
 	return MsgAddLiquidity{
@@ -123,29 +128,29 @@ func (msg MsgAddLiquidity) Type() string { return "add_liquidity" }
 // ValidateBasic Implements Msg.
 func (msg MsgAddLiquidity) ValidateBasic() sdk.Error {
 	if !msg.DepositAmount.IsPositive() {
-		return ErrInsufficientAmount("deposit amount provided is not positive")
+		return ErrInsufficientAmount(DefaultCodespace, "deposit amount provided is not positive")
 	}
 	if msg.ExchangeDenom == "" {
 		return ErrNoDenom(DefaultCodespace)
 	}
 	if !msg.MinLiquidity.IsPositive() {
-		return
+		return ErrInvalidBound(DefaultCodespace, "minimum liquidity is not positive")
 	}
 	if !msg.MaxCoins.IsPositive() {
-		return
+		return ErrInvalidBound(DefaultCodespace, "maxmimum coins is not positive")
 	}
-	if msg.Deadline {
-
+	if msg.Deadline.IsZero() {
+		return ErrInvalidDeadline(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
-		return sdk.InvalidAddress("invalid sender address")
+		return sdk.ErrInvalidAddress("invalid sender address")
 	}
-
+	return nil
 }
 
 // GetSignBytes Implements Msg.
 func (msg MsgAddLiquidity) GetSignBytes() []byte {
-	return sdk.MustSortJSON(moduleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners Implements Msg.
@@ -159,8 +164,8 @@ func (msg MsgAddLiquidity) GetSigners() []sdk.AccAddress {
 
 // MsgRemoveLiquidity - struct for removing liquidity from an exchange
 type MsgRemoveLiquidity struct {
-	WithdrawAmount sdk.Int // amount of UNI to be burned to withdraw liquidity from an exchange
 	ExchangeDenom  string  // denomination of the exchange being withdrawn from
+	WithdrawAmount sdk.Int // amount of UNI to be burned to withdraw liquidity from an exchange
 	MinNative      sdk.Int // minimum amount of the native asset the sender is willing to accept
 	MinCoins       sdk.Int // minimum amount of the exchange coin the sender is willing to accept
 	Deadline       time.Time
@@ -169,8 +174,8 @@ type MsgRemoveLiquidity struct {
 
 // NewMsgRemoveLiquidity is a contructor function for MsgRemoveLiquidity
 func NewMsgRemoveLiquidity(
-	withdrawAmount, minNative, minCoins sdk.Int,
-	exchangeDenom string, deadline time.Time, sender sdk.AccAddress,
+	exchangeDenom string, withdrawAmount, minNative, minCoins sdk.Int,
+	deadline time.Time, sender sdk.AccAddress,
 ) MsgRemoveLiquidity {
 
 	return MsgRemoveLiquidity{
@@ -192,25 +197,29 @@ func (msg MsgRemoveLiquidity) Type() string { return "remove_liquidity" }
 // ValidateBasic Implements Msg.
 func (msg MsgRemoveLiquidity) ValidateBasic() sdk.Error {
 	if !msg.WithdrawAmount.IsPositive() {
-		return ErrInsufficientAmount("withdraw amount is not positive")
+		return ErrInsufficientAmount(DefaultCodespace, "withdraw amount is not positive")
 	}
 	if msg.ExchangeDenom == "" {
 		return ErrNoDenom(DefaultCodespace)
 	}
 	if !msg.MinNative.IsPositive() {
-		return
+		return ErrInvalidBound(DefaultCodespace, "minimum native is not positive")
 	}
 	if !msg.MinCoins.IsPositive() {
-		return
+		return ErrInvalidBound(DefaultCodespace, "minimum coins is not positive")
+	}
+	if msg.Deadline.IsZero() {
+		return ErrInvalidDeadline(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
-		return sdk.InvalidAddress("invalid sender address")
+		return sdk.ErrInvalidAddress("invalid sender address")
 	}
+	return nil
 }
 
 // GetSignBytes Implements Msg.
 func (msg MsgRemoveLiquidity) GetSignBytes() []byte {
-	return sdk.MustSortJSON(moduleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners Implements Msg.

@@ -133,7 +133,7 @@ func (obj Object) remove(ctx sdk.Context) {
 }
 
 func (obj Object) assertSymmetric(ctx sdk.Context) error {
-	if !obj.Value(ctx).Symmetric(obj.id, obj.remote.Value(ctx)) {
+	if !obj.remote.connection.Is(ctx, obj.Value(ctx).Symmetry(obj.id)) {
 		return errors.New("unexpected counterparty connection value")
 	}
 

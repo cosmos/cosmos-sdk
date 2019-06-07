@@ -196,6 +196,11 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		vars := mux.Vars(r)
 		paramType := vars[RestParamsType]
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -218,6 +223,11 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		proposalID, ok := rest.ParseUint64OrReturnBadRequest(w, strProposalID)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
@@ -246,6 +256,11 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		strProposalID := vars[RestProposalID]
 
 		proposalID, ok := rest.ParseUint64OrReturnBadRequest(w, strProposalID)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
@@ -298,6 +313,11 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		res, err := gcutils.QueryProposerByTxQuery(cliCtx, proposalID)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -334,6 +354,11 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
 			return
 		}
 
@@ -414,6 +439,11 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params := types.NewQueryVoteParams(proposalID, voterAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
@@ -475,6 +505,11 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		proposalID, ok := rest.ParseUint64OrReturnBadRequest(w, strProposalID)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
@@ -561,6 +596,11 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			params.Limit = numLimit
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -590,6 +630,11 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		proposalID, ok := rest.ParseUint64OrReturnBadRequest(w, strProposalID)
+		if !ok {
+			return
+		}
+
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}

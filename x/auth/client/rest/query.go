@@ -40,6 +40,11 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		res, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -76,6 +81,11 @@ func QueryBalancesRequestHandlerFn(
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
 			return
 		}
 

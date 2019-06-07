@@ -208,6 +208,11 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 			return cliCtx, false
 		}
 
+		if height < 0 {
+			WriteErrorResponse(w, http.StatusBadRequest, "height must be equal or greater than zero")
+			return cliCtx, false
+		}
+
 		if height > 0 {
 			cliCtx = cliCtx.WithHeight(height)
 		}

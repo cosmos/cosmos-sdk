@@ -1,4 +1,4 @@
-package uniswap
+package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -7,8 +7,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// fee = 1 - p
+// p = feeN / feeD
 var (
-	fee sdk.Dec // TODO: replace with fee param
+	// TODO: replace with fee param
+	feeN sdk.Int // numerator for determining fee
+	feeD sdk.Int // denominator for determining fee
 )
 
 type Keeper struct {
@@ -28,11 +32,9 @@ type Keeper struct {
 // - users adding liquidity to exchanges
 // - users removing liquidity to exchanges
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck BankKeeper) Keeper {
-	fee, err := sdk.NewDecFromStr("0.003")
-	if err != nil {
-		panic("could not construct fee")
-	}
-
+	// TODO: replace with param
+	feeN = sdk.NewInt(997)
+	feeD = sdk.NewInt(100)
 	return Keeper{
 		storeKey: key,
 		ck:       ck,
@@ -48,91 +50,94 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 // CreateExchange initializes a new exchange pair between the new coin and the native asset
 func (keeper Keeper) CreateExchange(ctx sdk.Context, newCoinDenom string) {
 	store := ctx.KVStore(keeper.storeKey)
-	key := GetExchangeKey()
+	key := GetExchangeKey(newCoinDenom)
 	bz := store.Get(key)
 	if bz != nil {
 		panic("exchange already exists")
 	}
-	store.Set(key, sdk.NewDec(0))
+
+	store.Set(key, keeper.encode(sdk.NewInt(0)))
 }
 
 // Deposit adds the specified amount of UNI to the associated account
-func (keeper Keeper) Deposit(ctx sdk.Context, amt sdk.Dec, addr sdk.AccAddress) {
-	var balance sdk.Dec
+func (keeper Keeper) Deposit(ctx sdk.Context, amt sdk.Int, addr sdk.AccAddress) {
+	var balance sdk.Int
 
 	store := ctx.KVStore(keeper.storeKey)
 	key := GetUNIBalancesKey(addr)
 	bz := store.Get(key)
 	if bz != nil {
-		balance = keeper.decodeBalance(bz)
+		balance = keeper.decode(bz)
 	}
 
 	balance.Add(amt)
-	store.Set(key, keeper.encodeBalance(balance))
+	store.Set(key, keeper.encode(balance))
 
 	return
 }
 
 // Withdraw removes the specified amount of UNI from the associated account
-func (keeper Keeper) Withdraw(ctx sdk.Context, amt sdk.Dec, addr sdk.AccAddress) {
-	var balance sdk.Dec
+func (keeper Keeper) Withdraw(ctx sdk.Context, amt sdk.Int, addr sdk.AccAddress) {
+	var balance sdk.Int
 
 	store := ctx.KVStore(keeper.storeKey)
 	key := GetUNIBalancesKey(addr)
 	bz := store.Get(key)
 	if bz != nil {
-		balance = keeper.decodeBalance(bz)
+		balance = keeper.decode(bz)
 	}
 
 	balance.Sub(amt)
-	store.Set(key, keeper.encodeBalance(balance))
+	store.Set(key, keeper.encode(balance))
 }
 
 // GetInputAmount returns the amount of coins sold (calculated) given the output amount being bought (exact)
 // The fee is included in the output coins being bought
-func (keeper Keeper) GetInputAmount(ctx sdk.Context, outputAmt sdk.Dec, inputDenom, outputDenom string) sdk.Dec {
+// https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdfhttps://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+func (keeper Keeper) GetInputAmount(ctx sdk.Context, outputAmt sdk.Int, inputDenom, outputDenom string) sdk.Int {
 	store := ctx.KVStore(keeper.storeKey)
-	inputReserve := store.Get(GetExchangeKey(inputDenom))
-	if inputReserve == nil {
+	bz := store.Get(GetExchangeKey(inputDenom))
+	if bz == nil {
 		panic("exchange for input denomination does not exist")
 	}
-	outputReserve := store.Get(GetExchangeKey(outputDenom))
-	if outputReserve == nil {
+	inputReserve := keeper.decode(bz)
+	bz = store.Get(GetExchangeKey(outputDenom))
+	if bz == nil {
 		panic("exchange for output denomination does not exist")
 	}
+	outputReserve := keeper.decode(bz)
 
-	// TODO: verify
-	feeAmt := outputAmt.Mul(fee)
-	numerator := inputReserve.Mul(outputReserve)
-	denominator := outputReserve.Sub(outputAmt.Add(feeAmt))
-	return numerator/denominator + 1
+	numerator := inputReserve.Mul(outputReserve).Mul(feeD)
+	denominator := (outputReserve.Sub(outputAmt)).Mul(feeN)
+	return numerator.Quo(denominator).Add(sdk.NewInt(1))
 }
 
-// GetOutputAmount returns the amount of coins bought (calculated) given the output amount being sold (exact)
+// GetOutputAmount returns the amount of coins bought (calculated) given the input amount being sold (exact)
 // The fee is included in the input coins being bought
-func (keeper Keeper) GetOutputAmount(ctx sdk.Context, inputAmt sdk.Dec, inputDenom, outputDenom string) sdk.Dec {
+// https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+func (keeper Keeper) GetOutputAmount(ctx sdk.Context, inputAmt sdk.Int, inputDenom, outputDenom string) sdk.Int {
 	store := ctx.KVStore(keeper.storeKey)
-	inputReserve := store.Get(GetExchangeKey(inputDenom))
-	if inputReserve == nil {
+	bz := store.Get(GetExchangeKey(inputDenom))
+	if bz == nil {
 		panic("exchange for input denomination does not exist")
 	}
-	outputReserve := store.Get(GetExchangeKey(outputDenom))
-	if outputReserve == nil {
+	inputReserve := keeper.decode(bz)
+	bz = store.Get(GetExchangeKey(outputDenom))
+	if bz == nil {
 		panic("exchange for output denomination does not exist")
 	}
+	outputReserve := keeper.decode(bz)
 
-	// TODO: verify
-	feeAmt := inputAmt.Mul(fee)
-	inputAmtWithFee := inputReserve.Add(feeAmt)
-	numerator := inputAmtWithFee * outputReserve
-	denominator := inputReserve + inputAmt.Sub(feeAmt)
-	return numerator / denominator
+	inputAmtWithFee := inputAmt.Mul(feeN)
+	numerator := inputAmtWithFee.Mul(outputReserve)
+	denominator := inputReserve.Mul(feeD).Add(inputAmtWithFee)
+	return numerator.Quo(denominator)
 }
 
 // -----------------------------------------------------------------------------
 // Misc.
 
-func (keeper Keeper) decodeBalance(bz []byte) (balance sdk.Dec) {
+func (keeper Keeper) decode(bz []byte) (balance sdk.Int) {
 	err := keeper.cdc.UnmarshalBinaryBare(bz, &balance)
 	if err != nil {
 		panic(err)
@@ -140,7 +145,7 @@ func (keeper Keeper) decodeBalance(bz []byte) (balance sdk.Dec) {
 	return
 }
 
-func (keeper Keeper) encodeBalance(balance sdk.Dec) (bz []byte) {
+func (keeper Keeper) encode(balance sdk.Int) (bz []byte) {
 	bz, err := keeper.cdc.MarshalBinaryBare(balance)
 	if err != nil {
 		panic(err)

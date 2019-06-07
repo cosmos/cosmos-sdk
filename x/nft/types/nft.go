@@ -77,22 +77,6 @@ func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) NFT 
 	return NFT(NewBaseNFT(bnft.ID, bnft.Owner, tokenURI, description, image, name))
 }
 
-func (bnft BaseNFT) String() string {
-	return fmt.Sprintf(`ID:				%d
-Owner:			%s
-Name:			%s
-Description: 	%s
-Image:			%s
-TokenURI:		%s`,
-		bnft.ID,
-		bnft.Owner,
-		bnft.Name,
-		bnft.Description,
-		bnft.Image,
-		bnft.TokenURI,
-	)
-}
-
 // ----------------------------------------------------------------------------
 // NFT
 // TODO: create interface and types for mintable NFT
@@ -227,4 +211,20 @@ var _ sort.Interface = NFTs{}
 func (nfts NFTs) Sort() NFTs {
 	sort.Sort(nfts)
 	return nfts
+}
+
+func (bnft BaseNFT) String() string {
+	return fmt.Sprintf(`ID:				%d
+Owner:			%s
+Name:			%s
+Description: 	%s
+Image:			%s
+TokenURI:		%s`,
+		bnft.ID,
+		bnft.Owner,
+		bnft.Name,
+		bnft.Description,
+		bnft.Image,
+		bnft.TokenURI,
+	)
 }

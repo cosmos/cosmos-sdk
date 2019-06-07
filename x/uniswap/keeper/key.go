@@ -6,8 +6,9 @@ import (
 
 // keys
 var (
-	ExchangePrefix    = []byte{0x00} // key for exchange liquidity
-	UNIBalancesPrefix = []byte{0x01} // key for UNI balances
+	ExchangePrefix    = []byte{0x00} // prefix for exchange liquidity keys
+	UNIBalancesPrefix = []byte{0x01} // prefix for UNI balances keys
+	TotalLiquidityKey = []byte{0x02} // key for total UNI liquidity
 )
 
 const (

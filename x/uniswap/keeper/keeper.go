@@ -7,16 +7,16 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// TODO: replace with params
 // fee = 1 - p
 // p = feeN / feeD
 var (
-	// TODO: replace with fee param
 	feeN sdk.Int // numerator for determining fee
 	feeD sdk.Int // denominator for determining fee
 )
 
 type Keeper struct {
-	// The key used to access the store TODO update
+	// The key used to access the uniswap store
 	storeKey sdk.StoreKey
 
 	// The reference to the CoinKeeper to modify balances after swaps or liquidity is deposited/withdrawn
@@ -44,13 +44,13 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck BankKeeper) Keeper {
 
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/uniswap")
+	return ctx.Logger().With("module", ModuleName)
 }
 
 // CreateExchange initializes a new exchange pair between the new coin and the native asset
-func (keeper Keeper) CreateExchange(ctx sdk.Context, newCoinDenom string) {
+func (keeper Keeper) CreateExchange(ctx sdk.Context, exchangeDenom string) {
 	store := ctx.KVStore(keeper.storeKey)
-	key := GetExchangeKey(newCoinDenom)
+	key := GetExchangeKey(exchangeDenom)
 	bz := store.Get(key)
 	if bz != nil {
 		panic("exchange already exists")
@@ -89,6 +89,18 @@ func (keeper Keeper) Withdraw(ctx sdk.Context, amt sdk.Int, addr sdk.AccAddress)
 
 	balance.Sub(amt)
 	store.Set(key, keeper.encode(balance))
+}
+
+// GetTotalLiquidity returns the total UNI currently in existence
+func (keeper Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Int {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(TotalLiquidityKey)
+	if bz == nil {
+		panic("error retrieving total UNI liquidity")
+	}
+
+	totalLiquidity := keeper.decode(bz)
+	return totalLiquidity
 }
 
 // GetInputAmount returns the amount of coins sold (calculated) given the output amount being bought (exact)

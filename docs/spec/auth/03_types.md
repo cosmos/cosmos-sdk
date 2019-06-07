@@ -8,8 +8,9 @@ a struct which implements the `sdk.Tx` interface using `StdFee` and `StdSignatur
 
 ## StdFee
 
-A `StdFee` is simply the combination of a fee amount, in any number of denominations,
-and a gas limit (where dividing the amount by the gas limit gives a "gas price").
+`StdFee` implements the `sdk.Fee` interface and consists of a combination of a fee
+amount, in any number of denominations, and a gas limit (where dividing the amount
+by the gas limit gives a "gas price").
 
 ```golang
 type StdFee struct {

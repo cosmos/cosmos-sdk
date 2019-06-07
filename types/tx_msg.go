@@ -50,6 +50,16 @@ type Signature interface {
 	GetSignature() []byte
 }
 
+//__________________________________________________________
+
+// Fee defines the properties of a fee concrete type.
+type Fee interface {
+	GasLimit() uint64
+	Cost() Coins
+	Bytes() []byte
+	GasPrices() DecCoins
+}
+
 // TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
 

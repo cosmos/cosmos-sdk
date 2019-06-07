@@ -14,6 +14,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "auth/DelayedVestingAccount", nil)
 	cdc.RegisterConcrete(StdTx{}, "auth/StdTx", nil)
 	cdc.RegisterConcrete(StdSignature{}, "auth/StdSignature", nil)
+	cdc.RegisterConcrete(StdFee{}, "auth/StdFee", nil)
 }
 
 // RegisterBaseAccount most users shouldn't use this, but this comes in handy for tests.

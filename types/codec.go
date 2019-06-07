@@ -7,4 +7,5 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
 	cdc.RegisterInterface((*Signature)(nil), nil)
+	cdc.RegisterInterface((*Fee)(nil), nil)
 }

@@ -36,7 +36,7 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 		stdTx, ok := tx.(types.StdTx)
 		require.True(t, ok, "tx must be in form auth.types.StdTx")
 		// GasWanted set correctly
-		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
+		require.Equal(t, stdTx.Fee.GasLimit(), result.GasWanted, "Gas wanted not set correctly")
 		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
 		// Check that context is set correctly
 		require.Equal(t, result.GasUsed, newCtx.GasMeter().GasConsumed(), "Context not updated correctly")
@@ -87,7 +87,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// save the first account, but second is still unrecognized
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(fee.Amount)
+	acc1.SetCoins(fee.Cost())
 	input.ak.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnknownAddress)
 }

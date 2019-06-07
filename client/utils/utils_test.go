@@ -95,15 +95,15 @@ func TestConfiguredTxEncoder(t *testing.T) {
 }
 
 func TestReadStdTxFromFile(t *testing.T) {
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
+	cdc := makeCodec()
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, nil, "foomemo")
 
 	// Write it to the file
-	encodedTx, _ := cdc.MarshalJSON(stdTx)
+	encodedTx, err := cdc.MarshalJSON(stdTx)
+	require.NoError(t, err)
 	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
 	defer os.Remove(jsonTxFile.Name())
 
@@ -158,7 +158,7 @@ func TestValidateCmd(t *testing.T) {
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []sdk.Signature{}, "")
+	tx := authtypes.NewStdTx(msgs, sdk.Fee(nil), []sdk.Signature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

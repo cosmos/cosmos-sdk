@@ -14,6 +14,7 @@ import (
 var (
 	_ sdk.Tx        = (*StdTx)(nil)
 	_ sdk.Signature = (*StdSignature)(nil)
+	_ sdk.Fee       = (*StdFee)(nil)
 
 	maxGasWanted = uint64((1 << 63) - 1)
 )
@@ -22,12 +23,12 @@ var (
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg       `json:"msg"`
-	Fee        StdFee          `json:"fee"`
+	Fee        sdk.Fee         `json:"fee"`
 	Signatures []sdk.Signature `json:"signatures"`
 	Memo       string          `json:"memo"`
 }
 
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []sdk.Signature, memo string) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee sdk.Fee, sigs []sdk.Signature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
@@ -44,11 +45,11 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() sdk.Error {
 	stdSigs := tx.GetSignatures()
 
-	if tx.Fee.Gas > maxGasWanted {
-		return sdk.ErrGasOverflow(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted))
+	if tx.Fee.GasLimit() > maxGasWanted {
+		return sdk.ErrGasOverflow(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.GasLimit(), maxGasWanted))
 	}
-	if tx.Fee.Amount.IsAnyNegative() {
-		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
+	if tx.Fee.Cost().IsAnyNegative() {
+		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Cost()))
 	}
 	if len(stdSigs) == 0 {
 		return sdk.ErrNoSignatures("no signers")
@@ -117,13 +118,19 @@ type StdFee struct {
 	Gas    uint64    `json:"gas"`
 }
 
-// NewStdFee returns a new instance of StdFee
+// NewStdFee returns a new instance of StdFee.
 func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,
 	}
 }
+
+// GasLimit returns the maximum gas that can be used by a transaction.
+func (fee StdFee) GasLimit() uint64 { return fee.Gas }
+
+// Cost returns the amount of coins paid in fees.
+func (fee StdFee) Cost() sdk.Coins { return fee.Amount }
 
 // Bytes for signing later
 func (fee StdFee) Bytes() []byte {
@@ -167,7 +174,7 @@ type StdSignDoc struct {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee sdk.Fee, msgs []sdk.Msg, memo string) []byte {
 	var msgsBytes []json.RawMessage
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))

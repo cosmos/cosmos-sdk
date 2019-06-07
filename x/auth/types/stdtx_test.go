@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -39,7 +38,7 @@ func TestStdSignBytes(t *testing.T) {
 		chainID  string
 		accnum   uint64
 		sequence uint64
-		fee      StdFee
+		fee      sdk.Fee
 		msgs     []sdk.Msg
 		memo     string
 	}
@@ -50,7 +49,7 @@ func TestStdSignBytes(t *testing.T) {
 	}{
 		{
 			args{"1234", 3, 6, defaultFee, []sdk.Msg{sdk.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"50000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"type":"auth/StdFee","value":{"amount":[{"amount":"150","denom":"atom"}],"gas":"50000"}},"memo":"memo","msgs":[["%s"]],"sequence":"6"}`, addr),
 		},
 	}
 	for i, tc := range tests {
@@ -74,7 +73,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation upon invalid fee
 	badFee := NewTestStdFee()
-	badFee.Amount[0].Amount = sdk.NewInt(-5)
+	badFee.Cost()[0].Amount = sdk.NewInt(-5)
 	tx := NewTestTx(ctx, nil, nil, nil, nil, badFee)
 
 	err := tx.ValidateBasic()
@@ -142,4 +141,14 @@ func TestNewStdSignature(t *testing.T) {
 	got := NewStdSignature(pub, sigBytes)
 	require.True(t, bytes.Equal(got.GetSignature(), sigBytes))
 	require.True(t, got.GetPubKey().Equals(pub))
+}
+
+func TestNewStdFee(t *testing.T) {
+	amount := sdk.NewCoins(sdk.NewInt64Coin("test", 10))
+	fee := NewStdFee(100, amount)
+	require.True(t, fee.Cost().IsEqual(amount))
+	require.Equal(t, fee.GasLimit(), uint64(100))
+	gasPrices, err := sdk.ParseDecCoins("0.1test")
+	require.NoError(t, err)
+	require.True(t, gasPrices.IsEqual(fee.GasPrices()))
 }

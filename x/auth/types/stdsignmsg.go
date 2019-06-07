@@ -11,7 +11,7 @@ type StdSignMsg struct {
 	ChainID       string    `json:"chain_id"`
 	AccountNumber uint64    `json:"account_number"`
 	Sequence      uint64    `json:"sequence"`
-	Fee           StdFee    `json:"fee"`
+	Fee           sdk.Fee   `json:"fee"`
 	Msgs          []sdk.Msg `json:"msgs"`
 	Memo          string    `json:"memo"`
 }

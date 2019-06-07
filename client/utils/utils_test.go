@@ -100,7 +100,7 @@ func TestReadStdTxFromFile(t *testing.T) {
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, nil, "foomemo")
 
 	// Write it to the file
 	encodedTx, _ := cdc.MarshalJSON(stdTx)
@@ -143,8 +143,8 @@ func TestValidateCmd(t *testing.T) {
 	}{
 		{"misspelled command", []string{"comission"}, true},
 		{"no command provided", []string{}, false},
-		{"help flag", []string{"comission", "--help"}, false},
-		{"shorthand help flag", []string{"comission", "-h"}, false},
+		{"help flag", []string{"commission", "--help"}, false},
+		{"shorthand help flag", []string{"commission", "-h"}, false},
 	}
 
 	for _, tt := range tests {
@@ -158,7 +158,7 @@ func TestValidateCmd(t *testing.T) {
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
+	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []sdk.Signature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

@@ -169,7 +169,7 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
@@ -210,7 +210,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
@@ -269,7 +269,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 

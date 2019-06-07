@@ -54,7 +54,26 @@ func (client Client) GetRoot() commitment.Root {
 	return client.Root
 }
 
+func (client Client) Validate(header client.Header) (client.Client, error) {
+	return client, nil // XXX
+}
+
 var _ client.Header = Header{}
 
 type Header struct {
+	Base  ValidityPredicateBase
+	Root  commitment.Root
+	Votes []*types.CommitSig
+}
+
+func (header Header) Kind() client.Kind {
+	return client.Tendermint
+}
+
+func (header Header) GetBase() client.ValidityPredicateBase {
+	return header.Base
+}
+
+func (header Header) GetRoot() commitment.Root {
+	return header.Root
 }

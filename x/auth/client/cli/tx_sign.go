@@ -206,7 +206,7 @@ func printAndValidateSigs(
 	}
 
 	for i, sig := range sigs {
-		sigAddr := sdk.AccAddress(sig.Address())
+		sigAddr := sdk.AccAddress(sig.GetPubKey().Address())
 		sigSanity := "OK"
 
 		var (
@@ -233,16 +233,16 @@ func printAndValidateSigs(
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 
-			if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {
+			if ok := sig.GetPubKey().VerifyBytes(sigBytes, sig.GetSignature()); !ok {
 				sigSanity = "ERROR: signature invalid"
 				success = false
 			}
 		}
 
-		multiPK, ok := sig.PubKey.(multisig.PubKeyMultisigThreshold)
+		multiPK, ok := sig.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		if ok {
 			var multiSig multisig.Multisignature
-			cliCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
+			cliCtx.Codec.MustUnmarshalBinaryBare(sig.GetSignature(), &multiSig)
 
 			var b strings.Builder
 			b.WriteString("\n  MultiSig Signatures:\n")

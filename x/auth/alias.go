@@ -46,6 +46,7 @@ var (
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
+	NewStdSignature                = types.NewStdSignature
 	StdSignBytes                   = types.StdSignBytes
 	DefaultTxDecoder               = types.DefaultTxDecoder
 	DefaultTxEncoder               = types.DefaultTxEncoder

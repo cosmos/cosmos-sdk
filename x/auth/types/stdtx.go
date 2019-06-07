@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	_ sdk.Tx = (*StdTx)(nil)
+	_ sdk.Tx        = (*StdTx)(nil)
+	_ sdk.Signature = (*StdSignature)(nil)
 
 	maxGasWanted = uint64((1 << 63) - 1)
 )
@@ -20,13 +21,13 @@ var (
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
-	Msgs       []sdk.Msg      `json:"msg"`
-	Fee        StdFee         `json:"fee"`
-	Signatures []StdSignature `json:"signatures"`
-	Memo       string         `json:"memo"`
+	Msgs       []sdk.Msg       `json:"msg"`
+	Fee        StdFee          `json:"fee"`
+	Signatures []sdk.Signature `json:"signatures"`
+	Memo       string          `json:"memo"`
 }
 
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []sdk.Signature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
@@ -104,7 +105,7 @@ func (tx StdTx) GetMemo() string { return tx.Memo }
 // CONTRACT: If the signature is missing (ie the Msg is
 // invalid), then the corresponding signature is
 // .Empty().
-func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
+func (tx StdTx) GetSignatures() []sdk.Signature { return tx.Signatures }
 
 //__________________________________________________________
 
@@ -190,6 +191,17 @@ type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional
 	Signature     []byte           `json:"signature"`
 }
+
+// NewStdSignature constructs a new StdSignature instance.
+func NewStdSignature(pubKey crypto.PubKey, signature []byte) StdSignature {
+	return StdSignature{PubKey: pubKey, Signature: signature}
+}
+
+// GetPubKey returns the embedded crypto.PubKey type.
+func (sig StdSignature) GetPubKey() crypto.PubKey { return sig.PubKey }
+
+// GetSignature returns the embedded byte signature.
+func (sig StdSignature) GetSignature() []byte { return sig.Signature }
 
 // DefaultTxDecoder logic for standard transaction decoding
 func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {

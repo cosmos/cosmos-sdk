@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Transactions messages must fulfill the Msg
@@ -41,6 +43,12 @@ type Tx interface {
 }
 
 //__________________________________________________________
+
+// Signature defines the properties of the signature payload.
+type Signature interface {
+	GetPubKey() crypto.PubKey
+	GetSignature() []byte
+}
 
 // TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

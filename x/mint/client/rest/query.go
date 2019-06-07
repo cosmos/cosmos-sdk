@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
@@ -30,7 +30,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
+		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryParameters)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -49,7 +49,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
+		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryInflation)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -68,7 +68,7 @@ func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 func queryAnnualProvisionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
+		route := fmt.Sprintf("custom/%s/%s", mint.QuerierRoute, mint.QueryAnnualProvisions)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

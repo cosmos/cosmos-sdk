@@ -70,7 +70,7 @@ func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 }
 
 func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
-	sigs := make([]sdk.Signature, len(privs))
+	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
 
@@ -79,7 +79,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = NewStdSignature(priv.PubKey(), sig)
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -87,7 +87,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 }
 
 func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, memo string) sdk.Tx {
-	sigs := make([]sdk.Signature, len(privs))
+	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
 
@@ -96,7 +96,7 @@ func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 			panic(err)
 		}
 
-		sigs[i] = NewStdSignature(priv.PubKey(), sig)
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, memo)
@@ -104,14 +104,14 @@ func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 }
 
 func NewTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
-	sigs := make([]sdk.Signature, len(privs))
+	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
 
-		sigs[i] = NewStdSignature(priv.PubKey(), sig)
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, memo)

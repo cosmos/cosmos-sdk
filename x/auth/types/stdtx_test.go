@@ -1,12 +1,10 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -24,7 +22,7 @@ var (
 func TestStdTx(t *testing.T) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := NewTestStdFee()
-	sigs := []sdk.Signature{}
+	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 	require.Equal(t, msgs, tx.GetMsgs())
@@ -123,7 +121,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := NewTestStdFee()
-	sigs := []sdk.Signature{}
+	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 
@@ -134,12 +132,4 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, cdcBytes, encoderBytes)
-}
-
-func TestNewStdSignature(t *testing.T) {
-	pub := ed25519.GenPrivKey().PubKey()
-	sigBytes := []byte("data")
-	got := NewStdSignature(pub, sigBytes)
-	require.True(t, bytes.Equal(got.GetSignature(), sigBytes))
-	require.True(t, got.GetPubKey().Equals(pub))
 }

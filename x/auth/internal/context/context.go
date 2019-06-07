@@ -13,7 +13,18 @@ import (
 type AuthContext interface {
 	WithAccountDecoder(*codec.Codec) AuthContext
 	WithAccountStore(string) AuthContext
-	GetAccount([]byte) (types.Account, error)
+	QueryAccount(sdk.AccAddress) ([]byte, error)
+	CanDecodeAccount() bool
+	Codec() *codec.Codec
+}
+
+type AccountGetter interface {
+	GetAccount([]byte) (Accounter, error)
+}
+
+type Accounter interface {
+	GetSequence() uint64
+	GetAccountNumber() uint64
 }
 
 type CLIAuthContext struct {
@@ -23,6 +34,8 @@ type CLIAuthContext struct {
 }
 
 var _ AuthContext = CLIAuthContext{}
+var _ AccountGetter = CLIAuthContext{}
+var _ Accounter = types.Account(nil)
 
 func NewCLIAuthContextFromCLIContext(cliCtx context.CLIContext) CLIAuthContext {
 	return CLIAuthContext{CLIContext: cliCtx, AccountStore: types.StoreKey}
@@ -41,20 +54,24 @@ func (ctx CLIAuthContext) WithAccountStore(accountStore string) AuthContext {
 	return ctx
 }
 
+func (ctx CLIAuthContext) CanDecodeAccount() bool { return ctx.AccDecoder != nil }
+
+func (ctx CLIAuthContext) Codec() *codec.Codec { return ctx.Codec() }
+
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ctx CLIAuthContext) GetAccount(address []byte) (types.Account, error) {
-	if ctx.AccDecoder == nil {
+func (ctx CLIAuthContext) GetAccount(address []byte) (Accounter, error) {
+	if !ctx.CanDecodeAccount() {
 		return nil, errors.New("account decoder required but not provided")
 	}
 
-	res, err := ctx.queryAccount(address)
+	res, err := ctx.QueryAccount(address)
 	if err != nil {
 		return nil, err
 	}
 
 	var account types.Account
-	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
+	if err := ctx.Codec().UnmarshalJSON(res, &account); err != nil {
 		return nil, err
 	}
 
@@ -94,15 +111,15 @@ func (ctx CLIAuthContext) EnsureAccountExists() error {
 // address. Instead of using the context's from name, a direct address is
 // given. An error is returned if it does not.
 func (ctx CLIAuthContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
-	_, err := ctx.queryAccount(addr)
+	_, err := ctx.QueryAccount(addr)
 	return err
 }
 
 
 // queryAccount queries an account using custom query endpoint of auth module
 // returns an error if result is `null` otherwise account data
-func (ctx CLIAuthContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
-	bz, err := ctx.Codec.MarshalJSON(types.NewQueryAccountParams(addr))
+func (ctx CLIAuthContext) QueryAccount(addr sdk.AccAddress) ([]byte, error) {
+	bz, err := ctx.Codec().MarshalJSON(types.NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, err
 	}

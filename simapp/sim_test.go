@@ -113,24 +113,13 @@ func appStateFromGenesisFileFn(
 
 // TODO refactor out random initialization code to the modules
 func appStateRandomizedFn(
-	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
+	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
 ) (json.RawMessage, []simulation.Account, string) {
 
 	cdc := MakeCodec()
-	appParams := make(simulation.AppParams)
 	genesisState := NewDefaultGenesisState()
 
-	if paramsFile != "" {
-		bz, err := ioutil.ReadFile(paramsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		cdc.MustUnmarshalJSON(bz, &appParams)
-	}
-
 	var (
-		genesisAccounts    []genaccounts.GenesisAccount
 		amount             int64
 		numInitiallyBonded int64
 	)
@@ -152,7 +141,7 @@ func appStateRandomizedFn(
 `, amount, numInitiallyBonded,
 	)
 
-	genGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisAccounts, genesisState)
+	genGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
 	genAuthGenesisState(cdc, r, appParams, genesisState)
 	genBankGenesisState(cdc, r, appParams, genesisState)
 	genGovGenesisState(cdc, r, appParams, genesisState)
@@ -171,13 +160,33 @@ func appStateRandomizedFn(
 
 func appStateFn(
 	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
-) (json.RawMessage, []simulation.Account, string) {
+) (appState json.RawMessage, simAccs []simulation.Account, chainID string) {
 
-	if genesisFile != "" {
-		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	cdc := MakeCodec()
+
+	switch {
+	case paramsFile != "" && genesisFile != "":
+		panic("cannot provide both a genesis file and a params file")
+
+	case genesisFile != "":
+		appState, simAccs, chainID = appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+
+	case paramsFile != "":
+		appParams := make(simulation.AppParams)
+		bz, err := ioutil.ReadFile(paramsFile)
+		if err != nil {
+			panic(err)
+		}
+
+		cdc.MustUnmarshalJSON(bz, &appParams)
+		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
+
+	default:
+		appParams := make(simulation.AppParams)
+		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
 	}
 
-	return appStateRandomizedFn(r, accs, genesisTimestamp)
+	return appState, simAccs, chainID
 }
 
 func genAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
@@ -232,8 +241,11 @@ func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 func genGenesisAccounts(
 	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account,
 	genesisTimestamp time.Time, amount, numInitiallyBonded int64,
-	genesisAccounts []genaccounts.GenesisAccount, genesisState map[string]json.RawMessage,
+	genesisState map[string]json.RawMessage,
 ) {
+
+	var genesisAccounts []genaccounts.GenesisAccount
+
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))}

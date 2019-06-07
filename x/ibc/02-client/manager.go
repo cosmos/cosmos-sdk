@@ -19,8 +19,7 @@ type Manager struct {
 	protocol mapping.Mapping
 
 	idval mapping.Value
-	idgen IDGenerator // TODO: should be hard coded enum, defined in protocol
-	pred  map[Kind]ValidityPredicate
+	idgen IDGenerator
 }
 
 func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
@@ -28,10 +27,10 @@ func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
 		protocol: mapping.NewMapping(protocol, []byte("/")),
 		idval:    mapping.NewValue(free, []byte("/id")),
 		idgen:    idgen,
-		pred:     make(map[Kind]ValidityPredicate),
 	}
 }
 
+/*
 func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	if _, ok := man.pred[kind]; ok {
 		panic("Kind already registered")
@@ -39,13 +38,12 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	man.pred[kind] = pred
 	return man
 }
-
+*/
 func (man Manager) object(id string) Object {
 	return Object{
 		id:     id,
 		client: man.protocol.Value([]byte(id)),
 		freeze: mapping.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
-		pred:   man.pred,
 	}
 }
 
@@ -70,7 +68,6 @@ type Object struct {
 	id     string
 	client mapping.Value
 	freeze mapping.Boolean
-	pred   map[Kind]ValidityPredicate
 }
 
 func (obj Object) create(ctx sdk.Context, st Client) error {
@@ -105,9 +102,7 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 
 	var stored Client
 	obj.client.GetIfExists(ctx, &stored)
-	pred := obj.pred[stored.Kind()]
-
-	updated, err := pred(stored, header)
+	updated, err := stored.Validate(header)
 	if err != nil {
 		return err
 	}

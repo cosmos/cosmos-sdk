@@ -45,6 +45,13 @@ func NewBase(cdc *codec.Codec, key sdk.StoreKey) Base {
 	}
 }
 
+func NewBaseWithGetter(cdc *codec.Codec, storefn func(Context) KVStore) Base {
+	return Base{
+		cdc:     cdc,
+		storefn: storefn,
+	}
+}
+
 func (base Base) store(ctx Context) KVStore {
 	return prefix.NewStore(base.storefn(ctx), base.prefix)
 }

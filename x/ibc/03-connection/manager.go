@@ -114,6 +114,14 @@ type Object struct {
 	self   mapping.Indexer
 }
 
+func (obj Object) ID() string {
+	return obj.id
+}
+
+func (obj Object) ClientID() string {
+	return obj.client.ID()
+}
+
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.connection.Exists(ctx)
 }

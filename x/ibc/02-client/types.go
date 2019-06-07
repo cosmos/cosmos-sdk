@@ -15,6 +15,7 @@ type Client interface {
 	Kind() Kind
 	GetBase() ValidityPredicateBase
 	GetRoot() commitment.Root
+	Validate(Header) (Client, error) // ValidityPredicate
 }
 
 func Equal(client1, client2 Client) bool {
@@ -26,10 +27,8 @@ type Header interface {
 	Kind() Kind
 	//	Proof() HeaderProof
 	Base() ValidityPredicateBase // can be nil
-	// Root() CommitmentRoot
+	GetRoot() commitment.Root
 }
-
-type ValidityPredicate func(Client, Header) (Client, error)
 
 // XXX: Kind should be enum?
 

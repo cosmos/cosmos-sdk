@@ -3,13 +3,13 @@
 
 ## Prerequisite Reading
 * [High-level overview of the architecture of an SDK application](https://github.com/cosmos/cosmos-sdk/docs/intro/sdk-app-architecture.md)
-* Baseapp concept doc (not written yet)
+* Baseapp concept doc (link in future)
 
 ## Synopsis
-1. **Definition and Creation:** Transactions are comprised of `Msg`s specified by the developer.
-2. **Addition to Mempool:** Nodes that receive transactions validate them first by running stateless and stateful checks on a copy of the internal state. Approved transactions are kept in the node's Mempool pending inclusion in the next block.
-3. **Consensus:** The proposer creates a block, finalizing the transactions and their order for this round. Validators run Tendermint BFT Consensus to come to agreement on a block.
-4. **State Changes:** Transactions are delivered, creating state changes and expending gas. To commit, internal state is updated and all copies are reset; the new state root is returned as proof. 
+1. **Definition and Creation:** Transactions are comprised of metadata and `Msg`s specified by the developer. An application user creates a transaction when he performs an action that causes state change.
+2. **Addition to Mempool:** All full nodes that receive transactions validate them first by running stateless and stateful checks on a copy of the internal state. Approved transactions are kept in the node's Mempool pending inclusion in the next block.
+3. **Consensus:** The proposer creates a block, determining the transactions and their order for this round. Validators run Tendermint BFT Consensus and (if successful) commit to one block.
+4. **State Changes:** Transactions are delivered, creating state changes and expending gas. To commit state changes, internal state is updated and all copies are reset; the new state root is returned as proof. 
 
 
 ```
@@ -59,21 +59,21 @@ Commit()		  |				   |
 ```
 
 ## Definition and Creation
-Transactions are comprised of one or multiple **Messages** (link concept doc) and trigger state changes. The developer defines the specific messages to describe possible actions for the application by implementing the [`Msg`]() interface. 
+**[Transactions](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f7186a80bf7cb140e2/types/tx_msg.go#L36-L43)** are comprised of one or multiple **Messages** (link concept doc) and trigger state changes. The developer defines the specific messages to describe possible actions for the application by implementing the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f7186a80bf7cb140e2/types/tx_msg.go#L10-L31) interface. 
 
 The user performs an action to change the state, thereby creating a transaction, and provides a value `GasWanted` indicating the maximum amount of gas he is willing to spend to make this action go through. The node from which this transaction originates broadcasts it to its peers. 
 
 ## Addition to Mempool
-Each full node that receives a transaction performs local sanity checks to filter out and discard invalid transactions before they get included in a block. The first check is to unwrap the transaction into its message(s) and run each `validateBasic` function, which is simply a stateless sanity check (e.g. nonnegative numbers, nil strings, empty addresses). A stateful ABCI validation function, `CheckTx`, is also run: the handler `AnteHandler` does the work specified by each message using a deep copy of the internal state, `checkTxState`, to validate the transaction without modifying the last committed state. The stateful check is able to detect errors such as insufficient funds held by an address or attempted double-spends. Also, `CheckTx` returns `GasUsed` which may or may not be less than the user's provided `GasWanted`.
+Each full node that receives a transaction performs local sanity checks to filter out invalid transactions before they get included in a block. The first check is to unwrap the transaction into its message(s) and run each `validateBasic` function, which is simply a stateless sanity check (e.g. nonnegative numbers, nil strings, empty addresses). A stateful ABCI validation function, `CheckTx`, is also run: the handler `AnteHandler` does the work specified by each message using a deep copy of the internal state, `checkTxState`, to validate the transaction without modifying the last committed state. The stateful check is able to detect errors such as insufficient funds held by an address or attempted double-spends. Also, `CheckTx` returns `GasUsed` which may or may not be less than the user's provided `GasWanted`.
 
-The transactions approved by a node are held in its [**Mempool**](https://github.com/tendermint/tendermint/blob/75ffa2bf1c7d5805460d941a75112e6a0a38c039/mempool/mempool.go) (memory pool unique to each node) pending approval from the rest of the network.
+The transactions approved by a node are held in its [**Mempool**](https://github.com/tendermint/tendermint/blob/75ffa2bf1c7d5805460d941a75112e6a0a38c039/mempool/mempool.go) (memory pool unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid.
 
 ## Consensus
-At each round, a proposer is chosen amongst the validators to create and propose the next block. This validator (presumably honest) has generated a Mempool of validated transactions and now includes them in a block. The validators execute [Tendermint BFT Consensus](https://tendermint.com/docs/spec/consensus/consensus.html#terms); with 2/3 approval from the validators, the block is committed.
+At each round, a proposer is chosen amongst the validators to create and propose the next block. This validator (presumably honest) has generated a Mempool of validated transactions and now includes them in a block. The validators execute [Tendermint BFT Consensus](https://tendermint.com/docs/spec/consensus/consensus.html#terms); with 2/3 approval from the validators, the block is committed. Note that not all blocks have the same number of transactions and it is possible for consensus to result in a nil block or one with no transactions - here, it is assumed that the transaction has made it this far. 
 
 ## State Changes
-During consensus, the validators came to agreement on not only which transactions but also the precise order of the transactions. However, apart from committing to this block in consensus, the ultimate goal is actually for nodes to commit to a new state generated by the transaction state changes. Note that it is also possible for consensus to result in a nil block with no transactions - here, it is assumed that the transaction has made it this far. 
-The following ABCI function calls are made in order. While nodes each run everything individually, since the messages' state transitions are deterministic and the order was finalized during consensus, this process yields a single, unambiguous result.
+During consensus, the validators came to agreement on not only which transactions but also the precise order of the transactions. However, apart from committing to this block in consensus, the ultimate goal is actually for nodes to commit to a new state generated by the transaction state changes. 
+In order to execute the transaction, the following ABCI function calls are made in order. While nodes each run everything individually, since the messages' state transitions are deterministic and the order was finalized during consensus, this process yields a single, unambiguous result.
 ```
 		-----------------------		
 		| BeginBlock	      |        
@@ -112,4 +112,4 @@ The `DeliverTx` function does the bulk of the state change work: it is run for e
 #### Commit
 The application's `Commit` method is run in order to finalize the state changes made by executing this block's transactions. A new state root should be sent back to serve as a merkle proof for the state change. Any application can inherit Baseapp's [`Commit`](https://github.com/cosmos/cosmos-sdk/blob/cec3065a365f03b86bc629ccb6b275ff5846fdeb/baseapp/baseapp.go#L888-L912) method; it synchronizes all the states by writing the `deliverTxState` into the application's internal state, updating both `checkTxState` and `deliverTxState` afterward.
 
-The transaction data itself is still stored in the blockchain, and now its corresponding state changes have been executed and committed. 
+

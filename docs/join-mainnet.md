@@ -2,14 +2,7 @@
 
 ### Install Go
 
-Install `go` by following the [official docs](https://golang.org/doc/install). Remember to set your `$GOPATH` and `$PATH` environment variables, for example:
-
-```bash
-mkdir -p $HOME/go/bin
-echo "export GOPATH=$HOME/go" >> ~/.bash_profile
-echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.bash_profile
-source ~/.bash_profile
-```
+Install `go` by following the [official docs](https://golang.org/doc/install). Remember to set your `$GOPATH` and `$PATH` environment variables.
 
 ::: tip
 **Go 1.12+** is required for the Cosmos SDK.

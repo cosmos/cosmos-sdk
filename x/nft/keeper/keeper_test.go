@@ -64,7 +64,7 @@ func initialize() (ctx sdk.Context, keeperInstance Keeper) {
 	codec.RegisterCrypto(cdc)
 
 	keyNFT := sdk.NewKVStoreKey(types.StoreKey)
-	keeperInstance = NewKeeper(keyNFT, cdc)
+	keeperInstance = NewKeeper(cdc, keyNFT)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -84,26 +84,126 @@ func initialize() (ctx sdk.Context, keeperInstance Keeper) {
 	return
 }
 
-func TestSetAndGetAndIsNFT(t *testing.T) {
-	addresses := createTestAddrs(5)
+func TestSetNFT(t *testing.T) {
+	addresses := createTestAddrs(1)
 	ctx, keeper := initialize()
 
 	denom := sdk.DefaultBondDenom
-	id1 := uint64(1)
+	id1 := string(1)
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
 	description1 := "test_description"
 	image1 := "test_image"
 	name1 := "test_name"
 
-	// collection shouldn't exist
-	collection, exists := keeper.GetCollection(ctx, denom)
-	require.Empty(t, collection)
-	require.False(t, exists)
+	// SetNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err := keeper.SetNFT(ctx, denom, nft)
+	require.Nil(t, err)
 
-	// collections should be empty
-	collections := keeper.GetCollections(ctx)
-	require.Empty(t, collections)
+	id2 := string(2)
+
+	// SetNFT shouldn't fail when collection exists
+	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
+	err = keeper.SetNFT(ctx, denom, nft2)
+	require.Nil(t, err)
+}
+
+func TestGetNFT(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
+
+	// SetNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err := keeper.SetNFT(ctx, denom, nft)
+	require.Nil(t, err)
+
+	// GetNFT should get the NFT
+	var receivedNFT types.NFT
+	receivedNFT, err = keeper.GetNFT(ctx, denom, id1)
+	require.Nil(t, err)
+	require.Equal(t, receivedNFT.GetID(), id1)
+	require.True(t, receivedNFT.GetOwner().Equals(address1))
+	require.Equal(t, receivedNFT.GetTokenURI(), tokenURI1)
+	require.Equal(t, receivedNFT.GetDescription(), description1)
+	require.Equal(t, receivedNFT.GetImage(), image1)
+	require.Equal(t, receivedNFT.GetName(), name1)
+
+	id2 := string(2)
+
+	// SetNFT shouldn't fail when collection exists
+	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
+	err = keeper.SetNFT(ctx, denom, nft2)
+	require.Nil(t, err)
+
+	// GetNFT should get the NFT when collection exists
+	var receivedNFT2 types.NFT
+	receivedNFT2, err = keeper.GetNFT(ctx, denom, id2)
+	require.Nil(t, err)
+	require.Equal(t, receivedNFT2.GetID(), id2)
+	require.True(t, receivedNFT2.GetOwner().Equals(address1))
+	require.Equal(t, receivedNFT2.GetTokenURI(), tokenURI1)
+	require.Equal(t, receivedNFT2.GetDescription(), description1)
+	require.Equal(t, receivedNFT2.GetImage(), image1)
+	require.Equal(t, receivedNFT2.GetName(), name1)
+
+}
+
+func TestDeleteNFT(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
+
+	// DeleteNFT should fail when NFT doesn't exist and collection doesn't exist
+	err := keeper.DeleteNFT(ctx, denom, id1)
+	require.NotNil(t, err)
+
+	// SetNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err = keeper.SetNFT(ctx, denom, nft)
+	require.Nil(t, err)
+
+	id2 := string(2)
+
+	// DeleteNFT should fail when NFT doesn't exist but collection does exist
+	err = keeper.DeleteNFT(ctx, denom, id2)
+	require.NotNil(t, err)
+
+	// DeleteNFT should not fail when NFT and collection exist
+	err = keeper.DeleteNFT(ctx, denom, id1)
+	require.Nil(t, err)
+
+	// NFT should no longer exist
+	isNFT := keeper.IsNFT(ctx, denom, id1)
+	require.False(t, isNFT)
+}
+
+func TestIsNFT(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
 
 	// IsNFT should return false
 	isNFT := keeper.IsNFT(ctx, denom, id1)
@@ -117,42 +217,58 @@ func TestSetAndGetAndIsNFT(t *testing.T) {
 	// IsNFT should return true
 	isNFT = keeper.IsNFT(ctx, denom, id1)
 	require.True(t, isNFT)
+}
 
-	// GetNFT should get the NFT
-	var receivedNFT types.NFT
-	receivedNFT, err = keeper.GetNFT(ctx, denom, id1)
+func TestGetCollection(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
+
+	// collection shouldn't exist
+	collection, exists := keeper.GetCollection(ctx, denom)
+	require.Empty(t, collection)
+	require.False(t, exists)
+
+	// SetNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err := keeper.SetNFT(ctx, denom, nft)
 	require.Nil(t, err)
-	require.Equal(t, receivedNFT.GetID(), id1)
-	require.True(t, receivedNFT.GetOwner().Equals(address1))
-	require.Equal(t, receivedNFT.GetTokenURI(), tokenURI1)
-	require.Equal(t, receivedNFT.GetDescription(), description1)
-	require.Equal(t, receivedNFT.GetImage(), image1)
-	require.Equal(t, receivedNFT.GetName(), name1)
 
 	// collection should exist
 	collection, exists = keeper.GetCollection(ctx, denom)
 	require.True(t, exists)
 
+}
+func TestGetCollections(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
+
+	// collections should be empty
+	collections := keeper.GetCollections(ctx)
+	require.Empty(t, collections)
+
+	// SetNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err := keeper.SetNFT(ctx, denom, nft)
+	require.Nil(t, err)
+
 	// collections should equal 1
 	collections = keeper.GetCollections(ctx)
 	require.NotEmpty(t, collections)
 	require.Equal(t, len(collections), 1)
-
-	id2 := uint64(2)
-
-	// SetNFT shouldn't fail when collection exists
-	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
-	err = keeper.SetNFT(ctx, denom, nft2)
-	require.Nil(t, err)
-
-	// GetNFT should get the NFT
-	var receivedNFT2 types.NFT
-	receivedNFT2, err = keeper.GetNFT(ctx, denom, id2)
-	require.Nil(t, err)
-	require.Equal(t, receivedNFT2.GetID(), id2)
-	require.True(t, receivedNFT2.GetOwner().Equals(address1))
-	require.Equal(t, receivedNFT2.GetTokenURI(), tokenURI1)
-	require.Equal(t, receivedNFT2.GetDescription(), description1)
-	require.Equal(t, receivedNFT2.GetImage(), image1)
-	require.Equal(t, receivedNFT2.GetName(), name1)
 }

@@ -5,14 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/cosmos/cosmos-sdk/tests"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
@@ -31,7 +29,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	err := runUpdateCmd(cmd, []string{fakeKeyName1})
 	assert.EqualError(t, err, "EOF")
 
-	cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))
+	cleanUp := input.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))
 	defer cleanUp()
 
 	// try again
@@ -42,7 +40,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome, cleanUp1 := tests.NewTestCaseDir(t)
 	defer cleanUp1()
-	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(flags.FlagHome, kbHome)
 
 	kb, err := NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
@@ -52,7 +50,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try again now that we have keys
-	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\nNew1234\nNew1234")))
+	cleanUp2 := input.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\nNew1234\nNew1234")))
 	defer cleanUp2()
 
 	// Incorrect key type

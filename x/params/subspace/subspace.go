@@ -177,10 +177,10 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
-// SetRaw stores raw parameter bytes. It returns error if the stored parameter
+// Update stores raw parameter bytes. It returns error if the stored parameter
 // has a different type from the input. It also sets to the transient store to
 // record change.
-func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
+func (s Subspace) Update(ctx sdk.Context, key []byte, param []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
@@ -188,13 +188,13 @@ func (s Subspace) SetRaw(ctx sdk.Context, key []byte, param []byte) error {
 
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
+	s.GetIfExists(ctx, key, dest)
 	err := s.cdc.UnmarshalJSON(param, dest)
 	if err != nil {
 		return err
 	}
 
-	store := s.kvStore(ctx)
-	store.Set(key, param)
+	s.Set(ctx, key, dest)
 	tStore := s.transientStore(ctx)
 	tStore.Set(key, []byte{})
 
@@ -220,9 +220,9 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	tstore.Set(newkey, []byte{})
 }
 
-// SetRawWithSubkey stores raw parameter bytes  with a key and subkey. It checks
+// UpdateWithSubkey stores raw parameter bytes  with a key and subkey. It checks
 // the parameter type only over the key.
-func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
+func (s Subspace) UpdateWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
 	concatkey := concatKeys(key, subkey)
 
 	attr, ok := s.table.m[string(concatkey)]
@@ -232,13 +232,13 @@ func (s Subspace) SetRawWithSubkey(ctx sdk.Context, key []byte, subkey []byte, p
 
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
-	err := s.cdc.UnmarshalJSON(param, &dest)
+	s.GetWithSubkeyIfExists(ctx, key, subkey, dest)
+	err := s.cdc.UnmarshalJSON(param, dest)
 	if err != nil {
 		return err
 	}
 
-	store := s.kvStore(ctx)
-	store.Set(concatkey, param)
+	s.SetWithSubkey(ctx, key, subkey, dest)
 	tStore := s.transientStore(ctx)
 	tStore.Set(concatkey, []byte{})
 

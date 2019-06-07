@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -12,7 +11,7 @@ import (
 
 // NFT non fungible token interface
 type NFT interface {
-	GetID() uint64
+	GetID() string
 	GetOwner() sdk.AccAddress
 	SetOwner(address sdk.AccAddress) NFT
 	GetName() string
@@ -28,7 +27,7 @@ var _ NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
-	ID          uint64         `json:"id,omitempty"`       // id of the token; not exported to clients
+	ID          string         `json:"id,omitempty"`       // id of the token; not exported to clients
 	Owner       sdk.AccAddress `json:"owner,string"`       // account address that owns the NFT
 	Name        string         `json:"name,string"`        // name of the token
 	Description string         `json:"description,string"` // unique description of the NFT
@@ -37,7 +36,7 @@ type BaseNFT struct {
 }
 
 // NewBaseNFT creates a new NFT instance
-func NewBaseNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, name string,
+func NewBaseNFT(ID string, owner sdk.AccAddress, tokenURI, description, image, name string,
 ) BaseNFT {
 	return BaseNFT{
 		ID:          ID,
@@ -50,7 +49,7 @@ func NewBaseNFT(ID uint64, owner sdk.AccAddress, tokenURI, description, image, n
 }
 
 // GetID returns the ID of the token
-func (bnft BaseNFT) GetID() uint64 { return bnft.ID }
+func (bnft BaseNFT) GetID() string { return bnft.ID }
 
 // GetOwner returns the account address that owns the NFT
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
@@ -77,6 +76,22 @@ func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) NFT 
 	return NFT(NewBaseNFT(bnft.ID, bnft.Owner, tokenURI, description, image, name))
 }
 
+func (bnft BaseNFT) String() string {
+	return fmt.Sprintf(`ID:				%s
+Owner:			%s
+Name:			%s
+Description: 	%s
+Image:			%s
+TokenURI:		%s`,
+		bnft.ID,
+		bnft.Owner,
+		bnft.Name,
+		bnft.Description,
+		bnft.Image,
+		bnft.TokenURI,
+	)
+}
+
 // ----------------------------------------------------------------------------
 // NFT
 // TODO: create interface and types for mintable NFT
@@ -98,7 +113,7 @@ func (nfts *NFTs) Add(nftsB NFTs) {
 }
 
 // Find returns the searched collection from the set
-func (nfts NFTs) Find(id uint64) (nft NFT, found bool) {
+func (nfts NFTs) Find(id string) (nft NFT, found bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nft, false
@@ -107,7 +122,7 @@ func (nfts NFTs) Find(id uint64) (nft NFT, found bool) {
 }
 
 // Update removes and replaces an NFT from the set
-func (nfts NFTs) Update(id uint64, nft NFT) (NFTs, bool) {
+func (nfts NFTs) Update(id string, nft NFT) (NFTs, bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nfts, false
@@ -117,13 +132,18 @@ func (nfts NFTs) Update(id uint64, nft NFT) (NFTs, bool) {
 }
 
 // Remove removes a collection from the set of collections
-func (nfts NFTs) Remove(id uint64) (NFTs, bool) {
+func (nfts NFTs) Remove(id string) (NFTs, bool) {
 	index := nfts.find(id)
+	fmt.Println("index is", index)
 	if index == -1 {
 		return nfts, false
 	}
+	// mft.Println(nfts[:index],)
 
-	return append(nfts[:index], nfts[:index+1]...), true
+	// return append(nfts[:index], nfts[:index+1]...), true
+
+	nfts[len(nfts)-1], nfts[index] = nfts[index], nfts[len(nfts)-1]
+	return nfts[:len(nfts)-1], true
 }
 
 // String follows stringer interface
@@ -144,7 +164,7 @@ func (nfts NFTs) Empty() bool {
 	return len(nfts) == 0
 }
 
-func (nfts NFTs) find(id uint64) int {
+func (nfts NFTs) find(id string) int {
 	if len(nfts) == 0 {
 		return -1
 	}
@@ -165,18 +185,14 @@ func (nfts NFTs) find(id uint64) int {
 // Encoding
 
 // NFTJSON is the exported NFT format for clients
-type NFTJSON map[uint64]NFT
+type NFTJSON map[string]NFT
 
 // MarshalJSON for NFTs
 func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	nftJSON := make(NFTJSON)
 
 	for _, nft := range nfts {
-		id := nft.GetID()
-		// set the pointer of the ID to nil
-		ptr := reflect.ValueOf(id).Elem()
-		ptr.Set(reflect.Zero(ptr.Type()))
-		nftJSON[id] = nft
+		nftJSON[nft.GetID()] = nft
 	}
 
 	return json.Marshal(nftJSON)
@@ -202,7 +218,7 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 
 //nolint
 func (nfts NFTs) Len() int           { return len(nfts) }
-func (nfts NFTs) Less(i, j int) bool { return nfts[i].GetID() < nfts[j].GetID() }
+func (nfts NFTs) Less(i, j int) bool { return strings.Compare(nfts[i].GetID(), nfts[j].GetID()) == -1 }
 func (nfts NFTs) Swap(i, j int)      { nfts[i], nfts[j] = nfts[j], nfts[i] }
 
 var _ sort.Interface = NFTs{}
@@ -211,20 +227,4 @@ var _ sort.Interface = NFTs{}
 func (nfts NFTs) Sort() NFTs {
 	sort.Sort(nfts)
 	return nfts
-}
-
-func (bnft BaseNFT) String() string {
-	return fmt.Sprintf(`ID:				%d
-Owner:			%s
-Name:			%s
-Description: 	%s
-Image:			%s
-TokenURI:		%s`,
-		bnft.ID,
-		bnft.Owner,
-		bnft.Name,
-		bnft.Description,
-		bnft.Image,
-		bnft.TokenURI,
-	)
 }

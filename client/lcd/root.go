@@ -14,13 +14,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	// Import statik for light client stuff
+	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
@@ -69,15 +69,15 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	}
 	rs.log.Info(
 		fmt.Sprintf(
-			"Starting Gaia Lite REST service (chain-id: %q)...",
-			viper.GetString(client.FlagChainID),
+			"Starting application REST service (chain-id: %q)...",
+			viper.GetString(flags.FlagChainID),
 		),
 	)
 
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
-// ServeCommand will start a Gaia Lite REST service as a blocking process. It
+// ServeCommand will start the application REST service as a blocking process. It
 // takes a codec to create a RestServer object and a function to register all
 // necessary routes.
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
@@ -88,20 +88,21 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
+			rs.registerSwaggerUI()
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(
-				viper.GetString(client.FlagListenAddr),
-				viper.GetInt(client.FlagMaxOpenConnections),
-				uint(viper.GetInt(client.FlagRPCReadTimeout)),
-				uint(viper.GetInt(client.FlagRPCWriteTimeout)),
+				viper.GetString(flags.FlagListenAddr),
+				viper.GetInt(flags.FlagMaxOpenConnections),
+				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
+				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
 			)
 
 			return err
 		},
 	}
 
-	return client.RegisterRestServerFlags(cmd)
+	return flags.RegisterRestServerFlags(cmd)
 }
 
 func (rs *RestServer) registerSwaggerUI() {

@@ -3,17 +3,17 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/tests"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
@@ -47,7 +47,7 @@ func Test_runShowCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
-	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(flags.FlagHome, kbHome)
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"

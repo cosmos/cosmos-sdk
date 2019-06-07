@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -23,12 +23,12 @@ func Test_runAddCmdBasic(t *testing.T) {
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
-	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(flags.FlagHome, kbHome)
 
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	cleanUp1 := input.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
 	err := runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
@@ -36,7 +36,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	/// Test Text - Replace? >> FAIL
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	cleanUp2 := input.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp2()
 	err = runAddCmd(cmd, []string{"keyname1"})
 	assert.Error(t, err)
@@ -44,7 +44,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	/// Test Text - Replace? Answer >> PASS
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
+	cleanUp3 := input.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
 	defer cleanUp3()
 	err = runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
@@ -52,7 +52,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	// Check JSON
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 	// Now enter password
-	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	cleanUp4 := input.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp4()
 	err = runAddCmd(cmd, []string{"keyname2"})
 	assert.NoError(t, err)

@@ -2,17 +2,18 @@ package types
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
-	id          uint64 = 1
-	owner              = userAddr1
-	name               = "cool token"
-	description        = "a very cool token"
-	image              = "https://google.com/token-1.png"
-	tokenURI           = "https://google.com/token-1.json"
+	id          = "1"
+	owner       = userAddr1
+	name        = "cool token"
+	description = "a very cool token"
+	image       = "https://google.com/token-1.png"
+	tokenURI    = "https://google.com/token-1.json"
 )
 
 func TestBaseNFTGetMethods(t *testing.T) {
@@ -53,7 +54,7 @@ func TestBaseNFTSetMethods(t *testing.T) {
 
 func TestBaseNFTStringFormat(t *testing.T) {
 	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
-	expected := fmt.Sprintf(`ID:				%d
+	expected := fmt.Sprintf(`ID:				%s
 Owner:			%s
 Name:			%s
 Description: 	%s

@@ -17,7 +17,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates new instances of the nft Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -25,14 +25,13 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 }
 
 // IsNFT returns whether an NFT exists
-func (k Keeper) IsNFT(ctx sdk.Context, denom string, id uint64) (exists bool) {
+func (k Keeper) IsNFT(ctx sdk.Context, denom, id string) (exists bool) {
 	_, err := k.GetNFT(ctx, denom, id)
 	return err == nil
 }
 
 // GetNFT gets the entire NFT metadata struct for a uint64
-func (k Keeper) GetNFT(ctx sdk.Context, denom string, id uint64,
-) (nft types.NFT, err sdk.Error) {
+func (k Keeper) GetNFT(ctx sdk.Context, denom, id string) (nft types.NFT, err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
@@ -84,7 +83,7 @@ func (k Keeper) Mint(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Erro
 }
 
 // DeleteNFT deletes an existing NFT from store
-func (k Keeper) DeleteNFT(ctx sdk.Context, denom string, id uint64) (err sdk.Error) {
+func (k Keeper) DeleteNFT(ctx sdk.Context, denom, id string) (err sdk.Error) {
 	collection, found := k.GetCollection(ctx, denom)
 	if !found {
 		return types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
@@ -142,38 +141,39 @@ func (k Keeper) GetCollection(ctx sdk.Context, denom string) (collection types.C
 
 // SetCollection sets the entire collection of a single denom
 func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Collection) {
-	fmt.Println("SetCollection", denom, collection)
 	store := ctx.KVStore(k.storeKey)
 	collectionKey := GetCollectionKey(denom)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(collection)
 	store.Set(collectionKey, bz)
 }
 
-// IterateBalances iterates over the owners' balances of NFTs and performs a function
-func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte, handler func(owner sdk.AccAddress, collection []uint64) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var collection []uint64
+// // IterateBalances iterates over the owners' balances of NFTs and performs a function
+// func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte,
+// 	handler func(owner sdk.AccAddress, collection types.Collection) (stop bool)) {
 
-		owner, _ := SplitBalanceKey(iterator.Key())
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &collection)
+// 	store := ctx.KVStore(k.storeKey)
+// 	iterator := sdk.KVStorePrefixIterator(store, prefix)
+// 	defer iterator.Close()
+// 	for ; iterator.Valid(); iterator.Next() {
+// 		var collection []string
 
-		if handler(owner, collection) {
-			break
-		}
-	}
-}
+// 		owner, _ := SplitBalanceKey(iterator.Key())
+// 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &collection)
+
+// 		if handler(owner, collection) {
+// 			break
+// 		}
+// 	}
+// }
 
 // // GetBalances returns all the NFT balances
 // func (k Keeper) GetBalances(ctx sdk.Context) (balances []types.Balance) {
-// 	balances [sdk.AccAddress][]uint64
+// 	balances [sdk.AccAddress][]string
 // 	balance Struct {
 
 // 	}
 // 	k.IterateBalances(ctx, BalancesKeyPrefix,
-// 		func(owner sdk.AccAddress, collection []uint64) (stop bool) {
+// 		func(owner sdk.AccAddress, collection []string) (stop bool) {
 // 			balances = append(balances, collection)
 // 			return false
 // 		},
@@ -184,7 +184,7 @@ func (k Keeper) IterateBalances(ctx sdk.Context, prefix []byte, handler func(own
 // // GetOwnerBalances gets the all the collections of NFTs owned by an address
 // func (k Keeper) GetOwnerBalances(ctx sdk.Context, owner sdk.AccAddress) (collections types.Collections) {
 // 	k.IterateBalances(ctx, GetBalancesKey(owner),
-// 		func(_ sdk.AccAddress, collection []uint64) (stop bool) {
+// 		func(_ sdk.AccAddress, collection []string) (stop bool) {
 // 			collections = append(collections, collection)
 // 			return false
 // 		},

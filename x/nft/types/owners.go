@@ -12,11 +12,11 @@ type Owned struct {
 // NFTIDs of non fungible tokens
 type NFTIDs struct {
 	Denom  string   `json:"denom,string,omitempty"`
-	NFTIDs []uint64 `json:"NFTIDs"`
+	NFTIDs []string `json:"NFTIDs"`
 }
 
 // // NewNFTIDs creates a new NFT NFTIDs
-// func NewNFTIDs(denom string, nfts []uint64]) NFTIDs {
+// func NewNFTIDs(denom string, nfts []string]) NFTIDs {
 // 	return NFTIDs{
 // 		Denom: strings.TrimSpace(denom),
 // 		NFTIDs:  nfts
@@ -25,11 +25,11 @@ type NFTIDs struct {
 
 // // EmptyNFTIDs returns an empty balance
 // func EmptyNFTIDs() NFTIDs {
-// 	return NewNFTIDs("", []uint64)
+// 	return NewNFTIDs("", []string)
 // }
 
 // // GetNFT gets a NFT from the balance
-// func (balance NFTIDs) GetNFT(id uint64) (exists bool) {
+// func (balance NFTIDs) GetNFT(id string) (exists bool) {
 
 // 	for _, nft := range balance.NFTIDs {
 // 		if nft == id {
@@ -40,12 +40,12 @@ type NFTIDs struct {
 // }
 
 // // AddNFT adds an NFT to the balance
-// func (balance *NFTIDs) AddNFT(nft uint64) {
+// func (balance *NFTIDs) AddNFT(nft string) {
 // 	balance.NFTIDs = append(balance.NFTIDs, nft)
 // }
 
 // // DeleteNFT deletes an NFT from a balance
-// func (balance *NFTIDs) DeleteNFT(nft uint64) sdk.Error {
+// func (balance *NFTIDs) DeleteNFT(nft string) sdk.Error {
 // 	// TODO: how to remove element from array
 // 	// nfts, ok := balance.NFTIDs.Remove(nft)
 // 	if !ok {

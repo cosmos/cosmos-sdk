@@ -55,8 +55,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify that the by power index exists
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power := keep.GetValidatorsByPowerIndexKey(validator)
-	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
+	power := GetValidatorsByPowerIndexKey(validator)
+	require.True(t, ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// create a second validator keep it bonded
 	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, keep.PKs[2], initBond)
@@ -702,7 +702,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should still be unbonding at time 6 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
@@ -710,7 +710,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
 
 	// should be in unbonded state at time 7 seconds later
 	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
@@ -718,7 +718,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.GetStatus() == sdk.Unbonded, "%v", validator)
+	require.True(t, validator.IsUnbonded(), "%v", validator)
 }
 
 func TestUnbondingPeriod(t *testing.T) {
@@ -797,8 +797,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	got = handleMsgUndelegate(ctx, msgUndelegateDelegator, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 
-	// move the Block time forward by one second
-	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(time.Second * 1))
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(keeper.UnbondingTime(ctx)))
 
 	// Run the EndBlocker
 	EndBlocker(ctx, keeper)

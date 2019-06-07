@@ -7,18 +7,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// query endpoints supported by the auth Querier
-const (
-	QueryAccount = "account"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // creates a querier for auth REST endpoints
 func NewQuerier(keeper AccountKeeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
-		case QueryAccount:
+		case types.QueryAccount:
 			return queryAccount(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown auth query endpoint")
@@ -26,19 +22,8 @@ func NewQuerier(keeper AccountKeeper) sdk.Querier {
 	}
 }
 
-// defines the params for query: "custom/acc/account"
-type QueryAccountParams struct {
-	Address sdk.AccAddress
-}
-
-func NewQueryAccountParams(addr sdk.AccAddress) QueryAccountParams {
-	return QueryAccountParams{
-		Address: addr,
-	}
-}
-
 func queryAccount(ctx sdk.Context, req abci.RequestQuery, keeper AccountKeeper) ([]byte, sdk.Error) {
-	var params QueryAccountParams
+	var params types.QueryAccountParams
 	if err := keeper.cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}

@@ -22,29 +22,29 @@ var (
 
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	Description       Description    `json:"description"`
-	Commission        CommissionMsg  `json:"commission"`
-	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
-	DelegatorAddress  sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress  sdk.ValAddress `json:"validator_address"`
-	PubKey            crypto.PubKey  `json:"pubkey"`
-	Value             sdk.Coin       `json:"value"`
+	Description       Description     `json:"description"`
+	Commission        CommissionRates `json:"commission"`
+	MinSelfDelegation sdk.Int         `json:"min_self_delegation"`
+	DelegatorAddress  sdk.AccAddress  `json:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress  `json:"validator_address"`
+	PubKey            crypto.PubKey   `json:"pubkey"`
+	Value             sdk.Coin        `json:"value"`
 }
 
 type msgCreateValidatorJSON struct {
-	Description       Description    `json:"description"`
-	Commission        CommissionMsg  `json:"commission"`
-	MinSelfDelegation sdk.Int        `json:"min_self_delegation"`
-	DelegatorAddress  sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress  sdk.ValAddress `json:"validator_address"`
-	PubKey            string         `json:"pubkey"`
-	Value             sdk.Coin       `json:"value"`
+	Description       Description     `json:"description"`
+	Commission        CommissionRates `json:"commission"`
+	MinSelfDelegation sdk.Int         `json:"min_self_delegation"`
+	DelegatorAddress  sdk.AccAddress  `json:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress  `json:"validator_address"`
+	PubKey            string          `json:"pubkey"`
+	Value             sdk.Coin        `json:"value"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
-	description Description, commission CommissionMsg, minSelfDelegation sdk.Int,
+	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) MsgCreateValidator {
 
 	return MsgCreateValidator{
@@ -136,8 +136,11 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
-	if msg.Commission == (CommissionMsg{}) {
+	if msg.Commission == (CommissionRates{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
+	}
+	if err := msg.Commission.Validate(); err != nil {
+		return err
 	}
 	if !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)

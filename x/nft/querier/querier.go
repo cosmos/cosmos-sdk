@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -19,51 +18,8 @@ const (
 	QueryNFT        = "nft"
 )
 
-// QueryCollectionParams defines the params for queries:
-// - 'custom/nft/supply'
-// - 'custom/nft/collection'
-type QueryCollectionParams struct {
-	Denom string
-}
-
-// NewQueryCollectionParams creates a new instance of QuerySupplyParams
-func NewQueryCollectionParams(denom string) QueryCollectionParams {
-	return QueryCollectionParams{Denom: denom}
-}
-
-// QueryBalanceParams params for query 'custom/nfts/balance'
-type QueryBalanceParams struct {
-	Owner sdk.AccAddress
-	Denom string // optional
-}
-
-// NewQueryBalanceParams creates a new instance of QuerySupplyParams
-func NewQueryBalanceParams(owner sdk.AccAddress, denom ...string) QueryBalanceParams {
-	if len(denom) > 0 {
-		return QueryBalanceParams{
-			Owner: owner,
-			Denom: denom[0],
-		}
-	}
-	return QueryBalanceParams{Owner: owner}
-}
-
-// QueryNFTParams params for query 'custom/nfts/nft'
-type QueryNFTParams struct {
-	Denom   string
-	TokenID uint64
-}
-
-// NewQueryNFTParams creates a new instance of QueryNFTParams
-func NewQueryNFTParams(denom string, ID uint64) QueryNFTParams {
-	return QueryNFTParams{
-		Denom:   denom,
-		TokenID: ID,
-	}
-}
-
 // NewQuerier is the module level router for state queries
-func NewQuerier(k keeper.Keeper) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QuerySupply:
@@ -80,9 +36,9 @@ func NewQuerier(k keeper.Keeper) sdk.Querier {
 	}
 }
 
-func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 
-	var params QueryCollectionParams
+	var params types.QueryCollectionParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -98,9 +54,9 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper
 	return bz, nil
 }
 
-func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 
-	var params QueryBalanceParams
+	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -121,9 +77,9 @@ func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, k keepe
 	return bz, nil
 }
 
-func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 
-	var params QueryCollectionParams
+	var params types.QueryCollectionParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -143,9 +99,9 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 	return bz, nil
 }
 
-func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) ([]byte, sdk.Error) {
+func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 
-	var params QueryNFTParams
+	var params types.QueryNFTParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -153,7 +109,7 @@ func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Ke
 
 	nft, err := k.GetNFT(ctx, params.Denom, params.TokenID)
 	if err != nil {
-		return nil, types.ErrUnknownNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%d from collection %s", params.TokenID, params.Denom))
+		return nil, types.ErrUnknownNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%s from collection %s", params.TokenID, params.Denom))
 	}
 
 	nfts := types.NewNFTs(nft)

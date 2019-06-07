@@ -7,8 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/querier"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +21,7 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			denom := args[0]
 
-			params := querier.NewQueryCollectionParams(denom)
+			params := types.NewQueryCollectionParams(denom)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -33,7 +32,7 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return err
 			}
 
-			var out nft.NFT
+			var out types.NFT
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -59,7 +58,7 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				denom = args[1]
 			}
 
-			params := querier.NewQueryBalanceParams(address, denom)
+			params := types.NewQueryBalanceParams(address, denom)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -70,7 +69,7 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.Balance
+			var out types.Balance
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -87,7 +86,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			denom := args[0]
 
-			params := querier.NewQueryCollectionParams(denom)
+			params := types.NewQueryCollectionParams(denom)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -98,7 +97,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.Collection
+			var out types.Collection
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -119,7 +118,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			params := querier.NewQueryNFTParams(denom, id)
+			params := types.NewQueryNFTParams(denom, id)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -130,7 +129,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out nft.NFT
+			var out types.NFT
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

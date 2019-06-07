@@ -51,7 +51,7 @@ func NewParamChangeJSON(subspace, key, subkey string, value json.RawMessage) Par
 
 // ToParamChange converts a ParamChangeJSON object to ParamChange.
 func (pcj ParamChangeJSON) ToParamChange() params.ParamChange {
-	return params.NewParamChange(pcj.Subspace, pcj.Key, pcj.Subkey, string(pcj.Value))
+	return params.NewParamChangeWithSubkey(pcj.Subspace, pcj.Key, pcj.Subkey, string(pcj.Value))
 }
 
 // ToParamChanges converts a slice of ParamChangeJSON objects to a slice of

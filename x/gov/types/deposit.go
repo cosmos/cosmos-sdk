@@ -8,9 +8,14 @@ import (
 
 // Deposit
 type Deposit struct {
-	Depositor  sdk.AccAddress `json:"depositor"`   //  Address of the depositor
 	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
+	Depositor  sdk.AccAddress `json:"depositor"`   //  Address of the depositor
 	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
+}
+
+// NewDeposit creates a new Deposit instance
+func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
+	return Deposit{proposalID, depositor, amount}
 }
 
 func (d Deposit) String() string {

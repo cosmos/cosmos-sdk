@@ -1,16 +1,14 @@
 package slashing
 
 import (
-	"fmt"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info ValidatorSigningInfo, found bool) {
+func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GetValidatorSigningInfoKey(address))
+	bz := store.Get(types.GetValidatorSigningInfoKey(address))
 	if bz == nil {
 		found = false
 		return
@@ -21,13 +19,15 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context, handler func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool)) {
+func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
+	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool)) {
+
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorSigningInfoKey)
+	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		address := GetValidatorSigningInfoAddress(iter.Key())
-		var info ValidatorSigningInfo
+		address := types.GetValidatorSigningInfoAddress(iter.Key())
+		var info types.ValidatorSigningInfo
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &info)
 		if handler(address, info) {
 			break
@@ -36,16 +36,16 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context, handler func(addre
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
+func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
-	store.Set(GetValidatorSigningInfoKey(address), bz)
+	store.Set(types.GetValidatorSigningInfoKey(address), bz)
 }
 
 // Stored by *validator* address (not operator address)
 func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
+	bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
 	if bz == nil {
 		// lazy: treat empty key as not missed
 		missed = false
@@ -56,13 +56,15 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
+func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
+	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
+
 	store := ctx.KVStore(k.storeKey)
 	index := int64(0)
 	// Array may be sparse
 	for ; index < k.SignedBlocksWindow(ctx); index++ {
 		var missed bool
-		bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
+		bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
 		if bz == nil {
 			continue
 		}
@@ -77,54 +79,15 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk
 func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
-	store.Set(GetValidatorMissedBlockBitArrayKey(address, index), bz)
+	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 
 // Stored by *validator* address (not operator address)
 func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, GetValidatorMissedBlockBitArrayPrefixKey(address))
+	iter := sdk.KVStorePrefixIterator(store, types.GetValidatorMissedBlockBitArrayPrefixKey(address))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
-}
-
-// Signing info for a validator
-type ValidatorSigningInfo struct {
-	Address             sdk.ConsAddress `json:"address"`               // validator consensus address
-	StartHeight         int64           `json:"start_height"`          // height at which validator was first a candidate OR was unjailed
-	IndexOffset         int64           `json:"index_offset"`          // index offset into signed block bit array
-	JailedUntil         time.Time       `json:"jailed_until"`          // timestamp validator cannot be unjailed until
-	Tombstoned          bool            `json:"tombstoned"`            // whether or not a validator has been tombstoned (killed out of validator set)
-	MissedBlocksCounter int64           `json:"missed_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
-}
-
-// Construct a new `ValidatorSigningInfo` struct
-func NewValidatorSigningInfo(
-	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
-	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,
-) ValidatorSigningInfo {
-
-	return ValidatorSigningInfo{
-		Address:             condAddr,
-		StartHeight:         startHeight,
-		IndexOffset:         indexOffset,
-		JailedUntil:         jailedUntil,
-		Tombstoned:          tombstoned,
-		MissedBlocksCounter: missedBlocksCounter,
-	}
-}
-
-// Return human readable signing info
-func (i ValidatorSigningInfo) String() string {
-	return fmt.Sprintf(`Validator Signing Info:
-  Address:               %s
-  Start Height:          %d
-  Index Offset:          %d
-  Jailed Until:          %v
-  Tombstoned:            %t
-  Missed Blocks Counter: %d`,
-		i.Address, i.StartHeight, i.IndexOffset, i.JailedUntil,
-		i.Tombstoned, i.MissedBlocksCounter)
 }

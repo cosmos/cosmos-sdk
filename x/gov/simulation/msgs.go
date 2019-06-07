@@ -14,7 +14,7 @@ import (
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
-type ContentSimulator func(r *rand.Rand) gov.Content
+type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
@@ -51,7 +51,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 
 		// 1) submit proposal now
 		sender := simulation.RandomAcc(r, accs)
-		content := contentSim(r)
+		content := contentSim(r, app, ctx, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, content, sender)
 		if err != nil {
 			return simulation.NoOpMsg(), nil, err
@@ -64,7 +64,12 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 			return opMsg, nil, nil
 		}
 
-		proposalID := k.GetLastProposalID(ctx)
+		proposalID, err := k.GetProposalID(ctx)
+		if err != nil {
+			return simulation.NoOpMsg(), nil, err
+		}
+
+		proposalID = uint64(math.Max(float64(proposalID)-1, 0))
 
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -102,7 +107,7 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 }
 
 // SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand) gov.Content {
+func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
 	return gov.NewTextProposal(
 		simulation.RandStringOfLength(r, 140),
 		simulation.RandStringOfLength(r, 5000),
@@ -192,7 +197,9 @@ func randomDeposit(r *rand.Rand) sdk.Coins {
 
 // Pick a random proposal ID
 func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
-	lastProposalID := k.GetLastProposalID(ctx)
+	lastProposalID, _ := k.GetProposalID(ctx)
+	lastProposalID = uint64(math.Max(float64(lastProposalID)-1, 0))
+
 	if lastProposalID < 1 || lastProposalID == (2<<63-1) {
 		return 0, false
 	}

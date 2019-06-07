@@ -13,9 +13,6 @@ const (
 
 	// Maximum time per block
 	maxTimePerBlock int64 = 10000
-
-	// TODO Remove in favor of binary search for invariant violation
-	onOperation bool = false
 )
 
 // TODO explain transitional matrix usage
@@ -56,19 +53,19 @@ var (
 			return uint64(RandIntBetween(r, 500, 1000))
 		},
 		"DepositParams/MinDeposit": func(r *rand.Rand) interface{} {
-			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(r.Intn(1e3)))}
+			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
 		},
 		"VotingParams/VotingPeriod": func(r *rand.Rand) interface{} {
-			return time.Duration(r.Intn(2*172800)) * time.Second
+			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		},
 		"TallyParams/Quorum": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(334, 3)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
 		},
 		"TallyParams/Threshold": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(5, 1)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
 		},
 		"TallyParams/Veto": func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(334, 3)
+			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
 		},
 		"UnbondingTime": func(r *rand.Rand) interface{} {
 			return time.Duration(RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
@@ -134,7 +131,7 @@ func RandomParams(r *rand.Rand) Params {
 		PastEvidenceFraction:      r.Float64(),
 		NumKeys:                   RandIntBetween(r, 2, 250),
 		EvidenceFraction:          r.Float64(),
-		InitialLivenessWeightings: []int{r.Intn(80), r.Intn(10), r.Intn(10)},
+		InitialLivenessWeightings: []int{RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}

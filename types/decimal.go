@@ -46,8 +46,9 @@ func precisionInt() *big.Int {
 }
 
 // nolint - common values
-func ZeroDec() Dec { return Dec{new(big.Int).Set(zeroInt)} }
-func OneDec() Dec  { return Dec{precisionInt()} }
+func ZeroDec() Dec     { return Dec{new(big.Int).Set(zeroInt)} }
+func OneDec() Dec      { return Dec{precisionInt()} }
+func SmallestDec() Dec { return Dec{new(big.Int).Set(oneInt)} }
 
 // calculate the precision multiplier
 func calcPrecisionMultiplier(prec int64) *big.Int {

@@ -14,7 +14,6 @@ import (
 var (
 	_ sdk.Tx        = (*StdTx)(nil)
 	_ sdk.Signature = (*StdSignature)(nil)
-	_ sdk.Signature = StdSignature{}
 
 	maxGasWanted = uint64((1 << 63) - 1)
 )

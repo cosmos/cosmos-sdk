@@ -1,3 +1,0 @@
-#4507 New `Signature` generic interface available in the top level types package.
-`auth.StdSignature` implements such interface. User defined auth module can now
-define their own custom signature types.

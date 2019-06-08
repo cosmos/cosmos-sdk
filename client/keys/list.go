@@ -1,9 +1,8 @@
 package keys
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/cobra"
 )
 
 func listKeysCmd() *cobra.Command {

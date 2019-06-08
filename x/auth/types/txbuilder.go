@@ -214,7 +214,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []sdk.Signature{sig}, msg.Memo))
+	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -237,7 +237,7 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 	}
 
 	// the ante handler will populate with a sentinel pubkey
-	sigs := []sdk.Signature{NewStdSignature(nil, nil)}
+	sigs := []StdSignature{{}}
 	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
 }
 
@@ -262,7 +262,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 
 	sigs := stdTx.GetSignatures()
 	if len(sigs) == 0 || !appendSig {
-		sigs = []sdk.Signature{stdSignature}
+		sigs = []StdSignature{stdSignature}
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
@@ -271,8 +271,8 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 }
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
-func MakeSignature(keybase crkeys.Keybase, name,
-	passphrase string, msg StdSignMsg) (sig sdk.Signature, err error) {
+func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
+	msg StdSignMsg) (sig StdSignature, err error) {
 	if keybase == nil {
 		keybase, err = keys.NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -284,6 +284,8 @@ func MakeSignature(keybase crkeys.Keybase, name,
 	if err != nil {
 		return
 	}
-
-	return NewStdSignature(pubkey, sigBytes), nil
+	return StdSignature{
+		PubKey:    pubkey,
+		Signature: sigBytes,
+	}, nil
 }

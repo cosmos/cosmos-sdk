@@ -217,7 +217,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 		Gas:    100000,
 	}
 
-	sigs := make([]sdk.Signature, len(priv))
+	sigs := make([]auth.StdSignature, len(priv))
 	memo := "testmemotestmemo"
 
 	for i, p := range priv {
@@ -226,7 +226,10 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 			panic(err)
 		}
 
-		sigs[i] = auth.NewStdSignature(p.PubKey(), sig)
+		sigs[i] = auth.StdSignature{
+			PubKey:    p.PubKey(),
+			Signature: sig,
+		}
 	}
 
 	return auth.NewStdTx(msgs, fee, sigs, memo)

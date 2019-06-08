@@ -15,12 +15,13 @@ var _ types.StakingHooks = Hooks{}
 // Create new distribution hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// nolint
+// initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	h.k.initializeValidator(ctx, val)
 }
 
+// cleanup for after validator is removed
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 
 	// fetch outstanding
@@ -73,30 +74,28 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	h.k.DeleteValidatorCurrentRewards(ctx, valAddr)
 }
 
+// increment period
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-
-	// increment period
 	h.k.incrementValidatorPeriod(ctx, val)
 }
 
+// withdraw delegation rewards (which also increments period)
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
-
-	// withdraw delegation rewards (which also increments period)
 	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
 		panic(err)
 	}
 }
 
+// create new delegation period record
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	// create new delegation period record
 	h.k.initializeDelegation(ctx, valAddr, delAddr)
 }
 
+// record the slash event
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	// record the slash event
 	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 }
 

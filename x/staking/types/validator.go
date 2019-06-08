@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,6 +49,7 @@ type Validator struct {
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // validator's self declared minimum self delegation
 }
 
+// custom marshal yaml function due to consensus pubkey
 func (v Validator) MarshalYAML() (interface{}, error) {
 	bs, err := yaml.Marshal(struct {
 		OperatorAddress         sdk.ValAddress

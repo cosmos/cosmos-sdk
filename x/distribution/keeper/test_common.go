@@ -47,6 +47,7 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
+	// TODO move to common testing package for all modules
 	// test addresses
 	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,

@@ -77,8 +77,6 @@ var (
 
 type (
 	CodeType                = types.CodeType
-	StakingKeeper           = types.StakingKeeper
-	AccountKeeper           = types.AccountKeeper
 	GenesisState            = types.GenesisState
 	MissedBlock             = types.MissedBlock
 	MsgUnjail               = types.MsgUnjail

@@ -5,7 +5,8 @@
 package mint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 var (
 	// functions aliases
 	NewMinter            = types.NewMinter
+	NewKeeper            = keeper.NewKeeper
+	NewQuerier           = keeper.NewQuerier
 	InitialMinter        = types.InitialMinter
 	DefaultInitialMinter = types.DefaultInitialMinter
 	ValidateMinter       = types.ValidateMinter
@@ -41,6 +44,7 @@ var (
 )
 
 type (
+	Keeper = keeper.Keeper
 	Minter = types.Minter
 	Params = types.Params
 )

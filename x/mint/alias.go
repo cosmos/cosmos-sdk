@@ -22,6 +22,7 @@ const (
 var (
 	// functions aliases
 	NewMinter            = types.NewMinter
+	NewKeeper            = keeper.NewKeeper
 	NewQuerier           = keeper.NewQuerier
 	InitialMinter        = types.InitialMinter
 	DefaultInitialMinter = types.DefaultInitialMinter

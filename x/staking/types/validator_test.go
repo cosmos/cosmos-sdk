@@ -326,11 +326,27 @@ func TestValidatorMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 	bs, err := yaml.Marshal(validator)
 	require.NoError(t, err)
-	want := fmt.Sprintf("|\n  operatoraddress: %s\n  conspubkey" +
-		": %s\n  jailed: false\n  status: 0\n  tokens: {}\n  delegatorshares: \"0\"\n" +
-		"  description:\n    moniker: \"\"\n    identity: \"\"\n    website: \"\"\n    details" +
-		": \"\"\n  unbondingheight: 0\n  unbondingcompletiontime: 1970-01-01T00:00:00Z\n" +
-		"  commission:\n    commissionrates:\n      rate: \"0\"\n      maxrate: \"0\"\n      maxchangerate: \"0\"\n    updatetime: 1970-01-01T00:00:00Z\n  minselfdelegation: {}\n",
-		validator.OperatorAddress.String(), bechifiedPub)
+	want := fmt.Sprintf(`|
+  operatoraddress: %s
+  conspubkey: %s
+  jailed: false
+  status: 0
+  tokens: {}
+  delegatorshares: "0"
+  description:
+    moniker: ""
+    identity: ""
+    website: ""
+    details: ""
+  unbondingheight: 0
+  unbondingcompletiontime: 1970-01-01T00:00:00Z
+  commission:
+    commissionrates:
+      rate: "0"
+      maxrate: "0"
+      maxchangerate: "0"
+    updatetime: 1970-01-01T00:00:00Z
+  minselfdelegation: {}
+`, validator.OperatorAddress.String(), bechifiedPub)
 	require.Equal(t, want, string(bs))
 }

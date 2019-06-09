@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/tags"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
@@ -37,9 +36,9 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) sdk.Resu
 	}
 
 	resTags := sdk.NewTags(
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.FromAddress.String(),
-		tags.Recipient, msg.ToAddress.String(),
+		types.Category, types.TxCategory,
+		types.Sender, msg.FromAddress.String(),
+		types.Recipient, msg.ToAddress.String(),
 	)
 
 	return sdk.Result{
@@ -58,7 +57,7 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgMultiSend
 		return err.Result()
 	}
 
-	resTags = resTags.AppendTag(tags.Category, tags.TxCategory)
+	resTags = resTags.AppendTag(types.Category, types.TxCategory)
 	return sdk.Result{
 		Tags: resTags,
 	}

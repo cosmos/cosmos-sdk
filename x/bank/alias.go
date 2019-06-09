@@ -7,7 +7,7 @@ package bank
 import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/handler"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/invariants"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
@@ -38,8 +38,8 @@ var (
 	ValidateInputsOutputs           = types.ValidateInputsOutputs
 	ParamKeyTable                   = types.ParamKeyTable
 	NewHandler                      = handler.NewHandler
-	SimulateMsgSend                 = simulation.SimulateMsgSend
-	SimulateSingleInputMsgMultiSend = simulation.SimulateSingleInputMsgMultiSend
+	SimulateMsgSend                 = invariants.SimulateMsgSend
+	SimulateSingleInputMsgMultiSend = invariants.SimulateSingleInputMsgMultiSend
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc

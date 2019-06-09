@@ -15,7 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/invariants"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 var (
@@ -90,7 +91,7 @@ func (AppModule) Name() string {
 
 // register invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	RegisterInvariants(ir, am.accountKeeper)
+	invariants.RegisterInvariants(ir, am.accountKeeper)
 }
 
 // module message route name

@@ -5,7 +5,10 @@
 package bank
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/handler"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 const (
@@ -20,17 +23,23 @@ const (
 
 var (
 	// functions aliases
-	RegisterCodec          = types.RegisterCodec
-	ErrNoInputs            = types.ErrNoInputs
-	ErrNoOutputs           = types.ErrNoOutputs
-	ErrInputOutputMismatch = types.ErrInputOutputMismatch
-	ErrSendDisabled        = types.ErrSendDisabled
-	NewMsgSend             = types.NewMsgSend
-	NewMsgMultiSend        = types.NewMsgMultiSend
-	NewInput               = types.NewInput
-	NewOutput              = types.NewOutput
-	ValidateInputsOutputs  = types.ValidateInputsOutputs
-	ParamKeyTable          = types.ParamKeyTable
+	RegisterCodec                   = types.RegisterCodec
+	ErrNoInputs                     = types.ErrNoInputs
+	ErrNoOutputs                    = types.ErrNoOutputs
+	ErrInputOutputMismatch          = types.ErrInputOutputMismatch
+	ErrSendDisabled                 = types.ErrSendDisabled
+	NewBaseKeeper                   = keeper.NewBaseKeeper
+	NewBaseSendKeeper               = keeper.NewBaseSendKeeper
+	NewBaseViewKeeper               = keeper.NewBaseViewKeeper
+	NewMsgSend                      = types.NewMsgSend
+	NewMsgMultiSend                 = types.NewMsgMultiSend
+	NewInput                        = types.NewInput
+	NewOutput                       = types.NewOutput
+	ValidateInputsOutputs           = types.ValidateInputsOutputs
+	ParamKeyTable                   = types.ParamKeyTable
+	NewHandler                      = handler.NewHandler
+	SimulateMsgSend                 = simulation.SimulateMsgSend
+	SimulateSingleInputMsgMultiSend = simulation.SimulateSingleInputMsgMultiSend
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc
@@ -38,8 +47,14 @@ var (
 )
 
 type (
-	MsgSend      = types.MsgSend
-	MsgMultiSend = types.MsgMultiSend
-	Input        = types.Input
-	Output       = types.Output
+	BaseKeeper     = keeper.BaseKeeper
+	BaseSendKeeper = keeper.BaseSendKeeper
+	BaseViewKeeper = keeper.BaseViewKeeper
+	Keeper         = keeper.Keeper
+	MsgSend        = types.MsgSend
+	MsgMultiSend   = types.MsgMultiSend
+	SendKeeper     = keeper.SendKeeper
+	Input          = types.Input
+	Output         = types.Output
+	ViewKeeper     = keeper.ViewKeeper
 )

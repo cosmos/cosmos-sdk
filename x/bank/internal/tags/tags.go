@@ -1,7 +1,7 @@
 package tags
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // Tag keys and values
@@ -10,8 +10,8 @@ var (
 	ActionDelegateCoins   = "delegateCoins"
 	TxCategory            = "bank"
 
-	Action    = sdk.TagAction
-	Category  = sdk.TagCategory
+	Action    = types.TagAction
+	Category  = types.TagCategory
 	Recipient = "recipient"
 	Sender    = "sender"
 )

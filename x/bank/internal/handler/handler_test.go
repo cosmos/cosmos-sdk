@@ -1,4 +1,4 @@
-package bank
+package handler
 
 import (
 	"strings"

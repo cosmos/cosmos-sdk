@@ -1,4 +1,4 @@
-package bank
+package keeper
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -120,13 +120,13 @@ func TestKeeper(t *testing.T) {
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8))))
 
 	inputs := []types.Input{
-		NewInput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 3))),
+		types.NewInput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 3))),
 		types.NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 3), sdk.NewInt64Coin("foocoin", 2))),
 	}
 
 	outputs := []types.Output{
-		NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))),
-		NewOutput(addr3, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))),
+		types.NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))),
+		types.NewOutput(addr3, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))),
 	}
 	bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 21), sdk.NewInt64Coin("foocoin", 4))))
@@ -139,7 +139,7 @@ func TestSendKeeper(t *testing.T) {
 	ctx := input.ctx
 	paramSpace := input.pk.Subspace(types.DefaultParamspace)
 	bankKeeper := NewBaseKeeper(input.ak, paramSpace, types.DefaultCodespace)
-	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, DefaultCodespace)
+	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -186,10 +186,10 @@ func TestSendKeeper(t *testing.T) {
 func TestViewKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
-	paramSpace := input.pk.Subspace(DefaultParamspace)
-	bankKeeper := NewBaseKeeper(input.ak, paramSpace, DefaultCodespace)
+	paramSpace := input.pk.Subspace(types.DefaultParamspace)
+	bankKeeper := NewBaseKeeper(input.ak, paramSpace, types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
-	viewKeeper := NewBaseViewKeeper(input.ak, DefaultCodespace)
+	viewKeeper := NewBaseViewKeeper(input.ak, types.DefaultCodespace)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := input.ak.NewAccountWithAddress(ctx, addr)
@@ -216,7 +216,7 @@ func TestVestingAccountSend(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -250,7 +250,7 @@ func TestVestingAccountReceive(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -284,7 +284,7 @@ func TestDelegateCoins(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -321,7 +321,7 @@ func TestUndelegateCoins(t *testing.T) {
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(DefaultParamspace), DefaultCodespace)
+	bankKeeper := NewBaseKeeper(input.ak, input.pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))

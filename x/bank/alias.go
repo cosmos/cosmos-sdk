@@ -47,14 +47,10 @@ var (
 )
 
 type (
-	BaseKeeper     = keeper.BaseKeeper
-	BaseSendKeeper = keeper.BaseSendKeeper
-	BaseViewKeeper = keeper.BaseViewKeeper
-	Keeper         = keeper.Keeper
-	MsgSend        = types.MsgSend
-	MsgMultiSend   = types.MsgMultiSend
-	SendKeeper     = keeper.SendKeeper
-	Input          = types.Input
-	Output         = types.Output
-	ViewKeeper     = keeper.ViewKeeper
+	BaseKeeper   = keeper.BaseKeeper // ibc module depends on this
+	Keeper       = keeper.Keeper
+	MsgSend      = types.MsgSend
+	MsgMultiSend = types.MsgMultiSend
+	Input        = types.Input
+	Output       = types.Output
 )

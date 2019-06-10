@@ -3,6 +3,7 @@ package connection
 import (
 	"errors"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/mapping"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,33 +19,37 @@ type Manager struct {
 
 	client client.Manager
 
-	// CONTRACT: remote/self should not be used when remote
-	remote *Manager
-	self   mapping.Indexer
+	self mapping.Indexer
+
+	counterparty CounterpartyManager
 }
 
-func NewManager(protocol, free mapping.Base, client client.Manager) Manager {
+func NewManager(protocol, free mapping.Base, clientman client.Manager) Manager {
 	return Manager{
-		protocol: mapping.NewMapping(protocol, []byte("/")),
+		protocol: mapping.NewMapping(protocol, []byte("/connection/")),
 
-		client: client,
+		client: clientman,
 
-		self: mapping.NewIndexer(free, []byte("/self"), mapping.Dec),
+		self: mapping.NewIndexer(free, []byte("/connection/self/"), mapping.Dec),
+
+		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
 }
 
-// TODO: return newtyped manager
-func NewRemoteManager(protocol mapping.Base, client client.Manager) Manager {
-	return NewManager(protocol, mapping.EmptyBase(), client)
+type CounterpartyManager struct {
+	protocol commitment.Mapping
+
+	client client.CounterpartyManager
 }
 
-func (man Manager) Exec(remote Manager, fn func(Manager)) {
-	fn(Manager{
-		protocol: man.protocol,
-		client:   man.client,
-		self:     man.self,
-		remote:   &remote,
-	})
+func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
+	protocol := commitment.NewBase(cdc)
+
+	return CounterpartyManager{
+		protocol: commitment.NewMapping(protocol, []byte("/connection/")),
+
+		client: client.NewCounterpartyManager(protocol),
+	}
 }
 
 // CONTRACT: client and remote must be filled by the caller
@@ -59,12 +64,13 @@ func (man Manager) object(id string) Object {
 	}
 }
 
-func (man Manager) remoteobject(id string) Object {
-	return Object{
+// CONTRACT: client must be filled by the caller
+func (man CounterpartyManager) object(id string) CounterObject {
+	return CounterObject{
 		id:          id,
-		connection:  man.remote.protocol.Value([]byte(id), commitment.Value),
-		state:       commitment.Enum(man.protocol.Value([]byte(id+"/state"), commitment.Value)),
-		nexttimeout: commitment.Integer(man.protocol.Value([]byte(id+"/timeout"), commitment.Value), mapping.Dec),
+		connection:  man.protocol.Value([]byte(id)),
+		state:       commitment.NewEnum(man.protocol.Value([]byte(id + "/state"))),
+		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(id+"/timeout")), mapping.Dec),
 	}
 }
 
@@ -79,8 +85,8 @@ func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (no
 	if err != nil {
 		return
 	}
-	remote := man.remote.object(connection.Counterparty)
-	obj.remote = &remote
+	obj.counterparty = man.counterparty.object(connection.Counterparty)
+	obj.counterparty.client = man.counterparty.client.Query(connection.CounterpartyClient)
 	return NihiloObject(obj), nil
 }
 
@@ -94,8 +100,8 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	if err != nil {
 		return
 	}
-	remote := man.remote.object(conn.Counterparty)
-	obj.remote = &remote
+	obj.counterparty = man.counterparty.object(conn.Counterparty)
+	obj.counterparty.client = man.counterparty.client.Query(conn.CounterpartyClient)
 	return
 }
 
@@ -109,9 +115,17 @@ type Object struct {
 
 	client client.Object
 
-	// CONTRACT: remote/self should not be used when remote
-	remote *Object
-	self   mapping.Indexer
+	counterparty CounterObject
+	self         mapping.Indexer
+}
+
+type CounterObject struct {
+	id          string
+	connection  commitment.Value
+	state       commitment.Enum
+	nexttimeout commitment.Integer
+
+	client client.CounterObject
 }
 
 func (obj Object) ID() string {
@@ -133,7 +147,7 @@ func (obj Object) remove(ctx sdk.Context) {
 }
 
 func (obj Object) assertSymmetric(ctx sdk.Context) error {
-	if !obj.remote.connection.Is(ctx, obj.Value(ctx).Symmetry(obj.id)) {
+	if !obj.counterparty.connection.Is(ctx, obj.Value(ctx).Symmetry(obj.id)) {
 		return errors.New("unexpected counterparty connection value")
 	}
 
@@ -186,7 +200,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return err
 	}
 
-	if !obj.remote.state.Is(ctx, Init) {
+	if !obj.counterparty.state.Is(ctx, Init) {
 		return errors.New("counterparty state not init")
 	}
 
@@ -195,13 +209,13 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return err
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !obj.remote.client.Is(ctx, expected) {
+	if !obj.counterparty.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -226,7 +240,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if !obj.remote.state.Is(ctx, OpenTry) {
+	if !obj.counterparty.state.Is(ctx, OpenTry) {
 		return errors.New("counterparty state not try")
 	}
 
@@ -235,13 +249,13 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
 	var expected client.Client
 	obj.self.Get(ctx, expheight, &expected)
-	if !obj.remote.client.Is(ctx, expected) {
+	if !obj.counterparty.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
 	}
 
@@ -260,7 +274,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if !obj.remote.state.Is(ctx, Open) {
+	if !obj.counterparty.state.Is(ctx, Open) {
 		return errors.New("counterparty state not open")
 	}
 
@@ -269,7 +283,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -286,17 +300,17 @@ func (obj Object) OpenTimeout(ctx sdk.Context) error {
 	// XXX: double check if a user can bypass the verification logic somehow
 	switch obj.state.Get(ctx) {
 	case Init:
-		if !obj.remote.connection.Is(ctx, nil) {
+		if !obj.counterparty.connection.Is(ctx, nil) {
 			return errors.New("counterparty connection exists")
 		}
 	case OpenTry:
-		if !(obj.remote.state.Is(ctx, Init) ||
-			obj.remote.exists(ctx)) {
+		if !(obj.counterparty.state.Is(ctx, Init) ||
+			obj.counterparty.exists(ctx)) {
 			return errors.New("counterparty connection state not init")
 		}
 		// XXX: check if we need to verify symmetricity for timeout (already proven in OpenTry)
 	case Open:
-		if obj.remote.state.Is(ctx, OpenTry) {
+		if obj.counterparty.state.Is(ctx, OpenTry) {
 			return errors.New("counterparty connection state not tryopen")
 		}
 	}
@@ -326,11 +340,11 @@ func (obj Object) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uin
 		return err
 	}
 
-	if !obj.remote.state.Is(ctx, CloseTry) {
+	if !obj.counterparty.state.Is(ctx, CloseTry) {
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -349,11 +363,11 @@ func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if !obj.remote.state.Is(ctx, Closed) {
+	if !obj.counterparty.state.Is(ctx, Closed) {
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.remote.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -370,11 +384,11 @@ func (obj Object) CloseTimeout(ctx sdk.Context) error {
 	// XXX: double check if the user can bypass the verification logic somehow
 	switch obj.state.Get(ctx) {
 	case CloseTry:
-		if !obj.remote.state.Is(ctx, Open) {
+		if !obj.counterparty.state.Is(ctx, Open) {
 			return errors.New("counterparty connection state not open")
 		}
 	case Closed:
-		if !obj.remote.state.Is(ctx, CloseTry) {
+		if !obj.counterparty.state.Is(ctx, CloseTry) {
 			return errors.New("counterparty connection state not closetry")
 		}
 	}

@@ -23,7 +23,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	amt := sdk.TokensFromTendermintPower(power)
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), amt.MulRaw(numVals)))
 
-	bondedPool, _ := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
 	err := bondedPool.SetCoins(bondedCoins)
 	require.NoError(t, err)
 	keeper.SetBondedPool(ctx, bondedPool)
@@ -90,7 +90,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	_, oldUnbondedPool := keeper.GetPools(ctx)
+	oldUnbondedPool := keeper.GetNotBondedPool(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
@@ -104,7 +104,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// balance decreased
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
-	_, newUnbondedPool := keeper.GetPools(ctx)
+	newUnbondedPool := keeper.GetNotBondedPool(ctx)
 	diffTokens := oldUnbondedPool.GetCoins().Sub(newUnbondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, int64(5), diffTokens.Int64())
 }
@@ -116,7 +116,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// add bonded tokens to pool for (re)delegations
 	startCoins := sdk.NewCoins(sdk.NewInt64Coin(keeper.BondDenom(ctx), 15))
-	bondedPool, _ := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
 	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(startCoins))
 	require.NoError(t, err)
 	keeper.SetBondedPool(ctx, bondedPool)
@@ -171,7 +171,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// pool bonded tokens should decrease
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), slashAmount))
-	newBondedPool, _ := keeper.GetPools(ctx)
+	newBondedPool := keeper.GetBondedPool(ctx)
 	require.Equal(t, bondedPool.GetCoins().Sub(burnedCoins), newBondedPool.GetCoins())
 }
 
@@ -190,7 +190,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 
-	oldBondedPool, _ := keeper.GetPools(ctx)
+	oldBondedPool := keeper.GetBondedPool(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, -2, 10, fraction)
@@ -198,7 +198,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// read updated state
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	newBondedPool, _ := keeper.GetPools(ctx)
+	newBondedPool := keeper.GetBondedPool(ctx)
 
 	// end block
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -218,7 +218,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 
-	oldBondedPool, _ := keeper.GetPools(ctx)
+	oldBondedPool := keeper.GetBondedPool(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
@@ -226,7 +226,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// read updated state
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	newBondedPool, _ := keeper.GetPools(ctx)
+	newBondedPool := keeper.GetBondedPool(ctx)
 
 	// end block
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -255,7 +255,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// slash validator for the first time
 	ctx = ctx.WithBlockHeight(12)
-	oldBondedPool, _ := keeper.GetPools(ctx)
+	oldBondedPool := keeper.GetBondedPool(ctx)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
@@ -271,7 +271,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance decreased
 	require.Equal(t, sdk.TokensFromTendermintPower(2), ubd.Entries[0].Balance)
 	// read updated pool
-	newBondedPool, _ := keeper.GetPools(ctx)
+	newBondedPool := keeper.GetBondedPool(ctx)
 	// bonded tokens burned
 	diffTokens := oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromTendermintPower(3), diffTokens)
@@ -293,7 +293,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance decreased again
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newBondedPool, _ = keeper.GetPools(ctx)
+	newBondedPool = keeper.GetBondedPool(ctx)
 	// bonded tokens burned again
 	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromTendermintPower(6), diffTokens)
@@ -315,7 +315,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance unchanged
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newBondedPool, _ = keeper.GetPools(ctx)
+	newBondedPool = keeper.GetBondedPool(ctx)
 	// bonded tokens burned again
 	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromTendermintPower(9), diffTokens)
@@ -337,7 +337,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// balance unchanged
 	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
 	// read updated pool
-	newBondedPool, _ = keeper.GetPools(ctx)
+	newBondedPool = keeper.GetBondedPool(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
 	diffTokens = oldBondedPool.GetCoins().Sub(newBondedPool.GetCoins()).AmountOf(keeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromTendermintPower(10), diffTokens)
@@ -368,7 +368,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
 	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(rdCoins))
 	require.NoError(t, err)
@@ -385,7 +386,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, fraction) })
 	burnAmount := sdk.TokensFromTendermintPower(10).ToDec().Mul(fraction).TruncateInt()
 
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
+	bondedPool = keeper.GetBondedPool(ctx)
+	notBondedPool = keeper.GetNotBondedPool(ctx)
 	// burn bonded tokens from only from delegations
 	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded, notBondedPool.GetCoins().AmountOf(bondDenom)))
@@ -415,7 +417,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt()) // subtract redelegations as they are not burned
 
 	// read updated pool
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
+	bondedPool = keeper.GetBondedPool(ctx)
+	notBondedPool = keeper.GetNotBondedPool(ctx)
 	// seven bonded tokens burned
 	require.True(sdk.IntEq(t, oldBonded, bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded, notBondedPool.GetCoins().AmountOf(bondDenom)))
@@ -441,7 +444,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	burnAmount = sdk.TokensFromTendermintPower(10).ToDec().Mul(sdk.OneDec()).TruncateInt()
 
 	// read updated pool
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
+	bondedPool = keeper.GetBondedPool(ctx)
+	notBondedPool = keeper.GetNotBondedPool(ctx)
 	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded, notBondedPool.GetCoins().AmountOf(bondDenom)))
 	oldBonded = bondedPool.GetCoins().AmountOf(bondDenom)
@@ -468,7 +472,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
 	// read updated pool
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
+	bondedPool = keeper.GetBondedPool(ctx)
+	notBondedPool = keeper.GetNotBondedPool(ctx)
 	require.True(sdk.IntEq(t, oldBonded, bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded, notBondedPool.GetCoins().AmountOf(bondDenom)))
 
@@ -512,7 +517,8 @@ func TestSlashBoth(t *testing.T) {
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, ubdATokens))
 
 	// update bonded tokens
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(bondedCoins)))
 	require.NoError(t, bondedPool.SetCoins(notBondedPool.GetCoins().Add(notBondedCoins)))
 	keeper.SetBondedPool(ctx, bondedPool)
@@ -534,7 +540,8 @@ func TestSlashBoth(t *testing.T) {
 	burnedBondAmount = burnedBondAmount.Sub(burnedNotBondedAmount)
 
 	// read updated pool
-	bondedPool, notBondedPool = keeper.GetPools(ctx)
+	bondedPool = keeper.GetBondedPool(ctx)
+	notBondedPool = keeper.GetNotBondedPool(ctx)
 	require.True(sdk.IntEq(t, oldBonded.Sub(burnedBondAmount), bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded.Sub(burnedNotBondedAmount), notBondedPool.GetCoins().AmountOf(bondDenom)))
 

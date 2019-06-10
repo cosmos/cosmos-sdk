@@ -318,7 +318,8 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 
 func queryPool(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	bondDenom := k.BondDenom(ctx)
-	bondedPool, notBondedPool := k.GetPools(ctx)
+	bondedPool := k.GetBondedPool(ctx)
+	notBondedPool := k.GetNotBondedPool(ctx)
 	if bondedPool == nil || notBondedPool == nil {
 		return nil, sdk.ErrInternal("pool accounts haven't been set")
 	}

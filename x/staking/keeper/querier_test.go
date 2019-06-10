@@ -105,7 +105,8 @@ func TestQueryParametersPool(t *testing.T) {
 	require.Nil(t, err)
 
 	var pool types.Pool
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 	errRes = cdc.UnmarshalJSON(res, &pool)
 	require.Nil(t, errRes)
 	require.Equal(t, bondedPool.GetCoins().AmountOf(bondDenom), pool.BondedTokens)

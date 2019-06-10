@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 //_______________________________________________________________________
@@ -89,28 +88,6 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) expor
 	return val
 }
 
-// TotalBondedTokens total staking tokens supply which is bonded
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
-	bondedPool := k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
-	return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
-}
-
-// StakingTokenSupply staking tokens from the total supply
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	return k.supplyKeeper.GetSupply(ctx).Total.AmountOf(k.BondDenom(ctx))
-}
-
-// BondedRatio the fraction of the staking tokens which are currently bonded
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	bondedPool := k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
-
-	stakeSupply := k.StakingTokenSupply(ctx)
-	if stakeSupply.IsPositive() {
-		return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec().QuoInt(stakeSupply)
-	}
-	return sdk.ZeroDec()
-}
-
 //_______________________________________________________________________
 // Delegation Set
 
@@ -159,29 +136,4 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Deleg
 		delegations = append(delegations, delegation)
 	}
 	return delegations
-}
-
-// GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetPools(ctx sdk.Context) (bondedPool, notBondedPool supply.ModuleAccount) {
-	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
-	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
-	return bondedPool, notBondedPool
-}
-
-// SetBondedPool sets the bonded tokens pool account
-func (k Keeper) SetBondedPool(ctx sdk.Context, newBondPool supply.ModuleAccount) {
-	// safety check
-	if newBondPool.Name() != BondedTokensName {
-		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", BondedTokensName, newBondPool.Name()))
-	}
-	k.supplyKeeper.SetModuleAccount(ctx, newBondPool)
-}
-
-// SetNotBondedPool sets the not bonded tokens pool account
-func (k Keeper) SetNotBondedPool(ctx sdk.Context, newNotBondedPool supply.ModuleAccount) {
-	// safety check
-	if newNotBondedPool.Name() != NotBondedTokensName {
-		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", NotBondedTokensName, newNotBondedPool.Name()))
-	}
-	k.supplyKeeper.SetModuleAccount(ctx, newNotBondedPool)
 }

@@ -71,7 +71,8 @@ func TestSetValidator(t *testing.T) {
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 
 	// create a random pool
 	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromTendermintPower(1234))))
@@ -111,7 +112,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// create context, keeper, and pool for tests
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	bondedPool, notBondedPool := keeper.GetPools(ctx)
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 
 	// create keeper parameters
 	params := keeper.GetParams(ctx)
@@ -168,10 +170,12 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromTendermintPower(100)
-	bondedPool, _ := keeper.GetPools(ctx)
+
+	bondedPool := keeper.GetBondedPool(ctx)
 	err := bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens)))
 	require.NoError(t, err)
 	keeper.SetBondedPool(ctx, bondedPool)
+
 	validator, _ = keeper.AddTokensFromDel(ctx, validator, valTokens)
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, valTokens, validator.Tokens)
@@ -201,7 +205,7 @@ func TestValidatorBasics(t *testing.T) {
 		validators[i].Status = sdk.Unbonded
 		validators[i].Tokens = sdk.ZeroInt()
 		tokens := sdk.TokensFromTendermintPower(power)
-		
+
 		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], tokens)
 	}
 	assert.Equal(t, sdk.TokensFromTendermintPower(9), validators[0].Tokens)
@@ -1178,7 +1182,7 @@ func TestUpdateStatus(t *testing.T) {
 	// Unbonded to Bonded
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	
+
 	// Bonded to Unbonding
 	validator = keeper.UpdateStatus(ctx, validator, sdk.Unbonding)
 	require.Equal(t, sdk.Unbonding, validator.Status)

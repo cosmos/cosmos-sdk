@@ -50,7 +50,8 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		bonded := sdk.ZeroInt()
 		notBonded := sdk.ZeroInt()
-		bondedPool, notBondedPool := k.GetPools(ctx)
+		bondedPool := k.GetBondedPool(ctx)
+		notBondedPool := k.GetNotBondedPool(ctx)
 		bondDenom := k.BondDenom(ctx)
 
 		k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {

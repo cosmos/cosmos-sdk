@@ -87,10 +87,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
 
 	// check if the unbonded and bonded pools accounts exist and create them if not
-	bondPool, notBondedPool := keeper.GetPools(ctx)
-	if bondPool == nil {
-		bondPool = supply.NewModuleHolderAccount(BondedTokensName)
-		if err := bondPool.SetAccountNumber(accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+	bondedPool := keeper.GetBondedPool(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
+
+	if bondedPool == nil {
+		bondedPool = supply.NewModuleHolderAccount(BondedTokensName)
+		if err := bondedPool.SetAccountNumber(accountKeeper.GetNextAccountNumber(ctx)); err != nil {
 			panic(err)
 		}
 	}
@@ -103,11 +105,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	}
 
 	// add coins if not provided on genesis
-	if bondPool.GetCoins().IsZero() {
-		if err := bondPool.SetCoins(bondedCoins); err != nil {
+	if bondedPool.GetCoins().IsZero() {
+		if err := bondedPool.SetCoins(bondedCoins); err != nil {
 			panic(err)
 		}
-		keeper.SetBondedPool(ctx, bondPool)
+		keeper.SetBondedPool(ctx, bondedPool)
 	}
 
 	if notBondedPool.GetCoins().IsZero() {

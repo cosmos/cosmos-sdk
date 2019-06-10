@@ -52,8 +52,8 @@ records within a block.
 
 - Validators: `0x21 | OperatorAddr -> amino(validator)`
 - ValidatorsByConsAddr: `0x22 | ConsAddr -> OperatorAddr`
-- ValidatorsByPower: `0x23 | BigEndian(Tokens) | OperatorAddr -> OperatorAddr`
-- LastValidatorsPower: `0x11 OperatorAddr -> amino(Tokens) 
+- ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddr -> OperatorAddr`
+- LastValidatorsPower: `0x11 OperatorAddr -> amino(ConsensusPower) 
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
@@ -66,8 +66,9 @@ map is needed to find the operator. Note that the `ConsAddr` corresponds to the
 address which can be derived from the validator's `ConsPubKey`. 
 
 `ValidatorsByPower` is an additional index that provides a sorted list o
-potential validators to quickly determine the current active set. Note 
-that all validators where `Jailed` is true are not stored within this index.
+potential validators to quickly determine the current active set. Here
+ConsensusPower is validator.Tokens/10^6.  Note that all validators where
+`Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
@@ -78,28 +79,28 @@ Each validator's state is stored in a `Validator` struct:
 
 ```golang
 type Validator struct {
-    OperatorAddr    sdk.ValAddress // address of the validator's operator; bech encoded in JSON
-    ConsPubKey      crypto.PubKey  // Tendermint consensus pubkey of validator
-    Jailed          bool           // has the validator been jailed?
-
-    Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
-    Tokens          sdk.Int        // delegated tokens (incl. self-delegation)
-    DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
-
-    Description Description  // description terms for the validator
-
-    // Needed for ordering vals in the by-power key
-    UnbondingHeight  int64     // if unbonding, height at which this validator has begun unbonding
-    UnbondingMinTime time.Time // if unbonding, min time for the validator to complete unbonding
-
-    Commission Commission // info about the validator's commission
+    OperatorAddress         sdk.ValAddress  // address of the validator's operator; bech encoded in JSON
+    ConsPubKey              crypto.PubKey   // the consensus public key of the validator; bech encoded in JSON
+    Jailed                  bool            // has the validator been jailed from bonded status?
+    Status                  sdk.BondStatus  // validator status (bonded/unbonding/unbonded)
+    Tokens                  sdk.Int         // delegated tokens (incl. self-delegation)
+    DelegatorShares         sdk.Dec         // total shares issued to a validator's delegators
+    Description             Description     // description terms for the validator
+    UnbondingHeight         int64           // if unbonding, height at which this validator has begun unbonding
+    UnbondingCompletionTime time.Time       // if unbonding, min time for the validator to complete unbonding
+    Commission              Commission      // commission parameters
+    MinSelfDelegation       sdk.Int         // validator's self declared minimum self delegation
 }
 
 type Commission struct {
-    Rate          sdk.Dec   // the commission rate charged to delegators
-    MaxRate       sdk.Dec   // maximum commission rate which this validator can ever charge
-    MaxChangeRate sdk.Dec   // maximum daily increase of the validator commission
-    UpdateTime    time.Time // the last time the commission rate was changed
+    CommissionRates
+    UpdateTime time.Time // the last time the commission rate was changed
+}
+
+CommissionRates struct {
+    Rate          sdk.Dec // the commission rate charged to delegators, as a fraction
+    MaxRate       sdk.Dec // maximum commission rate which validator can ever charge, as a fraction
+    MaxChangeRate sdk.Dec // maximum daily increase of the validator commission, as a fraction
 }
 
 type Description struct {

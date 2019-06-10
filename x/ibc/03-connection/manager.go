@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// XXX: rename remote to something else
+// XXX: rename remote to counterparty
 // XXX: all code using external KVStore should be defer-recovered in case of missing proofs
 
 type Manager struct {
@@ -30,7 +30,7 @@ func NewManager(protocol, free state.Base, clientman client.Manager) Manager {
 
 		client: clientman,
 
-		self: state.NewIndexer(free, []byte("/connection/self/"), state.Dec),
+		self: state.NewIndexer(state.NewMapping(free, []byte("/connection/self/")), state.Dec),
 
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
@@ -80,13 +80,12 @@ func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (no
 		err = errors.New("connection already exists for the provided id")
 		return
 	}
-	obj.connection.Set(ctx, connection)
 	obj.client, err = man.client.Query(ctx, connection.Client)
 	if err != nil {
 		return
 	}
-	obj.counterparty = man.counterparty.object(connection.Counterparty)
-	obj.counterparty.client = man.counterparty.client.Query(connection.CounterpartyClient)
+
+	obj.connection.Set(ctx, connection)
 	return NihiloObject(obj), nil
 }
 

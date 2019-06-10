@@ -5,13 +5,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic app module basics object
@@ -42,22 +43,22 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// // register rest routes
-// func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-// 	// TODO
-// 	rest.RegisterRoutes(ctx, rtr, cdc)
-// }
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+	// TODO
+	// rest.RegisterRoutes(ctx, rtr, cdc)
+}
 
-// // get the root tx command of this module
-// func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-// 	// TODO:
-// 	return nil
-// }
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+	// TODO:
+	return nil
+}
 
-// // get the root query command of this module
-// func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-// 	return cli.GetQueryCmd(cdc)
-// }
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetQueryCmd(cdc)
+}
 
 //___________________________
 

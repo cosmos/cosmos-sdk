@@ -84,7 +84,7 @@ func initialize() (ctx sdk.Context, keeperInstance Keeper) {
 	return
 }
 
-func TestSetNFT(t *testing.T) {
+func TestUpdateNFT(t *testing.T) {
 	addresses := createTestAddrs(1)
 	ctx, keeper := initialize()
 
@@ -96,16 +96,16 @@ func TestSetNFT(t *testing.T) {
 	image1 := "test_image"
 	name1 := "test_name"
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err := keeper.SetNFT(ctx, denom, nft)
+	err := keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	id2 := string(2)
 
-	// SetNFT shouldn't fail when collection exists
+	// UpdateNFT shouldn't fail when collection exists
 	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
-	err = keeper.SetNFT(ctx, denom, nft2)
+	err = keeper.UpdateNFT(ctx, denom, nft2)
 	require.Nil(t, err)
 }
 
@@ -121,9 +121,9 @@ func TestGetNFT(t *testing.T) {
 	image1 := "test_image"
 	name1 := "test_name"
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err := keeper.SetNFT(ctx, denom, nft)
+	err := keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	// GetNFT should get the NFT
@@ -139,9 +139,9 @@ func TestGetNFT(t *testing.T) {
 
 	id2 := string(2)
 
-	// SetNFT shouldn't fail when collection exists
+	// UpdateNFT shouldn't fail when collection exists
 	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
-	err = keeper.SetNFT(ctx, denom, nft2)
+	err = keeper.UpdateNFT(ctx, denom, nft2)
 	require.Nil(t, err)
 
 	// GetNFT should get the NFT when collection exists
@@ -173,9 +173,9 @@ func TestDeleteNFT(t *testing.T) {
 	err := keeper.DeleteNFT(ctx, denom, id1)
 	require.NotNil(t, err)
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err = keeper.SetNFT(ctx, denom, nft)
+	err = keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	id2 := string(2)
@@ -209,9 +209,9 @@ func TestIsNFT(t *testing.T) {
 	isNFT := keeper.IsNFT(ctx, denom, id1)
 	require.False(t, isNFT)
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err := keeper.SetNFT(ctx, denom, nft)
+	err := keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	// IsNFT should return true
@@ -219,6 +219,37 @@ func TestIsNFT(t *testing.T) {
 	require.True(t, isNFT)
 }
 
+func TestSetCollection(t *testing.T) {
+	addresses := createTestAddrs(1)
+	ctx, keeper := initialize()
+
+	denom := sdk.DefaultBondDenom
+	id1 := string(1)
+	address1 := addresses[0]
+	tokenURI1 := "https://google.com"
+	description1 := "test_description"
+	image1 := "test_image"
+	name1 := "test_name"
+
+	// UpdateNFT shouldn't fail when collection does not exist
+	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
+	err := keeper.UpdateNFT(ctx, denom, nft)
+	require.Nil(t, err)
+
+	// collection should exist
+	collection, exists := keeper.GetCollection(ctx, denom)
+	require.True(t, exists)
+
+	id2 := string(2)
+	nft2 := types.NewBaseNFT(id2, address1, tokenURI1, description1, image1, name1)
+	collection.AddNFT(nft2)
+	keeper.SetCollection(ctx, denom, collection)
+
+	collection, exists = keeper.GetCollection(ctx, denom)
+	require.True(t, exists)
+	require.Len(t, collection.NFTs, 2)
+
+}
 func TestGetCollection(t *testing.T) {
 	addresses := createTestAddrs(1)
 	ctx, keeper := initialize()
@@ -236,15 +267,15 @@ func TestGetCollection(t *testing.T) {
 	require.Empty(t, collection)
 	require.False(t, exists)
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err := keeper.SetNFT(ctx, denom, nft)
+	err := keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	// collection should exist
 	collection, exists = keeper.GetCollection(ctx, denom)
 	require.True(t, exists)
-
+	require.NotEmpty(t, collection)
 }
 func TestGetCollections(t *testing.T) {
 	addresses := createTestAddrs(1)
@@ -262,9 +293,9 @@ func TestGetCollections(t *testing.T) {
 	collections := keeper.GetCollections(ctx)
 	require.Empty(t, collections)
 
-	// SetNFT shouldn't fail when collection does not exist
+	// UpdateNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, tokenURI1, description1, image1, name1)
-	err := keeper.SetNFT(ctx, denom, nft)
+	err := keeper.UpdateNFT(ctx, denom, nft)
 	require.Nil(t, err)
 
 	// collections should equal 1

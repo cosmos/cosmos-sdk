@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"crypto/sha1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,32 +13,40 @@ import (
 // - Balances: 0x01<address_bytes_key><denom_bytes_key>: <Collections>
 var (
 	CollectionsKeyPrefix = []byte{0x00} // key for NFT collections
-	BalancesKeyPrefix    = []byte{0x01} // key for balance of NFTs held by an address 
+	OwnersKeyPrefix      = []byte{0x01} // key for balance of NFTs held by an address
 )
 
 // GetCollectionKey gets the key of a collection
 func GetCollectionKey(denom string) []byte {
-	// TODO: use the hash of the denom instead
-	return append(CollectionsKeyPrefix, []byte(denom)...)
+
+	h := sha1.New()
+	h.Write([]byte(denom))
+	bs := h.Sum(nil)
+
+	return append(CollectionsKeyPrefix, bs...)
 }
 
-// SplitBalanceKey gets an address and denom from a balance key
-func SplitBalanceKey(key []byte) (sdk.AccAddress, string) {
+// SplitOwnerKey gets an address and denom from an owner key
+func SplitOwnerKey(key []byte) (sdk.AccAddress, []byte) {
 	if len(key) != sdk.AddrLen {
 		panic("unexpected key length")
 	}
 	address := key[1 : sdk.AddrLen+1]
-	denomBz := key[sdk.AddrLen+1:] // TODO: use the hash as the key
-	return sdk.AccAddress(address), string(denomBz)
+	denomHashBz := key[sdk.AddrLen+1:]
+	return sdk.AccAddress(address), denomHashBz
 }
 
-// GetBalancesKey gets the key prefix for all the collections owned by an account address
-func GetBalancesKey(address sdk.AccAddress) []byte {
-	return append(BalancesKeyPrefix, address.Bytes()...)
+// GetOwnersKey gets the key prefix for all the collections owned by an account address
+func GetOwnersKey(address sdk.AccAddress) []byte {
+	return append(OwnersKeyPrefix, address.Bytes()...)
 }
 
-// GetBalanceKey gets the key of a collection owned by an account address
-func GetBalanceKey(address sdk.AccAddress, denom string) []byte {
-	// TODO: use the hash of the denom instead
-	return append(GetBalancesKey(address), []byte(denom)...)
+// GetOwnerKey gets the key of a collection owned by an account address
+func GetOwnerKey(address sdk.AccAddress, denom string) []byte {
+
+	h := sha1.New()
+	h.Write([]byte(denom))
+	bs := h.Sum(nil)
+
+	return append(GetOwnersKey(address), bs...)
 }

@@ -7,3 +7,8 @@ const (
 	// RouterKey is the message route for the uniswap module
 	RouterKey = ModuleName
 )
+
+// native asset to the module
+type (
+	NativeAsset string
+)

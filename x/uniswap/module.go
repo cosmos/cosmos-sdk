@@ -3,6 +3,10 @@ package uniswap
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,9 +16,6 @@ var (
 	_ sdk.AppModule      = AppModule{}
 	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
-
-// name of this module
-const ModuleName = "uniswap"
 
 // AppModuleBasic app module basics object
 type AppModuleBasic struct{}
@@ -31,22 +32,31 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis default genesis state
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return moduleCdc.MustMarshalJSON(DefaultGenesisState())
+	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := moduleCdc.UnmarshalJSON(bz, &data)
+	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
 	return ValidateGenesis(data)
 }
 
-//___________________________
+// RegisterRESTRoutes registers rest routes
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {
 
-// AppModule supply app module
+}
+
+// GetTxCmd returns the root tx command of this module
+func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
+
+// GetQueryCmd returns the root query command of this module
+func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+
+// AppModule uniswap app module
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
@@ -54,19 +64,13 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper) sdk.AppModule {
-
 	return sdk.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	})
 }
 
-// Name defines module name
-func (AppModule) Name() string {
-	return ModuleName
-}
-
-// RegisterInvariants registers the nft module invariants
+// RegisterInvariants registers the uniswap module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
 	RegisterInvariants(ir, am.keeper)
 }
@@ -77,9 +81,9 @@ func (AppModule) Route() string {
 }
 
 // NewHandler module handler
-//func (am AppModule) NewHandler() sdk.Handler {
-//	return NewHandler(am.keeper)
-//}
+func (am AppModule) NewHandler() sdk.Handler {
+	return NewHandler(am.keeper)
+}
 
 // QuerierRoute module querier route name
 func (AppModule) QuerierRoute() string {
@@ -87,11 +91,11 @@ func (AppModule) QuerierRoute() string {
 }
 
 // NewQuerierHandler module querier
-//func (am AppModule) NewQuerierHandler() sdk.Querier {
-//	return NewQuerier(am.keeper)
-//}
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(am.keeper)
+}
 
-// InitGenesis supply module init-genesis
+// InitGenesis uniswap module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)

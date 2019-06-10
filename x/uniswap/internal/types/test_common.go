@@ -27,6 +27,6 @@ var (
 	deadline = time.Now()
 
 	emptyAddr  sdk.AccAddress
-	emptyDenom string
+	emptyDenom = "   "
 	emptyTime  time.Time
 )

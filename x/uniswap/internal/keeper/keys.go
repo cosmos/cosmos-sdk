@@ -8,12 +8,7 @@ import (
 var (
 	ExchangePrefix    = []byte{0x00} // prefix for exchange liquidity keys
 	UNIBalancesPrefix = []byte{0x01} // prefix for UNI balances keys
-	TotalLiquidityKey = []byte{0x02} // key for total UNI liquidity
-)
-
-const (
-	// ModuleName is the name of the module
-	ModuleName = "uniswap"
+	TotalUNIKey       = []byte{0x02} // key for total
 )
 
 // GetExchangeKey gets the key for an exchanges total liquidity

@@ -656,7 +656,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		k.SetUnbondingDelegation(ctx, ubd)
 	}
 
-	// remove the coins from the not bonded pool as they were transfered to the account
+	// remove the coins from the not bonded pool as they were transferred to the account
 	err := k.removeNotBondedTokens(ctx, removedAmt)
 	if err != nil {
 		return err

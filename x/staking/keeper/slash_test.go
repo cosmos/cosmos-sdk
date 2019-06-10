@@ -169,9 +169,10 @@ func TestSlashRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
 
-	// pool bonded tokens should not decrease as they are burned upstream
+	// pool bonded tokens should decrease
+	burnedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), slashAmount))
 	newBondedPool, _ := keeper.GetPools(ctx)
-	require.Equal(t, newBondedPool.GetCoins(), bondedPool.GetCoins())
+	require.Equal(t, bondedPool.GetCoins().Sub(burnedCoins), newBondedPool.GetCoins())
 }
 
 // tests Slash at a future height (must panic)
@@ -380,10 +381,9 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	keeper.Slash(ctx, consAddr, 10, 10, fraction)
 
+	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, fraction) })
 	burnAmount := sdk.TokensFromTendermintPower(10).ToDec().Mul(fraction).TruncateInt()
-	burnAmount = burnAmount.Sub(fraction.MulInt(rdTokens).TruncateInt()) // subtract redelegations as they are not burned
 
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	// burn bonded tokens from only from delegations
@@ -409,15 +409,15 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
+	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 	burnAmount = sdk.TokensFromTendermintPower(10).ToDec().Mul(sdk.OneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt()) // subtract redelegations as they are not burned
 
 	// read updated pool
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
 	// seven bonded tokens burned
-	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPool.GetCoins().AmountOf(bondDenom)))
+	require.True(sdk.IntEq(t, oldBonded, bondedPool.GetCoins().AmountOf(bondDenom)))
 	require.True(sdk.IntEq(t, oldNotBonded, notBondedPool.GetCoins().AmountOf(bondDenom)))
 	oldBonded = bondedPool.GetCoins().AmountOf(bondDenom)
 
@@ -436,10 +436,9 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec())
 
+	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 	burnAmount = sdk.TokensFromTendermintPower(10).ToDec().Mul(sdk.OneDec()).TruncateInt()
-	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt()) // subtract redelegations as they are not burned
 
 	// read updated pool
 	bondedPool, notBondedPool = keeper.GetPools(ctx)
@@ -465,7 +464,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// validator still in unbonding period
 	validator, _ = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
-	keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec())
+
+	require.NotPanics(t, func() { keeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
 	// read updated pool
 	bondedPool, notBondedPool = keeper.GetPools(ctx)

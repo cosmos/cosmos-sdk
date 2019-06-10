@@ -198,12 +198,13 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// have been slashed, and slash amounts are calculated
 		// according to stake held at time of infraction
 		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance)
-		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 
 		// Update unbonding delegation if necessary
 		if unbondingSlashAmount.IsZero() {
 			continue
 		}
+
+		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
 		unbondingDelegation.Entries[i] = entry
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
@@ -261,7 +262,6 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			sharesToUnbond = delegation.Shares
 		}
 
-		// we don't burn tokens as the tokens remain on the bonded pool
 		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))

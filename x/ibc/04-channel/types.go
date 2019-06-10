@@ -3,7 +3,8 @@ package channel
 type State = byte
 
 const (
-	Init State = iota
+	Idle State = iota
+	Init
 	OpenTry
 	Open
 	CloseTry

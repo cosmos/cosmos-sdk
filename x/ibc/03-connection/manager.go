@@ -140,6 +140,10 @@ func (obj Object) ClientID() string {
 	return obj.client.ID()
 }
 
+func (obj Object) State(ctx sdk.Context) State {
+	return obj.state.Get(ctx)
+}
+
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.connection.Exists(ctx)
 }
@@ -188,10 +192,6 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 
 	obj := Object(nobj)
-	if obj.exists(ctx) {
-		return errors.New("init on existing connection")
-	}
-
 	if !obj.state.Transit(ctx, Idle, Init) {
 		return errors.New("init on non-idle connection")
 	}

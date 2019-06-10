@@ -113,12 +113,12 @@ func testAddr(addr string) sdk.AccAddress {
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
+		address, pubKey, sdk.NewCoin(sdk.BondDenom, amt),
 		staking.Description{}, commission, sdk.OneInt(),
 	)
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
-	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
+	amount := sdk.NewCoin(sdk.BondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

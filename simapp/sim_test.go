@@ -268,7 +268,7 @@ func genGenesisAccounts(
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
-		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))}
+		coins := sdk.Coins{sdk.NewCoin(sdk.BondDenom, sdk.NewInt(amount))}
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
@@ -382,7 +382,7 @@ func genMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 			}(r),
 		),
 		mint.NewParams(
-			sdk.DefaultBondDenom,
+			sdk.BondDenom,
 			func(r *rand.Rand) sdk.Dec {
 				var v sdk.Dec
 				ap.GetOrGenerate(cdc, simulation.InflationRateChange, &v, r,
@@ -537,7 +537,7 @@ func genStakingGenesisState(
 				return v
 			}(r),
 			7,
-			sdk.DefaultBondDenom,
+			sdk.BondDenom,
 		),
 		nil,
 		nil,

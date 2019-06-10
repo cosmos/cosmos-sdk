@@ -18,8 +18,18 @@ const (
 	ValidatorUpdateDelay int64 = 1
 )
 
+// BondDenom can be passed as build flag as shown in the following example:
+//  go build -X github.com/cosmos/cosmos-sdk/types.BondDenom=atom
+var BondDenom = ""
+
 // PowerReduction is the amount of staking tokens required for 1 unit of Tendermint power
 var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+
+func init() {
+	if BondDenom == "" {
+		BondDenom = DefaultBondDenom
+	}
+}
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
 func TokensToTendermintPower(tokens Int) int64 {

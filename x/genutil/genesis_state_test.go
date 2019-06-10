@@ -21,10 +21,10 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	comm := staking.CommissionRates{}
 
 	msg1 := staking.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
+		sdk.NewInt64Coin(sdk.BondDenom, 50), desc, comm, sdk.OneInt())
 
 	msg2 := staking.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
+		sdk.NewInt64Coin(sdk.BondDenom, 50), desc, comm, sdk.OneInt())
 
 	genTxs := auth.NewStdTx([]sdk.Msg{msg1, msg2}, auth.StdFee{}, nil, "")
 	genesisState := NewGenesisStateFromStdTx([]auth.StdTx{genTxs})

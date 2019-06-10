@@ -68,7 +68,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	if genAccs == nil || len(genAccs) == 0 {
 		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
-			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
+			sdk.Coins{sdk.NewCoin(sdk.BondDenom, valTokens)})
 	}
 
 	mock.SetGenesis(mApp, genAccs)
@@ -202,7 +202,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
-			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			addrs[i], pubkeys[i], sdk.NewCoin(sdk.BondDenom, valTokens),
 			testDescription, testCommissionRates, sdk.OneInt(),
 		)
 

@@ -96,8 +96,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	genTokens := sdk.TokensFromTendermintPower(42)
 	bondTokens := sdk.TokensFromTendermintPower(10)
-	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
-	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
+	genCoin := sdk.NewCoin(sdk.BondDenom, genTokens)
+	bondCoin := sdk.NewCoin(sdk.BondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

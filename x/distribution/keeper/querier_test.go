@@ -188,7 +188,7 @@ func TestQueries(t *testing.T) {
 	sh := staking.NewHandler(sk)
 	comm := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt())
+		sdk.NewCoin(sdk.BondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 	staking.EndBlocker(ctx, sk)
 	val := sk.Validator(ctx, valOpAddr1)
@@ -196,10 +196,10 @@ func TestQueries(t *testing.T) {
 	require.True(t, rewards.IsZero())
 	initial := int64(10)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	tokens := sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial)}}
+	tokens := sdk.DecCoins{{sdk.BondDenom, sdk.NewDec(initial)}}
 	keeper.AllocateTokensToValidator(ctx, val, tokens)
 	rewards = getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
-	require.Equal(t, sdk.DecCoins{{sdk.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{sdk.BondDenom, sdk.NewDec(initial / 2)}}, rewards)
 
 	// test delegator's total rewards query
 	delRewards = getQueriedDelegatorTotalRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1))

@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	coinsPos         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
+	coinsPos         = sdk.NewCoins(sdk.NewInt64Coin(sdk.BondDenom, 1000))
 	coinsZero        = sdk.NewCoins()
 	coinsPosNotAtoms = sdk.NewCoins(sdk.NewInt64Coin("foo", 10000))
-	coinsMulti       = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
+	coinsMulti       = sdk.NewCoins(sdk.NewInt64Coin(sdk.BondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
 	addrs            = []sdk.AccAddress{
 		sdk.AccAddress("test1"),
 		sdk.AccAddress("test2"),

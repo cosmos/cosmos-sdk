@@ -95,14 +95,14 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
-	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.BondDenom, sdk.TokensFromTendermintPower(4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.BondDenom, sdk.TokensFromTendermintPower(5)))
 
 	addr0Initial := input.keeper.ck.GetCoins(ctx, input.addrs[0])
 	addr1Initial := input.keeper.ck.GetCoins(ctx, input.addrs[1])
 
 	expTokens := sdk.TokensFromTendermintPower(42)
-	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.BondDenom, expTokens)), addr0Initial)
 	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning

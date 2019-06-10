@@ -24,8 +24,8 @@ func createFakeTxBuilder() auth.TxBuilder {
 		false,
 		"test_chain",
 		"hello",
-		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
+		sdk.NewCoins(sdk.NewCoin(sdk.BondDenom, sdk.NewInt(1))),
+		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.BondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 	)
 }
 

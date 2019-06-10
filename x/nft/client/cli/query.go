@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,12 +38,12 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 	}
 }
 
-// GetCmdQueryBalance queries all the NFTs owned by an account
-func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
+// GetCmdQueryOwner queries all the NFTs owned by an account
+func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "balance [accountAddress] [denom (optional)]",
-		Short: "get the NFTs owned by an account address.",
-		Long:  "get the NFTs owned by an account address", // TODO: finish this
+		Use:   "owner [accountAddress] [denom (optional)]",
+		Short: "get the NFTs owned by an account address",
+		Long:  "get the NFTs owned by an account address optionally filtered by the denom of the NFTs",
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -64,12 +63,18 @@ func GetCmdQueryBalance(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/balance", queryRoute), bz)
+			var res []byte
+			if denom == "" {
+				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/owner", queryRoute), bz)
+			} else {
+				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/ownerByDenom", queryRoute), bz)
+			}
+
 			if err != nil {
 				return err
 			}
 
-			var out types.Balance
+			var out types.Owner
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -113,10 +118,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			denom := args[0]
-			id, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
+			id := args[1]
 
 			params := types.NewQueryNFTParams(denom, id)
 			bz, err := cdc.MarshalJSON(params)

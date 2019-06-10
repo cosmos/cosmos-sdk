@@ -3,7 +3,6 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/nft/querier"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
@@ -49,7 +48,7 @@ func supplyNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute st
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 
-		params := querier.NewQueryCollectionParams(denom)
+		params := types.NewQueryCollectionParams(denom)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -74,7 +73,7 @@ func getBalanceHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute s
 			return
 		}
 
-		params := querier.NewQueryBalanceParams(address, "")
+		params := types.NewQueryBalanceParams(address, "")
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -101,7 +100,7 @@ func getBalanceCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, qu
 			return
 		}
 
-		params := querier.NewQueryBalanceParams(address, denom)
+		params := types.NewQueryBalanceParams(address, denom)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -122,7 +121,7 @@ func getCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRout
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 
-		params := querier.NewQueryCollectionParams(denom)
+		params := types.NewQueryCollectionParams(denom)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -143,15 +142,9 @@ func getNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute strin
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		denom := vars["denom"]
-		tokenID := vars["id"]
+		id := vars["id"]
 
-		id, err := strconv.ParseUint(tokenID, 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		params := querier.NewQueryNFTParams(denom, id)
+		params := types.NewQueryNFTParams(denom, id)
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

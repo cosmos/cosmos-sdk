@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/require"
 )
 
 // TODO: finish
@@ -41,15 +40,14 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 	return addresses
 }
 
-
 func createInput() (k keeper, addrs []sdk.AccAddress) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	
+
 	addrs = createTestAddrs(2)
 	keyNFT := sdk.NewKVStoreKey(StoreKey)
-	
+
 	k = keeper.NewKeeper(storeKey, cdc)
 	return
 }
@@ -70,25 +68,25 @@ func TestTransferNFTMsg(t *testing.T) {
 	nfts := types.NewNFTs(
 		types.NewBaseNFT(
 			"hello",
-			addresses[0].Address()
+			addresses[0].Address(),
 			"Berlin",
 			"Berlin NFT",
 			"ImageURI",
-			"TokenURI"
-		)
-)
+			"TokenURI",
+		),
+	)
 
 	require.equal(t, nft)
 
-	// Create collection 
+	// Create collection
 	nftK.SetCollection(cdc, "Williams", nfts)
 
 	// Define MsgTransferNft
 	transferNft := MsgTransferNFT{
 		addresses[0].GetAddress(),
 		addresses[1].GetAddress(),
-		"Williams"
-		"hello"
+		"Williams",
+		"hello",
 	}
 
 }

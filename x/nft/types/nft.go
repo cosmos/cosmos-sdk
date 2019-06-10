@@ -134,14 +134,9 @@ func (nfts NFTs) Update(id string, nft NFT) (NFTs, bool) {
 // Remove removes a collection from the set of collections
 func (nfts NFTs) Remove(id string) (NFTs, bool) {
 	index := nfts.find(id)
-	fmt.Println("index is", index)
 	if index == -1 {
 		return nfts, false
 	}
-	// mft.Println(nfts[:index],)
-
-	// return append(nfts[:index], nfts[:index+1]...), true
-
 	nfts[len(nfts)-1], nfts[index] = nfts[index], nfts[len(nfts)-1]
 	return nfts[:len(nfts)-1], true
 }

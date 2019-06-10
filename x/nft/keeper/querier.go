@@ -1,4 +1,4 @@
-package querier
+package keeper
 
 import (
 	"encoding/binary"
@@ -12,10 +12,11 @@ import (
 
 // query endpoints supported by the NFT Querier
 const (
-	QuerySupply     = "supply"
-	QueryBalance    = "balance"
-	QueryCollection = "collection"
-	QueryNFT        = "nft"
+	QuerySupply       = "supply"
+	QueryOwner        = "owner"
+	QueryOwnerByDenom = "ownerByDenom"
+	QueryCollection   = "collection"
+	QueryNFT          = "nft"
 )
 
 // NewQuerier is the module level router for state queries
@@ -24,8 +25,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 		switch path[0] {
 		case QuerySupply:
 			return querySupply(ctx, path[1:], req, k)
-		case QueryBalance:
-			return queryBalance(ctx, path[1:], req, k)
+		case QueryOwner:
+			return queryOwner(ctx, path[1:], req, k)
+		case QueryOwnerByDenom:
+			return queryOwnerByDenom(ctx, path[1:], req, k)
 		case QueryCollection:
 			return queryCollection(ctx, path[1:], req, k)
 		case QueryNFT:
@@ -54,26 +57,34 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 	return bz, nil
 }
 
-func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
+func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	var collections types.Collections
-	if params.Denom == "" {
-		collections = k.GetOwnerBalances(ctx, params.Owner)
-	} else {
-		collection, _ := k.GetBalance(ctx, params.Owner, params.Denom)
-		collections = types.NewCollections(collection)
+	var owner types.Owner
+
+	var idCollections []types.IDCollection
+	idCollection, _ := k.GetOwnerByDenom(ctx, params.Owner, params.Denom)
+	owner.Address = params.Owner
+	owner.IDCollections = append(idCollections, idCollection)
+
+	bz := types.ModuleCdc.MustMarshalJSON(owner)
+	return bz, nil
+}
+
+func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryBalanceParams
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	bz, err := collections.MarshalJSON()
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
+	owner := k.GetOwner(ctx, params.Owner)
+
+	bz := types.ModuleCdc.MustMarshalJSON(owner)
 	return bz, nil
 }
 

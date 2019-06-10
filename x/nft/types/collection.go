@@ -121,7 +121,6 @@ func (collections Collections) Remove(denom string) (Collections, bool) {
 	if index == -1 {
 		return collections, false
 	}
-
 	return append(collections[:index], collections[:index+1]...), true
 }
 

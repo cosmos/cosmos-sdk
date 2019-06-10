@@ -5,15 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ sdk.AppModule      = AppModule{}
+	_ sdk.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic app module basics object
@@ -44,21 +42,22 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc)
-}
+// // register rest routes
+// func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
+// 	// TODO
+// 	rest.RegisterRoutes(ctx, rtr, cdc)
+// }
 
-// get the root tx command of this module
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	// TODO:
-	 return nil 
-	}
+// // get the root tx command of this module
+// func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+// 	// TODO:
+// 	return nil
+// }
 
-// get the root query command of this module
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
-}
+// // get the root query command of this module
+// func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+// 	return cli.GetQueryCmd(cdc)
+// }
 
 //___________________________
 
@@ -69,22 +68,22 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) sdk.AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 
-	return sdk.NewGenesisOnlyAppModule(AppModule{
+	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-	})
+	}
 }
 
-// // Name defines module name
+// Name defines module name
 func (AppModule) Name() string {
 	return ModuleName
 }
 
 // RegisterInvariants registers the nft module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
-	RegisterInvariants(ir, am.keeper)
+	// RegisterInvariants(ir, am.keeper)
 }
 
 // Route module message route name

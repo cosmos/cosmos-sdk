@@ -1,117 +1,188 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Owned struct {
-	Address sdk.AccAddress
-	Owned   []NFTIDs
+// IDCollection of non fungible tokens
+type IDCollection struct {
+	Denom string   `json:"denom,string,omitempty"`
+	IDs   []string `json:"IDs"`
 }
 
-// NFTIDs of non fungible tokens
-type NFTIDs struct {
-	Denom  string   `json:"denom,string,omitempty"`
-	NFTIDs []string `json:"NFTIDs"`
+// StringArray is an array of strings whose sole purpose is to help with find
+type StringArray []string
+
+func (stringArray StringArray) find(el string) (idx int) {
+	if len(stringArray) == 0 {
+		return -1
+	}
+	midIdx := len(stringArray) / 2
+	stringArrayEl := stringArray[midIdx]
+
+	if strings.Compare(el, stringArrayEl) == -1 {
+		return stringArray[:midIdx].find(el)
+	} else if stringArrayEl == el {
+		return midIdx
+	} else {
+		return stringArray[midIdx+1:].find(el)
+	}
 }
 
-// // NewNFTIDs creates a new NFT NFTIDs
-// func NewNFTIDs(denom string, nfts []string]) NFTIDs {
-// 	return NFTIDs{
-// 		Denom: strings.TrimSpace(denom),
-// 		NFTIDs:  nfts
-// 	}
-// }
+// NewIDCollection creates a new NFT NFTIDs
+func NewIDCollection(denom string, ids []string) IDCollection {
+	return IDCollection{
+		Denom: strings.TrimSpace(denom),
+		IDs:   ids,
+	}
+}
 
-// // EmptyNFTIDs returns an empty balance
-// func EmptyNFTIDs() NFTIDs {
-// 	return NewNFTIDs("", []string)
-// }
+// EmptyIDCollection returns an empty balance
+func EmptyIDCollection() IDCollection {
+	return NewIDCollection("", []string{})
+}
 
-// // GetNFT gets a NFT from the balance
-// func (balance NFTIDs) GetNFT(id string) (exists bool) {
+// Exists determines whether an ID is in the IDCollection
+func (idCollection IDCollection) Exists(id string) (exists bool) {
+	for _, _id := range idCollection.IDs {
+		if _id == id {
+			return true
+		}
+	}
+	return false
+}
 
-// 	for _, nft := range balance.NFTIDs {
-// 		if nft == id {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
+// AddID adds an ID to the idCollection
+func (idCollection *IDCollection) AddID(id string) {
+	idCollection.IDs = append(idCollection.IDs, id)
+}
 
-// // AddNFT adds an NFT to the balance
-// func (balance *NFTIDs) AddNFT(nft string) {
-// 	balance.NFTIDs = append(balance.NFTIDs, nft)
-// }
+// DeleteID deletes an ID from an ID Collection
+func (idCollection *IDCollection) DeleteID(id string) sdk.Error {
+	index := StringArray(idCollection.IDs).find(id)
+	if index == -1 {
+		return ErrUnknownNFT(DefaultCodespace,
+			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
+		)
+	}
+	(*idCollection).IDs = append(idCollection.IDs[:index], idCollection.IDs[:index+1]...)
+	return nil
+}
 
-// // DeleteNFT deletes an NFT from a balance
-// func (balance *NFTIDs) DeleteNFT(nft string) sdk.Error {
-// 	// TODO: how to remove element from array
-// 	// nfts, ok := balance.NFTIDs.Remove(nft)
-// 	if !ok {
-// 		return ErrUnknownNFT(DefaultCodespace,
-// 			fmt.Sprintf("NFT #%d doesn't exist on balance %s", nft.GetID(), balance.Denom),
-// 		)
-// 	}
-// 	(*balance).NFTIDs = nfts
-// 	return nil
-// }
+// Supply gets the total supply of NFTIDs of a balance
+func (idCollection IDCollection) Supply() uint {
+	return uint(len(idCollection.IDs))
+}
 
-// // Supply gets the total supply of NFTIDs of a balance
-// func (balance NFTIDs) Supply() uint {
-// 	return uint(len(balance.NFTIDs))
-// }
+// String follows stringer interface
+func (idCollection IDCollection) String() string {
+	return fmt.Sprintf(`Denom: 			%s
+IDs:        	%s`,
+		idCollection.Denom,
+		strings.Join(idCollection.IDs, ","),
+	)
+}
 
-// // String follows stringer interface
-// func (balance NFTIDs) String() string {
-// 	return fmt.Sprintf(`
-// 	Denom: 				%s
-// 	NFTIDs:        	%s`,
-// 		balance.Denom,
-// 		balance.NFTIDs.String(), // TODO: check array to string
-// 	)
-// }
+// ----------------------------------------------------------------------------
+// Owners
 
-// // ----------------------------------------------------------------------------
-// // Owners
+// Owner of non fungible tokens
+type Owner struct {
+	Address       sdk.AccAddress
+	IDCollections IDCollections
+}
 
-// // Owners an owner's array of various NFT IDs by denom
-// type Owners struct {
-// 	Owner sdk.AccAddress `json:"owner,string"`
-// 	Owners []Owner  `json:"Owners"`
-// }
+// String follows stringer interface
+func (owner Owner) String() string {
+	return fmt.Sprintf(`
+	Address: 				%s
+	IDCollections:        	%s`,
+		owner.Address,
+		owner.IDCollections.String(),
+	)
+}
 
-// // NewOwners creates a new set of NFTIDs
-// func NewOwners(owner sdk.AccAddress, balances ...Owner) Owners {
-// 	return Owner{
-// 		Owner: owner,
-// 		Owners:  balances,
-// 	}
-// }
+// IDCollections is an array of ID Collections whose sole purpose is for find
+type IDCollections []IDCollection
 
-// // Add appends two sets of Owners
-// func (balances *Owners) Add(balancesB Owners) {
-// 	*balances = append(*balances, balancesB...)
-// }
+// String follows stringer interface
+func (idCollections IDCollections) String() string {
+	if len(idCollections) == 0 {
+		return ""
+	}
 
-// // Find returns the searched balance from the set
-// func (balances Owners) Find(owner sdk.AccAddress, denom string) (Owner, bool) {
-// 	index := balances.find(owner)
-// 	if index == -1 {
-// 		return Owner{}, false
-// 	}
-// 	return balances[index], true
-// }
+	out := ""
+	for _, idCollection := range idCollections {
+		out += fmt.Sprintf("%v\n", idCollection.String())
+	}
+	return out[:len(out)-1]
+}
 
-// // Remove removes a balance from the set of balances
-// func (balances Owners) Remove(denom string) (Owners, bool) {
-// 	index := balances.find(denom)
-// 	if index == -1 {
-// 		return balances, false
-// 	}
+func (idCollections IDCollections) find(el string) int {
+	if len(idCollections) == 0 {
+		return -1
+	}
 
-// 	return append(balances[:index], balances[:index+1]...), true
-// }
+	midIdx := len(idCollections) / 2
+	midIDCollection := idCollections[midIdx]
+
+	if strings.Compare(el, midIDCollection.Denom) == -1 {
+		return idCollections[:midIdx].find(el)
+	} else if midIDCollection.Denom == el {
+		return midIdx
+	} else {
+		return idCollections[midIdx+1:].find(el)
+	}
+}
+
+// NewOwner creates a new Owner
+func NewOwner(owner sdk.AccAddress, idCollections ...IDCollection) Owner {
+	return Owner{
+		Address:       owner,
+		IDCollections: idCollections,
+	}
+}
+
+// GetIDCollection gets the IDCollection from the owner
+func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
+	index := IDCollections(owner.IDCollections).find(denom)
+	if index == -1 {
+		return NewIDCollection("", []string{}), false
+	}
+	return owner.IDCollections[index], true
+}
+
+// UpdateIDCollection updates the ID Collection of an owner
+func (owner *Owner) UpdateIDCollection(denom string, idCollection IDCollection) sdk.Error {
+	index := IDCollections(owner.IDCollections).find(denom)
+	if index == -1 {
+		return ErrUnknownCollection(DefaultCodespace,
+			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
+		)
+	}
+
+	(*owner).IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
+	return nil
+}
+
+// DeleteID deletes an ID from an owners ID Collection
+func (owner *Owner) DeleteID(denom string, id string) (err sdk.Error) {
+	idCollection, found := owner.GetIDCollection(denom)
+	if !found {
+		return ErrUnknownNFT(DefaultCodespace,
+			fmt.Sprintf("ID #%s doesn't exist in ID Collection %s", id, denom),
+		)
+	}
+	err = idCollection.DeleteID(id)
+	if err != nil {
+		return err
+	}
+	owner.UpdateIDCollection(denom, idCollection)
+	return nil
+}
 
 // // String follows stringer interface
 // func (balances Owners) String() string {
@@ -131,54 +202,36 @@ type NFTIDs struct {
 // 	return len(balances) == 0
 // }
 
-// func (balances Owners) find(owner string) int {
-// 	if len(balances) == 0 {
-// 		return -1
-// 	}
-
-// 	midIdx := len(balances) / 2
-// 	midOwner := balances[midIdx]
-
-// 	if strings.Compare(denom, midOwner.Denom) == -1 {
-// 		return balances[:midIdx].find(denom)
-// 	} else if midOwner.Denom == denom {
-// 		return midIdx
-// 	} else {
-// 		return balances[midIdx+1:].find(denom)
-// 	}
-// }
-
-// // ----------------------------------------------------------------------------
-// // Encoding
-
-// // OwnerJSON is the exported Owner format for clients
-// type OwnerJSON map[string]Owner
-
-// // MarshalJSON for Owners
-// func (balances Owners) MarshalJSON() ([]byte, error) {
-// 	balanceJSON := make(OwnerJSON)
-
-// 	for _, balance := range balances {
-// 		denom := balance.Denom
-// 		// set the pointer of the ID to nil
-// 		ptr := reflect.ValueOf(balance.Denom).Elem()
-// 		ptr.Set(reflect.Zero(ptr.Type()))
-// 		balanceJSON[denom] = balance
-// 	}
-
-// 	return json.Marshal(balanceJSON)
-// }
+// ----------------------------------------------------------------------------
+// Encoding
 
 // // UnmarshalJSON for Owners
-// func (balances *Owners) UnmarshalJSON(b []byte) error {
-// 	balanceJSON := make(OwnerJSON)
+// func (owner *Owner) UnmarshalJSON(b []byte) error {
+// 	idCollectionJSON := make(IDCollectionJSON)
 
-// 	if err := json.Unmarshal(b, &balanceJSON); err != nil {
+// 	if err := json.Unmarshal(b, &idCollectionJSON); err != nil {
 // 		return err
 // 	}
 
-// 	for denom, balance := range balanceJSON {
-// 		*balances = append(*balances, NewOwner(denom, balance.NFTIDs))
+// 	var idCollections []IDCollection
+
+// 	for denom, idCollection := range idCollectionJSON {
+// 		*owner.IDCollections = append(*owner.IDCollections, NewIDCollection(denom, idCollection))
+// 	}
+
+// 	return nil
+// }
+
+// // UnmarshalJSON for Collections
+// func (collections *Collections) UnmarshalJSON(b []byte) error {
+// 	collectionJSON := make(CollectionJSON)
+
+// 	if err := json.Unmarshal(b, &collectionJSON); err != nil {
+// 		return err
+// 	}
+
+// 	for denom, collection := range collectionJSON {
+// 		*collections = append(*collections, NewCollection(denom, collection.NFTs))
 // 	}
 
 // 	return nil

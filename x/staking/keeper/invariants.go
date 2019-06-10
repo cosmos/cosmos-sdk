@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -54,12 +55,8 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		notBondedPool := k.GetNotBondedPool(ctx)
 		bondDenom := k.BondDenom(ctx)
 
-		k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
-			validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
-			if !found {
-				panic(fmt.Sprintf("validator %s not found", delegation.ValidatorAddress))
-			}
-			bonded = bonded.Add(validator.TokensFromShares(delegation.Shares).TruncateInt())
+		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
+			bonded = bonded.Add(validator.GetTokens())
 			return false
 		})
 

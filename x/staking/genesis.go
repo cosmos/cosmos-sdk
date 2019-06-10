@@ -44,10 +44,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
 		}
 
-		// update pools and update timeslice if necessary
+		// update timeslice if necessary
 		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
+
+		bondedTokens = bondedTokens.Add(validator.GetTokens())
 	}
 
 	for _, delegation := range data.Delegations {
@@ -56,16 +58,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 		keeper.SetDelegation(ctx, delegation)
+
 		// Call the after-modification hook if not exported
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
-
-		validator, found := keeper.GetValidator(ctx, delegation.ValidatorAddress)
-		if !found {
-			panic(fmt.Sprintf("validator %s not found", delegation.ValidatorAddress))
-		}
-		bondedTokens = bondedTokens.Add(validator.TokensFromShares(delegation.Shares).TruncateInt())
 	}
 
 	for _, ubd := range data.UnbondingDelegations {

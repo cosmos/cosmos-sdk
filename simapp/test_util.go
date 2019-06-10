@@ -40,18 +40,21 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 }
 
 func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (log string) {
-	switch storeName {
-	case accountStore:
+
+	log = fmt.Sprintf("store A %X => %X\n"+
+		"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+
+	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
+		return
+	}
+
+	if storeName == accountStore {
 		var accA auth.Account
 		var accB auth.Account
 		appA.cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)
 		appB.cdc.MustUnmarshalBinaryBare(kvB.Value, &accB)
 		log = fmt.Sprintf("%v\n%v", accA, accB)
-
-	default:
-		// TODO: unmarshal based on the key prefix bytes
-		log = fmt.Sprintf("store A %X => %X\n"+
-			"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 	}
+
 	return log
 }

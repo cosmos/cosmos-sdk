@@ -57,8 +57,8 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc)
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterRoutes(ctx, rtr)
 }
 
 // get the root tx command of this module
@@ -96,14 +96,14 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 type AppModule struct {
 	AppModuleBasic
 	keeper      Keeper
-	fcKeeper    FeeCollectionKeeper
-	distrKeeper DistributionKeeper
-	accKeeper   AccountKeeper
+	fcKeeper    types.FeeCollectionKeeper
+	distrKeeper types.DistributionKeeper
+	accKeeper   types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
-	distrKeeper types.DistributionKeeper, accKeeper AccountKeeper) AppModule {
+	distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -120,7 +120,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper, am.fcKeeper, am.distrKeeper, am.accKeeper)
 }
 

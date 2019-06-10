@@ -51,7 +51,6 @@ const (
 	FlagGenerateOnly       = flags.FlagGenerateOnly
 	FlagIndentResponse     = flags.FlagIndentResponse
 	FlagListenAddr         = flags.FlagListenAddr
-	FlagCORS               = flags.FlagCORS
 	FlagMaxOpenConnections = flags.FlagMaxOpenConnections
 	FlagRPCReadTimeout     = flags.FlagRPCReadTimeout
 	FlagRPCWriteTimeout    = flags.FlagRPCWriteTimeout

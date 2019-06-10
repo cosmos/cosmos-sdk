@@ -1,4 +1,4 @@
-package mint
+package keeper
 
 import (
 	"os"
@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -36,7 +37,7 @@ func newTestInput(t *testing.T) testInput {
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
-	keyMint := sdk.NewKVStoreKey(StoreKey)
+	keyMint := sdk.NewKVStoreKey(types.StoreKey)
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
@@ -49,21 +50,21 @@ func newTestInput(t *testing.T) testInput {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	paramsKeeper := params.NewKeeper(ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
-	feeCollectionKeeper := auth.NewFeeCollectionKeeper(ModuleCdc, keyFeeCollection)
-	accountKeeper := auth.NewAccountKeeper(ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	paramsKeeper := params.NewKeeper(types.ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
+	feeCollectionKeeper := auth.NewFeeCollectionKeeper(types.ModuleCdc, keyFeeCollection)
+	accountKeeper := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	stakingKeeper := staking.NewKeeper(
-		ModuleCdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		types.ModuleCdc, keyStaking, tkeyStaking, bankKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 	mintKeeper := NewKeeper(
-		ModuleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
+		types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, feeCollectionKeeper,
 	)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 
-	mintKeeper.SetParams(ctx, DefaultParams())
-	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
+	mintKeeper.SetParams(ctx, types.DefaultParams())
+	mintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
-	return testInput{ctx, ModuleCdc, mintKeeper}
+	return testInput{ctx, types.ModuleCdc, mintKeeper}
 }

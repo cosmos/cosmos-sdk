@@ -17,7 +17,7 @@ import (
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) (*sdk.SearchTxsResult, error) {
+func SearchTxs(cliCtx context.CLIContext, tags []string, page, limit int) (*sdk.SearchTxsResult, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -59,7 +59,7 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 		return nil, err
 	}
 
-	txs, err := formatTxResults(cdc, resTxs.Txs, resBlocks)
+	txs, err := formatTxResults(cliCtx.Codec, resTxs.Txs, resBlocks)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
+func queryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return sdk.TxResponse{}, err
@@ -167,7 +167,7 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) (sd
 		return sdk.TxResponse{}, err
 	}
 
-	out, err := formatTxResult(cdc, resTx, resBlocks[resTx.Height])
+	out, err := formatTxResult(cliCtx.Codec, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}

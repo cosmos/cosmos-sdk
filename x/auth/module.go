@@ -50,8 +50,8 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-	rest.RegisterRoutes(ctx, rtr, cdc, types.StoreKey)
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterRoutes(ctx, rtr, types.StoreKey)
 }
 
 // get the root tx command of this module
@@ -88,7 +88,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module message route name
 func (AppModule) Route() string { return "" }

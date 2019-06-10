@@ -59,20 +59,46 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryValidatorOutstandingRewards implements the query validator outstanding rewards command.
 func GetCmdQueryValidatorOutstandingRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "validator-outstanding-rewards",
-		Args:  cobra.NoArgs,
+		Use:   "validator-outstanding-rewards [validator]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query distribution outstanding (un-withdrawn) rewards
+for a validator and all their delegations.
+
+Example:
+$ %s query distr validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
+`,
+				version.ClientName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute)
-			res, err := cliCtx.QueryWithData(route, []byte{})
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			params := types.NewQueryValidatorOutstandingRewardsParams(valAddr)
+			bz, err := cdc.MarshalJSON(params)
+			if err != nil {
+				return err
+			}
+
+			resp, err := cliCtx.QueryWithData(
+				fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorOutstandingRewards),
+				bz,
+			)
 			if err != nil {
 				return err
 			}
 
 			var outstandingRewards types.ValidatorOutstandingRewards
-			cdc.MustUnmarshalJSON(res, &outstandingRewards)
+			if err := cdc.UnmarshalJSON(resp, &outstandingRewards); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(outstandingRewards)
 		},
 	}
@@ -101,7 +127,7 @@ $ %s query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			res, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
+			res, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
 			if err != nil {
 				return err
 			}
@@ -185,7 +211,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 
 			if len(args) == 2 {
 				// query for rewards from a particular delegation
-				resp, err := common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
+				resp, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
 				if err != nil {
 					return err
 				}
@@ -196,7 +222,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 			}
 
 			// query for delegator total rewards
-			resp, err := common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
+			resp, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, args[0])
 			if err != nil {
 				return err
 			}

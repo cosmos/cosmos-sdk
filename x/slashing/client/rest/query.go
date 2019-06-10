@@ -7,31 +7,30 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
-		signingInfoHandlerFn(cliCtx, cdc),
+		signingInfoHandlerFn(cliCtx),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/slashing/signing_infos",
-		signingInfoHandlerListFn(cliCtx, cdc),
+		signingInfoHandlerListFn(cliCtx),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/slashing/parameters",
-		queryParamsHandlerFn(cdc, cliCtx),
+		queryParamsHandlerFn(cliCtx),
 	).Methods("GET")
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
@@ -40,9 +39,14 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Hand
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params := types.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
 
-		bz, err := cdc.MarshalJSON(params)
+		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -55,12 +59,12 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Hand
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // http request handler to query signing info
-func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
@@ -68,8 +72,13 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params := types.NewQuerySigningInfosParams(page, limit)
-		bz, err := cdc.MarshalJSON(params)
+		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -82,12 +91,17 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
-func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
 
 		res, err := cliCtx.QueryWithData(route, nil)
@@ -96,6 +110,6 @@ func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Hand
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

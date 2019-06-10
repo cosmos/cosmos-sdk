@@ -11,7 +11,7 @@ import (
 )
 
 // register all staking invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, f types.FeeCollectionKeeper,
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper, f types.FeeCollectionKeeper,
 	d types.DistributionKeeper, am types.AccountKeeper) {
 
 	ir.RegisterRoute(types.ModuleName, "supply",

@@ -63,14 +63,13 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // register rest routes
-func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, cdc *codec.Codec) {
-
+func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	var proposalRESTHandlers []rest.ProposalRESTHandler
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx, cdc))
+		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
 	}
 
-	rest.RegisterRoutes(ctx, rtr, cdc, proposalRESTHandlers)
+	rest.RegisterRoutes(ctx, rtr, proposalRESTHandlers)
 }
 
 // get the root tx command of this module
@@ -110,7 +109,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module message route name
 func (AppModule) Route() string {

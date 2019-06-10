@@ -62,13 +62,14 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
 	valTokens := sdk.TokensFromTendermintPower(initPower)
 
 	initialCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
 	createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
-	keeper := NewKeeper(cdc, keySupply, ak, DefaultCodespace)
+	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 

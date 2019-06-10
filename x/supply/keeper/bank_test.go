@@ -11,21 +11,21 @@ import (
 )
 
 const (
-	foo = "foo"
-	bar = "bar"
+	foo    = "foo"
+	bar    = "bar"
 	minter = "minter"
-	base = "baseAcc"
+	base   = "baseAcc"
 
 	initialPower = int64(100)
 )
 
 var (
-	fooAcc = types.NewModuleHolderAccount(foo)
-	barAcc = types.NewModuleHolderAccount(bar)
+	fooAcc    = types.NewModuleHolderAccount(foo)
+	barAcc    = types.NewModuleHolderAccount(bar)
 	minterAcc = types.NewModuleMinterAccount(minter)
 
 	initTokens = sdk.TokensFromTendermintPower(initialPower)
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
 func TestSendCoins(t *testing.T) {
@@ -61,11 +61,11 @@ func TestSendCoins(t *testing.T) {
 	err = keeper.SendCoinsModuleToAccount(ctx, bar, baseAcc.GetAddress(), initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, bar))
-	require.Equal(t, initCoins, keeper.GetCoins(ctx, baseAcc.GetAddress()))
+	require.Equal(t, initCoins, keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 
 	err = keeper.SendCoinsAccountToModule(ctx, baseAcc.GetAddress(), foo, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoins(ctx, baseAcc.GetAddress()))
+	require.Equal(t, sdk.Coins(nil), keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, foo))
 }
 
@@ -86,7 +86,7 @@ func TestMintCoins(t *testing.T) {
 	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, minter))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)
 
-	require.Panics(t,  func() { keeper.MintCoins(ctx, foo, initCoins) })
+	require.Panics(t, func() { keeper.MintCoins(ctx, foo, initCoins) })
 }
 
 func TestBurnCoins(t *testing.T) {

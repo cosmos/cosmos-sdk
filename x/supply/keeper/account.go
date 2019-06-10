@@ -33,6 +33,11 @@ func (k Keeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount) {
 	k.ak.SetAccount(ctx, macc)
 }
 
+// GetCoins alias for bank keeper
+func (k Keeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	return k.bk.GetCoins(ctx, addr)
+}
+
 // GetCoinsByName returns a ModuleAccount's coins
 func (k Keeper) GetCoinsByName(ctx sdk.Context, name string) sdk.Coins {
 	macc := k.GetModuleAccountByName(ctx, name)

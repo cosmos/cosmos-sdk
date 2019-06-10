@@ -52,21 +52,21 @@ func NewBaseKeeper(ak auth.AccountKeeper,
 func (keeper BaseKeeper) SetCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) sdk.Error {
-	return SetCoins(ctx, keeper.ak, addr, amt)
+	return setCoins(ctx, keeper.ak, addr, amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
 func (keeper BaseKeeper) SubtractCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Error) {
-	return SubtractCoins(ctx, keeper.ak, addr, amt)
+	return subtractCoins(ctx, keeper.ak, addr, amt)
 }
 
 // AddCoins adds amt to the coins at the addr.
 func (keeper BaseKeeper) AddCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Error) {
-	return AddCoins(ctx, keeper.ak, addr, amt)
+	return addCoins(ctx, keeper.ak, addr, amt)
 }
 
 // InputOutputCoins handles a list of inputs and outputs
@@ -132,7 +132,7 @@ func NewBaseSendKeeper(ak auth.AccountKeeper,
 func (keeper BaseSendKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) sdk.Error {
-	return SendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
+	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
 }
 
 // GetSendEnabled returns the current SendEnabled
@@ -172,12 +172,12 @@ func NewBaseViewKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType) BaseV
 
 // GetCoins returns the coins at the addr.
 func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return GetCoins(ctx, keeper.ak, addr)
+	return getCoins(ctx, keeper.ak, addr)
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
 func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return HasCoins(ctx, keeper.ak, addr, amt)
+	return hasCoins(ctx, keeper.ak, addr, amt)
 }
 
 // Codespace returns the keeper's codespace.
@@ -186,7 +186,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 }
 
 // GetCoins returns the account coins
-func GetCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
+func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.NewCoins()
@@ -195,7 +195,7 @@ func GetCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 }
 
 // SetCoins replaces the account coins for a new amount
-func SetCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())
 	}
@@ -213,24 +213,24 @@ func SetCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func HasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return GetCoins(ctx, am, addr).IsAllGTE(amt)
+func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
+	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
 // GetAccount implements AccountKeeper
-func GetAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
+func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
 	return ak.GetAccount(ctx, addr)
 }
 
 // SetAccount implements AccountKeeper
-func SetAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
+func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
 	ak.SetAccount(ctx, acc)
 }
 
 // SubtractCoins subtracts amt coins from an account with the given address addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
-func SubtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
@@ -238,7 +238,7 @@ func SubtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 
 	oldCoins, spendableCoins := sdk.NewCoins(), sdk.NewCoins()
 
-	acc := GetAccount(ctx, ak, addr)
+	acc := getAccount(ctx, ak, addr)
 	if acc != nil {
 		oldCoins = acc.GetCoins()
 		spendableCoins = acc.SpendableCoins(ctx.BlockHeader().Time)
@@ -254,19 +254,19 @@ func SubtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 	}
 
 	newCoins := oldCoins.Sub(amt) // should not panic as spendable coins was already checked
-	err := SetCoins(ctx, ak, addr, newCoins)
+	err := setCoins(ctx, ak, addr, newCoins)
 
 	return newCoins, err
 }
 
 // AddCoins adds amt to the coins at the addr.
-func AddCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	oldCoins := GetCoins(ctx, am, addr)
+	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Add(amt)
 
 	if newCoins.IsAnyNegative() {
@@ -275,25 +275,21 @@ func AddCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 		)
 	}
 
-	err := SetCoins(ctx, am, addr, newCoins)
+	err := setCoins(ctx, am, addr, newCoins)
 
 	return newCoins, err
 }
 
 // SendCoins moves coins from one account to another
 // Returns ErrInvalidCoins if amt is invalid.
-func SendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	// Safety check ensuring that when sending coins the keeper must maintain the
-	if !amt.IsValid() {
-		return sdk.ErrInvalidCoins(amt.String())
-	}
+func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
-	_, err := SubtractCoins(ctx, am, fromAddr, amt)
+	_, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	_, err = AddCoins(ctx, am, toAddr, amt)
+	_, err = addCoins(ctx, am, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -313,7 +309,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {
-		_, err := SubtractCoins(ctx, am, in.Address, in.Coins)
+		_, err := subtractCoins(ctx, am, in.Address, in.Coins)
 		if err != nil {
 			return nil, err
 		}
@@ -324,7 +320,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 	}
 
 	for _, out := range outputs {
-		_, err := AddCoins(ctx, am, out.Address, out.Coins)
+		_, err := addCoins(ctx, am, out.Address, out.Coins)
 		if err != nil {
 			return nil, err
 		}
@@ -344,7 +340,7 @@ func delegateCoins(
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	acc := GetAccount(ctx, ak, addr)
+	acc := getAccount(ctx, ak, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
@@ -362,7 +358,7 @@ func delegateCoins(
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
 	}
 
-	SetAccount(ctx, ak, acc)
+	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionDelegateCoins,
@@ -378,7 +374,7 @@ func undelegateCoins(
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	acc := GetAccount(ctx, ak, addr)
+	acc := getAccount(ctx, ak, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
@@ -387,7 +383,7 @@ func undelegateCoins(
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
 	}
 
-	SetAccount(ctx, ak, acc)
+	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionUndelegateCoins,

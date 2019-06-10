@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // SendCoinsModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
@@ -14,12 +13,7 @@ func (k Keeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, r
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
 	}
 
-	err := bank.SendCoins(ctx, k.ak, senderAcc.GetAddress(), recipientAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.bk.SendCoins(ctx, senderAcc.GetAddress(), recipientAddr, amt)
 }
 
 // SendCoinsModuleToModule trasfers coins from a ModuleAccount to another
@@ -34,12 +28,7 @@ func (k Keeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipient
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))
 	}
 
-	err := bank.SendCoins(ctx, k.ak, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.bk.SendCoins(ctx, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
 }
 
 // SendCoinsAccountToModule trasfers coins from an AccAddress to a ModuleAccount
@@ -49,12 +38,7 @@ func (k Keeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddr
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))
 	}
 
-	err := bank.SendCoins(ctx, k.ak, senderAddr, recipientAcc.GetAddress(), amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.bk.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
@@ -69,7 +53,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", name))
 	}
 
-	_, err := bank.AddCoins(ctx, k.ak, macc.GetAddress(), amt)
+	_, err := k.bk.AddCoins(ctx, macc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}
@@ -89,7 +73,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", name))
 	}
 
-	_, err := bank.SubtractCoins(ctx, k.ak, macc.GetAddress(), amt)
+	_, err := k.bk.SubtractCoins(ctx, macc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

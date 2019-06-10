@@ -2,16 +2,17 @@ package supply
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	autypes "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // InitGenesis sets supply information for genesis.
-func InitGenesis(ctx sdk.Context, keeper Keeper, ak AccountKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data GenesisState) {
 	// manually set the total supply based on accounts if not provided
 	if data.Supply.Total.Empty() {
 		var totalSupply sdk.Coins
 		ak.IterateAccounts(ctx,
-			func(acc auth.Account) (stop bool) {
+			func(acc autypes.Account) (stop bool) {
 				totalSupply = totalSupply.Add(acc.GetCoins())
 				return false
 			},

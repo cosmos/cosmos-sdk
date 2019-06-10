@@ -3,28 +3,24 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // Keeper of the supply store
 type Keeper struct {
-	*bank.BaseViewKeeper
-
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
-	ak       auth.AccountKeeper
+	ak       types.AccountKeeper
+	bk       types.BankKeeper
 }
 
 // NewKeeper creates a new Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak auth.AccountKeeper, codespace sdk.CodespaceType) Keeper {
-	baseViewKeeper := bank.NewBaseViewKeeper(ak, codespace)
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
-		&baseViewKeeper,
 		cdc,
 		key,
 		ak,
+		bk,
 	}
 }
 

@@ -37,7 +37,6 @@ var (
 )
 
 type (
-	AccountKeeper       = keeper.AccountKeeper
 	Keeper              = keeper.Keeper
 	ModuleAccount       = types.ModuleAccount
 	ModuleHolderAccount = types.ModuleHolderAccount

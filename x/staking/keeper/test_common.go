@@ -124,7 +124,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		bank.DefaultCodespace,
 	)
 
-	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, supply.DefaultCodespace)
+	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace)
 
 	initTokens := sdk.TokensFromTendermintPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // expected coin keeper
@@ -32,7 +32,6 @@ type SupplyKeeper interface {
 	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
 
-	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsModuleToModule(ctx sdk.Context, senderPool, recipientPool string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }

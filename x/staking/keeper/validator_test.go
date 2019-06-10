@@ -76,20 +76,20 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	// create a random pool
-	pool.NotBondedTokens = sdk.NewInt(10000)
-	pool.BondedTokens = sdk.NewInt(1234)
+	pool.NotBondedTokens = sdk.TokensFromConsensusPower(10000)
+	pool.BondedTokens = sdk.TokensFromConsensusPower(1234)
 	keeper.SetPool(ctx, pool)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.NewInt(100))
+	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.TokensFromConsensusPower(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.Int64())
+	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens)
 	keeper.SetPool(ctx, pool)
 	TestingUpdateValidator(keeper, ctx, validator, true)
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, int64(100), validator.Tokens.Int64(), "\nvalidator %v\npool %v", validator, pool)
+	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens, "\nvalidator %v\npool %v", validator, pool)
 
 	pool = keeper.GetPool(ctx)
 	power := types.GetValidatorsByPowerIndexKey(validator)
@@ -98,7 +98,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	// burn half the delegator shares
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewDec(2)))
-	require.Equal(t, int64(50), burned.Int64())
+	require.Equal(t, sdk.TokensFromConsensusPower(50), burned)
 	keeper.SetPool(ctx, pool)                            // update the pool
 	TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
@@ -493,7 +493,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], found = keeper.GetValidator(ctx, validators[3].OperatorAddress)
 	require.True(t, found)
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(1))
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.TokensFromConsensusPower(1))
 	keeper.SetPool(ctx, pool)
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)

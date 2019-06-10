@@ -391,7 +391,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 		keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
 	}
 
-	// validator kicked out of validator set
+	// kick first validator out of validator set
 	newAmt := sdk.TokensFromConsensusPower(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
 	require.True(t, got.IsOK())
@@ -405,14 +405,14 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
-	delTokens := sdk.TokensFromConsensusPower(3)
+	delTokens := sdk.TokensFromConsensusPower(50)
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
 	require.True(t, got.IsOK())
 	validatorUpdates, _ = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	newPower := int64(103)
+	newPower := int64(150)
 
 	// validator misses a block
 	keeper.HandleValidatorSignature(ctx, val.Address(), newPower, false)

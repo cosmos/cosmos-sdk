@@ -87,11 +87,11 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // nolint: unparam
 func getValidatorPowerRank(validator Validator) []byte {
 
-	tendermintPower := sdk.TokensToTendermintPower(validator.Tokens)
-	tendermintPowerBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
+	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)
+	consensusPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(consensusPowerBytes[:], uint64(consensusPower))
 
-	powerBytes := tendermintPowerBytes
+	powerBytes := consensusPowerBytes
 	powerBytesLen := len(powerBytes) // 8
 
 	// key is of format prefix || powerbytes || addrBytes

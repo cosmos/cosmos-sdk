@@ -147,7 +147,7 @@ func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisVali
 	keeper.IterateLastValidators(ctx, func(_ int64, validator exported.ValidatorI) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetConsPubKey(),
-			Power:  validator.GetTendermintPower(),
+			Power:  validator.GetConsensusPower(),
 			Name:   validator.GetMoniker(),
 		})
 

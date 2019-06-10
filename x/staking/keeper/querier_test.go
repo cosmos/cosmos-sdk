@@ -190,7 +190,7 @@ func TestQueryDelegation(t *testing.T) {
 	r.SetValidator(ctx, val2)
 	r.SetValidatorByPowerIndex(ctx, val2)
 
-	delTokens := sdk.TokensFromTendermintPower(20)
+	delTokens := sdk.TokensFromConsensusPower(20)
 	r.Delegate(ctx, addrAcc2, delTokens, val1, true)
 
 	// apply TM updates
@@ -315,7 +315,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegation.Shares.TruncateInt(), delegationsRes[0].Balance)
 
 	// Query unbonging delegation
-	unbondingTokens := sdk.TokensFromTendermintPower(10)
+	unbondingTokens := sdk.TokensFromConsensusPower(10)
 	_, err = r.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.Nil(t, err)
 
@@ -368,7 +368,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Query redelegation
-	redelegationTokens := sdk.TokensFromTendermintPower(10)
+	redelegationTokens := sdk.TokensFromConsensusPower(10)
 	_, err = r.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
 		val2.OperatorAddress, redelegationTokens.ToDec())
 	require.Nil(t, err)
@@ -406,11 +406,11 @@ func TestQueryRedelegations(t *testing.T) {
 	r.SetValidator(ctx, val1)
 	r.SetValidator(ctx, val2)
 
-	delAmount := sdk.TokensFromTendermintPower(100)
+	delAmount := sdk.TokensFromConsensusPower(100)
 	r.Delegate(ctx, addrAcc2, delAmount, val1, true)
 	_ = r.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	rdAmount := sdk.TokensFromTendermintPower(20)
+	rdAmount := sdk.TokensFromConsensusPower(20)
 	r.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	r.ApplyAndReturnValidatorSetUpdates(ctx)
 
@@ -470,13 +470,13 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	keeper.SetValidator(ctx, val1)
 
 	// delegate
-	delAmount := sdk.TokensFromTendermintPower(100)
+	delAmount := sdk.TokensFromConsensusPower(100)
 	_, err := keeper.Delegate(ctx, addrAcc1, delAmount, val1, true)
 	require.NoError(t, err)
 	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// undelegate
-	undelAmount := sdk.TokensFromTendermintPower(20)
+	undelAmount := sdk.TokensFromConsensusPower(20)
 	_, err = keeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
 	require.NoError(t, err)
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)

@@ -235,7 +235,6 @@ type (
 	RedelegationResponses     = types.RedelegationResponses
 	CodeType                  = types.CodeType
 	DistributionKeeper        = types.DistributionKeeper
-	BankKeeper                = types.BankKeeper
 	AccountKeeper             = types.AccountKeeper
 	SupplyKeeper              = types.SupplyKeeper
 	ValidatorSet              = types.ValidatorSet

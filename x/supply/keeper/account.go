@@ -8,14 +8,14 @@ import (
 )
 
 // GetAccountByName returns an Account based on the name
-func (k Keeper) GetAccountByName(ctx sdk.Context, name string) auth.Account {
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
+func (k Keeper) GetAccountByName(ctx sdk.Context, moduleName string) auth.Account {
+	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 	return k.ak.GetAccount(ctx, moduleAddress)
 }
 
 // GetModuleAccountByName returns a ModuleAccount based on the name
-func (k Keeper) GetModuleAccountByName(ctx sdk.Context, name string) types.ModuleAccount {
-	acc := k.GetAccountByName(ctx, name)
+func (k Keeper) GetModuleAccountByName(ctx sdk.Context, moduleName string) types.ModuleAccount {
+	acc := k.GetAccountByName(ctx, moduleName)
 	if acc == nil {
 		return nil
 	}
@@ -39,8 +39,8 @@ func (k Keeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 }
 
 // GetCoinsByName returns a ModuleAccount's coins
-func (k Keeper) GetCoinsByName(ctx sdk.Context, name string) sdk.Coins {
-	macc := k.GetModuleAccountByName(ctx, name)
+func (k Keeper) GetCoinsByName(ctx sdk.Context, moduleName string) sdk.Coins {
+	macc := k.GetModuleAccountByName(ctx, moduleName)
 	if macc == nil {
 		return sdk.Coins(nil)
 	}

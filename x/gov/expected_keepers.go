@@ -11,13 +11,10 @@ type AccountKeeper interface {
 	GetNextAccountNumber(ctx sdk.Context) uint64
 }
 
-// BankKeeper defines the expected bank keeper
-type BankKeeper interface {
-	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-}
-
 // SupplyKeeper defines the supply Keeper for module accounts
 type SupplyKeeper interface {
+	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+
 	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
 

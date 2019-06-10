@@ -21,9 +21,6 @@ type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
 	paramSpace params.Subspace
 
-	// The reference to the CoinKeeper to modify balances
-	ck BankKeeper
-
 	// The SupplyKeeper to reduce the supply of the network
 	supplyKeeper SupplyKeeper
 
@@ -50,7 +47,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, supplyKeeper SupplyKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
+	supplyKeeper SupplyKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// It is vital to seal the governance proposal router here as to not allow
@@ -62,7 +59,6 @@ func NewKeeper(
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
-		ck:           ck,
 		supplyKeeper: supplyKeeper,
 		sk:           sk,
 		cdc:          cdc,

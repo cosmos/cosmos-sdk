@@ -59,7 +59,7 @@ func newTestInput(t *testing.T) testInput {
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
 
 	stakingKeeper := staking.NewKeeper(
-		ModuleCdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		ModuleCdc, keyStaking, tkeyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 	mintKeeper := NewKeeper(ModuleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, supplyKeeper)
 

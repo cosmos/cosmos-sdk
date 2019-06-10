@@ -480,13 +480,10 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 
 	if subtractAccount {
 		bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, bondedCoins)
+		err := k.supplyKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, BondedTokensName, bondedCoins)
 		if err != nil {
 			return sdk.Dec{}, err
 		}
-
-		// update pool when bond amount doesn't come from redelegation
-		k.freeTokensToBonded(ctx, bondAmt)
 	}
 
 	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
@@ -640,7 +637,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 
 			if !entry.Balance.IsZero() {
 				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
-				_, err := k.bankKeeper.UndelegateCoins(ctx, ubd.DelegatorAddress, amt)
+				err := k.supplyKeeper.UndelegateCoins(ctx, ubd.DelegatorAddress, NotBondedTokensName, amt)
 				if err != nil {
 					return err
 				}
@@ -654,12 +651,6 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		k.RemoveUnbondingDelegation(ctx, ubd)
 	} else {
 		k.SetUnbondingDelegation(ctx, ubd)
-	}
-
-	// remove the coins from the not bonded pool as they were transferred to the account
-	err := k.removeNotBondedTokens(ctx, removedAmt)
-	if err != nil {
-		return err
 	}
 
 	return nil

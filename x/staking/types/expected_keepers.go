@@ -13,12 +13,6 @@ type DistributionKeeper interface {
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
-// expected bank keeper
-type BankKeeper interface {
-	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-}
-
 // AccountKeeper defines the expected account keeper
 type AccountKeeper interface {
 	GetNextAccountNumber(ctx sdk.Context) uint64
@@ -28,6 +22,9 @@ type AccountKeeper interface {
 // SupplyKeeper defines the expected supply Keeper
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supply.Supply
+
+	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error
+	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error
 
 	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)

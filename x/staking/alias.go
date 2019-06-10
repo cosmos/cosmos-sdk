@@ -63,15 +63,6 @@ var (
 	NewKeeper                          = keeper.NewKeeper
 	ParamKeyTable                      = keeper.ParamKeyTable
 	NewQuerier                         = keeper.NewQuerier
-	ValEq                              = keeper.ValEq
-	MakeTestCodec                      = keeper.MakeTestCodec
-	CreateTestInput                    = keeper.CreateTestInput
-	NewPubKey                          = keeper.NewPubKey
-	TestAddr                           = keeper.TestAddr
-	ValidatorByPowerIndexExists        = keeper.ValidatorByPowerIndexExists
-	TestingUpdateValidator             = keeper.TestingUpdateValidator
-	RandomValidator                    = keeper.RandomValidator
-	RandomBondedValidator              = keeper.RandomBondedValidator
 	RegisterCodec                      = types.RegisterCodec
 	NewCommissionRates                 = types.NewCommissionRates
 	NewCommission                      = types.NewCommission
@@ -190,8 +181,6 @@ var (
 	NewDescription                     = types.NewDescription
 
 	// variable aliases
-	Addrs                            = keeper.Addrs
-	PKs                              = keeper.PKs
 	ModuleCdc                        = types.ModuleCdc
 	PoolKey                          = types.PoolKey
 	LastValidatorPowerKey            = types.LastValidatorPowerKey
@@ -234,13 +223,7 @@ type (
 	RedelegationEntryResponse = types.RedelegationEntryResponse
 	RedelegationResponses     = types.RedelegationResponses
 	CodeType                  = types.CodeType
-	DistributionKeeper        = types.DistributionKeeper
-	FeeCollectionKeeper       = types.FeeCollectionKeeper
-	BankKeeper                = types.BankKeeper
 	AccountKeeper             = types.AccountKeeper
-	ValidatorSet              = types.ValidatorSet
-	DelegationSet             = types.DelegationSet
-	StakingHooks              = types.StakingHooks
 	GenesisState              = types.GenesisState
 	LastValidatorPower        = types.LastValidatorPower
 	MultiStakingHooks         = types.MultiStakingHooks

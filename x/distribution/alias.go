@@ -134,6 +134,7 @@ type (
 	DelegatorStartingInfo                  = types.DelegatorStartingInfo
 	CodeType                               = types.CodeType
 	StakingKeeper                          = types.StakingKeeper
+	StakingHooks                           = types.StakingHooks
 	BankKeeper                             = types.BankKeeper
 	FeeCollectionKeeper                    = types.FeeCollectionKeeper
 	FeePool                                = types.FeePool

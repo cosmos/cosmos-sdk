@@ -6,6 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/mapping"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type IDGenerator func(sdk.Context /*Header,*/, mapping.Value) string
@@ -24,9 +26,19 @@ type Manager struct {
 
 func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
 	return Manager{
-		protocol: mapping.NewMapping(protocol, []byte("/")),
-		idval:    mapping.NewValue(free, []byte("/id")),
+		protocol: mapping.NewMapping(protocol, []byte("/client")),
+		idval:    mapping.NewValue(free, []byte("/client/id")),
 		idgen:    idgen,
+	}
+}
+
+type CounterpartyManager struct {
+	protocol commitment.Mapping
+}
+
+func NewCounterpartyManager(protocol commitment.Base) CounterpartyManager {
+	return CounterpartyManager{
+		protocol: commitment.NewMapping(protocol, []byte("/client")),
 	}
 }
 

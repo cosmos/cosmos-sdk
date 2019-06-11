@@ -11,6 +11,7 @@ const (
 	Closed
 )
 
+/*
 type Packet struct {
 	Sequence      uint64
 	TimeoutHeight uint64
@@ -21,6 +22,12 @@ type Packet struct {
 	DestChannel      string
 
 	Data []byte
+}
+*/
+
+type Packet interface {
+	Timeout() uint64
+	Commit() []byte // Can be a commit message
 }
 
 type Channel struct {

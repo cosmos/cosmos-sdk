@@ -44,10 +44,10 @@ func TestTransferNFTMsg(t *testing.T) {
 	nft := types.NewBaseNFT(
 		id,
 		originalOwner,
-		"TokenURI",
+		"Name",
 		"Description",
 		"ImageURI",
-		"Name",
+		"TokenURI",
 	)
 
 	// Define MsgTransferNft
@@ -104,10 +104,10 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	nft := types.NewBaseNFT(
 		id,
 		owner,
-		tokenURI,
+		name,
 		description,
 		image,
-		name,
+		tokenURI,
 	)
 
 	// Create token (collection and owner)

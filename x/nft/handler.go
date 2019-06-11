@@ -18,6 +18,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return HandleMsgTransferNFT(ctx, msg, k)
 		case types.MsgEditNFTMetadata:
 			return HandleMsgEditNFTMetadata(ctx, msg, k)
+		case types.MsgMintNFT:
+			return HandleMsgMintNFT(ctx, msg, k)
+		case types.MsgBurnNFT:
+			return HandleMsgBurnNFT(ctx, msg, k)
 		default:
 			errMsg := fmt.Sprintf("unrecognized nft message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -89,6 +93,50 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	}
 }
 
+// HandleMsgMintNFT handles MsgMintNFT
+func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
+) sdk.Result {
+
+	nft := types.NewBaseNFT(msg.ID, msg.Recipient, msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	err := k.MintNFT(ctx, msg.Denom, nft)
+	if err != nil {
+		return err.Result()
+	}
+
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Sender.String(),
+		tags.Recipient, string(msg.Recipient),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, string(msg.ID),
+	)
+	return sdk.Result{
+		Tags: resTags,
+	}
+}
+
+// HandleMsgBurnNFT handles MsgBurnNFT
+func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
+) sdk.Result {
+
+	// remove  NFT
+	err := k.DeleteNFT(ctx, msg.Denom, msg.ID)
+	if err != nil {
+		return err.Result()
+	}
+
+	resTags := sdk.NewTags(
+		tags.Category, tags.TxCategory,
+		tags.Sender, msg.Sender.String(),
+		tags.Denom, string(msg.Denom),
+		tags.NFTID, string(msg.ID),
+	)
+	return sdk.Result{
+		Tags: resTags,
+	}
+}
+
+// EndBlocker is run at the end of the block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
 	return nil, nil
 }

@@ -18,7 +18,7 @@ var (
 
 func TestBaseNFTGetMethods(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
+	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
 
 	require.Equal(t, id, testNFT.GetID())
 	require.Equal(t, owner, testNFT.GetOwner())
@@ -35,7 +35,7 @@ func TestBaseNFTSetMethods(t *testing.T) {
 	image2 := "https://google.com/token-2.png"
 	tokenURI2 := "https://google.com/token-2.json"
 
-	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
+	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
 	require.Equal(t, owner, testNFT.GetOwner())
 	require.Equal(t, name, testNFT.GetName())
 	require.Equal(t, description, testNFT.GetDescription())
@@ -53,7 +53,7 @@ func TestBaseNFTSetMethods(t *testing.T) {
 }
 
 func TestBaseNFTStringFormat(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, tokenURI, description, image, name)
+	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
 	expected := fmt.Sprintf(`ID:				%s
 Owner:			%s
 Name:			%s

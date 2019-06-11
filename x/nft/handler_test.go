@@ -135,3 +135,106 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	require.Equal(t, _tokenURI, nftAfterwards.GetTokenURI())
 
 }
+
+func TestMintNFTMsg(t *testing.T) {
+	denom := "some-denom"
+	id := "somd-id"
+	name := "Name"
+	tokenURI := "TokenURI"
+	description := "Description"
+	image := "ImageURI"
+
+	ctx, k := keeper.Initialize()
+	addresses := keeper.CreateTestAddrs(2)
+	owner := addresses[0]
+
+	h := NewHandler(k)
+
+	// Define MsgMintNFT
+	mintNFT := types.NewMsgMintNFT(
+		owner,
+		owner,
+		id,
+		denom,
+		name,
+		description,
+		image,
+		tokenURI,
+	)
+
+	// minting a token should succeed
+	res := h(ctx, mintNFT)
+	require.True(t, res.IsOK(), "%v", res)
+
+	nftAfterwards, err := k.GetNFT(ctx, denom, id)
+
+	require.Nil(t, err)
+	require.Equal(t, name, nftAfterwards.GetName())
+	require.Equal(t, description, nftAfterwards.GetDescription())
+	require.Equal(t, image, nftAfterwards.GetImage())
+	require.Equal(t, tokenURI, nftAfterwards.GetTokenURI())
+
+	// minting the same token should fail
+	res = h(ctx, mintNFT)
+	require.False(t, res.IsOK(), "%v", res)
+
+}
+
+func TestBurnNFTMsg(t *testing.T) {
+	denom := "some-denom"
+	id := "somd-id"
+	name := "Name"
+	tokenURI := "TokenURI"
+	description := "Description"
+	image := "ImageURI"
+
+	ctx, k := keeper.Initialize()
+	addresses := keeper.CreateTestAddrs(2)
+	owner := addresses[0]
+	notOwner := addresses[1]
+
+	h := NewHandler(k)
+
+	// An NFT to be burned
+	nft := types.NewBaseNFT(
+		id,
+		owner,
+		name,
+		description,
+		image,
+		tokenURI,
+	)
+
+	// Create token (collection and owner)
+	k.MintNFT(ctx, denom, nft)
+
+	exists := k.IsNFT(ctx, denom, id)
+	require.True(t, exists)
+
+	// burning an NFT without being the owner should fail
+	failBurnNFT := types.NewMsgBurnNFT(
+		notOwner,
+		id,
+		denom,
+	)
+	res := h(ctx, failBurnNFT)
+	require.False(t, res.IsOK(), "%s", res.Log)
+
+	// NFT should still exist
+	exists = k.IsNFT(ctx, denom, id)
+	require.True(t, exists)
+
+	// burning the NFt should succeed
+	burnNFT := types.NewMsgBurnNFT(
+		owner,
+		id,
+		denom,
+	)
+
+	res = h(ctx, burnNFT)
+	require.True(t, res.IsOK(), "%v", res)
+
+	// the NFT should not exist after burn
+	exists = k.IsNFT(ctx, denom, id)
+	require.False(t, exists)
+}

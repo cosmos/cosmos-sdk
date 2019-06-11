@@ -107,8 +107,8 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.Sender.String(),
 		tags.Recipient, string(msg.Recipient),
-		tags.Denom, string(msg.Denom),
-		tags.NFTID, string(msg.ID),
+		tags.Denom, msg.Denom,
+		tags.NFTID, msg.ID,
 	)
 	return sdk.Result{
 		Tags: resTags,
@@ -119,8 +119,18 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 ) sdk.Result {
 
+	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
+	if err != nil {
+		return err.Result()
+	}
+
+	// check if msg sender is the Owner of the NFT
+	if !nft.GetOwner().Equals(msg.Sender) {
+		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%s", msg.Sender.String(), msg.ID)).Result()
+	}
+
 	// remove  NFT
-	err := k.DeleteNFT(ctx, msg.Denom, msg.ID)
+	err = k.DeleteNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
 		return err.Result()
 	}
@@ -128,8 +138,8 @@ func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.Sender.String(),
-		tags.Denom, string(msg.Denom),
-		tags.NFTID, string(msg.ID),
+		tags.Denom, msg.Denom,
+		tags.NFTID, msg.ID,
 	)
 	return sdk.Result{
 		Tags: resTags,

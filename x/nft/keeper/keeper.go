@@ -77,7 +77,10 @@ func (k Keeper) MintNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.E
 	// var replaces types.NFT
 	collection, found := k.GetCollection(ctx, denom)
 	if found {
-		collection.AddNFT(nft)
+		err := collection.AddNFT(nft)
+		if err != nil {
+			return err
+		}
 	} else {
 		collection = types.NewCollection(denom, types.NewNFTs(nft))
 	}

@@ -203,7 +203,8 @@ func TestSetCollection(t *testing.T) {
 
 	id2 := "2"
 	nft2 := types.NewBaseNFT(id2, address1, name1, description1, image1, tokenURI1)
-	collection.AddNFT(nft2)
+	err = collection.AddNFT(nft2)
+	require.Nil(t, err)
 	keeper.SetCollection(ctx, denom, collection)
 
 	collection, exists = keeper.GetCollection(ctx, denom)

@@ -58,6 +58,28 @@ func (m Mapping) Value(key []byte) Value {
 	}
 }
 
+func (m Mapping) Prefix(prefix []byte) Mapping {
+	return Mapping{
+		base: m.base.Prefix(prefix),
+	}
+}
+
+type Indexer struct {
+	Mapping
+	enc mapping.IntEncoding
+}
+
+func NewIndexer(m Mapping, enc mapping.IntEncoding) Indexer {
+	return Indexer{
+		Mapping: m,
+		enc:     enc,
+	}
+}
+
+func (ix Indexer) Value(index uint64) Value {
+	return ix.Mapping.Value(mapping.EncodeInt(index, ix.enc))
+}
+
 type Value struct {
 	base Base
 	key  []byte

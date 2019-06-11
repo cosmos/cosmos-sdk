@@ -43,7 +43,7 @@ func Newstore(root Root, proofs []Proof) (res store, err error) {
 	}
 
 	for _, proof := range proofs {
-		res.proofs[string(proof.Key())] = proof
+		res.proofs[string(proof.GetKey())] = proof
 	}
 
 	return

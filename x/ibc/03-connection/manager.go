@@ -105,6 +105,11 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	return
 }
 
+// XXX: add HasProof() method to commitment.Store, and check it here
+func (man CounterpartyManager) Query(id string) CounterObject {
+	return man.object(id)
+}
+
 type NihiloObject Object
 
 type Object struct {

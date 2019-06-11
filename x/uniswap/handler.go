@@ -2,7 +2,9 @@ package uniswap
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // NewHandler routes the messages to the handlers
@@ -49,18 +51,32 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 		panic("error retrieving native asset total liquidity")
 	}
 
-	totalLiquidity, err := k.GetTotalLiquidity(ctx)
+	totalUNI, err := k.GetTotalUNI(ctx)
 	if err != nil {
-		panic("error retrieving total UNI liquidity")
+		panic("error retrieving total UNI")
 	}
 
-	MintedUNI := (totalLiquidity.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
-	coinDeposited := (totalLiquidity.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
+	// calculate amount of UNI to be minted for sender
+	// and coin amount to be deposited
+	MintedUNI := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
+	coinDeposited := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
 	nativeCoin := sdk.NewCoin(NativeAsset, msg.DepositAmount)
 	exchangeCoin := sdk.NewCoin(msg.ExchangeDenom, coinDeposited)
-	k.SendCoins(ctx, msg.Sender, exchangeAcc, nativeCoin)
-	k.SendCoins(ctx, msg.Sender, exchangeAcc, exchangeCoin)
-	k.Deposit(ctx, msg.Sender, UNIMinted)
+
+	// transfer deposited liquidity into uniswaps ModuleAccount
+	err := k.SendCoinsAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
+	if err != nil {
+		return err
+	}
+
+	// set updated total UNI
+	totalUNI = totalUNI.Add(MintedUNI)
+	k.SetTotalUNI(ctx, totalUNI)
+
+	// update senders account with minted UNI
+	UNIBalance := k.GetUNIForAddress(ctx, msg.Sender)
+	UNIBalance = UNIBalance.Add(MintedUNI)
+	k.SetUNIForAddress(ctx, UNIBalance)
 
 	return sdk.Result{}
 }
@@ -68,10 +84,42 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 // HandleMsgRemoveLiquidity handler for MsgRemoveLiquidity
 func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper) sdk.Result {
 	// check if exchange exists
-	totalLiquidity, err := k.GetExchange(ctx, msg.ExchangeDenom)
+	coinLiquidity, err := k.GetExchange(ctx, msg.ExchangeDenom)
+	if err != nil {
+		panic(fmt.Sprintf("error retrieving total liquidity for denomination: %s", msg.ExchangeDenom))
+	}
+
+	nativeLiquidity, err := k.GetExchange(ctx, NativeAsset)
+	if err != nil {
+		panic("error retrieving native asset total liquidity")
+	}
+
+	totalUNI, err := k.GetTotalUNI(ctx)
+	if err != nil {
+		panic("error retrieving total UNI")
+	}
+
+	// calculate amount of UNI to be burned for sender
+	// and coin amount to be returned
+	nativeWithdrawn := msg.WithdrawAmount.Mul(nativeLiquidity).Quo(totalUNI)
+	coinWithdrawn := msg.WithdrawAmount.Mul(coinLiqudity).Quo(totalUNI)
+	nativeCoin := sdk.NewCoin(nativeDenom, nativeWithdrawn)
+	exchangeCoin = sdk.NewCoin(msg.ExchangeDenom, coinWithdrawn)
+
+	// transfer withdrawn liquidity from uniswaps ModuleAccount to sender's account
+	err := k.SendCoinsModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
 	if err != nil {
 		return err
 	}
+
+	// set updated total UNI
+	totalUNI = totalUNI.Add(MintedUNI)
+	k.SetTotalUNI(ctx, totalUNI)
+
+	// update senders account with minted UNI
+	UNIBalance := k.GetUNIForAddress(ctx, msg.Sender)
+	UNIBalance = UNIBalance.Add(MintedUNI)
+	k.SetUNIForAddress(ctx, UNIBalance)
 
 	return sdk.Result{}
 }

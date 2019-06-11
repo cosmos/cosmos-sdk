@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	supply "github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -16,8 +16,8 @@ type Keeper struct {
 	// The key used to access the uniswap store
 	storeKey sdk.StoreKey
 
-	// The reference to the CoinKeeper to modify balances after swaps or liquidity is deposited/withdrawn
-	ck bank.Keeper
+	// The reference to the SupplyKeeper to hold coins for this module
+	types.SupplyKeeper
 
 	// The codec codec for binary encoding/decoding.
 	cdc *codec.Codec
@@ -31,12 +31,12 @@ type Keeper struct {
 // - facilitating swaps
 // - users adding liquidity to exchanges
 // - users removing liquidity to exchanges
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck bank.Keeper, paramSpace params.Subspace) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, supplyKeeper supply.Keeper, paramSpace params.Subspace) Keeper {
 	return Keeper{
-		storeKey:   key,
-		ck:         ck,
-		cdc:        cdc,
-		paramSpace: paramSpace.WithKeyTable(types.ParamKeyTable()),
+		storeKey:     key,
+		supplyKeeper: supplyKeeper,
+		cdc:          cdc,
+		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
 	}
 }
 

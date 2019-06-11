@@ -45,6 +45,13 @@ func NewMapping(base Base, prefix []byte) Mapping {
 	}
 }
 
+func (m Mapping) Value(key []byte) Value {
+	return Value{
+		base: m.base,
+		key:  key,
+	}
+}
+
 type Value struct {
 	base Base
 	key  []byte

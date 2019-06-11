@@ -76,10 +76,26 @@ func (man Manager) Query(ctx sdk.Context, id string) (Object, error) {
 	return res, nil
 }
 
+func (man CounterpartyManager) object(id string) CounterObject {
+	return CounterObject{
+		id:     id,
+		client: man.protocol.Value([]byte(id)),
+	}
+}
+
+func (man CounterpartyManager) Query(id string) CounterObject {
+	return man.object(id)
+}
+
 type Object struct {
 	id     string
 	client mapping.Value
 	freeze mapping.Boolean
+}
+
+type CounterObject struct {
+	id     string
+	client commitment.Value
 }
 
 func (obj Object) create(ctx sdk.Context, st Client) error {

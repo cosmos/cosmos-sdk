@@ -2,7 +2,7 @@ package commitment
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/mapping"
+	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -77,13 +77,13 @@ func (v Enum) Is(ctx sdk.Context, value byte) bool {
 type Integer struct {
 	Value
 
-	enc mapping.IntEncoding
+	enc state.IntEncoding
 }
 
-func NewInteger(v Value, enc mapping.IntEncoding) Integer {
+func NewInteger(v Value, enc state.IntEncoding) Integer {
 	return Integer{v, enc}
 }
 
 func (v Integer) Is(ctx sdk.Context, value uint64) bool {
-	return v.Value.IsRaw(ctx, mapping.EncodeInt(value, v.enc))
+	return v.Value.IsRaw(ctx, state.EncodeInt(value, v.enc))
 }

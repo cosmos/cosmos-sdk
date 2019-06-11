@@ -17,34 +17,36 @@ type Manager struct {
 
 	connection connection.Manager
 
-	remote *Manager
+	counterparty CounterpartyManager
+}
+
+type CounterpartyManager struct {
+	protocol commitment.Mapping
+
+	connection connection.CounterpartyManager
 }
 
 func NewManager(protocol mapping.Base, connection connection.Manager) Manager {
-	man := newManager(protocol, connection)
-	man.remote = newRemoteManager(protocol.Cdc())
-	return man
-}
-
-func newRemoteManager(cdc *codec.Codec) *Manager {
-	protocol := mapping.NewBaseWithGetter(cdc, commitment.GetStore)
-	connection := connection.NewRemoteManager(cdc)
-	res := newManager(protocol, *connection)
-	return &res
-}
-
-func newManager(protocol mapping.Base, connection connection.Manager) Manager {
 	return Manager{
-		protocol:   mapping.NewMapping(protocol, []byte("/connection/")),
-		connection: connection,
+		protocol:     mapping.NewMapping(protocol, []byte("/connection/")),
+		connection:   connection,
+		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
 }
 
-// CONTRACT: remote must be filled by the caller
+func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
+	protocol := commitment.NewBase(cdc)
+
+	return CounterpartyManager{
+		protocol:   commitment.NewMapping(protocol, []byte("/connection/")),
+		connection: connection.NewCounterpartyManager(cdc),
+	}
+}
+
+// CONTRACT: connection and counterparty must be filled by the caller
 func (man Manager) object(connid, chanid string) Object {
 	key := connid + "/channels/" + chanid
 	return Object{
-		connid:      connid,
 		chanid:      chanid,
 		channel:     man.protocol.Value([]byte(key)),
 		state:       mapping.NewEnum(man.protocol.Value([]byte(key + "/state"))),
@@ -54,6 +56,20 @@ func (man Manager) object(connid, chanid string) Object {
 		seqsend: mapping.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), mapping.Dec),
 		seqrecv: mapping.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), mapping.Dec),
 		packets: mapping.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), mapping.Dec),
+	}
+}
+
+func (man CounterpartyManager) object(connid, chanid string) CounterObject {
+	key := connid + "/channels/" + chanid
+	return CounterObject{
+		chanid:      chanid,
+		channel:     man.protocol.Value([]byte(key)),
+		state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
+		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), mapping.Dec),
+
+		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), mapping.Dec),
+		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), mapping.Dec),
+		// packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key + "/packets")), mapping.Dec),
 	}
 }
 
@@ -67,13 +83,12 @@ func (man Manager) Create(ctx sdk.Context, connid, chanid string, channel Channe
 	if err != nil {
 		return
 	}
-	if obj.connection.State(ctx) != connection.Open {
-		err = errors.New("connection exists but not opened")
-		return
-	}
+	counterconnid := obj.connection.Value(ctx).Counterparty
+	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
+	obj.counterparty.connection = man.counterparty.connection.Query(counterconnid)
+
 	obj.channel.Set(ctx, channel)
-	remote := man.remote.object(obj.connection.Value(ctx).Counterparty, channel.Counterparty)
-	obj.remote = &remote
+
 	return
 }
 
@@ -93,8 +108,10 @@ func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, er
 	}
 
 	channel := obj.Value(ctx)
-	remote := man.remote.object(obj.connection.Value(ctx).Counterparty, channel.Counterparty)
-	obj.remote = &remote
+	counterconnid := obj.connection.Value(ctx).Counterparty
+	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
+	obj.counterparty.connection = man.counterparty.connection.Query(counterconnid)
+
 	return
 }
 
@@ -142,9 +159,7 @@ func (man ModuleManager) Query(ctx sdk.Context, connid, chanid string) (Object, 
 	return obj, nil
 }
 
-// XXX: remove connid(already exists in connection.id)
 type Object struct {
-	connid      string
 	chanid      string
 	channel     mapping.Value
 	state       mapping.Enum
@@ -156,12 +171,20 @@ type Object struct {
 
 	connection connection.Object
 
-	// CONTRACT: remote should not be used when remote
-	remote *Object
+	counterparty CounterObject
 }
 
-func (obj Object) ConnID() string {
-	return obj.connid
+type CounterObject struct {
+	chanid      string
+	channel     commitment.Value
+	state       commitment.Enum
+	nexttimeout commitment.Integer
+
+	seqsend commitment.Integer
+	seqrecv commitment.Integer
+	//packets commitment.Indexer
+
+	connection connection.CounterObject
 }
 
 func (obj Object) ChanID() string {
@@ -250,7 +273,7 @@ func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
 	}
 
 	// XXX: increment should happen before verification, reflect on the spec
-	if !obj.remote.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
+	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
 		return errors.New("verification failed")
 	}
 

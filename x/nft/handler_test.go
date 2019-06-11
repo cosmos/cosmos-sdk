@@ -1,6 +1,7 @@
 package nft
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -23,7 +24,7 @@ func createInput() (k Keeper, addrs []sdk.AccAddress) {
 	return
 }
 func TestInvalidMsg(t *testing.T) {
-	ctx, k := keeper.Initialize()
+	ctx, k, _ := keeper.Initialize()
 	h := NewHandler(k)
 	res := h(ctx, sdk.NewTestMsg())
 	require.False(t, res.IsOK())
@@ -34,7 +35,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	denom := "some-denom"
 	id := "somd-id"
 
-	ctx, k := keeper.Initialize()
+	ctx, k, _ := keeper.Initialize()
 	addresses := keeper.CreateTestAddrs(2)
 	originalOwner := addresses[0]
 	nextOwner := addresses[1]
@@ -78,6 +79,8 @@ func TestTransferNFTMsg(t *testing.T) {
 	res = h(ctx, transferNftMsg)
 	require.False(t, res.IsOK(), "%v", res)
 
+	tags := res.Tags
+	fmt.Println(tags)
 	// TODO: check for proper tags
 }
 
@@ -94,7 +97,7 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	_description := "Description2"
 	_image := "ImageURI2"
 
-	ctx, k := keeper.Initialize()
+	ctx, k, _ := keeper.Initialize()
 	addresses := keeper.CreateTestAddrs(2)
 	owner := addresses[0]
 
@@ -144,7 +147,7 @@ func TestMintNFTMsg(t *testing.T) {
 	description := "Description"
 	image := "ImageURI"
 
-	ctx, k := keeper.Initialize()
+	ctx, k, _ := keeper.Initialize()
 	addresses := keeper.CreateTestAddrs(2)
 	owner := addresses[0]
 
@@ -188,7 +191,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	description := "Description"
 	image := "ImageURI"
 
-	ctx, k := keeper.Initialize()
+	ctx, k, _ := keeper.Initialize()
 	addresses := keeper.CreateTestAddrs(2)
 	owner := addresses[0]
 	notOwner := addresses[1]

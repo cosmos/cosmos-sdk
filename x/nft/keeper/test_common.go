@@ -117,8 +117,9 @@ func CreateTestAddrs(numAddrs int) []sdk.AccAddress {
 	return addresses
 }
 
-func Initialize() (ctx sdk.Context, keeperInstance Keeper) {
-	cdc := codec.New()
+// Initialize initializes a basic nft app for tests
+func Initialize() (ctx sdk.Context, keeperInstance Keeper, cdc *codec.Codec) {
+	cdc = codec.New()
 	types.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 

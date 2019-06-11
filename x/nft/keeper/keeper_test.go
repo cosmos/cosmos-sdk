@@ -9,7 +9,7 @@ import (
 )
 
 func TestMintNFT(t *testing.T) {
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 	addresses := CreateTestAddrs(1)
 
 	denom := sdk.DefaultBondDenom
@@ -35,7 +35,7 @@ func TestMintNFT(t *testing.T) {
 
 func TestGetNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -83,7 +83,7 @@ func TestGetNFT(t *testing.T) {
 
 func TestUpdateNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -120,7 +120,7 @@ func TestUpdateNFT(t *testing.T) {
 
 func TestDeleteNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -156,7 +156,7 @@ func TestDeleteNFT(t *testing.T) {
 
 func TestIsNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -182,7 +182,7 @@ func TestIsNFT(t *testing.T) {
 
 func TestSetCollection(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -214,7 +214,7 @@ func TestSetCollection(t *testing.T) {
 }
 func TestGetCollection(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"
@@ -241,7 +241,7 @@ func TestGetCollection(t *testing.T) {
 }
 func TestGetCollections(t *testing.T) {
 	addresses := CreateTestAddrs(1)
-	ctx, keeper := Initialize()
+	ctx, keeper, _ := Initialize()
 
 	denom := sdk.DefaultBondDenom
 	id1 := "1"

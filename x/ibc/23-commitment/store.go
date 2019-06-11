@@ -4,22 +4,46 @@ import (
 	"bytes"
 )
 
-type Store struct {
+type Store interface {
+	Prove(key, value []byte) bool
+}
+
+var _ Store = prefix{}
+
+type prefix struct {
+	store  Store
+	prefix []byte
+}
+
+func NewPrefix(store Store, pref []byte) prefix {
+	return prefix{
+		store:  store,
+		prefix: pref,
+	}
+}
+
+func (prefix prefix) Prove(key, value []byte) bool {
+	return prefix.store.Prove(join(prefix.prefix, key), value)
+}
+
+var _ Store = store{}
+
+type store struct {
 	root     Root
 	proofs   map[string]Proof
 	verified map[string][]byte
 }
 
 // Proofs must be provided
-func NewStore(root Root, proofs []Proof, fullProofs []FullProof) (store Store, err error) {
-	store = Store{
+func Newstore(root Root, proofs []Proof, fullProofs []FullProof) (res store, err error) {
+	res = store{
 		root:     root,
 		proofs:   make(map[string]Proof),
 		verified: make(map[string][]byte),
 	}
 
 	for _, proof := range proofs {
-		store.proofs[string(proof.Key())] = proof
+		res.proofs[string(proof.Key())] = proof
 	}
 
 	for _, proof := range fullProofs {
@@ -27,18 +51,18 @@ func NewStore(root Root, proofs []Proof, fullProofs []FullProof) (store Store, e
 		if err != nil {
 			return
 		}
-		store.verified[string(proof.Proof.Key())] = proof.Value
+		res.verified[string(proof.Proof.Key())] = proof.Value
 	}
 
 	return
 }
 
-func (store Store) Get(key []byte) ([]byte, bool) {
+func (store store) Get(key []byte) ([]byte, bool) {
 	res, ok := store.verified[string(key)]
 	return res, ok
 }
 
-func (store Store) Prove(key, value []byte) bool {
+func (store store) Prove(key, value []byte) bool {
 	stored, ok := store.Get(key)
 	if ok && bytes.Equal(stored, value) {
 		return true
@@ -56,7 +80,7 @@ func (store Store) Prove(key, value []byte) bool {
 	return true
 }
 
-func (store Store) Proven(key []byte) bool {
+func (store store) Proven(key []byte) bool {
 	_, ok := store.Get(key)
 	return ok
 }

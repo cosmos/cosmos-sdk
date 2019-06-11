@@ -14,6 +14,6 @@ func WithStore(ctx sdk.Context, store Store) Context {
 	return Context{ctx.WithValue(contextKeyRemoteKVStore{}, store)}
 }
 
-func (ctx Context) Store() Store {
+func (ctx Context) RemoteStore() Store {
 	return ctx.Value(contextKeyRemoteKVStore{}).(Store)
 }

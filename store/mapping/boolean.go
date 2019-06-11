@@ -1,6 +1,5 @@
 package mapping
 
-// XXX: interface
 type Boolean struct {
 	Enum
 }

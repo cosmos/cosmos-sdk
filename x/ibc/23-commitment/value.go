@@ -1,61 +1,65 @@
 package commitment
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/store/mapping"
 )
 
-var _ mapping.Value = value{}
-
-type value struct {
-	mapping.Value
+type Base struct {
+	cdc    *codec.Codec
+	prefix []byte
 }
 
-func Value(base mapping.Base, key []byte) mapping.Value {
-	return value{mapping.NewValue(base, key)}
+func NewBase(cdc *codec.Codec) Base {
+	return Base{
+		cdc: cdc,
+	}
 }
 
-func (v value) Is(ctx sdk.Context, value interface{}) bool {
-	// CONTRACT: commitment.value must be used with commitment.Store as its underlying KVStore
-	// TODO: enforce it
-
-	v.Set(ctx, value)
-	return v.Exists(ctx)
+func (base Base) Store(ctx Context) Store {
+	return ctx.Store()
 }
 
-var _ mapping.Enum = enum{}
-
-type enum struct {
-	mapping.Enum
+type Value struct {
+	base Base
+	key  []byte
 }
 
-func Enum(v mapping.Value) mapping.Enum {
-	return enum{mapping.NewEnum(v)}
+func NewValue(base Base, key []byte) Value {
+	return Value{base, key}
 }
 
-func (v enum) Is(ctx sdk.Context, value byte) bool {
-	// CONTRACT: commitment.enum must be used with commitment.Store as its underlying KVStore
-	// TODO: enforce it
-
-	v.Set(ctx, value)
-	return v.Exists(ctx)
+func (v Value) Is(ctx Context, value interface{}) bool {
+	return v.base.Store(ctx).Prove(v.key, v.base.cdc.MustMarshalBinaryBare(value))
 }
 
-var _ mapping.Integer = integer{}
-
-type integer struct {
-	mapping.Integer
+func (v Value) IsRaw(ctx Context, value []byte) bool {
+	return v.base.Store(ctx).Prove(v.key, value)
 }
 
-func Integer(v mapping.Value, enc mapping.IntEncoding) mapping.Integer {
-	return integer{mapping.NewInteger(v, enc)}
+type Enum struct {
+	Value
 }
 
-func (v integer) Is(ctx sdk.Context, value uint64) bool {
-	// CONTRACT: commitment.integer must be used with commitment.Store as its underlying KVStore
-	// TODO: enforce it
+func NewEnum(v Value) Enum {
+	return Enum{v}
+}
 
-	v.Set(ctx, value)
-	return v.Exists(ctx)
+func (v Enum) Is(ctx Context, value byte) bool {
+	return v.Value.IsRaw(ctx, []byte{value})
+}
+
+type Integer struct {
+	Value
+
+	enc mapping.IntEncoding
+}
+
+func NewInteger(v Value, enc mapping.IntEncoding) Integer {
+	return Integer{v, enc}
+}
+
+func (v Integer) Is(ctx Context, value uint64) bool {
+	return v.Value.IsRaw(ctx, mapping.EncodeInt(value, v.enc))
 }

@@ -1,4 +1,4 @@
-package invariants
+package bank
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/handler"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -19,7 +18,7 @@ import (
 // SendTx tests and runs a single msg send where both
 // accounts already exist.
 func SimulateMsgSend(mapper auth.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	handler := handler.NewHandler(bk)
+	handler := NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -113,7 +112,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg t
 // SingleInputSendMsg tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	handler := handler.NewHandler(bk)
+	handler := NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 

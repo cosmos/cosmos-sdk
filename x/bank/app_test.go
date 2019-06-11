@@ -1,4 +1,4 @@
-package keeper_test
+package bank_test
 
 import (
 	"testing"

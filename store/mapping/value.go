@@ -1,7 +1,6 @@
 package mapping
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -70,19 +69,6 @@ func (v Value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.key)
 }
 
-func (v Value) Is(ctx Context, o interface{}) bool {
-	return bytes.Equal(v.GetRaw(ctx), v.base.cdc.MustMarshalBinaryBare(o))
-}
-
-func (v Value) Key() []byte {
-	return v.base.key(v.key)
-}
-
-/*
-func (v Value) KeyPath() KeyPath {
-	return v.base.KeyPath().AppendKey(v.key, KeyEncodingHex)
-}
-*/
 type GetSafeErrorType byte
 
 const (

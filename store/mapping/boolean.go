@@ -28,15 +28,3 @@ func (v Boolean) Set(ctx Context, value bool) {
 		v.Enum.Set(ctx, 0x00)
 	}
 }
-
-func (v Boolean) Flip(ctx Context) (res bool) {
-	res = !v.GetIfExists(ctx)
-	v.Set(ctx, res)
-	return
-}
-
-/*
-func (v Boolean) Key() []byte {
-	return v.base.key(v.key)
-}
-*/

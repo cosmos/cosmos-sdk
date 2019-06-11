@@ -8,11 +8,6 @@ func NewEnum(v Value) Enum {
 	return Enum{v}
 }
 
-/*
-func (v Value) Enum() Enum {
-	return Enum{v}
-}
-*/
 func (v Enum) Get(ctx Context) byte {
 	return v.Value.GetRaw(ctx)[0]
 }
@@ -50,13 +45,3 @@ func (v Enum) Transit(ctx Context, from, to byte) bool {
 	v.Set(ctx, to)
 	return true
 }
-
-func (v Enum) Is(ctx Context, value byte) bool {
-	return v.Get(ctx) == value
-}
-
-/*
-func (v Enum) Key() []byte {
-	return v.base.key(v.key)
-}
-*/

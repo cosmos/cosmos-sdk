@@ -13,11 +13,6 @@ func NewInteger(v Value, enc IntEncoding) Integer {
 	}
 }
 
-/*
-func (v Value) Integer() Integer {
-	return Integer{v}
-}
-*/
 func (v Integer) Get(ctx Context) uint64 {
 	res, err := DecodeInt(v.GetRaw(ctx), v.enc)
 	if err != nil {
@@ -59,13 +54,3 @@ func (v Integer) Incr(ctx Context) (res uint64) {
 	v.Set(ctx, res)
 	return
 }
-
-func (v Integer) Is(ctx Context, value uint64) bool {
-	return v.Get(ctx) == value
-}
-
-/*
-func (v Integer) Key() []byte {
-	return v.base.key(v.key)
-}
-*/

@@ -20,7 +20,10 @@ var (
 func GetCollectionKey(denom string) []byte {
 
 	h := sha1.New()
-	h.Write([]byte(denom))
+	_, err := h.Write([]byte(denom))
+	if err != nil {
+		panic(err)
+	}
 	bs := h.Sum(nil)
 
 	return append(CollectionsKeyPrefix, bs...)
@@ -45,7 +48,10 @@ func GetOwnersKey(address sdk.AccAddress) []byte {
 func GetOwnerKey(address sdk.AccAddress, denom string) []byte {
 
 	h := sha1.New()
-	h.Write([]byte(denom))
+	_, err := h.Write([]byte(denom))
+	if err != nil {
+		panic(err)
+	}
 	bs := h.Sum(nil)
 
 	return append(GetOwnersKey(address), bs...)

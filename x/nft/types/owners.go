@@ -157,7 +157,7 @@ func NewOwner(owner sdk.AccAddress, idCollections ...IDCollection) Owner {
 
 // GetIDCollection gets the IDCollection from the owner
 func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
-	index := IDCollections(owner.IDCollections).find(denom)
+	index := owner.IDCollections.find(denom)
 	if index == -1 {
 		return NewIDCollection("", []string{}), false
 	}
@@ -166,7 +166,7 @@ func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
 
 // UpdateIDCollection updates the ID Collection of an owner
 func (owner *Owner) UpdateIDCollection(denom string, idCollection IDCollection) sdk.Error {
-	index := IDCollections(owner.IDCollections).find(denom)
+	index := owner.IDCollections.find(denom)
 	if index == -1 {
 		return ErrUnknownCollection(DefaultCodespace,
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
@@ -189,7 +189,10 @@ func (owner *Owner) DeleteID(denom string, id string) (err sdk.Error) {
 	if err != nil {
 		return err
 	}
-	owner.UpdateIDCollection(denom, idCollection)
+	err = owner.UpdateIDCollection(denom, idCollection)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

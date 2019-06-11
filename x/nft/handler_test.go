@@ -1,92 +1,72 @@
 package nft
 
-// import (
-// 	"bytes"
-// 	"strconv"
-// 	"strings"
-// 	"testing"
+import (
+	"strings"
+	"testing"
 
-// 	"github.com/cosmos/cosmos-sdk/codec"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-// 	"github.com/cosmos/cosmos-sdk/x/nft/types"
-// 	"github.com/stretchr/testify/require"
-// )
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/stretchr/testify/require"
+)
 
-// // TODO: finish
+func createInput() (k Keeper, addrs []sdk.AccAddress) {
+	cdc := codec.New()
+	types.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 
-// // type MsgTransferNFT struct {
-// // 	Sender    sdk.AccAddress
-// // 	Recipient sdk.AccAddress
-// // 	Denom     string
-// // 	ID        uint64
-// // }
+	addrs = keeper.CreateTestAddrs(2)
+	keyNFT := sdk.NewKVStoreKey(StoreKey)
 
-// func createTestAddrs(numAddrs int) []sdk.AccAddress {
-// 	var addresses []sdk.AccAddress
-// 	var buffer bytes.Buffer
+	k = keeper.NewKeeper(cdc, keyNFT)
+	return
+}
+func TestInvalidMsg(t *testing.T) {
+	ctx, k := keeper.Initialize()
+	h := NewHandler(k)
+	res := h(ctx, sdk.NewTestMsg())
+	require.False(t, res.IsOK())
+	require.True(t, strings.Contains(res.Log, "unrecognized nft message type"))
+}
 
-// 	// start at 100 so we can make up to 999 test addresses with valid test addresses
-// 	for i := 100; i < (numAddrs + 100); i++ {
-// 		numString := strconv.Itoa(i)
-// 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
+func TestTransferNFTMsg(t *testing.T) {
+	denom := "some-denom"
+	id := "somd-id"
 
-// 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
-// 		res, _ := sdk.AccAddressFromHex(buffer.String())
-// 		bech := res.String()
-// 		addresses = append(addresses, testAddr(buffer.String(), bech))
-// 		buffer.Reset()
-// 	}
-// 	return addresses
-// }
+	ctx, k := keeper.Initialize()
+	addresses := keeper.CreateTestAddrs(2)
+	originalOwner := addresses[0]
+	nextOwner := addresses[1]
+	h := NewHandler(k)
 
-// func createInput() (k keeper, addrs []sdk.AccAddress) {
-// 	cdc := codec.New()
-// 	types.RegisterCodec(cdc)
-// 	codec.RegisterCrypto(cdc)
+	// An NFT to be transferred
+	nft := types.NewBaseNFT(
+		id,
+		originalOwner,
+		"TokenURI",
+		"Description",
+		"ImageURI",
+		"Name",
+	)
 
-// 	addrs = createTestAddrs(2)
-// 	keyNFT := sdk.NewKVStoreKey(StoreKey)
+	// Create token (collection and owner)
+	k.MintNFT(ctx, denom, nft)
 
-// 	k = keeper.NewKeeper(storeKey, cdc)
-// 	return
-// }
-// func TestInvalidMsg(t *testing.T) {
-// 	h := NewHandler(nil)
+	// Define MsgTransferNft
+	transferNftMsg := MsgTransferNFT{
+		originalOwner,
+		nextOwner,
+		denom,
+		id,
+	}
 
-// 	res := h(sdk.Context{}, sdk.NewTestMsg())
-// 	require.False(t, res.IsOK())
-// 	require.True(t, strings.Contains(res.Log, "unrecognized nft message type"))
-// }
+	res := h(ctx, transferNftMsg)
+	require.True(t, res.IsOK())
 
-// func TestTransferNFTMsg(t *testing.T) {
-// 	nftK, addresses := CreateTestInput(t)
+	nftAfterwards, err := k.GetNFT(ctx, denom, id)
+	require.Nil(t, err)
 
-// 	h := NewHandler(nftK)
+	require.True(t, nftAfterwards.GetOwner().Equals(addresses[1]))
 
-// 	// An NFT to be transferred
-// 	nfts := types.NewNFTs(
-// 		types.NewBaseNFT(
-// 			"hello",
-// 			addresses[0].Address(),
-// 			"Berlin",
-// 			"Berlin NFT",
-// 			"ImageURI",
-// 			"TokenURI",
-// 		),
-// 	)
-
-// 	require.equal(t, nft)
-
-// 	// Create collection
-// 	nftK.SetCollection(cdc, "Williams", nfts)
-
-// 	// Define MsgTransferNft
-// 	transferNft := MsgTransferNFT{
-// 		addresses[0].GetAddress(),
-// 		addresses[1].GetAddress(),
-// 		"Williams",
-// 		"hello",
-// 	}
-
-// }
+}

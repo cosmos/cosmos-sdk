@@ -63,12 +63,15 @@ func (k Keeper) UpdateNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk
 			return err
 		}
 	}
-	collection.UpdateNFT(nft)
+	err = collection.UpdateNFT(nft)
+	if err != nil {
+		return err
+	}
 	k.SetCollection(ctx, denom, collection)
 	return nil
 }
 
-// MintNFT mints an NFT and manages that NFTs existance within Collections and Owners
+// MintNFT mints an NFT and manages that NFTs existence within Collections and Owners
 func (k Keeper) MintNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
 
 	// var replaces types.NFT
@@ -128,10 +131,13 @@ func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress 
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, oldAddress),
 		)
 	}
-	oldOwnerIDCollection.DeleteID(id)
+	err = oldOwnerIDCollection.DeleteID(id)
+	if err != nil {
+		return err
+	}
 	k.SetOwnerByDenom(ctx, oldAddress, denom, oldOwnerIDCollection.IDs)
 
-	newOwnerIDCollection, found := k.GetOwnerByDenom(ctx, newAddress, denom)
+	newOwnerIDCollection, _ := k.GetOwnerByDenom(ctx, newAddress, denom)
 	newOwnerIDCollection.AddID(id)
 	k.SetOwnerByDenom(ctx, newAddress, denom, newOwnerIDCollection.IDs)
 	return nil

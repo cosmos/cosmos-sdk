@@ -1,4 +1,4 @@
-package mapping
+package state
 
 type Integer struct {
 	Value

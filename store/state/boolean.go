@@ -1,4 +1,4 @@
-package mapping
+package state
 
 type Boolean struct {
 	Enum

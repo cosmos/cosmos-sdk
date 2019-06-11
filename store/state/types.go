@@ -1,4 +1,4 @@
-package mapping
+package state
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

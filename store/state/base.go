@@ -1,4 +1,4 @@
-package mapping
+package state
 
 import (
 	//	"github.com/tendermint/tendermint/crypto/merkle"

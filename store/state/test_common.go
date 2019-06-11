@@ -1,4 +1,4 @@
-package mapping
+package state
 
 import (
 	//	"testing"
@@ -45,7 +45,10 @@ func defaultComponents() (sdk.StoreKey, Context, *codec.Codec) {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	cms.LoadLatestVersion()
+	err := cms.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	cdc := codec.New()
 	cdc.RegisterInterface((*test)(nil), nil)

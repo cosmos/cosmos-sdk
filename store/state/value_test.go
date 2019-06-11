@@ -1,4 +1,4 @@
-package mapping
+package state
 
 import (
 	"math/rand"

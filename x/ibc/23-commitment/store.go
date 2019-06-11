@@ -35,7 +35,7 @@ type store struct {
 }
 
 // Proofs must be provided
-func Newstore(root Root, proofs []Proof, fullProofs []FullProof) (res store, err error) {
+func Newstore(root Root, proofs []Proof) (res store, err error) {
 	res = store{
 		root:     root,
 		proofs:   make(map[string]Proof),
@@ -44,14 +44,6 @@ func Newstore(root Root, proofs []Proof, fullProofs []FullProof) (res store, err
 
 	for _, proof := range proofs {
 		res.proofs[string(proof.Key())] = proof
-	}
-
-	for _, proof := range fullProofs {
-		err = proof.Verify(root)
-		if err != nil {
-			return
-		}
-		res.verified[string(proof.Proof.Key())] = proof.Value
 	}
 
 	return
@@ -71,7 +63,7 @@ func (store store) Prove(key, value []byte) bool {
 	if !ok {
 		return false
 	}
-	err := proof.Verify(store.root, key, value)
+	err := proof.Verify(store.root, value)
 	if err != nil {
 		return false
 	}

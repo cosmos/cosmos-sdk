@@ -1,22 +1,9 @@
 package commitment
 
 import (
-	"io"
-
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"bytes"
 )
 
-var _ types.KVStore = Store{}
-
-// Panics when there is no corresponding proof or the proof is invalid
-// (to be compatible with KVStore interface)
-// The semantics of the methods are redefined and does not compatible(should be improved)
-// Get -> Returns the value if the corresponding proof is already verified
-// Set -> Proof corresponding to the provided key is verified with the provided value
-// Has -> Returns true if the proof is verified, returns false in any other case
-// Delete -> Proof corresponding to the provided key is verified with nil value
-// Other methods should not be used
 type Store struct {
 	root     Root
 	proofs   map[string]Proof
@@ -46,67 +33,30 @@ func NewStore(root Root, proofs []Proof, fullProofs []FullProof) (store Store, e
 	return
 }
 
-func (store Store) GetStoreType() types.StoreType {
-	return types.StoreTypeTransient // XXX: check is it right
-}
-
-func (store Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(store)
-}
-
-func (store Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	// FIXME
-	return store.CacheWrap()
-}
-
-func (store Store) Get(key []byte) []byte {
+func (store Store) Get(key []byte) ([]byte, bool) {
 	res, ok := store.verified[string(key)]
-	if !ok {
-		panic(UnverifiedKeyError{})
-	}
-	return res
+	return res, ok
 }
 
-func (store Store) Set(key, value []byte) {
+func (store Store) Prove(key, value []byte) bool {
+	stored, ok := store.Get(key)
+	if ok && bytes.Equal(stored, value) {
+		return true
+	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
-		return
+		return false
 	}
 	err := proof.Verify(store.root, key, value)
-	if err == nil {
-		store.verified[string(key)] = value
+	if err != nil {
+		return false
 	}
+	store.verified[string(key)] = value
 
-	return
+	return true
 }
 
-// TODO: consider using this method to check whether the proof provided or not
-// which may violate KVStore semantics
-func (store Store) Has(key []byte) bool {
-	_, ok := store.verified[string(key)]
+func (store Store) Proven(key []byte) bool {
+	_, ok := store.Get(key)
 	return ok
-}
-
-func (store Store) Delete(key []byte) {
-	store.Set(key, nil)
-}
-
-func (store Store) Iterator(begin, end []byte) types.Iterator {
-	panic(MethodError{})
-}
-
-func (store Store) ReverseIterator(begin, end []byte) types.Iterator {
-	panic(MethodError{})
-}
-
-type NoProofError struct {
-	// XXX
-}
-
-type MethodError struct {
-	// XXX
-}
-
-type UnverifiedKeyError struct {
-	// XXX
 }

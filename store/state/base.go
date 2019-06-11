@@ -25,7 +25,7 @@ func NewBase(cdc *codec.Codec, key sdk.StoreKey) Base {
 	}
 }
 
-func (base Base) store(ctx Context) KVStore {
+func (base Base) Store(ctx Context) KVStore {
 	return prefix.NewStore(base.storefn(ctx), base.prefix)
 }
 

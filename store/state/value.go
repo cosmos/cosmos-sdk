@@ -19,7 +19,7 @@ func NewValue(base Base, key []byte) Value {
 }
 
 func (v Value) store(ctx Context) KVStore {
-	return v.base.store(ctx)
+	return v.base.Store(ctx)
 }
 
 func (v Value) Cdc() *codec.Codec {

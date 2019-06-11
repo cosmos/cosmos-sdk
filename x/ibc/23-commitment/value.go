@@ -18,7 +18,31 @@ func NewBase(cdc *codec.Codec) Base {
 }
 
 func (base Base) Store(ctx Context) Store {
-	return ctx.Store()
+	return NewPrefix(ctx.RemoteStore(), base.prefix)
+}
+
+func join(a, b []byte) (res []byte) {
+	res = make([]byte, len(a)+len(b))
+	copy(res, a)
+	copy(res[len(a):], b)
+	return
+}
+
+func (base Base) Prefix(prefix []byte) Base {
+	return Base{
+		cdc:    base.cdc,
+		prefix: join(base.prefix, prefix),
+	}
+}
+
+type Mapping struct {
+	base Base
+}
+
+func NewMapping(base Base, prefix []byte) Mapping {
+	return Mapping{
+		base: base.Prefix(prefix),
+	}
 }
 
 type Value struct {

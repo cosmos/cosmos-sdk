@@ -50,23 +50,88 @@ func TestTransferNFTMsg(t *testing.T) {
 		"Name",
 	)
 
-	// Create token (collection and owner)
-	k.MintNFT(ctx, denom, nft)
-
 	// Define MsgTransferNft
-	transferNftMsg := MsgTransferNFT{
+	transferNftMsg := types.NewMsgTransferNFT(
 		originalOwner,
 		nextOwner,
 		denom,
 		id,
-	}
+	)
 
+	// handle should fail trying to transfer NFT that doesn't exist
 	res := h(ctx, transferNftMsg)
-	require.True(t, res.IsOK())
+	require.False(t, res.IsOK(), "%v", res)
+
+	// Create token (collection and owner)
+	k.MintNFT(ctx, denom, nft)
+
+	// handle should succeed when nft exists and is transferred by owner
+	res = h(ctx, transferNftMsg)
+	require.True(t, res.IsOK(), "%v", res)
+
+	// nft should have been transferred as a result of the message
+	nftAfterwards, err := k.GetNFT(ctx, denom, id)
+	require.Nil(t, err)
+	require.True(t, nftAfterwards.GetOwner().Equals(addresses[1]))
+
+	// handle should fail when nft exists and is transferred by not owner
+	res = h(ctx, transferNftMsg)
+	require.False(t, res.IsOK(), "%v", res)
+
+	// TODO: check for proper tags
+}
+
+func TestEditNFTMetadataMsg(t *testing.T) {
+	denom := "some-denom"
+	id := "somd-id"
+	name := "Name"
+	tokenURI := "TokenURI"
+	description := "Description"
+	image := "ImageURI"
+
+	_name := "Name2"
+	_tokenURI := "TokenURI2"
+	_description := "Description2"
+	_image := "ImageURI2"
+
+	ctx, k := keeper.Initialize()
+	addresses := keeper.CreateTestAddrs(2)
+	owner := addresses[0]
+
+	h := NewHandler(k)
+
+	// An NFT to be edited
+	nft := types.NewBaseNFT(
+		id,
+		owner,
+		tokenURI,
+		description,
+		image,
+		name,
+	)
+
+	// Create token (collection and owner)
+	k.MintNFT(ctx, denom, nft)
+
+	// Define MsgTransferNft
+	editNFTMetadata := types.NewMsgEditNFTMetadata(
+		owner,
+		id,
+		denom,
+		_name,
+		_description,
+		_image,
+		_tokenURI,
+	)
+
+	res := h(ctx, editNFTMetadata)
+	require.True(t, res.IsOK(), "%v", res)
 
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
-
-	require.True(t, nftAfterwards.GetOwner().Equals(addresses[1]))
+	require.Equal(t, _name, nftAfterwards.GetName())
+	require.Equal(t, _description, nftAfterwards.GetDescription())
+	require.Equal(t, _image, nftAfterwards.GetImage())
+	require.Equal(t, _tokenURI, nftAfterwards.GetTokenURI())
 
 }

@@ -80,7 +80,7 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		// create the message
-		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), req.TokenID, req.Denom,
+		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), req.Denom, req.TokenID,
 			req.Name, req.Description, req.Image, req.TokenURI,
 		)
 

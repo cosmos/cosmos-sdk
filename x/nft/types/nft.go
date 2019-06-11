@@ -167,7 +167,7 @@ func (nfts NFTs) find(id string) int {
 	midIdx := len(nfts) / 2
 	nft := nfts[midIdx]
 
-	if id < nft.GetID() {
+	if strings.Compare(id, nft.GetID()) == -1 {
 		return nfts[:midIdx].find(id)
 	} else if id == nft.GetID() {
 		return midIdx

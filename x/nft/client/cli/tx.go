@@ -55,7 +55,7 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, denom, name, description, image, tokenURI)
+			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), denom, tokenID, name, description, image, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

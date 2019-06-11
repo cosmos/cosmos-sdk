@@ -101,7 +101,7 @@ func (keeper Keeper) GetExchange(ctx sdk.Context, denom string) sdk.Int {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(GetExchangeKey(denom))
 	if bz == nil {
-		panic(fmt.Sprintf("exchange for denomination: %s does not exist"))
+		panic(fmt.Sprintf("exchange for denomination: %s does not exist"), denom)
 	}
 	return keeper.decode(bz)
 }

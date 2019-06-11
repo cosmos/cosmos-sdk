@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/store/mapping"
+	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -12,24 +12,24 @@ import (
 
 // XXX: implement spec: ClientState.verifiedRoots
 
-type IDGenerator func(sdk.Context /*Header,*/, mapping.Value) string
+type IDGenerator func(sdk.Context /*Header,*/, state.Value) string
 
-func IntegerIDGenerator(ctx sdk.Context, v mapping.Value) string {
-	id := mapping.NewInteger(v, mapping.Dec).Incr(ctx)
+func IntegerIDGenerator(ctx sdk.Context, v state.Value) string {
+	id := state.NewInteger(v, state.Dec).Incr(ctx)
 	return strconv.FormatUint(id, 10)
 }
 
 type Manager struct {
-	protocol mapping.Mapping
+	protocol state.Mapping
 
-	idval mapping.Value
+	idval state.Value
 	idgen IDGenerator
 }
 
-func NewManager(protocol, free mapping.Base, idgen IDGenerator) Manager {
+func NewManager(protocol, free state.Base, idgen IDGenerator) Manager {
 	return Manager{
-		protocol: mapping.NewMapping(protocol, []byte("/client")),
-		idval:    mapping.NewValue(free, []byte("/client/id")),
+		protocol: state.NewMapping(protocol, []byte("/client")),
+		idval:    state.NewValue(free, []byte("/client/id")),
 		idgen:    idgen,
 	}
 }
@@ -57,7 +57,7 @@ func (man Manager) object(id string) Object {
 	return Object{
 		id:     id,
 		client: man.protocol.Value([]byte(id)),
-		freeze: mapping.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
+		freeze: state.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
 	}
 }
 
@@ -92,8 +92,8 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 
 type Object struct {
 	id     string
-	client mapping.Value // ConsensusState
-	freeze mapping.Boolean
+	client state.Value // ConsensusState
+	freeze state.Boolean
 }
 
 type CounterObject struct {
@@ -112,10 +112,6 @@ func (obj Object) ID() string {
 func (obj Object) Value(ctx sdk.Context) (res ConsensusState) {
 	obj.client.Get(ctx, &res)
 	return
-}
-
-func (obj Object) Is(ctx sdk.Context, client ConsensusState) bool {
-	return obj.client.Is(ctx, client)
 }
 
 func (obj CounterObject) Is(ctx sdk.Context, client ConsensusState) bool {

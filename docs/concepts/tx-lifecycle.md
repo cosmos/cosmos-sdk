@@ -21,11 +21,10 @@ A user can create a transaction by running `appcli tx [tx]` from the command-lin
 Each full node that receives a transaction performs local checks to filter out invalid transactions before they get included in a block. The transactions approved by a node are held in its [**Mempool**](https://github.com/tendermint/tendermint/blob/75ffa2bf1c7d5805460d941a75112e6a0a38c039/mempool/mempool.go) (memory pool unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
 
 ### Stateless Checks
-Upon first receiving the transaction, an optional `PreCheckFunc` can be called to reject transactions that are obviously invalid such as ones exceeding the block size. 
-It unwraps the transaction into its message(s) and run each `validateBasic` function, which is simply a stateless sanity check (e.g. nonnegative numbers, nil strings, empty addresses). 
+Upon first receiving the transaction, an optional `PreCheckFunc` can be called to reject transactions that are clearly invalid as early as possible, such as ones exceeding the block size. Afterward, the next step is to unwrap the transaction into its message(s) and run each `validateBasic` function, which is simply a stateless sanity check (e.g. nonnegative numbers, nil strings, empty addresses). 
 
 ### Stateful Checks
-A stateful ABCI validation function, `CheckTx`, is also run: the message's `AnteHandler` performs the actions required for each message using a deep copy of the internal state, `checkTxState`, to validate the transaction without modifying the last committed state. At a given moment, full nodes typically have multiple versions of the application's internal state that may differ from one another; they are synced upon each commit to reflect the new state of the network. The stateful check is able to detect errors such as insufficient funds held by an address or attempted double-spends. 
+A stateful ABCI validation function, `CheckTx`, is also run: the message's `AnteHandler` performs the actions required for each message using a deep copy of the internal state, `checkTxState`, to validate the transaction without modifying the last committed state. At a given moment, full nodes typically have multiple versions of the application's internal state that may differ from one another; they are synced upon each commit to reflect the new state of the network. The stateful check is able to detect errors such as insufficient funds held by an address. 
 
 ```
 		To perform state checks	  	   To execute state 		   To answer queries
@@ -76,7 +75,7 @@ States synced:  | CheckTxState(t+1)   |         | DeliverTxState(t+1) |		|   Que
 			  
 ```
 ### PostChecks
-`CheckTx` also returns `GasUsed` which may or may not be less than the user's provided `GasWanted`. A `PostCheckFunc` is an optional filter after `CheckTx` that can be used to enforce that users must provide enough gas. 
+`CheckTx` also returns `GasUsed` which may or may not be less than the user's provided `GasWanted`. A `PostCheckFunc` is an optional filter run after `CheckTx` that can be used to enforce that users provide enough gas. 
 
 
 ## Consensus

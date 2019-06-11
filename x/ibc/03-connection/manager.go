@@ -140,6 +140,20 @@ func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.connection.Exists(ctx)
 }
 
+// If there is no proof provided, assume not exists
+func (obj CounterObject) exists(ctx sdk.Context) bool {
+	/*
+		// XXX
+		if !obj.connection.Proven(ctx) {
+			return false
+		}
+
+		return obj.connection.Exists(ctx)
+	*/
+
+	return false
+}
+
 func (obj Object) remove(ctx sdk.Context) {
 	obj.connection.Delete(ctx)
 	obj.state.Delete(ctx)

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// Manager is unrestricted
 type Manager struct {
 	protocol mapping.Mapping
 
@@ -97,6 +98,51 @@ func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, er
 	return
 }
 
+func (man Manager) Module(module string, chanid func(string) bool) ModuleManager {
+	return ModuleManager{
+		man:    man,
+		module: module,
+		chanid: chanid,
+	}
+}
+
+// ModuleManage is module specific
+type ModuleManager struct {
+	man    Manager
+	module string
+	chanid func(string) bool
+}
+
+func (man ModuleManager) Create(ctx sdk.Context, connid, chanid string, channel Channel) (Object, error) {
+	if !man.chanid(chanid) {
+		return Object{}, errors.New("invalid channel id")
+	}
+
+	if channel.Module != man.module {
+		return Object{}, errors.New("invalid module")
+	}
+
+	return man.man.Create(ctx, connid, chanid, channel)
+}
+
+func (man ModuleManager) Query(ctx sdk.Context, connid, chanid string) (Object, error) {
+	if !man.chanid(chanid) {
+		return Object{}, errors.New("invalid channel id")
+	}
+
+	obj, err := man.man.Query(ctx, connid, chanid)
+	if err != nil {
+		return Object{}, err
+	}
+
+	if obj.Value(ctx).Module != man.module {
+		return Object{}, errors.New("invalid module")
+	}
+
+	return obj, nil
+}
+
+// XXX: remove connid(already exists in connection.id)
 type Object struct {
 	connid      string
 	chanid      string
@@ -139,20 +185,17 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 // TODO: ocapify callingModule
-func (obj Object) OpenInit(ctx sdk.Context, callingModule string) error {
+func (obj Object) OpenInit(ctx sdk.Context) error {
 	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
 	// which will ensure
 	// assert(get() === null) and
 	// set() and
 	// connection.state == open
 
+	// getCallingModule() === channel.moduleIdentifier is ensured by ModuleManager
+
 	if !obj.state.Transit(ctx, Idle, Init) {
 		return errors.New("init on non-idle channel")
-	}
-
-	channel := obj.Value(ctx)
-	if callingModule != channel.Module {
-		return errors.New("setting wrong module")
 	}
 
 	obj.seqsend.Set(ctx, 0)
@@ -161,7 +204,7 @@ func (obj Object) OpenInit(ctx sdk.Context, callingModule string) error {
 	return nil
 }
 
-func (obj Object) OpenTry(ctx sdk.Context, callingModule string, timeoutHeight, nextTimeoutHeight uint64) error {
+func (obj Object) OpenTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
 	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("opentry on non-idle channel")
 	}
@@ -174,10 +217,42 @@ func (obj Object) OpenTry(ctx sdk.Context, callingModule string, timeoutHeight, 
 	// XXX
 }
 
-func (obj Object) Send(ctx sdk.Context, packet Packet) {
+func (obj Object) Send(ctx sdk.Context, packet Packet) error {
+	if obj.state.Get(ctx) != Open {
+		return errors.New("send on non-open channel")
+	}
 
+	if obj.connection.State(ctx) != Open {
+		return errors.New("send on non-open connection")
+	}
+
+	if uint64(obj.connection.Client(ctx).GetBase().GetHeight()) >= packet.Timeout() {
+		return errors.New("timeout height higher than the latest known")
+	}
+
+	obj.packets.Set(ctx, obj.seqsend.Incr(ctx), packet)
+
+	return nil
 }
 
-func (obj Object) Receive(ctx sdk.Context, packet Packet) {
+func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
+	if obj.state.Get(ctx) != Open {
+		return errors.New("send on non-open channel")
+	}
 
+	if obj.connection.State(ctx) != Open {
+		return errors.New("send on non-open connection")
+	}
+
+	err := assertTimeout(ctx, packet.Timeout())
+	if err != nil {
+		return err
+	}
+
+	// XXX: increment should happen before verification, reflect on the spec
+	if !obj.remote.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
+		return errors.New("verification failed")
+	}
+
+	return nil
 }

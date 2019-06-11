@@ -111,6 +111,8 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 
 type NihiloObject Object
 
+// XXX: add readonly Object
+
 type Object struct {
 	id          string
 	connection  state.Value
@@ -136,8 +138,8 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) ClientID() string {
-	return obj.client.ID()
+func (obj Object) Client(ctx sdk.Context) client.Client {
+	return obj.client.Value(ctx)
 }
 
 func (obj Object) State(ctx sdk.Context) State {

@@ -12,6 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// AccountWithQueryHeight wraps the embedded Account
+// with the height it was queried at
+type AccountWithQueryHeight struct {
+	types.Account
+	Height int64 `json:"height"`
+}
+
 // register REST routes
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
 	r.HandleFunc(
@@ -64,7 +71,12 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, account)
+		if cliCtx.Height > 0 {
+			accountWithHeight := AccountWithQueryHeight{account, cliCtx.Height}
+			rest.PostProcessResponse(w, cliCtx, accountWithHeight)
+		} else {
+			rest.PostProcessResponse(w, cliCtx, account)
+		}
 	}
 }
 

@@ -53,7 +53,7 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		// create the message
 		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, req.Denom, req.TokenID)
 
-		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
+		clientrest.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -84,6 +84,6 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			req.Name, req.Description, req.Image, req.TokenURI,
 		)
 
-		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
+		clientrest.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }

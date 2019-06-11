@@ -1,44 +1,51 @@
 package keeper
 
-// // RegisterInvariants registers all supply invariants
-// func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
-// 	ir.RegisterRoute(
-// 		types.ModuleName, "supply",
-// 		SupplyInvariant(k),
-// 	)
-// }
+import (
+	"fmt"
 
-// // AllInvariants runs all invariants of the nfts module.
-// func AllInvariants(k Keeper) sdk.Invariant {
-// 	return func(ctx sdk.Context) error {
-// 		return SupplyInvariant(k)(ctx)
-// 	}
-// }
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// // SupplyInvariant checks that the total amount of nfts on collections matches the total amount owned by addresses
-// func SupplyInvariant(k Keeper) sdk.Invariant {
+	"github.com/cosmos/cosmos-sdk/x/nft/types"
+)
 
-// 	return func(ctx sdk.Context) error {
-// 		collectionsSupply := uint(0)
-// 		balancesSupply := uint(0)
+// RegisterInvariants registers all supply invariants
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
+	ir.RegisterRoute(
+		types.ModuleName, "supply",
+		SupplyInvariant(k),
+	)
+}
 
-// 		k.IterateCollections(ctx, func(collection types.Collection) bool {
-// 			collectionsSupply += collection.Supply()
-// 			return false
-// 		})
+// AllInvariants runs all invariants of the nfts module.
+func AllInvariants(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+		return SupplyInvariant(k)(ctx)
+	}
+}
 
-// 		// TODO: make this invariant per collection, not in total
-// 		k.IterateBalances(ctx, BalancesKeyPrefix, func(_ sdk.AccAddress, collection types.Collection) bool {
-// 			balancesSupply += collection.Supply()
-// 			return false
-// 		})
+// SupplyInvariant checks that the total amount of nfts on collections matches the total amount owned by addresses
+func SupplyInvariant(k Keeper) sdk.Invariant {
 
-// 		if collectionsSupply != balancesSupply {
-// 			return fmt.Errorf("total NFTs supply invariance:\n"+
-// 				"\ttotal collections supply: %d\n"+
-// 				"\tsum of NFT balances: %d", collectionsSupply, balancesSupply)
-// 		}
+	return func(ctx sdk.Context) error {
+		collectionsSupply := 0
+		ownersSupply := 0
 
-// 		return nil
-// 	}
-// }
+		k.IterateCollections(ctx, func(collection types.Collection) bool {
+			collectionsSupply += collection.Supply()
+			return false
+		})
+
+		k.IterateOwners(ctx, func(owner types.Owner) bool {
+			ownersSupply += owner.Supply()
+			return false
+		})
+
+		if collectionsSupply != ownersSupply {
+			return fmt.Errorf("total NFTs supply invariance:\n"+
+				"\ttotal collections supply: %d\n"+
+				"\tsum of NFTs by owner: %d", collectionsSupply, ownersSupply)
+		}
+
+		return nil
+	}
+}

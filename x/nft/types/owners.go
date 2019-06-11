@@ -72,9 +72,18 @@ func (idCollection *IDCollection) DeleteID(id string) sdk.Error {
 	return nil
 }
 
+// Supply gets the total supply of an Owner
+func (owner Owner) Supply() int {
+	total := 0
+	for _, idCollection := range owner.IDCollections {
+		total += idCollection.Supply()
+	}
+	return total
+}
+
 // Supply gets the total supply of NFTIDs of a balance
-func (idCollection IDCollection) Supply() uint {
-	return uint(len(idCollection.IDs))
+func (idCollection IDCollection) Supply() int {
+	return len(idCollection.IDs)
 }
 
 // String follows stringer interface

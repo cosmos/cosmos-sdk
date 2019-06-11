@@ -20,8 +20,8 @@ type (
 )
 
 var (
-	NewKeeper = keeper.NewKeeper
-	// RegisterInvariants  = keeper.RegisterInvariants
+	NewKeeper           = keeper.NewKeeper
+	RegisterInvariants  = keeper.RegisterInvariants
 	NewQuerier          = keeper.NewQuerier
 	NewBaseNFT          = types.NewBaseNFT
 	NewNFTs             = types.NewNFTs

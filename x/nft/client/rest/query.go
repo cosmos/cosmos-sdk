@@ -61,7 +61,7 @@ func supplyNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute st
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -86,7 +86,7 @@ func getBalanceHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute s
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -113,7 +113,7 @@ func getBalanceCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, qu
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -134,7 +134,7 @@ func getCollectionHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRout
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -157,6 +157,6 @@ func getNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute strin
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

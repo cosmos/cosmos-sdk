@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/tags"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // NewHandler routes the messages to the handlers
@@ -34,7 +35,7 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	}
 
 	if !nft.GetOwner().Equals(msg.Sender) {
-		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Sender.String(), msg.ID)).Result()
+		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%s", msg.Sender.String(), msg.ID)).Result()
 	}
 
 	// update NFT owner
@@ -68,7 +69,7 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 
 	// check if msg sender is the Owner of the NFT
 	if !nft.GetOwner().Equals(msg.Owner) {
-		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%d", msg.Owner.String(), msg.ID)).Result()
+		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%s", msg.Owner.String(), msg.ID)).Result()
 	}
 
 	// update NFT
@@ -86,4 +87,8 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 			tags.NFTID, msg.ID,
 		),
 	}
+}
+
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
+	return nil, nil
 }

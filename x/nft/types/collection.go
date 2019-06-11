@@ -73,8 +73,8 @@ func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
 }
 
 // Supply gets the total supply of NFTs of a collection
-func (collection Collection) Supply() uint {
-	return uint(len(collection.NFTs))
+func (collection Collection) Supply() int {
+	return len(collection.NFTs)
 }
 
 // String follows stringer interface

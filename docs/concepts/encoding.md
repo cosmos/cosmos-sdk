@@ -1,3 +1,3 @@
-# Amnio Encoding
+# Amino Encoding
 
 TODO

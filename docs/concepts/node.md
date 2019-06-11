@@ -2,7 +2,7 @@
 
 ## Pre-Requisite Reading
 
-## main function
+## `main` function
 
 TODO
 
@@ -10,4 +10,4 @@ TODO
 
 TODO
 
-## LCD
+## Light-Client Daemon (LCD)

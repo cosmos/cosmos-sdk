@@ -1,3 +1,3 @@
-# Amino Encoding
+# Encoding
 
 TODO

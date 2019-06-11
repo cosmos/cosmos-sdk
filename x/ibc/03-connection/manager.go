@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/mapping"
+	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
@@ -15,22 +15,22 @@ import (
 // XXX: all code using external KVStore should be defer-recovered in case of missing proofs
 
 type Manager struct {
-	protocol mapping.Mapping
+	protocol state.Mapping
 
 	client client.Manager
 
-	self mapping.Indexer
+	self state.Indexer
 
 	counterparty CounterpartyManager
 }
 
-func NewManager(protocol, free mapping.Base, clientman client.Manager) Manager {
+func NewManager(protocol, free state.Base, clientman client.Manager) Manager {
 	return Manager{
-		protocol: mapping.NewMapping(protocol, []byte("/connection/")),
+		protocol: state.NewMapping(protocol, []byte("/connection/")),
 
 		client: clientman,
 
-		self: mapping.NewIndexer(free, []byte("/connection/self/"), mapping.Dec),
+		self: state.NewIndexer(free, []byte("/connection/self/"), state.Dec),
 
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
@@ -57,8 +57,8 @@ func (man Manager) object(id string) Object {
 	return Object{
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
-		state:       mapping.NewEnum(man.protocol.Value([]byte(id + "/state"))),
-		nexttimeout: mapping.NewInteger(man.protocol.Value([]byte(id+"/timeout")), mapping.Dec),
+		state:       state.NewEnum(man.protocol.Value([]byte(id + "/state"))),
+		nexttimeout: state.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
 
 		self: man.self,
 	}
@@ -70,7 +70,7 @@ func (man CounterpartyManager) object(id string) CounterObject {
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
 		state:       commitment.NewEnum(man.protocol.Value([]byte(id + "/state"))),
-		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(id+"/timeout")), mapping.Dec),
+		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
 	}
 }
 
@@ -114,14 +114,14 @@ type NihiloObject Object
 
 type Object struct {
 	id          string
-	connection  mapping.Value
-	state       mapping.Enum
-	nexttimeout mapping.Integer
+	connection  state.Value
+	state       state.Enum
+	nexttimeout state.Integer
 
 	client client.Object
 
 	counterparty CounterObject
-	self         mapping.Indexer
+	self         state.Indexer
 }
 
 type CounterObject struct {
@@ -232,7 +232,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	var expected client.Client
+	var expected client.ConsensusState
 	obj.self.Get(ctx, expheight, &expected)
 	if !obj.counterparty.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
@@ -272,7 +272,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	var expected client.Client
+	var expected client.ConsensusState
 	obj.self.Get(ctx, expheight, &expected)
 	if !obj.counterparty.client.Is(ctx, expected) {
 		return errors.New("unexpected counterparty client value")
@@ -312,7 +312,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetBase().GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -396,7 +396,7 @@ func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) CloseTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetBase().GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

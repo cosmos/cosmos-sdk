@@ -69,7 +69,7 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 
 		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), mapping.Dec),
 		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), mapping.Dec),
-		// packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key + "/packets")), mapping.Dec),
+		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets")), mapping.Dec),
 	}
 }
 
@@ -182,7 +182,7 @@ type CounterObject struct {
 
 	seqsend commitment.Integer
 	seqrecv commitment.Integer
-	//packets commitment.Indexer
+	packets commitment.Indexer
 
 	connection connection.CounterObject
 }

@@ -27,13 +27,8 @@ var (
 	ErrInputOutputMismatch          = types.ErrInputOutputMismatch
 	ErrSendDisabled                 = types.ErrSendDisabled
 	NewBaseKeeper                   = keeper.NewBaseKeeper
-	NewBaseSendKeeper               = keeper.NewBaseSendKeeper
-	NewBaseViewKeeper               = keeper.NewBaseViewKeeper
-	NewMsgSend                      = types.NewMsgSend
-	NewMsgMultiSend                 = types.NewMsgMultiSend
 	NewInput                        = types.NewInput
 	NewOutput                       = types.NewOutput
-	ValidateInputsOutputs           = types.ValidateInputsOutputs
 	ParamKeyTable                   = types.ParamKeyTable
 
 	// variable aliases

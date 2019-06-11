@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// XXX: implement spec: ClientState.verifiedRoots
+
 type IDGenerator func(sdk.Context /*Header,*/, mapping.Value) string
 
 func IntegerIDGenerator(ctx sdk.Context, v mapping.Value) string {
@@ -59,13 +61,14 @@ func (man Manager) object(id string) Object {
 	}
 }
 
-func (man Manager) Create(ctx sdk.Context, cs Client) string {
+func (man Manager) Create(ctx sdk.Context, cs ConsensusState) (Object, error) {
 	id := man.idgen(ctx, man.idval)
-	err := man.object(id).create(ctx, cs)
-	if err != nil {
-		panic(err)
+	obj := man.object(id)
+	if obj.exists(ctx) {
+		return Object{}, errors.New("Create client on already existing id")
 	}
-	return id
+	obj.client.Set(ctx, cs)
+	return obj, nil
 }
 
 func (man Manager) Query(ctx sdk.Context, id string) (Object, error) {
@@ -89,21 +92,13 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 
 type Object struct {
 	id     string
-	client mapping.Value
+	client mapping.Value // ConsensusState
 	freeze mapping.Boolean
 }
 
 type CounterObject struct {
 	id     string
 	client commitment.Value
-}
-
-func (obj Object) create(ctx sdk.Context, st Client) error {
-	if obj.exists(ctx) {
-		return errors.New("Create client on already existing id")
-	}
-	obj.client.Set(ctx, st)
-	return nil
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
@@ -114,16 +109,16 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) Value(ctx sdk.Context) (res Client) {
+func (obj Object) Value(ctx sdk.Context) (res ConsensusState) {
 	obj.client.Get(ctx, &res)
 	return
 }
 
-func (obj Object) Is(ctx sdk.Context, client Client) bool {
+func (obj Object) Is(ctx sdk.Context, client ConsensusState) bool {
 	return obj.client.Is(ctx, client)
 }
 
-func (obj CounterObject) Is(ctx sdk.Context, client Client) bool {
+func (obj CounterObject) Is(ctx sdk.Context, client ConsensusState) bool {
 	return obj.client.Is(ctx, client)
 }
 
@@ -136,7 +131,7 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 		return errors.New("client is frozen")
 	}
 
-	var stored Client
+	var stored ConsensusState
 	obj.client.GetIfExists(ctx, &stored)
 	updated, err := stored.Validate(header)
 	if err != nil {

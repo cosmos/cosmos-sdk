@@ -119,19 +119,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// Burn the slashed tokens from the pool account and decrease the total supply.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
-	switch {
-	case validator.IsBonded():
-		if err := k.removeBondedTokens(ctx, tokensToBurn); err != nil {
-			panic(err)
-		}
-	case validator.IsUnbonding():
-		if err := k.removeNotBondedTokens(ctx, tokensToBurn); err != nil {
-			panic(err)
-		}
-	case validator.IsUnbonded():
-		if err := k.removeNotBondedTokens(ctx, tokensToBurn); err != nil {
-			panic(err)
-		}
+	if err := k.removeBondedTokens(ctx, tokensToBurn); err != nil {
+		panic(err)
 	}
 
 	// Log that a slash occurred!

@@ -7,19 +7,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// expected coin keeper
+// expected coin keeper (noalias)
 type DistributionKeeper interface {
 	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
-// AccountKeeper defines the expected account keeper
+// AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	GetNextAccountNumber(ctx sdk.Context) uint64
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 
-// SupplyKeeper defines the expected supply Keeper
+// SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supply.Supply
 
@@ -33,7 +33,7 @@ type SupplyKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }
 
-// ValidatorSet expected properties for the set of all validators
+// ValidatorSet expected properties for the set of all validators (noalias)
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
@@ -65,7 +65,7 @@ type ValidatorSet interface {
 	MaxValidators(sdk.Context) uint16
 }
 
-// DelegationSet expected properties for the set of all delegations for a particular
+// DelegationSet expected properties for the set of all delegations for a particular (noalias)
 type DelegationSet interface {
 	GetValidatorSet() ValidatorSet // validator set for which delegation set is based upon
 
@@ -82,7 +82,7 @@ type DelegationSet interface {
 // state. The second keeper must implement this interface, which then the
 // staking keeper can call.
 
-// StakingHooks event hooks for staking validator object
+// StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
 	BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress)                         // Must be called when a validator's state changes

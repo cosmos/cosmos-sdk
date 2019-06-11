@@ -101,8 +101,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper,
-	accKeeper AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -118,7 +117,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
 }
 

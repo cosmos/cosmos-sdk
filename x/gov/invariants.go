@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterInvariants registers all governance invariants
-func RegisterInvariants(ir sdk.InvariantRouter, keeper Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 
 	ir.RegisterRoute(types.ModuleName, "module-account",
 		ModuleAccountInvariant(keeper))

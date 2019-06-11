@@ -9,7 +9,7 @@ import (
 )
 
 // RegisterInvariants register all supply invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "total-supply", TotalSupply(k))
 }
 

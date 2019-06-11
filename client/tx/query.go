@@ -156,6 +156,11 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		if len(r.Form) == 0 {
 			rest.PostProcessResponse(w, cliCtx, txs)
 			return
@@ -183,6 +188,11 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
 
 		output, err := queryTx(cliCtx, hashHexStr)
 		if err != nil {

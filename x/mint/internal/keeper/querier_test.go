@@ -1,4 +1,4 @@
-package mint
+package keeper
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -19,13 +20,13 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	_, err := querier(input.ctx, []string{QueryParameters}, query)
+	_, err := querier(input.ctx, []string{types.QueryParameters}, query)
 	require.NoError(t, err)
 
-	_, err = querier(input.ctx, []string{QueryInflation}, query)
+	_, err = querier(input.ctx, []string{types.QueryInflation}, query)
 	require.NoError(t, err)
 
-	_, err = querier(input.ctx, []string{QueryAnnualProvisions}, query)
+	_, err = querier(input.ctx, []string{types.QueryAnnualProvisions}, query)
 	require.NoError(t, err)
 
 	_, err = querier(input.ctx, []string{"foo"}, query)
@@ -35,7 +36,7 @@ func TestNewQuerier(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	input := newTestInput(t)
 
-	var params Params
+	var params types.Params
 
 	res, sdkErr := queryParams(input.ctx, input.mintKeeper)
 	require.NoError(t, sdkErr)

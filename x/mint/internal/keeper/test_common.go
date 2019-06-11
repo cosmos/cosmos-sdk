@@ -1,4 +1,4 @@
-package mint
+package keeper
 
 import (
 	"os"
@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -37,7 +38,7 @@ func newTestInput(t *testing.T) testInput {
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
-	keyMint := sdk.NewKVStoreKey(StoreKey)
+	keyMint := sdk.NewKVStoreKey(types.StoreKey)
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
@@ -52,20 +53,20 @@ func newTestInput(t *testing.T) testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 
-	paramsKeeper := params.NewKeeper(ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
-	accountKeeper := auth.NewAccountKeeper(ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	paramsKeeper := params.NewKeeper(types.ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(ModuleCdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(types.ModuleCdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace)
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
 
 	stakingKeeper := staking.NewKeeper(
-		ModuleCdc, keyStaking, tkeyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		types.ModuleCdc, keyStaking, tkeyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
-	mintKeeper := NewKeeper(ModuleCdc, keyMint, paramsKeeper.Subspace(DefaultParamspace), &stakingKeeper, supplyKeeper)
+	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper)
 
 	// set module accounts
 	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
-	moduleAcc := supply.NewModuleMinterAccount(ModuleName)
+	moduleAcc := supply.NewModuleMinterAccount(types.ModuleName)
 	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
 	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
 
@@ -74,8 +75,8 @@ func newTestInput(t *testing.T) testInput {
 	stakingKeeper.SetNotBondedPool(ctx, notBondedPool)
 	stakingKeeper.SetBondedPool(ctx, bondPool)
 
-	mintKeeper.SetParams(ctx, DefaultParams())
-	mintKeeper.SetMinter(ctx, DefaultInitialMinter())
+	mintKeeper.SetParams(ctx, types.DefaultParams())
+	mintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
-	return testInput{ctx, ModuleCdc, mintKeeper}
+	return testInput{ctx, types.ModuleCdc, mintKeeper}
 }

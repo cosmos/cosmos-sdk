@@ -10,7 +10,7 @@ import (
 )
 
 // RegisterInvariants registers all staking invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 
 	ir.RegisterRoute(types.ModuleName, "module-accounts",
 		ModuleAccountInvariants(k))

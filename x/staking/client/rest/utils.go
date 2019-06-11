@@ -49,6 +49,11 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
@@ -77,6 +82,11 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params := types.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
@@ -102,6 +112,11 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
 			return
 		}
 

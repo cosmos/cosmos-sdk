@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -96,6 +97,42 @@ func TestParseHTTPArgs(t *testing.T) {
 				require.Equal(t, tt.tags, tags)
 				require.Equal(t, tt.page, page)
 				require.Equal(t, tt.limit, limit)
+			}
+		})
+	}
+}
+
+func TestParseQueryHeight(t *testing.T) {
+	var emptyHeight int64
+	height := int64(1256756)
+
+	req0 := mustNewRequest(t, "", "/", nil)
+	req1 := mustNewRequest(t, "", "/?height=1256756", nil)
+	req2 := mustNewRequest(t, "", "/?height=456yui4567", nil)
+	req3 := mustNewRequest(t, "", "/?height=-1", nil)
+
+	tests := []struct {
+		name           string
+		req            *http.Request
+		w              http.ResponseWriter
+		cliCtx         context.CLIContext
+		expectedHeight int64
+		expectedOk     bool
+	}{
+		{"no height", req0, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
+		{"height", req1, httptest.NewRecorder(), context.CLIContext{}, height, true},
+		{"invalid height", req2, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
+		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cliCtx, ok := ParseQueryHeightOrReturnBadRequest(tt.w, tt.cliCtx, tt.req)
+			if tt.expectedOk {
+				require.True(t, ok)
+				require.Equal(t, tt.expectedHeight, cliCtx.Height)
+			} else {
+				require.False(t, ok)
+				require.Empty(t, tt.expectedHeight, cliCtx.Height)
 			}
 		})
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
 var (
@@ -67,11 +68,11 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
-	ak     AccountKeeper
+	ak     types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -85,7 +86,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module message route name
 func (AppModule) Route() string { return "" }

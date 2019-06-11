@@ -1,4 +1,4 @@
-//nolint
+// nolint noalias
 package types
 
 import (

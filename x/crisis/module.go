@@ -86,7 +86,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (AppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module querier route name
 func (AppModule) Route() string {

@@ -5,35 +5,29 @@ import (
 )
 
 // TODO: types in this file should be (de/)serialized with proto in the future
-
-type AminoMarshaler interface {
-	MarshalAmino() (string, error)
-	UnmarshalAmino(string) error
-}
-
-type ValidityPredicateBase interface {
-	Kind() Kind
-	GetHeight() int64
-	Equal(ValidityPredicateBase) bool
-}
+// currently amkno codec handles it
 
 // ConsensusState
-type Client interface {
+type ConsensusState interface {
 	Kind() Kind
-	GetBase() ValidityPredicateBase
+	GetHeight() uint64
 	GetRoot() commitment.Root
-	Validate(Header) (Client, error) // ValidityPredicate
+	Validate(Header) (ConsensusState, error) // ValidityPredicate
+	Equivocation(Header, Header) bool        // EquivocationPredicate
 }
 
-func Equal(client1, client2 Client) bool {
+/*
+func Equal(client1, client2 ConsensusState) bool {
 	return client1.Kind() == client2.Kind() &&
 		client1.GetBase().Equal(client2.GetBase())
 }
+*/
 
 type Header interface {
 	Kind() Kind
+	GetHeight() uint64
 	//	Proof() HeaderProof
-	GetBase() ValidityPredicateBase // can be nil
+	State() ConsensusState // can be nil
 	GetRoot() commitment.Root
 }
 

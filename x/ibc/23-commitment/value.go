@@ -2,8 +2,8 @@ package commitment
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/cosmos/cosmos-sdk/store/mapping"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Base struct {
@@ -17,8 +17,8 @@ func NewBase(cdc *codec.Codec) Base {
 	}
 }
 
-func (base Base) Store(ctx Context) Store {
-	return NewPrefix(ctx.RemoteStore(), base.prefix)
+func (base Base) Store(ctx sdk.Context) Store {
+	return NewPrefix(GetStore(ctx), base.prefix)
 }
 
 func join(a, b []byte) (res []byte) {
@@ -54,11 +54,11 @@ func NewValue(base Base, key []byte) Value {
 	return Value{base, key}
 }
 
-func (v Value) Is(ctx Context, value interface{}) bool {
+func (v Value) Is(ctx sdk.Context, value interface{}) bool {
 	return v.base.Store(ctx).Prove(v.key, v.base.cdc.MustMarshalBinaryBare(value))
 }
 
-func (v Value) IsRaw(ctx Context, value []byte) bool {
+func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
 	return v.base.Store(ctx).Prove(v.key, value)
 }
 
@@ -70,7 +70,7 @@ func NewEnum(v Value) Enum {
 	return Enum{v}
 }
 
-func (v Enum) Is(ctx Context, value byte) bool {
+func (v Enum) Is(ctx sdk.Context, value byte) bool {
 	return v.Value.IsRaw(ctx, []byte{value})
 }
 
@@ -84,6 +84,6 @@ func NewInteger(v Value, enc mapping.IntEncoding) Integer {
 	return Integer{v, enc}
 }
 
-func (v Integer) Is(ctx Context, value uint64) bool {
+func (v Integer) Is(ctx sdk.Context, value uint64) bool {
 	return v.Value.IsRaw(ctx, mapping.EncodeInt(value, v.enc))
 }

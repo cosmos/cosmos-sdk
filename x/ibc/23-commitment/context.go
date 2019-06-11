@@ -4,16 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Context struct {
-	sdk.Context
+// TODO: define Context type which embeds sdk.Context and ensures the existence of RemoteKVStore
+
+type ContextKeyRemoteKVStore struct{}
+
+func WithStore(ctx sdk.Context, store Store) sdk.Context {
+	return ctx.WithValue(ContextKeyRemoteKVStore{}, store)
 }
 
-type contextKeyRemoteKVStore struct{}
-
-func WithStore(ctx sdk.Context, store Store) Context {
-	return Context{ctx.WithValue(contextKeyRemoteKVStore{}, store)}
-}
-
-func (ctx Context) RemoteStore() Store {
-	return ctx.Value(contextKeyRemoteKVStore{}).(Store)
+func GetStore(ctx sdk.Context) Store {
+	return ctx.Value(ContextKeyRemoteKVStore{}).(Store)
 }

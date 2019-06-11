@@ -16,7 +16,6 @@ const (
 	ModuleName               = types.ModuleName
 	RouterKey                = types.RouterKey
 	DefaultParamspace        = types.DefaultParamspace
-	DefaultSendEnabled       = types.DefaultSendEnabled
 )
 
 var (

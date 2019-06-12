@@ -118,7 +118,7 @@ test_sim_benchmark_invariants:
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
-$(BINDIR)/runsim: contrib/runsim/main.go
+$(BINDIR)/runsim: contrib/runsim/main.go contrib/runsim/notification.go
 	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500

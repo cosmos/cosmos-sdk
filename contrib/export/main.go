@@ -9,15 +9,14 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
-// TODO accept those as parameters once we have more than one release available
-var source = "034"
-var target = "036"
-
 var migrationMap = extypes.MigrationMap{
 	"036": v036.Migrate,
 }
 
 func main() {
+	var source = "034"
+	var target = "036"
+
 	// This function should be modularized, for now we read and dump genesis committed to git,
 	// to simplify the creation of a CCI script that tests three different things:
 	// - Reading old types,

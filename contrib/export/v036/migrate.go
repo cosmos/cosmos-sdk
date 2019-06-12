@@ -73,6 +73,7 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 	return targetGov
 }
 
+// Migrate - unmarshal with the previous version and marshal with the new types
 func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	var govState v034gov.GenesisState
 	v034gov.RegisterCodec(cdc)

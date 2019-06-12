@@ -32,6 +32,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	nftsim "github.com/cosmos/cosmos-sdk/x/nft/simulation"
 	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -151,6 +154,7 @@ func appStateRandomizedFn(
 	genDistrGenesisState(cdc, r, appParams, genesisState)
 	stakingGen := genStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
 	genSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
+	genNFTGenesisState(cdc, r, accs, appParams, genesisState)
 
 	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
@@ -314,6 +318,39 @@ func genGenesisAccounts(
 	}
 
 	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
+}
+
+func genNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+	const (
+		Kitties = "crypto-kitties"
+		Doggos  = "crypto-doggos"
+	)
+
+	collections := nft.NewCollections(nft.NewCollection(Kitties, nft.NFTs{}), nft.NewCollection(Doggos, nft.NFTs{}))
+
+	for _, acc := range accs {
+		if r.Intn(100) < 50 {
+			nft := nft.NewBaseNFT(
+				simulation.RandStringOfLength(r, 10), // id
+				acc.Address,
+				simulation.RandStringOfLength(r, 15), // name
+				simulation.RandStringOfLength(r, 50), // description
+				simulation.RandStringOfLength(r, 30), // image
+				simulation.RandStringOfLength(r, 45), // tokenURI
+			)
+
+			if r.Intn(100) < 50 {
+				collections[0].AddNFT(nft)
+			} else {
+				collections[1].AddNFT(nft)
+			}
+		}
+	}
+
+	nftGenesis := nft.DefaultGenesisState()
+
+	fmt.Printf("Selected randomly generated NFT parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, nftGenesis))
+	genesisState[nft.ModuleName] = cdc.MustMarshalJSON(nftGenesis)
 }
 
 func genGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
@@ -760,6 +797,28 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 				return v
 			}(nil),
 			slashingsim.SimulateMsgUnjail(app.slashingKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgTransferNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nftsim.SimulateMsgEditNFTMetadata(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgTransferNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nftsim.SimulateMsgEditNFTMetadata(app.nftKeeper),
 		},
 	}
 }

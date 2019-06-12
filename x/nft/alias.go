@@ -20,19 +20,21 @@ type (
 )
 
 var (
-	NewKeeper           = keeper.NewKeeper
-	RegisterInvariants  = keeper.RegisterInvariants
-	NewQuerier          = keeper.NewQuerier
-	NewBaseNFT          = types.NewBaseNFT
-	NewNFTs             = types.NewNFTs
-	NewCollection       = types.NewCollection
-	NewCollections      = types.NewCollections
-	EmptyCollection     = types.EmptyCollection
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	ValidateGenesis     = types.ValidateGenesis
-	RegisterCodec       = types.RegisterCodec
-	ModuleCdc           = types.ModuleCdc
+	NewKeeper             = keeper.NewKeeper
+	RegisterInvariants    = keeper.RegisterInvariants
+	NewQuerier            = keeper.NewQuerier
+	NewBaseNFT            = types.NewBaseNFT
+	NewNFTs               = types.NewNFTs
+	NewCollection         = types.NewCollection
+	NewCollections        = types.NewCollections
+	EmptyCollection       = types.EmptyCollection
+	NewGenesisState       = types.NewGenesisState
+	NewMsgTransferNFT     = types.NewMsgTransferNFT
+	NewMsgEditNFTMetadata = types.NewMsgEditNFTMetadata
+	DefaultGenesisState   = types.DefaultGenesisState
+	ValidateGenesis       = types.ValidateGenesis
+	RegisterCodec         = types.RegisterCodec
+	ModuleCdc             = types.ModuleCdc
 )
 
 const (

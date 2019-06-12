@@ -20,4 +20,6 @@ const (
 	OpWeightMsgUndelegate                              = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate                         = "op_weight_msg_begin_redelegate"
 	OpWeightMsgUnjail                                  = "op_weight_msg_unjail"
+	OpWeightMsgTransferNFT                             = "op_weight_msg_transfer_nft"
+	OpWeightMsgEditNFTMetadata                         = "op_weight_msg_edit_nft_metadata"
 )

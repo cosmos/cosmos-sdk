@@ -24,7 +24,7 @@ func createInput() (k Keeper, addrs []sdk.AccAddress) {
 }
 func TestInvalidMsg(t *testing.T) {
 	ctx, k, _ := keeper.Initialize()
-	h := NewHandler(k)
+	h := GenericHandler(k)
 	res := h(ctx, sdk.NewTestMsg())
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized nft message type"))
@@ -38,7 +38,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	addresses := keeper.CreateTestAddrs(2)
 	originalOwner := addresses[0]
 	nextOwner := addresses[1]
-	h := NewHandler(k)
+	h := GenericHandler(k)
 
 	// An NFT to be transferred
 	nft := types.NewBaseNFT(
@@ -116,7 +116,7 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	addresses := keeper.CreateTestAddrs(2)
 	owner := addresses[0]
 
-	h := NewHandler(k)
+	h := GenericHandler(k)
 
 	// An NFT to be edited
 	nft := types.NewBaseNFT(
@@ -183,7 +183,7 @@ func TestMintNFTMsg(t *testing.T) {
 	addresses := keeper.CreateTestAddrs(2)
 	owner := addresses[0]
 
-	h := NewHandler(k)
+	h := GenericHandler(k)
 
 	// Define MsgMintNFT
 	mintNFT := types.NewMsgMintNFT(
@@ -246,7 +246,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	owner := addresses[0]
 	notOwner := addresses[1]
 
-	h := NewHandler(k)
+	h := GenericHandler(k)
 
 	// An NFT to be burned
 	nft := types.NewBaseNFT(

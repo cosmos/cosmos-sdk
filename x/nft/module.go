@@ -100,7 +100,7 @@ func (AppModule) Route() string {
 
 // NewHandler module handler
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return GenericHandler(am.keeper)
 }
 
 // QuerierRoute module querier route name

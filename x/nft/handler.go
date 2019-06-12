@@ -10,8 +10,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// NewHandler routes the messages to the handlers
-func NewHandler(k keeper.Keeper) sdk.Handler {
+// GenericHandler routes the messages to the handlers
+func GenericHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case types.MsgTransferNFT:

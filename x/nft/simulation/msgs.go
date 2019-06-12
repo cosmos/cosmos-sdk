@@ -12,7 +12,7 @@ import (
 
 // SimulateMsgTransferNFT
 func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
-	handler := nft.NewHandler(k)
+	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -45,7 +45,7 @@ func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
 
 // SimulateMsgEditNFTMetadata
 func SimulateMsgEditNFTMetadata(k nft.Keeper) simulation.Operation {
-	handler := nft.NewHandler(k)
+	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 

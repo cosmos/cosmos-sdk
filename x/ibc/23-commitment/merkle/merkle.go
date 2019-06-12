@@ -3,8 +3,9 @@ package merkle
 import (
 	"errors"
 
-	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/crypto/merkle"
+
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -38,9 +39,7 @@ func (proof Proof) Verify(croot commitment.Root, value []byte) error {
 		return err
 	}
 	// Hard coded for now
-	runtime := merkle.DefaultProofRuntime()
-	runtime.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.IAVLAbsenceOpDecoder)
-	runtime.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.IAVLValueOpDecoder)
+	runtime := rootmulti.DefaultProofRuntime()
 
 	if value != nil {
 		return runtime.VerifyValue(proof.Proof, root, keypath.String(), value)
@@ -61,7 +60,7 @@ func PrefixKeyPath(prefix string, key []byte) (res merkle.KeyPath, err error) {
 		return
 	}
 
-	keys[len(keys)-1] = append(keys[len(keys)], key...)
+	keys[len(keys)-1] = append(keys[len(keys)-1], key...)
 
 	for _, key := range keys {
 		res = res.AppendKey(key, merkle.KeyEncodingHex)

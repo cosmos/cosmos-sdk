@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"bytes"
+	"fmt"
 )
 
 type Store interface {
@@ -35,7 +36,7 @@ type store struct {
 }
 
 // Proofs must be provided
-func Newstore(root Root, proofs []Proof) (res store, err error) {
+func NewStore(root Root, proofs []Proof) (res store, err error) {
 	res = store{
 		root:     root,
 		proofs:   make(map[string]Proof),
@@ -57,14 +58,17 @@ func (store store) Get(key []byte) ([]byte, bool) {
 func (store store) Prove(key, value []byte) bool {
 	stored, ok := store.Get(key)
 	if ok && bytes.Equal(stored, value) {
+		fmt.Println(1)
 		return true
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
+		fmt.Println(2)
 		return false
 	}
 	err := proof.Verify(store.root, value)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 	store.verified[string(key)] = value

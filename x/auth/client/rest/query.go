@@ -52,7 +52,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
+		res, height, err := cliCtx.QueryStoreWithHeight(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -71,12 +71,8 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		if cliCtx.Height > 0 {
-			accountWithHeight := AccountWithQueryHeight{account, cliCtx.Height}
-			rest.PostProcessResponse(w, cliCtx, accountWithHeight)
-		} else {
-			rest.PostProcessResponse(w, cliCtx, account)
-		}
+		accountWithHeight := AccountWithQueryHeight{account, height}
+		rest.PostProcessResponse(w, cliCtx, accountWithHeight)
 	}
 }
 

@@ -108,5 +108,5 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) sdk.Error {
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) sdk.Error {
-	return k.supplyKeeper.SendCoinsModuleToAccount(ctx, types.ModuleName, auth.FeeCollectorAddr, fees)
+	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, auth.FeeCollectorAddr, fees)
 }

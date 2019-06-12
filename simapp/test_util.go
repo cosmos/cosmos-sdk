@@ -14,18 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const (
-	mainStore         = "main"
-	accountStore      = "account"
-	stakingStore      = "staking"
-	slashingStore     = "slashing"
-	mintStore         = "mint"
-	distributionStore = "distribution"
-	supplyStore       = "supply"
-	paramStore        = "params"
-	govStore          = "gov"
-)
-
 // DONTCOVER
 
 // NewSimAppUNSAFE is used for debugging purposes only.
@@ -48,7 +36,7 @@ func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (
 		return
 	}
 
-	if storeName == accountStore {
+	if storeName == auth.StoreKey {
 		var accA auth.Account
 		var accB auth.Account
 		appA.cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)

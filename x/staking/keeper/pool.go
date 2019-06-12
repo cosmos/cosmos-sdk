@@ -50,7 +50,7 @@ func (k Keeper) SetNotBondedPool(ctx sdk.Context, notBondedPool supply.ModuleAcc
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
-	err := k.supplyKeeper.SendCoinsModuleToModule(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 // notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
 func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
-	err := k.supplyKeeper.SendCoinsModuleToModule(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
 	if err != nil {
 		panic(err)
 	}

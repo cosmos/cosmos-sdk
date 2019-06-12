@@ -41,29 +41,29 @@ func TestSendCoins(t *testing.T) {
 	keeper.SetModuleAccount(ctx, barAcc)
 	ak.SetAccount(ctx, baseAcc)
 
-	err = keeper.SendCoinsModuleToModule(ctx, "", bar, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, "", bar, initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsModuleToModule(ctx, foo, "", initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, foo, "", initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
+	err = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsModuleToAccount(ctx, foo, baseAcc.GetAddress(), initCoins.Add(initCoins))
+	err = keeper.SendCoinsFromModuleToAccount(ctx, foo, baseAcc.GetAddress(), initCoins.Add(initCoins))
 	require.Error(t, err)
 
-	err = keeper.SendCoinsModuleToModule(ctx, foo, bar, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, foo, bar, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, foo))
 	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, bar))
 
-	err = keeper.SendCoinsModuleToAccount(ctx, bar, baseAcc.GetAddress(), initCoins)
+	err = keeper.SendCoinsFromModuleToAccount(ctx, bar, baseAcc.GetAddress(), initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, bar))
 	require.Equal(t, initCoins, keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 
-	err = keeper.SendCoinsAccountToModule(ctx, baseAcc.GetAddress(), foo, initCoins)
+	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), foo, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, foo))

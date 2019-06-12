@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SendCoinsModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
-func (k Keeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+// SendCoinsFromModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
+func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
@@ -16,8 +16,8 @@ func (k Keeper) SendCoinsModuleToAccount(ctx sdk.Context, senderModule string, r
 	return k.bk.SendCoins(ctx, senderAcc.GetAddress(), recipientAddr, amt)
 }
 
-// SendCoinsModuleToModule trasfers coins from a ModuleAccount to another
-func (k Keeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
+// SendCoinsFromModuleToModule trasfers coins from a ModuleAccount to another
+func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
 	senderAcc := k.GetModuleAccountByName(ctx, senderModule)
 	if senderAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
@@ -31,8 +31,8 @@ func (k Keeper) SendCoinsModuleToModule(ctx sdk.Context, senderModule, recipient
 	return k.bk.SendCoins(ctx, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
 }
 
-// SendCoinsAccountToModule trasfers coins from an AccAddress to a ModuleAccount
-func (k Keeper) SendCoinsAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
+// SendCoinsFromAccountToModule trasfers coins from an AccAddress to a ModuleAccount
+func (k Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
 	recipientAcc := k.GetModuleAccountByName(ctx, recipientModule)
 	if recipientAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", recipientModule))

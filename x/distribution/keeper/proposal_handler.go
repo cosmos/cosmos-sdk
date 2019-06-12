@@ -17,7 +17,7 @@ func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p types.Communi
 	feePool.CommunityPool = newPool
 	k.SetFeePool(ctx, feePool)
 
-	err := k.supplyKeeper.SendCoinsModuleToAccount(ctx, types.ModuleName, p.Recipient, p.Amount)
+	err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, p.Recipient, p.Amount)
 	if err != nil {
 		return err
 	}

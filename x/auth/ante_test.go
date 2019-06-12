@@ -335,8 +335,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 
 	// set the accounts
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
-	err := acc1.SetAccountNumber(0)
-	require.NoError(t, err)
+	require.NoError(t, acc1.SetAccountNumber(0))
 	input.ak.SetAccount(ctx, acc1)
 
 	// msg and signatures
@@ -810,10 +809,8 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	pub2 := priv2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
-	err := acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
-	require.NoError(t, err)
-	err = acc2.SetAccountNumber(1)
-	require.NoError(t, err)
+	require.NoError(t, acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+	require.NoError(t, acc2.SetAccountNumber(1))
 	input.ak.SetAccount(ctx, acc2)
 	msg = types.NewTestMsg(addr2)
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}

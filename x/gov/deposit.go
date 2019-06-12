@@ -38,7 +38,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.supplyKeeper.SendCoinsAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
+	err := keeper.supplyKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -96,7 +96,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
-		err := keeper.supplyKeeper.SendCoinsModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
+		err := keeper.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

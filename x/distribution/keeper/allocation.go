@@ -25,7 +25,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
 
 	// transfer collected fees to the distribution module account
-	err := k.supplyKeeper.SendCoinsAccountToModule(ctx, auth.FeeCollectorAddr, types.ModuleName, feesCollectedInt)
+	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, auth.FeeCollectorAddr, types.ModuleName, feesCollectedInt)
 	if err != nil {
 		panic(err)
 	}

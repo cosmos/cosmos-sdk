@@ -914,23 +914,22 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, abci.Header{})
 
 	type StoreKeysPrefixes struct {
-		keyName  string
 		A        sdk.StoreKey
 		B        sdk.StoreKey
 		Prefixes [][]byte
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{"main", app.keyMain, newApp.keyMain, [][]byte{}},
-		{"account", app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{"staking", app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
+		{app.keyMain, newApp.keyMain, [][]byte{}},
+		{app.keyAccount, newApp.keyAccount, [][]byte{}},
+		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
 			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
-		{"slashing", app.keySlashing, newApp.keySlashing, [][]byte{}},
-		{"mint", app.keyMint, newApp.keyMint, [][]byte{}},
-		{"distribution", app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{"supply", app.keySupply, newApp.keySupply, [][]byte{}},
-		{"params", app.keyParams, newApp.keyParams, [][]byte{}},
-		{"gov", app.keyGov, newApp.keyGov, [][]byte{}},
+		{app.keySlashing, newApp.keySlashing, [][]byte{}},
+		{app.keyMint, newApp.keyMint, [][]byte{}},
+		{app.keyDistr, newApp.keyDistr, [][]byte{}},
+		{app.keySupply, newApp.keySupply, [][]byte{}},
+		{app.keyParams, newApp.keyParams, [][]byte{}},
+		{app.keyGov, newApp.keyGov, [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {
@@ -944,7 +943,7 @@ func TestAppImportExport(t *testing.T) {
 		require.True(t, equal,
 			"unequal %s stores: \n"+
 				"%s",
-			storeKeysPrefix.keyName, retrieveSimLog(storeKeysPrefix.keyName, app, newApp, kvA, kvB),
+			storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB),
 		)
 	}
 

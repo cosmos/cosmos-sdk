@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -26,7 +27,6 @@ type GenesisAccount struct {
 
 	// module account fields
 	ModuleName string `json:"module_name"` // name of the module account
-	IsMinter   bool   `json:"is_minter"`   // used to differentiate ModuleMinterAccount from a ModuleHolderAccount
 }
 
 // Validate checks for errors on the vesting and module account parameters
@@ -40,6 +40,7 @@ func (ga GenesisAccount) Validate() error {
 		}
 	}
 
+	// don't allow blank (i.e just whitespaces) on the module name
 	if ga.ModuleName != "" && strings.TrimSpace(ga.ModuleName) == "" {
 		return errors.New("module account name cannot be blank")
 	}
@@ -50,7 +51,7 @@ func (ga GenesisAccount) Validate() error {
 // NewGenesisAccountRaw creates a new GenesisAccount object
 func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 	vestingAmount sdk.Coins, vestingStartTime, vestingEndTime int64,
-	module string, isMinter bool) GenesisAccount {
+	module string) GenesisAccount {
 
 	return GenesisAccount{
 		Address:          address,
@@ -63,7 +64,6 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 		StartTime:        vestingStartTime,
 		EndTime:          vestingEndTime,
 		ModuleName:       module,
-		IsMinter:         isMinter,
 	}
 }
 
@@ -130,7 +130,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		if ga.IsMinter {
+		if ga.ModuleName == mint.ModuleName {
 			return supply.NewModuleMinterAccount(ga.ModuleName)
 		}
 		return supply.NewModuleHolderAccount(ga.ModuleName)

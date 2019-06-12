@@ -9,10 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// UndelegatePatchHeight reflects the height at which to switch to the
-// undelegating patch.
-const UndelegatePatchHeight = 482100
-
 // return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (

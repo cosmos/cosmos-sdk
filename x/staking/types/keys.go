@@ -84,7 +84,6 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
-// nolint: unparam
 func getValidatorPowerRank(validator Validator) []byte {
 
 	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)

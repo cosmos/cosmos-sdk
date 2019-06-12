@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// TODO: import from x/gov all the types that have not changed
-
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
 	StartingProposalID uint64            `json:"starting_proposal_id"`

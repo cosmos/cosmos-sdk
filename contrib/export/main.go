@@ -9,11 +9,13 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
-// TODO accept those as parameters in next releases
-var source = "0_34"
-var target = "0_36"
+// TODO accept those as parameters once we have more than one release available
+var source = "034"
+var target = "036"
 
-//const map[string]func( extypes.AppMap, ) extypes.AppMap
+var migrationMap = extypes.MigrationMap{
+	"036": v036.Migrate,
+}
 
 func main() {
 	// This function should be modularized, for now we read and dump genesis committed to git,
@@ -33,7 +35,11 @@ func main() {
 	var initialState extypes.AppMap
 	cdc.MustUnmarshalJSON(genDoc.AppState, &initialState)
 
-	newGenState := v036.Migrate(initialState, cdc)
+	if migrationMap[target] == nil {
+		panic(fmt.Sprintf("Missing migration function for version %s", target))
+	}
+	newGenState := migrationMap[target](initialState, cdc)
+
 	genDoc.AppState = cdc.MustMarshalJSON(newGenState)
 	// Keep dumping updated genesis to test import of a new genesis directly
 	if err = genutil.ExportGenesisFile(genDoc, fmt.Sprintf("./contrib/export/genesis_%s.json", target)); err != nil {

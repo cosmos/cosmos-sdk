@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -37,13 +38,19 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs       = runtime.GOMAXPROCS(0)
-	pkgName    string
-	blocks     string
-	period     string
-	testname   string
-	genesis    string
-	exitOnFail bool
+	jobs         = runtime.GOMAXPROCS(0)
+	pkgName      string
+	blocks       string
+	period       string
+	testname     string
+	genesis      string
+	slackToken   string
+	slackChannel string
+	slackThread  string
+	seedsStrRepr string
+	exitOnFail   bool
+	gitReport    bool
+	slackReport  bool
 
 	// logs temporary directory
 	tempdir string
@@ -59,10 +66,12 @@ func init() {
 	flag.IntVar(&jobs, "j", jobs, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
+	flag.BoolVar(&gitReport, "p", false, "Report results to git check")
+	flag.BoolVar(&slackReport, "s", false, "Report results to slack channel")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-g genesis.json] [-e] [package] [blocks] [period] [testname]
+			`Usage: %s [-j maxprocs] [-g genesis.json] [-e] [-s] [-p] [package] [blocks] [period] [testname] [slacktoken] [channel] [thread] [seeds]
 Run simulations in parallel
 
 `, filepath.Base(os.Args[0]))
@@ -74,11 +83,19 @@ func main() {
 	var err error
 
 	flag.Parse()
-	if flag.NArg() != 4 {
+	if flag.NArg() < 8 && (gitReport || slackReport) {
+		log.Fatal("wrong number of arguments")
+	} else if !(gitReport || slackReport) && flag.NArg() != 4 {
 		log.Fatal("wrong number of arguments")
 	}
 
 	// prepare input channel
+	if gitReport || slackReport {
+		slackToken = flag.Arg(4)
+		slackChannel = flag.Arg(5)
+		slackThread = flag.Arg(6)
+		seeds, seedsStrRepr = makeSeedList(flag.Args()[7:])
+	}
 	queue := make(chan int, len(seeds))
 	for _, seed := range seeds {
 		queue <- seed
@@ -155,7 +172,9 @@ wait:
 			os.Exit(1)
 		}
 	}
-
+	if slackReport {
+		slackMessage(slackToken, slackChannel, &slackThread, "Finished running simulation for seeds: "+seedsStrRepr)
+	}
 	os.Exit(0)
 }
 
@@ -182,6 +201,9 @@ func worker(id int, seeds <-chan int) {
 			results <- false
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
+			if slackReport {
+				slackMessage(slackToken, slackChannel, nil, "Seed "+strconv.Itoa(seed)+" failed. To reproduce, run: "+buildCommand(testname, blocks, period, genesis, seed))
+			}
 			if exitOnFail {
 				log.Printf("\bERROR OUTPUT \n\n%s", err)
 				panic("halting simulations")
@@ -190,6 +212,7 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
 	}
+
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }
 
@@ -261,4 +284,14 @@ func checkSignal(proc *os.Process, signal syscall.Signal) {
 	if err := proc.Signal(signal); err != nil {
 		log.Printf("Failed to send %s to PID %d", signal, proc.Pid)
 	}
+}
+
+func makeSeedList(args []string) ([]int, string) {
+	seeds = make([]int, len(args))
+	var seedsStrRepr string
+	for i := range seeds {
+		seeds[i], _ = strconv.Atoi(args[i])
+		seedsStrRepr = seedsStrRepr + args[i] + " "
+	}
+	return seeds, seedsStrRepr
 }

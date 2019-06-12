@@ -82,7 +82,7 @@ func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	// migration below are only sanity check:
 	// used as unmarshal guarantee,
 	// so if anyone change the types without a migrations we panic
-	// We could move this next steps to a test OR use the outcome on CCI for re-import
+	// We could move this next steps to a test OR use the outcome on CCI for re-import.
 
 	var authState auth.GenesisState
 	cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authState)

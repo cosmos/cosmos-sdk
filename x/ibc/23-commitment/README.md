@@ -24,7 +24,7 @@ an argument for `spec: verifyMembership` / `spec: verifyNonMembership`, construc
 `type Root` implements `spec: type CommitmentRoot`. 
 
 In Cosmos-SDK implementation, `Root` will be the `AppHash []byte`, and `Proof` will be `merkle.Proof`, which consists
-of `SimpleProof` and `IAVLValueProof`
+of `SimpleProof` and `IAVLValueProof`. Defined in `merkle/`
 
 ### store.go
 

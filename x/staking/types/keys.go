@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO remove some of these prefixes once have working multistore
 
 const (
 	// ModuleName is the name of the staking module
@@ -84,7 +83,6 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
-// nolint: unparam
 func getValidatorPowerRank(validator Validator) []byte {
 
 	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)

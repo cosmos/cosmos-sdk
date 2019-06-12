@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// AccountWithQueryHeight wraps the embedded Account
+// AccountWithHeight wraps the embedded Account
 // with the height it was queried at
-type AccountWithQueryHeight struct {
+type AccountWithHeight struct {
 	types.Account
 	Height int64 `json:"height"`
 }
@@ -52,7 +52,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, height, err := cliCtx.QueryStoreWithHeight(types.AddressStoreKey(addr), storeName)
+		res, height, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -71,8 +71,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		accountWithHeight := AccountWithQueryHeight{account, height}
-		rest.PostProcessResponse(w, cliCtx, accountWithHeight)
+		rest.PostProcessResponse(w, cliCtx, AccountWithHeight{account, height})
 	}
 }
 
@@ -97,7 +96,7 @@ func QueryBalancesRequestHandlerFn(
 			return
 		}
 
-		res, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
+		res, _, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

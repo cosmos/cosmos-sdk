@@ -58,7 +58,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			consAddr := sdk.ConsAddress(pk.Address())
 			key := types.GetValidatorSigningInfoKey(consAddr)
 
-			res, err := cliCtx.QueryStore(key, storeName)
+			res, _, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -88,7 +88,7 @@ $ <appcli> query slashing params
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
-			res, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}

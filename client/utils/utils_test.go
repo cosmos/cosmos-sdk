@@ -36,12 +36,12 @@ func TestParseQueryResponse(t *testing.T) {
 
 func TestCalculateGas(t *testing.T) {
 	cdc := makeCodec()
-	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, error) {
-		return func(string, common.HexBytes) ([]byte, error) {
+	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, int64, error) {
+		return func(string, common.HexBytes) ([]byte, int64, error) {
 			if wantErr {
-				return nil, errors.New("")
+				return nil, 0, errors.New("")
 			}
-			return cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: gasUsed}), nil
+			return cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: gasUsed}), 0, nil
 		}
 	}
 	type args struct {

@@ -23,7 +23,7 @@ func TestQuerySupply(t *testing.T) {
 
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
-	err := keeper.MintNFT(ctx, denom, nft)
+	err := keeper.MintNFT(ctx, denom, &nft)
 	require.Nil(t, err)
 
 	querier := NewQuerier(keeper)

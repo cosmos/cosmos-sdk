@@ -13,13 +13,13 @@ import (
 type NFT interface {
 	GetID() string
 	GetOwner() sdk.AccAddress
-	SetOwner(address sdk.AccAddress) NFT
+	SetOwner(address sdk.AccAddress)
 	GetName() string
 	GetDescription() string
 	GetImage() string
 	GetTokenURI() string
 
-	EditMetadata(name, description, image, tokenURI string) NFT
+	EditMetadata(name, description, image, tokenURI string)
 	String() string
 }
 
@@ -27,12 +27,12 @@ var _ NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
-	ID          string         `json:"id,omitempty"`       // id of the token; not exported to clients
-	Owner       sdk.AccAddress `json:"owner,string"`       // account address that owns the NFT
-	Name        string         `json:"name,string"`        // name of the token
-	Description string         `json:"description,string"` // unique description of the NFT
-	Image       string         `json:"image,string"`       // image path
-	TokenURI    string         `json:"token_uri,string"`   // optional extra properties available fo querying
+	ID          string         `json:"id,omitempty"` // id of the token; not exported to clients
+	Owner       sdk.AccAddress `json:"owner"`        // account address that owns the NFT
+	Name        string         `json:"name"`         // name of the token
+	Description string         `json:"description"`  // unique description of the NFT
+	Image       string         `json:"image"`        // image path
+	TokenURI    string         `json:"token_uri"`    // optional extra properties available fo querying
 }
 
 // NewBaseNFT creates a new NFT instance
@@ -55,8 +55,8 @@ func (bnft BaseNFT) GetID() string { return bnft.ID }
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
 
 // SetOwner updates the owner address of the NFT
-func (bnft BaseNFT) SetOwner(address sdk.AccAddress) NFT {
-	return NFT(NewBaseNFT(bnft.ID, address, bnft.Name, bnft.Description, bnft.Image, bnft.TokenURI))
+func (bnft *BaseNFT) SetOwner(address sdk.AccAddress) {
+	bnft.Owner = address
 }
 
 // GetName returns the name of the token
@@ -72,8 +72,15 @@ func (bnft BaseNFT) GetImage() string { return bnft.Image }
 func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
 
 // EditMetadata edits metadata of an nft
-func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) NFT {
-	return NFT(NewBaseNFT(bnft.ID, bnft.Owner, name, description, image, tokenURI))
+func (bnft *BaseNFT) EditMetadata(name, description, image, tokenURI string) {
+	bnft.Name = name
+	bnft.Description = description
+	bnft.Image = image
+	bnft.TokenURI = tokenURI
+}
+
+func (bnft *BaseNFT) setID(id string) {
+	bnft.ID = id
 }
 
 func (bnft BaseNFT) String() string {
@@ -187,7 +194,14 @@ func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	nftJSON := make(NFTJSON)
 
 	for _, nft := range nfts {
-		nftJSON[nft.GetID()] = nft
+		id := nft.GetID()
+
+		bnft, ok := nft.(*BaseNFT)
+		if !ok {
+			continue
+		}
+		bnft.setID("")
+		nftJSON[id] = bnft
 	}
 
 	return json.Marshal(nftJSON)
@@ -202,7 +216,8 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	}
 
 	for id, nft := range nftJSON {
-		*nfts = append(*nfts, NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI()))
+		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
+		*nfts = append(*nfts, &bnft)
 	}
 
 	return nil

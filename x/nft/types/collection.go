@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -185,9 +184,7 @@ func (collections Collections) MarshalJSON() ([]byte, error) {
 
 	for _, collection := range collections {
 		denom := collection.Denom
-		// set the pointer of the ID to nil
-		ptr := reflect.ValueOf(collection.Denom).Elem()
-		ptr.Set(reflect.Zero(ptr.Type()))
+		collection.Denom = ""
 		collectionJSON[denom] = collection
 	}
 

@@ -43,10 +43,10 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	}
 
 	// update NFT owner
-	nftTranfered := nft.SetOwner(msg.Recipient)
+	nft.SetOwner(msg.Recipient)
 
 	// update the NFT (owners are updated within the keeper)
-	err = k.UpdateNFT(ctx, msg.Denom, nftTranfered)
+	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()
 	}
@@ -77,8 +77,8 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	}
 
 	// update NFT
-	nftEdited := nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
-	err = k.UpdateNFT(ctx, msg.Denom, nftEdited)
+	nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()
 	}
@@ -98,7 +98,7 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 ) sdk.Result {
 
 	nft := types.NewBaseNFT(msg.ID, msg.Recipient, msg.Name, msg.Description, msg.Image, msg.TokenURI)
-	err := k.MintNFT(ctx, msg.Denom, nft)
+	err := k.MintNFT(ctx, msg.Denom, &nft)
 	if err != nil {
 		return err.Result()
 	}

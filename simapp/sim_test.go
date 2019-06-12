@@ -327,10 +327,11 @@ func genNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Accoun
 	)
 
 	collections := nft.NewCollections(nft.NewCollection(Kitties, nft.NFTs{}), nft.NewCollection(Doggos, nft.NFTs{}))
+	var ownerships []nft.Owner
 
 	for _, acc := range accs {
 		if r.Intn(100) < 50 {
-			nft := nft.NewBaseNFT(
+			baseNFT := nft.NewBaseNFT(
 				simulation.RandStringOfLength(r, 10), // id
 				acc.Address,
 				simulation.RandStringOfLength(r, 15), // name
@@ -339,15 +340,20 @@ func genNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Accoun
 				simulation.RandStringOfLength(r, 45), // tokenURI
 			)
 
+			var idCollection nft.IDCollection
 			if r.Intn(100) < 50 {
-				collections[0].AddNFT(nft)
+				collections[0].AddNFT(&baseNFT)
+				idCollection = nft.NewIDCollection(Kitties, []string{baseNFT.ID})
 			} else {
-				collections[1].AddNFT(nft)
+				collections[1].AddNFT(&baseNFT)
+				idCollection = nft.NewIDCollection(Doggos, []string{baseNFT.ID})
 			}
+			ownership := nft.NewOwner(acc.Address, idCollection)
+			ownerships = append(ownerships, ownership)
 		}
 	}
 
-	nftGenesis := nft.DefaultGenesisState()
+	nftGenesis := nft.NewGenesisState(ownerships, collections)
 
 	fmt.Printf("Selected randomly generated NFT parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, nftGenesis))
 	genesisState[nft.ModuleName] = cdc.MustMarshalJSON(nftGenesis)
@@ -818,7 +824,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			nftsim.SimulateMsgEditNFTMetadata(app.nftKeeper),
+			nftsim.SimulateMsgTransferNFT(app.nftKeeper),
 		},
 	}
 }

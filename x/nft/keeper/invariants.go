@@ -25,27 +25,29 @@ func AllInvariants(k Keeper) sdk.Invariant {
 
 // SupplyInvariant checks that the total amount of nfts on collections matches the total amount owned by addresses
 func SupplyInvariant(k Keeper) sdk.Invariant {
-
 	return func(ctx sdk.Context) error {
-		collectionsSupply := 0
-		ownersSupply := 0
+		var collectionsSupply map[string]int
+		var ownersCollectionsSupply map[string]int
 
 		k.IterateCollections(ctx, func(collection types.Collection) bool {
-			collectionsSupply += collection.Supply()
+			collectionsSupply[collection.Denom] = collection.Supply()
 			return false
 		})
 
 		k.IterateOwners(ctx, func(owner types.Owner) bool {
-			ownersSupply += owner.Supply()
+			for _, idCollection := range owner.IDCollections {
+				ownersCollectionsSupply[idCollection.Denom] = idCollection.Supply()
+			}
 			return false
 		})
 
-		if collectionsSupply != ownersSupply {
-			return fmt.Errorf("total NFTs supply invariance:\n"+
-				"\ttotal collections supply: %d\n"+
-				"\tsum of NFTs by owner: %d", collectionsSupply, ownersSupply)
+		for denom, supply := range collectionsSupply {
+			if supply != ownersCollectionsSupply[denom] {
+				return fmt.Errorf("total NFTs supply invariance:\n"+
+					"\ttotal %s NFTs supply: %d\n"+
+					"\tsum of %s NFTs by owner: %d", denom, supply, denom, ownersCollectionsSupply[denom])
+			}
 		}
-
 		return nil
 	}
 }

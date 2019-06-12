@@ -1,6 +1,5 @@
-package nft
-
 // nolint
+package nft
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -12,6 +11,8 @@ type (
 	NFT                = types.NFT
 	BaseNFT            = types.BaseNFT
 	NFTs               = types.NFTs
+	Owner              = types.Owner
+	IDCollection       = types.IDCollection
 	Collection         = types.Collection
 	Collections        = types.Collections
 	GenesisState       = types.GenesisState
@@ -25,6 +26,8 @@ var (
 	NewQuerier            = keeper.NewQuerier
 	NewBaseNFT            = types.NewBaseNFT
 	NewNFTs               = types.NewNFTs
+	NewIDCollection       = types.NewIDCollection
+	NewOwner              = types.NewOwner
 	NewCollection         = types.NewCollection
 	NewCollections        = types.NewCollections
 	EmptyCollection       = types.EmptyCollection

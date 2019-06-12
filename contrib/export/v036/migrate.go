@@ -1,15 +1,14 @@
-package v0_36
+package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	extypes "github.com/cosmos/cosmos-sdk/contrib/export/types"
-	v034gov "github.com/cosmos/cosmos-sdk/contrib/export/v0_34/gov"
-	v036gov "github.com/cosmos/cosmos-sdk/contrib/export/v0_36/gov"
+	v034gov "github.com/cosmos/cosmos-sdk/contrib/export/v034/gov"
+	v036gov "github.com/cosmos/cosmos-sdk/contrib/export/v036/gov"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -58,7 +57,8 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 
 func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	var govState v034gov.GenesisState
-	cdc.MustUnmarshalJSON(appState[gov.ModuleName], govState)
+	v034gov.RegisterCodec(cdc)
+	cdc.MustUnmarshalJSON(appState[gov.ModuleName], &govState)
 	appState[gov.ModuleName] = cdc.MustMarshalJSON(migrateGovernance(govState))
 
 	// migration below are only sanity check:
@@ -66,35 +66,36 @@ func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	// so if anyone change the types without a migrations we panic
 
 	var authState auth.GenesisState
-	cdc.MustUnmarshalJSON(appState[auth.ModuleName], authState)
+	cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authState)
 	appState[auth.ModuleName] = cdc.MustMarshalJSON(authState)
 
 	var bankState bank.GenesisState
-	cdc.MustUnmarshalJSON(appState[bank.ModuleName], bankState)
+	cdc.MustUnmarshalJSON(appState[bank.ModuleName], &bankState)
 	appState[bank.ModuleName] = cdc.MustMarshalJSON(bankState)
 
 	var crisisState crisis.GenesisState
-	cdc.MustUnmarshalJSON(appState[crisis.ModuleName], crisisState)
+	cdc.MustUnmarshalJSON(appState[crisis.ModuleName], &crisisState)
 	appState[crisis.ModuleName] = cdc.MustMarshalJSON(crisisState)
 
 	var distributionState distribution.GenesisState
-	cdc.MustUnmarshalJSON(appState[distribution.ModuleName], distributionState)
+	cdc.MustUnmarshalJSON(appState[distribution.ModuleName], &distributionState)
 	appState[distribution.ModuleName] = cdc.MustMarshalJSON(distributionState)
 
-	var genutilState genutil.GenesisState
-	cdc.MustUnmarshalJSON(appState[genutil.ModuleName], genutilState)
-	appState[genutil.ModuleName] = cdc.MustMarshalJSON(genutilState)
+	// Cannot decode empty bytes
+	//var genutilState genutil.GenesisState
+	//cdc.MustUnmarshalJSON(appState[genutil.ModuleName], &genutilState)
+	//appState[genutil.ModuleName] = cdc.MustMarshalJSON(genutilState)
 
 	var mintState mint.GenesisState
-	cdc.MustUnmarshalJSON(appState[mint.ModuleName], mintState)
+	cdc.MustUnmarshalJSON(appState[mint.ModuleName], &mintState)
 	appState[mint.ModuleName] = cdc.MustMarshalJSON(mintState)
 
 	var slashingState slashing.GenesisState
-	cdc.MustUnmarshalJSON(appState[slashing.ModuleName], slashingState)
+	cdc.MustUnmarshalJSON(appState[slashing.ModuleName], &slashingState)
 	appState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingState)
 
 	var stakingState staking.GenesisState
-	cdc.MustUnmarshalJSON(appState[staking.ModuleName], stakingState)
+	cdc.MustUnmarshalJSON(appState[staking.ModuleName], &stakingState)
 	appState[staking.ModuleName] = cdc.MustMarshalJSON(stakingState)
 
 	return appState

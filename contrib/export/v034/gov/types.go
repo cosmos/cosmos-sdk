@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"time"
@@ -42,3 +43,16 @@ type Proposal struct {
 }
 
 type Proposals []Proposal
+
+func RegisterCodec(codec *codec.Codec) {
+	codec.RegisterInterface((*gov.Content)(nil), nil)
+	//codec.RegisterInterface(Proposal{}, nil)
+	//codec.RegisterInterface(VoteWithMetadata{}, nil)
+	//codec.RegisterInterface(DepositWithMetadata{}, nil)
+	//codec.RegisterInterface(GenesisState{}, nil)
+	//codec.RegisterInterface(gov.Vote{}, nil)
+	//codec.RegisterInterface(gov.ProposalStatus{}, nil)
+	//codec.RegisterInterface(gov.TallyResult{}, nil)
+	//codec.RegisterInterface(gov.Deposit{}, nil)
+	//codec.RegisterInterface(sdk.Coin{}, nil)
+}

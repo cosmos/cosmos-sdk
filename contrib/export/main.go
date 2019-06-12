@@ -30,6 +30,7 @@ func main() {
 	}
 	var initialState extypes.AppMap
 	cdc.MustUnmarshalJSON(genDoc.AppState, initialState)
+
 	newGenState := v0_36.Migrate(initialState, cdc)
 	genDoc.AppState = cdc.MustMarshalJSON(newGenState)
 	// Keep dumping updated genesis to test import of a new genesis directly

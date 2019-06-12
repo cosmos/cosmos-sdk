@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO remove some of these prefixes once have working multistore
 
 const (
 	// ModuleName is the name of the staking module

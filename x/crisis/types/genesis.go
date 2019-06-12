@@ -25,7 +25,7 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// ValidateGenesis - placeholder function
+// ValidateGenesis - validate crisis genesis data
 func ValidateGenesis(data GenesisState) error {
 	if !data.ConstantFee.IsPositive() {
 		return fmt.Errorf("constant fee must be positive: %s", data.ConstantFee)

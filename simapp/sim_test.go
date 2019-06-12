@@ -260,7 +260,7 @@ func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 }
 
 func genSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
-	totalSupply := sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
 	supplyGenesis := supply.NewGenesisState(
 		supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))),
 	)

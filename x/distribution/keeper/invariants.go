@@ -138,7 +138,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
-// ModuleAccountInvariant checks that the cois held by the distr ModuleAccount
+// ModuleAccountInvariant checks that the coins held by the distr ModuleAccount
 // is consistent with the sum of validator outstanding rewards
 func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {

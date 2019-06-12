@@ -161,7 +161,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 	priv2, _, addr2 := types.KeyTestPubAddr()
 
-	// set the accounts, we don't need the acc numbers as it's genesis block
+	// set the accounts, we don't need the acc numbers as it is in the genesis block
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(types.NewTestCoins())
 	input.ak.SetAccount(ctx, acc1)

@@ -185,7 +185,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 	return keeper.codespace
 }
 
-// GetCoins returns the account coins
+// getCoins returns the account coins
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
@@ -194,7 +194,7 @@ func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 	return acc.GetCoins()
 }
 
-// SetCoins replaces the account coins for a new amount
+// setCoins replaces the account coins for a new amount
 func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())
@@ -217,17 +217,17 @@ func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
-// GetAccount implements AccountKeeper
+// getAccount implements AccountKeeper
 func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
 	return ak.GetAccount(ctx, addr)
 }
 
-// SetAccount implements AccountKeeper
+// setAccount implements AccountKeeper
 func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
 	ak.SetAccount(ctx, acc)
 }
 
-// SubtractCoins subtracts amt coins from an account with the given address addr.
+// subtractCoins subtracts amt coins from an account with the given address addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {

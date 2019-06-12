@@ -102,7 +102,6 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 	macc, ok := acc.(supply.ModuleAccount)
 	if ok {
 		gacc.ModuleName = macc.Name()
-		gacc.IsMinter = macc.IsMinter()
 	}
 
 	return gacc, nil

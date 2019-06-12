@@ -106,7 +106,7 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 	resTags := sdk.NewTags(
 		tags.Category, tags.TxCategory,
 		tags.Sender, msg.Sender.String(),
-		tags.Recipient, string(msg.Recipient),
+		tags.Recipient, msg.Recipient.String(),
 		tags.Denom, msg.Denom,
 		tags.NFTID, msg.ID,
 	)

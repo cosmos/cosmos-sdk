@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
@@ -42,8 +41,6 @@ func TestQuerySupply(t *testing.T) {
 	query.Data = bz
 
 	res, err := querier(ctx, []string{"supply"}, query)
-	fmt.Println(res)
 	supplyResp := binary.LittleEndian.Uint64(res)
-	fmt.Println(supplyResp)
 	require.Equal(t, 1, int(supplyResp))
 }

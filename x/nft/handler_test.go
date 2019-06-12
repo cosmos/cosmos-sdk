@@ -1,7 +1,6 @@
 package nft
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -70,6 +69,25 @@ func TestTransferNFTMsg(t *testing.T) {
 	res = h(ctx, transferNftMsg)
 	require.True(t, res.IsOK(), "%v", res)
 
+	// tag events should be emmitted correctly
+	for _, tag := range res.Tags {
+		value := string(tag.Value)
+		switch key := string(tag.Key); key {
+		case "denom":
+			require.Equal(t, value, denom)
+		case "nft-id":
+			require.Equal(t, value, id)
+		case "category":
+			require.Equal(t, value, "nfts")
+		case "sender":
+			require.Equal(t, value, originalOwner.String())
+		case "recipient":
+			require.Equal(t, value, nextOwner.String())
+		default:
+			require.Fail(t, "unrecognized tag %s", key)
+		}
+	}
+
 	// nft should have been transferred as a result of the message
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
@@ -79,9 +97,6 @@ func TestTransferNFTMsg(t *testing.T) {
 	res = h(ctx, transferNftMsg)
 	require.False(t, res.IsOK(), "%v", res)
 
-	tags := res.Tags
-	fmt.Println(tags)
-	// TODO: check for proper tags
 }
 
 func TestEditNFTMetadataMsg(t *testing.T) {
@@ -130,6 +145,23 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	res := h(ctx, editNFTMetadata)
 	require.True(t, res.IsOK(), "%v", res)
 
+	// tag events should be emmitted correctly
+	for _, tag := range res.Tags {
+		value := string(tag.Value)
+		switch key := string(tag.Key); key {
+		case "denom":
+			require.Equal(t, value, denom)
+		case "nft-id":
+			require.Equal(t, value, id)
+		case "category":
+			require.Equal(t, value, "nfts")
+		case "sender":
+			require.Equal(t, value, owner.String())
+		default:
+			require.Fail(t, "unrecognized tag %s", key)
+		}
+	}
+
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
 	require.Equal(t, _name, nftAfterwards.GetName())
@@ -169,6 +201,24 @@ func TestMintNFTMsg(t *testing.T) {
 	res := h(ctx, mintNFT)
 	require.True(t, res.IsOK(), "%v", res)
 
+	// tag events should be emmitted correctly
+	for _, tag := range res.Tags {
+		value := string(tag.Value)
+		switch key := string(tag.Key); key {
+		case "denom":
+			require.Equal(t, value, denom)
+		case "nft-id":
+			require.Equal(t, value, id)
+		case "category":
+			require.Equal(t, value, "nfts")
+		case "sender":
+			require.Equal(t, value, owner.String())
+		case "recipient":
+			require.Equal(t, value, owner.String())
+		default:
+			require.Fail(t, "unrecognized tag %s", key)
+		}
+	}
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 
 	require.Nil(t, err)
@@ -236,6 +286,23 @@ func TestBurnNFTMsg(t *testing.T) {
 
 	res = h(ctx, burnNFT)
 	require.True(t, res.IsOK(), "%v", res)
+
+	// tag events should be emmitted correctly
+	for _, tag := range res.Tags {
+		value := string(tag.Value)
+		switch key := string(tag.Key); key {
+		case "denom":
+			require.Equal(t, value, denom)
+		case "nft-id":
+			require.Equal(t, value, id)
+		case "category":
+			require.Equal(t, value, "nfts")
+		case "sender":
+			require.Equal(t, value, owner.String())
+		default:
+			require.Fail(t, "unrecognized tag %s", key)
+		}
+	}
 
 	// the NFT should not exist after burn
 	exists = k.IsNFT(ctx, denom, id)

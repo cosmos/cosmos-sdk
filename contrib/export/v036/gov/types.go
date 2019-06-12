@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// GenesisState - all staking state that must be provided at genesis
+// GenesisState represents v0.34.x genesis state for the governance module.
 type GenesisState struct {
 	StartingProposalID uint64            `json:"starting_proposal_id"`
 	Deposits           gov.Deposits      `json:"deposits"`

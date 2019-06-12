@@ -43,9 +43,23 @@ func (collection Collection) GetNFT(id string) (nft NFT, err sdk.Error) {
 	)
 }
 
+// ContainsNFT returns whether or not a Collection contains an NFT
+func (collection Collection) ContainsNFT(id string) bool {
+	_, err := collection.GetNFT(id)
+	return err == nil
+}
+
 // AddNFT adds an NFT to the collection
-func (collection *Collection) AddNFT(nft NFT) {
+func (collection *Collection) AddNFT(nft NFT) sdk.Error {
+	id := nft.GetID()
+	exists := collection.ContainsNFT(id)
+	if exists {
+		return ErrNFTAlreadyExists(DefaultCodespace,
+			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
+		)
+	}
 	collection.NFTs = append(collection.NFTs, nft)
+	return nil
 }
 
 // UpdateNFT updates an NFT from a collection

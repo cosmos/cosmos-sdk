@@ -114,3 +114,109 @@ func (msg MsgEditNFTMetadata) GetSignBytes() []byte {
 func (msg MsgEditNFTMetadata) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Owner}
 }
+
+/* --------------------------------------------------------------------------- */
+// MsgMintNFT
+/* --------------------------------------------------------------------------- */
+
+// MsgMintNFT defines a MintNFT message
+type MsgMintNFT struct {
+	Sender      sdk.AccAddress
+	Recipient   sdk.AccAddress
+	ID          string
+	Denom       string
+	Name        string
+	Description string
+	Image       string
+	TokenURI    string
+}
+
+// NewMsgMintNFT is a constructor function for MsgMintNFT
+func NewMsgMintNFT(sender, recipient sdk.AccAddress, id, denom, name, description, image, tokenURI string) MsgMintNFT {
+	return MsgMintNFT{
+		Sender:      sender,
+		Recipient:   recipient,
+		ID:          id,
+		Denom:       strings.TrimSpace(denom),
+		Name:        strings.TrimSpace(name),
+		Description: strings.TrimSpace(description),
+		Image:       strings.TrimSpace(image),
+		TokenURI:    strings.TrimSpace(tokenURI),
+	}
+}
+
+// Route Implements Msg
+func (msg MsgMintNFT) Route() string { return RouterKey }
+
+// Type Implements Msg
+func (msg MsgMintNFT) Type() string { return "mint_nft" }
+
+// ValidateBasic Implements Msg.
+func (msg MsgMintNFT) ValidateBasic() sdk.Error {
+	if msg.Denom == "" {
+		return ErrInvalidCollection(DefaultCodespace)
+	}
+	if msg.Sender.Empty() {
+		return sdk.ErrInvalidAddress("invalid sender address")
+	}
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgMintNFT) GetSignBytes() []byte {
+	bz := cdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners Implements Msg.
+func (msg MsgMintNFT) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+/* --------------------------------------------------------------------------- */
+// MsgBurnNFT
+/* --------------------------------------------------------------------------- */
+
+// MsgBurnNFT defines a BurnNFT message
+type MsgBurnNFT struct {
+	Sender sdk.AccAddress
+	ID     string
+	Denom  string
+}
+
+// NewMsgBurnNFT is a constructor function for MsgBurnNFT
+func NewMsgBurnNFT(sender sdk.AccAddress, id string, denom string) MsgBurnNFT {
+	return MsgBurnNFT{
+		Sender: sender,
+		ID:     id,
+		Denom:  strings.TrimSpace(denom),
+	}
+}
+
+// Route Implements Msg
+func (msg MsgBurnNFT) Route() string { return RouterKey }
+
+// Type Implements Msg
+func (msg MsgBurnNFT) Type() string { return "burn_nft" }
+
+// ValidateBasic Implements Msg.
+func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
+	if msg.Denom == "" {
+		return ErrInvalidCollection(DefaultCodespace)
+	}
+	if msg.Sender.Empty() {
+		return sdk.ErrInvalidAddress("invalid sender address")
+	}
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgBurnNFT) GetSignBytes() []byte {
+	bz := cdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners Implements Msg.
+func (msg MsgBurnNFT) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}

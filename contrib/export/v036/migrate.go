@@ -16,21 +16,39 @@ import (
 )
 
 func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
-	var targetGov v036gov.GenesisState
-	targetGov.StartingProposalID = initialState.StartingProposalID
-	targetGov.DepositParams = initialState.DepositParams
-	targetGov.TallyParams = initialState.TallyParams
-	targetGov.VotingParams = initialState.VotingParams
+	targetGov := v036gov.GenesisState{
+		StartingProposalID: initialState.StartingProposalID,
+		DepositParams: v036gov.DepositParams{
+			MinDeposit:       initialState.DepositParams.MinDeposit,
+			MaxDepositPeriod: initialState.DepositParams.MaxDepositPeriod,
+		},
+		TallyParams: v036gov.TallyParams{
+			Quorum:    initialState.TallyParams.Quorum,
+			Threshold: initialState.TallyParams.Threshold,
+			Veto:      initialState.TallyParams.Veto,
+		},
+		VotingParams: v036gov.VotingParams{
+			VotingPeriod: initialState.VotingParams.VotingPeriod,
+		},
+	}
 
-	var deposits gov.Deposits
+	var deposits v036gov.Deposits
 	for _, p := range initialState.Deposits {
-		deposits = append(deposits, p.Deposit)
+		deposits = append(deposits, v036gov.Deposit{
+			ProposalID: p.Deposit.ProposalID,
+			Amount:     p.Deposit.Amount,
+			Depositor:  p.Deposit.Depositor,
+		})
 	}
 	targetGov.Deposits = deposits
 
-	var votes gov.Votes
+	var votes v036gov.Votes
 	for _, p := range initialState.Votes {
-		votes = append(votes, p.Vote)
+		votes = append(votes, v036gov.Vote{
+			ProposalID: p.Vote.ProposalID,
+			Option:     v036gov.VoteOption(p.Vote.Option),
+			Voter:      p.Vote.Voter,
+		})
 	}
 	targetGov.Votes = votes
 
@@ -39,8 +57,8 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 		proposal := v036gov.Proposal{
 			Content:          p.Content,
 			ProposalID:       p.ProposalID,
-			Status:           p.Status,
-			FinalTallyResult: p.FinalTallyResult,
+			Status:           v036gov.ProposalStatus(p.Status),
+			FinalTallyResult: v036gov.TallyResult(p.FinalTallyResult),
 			SubmitTime:       p.SubmitTime,
 			DepositEndTime:   p.DepositEndTime,
 			TotalDeposit:     p.TotalDeposit,
@@ -81,11 +99,6 @@ func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	var distributionState distribution.GenesisState
 	cdc.MustUnmarshalJSON(appState[distribution.ModuleName], &distributionState)
 	appState[distribution.ModuleName] = cdc.MustMarshalJSON(distributionState)
-
-	// Cannot decode empty bytes
-	//var genutilState genutil.GenesisState
-	//cdc.MustUnmarshalJSON(appState[genutil.ModuleName], &genutilState)
-	//appState[genutil.ModuleName] = cdc.MustMarshalJSON(genutilState)
 
 	var mintState mint.GenesisState
 	cdc.MustUnmarshalJSON(appState[mint.ModuleName], &mintState)

@@ -99,7 +99,7 @@ func getValidatorPowerRank(validator Validator) []byte {
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-	operAddrInvr := cp(validator.OperatorAddress)
+	operAddrInvr := sdk.CopyBytes(validator.OperatorAddress)
 	for i, b := range operAddrInvr {
 		operAddrInvr[i] = ^b
 	}
@@ -114,7 +114,7 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	if len(key) != 1+powerBytesLen+sdk.AddrLen {
 		panic("Invalid validator power rank key length")
 	}
-	operAddr = cp(key[powerBytesLen+1:])
+	operAddr = sdk.CopyBytes(key[powerBytesLen+1:])
 	for i, b := range operAddr {
 		operAddr[i] = ^b
 	}
@@ -282,15 +282,4 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 	return append(
 		GetREDsToValDstIndexKey(valDstAddr),
 		delAddr.Bytes()...)
-}
-
-//-------------------------------------------------
-
-func cp(bz []byte) (ret []byte) {
-	if bz == nil {
-		return nil
-	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
-	return ret
 }

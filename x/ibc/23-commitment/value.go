@@ -66,10 +66,10 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 
 type Indexer struct {
 	Mapping
-	enc mapping.IntEncoding
+	enc state.IntEncoding
 }
 
-func NewIndexer(m Mapping, enc mapping.IntEncoding) Indexer {
+func NewIndexer(m Mapping, enc state.IntEncoding) Indexer {
 	return Indexer{
 		Mapping: m,
 		enc:     enc,
@@ -77,7 +77,7 @@ func NewIndexer(m Mapping, enc mapping.IntEncoding) Indexer {
 }
 
 func (ix Indexer) Value(index uint64) Value {
-	return ix.Mapping.Value(mapping.EncodeInt(index, ix.enc))
+	return ix.Mapping.Value(state.EncodeInt(index, ix.enc))
 }
 
 type Value struct {

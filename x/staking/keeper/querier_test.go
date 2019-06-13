@@ -26,7 +26,7 @@ func TestNewQuerier(t *testing.T) {
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
-		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], amt)
+		validators[i], _ = validators[i].AddTokensFromDel(amt)
 		keeper.SetValidator(ctx, validators[i])
 		keeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
@@ -124,8 +124,8 @@ func TestQueryValidators(t *testing.T) {
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
-		validators[i], _ = keeper.AddTokensFromDel(ctx, validators[i], amt)
-		validators[i] = keeper.UpdateStatus(ctx, validators[i], status[i])
+		validators[i], _ = validators[i].AddTokensFromDel(amt)
+		validators[i] = validators[i].UpdateStatus(status[i])
 	}
 
 	keeper.SetValidator(ctx, validators[0])

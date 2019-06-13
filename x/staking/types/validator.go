@@ -412,6 +412,75 @@ func (v Validator) PotentialTendermintPower() int64 {
 	return sdk.TokensToTendermintPower(v.Tokens)
 }
 
+// UpdateStatus updates the location of the shares within a validator
+// to reflect the new status
+func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
+	v.Status = newStatus
+	return v
+}
+
+// AddTokensFromDel adds tokens to a validator
+func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
+
+	// calculate the shares to issue
+	var issuedShares sdk.Dec
+	if v.DelegatorShares.IsZero() {
+		// the first delegation to a validator sets the exchange rate to one
+		issuedShares = amount.ToDec()
+	} else {
+		shares, err := v.SharesFromTokens(amount)
+		if err != nil {
+			panic(err)
+		}
+
+		issuedShares = shares
+	}
+
+	v.Tokens = v.Tokens.Add(amount)
+	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
+
+	return v, issuedShares
+}
+
+// RemoveTokens removes tokens from a validator
+func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
+	if tokens.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
+	}
+	if v.Tokens.LT(tokens) {
+		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
+	}
+	v.Tokens = v.Tokens.Sub(tokens)
+	return v
+}
+
+// RemoveDelShares removes delegator shares from a validator.
+// NOTE: because token fractions are left in the valiadator,
+//       the exchange rate of future shares of this validator can increase.
+func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
+
+	remainingShares := v.DelegatorShares.Sub(delShares)
+	var issuedTokens sdk.Int
+	if remainingShares.IsZero() {
+
+		// last delegation share gets any trimmings
+		issuedTokens = v.Tokens
+		v.Tokens = sdk.ZeroInt()
+	} else {
+
+		// leave excess tokens in the validator
+		// however fully use all the delegator shares
+		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
+		v.Tokens = v.Tokens.Sub(issuedTokens)
+		if v.Tokens.IsNegative() {
+			panic("attempting to remove more tokens than available in validator")
+		}
+	}
+
+	v.DelegatorShares = remainingShares
+	return v, issuedTokens
+}
+
 // nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }

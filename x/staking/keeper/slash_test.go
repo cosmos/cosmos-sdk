@@ -31,7 +31,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	// add numVals validators
 	for i := int64(0); i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validator, _ = keeper.AddTokensFromDel(ctx, validator, amt)
+		validator, _ = validator.AddTokensFromDel(amt)
 		validator = TestingUpdateValidator(keeper, ctx, validator, true)
 		keeper.SetValidatorByConsAddr(ctx, validator)
 	}

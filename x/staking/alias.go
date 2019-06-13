@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	NotBondedTokensName                = keeper.NotBondedTokensName
-	BondedTokensName                   = keeper.BondedTokensName
+	NotBondedTokensName                = types.NotBondedTokensName
+	BondedTokensName                   = types.BondedTokensName
 	DefaultParamspace                  = keeper.DefaultParamspace
 	DefaultCodespace                   = types.DefaultCodespace
 	CodeInvalidValidator               = types.CodeInvalidValidator

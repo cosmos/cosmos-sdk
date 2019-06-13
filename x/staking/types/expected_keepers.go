@@ -7,10 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// expected coin keeper (noalias)
+// DistributionKeeper expected coin keeper (noalias)
 type DistributionKeeper interface {
 	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
+}
+
+// BankKeeper defines the expected bank keeper (noalias)
+type BankKeeper interface {
+	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	UndelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -22,9 +28,6 @@ type AccountKeeper interface {
 // SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supply.Supply
-
-	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error
-	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error
 
 	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)

@@ -289,25 +289,30 @@ func TestDelegateCoins(t *testing.T) {
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
+	addrModule := sdk.AccAddress([]byte("moduleAcc"))
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
+	macc := input.ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := input.ak.NewAccountWithAddress(ctx, addr2)
 	input.ak.SetAccount(ctx, vacc)
 	input.ak.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, macc)
 	bankKeeper.SetCoins(ctx, addr2, origCoins)
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := bankKeeper.DelegateCoins(ctx, addr2, delCoins)
+	_, err := bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
 	acc = input.ak.GetAccount(ctx, addr2)
+	macc = input.ak.GetAccount(ctx, addrModule)
 	require.NoError(t, err)
-	require.Equal(t, delCoins, acc.GetCoins())
+	require.Equal(t, origCoins.Sub(delCoins), acc.GetCoins())
+	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a vesting account to delegate
-	_, err = bankKeeper.DelegateCoins(ctx, addr1, delCoins)
+	_, err = bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, vacc.GetCoins())
@@ -326,36 +331,53 @@ func TestUndelegateCoins(t *testing.T) {
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
+	addrModule := sdk.AccAddress([]byte("moduleAcc"))
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
+	macc := input.ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := input.ak.NewAccountWithAddress(ctx, addr2)
 	input.ak.SetAccount(ctx, vacc)
 	input.ak.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, macc)
 	bankKeeper.SetCoins(ctx, addr2, origCoins)
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := bankKeeper.DelegateCoins(ctx, addr2, delCoins)
-	require.NoError(t, err)
-
-	// require the ability for a non-vesting account to undelegate
-	_, err = bankKeeper.UndelegateCoins(ctx, addr2, delCoins)
+	_, err := bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
 	require.NoError(t, err)
 
 	acc = input.ak.GetAccount(ctx, addr2)
-	require.Equal(t, origCoins, acc.GetCoins())
+	macc = input.ak.GetAccount(ctx, addrModule)
+	require.Equal(t, origCoins.Sub(delCoins), acc.GetCoins())
+	require.Equal(t, delCoins, macc.GetCoins())
 
-	// require the ability for a vesting account to delegate
-	_, err = bankKeeper.DelegateCoins(ctx, addr1, delCoins)
+	// require the ability for a non-vesting account to undelegate
+	_, err = bankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins)
 	require.NoError(t, err)
 
-	// require the ability for a vesting account to undelegate
-	_, err = bankKeeper.UndelegateCoins(ctx, addr1, delCoins)
+	acc = input.ak.GetAccount(ctx, addr2)
+	macc = input.ak.GetAccount(ctx, addrModule)
+	require.Equal(t, origCoins, acc.GetCoins())
+	require.True(t, macc.GetCoins().Empty())
+
+	// require the ability for a vesting account to delegate
+	_, err = bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	require.NoError(t, err)
 
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	macc = input.ak.GetAccount(ctx, addrModule)
+	require.Equal(t, origCoins.Sub(delCoins), vacc.GetCoins())
+	require.Equal(t, delCoins, macc.GetCoins())
+
+	// require the ability for a vesting account to undelegate
+	_, err = bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins)
+	require.NoError(t, err)
+
+	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	macc = input.ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins, vacc.GetCoins())
+	require.True(t, macc.GetCoins().Empty())
 }

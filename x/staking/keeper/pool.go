@@ -4,36 +4,27 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-)
-
-// names used as root for pool module accounts:
-//
-// - NotBondedPool -> "NotBondedTokens"
-//
-// - BondedPool -> "BondedTokens"
-const (
-	NotBondedTokensName = "NotBondedTokensPool"
-	BondedTokensName    = "BondedTokensPool"
 )
 
 // GetPools returns the bonded and unbonded tokens pool accounts
 func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccount) {
-	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, BondedTokensName)
+	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.BondedTokensName)
 	return bondedPool
 }
 
 // GetPools returns the bonded and unbonded tokens pool accounts
 func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccount) {
-	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, NotBondedTokensName)
+	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.NotBondedTokensName)
 	return notBondedPool
 }
 
 // SetBondedPool sets the bonded tokens pool account
 func (k Keeper) SetBondedPool(ctx sdk.Context, bondedPool supply.ModuleAccount) {
 	// safety check
-	if bondedPool.Name() != BondedTokensName {
-		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", BondedTokensName, bondedPool.Name()))
+	if bondedPool.Name() != types.BondedTokensName {
+		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", types.BondedTokensName, bondedPool.Name()))
 	}
 	k.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 }
@@ -41,8 +32,8 @@ func (k Keeper) SetBondedPool(ctx sdk.Context, bondedPool supply.ModuleAccount) 
 // SetNotBondedPool sets the not bonded tokens pool account
 func (k Keeper) SetNotBondedPool(ctx sdk.Context, notBondedPool supply.ModuleAccount) {
 	// safety check
-	if notBondedPool.Name() != NotBondedTokensName {
-		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", NotBondedTokensName, notBondedPool.Name()))
+	if notBondedPool.Name() != types.NotBondedTokensName {
+		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", types.NotBondedTokensName, notBondedPool.Name()))
 	}
 	k.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 }
@@ -50,7 +41,7 @@ func (k Keeper) SetNotBondedPool(ctx sdk.Context, notBondedPool supply.ModuleAcc
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondedTokens))
-	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, BondedTokensName, NotBondedTokensName, bondedCoins)
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.BondedTokensName, types.NotBondedTokensName, bondedCoins)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +50,7 @@ func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, bondedTokens sdk.Int) {
 // notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
 func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int) {
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), notBondedTokens))
-	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, NotBondedTokensName, BondedTokensName, notBondedCoins)
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedTokensName, types.BondedTokensName, notBondedCoins)
 	if err != nil {
 		panic(err)
 	}
@@ -68,13 +59,13 @@ func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, notBondedTokens sdk.Int
 // removeBondedTokens removes coins from the bonded pool module account
 func (k Keeper) removeBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
-	return k.supplyKeeper.BurnCoins(ctx, BondedTokensName, bondedCoins)
+	return k.supplyKeeper.BurnCoins(ctx, types.BondedTokensName, bondedCoins)
 }
 
 // removeNotBondedTokens removes coins from the not bonded pool module account
 func (k Keeper) removeNotBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
-	return k.supplyKeeper.BurnCoins(ctx, NotBondedTokensName, notBondedCoins)
+	return k.supplyKeeper.BurnCoins(ctx, types.NotBondedTokensName, notBondedCoins)
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded

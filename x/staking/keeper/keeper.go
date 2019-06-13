@@ -24,6 +24,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
+	bankKeeper         types.BankKeeper
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
 	paramstore         params.Subspace
@@ -35,13 +36,14 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new staking Keeper instance
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, sk types.SupplyKeeper,
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
 	return Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,
 		cdc:                cdc,
+		bankKeeper:         bk,
 		supplyKeeper:       sk,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,

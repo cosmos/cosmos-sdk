@@ -85,38 +85,3 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 
 	return nil
 }
-
-// DelegateCoins is a wrapper of the bank keeper's DelegateCoins, sending the coins also to the staking bonded ModuleAccount
-func (k Keeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error {
-	_, err := k.bk.DelegateCoins(ctx, addr, amt)
-	if err != nil {
-		return err
-	}
-
-	acc := k.GetAccountByName(ctx, moduleName)
-	if acc == nil {
-		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
-	}
-
-	_, err = k.bk.AddCoins(ctx, acc.GetAddress(), amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// UndelegateCoins is a wrapper of the bank keeper's UndelegateCoins, sending the coins also to the staking not bonded ModuleAccount
-func (k Keeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, amt sdk.Coins) sdk.Error {
-	_, err := k.bk.UndelegateCoins(ctx, addr, amt)
-	if err != nil {
-		return err
-	}
-
-	err = k.BurnCoins(ctx, moduleName, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

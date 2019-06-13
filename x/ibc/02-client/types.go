@@ -26,9 +26,6 @@ func Equal(client1, client2 ConsensusState) bool {
 type Header interface {
 	Kind() Kind
 	GetHeight() uint64
-	//	Proof() HeaderProof
-	State() ConsensusState // can be nil
-	GetRoot() commitment.Root
 }
 
 // XXX: Kind should be enum?

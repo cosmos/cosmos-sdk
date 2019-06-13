@@ -2,78 +2,98 @@ package tendermint
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 
+	lerr "github.com/tendermint/tendermint/lite/errors"
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+var _ client.ConsensusState = ConsensusState{}
+
 // Ref tendermint/lite/base_verifier.go
-
-var _ client.ValidityPredicateBase = ValidityPredicateBase{}
-
-type ValidityPredicateBase struct {
-	Height           int64
+type ConsensusState struct {
+	ChainID          string
+	Height           uint64
+	Root             commitment.Root
 	NextValidatorSet *types.ValidatorSet
 }
 
-func (ValidityPredicateBase) Kind() client.Kind {
+func (ConsensusState) Kind() client.Kind {
 	return client.Tendermint
 }
 
-func (base ValidityPredicateBase) GetHeight() int64 {
-	return base.Height
+func (cs ConsensusState) GetHeight() uint64 {
+	return cs.Height
 }
 
-func (base ValidityPredicateBase) Equal(cbase client.ValidityPredicateBase) bool {
-	base0, ok := cbase.(ValidityPredicateBase)
-	if !ok {
-		return false
+func (cs ConsensusState) GetRoot() commitment.Root {
+	return cs.Root
+}
+
+func (cs ConsensusState) update(header Header) ConsensusState {
+	return ConsensusState{
+		ChainID:          cs.ChainID,
+		Height:           uint64(header.Height),
+		Root:             header.AppHash,
+		NextValidatorSet: header.NextValidatorSet,
 	}
-	return base.Height == base0.Height &&
-		bytes.Equal(base.NextValidatorSet.Hash(), base0.NextValidatorSet.Hash())
 }
 
-var _ client.Client = Client{}
+func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState, error) {
+	header, ok := cheader.(Header)
+	if !ok {
+		return nil, errors.New("invalid type")
+	}
 
-type Client struct {
-	Base ValidityPredicateBase
-	Root commitment.Root
+	nextvalset := cs.NextValidatorSet
+	nexthash := nextvalset.Hash()
+
+	if cs.Height == uint64(header.Height-1) {
+		nexthash = cs.NextValidatorSet.Hash()
+		if !bytes.Equal(header.ValidatorsHash, nexthash) {
+			fmt.Println(111)
+			return nil, lerr.ErrUnexpectedValidators(header.ValidatorsHash, nexthash)
+		}
+	}
+
+	if !bytes.Equal(header.NextValidatorsHash, header.NextValidatorSet.Hash()) {
+		fmt.Println(header)
+		return nil, lerr.ErrUnexpectedValidators(header.NextValidatorsHash, header.NextValidatorSet.Hash())
+	}
+
+	err := header.ValidateBasic(cs.ChainID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cs.NextValidatorSet.VerifyCommit(cs.ChainID, header.Commit.BlockID, header.Height, header.Commit)
+	if err != nil {
+		return nil, err
+	}
+
+	return cs.update(header), nil
 }
 
-func (Client) Kind() client.Kind {
-	return client.Tendermint
-}
-
-func (client Client) GetBase() client.ValidityPredicateBase {
-	return client.Base
-}
-
-func (client Client) GetRoot() commitment.Root {
-	return client.Root
-}
-
-func (client Client) Validate(header client.Header) (client.Client, error) {
-	return client, nil // XXX
+func (cs ConsensusState) Equivocation(header1, header2 client.Header) bool {
+	return false // XXX
 }
 
 var _ client.Header = Header{}
 
 type Header struct {
-	Base  ValidityPredicateBase
-	Root  commitment.Root
-	Votes []*types.CommitSig
+	// XXX: don't take the entire struct
+	types.SignedHeader
+	NextValidatorSet *types.ValidatorSet
 }
 
 func (header Header) Kind() client.Kind {
 	return client.Tendermint
 }
 
-func (header Header) GetBase() client.ValidityPredicateBase {
-	return header.Base
-}
-
-func (header Header) GetRoot() commitment.Root {
-	return header.Root
+func (header Header) GetHeight() uint64 {
+	return uint64(header.Height)
 }

@@ -19,6 +19,10 @@ import (
 	"time"
 )
 
+const (
+	SlackConfigSep = ","
+)
+
 var (
 	// default seeds
 	seeds = []int{
@@ -27,8 +31,9 @@ var (
 		989182, 89182391, 11, 22, 44, 77, 99, 2020,
 		3232, 123123, 124124, 582582, 18931893,
 		29892989, 30123012, 47284728, 7601778, 8090485,
-		977367484, 491163361, 424254581, 673398983,		
+		977367484, 491163361, 424254581, 673398983,
 	}
+	seedOverrideList = ""
 
 	// goroutine-safe process map
 	procs map[int]*os.Process
@@ -49,8 +54,7 @@ var (
 	slackThread  string
 	seedsStrRepr string
 	exitOnFail   bool
-	gitReport    bool
-	slackReport  bool
+	slackConfig  string
 
 	// logs temporary directory
 	tempdir string
@@ -65,9 +69,9 @@ func init() {
 
 	flag.IntVar(&jobs, "j", jobs, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
+	flag.StringVar(&seedOverrideList, "seeds", "", "run the supplied comma-separated list of seeds instead of defaults")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
-	flag.BoolVar(&gitReport, "p", false, "Report results to git check")
-	flag.BoolVar(&slackReport, "s", false, "Report results to slack channel")
+	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
@@ -83,19 +87,26 @@ func main() {
 	var err error
 
 	flag.Parse()
-	if flag.NArg() < 8 && (gitReport || slackReport) {
-		log.Fatal("wrong number of arguments")
-	} else if !(gitReport || slackReport) && flag.NArg() != 4 {
+	if flag.NArg() != 4 {
 		log.Fatal("wrong number of arguments")
 	}
 
-	// prepare input channel
-	if gitReport || slackReport {
-		slackToken = flag.Arg(4)
-		slackChannel = flag.Arg(5)
-		slackThread = flag.Arg(6)
-		seeds, seedsStrRepr = makeSeedList(flag.Args()[7:])
+	if slackConfig != "" {
+		opts := strings.Split(slackConfig, SlackConfigSep)
+		if len(opts) != 3 {
+			log.Fatal("please don't fuck with slack config format")
+		}
+		slackToken, slackChannel, slackThread = opts[0], opts[1], opts[2]
 	}
+
+	seedOverrideList = strings.TrimSpace(seedOverrideList)
+	if seedOverrideList != "" {
+		seeds, err = makeSeedList(seedOverrideList)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	queue := make(chan int, len(seeds))
 	for _, seed := range seeds {
 		queue <- seed
@@ -172,8 +183,8 @@ wait:
 			os.Exit(1)
 		}
 	}
-	if slackReport {
-		slackMessage(slackToken, slackChannel, &slackThread, "Finished running simulation for seeds: "+seedsStrRepr)
+	if slackConfigSupplied() {
+		slackMessage(slackToken, slackChannel, &slackThread, "Finished running simulation for seeds: "+seedOverrideList)
 	}
 	os.Exit(0)
 }
@@ -201,7 +212,7 @@ func worker(id int, seeds <-chan int) {
 			results <- false
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
-			if slackReport {
+			if slackConfigSupplied() {
 				slackMessage(slackToken, slackChannel, nil, "Seed "+strconv.Itoa(seed)+" failed. To reproduce, run: "+buildCommand(testname, blocks, period, genesis, seed))
 			}
 			if exitOnFail {
@@ -286,12 +297,20 @@ func checkSignal(proc *os.Process, signal syscall.Signal) {
 	}
 }
 
-func makeSeedList(args []string) ([]int, string) {
-	seeds = make([]int, len(args))
-	var seedsStrRepr string
-	for i := range seeds {
-		seeds[i], _ = strconv.Atoi(args[i])
-		seedsStrRepr = seedsStrRepr + args[i] + " "
+func makeSeedList(seeds string) ([]int, error) {
+	strSeedsLst := strings.Split(seeds, ",")
+	if len(strSeedsLst) == 0 {
+		return nil, fmt.Errorf("seeds was empty")
 	}
-	return seeds, seedsStrRepr
+	intSeeds := make([]int, len(strSeedsLst))
+	for i, seedstr := range strSeedsLst {
+		intSeed, err := strconv.Atoi(strings.TrimSpace(seedstr))
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert seed to integer: %v", err)
+		}
+		intSeeds[i] = intSeed
+	}
+	return intSeeds, nil
 }
+
+func slackConfigSupplied() bool { return slackConfig != "" }

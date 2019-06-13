@@ -138,7 +138,7 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) Client(ctx sdk.Context) client.Client {
+func (obj Object) Client(ctx sdk.Context) client.ConsensusState {
 	return obj.client.Value(ctx)
 }
 

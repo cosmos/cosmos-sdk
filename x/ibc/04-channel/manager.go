@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/mapping"
+	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -13,7 +13,7 @@ import (
 
 // Manager is unrestricted
 type Manager struct {
-	protocol mapping.Mapping
+	protocol state.Mapping
 
 	connection connection.Manager
 
@@ -26,9 +26,9 @@ type CounterpartyManager struct {
 	connection connection.CounterpartyManager
 }
 
-func NewManager(protocol mapping.Base, connection connection.Manager) Manager {
+func NewManager(protocol state.Base, connection connection.Manager) Manager {
 	return Manager{
-		protocol:     mapping.NewMapping(protocol, []byte("/connection/")),
+		protocol:     state.NewMapping(protocol, []byte("/connection/")),
 		connection:   connection,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
@@ -49,13 +49,13 @@ func (man Manager) object(connid, chanid string) Object {
 	return Object{
 		chanid:      chanid,
 		channel:     man.protocol.Value([]byte(key)),
-		state:       mapping.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-		nexttimeout: mapping.NewInteger(man.protocol.Value([]byte(key+"/timeout")), mapping.Dec),
+		state:       state.NewEnum(man.protocol.Value([]byte(key + "/state"))),
+		nexttimeout: state.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
 
-		// TODO: remove length functionality from mapping.Indeer(will be handled manually)
-		seqsend: mapping.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), mapping.Dec),
-		seqrecv: mapping.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), mapping.Dec),
-		packets: mapping.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), mapping.Dec),
+		// TODO: remove length functionality from state.Indeer(will be handled manually)
+		seqsend: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
+		seqrecv: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
+		packets: state.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), state.Dec),
 	}
 }
 
@@ -65,11 +65,11 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 		chanid:      chanid,
 		channel:     man.protocol.Value([]byte(key)),
 		state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), mapping.Dec),
+		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
 
-		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), mapping.Dec),
-		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), mapping.Dec),
-		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets")), mapping.Dec),
+		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
+		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
+		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets")), state.Dec),
 	}
 }
 
@@ -161,13 +161,13 @@ func (man ModuleManager) Query(ctx sdk.Context, connid, chanid string) (Object, 
 
 type Object struct {
 	chanid      string
-	channel     mapping.Value
-	state       mapping.Enum
-	nexttimeout mapping.Integer
+	channel     state.Value
+	state       state.Enum
+	nexttimeout state.Integer
 
-	seqsend mapping.Integer
-	seqrecv mapping.Integer
-	packets mapping.Indexer
+	seqsend state.Integer
+	seqrecv state.Integer
+	packets state.Indexer
 
 	connection connection.Object
 
@@ -227,6 +227,7 @@ func (obj Object) OpenInit(ctx sdk.Context) error {
 	return nil
 }
 
+/*
 func (obj Object) OpenTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
 	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("opentry on non-idle channel")
@@ -239,7 +240,7 @@ func (obj Object) OpenTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint
 
 	// XXX
 }
-
+*/
 func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 	if obj.state.Get(ctx) != Open {
 		return errors.New("send on non-open channel")
@@ -249,7 +250,7 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("send on non-open connection")
 	}
 
-	if uint64(obj.connection.Client(ctx).GetBase().GetHeight()) >= packet.Timeout() {
+	if uint64(obj.connection.Client(ctx).GetHeight()) >= packet.Timeout() {
 		return errors.New("timeout height higher than the latest known")
 	}
 

@@ -195,6 +195,14 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 	return
 }
 
+func (nobj NihiloObject) Open(ctx sdk.Context) error {
+	obj := Object(nobj)
+	if !obj.state.Transit(ctx, Idle, Open) {
+		return errors.New("init on non-idle connection")
+	}
+	return nil
+}
+
 func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 
 	obj := Object(nobj)

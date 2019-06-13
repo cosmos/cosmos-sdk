@@ -83,6 +83,11 @@ func (man Manager) Create(ctx sdk.Context, connid, chanid string, channel Channe
 	if err != nil {
 		return
 	}
+	if obj.connection.State(ctx) != connection.Open {
+		err = errors.New("connection exists but not opened")
+		return
+	}
+
 	counterconnid := obj.connection.Value(ctx).Counterparty
 	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
 	obj.counterparty.connection = man.counterparty.connection.Query(counterconnid)
@@ -207,6 +212,7 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 	return nil
 }
 
+/*
 // TODO: ocapify callingModule
 func (obj Object) OpenInit(ctx sdk.Context) error {
 	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
@@ -241,6 +247,15 @@ func (obj Object) OpenTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint
 	// XXX
 }
 */
+
+func (obj Object) Open(ctx sdk.Context) error {
+	if !obj.state.Transit(ctx, Idle, Open) {
+		return errors.New("open on non-idle channel")
+	}
+
+	return nil
+}
+
 func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 	if obj.state.Get(ctx) != Open {
 		return errors.New("send on non-open channel")

@@ -5,8 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
+
+// HANDSHAKE PROCESS IS OMITTED
 
 // ICS 02
 
@@ -31,12 +34,6 @@ func (k Keeper) QueryClientFrozen(ctx sdk.Context, id string) (bool, error) {
 	return obj.Frozen(ctx), nil
 }
 
-/*
-func (k Keeper) QueryClientRoot(ctx sdk.Context, id string, height uint64) (commitment.Root, error) {
-	re
-}
-*/
-
 func (k Keeper) UpdateClient(ctx sdk.Context, id string, header client.Header) error {
 	obj, err := k.client.Query(ctx, id)
 	if err != nil {
@@ -56,9 +53,8 @@ func (k Keeper) DeleteClient(ctx sdk.Context, id string) error {
 
 // ICS 03
 
-func (k Keeper) OpenInitConnection(ctx sdk.Context,
+func (k Keeper) OpenConnection(ctx sdk.Context,
 	id, counterpartyID, clientID, counterpartyClientID string,
-	nextTimeoutHeight uint64,
 ) error {
 	obj, err := k.connection.Create(ctx, id, connection.Connection{
 		Counterparty:       counterpartyID,
@@ -68,9 +64,10 @@ func (k Keeper) OpenInitConnection(ctx sdk.Context,
 	if err != nil {
 		return err
 	}
-	return obj.OpenInit(ctx, nextTimeoutHeight)
+	return obj.Open(ctx)
 }
 
+/*
 func (k Keeper) OpenTryConnection(ctx sdk.Context,
 	id, counterpartyID, clientID, counterpartyClientID string,
 	timeoutHeight, nextTimeoutHeight uint64,
@@ -116,8 +113,7 @@ func (k Keeper) OpenConfirmConnection(ctx sdk.Context,
 		return obj.OpenConfirm(ctx, timeoutHeight)
 	})
 }
-
-// TODO: close
+*/
 
 func (k Keeper) QueryConnection(ctx sdk.Context, id string) (connection.Connection, error) {
 	obj, err := k.connection.Query(ctx, id)
@@ -128,13 +124,46 @@ func (k Keeper) QueryConnection(ctx sdk.Context, id string) (connection.Connecti
 }
 
 // ICS 4
-/*
-func (k Keeper) OpenInitChannel(ctx sdk.Context,
-	moduleID, id, connID, counterpartyModuleID, counterpartyID, counterparty string,
-	nextTimeoutHeight uint64,
+
+func (k Keeper) OpenChannel(ctx sdk.Context,
+	moduleID, connID, id, counterpartyID, counterpartyModuleID string,
 ) error {
-	obj, err := k.channel.
+	obj, err := k.channel.Create(ctx, connID, id, channel.Channel{
+		Module:             moduleID,
+		Counterparty:       counterpartyID,
+		CounterpartyModule: counterpartyModuleID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return obj.Open(ctx)
 }
 
-func (k Keeper) Send()
-*/
+func (k Keeper) QueryChannel(ctx sdk.Context,
+	connID, id string,
+) (channel channel.Channel, err error) {
+	obj, err := k.channel.Query(ctx, connID, id)
+	if err != nil {
+		return
+	}
+	return obj.Value(ctx), err
+}
+
+func (k Keeper) Send(ctx sdk.Context, connID, id string, packet channel.Packet) error {
+	obj, err := k.channel.Query(ctx, connID, id)
+	if err != nil {
+		return err
+	}
+	return obj.Send(ctx, packet)
+}
+
+func (k Keeper) Receive(ctx sdk.Context, connID, id string, packet channel.Packet, proofs []commitment.Proof) error {
+	obj, err := k.channel.Query(ctx, connID, id)
+	if err != nil {
+		return err
+	}
+	return k.ProofExec(ctx, connID, proofs, func(ctx sdk.Context) error {
+		return obj.Receive(ctx, packet)
+	})
+}

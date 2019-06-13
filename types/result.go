@@ -32,8 +32,8 @@ type Result struct {
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed uint64
 
-	// Tags are used for transaction indexing and pubsub.
-	Tags Tags
+	// Events are used for transaction indexing and pubsub.
+	Events Events
 }
 
 // TODO: In the future, more codes may be OK.
@@ -75,7 +75,7 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Tags      StringTags      `json:"tags,omitempty"`
+	Events    StringEvents    `json:"events,omitempty"`
 	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
@@ -99,7 +99,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
-		Tags:      TagsToStringTags(res.TxResult.Tags),
+		Events:    StringifyEvents(res.TxResult.Events),
 		Tx:        tx,
 		Timestamp: timestamp,
 	}
@@ -141,7 +141,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.CheckTx.Info,
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
-		Tags:      TagsToStringTags(res.CheckTx.Tags),
+		Events:    StringifyEvents(res.CheckTx.Events),
 		Codespace: res.CheckTx.Codespace,
 	}
 }
@@ -168,7 +168,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
-		Tags:      TagsToStringTags(res.DeliverTx.Tags),
+		Events:    StringifyEvents(res.DeliverTx.Events),
 		Codespace: res.DeliverTx.Codespace,
 	}
 }
@@ -238,8 +238,8 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
 	}
 
-	if len(r.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
+	if len(r.Events) > 0 {
+		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Events.String()))
 	}
 
 	return strings.TrimSpace(sb.String())

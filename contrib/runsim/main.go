@@ -75,7 +75,7 @@ func init() {
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-g genesis.json] [-e] [-s] [-p] [package] [blocks] [period] [testname] [slacktoken] [channel] [thread] [seeds]
+			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-slack token,channel,thread] [package] [blocks] [period] [testname]
 Run simulations in parallel
 
 `, filepath.Base(os.Args[0]))

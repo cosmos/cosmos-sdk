@@ -229,7 +229,7 @@ func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, queryRoute 
 		return nil, err
 	}
 
-	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
 	if err != nil {
 		return nil, err
 	}

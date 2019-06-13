@@ -12,25 +12,25 @@ import (
 func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
 	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamCommunityTax)
 
-	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
+	retCommunityTax, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
 	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBaseProposerReward)
-	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	retBaseProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
 	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBonusProposerReward)
-	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	retBonusProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
 	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamWithdrawAddrEnabled)
-	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
+	retWithdrawAddrEnabled, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
@@ -47,10 +47,11 @@ func QueryDelegatorTotalRewards(cliCtx context.CLIContext, queryRoute, delAddr s
 		return nil, err
 	}
 
-	return cliCtx.QueryWithData(
+	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
+	return res, err
 }
 
 // QueryDelegationRewards queries a delegation rewards.
@@ -65,27 +66,30 @@ func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valA
 		return nil, err
 	}
 
-	return cliCtx.QueryWithData(
+	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegationRewards),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
 	)
+	return res, err
 }
 
 // QueryDelegatorValidators returns delegator's list of validators
 // it submitted delegations to.
 func QueryDelegatorValidators(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
-	return cliCtx.QueryWithData(
+	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorValidators),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
+	return res, err
 }
 
 // QueryValidatorCommission returns a validator's commission.
 func QueryValidatorCommission(cliCtx context.CLIContext, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
-	return cliCtx.QueryWithData(
+	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorCommission),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
+	return res, err
 }
 
 // WithdrawAllDelegatorRewards builds a multi-message slice to be used

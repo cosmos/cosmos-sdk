@@ -62,7 +62,7 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(endpoint, bz)
+		res, _, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -95,7 +95,7 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(endpoint, bz)
+		res, _, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -128,7 +128,7 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(endpoint, bz)
+		res, _, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

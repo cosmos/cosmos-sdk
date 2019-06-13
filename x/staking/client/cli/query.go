@@ -66,7 +66,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return err
 			}
 
-			res, err := cliCtx.QueryStore(types.GetValidatorKey(addr), storeName)
+			res, _, err := cliCtx.QueryStore(types.GetValidatorKey(addr), storeName)
 			if err != nil {
 				return err
 			}
@@ -98,7 +98,7 @@ $ %s query staking validators
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			resKVs, err := cliCtx.QuerySubspace(types.ValidatorsKey, storeName)
+			resKVs, _, err := cliCtx.QuerySubspace(types.ValidatorsKey, storeName)
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorUnbondingDelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -184,7 +184,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -233,7 +233,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegation)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -278,7 +278,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorDelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -323,7 +323,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorDelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -373,7 +373,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryUnbondingDelegation)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -413,7 +413,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorUnbondingDelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -468,7 +468,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -513,7 +513,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -546,7 +546,7 @@ $ %s query staking pool
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryStore(types.PoolKey, storeName)
+			res, _, err := cliCtx.QueryStore(types.PoolKey, storeName)
 			if err != nil {
 				return err
 			}
@@ -575,7 +575,7 @@ $ %s query staking params
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", storeName, types.QueryParameters)
-			bz, err := cliCtx.QueryWithData(route, nil)
+			bz, _, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}

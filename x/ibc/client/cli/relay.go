@@ -157,7 +157,8 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
+	res, _, err = context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
+	return res, err
 }
 
 // nolint: unparam

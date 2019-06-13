@@ -127,12 +127,12 @@ func EnrichWithGas(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs [
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error),
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, int64, error),
 	cdc *codec.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
 
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
-	rawRes, err := queryFunc("/app/simulate", txBytes)
+	rawRes, _, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
 		return
 	}

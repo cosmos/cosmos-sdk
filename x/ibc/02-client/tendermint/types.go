@@ -3,7 +3,6 @@ package tendermint
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	"github.com/tendermint/tendermint/types"
@@ -55,13 +54,11 @@ func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState,
 	if cs.Height == uint64(header.Height-1) {
 		nexthash = cs.NextValidatorSet.Hash()
 		if !bytes.Equal(header.ValidatorsHash, nexthash) {
-			fmt.Println(111)
 			return nil, lerr.ErrUnexpectedValidators(header.ValidatorsHash, nexthash)
 		}
 	}
 
 	if !bytes.Equal(header.NextValidatorsHash, header.NextValidatorSet.Hash()) {
-		fmt.Println(header)
 		return nil, lerr.ErrUnexpectedValidators(header.NextValidatorsHash, header.NextValidatorSet.Hash())
 	}
 
@@ -70,7 +67,7 @@ func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState,
 		return nil, err
 	}
 
-	err = cs.NextValidatorSet.VerifyCommit(cs.ChainID, header.Commit.BlockID, header.Height, header.Commit)
+	err = cs.NextValidatorSet.VerifyFutureCommit(header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +84,7 @@ var _ client.Header = Header{}
 type Header struct {
 	// XXX: don't take the entire struct
 	types.SignedHeader
+	ValidatorSet     *types.ValidatorSet
 	NextValidatorSet *types.ValidatorSet
 }
 

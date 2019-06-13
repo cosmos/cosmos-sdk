@@ -2,7 +2,6 @@ package tendermint
 
 import (
 	"bytes"
-	"fmt"
 	"sort"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -91,13 +90,8 @@ func NewMockValidators(num int, power int64) MockValidators {
 		res[i] = NewMockValidator(sdk.NewDec(power))
 	}
 
-	// ddd
-	fmt.Println(333)
-	for _, val := range res {
-		fmt.Println(val)
-	}
+	sort.Sort(res)
 
-	// ddd
 	return res
 }
 
@@ -124,9 +118,10 @@ func (vals MockValidators) TotalPower() sdk.Dec {
 }
 
 func (vals MockValidators) Sign(header tmtypes.Header) tmtypes.SignedHeader {
+
 	precommits := make([]*tmtypes.CommitSig, len(vals))
 	for i, val := range vals {
-		precommits[i] = (&tmtypes.Vote{
+		vote := &tmtypes.Vote{
 			BlockID: tmtypes.BlockID{
 				Hash: header.Hash(),
 			},
@@ -134,8 +129,9 @@ func (vals MockValidators) Sign(header tmtypes.Header) tmtypes.SignedHeader {
 			ValidatorIndex:   i,
 			Height:           header.Height,
 			Type:             tmtypes.PrecommitType,
-		}).CommitSig()
-		val.MockPV.SignVote("", (*tmtypes.Vote)(precommits[i]))
+		}
+		val.MockPV.SignVote(chainid, vote)
+		precommits[i] = vote.CommitSig()
 	}
 
 	return tmtypes.SignedHeader{
@@ -150,13 +146,8 @@ func (vals MockValidators) Sign(header tmtypes.Header) tmtypes.SignedHeader {
 }
 
 // Mutate valset
-func (vals MockValidators) Mutate(majority bool) MockValidators {
-	var num int
-	if majority {
-		num = len(vals) * 2 / 3
-	} else {
-		num = len(vals) * 1 / 6
-	}
+func (vals MockValidators) Mutate() MockValidators {
+	num := len(vals) / 20 // 5% change each block
 
 	res := make(MockValidators, len(vals))
 
@@ -168,15 +159,15 @@ func (vals MockValidators) Mutate(majority bool) MockValidators {
 		res[i] = NewMockValidator(vals[0].Power)
 	}
 
-	// ddd
-	fmt.Println(333)
-	for _, val := range res {
-		fmt.Println(val)
+	sort.Sort(res)
+
+	for i, val := range vals {
+		if val != res[i] {
+			return res
+		}
 	}
 
-	// ddd
-
-	return res
+	panic("not mutated")
 }
 
 func (vals MockValidators) ValidatorSet() *tmtypes.ValidatorSet {
@@ -186,12 +177,5 @@ func (vals MockValidators) ValidatorSet() *tmtypes.ValidatorSet {
 		tmvals[i] = val.Validator()
 	}
 
-	// ddd
-	fmt.Println(333444)
-	for _, val := range tmvals {
-		fmt.Println(val)
-	}
-
-	// ddd
 	return tmtypes.NewValidatorSet(tmvals)
 }

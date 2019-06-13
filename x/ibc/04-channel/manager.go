@@ -44,7 +44,7 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 }
 
 // CONTRACT: connection and counterparty must be filled by the caller
-func (man Manager) object(connid, chanid string) Object {
+func (man Manager) Object(connid, chanid string) Object {
 	key := connid + "/channels/" + chanid
 	return Object{
 		chanid:      chanid,
@@ -74,7 +74,7 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 }
 
 func (man Manager) Create(ctx sdk.Context, connid, chanid string, channel Channel) (obj Object, err error) {
-	obj = man.object(connid, chanid)
+	obj = man.Object(connid, chanid)
 	if obj.exists(ctx) {
 		err = errors.New("channel already exists for the provided id")
 		return
@@ -98,7 +98,7 @@ func (man Manager) Create(ctx sdk.Context, connid, chanid string, channel Channe
 }
 
 func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, err error) {
-	obj = man.object(connid, chanid)
+	obj = man.Object(connid, chanid)
 	if !obj.exists(ctx) {
 		err = errors.New("channel not exists for the provided id")
 		return

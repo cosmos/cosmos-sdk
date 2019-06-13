@@ -24,6 +24,11 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Ke
 	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), cidgen, cdc)
 }
 
+func DummyKeeper() Keeper {
+	base := state.EmptyBase9()
+	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), nil, nil)
+}
+
 type ContextKeyRemoteKVStore struct{}
 
 func newKeeper(protocol state.Base, free state.Base, cidgen client.IDGenerator, cdc *codec.Codec) (k Keeper) {

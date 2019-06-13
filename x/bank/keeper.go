@@ -88,10 +88,25 @@ func (keeper BaseKeeper) DelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
 	}
 
+	moduleAcc := getAccount(ctx, keeper.ak, moduleAccAddr)
+	if moduleAcc == nil {
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
+	}
+
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
+	oldCoins := delegatorAcc.GetCoins()
+
+	_, hasNeg := oldCoins.SafeSub(amt)
+	if hasNeg {
+		return nil, sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+		)
+	}
+
+	// TODO: return error on account.TrackDelegation
 	trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt)
 
 	err := sendCoins(ctx, keeper.ak, delegatorAddr, moduleAccAddr, amt)
@@ -118,10 +133,25 @@ func (keeper BaseKeeper) UndelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
 	}
 
+	moduleAcc := getAccount(ctx, keeper.ak, moduleAccAddr)
+	if moduleAcc == nil {
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
+	}
+
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
+	oldCoins := delegatorAcc.GetCoins()
+
+	_, hasNeg := oldCoins.SafeSub(amt)
+	if hasNeg {
+		return nil, sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+		)
+	}
+
+	// TODO: return error on account.TrackUndelegation
 	trackUndelegation(delegatorAcc, amt)
 
 	err := sendCoins(ctx, keeper.ak, moduleAccAddr, delegatorAddr, amt)

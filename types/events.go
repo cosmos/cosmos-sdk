@@ -29,16 +29,15 @@ func NewEvent(ty string, attrs ...Attribute) Event {
 	e := Event{Type: ty}
 
 	for _, attr := range attrs {
-		e.Attributes = append(e.Attributes, cmn.KVPair{Key: toBytes(attr.Key), Value: toBytes(attr.Value)})
+		e.Attributes = append(e.Attributes, NewAttribute(attr.Key, attr.Value).ToKVPair())
 	}
 
 	return e
 }
 
-// NewAttribute returns a Tendermint key/value pair given a key and a value as
-// strings.
-func NewAttribute(k, v string) cmn.KVPair {
-	return cmn.KVPair{Key: toBytes(k), Value: toBytes(v)}
+// NewAttribute returns a new key/value Attribute object.
+func NewAttribute(k, v string) Attribute {
+	return Attribute{k, v}
 }
 
 // EmptyEvents returns an empty slice of events.
@@ -46,13 +45,20 @@ func EmptyEvents() Events {
 	return make(Events, 0)
 }
 
-func (sa Attribute) String() string {
-	return fmt.Sprintf("%s: %s", sa.Key, sa.Value)
+func (a Attribute) String() string {
+	return fmt.Sprintf("%s: %s", a.Key, a.Value)
+}
+
+// ToKVPair converts an Attribute object into a Tendermint key/value pair.
+func (a Attribute) ToKVPair() cmn.KVPair {
+	return cmn.KVPair{Key: toBytes(a.Key), Value: toBytes(a.Value)}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
-func (e Event) AppendAttributes(attrs ...cmn.KVPair) Event {
-	e.Attributes = append(e.Attributes, attrs...)
+func (e Event) AppendAttributes(attrs ...Attribute) Event {
+	for _, attr := range attrs {
+		e.Attributes = append(e.Attributes, attr.ToKVPair())
+	}
 	return e
 }
 
@@ -96,7 +102,7 @@ type (
 	StringEvent struct {
 		Event
 		// override attributes
-		Attributes []Attribute `json:"attributes,omitempty"`
+		Attributes []Attribute `json:"attributes,omitempty"` // nolint: govet
 	}
 
 	// StringAttributes defines a slice of StringEvents objects.

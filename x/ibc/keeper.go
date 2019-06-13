@@ -7,33 +7,26 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type Keeper struct {
 	client     client.Manager
 	connection connection.Manager
+	channel    channel.Manager
 
 	cdc *codec.Codec
 }
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Keeper {
-	base := mapping.NewBase(cdc, key)
+	base := state.NewBase(cdc, key)
 	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), cidgen, cdc)
 }
 
 type ContextKeyRemoteKVStore struct{}
 
-func newRemoteKeeper(cdc *codec.Codec) Keeper {
-	return newKeeper(
-		mapping.NewBaseWithGetter(cdc, commitment.GetStore),
-		mapping.EmptyBase(), // Will cause panic when trying to access on non-protocol states
-		nil,                 // cidgen should not be used as it is called when a new client is set
-		cdc,
-	)
-}
-
-func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerator, cdc *codec.Codec) (k Keeper) {
+func newKeeper(protocol state.Base, free state.Base, cidgen client.IDGenerator, cdc *codec.Codec) (k Keeper) {
 	k = Keeper{
 		client:     client.NewManager(protocol, free, cidgen),
 		connection: connection.NewManager(protocol, free, k.client),
@@ -43,21 +36,21 @@ func newKeeper(protocol mapping.Base, free mapping.Base, cidgen client.IDGenerat
 	return
 }
 
-func (k Keeper) Exec(ctx sdk.Context,
-	connid string, proofs []commitment.Proof, fullProofs []commitment.FullProof,
-	fn func(sdk.Context, Keeper) error,
+func (k Keeper) ProofExec(ctx sdk.Context,
+	connid string, proofs []commitment.Proof,
+	fn func(sdk.Context) error,
 ) error {
 	root, err := k.root(ctx, connid)
 	if err != nil {
 		return err
 	}
 
-	store, err := commitment.NewStore(root, proofs, fullProofs)
+	store, err := commitment.NewStore(root, proofs)
 	if err != nil {
 		return err
 	}
 
-	return fn(commitment.WithStore(ctx, store), newRemoteKeeper(k.cdc))
+	return fn(commitment.WithStore(ctx, store))
 }
 
 func (k Keeper) root(ctx sdk.Context, connid string) (commitment.Root, error) {

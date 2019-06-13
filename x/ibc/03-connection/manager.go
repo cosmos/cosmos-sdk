@@ -138,6 +138,10 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
+func (obj Object) ClientID() string {
+	return obj.client.ID()
+}
+
 func (obj Object) Client(ctx sdk.Context) client.ConsensusState {
 	return obj.client.Value(ctx)
 }
@@ -208,7 +212,7 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 	return nil
 }
 
-func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+func (nobj NihiloObject) OpenTry(ctx sdk.Context /*expheight uint64,*/, timeoutHeight, nextTimeoutHeight uint64) error {
 
 	obj := Object(nobj)
 	if !obj.state.Transit(ctx, Idle, OpenTry) {
@@ -233,12 +237,14 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	var expected client.ConsensusState
-	obj.self.Get(ctx, expheight, &expected)
-	if !obj.counterparty.client.Is(ctx, expected) {
-		return errors.New("unexpected counterparty client value")
-	}
-
+	// XXX: disabled for now
+	/*
+		var expected client.ConsensusState
+		obj.self.Get(ctx, expheight, &expected)
+		if !obj.counterparty.client.Is(ctx, expected) {
+			return errors.New("unexpected counterparty client value")
+		}
+	*/
 	// CONTRACT: OpenTry() should be called after man.Create(), not man.Query(),
 	// which will ensure
 	// assert(get("connections/{desiredIdentifier}") === null) and
@@ -249,7 +255,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 	return nil
 }
 
-func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
+func (obj Object) OpenAck(ctx sdk.Context /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64) error {
 
 	if !obj.state.Transit(ctx, Init, Open) {
 		return errors.New("ack on non-init connection")
@@ -272,13 +278,14 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
-
-	var expected client.ConsensusState
-	obj.self.Get(ctx, expheight, &expected)
-	if !obj.counterparty.client.Is(ctx, expected) {
-		return errors.New("unexpected counterparty client value")
-	}
-
+	// XXX: disabled
+	/*
+		var expected client.ConsensusState
+		obj.self.Get(ctx, expheight, &expected)
+		if !obj.counterparty.client.Is(ctx, expected) {
+			return errors.New("unexpected counterparty client value")
+		}
+	*/
 	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return nil

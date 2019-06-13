@@ -61,8 +61,7 @@ func (man Manager) object(id string) Object {
 	}
 }
 
-func (man Manager) Create(ctx sdk.Context, cs ConsensusState) (Object, error) {
-	id := man.idgen(ctx, man.idval)
+func (man Manager) Create(ctx sdk.Context, id string, cs ConsensusState) (Object, error) {
 	obj := man.object(id)
 	if obj.exists(ctx) {
 		return Object{}, errors.New("Create client on already existing id")
@@ -112,6 +111,10 @@ func (obj Object) ID() string {
 func (obj Object) Value(ctx sdk.Context) (res ConsensusState) {
 	obj.client.Get(ctx, &res)
 	return
+}
+
+func (obj Object) Frozen(ctx sdk.Context) bool {
+	return obj.freeze.Get(ctx)
 }
 
 func (obj CounterObject) Is(ctx sdk.Context, client ConsensusState) bool {

@@ -14,12 +14,12 @@ import (
 // ICS 02
 
 func (k Keeper) CreateClient(ctx sdk.Context, id string, cstate client.ConsensusState) error {
-	_, err := k.client.Create(ctx, id, cstate)
+	_, err := k.Client.Create(ctx, id, cstate)
 	return err
 }
 
 func (k Keeper) QueryClient(ctx sdk.Context, id string) (client.ConsensusState, error) {
-	obj, err := k.client.Query(ctx, id)
+	obj, err := k.Client.Query(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (k Keeper) QueryClient(ctx sdk.Context, id string) (client.ConsensusState, 
 }
 
 func (k Keeper) QueryClientFrozen(ctx sdk.Context, id string) (bool, error) {
-	obj, err := k.client.Query(ctx, id)
+	obj, err := k.Client.Query(ctx, id)
 	if err != nil {
 		return false, err
 	}
@@ -35,7 +35,7 @@ func (k Keeper) QueryClientFrozen(ctx sdk.Context, id string) (bool, error) {
 }
 
 func (k Keeper) UpdateClient(ctx sdk.Context, id string, header client.Header) error {
-	obj, err := k.client.Query(ctx, id)
+	obj, err := k.Client.Query(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, id string, header client.Header) e
 }
 
 func (k Keeper) DeleteClient(ctx sdk.Context, id string) error {
-	obj, err := k.client.Query(ctx, id)
+	obj, err := k.Client.Query(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (k Keeper) DeleteClient(ctx sdk.Context, id string) error {
 func (k Keeper) OpenConnection(ctx sdk.Context,
 	id, counterpartyID, clientID, counterpartyClientID string,
 ) error {
-	obj, err := k.connection.Create(ctx, id, connection.Connection{
+	obj, err := k.Connection.Create(ctx, id, connection.Connection{
 		Counterparty:       counterpartyID,
 		Client:             clientID,
 		CounterpartyClient: counterpartyClientID,
@@ -73,7 +73,7 @@ func (k Keeper) OpenTryConnection(ctx sdk.Context,
 	timeoutHeight, nextTimeoutHeight uint64,
 	proofs []commitment.Proof,
 ) error {
-	obj, err := k.connection.Create(ctx, id, connection.Connection{
+	obj, err := k.Connection.Create(ctx, id, connection.Connection{
 		Counterparty:       counterpartyID,
 		Client:             clientID,
 		CounterpartyClient: counterpartyClientID,
@@ -91,7 +91,7 @@ func (k Keeper) OpenAckConnection(ctx sdk.Context,
 	timeoutHeight, nextTimeoutHeight uint64,
 	proofs []commitment.Proof,
 ) error {
-	obj, err := k.connection.Query(ctx, id)
+	obj, err := k.Connection.Query(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (k Keeper) OpenConfirmConnection(ctx sdk.Context,
 	timeoutHeight uint64,
 	proofs []commitment.Proof,
 ) error {
-	obj, err := k.connection.Query(ctx, id)
+	obj, err := k.Connection.Query(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (k Keeper) OpenConfirmConnection(ctx sdk.Context,
 */
 
 func (k Keeper) QueryConnection(ctx sdk.Context, id string) (connection.Connection, error) {
-	obj, err := k.connection.Query(ctx, id)
+	obj, err := k.Connection.Query(ctx, id)
 	if err != nil {
 		return connection.Connection{}, err
 	}
@@ -128,7 +128,7 @@ func (k Keeper) QueryConnection(ctx sdk.Context, id string) (connection.Connecti
 func (k Keeper) OpenChannel(ctx sdk.Context,
 	moduleID, connID, id, counterpartyID, counterpartyModuleID string,
 ) error {
-	obj, err := k.channel.Create(ctx, connID, id, channel.Channel{
+	obj, err := k.Channel.Create(ctx, connID, id, channel.Channel{
 		Module:             moduleID,
 		Counterparty:       counterpartyID,
 		CounterpartyModule: counterpartyModuleID,
@@ -143,7 +143,7 @@ func (k Keeper) OpenChannel(ctx sdk.Context,
 func (k Keeper) QueryChannel(ctx sdk.Context,
 	connID, id string,
 ) (channel channel.Channel, err error) {
-	obj, err := k.channel.Query(ctx, connID, id)
+	obj, err := k.Channel.Query(ctx, connID, id)
 	if err != nil {
 		return
 	}
@@ -151,7 +151,7 @@ func (k Keeper) QueryChannel(ctx sdk.Context,
 }
 
 func (k Keeper) Send(ctx sdk.Context, connID, id string, packet channel.Packet) error {
-	obj, err := k.channel.Query(ctx, connID, id)
+	obj, err := k.Channel.Query(ctx, connID, id)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (k Keeper) Send(ctx sdk.Context, connID, id string, packet channel.Packet) 
 }
 
 func (k Keeper) Receive(ctx sdk.Context, connID, id string, packet channel.Packet, proofs []commitment.Proof) error {
-	obj, err := k.channel.Query(ctx, connID, id)
+	obj, err := k.Channel.Query(ctx, connID, id)
 	if err != nil {
 		return err
 	}

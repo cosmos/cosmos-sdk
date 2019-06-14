@@ -53,9 +53,9 @@ func (man Manager) Object(connid, chanid string) Object {
 		nexttimeout: state.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
 
 		// TODO: remove length functionality from state.Indeer(will be handled manually)
-		seqsend: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
-		seqrecv: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
-		packets: state.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), state.Dec),
+		Seqsend: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
+		Seqrecv: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
+		Packets: state.NewIndexer(man.protocol.Prefix([]byte(key+"/Packets/")), state.Dec),
 	}
 }
 
@@ -67,9 +67,9 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 		state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
 		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
 
-		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
-		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
-		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets")), state.Dec),
+		Seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
+		Seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
+		Packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/Packets")), state.Dec),
 	}
 }
 
@@ -170,9 +170,10 @@ type Object struct {
 	state       state.Enum
 	nexttimeout state.Integer
 
-	seqsend state.Integer
-	seqrecv state.Integer
-	packets state.Indexer
+	// TODO: must be unexported
+	Seqsend state.Integer
+	Seqrecv state.Integer
+	Packets state.Indexer
 
 	connection connection.Object
 
@@ -185,9 +186,9 @@ type CounterObject struct {
 	state       commitment.Enum
 	nexttimeout commitment.Integer
 
-	seqsend commitment.Integer
-	seqrecv commitment.Integer
-	packets commitment.Indexer
+	Seqsend commitment.Integer
+	Seqrecv commitment.Integer
+	Packets commitment.Indexer
 
 	connection connection.CounterObject
 }
@@ -227,8 +228,8 @@ func (obj Object) OpenInit(ctx sdk.Context) error {
 		return errors.New("init on non-idle channel")
 	}
 
-	obj.seqsend.Set(ctx, 0)
-	obj.seqrecv.Set(ctx, 0)
+	obj.Seqsend.Set(ctx, 0)
+	obj.Seqrecv.Set(ctx, 0)
 
 	return nil
 }
@@ -269,7 +270,7 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.packets.Set(ctx, obj.seqsend.Incr(ctx), packet)
+	obj.Packets.Set(ctx, obj.Seqsend.Incr(ctx), packet)
 
 	return nil
 }
@@ -289,7 +290,7 @@ func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
 	}
 
 	// XXX: increment should happen before verification, reflect on the spec
-	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
+	if !obj.counterparty.Packets.Value(obj.Seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
 		return errors.New("verification failed")
 	}
 

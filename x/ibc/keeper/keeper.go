@@ -12,9 +12,9 @@ import (
 )
 
 type Keeper struct {
-	client     client.Manager
-	connection connection.Manager
-	channel    channel.Manager
+	Client     client.Manager
+	Connection connection.Manager
+	Channel    channel.Manager
 
 	cdc *codec.Codec
 }
@@ -25,7 +25,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Ke
 }
 
 func DummyKeeper() Keeper {
-	base := state.EmptyBase9()
+	base := state.EmptyBase()
 	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), nil, nil)
 }
 
@@ -33,8 +33,9 @@ type ContextKeyRemoteKVStore struct{}
 
 func newKeeper(protocol state.Base, free state.Base, cidgen client.IDGenerator, cdc *codec.Codec) (k Keeper) {
 	k = Keeper{
-		client:     client.NewManager(protocol, free, cidgen),
-		connection: connection.NewManager(protocol, free, k.client),
+		Client:     client.NewManager(protocol, free, cidgen),
+		Connection: connection.NewManager(protocol, free, k.Client),
+		Channel:    channel.NewManager(protocol, k.Connection),
 		cdc:        cdc,
 	}
 
@@ -59,11 +60,11 @@ func (k Keeper) ProofExec(ctx sdk.Context,
 }
 
 func (k Keeper) root(ctx sdk.Context, connid string) (commitment.Root, error) {
-	conn, err := k.connection.Query(ctx, connid)
+	conn, err := k.Connection.Query(ctx, connid)
 	if err != nil {
 		return nil, err
 	}
-	client, err := k.client.Query(ctx, conn.ClientID())
+	client, err := k.Client.Query(ctx, conn.ClientID())
 	if err != nil {
 		return nil, err
 	}

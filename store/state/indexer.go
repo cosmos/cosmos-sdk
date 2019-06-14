@@ -44,6 +44,9 @@ func EncodeInt(index uint64, enc IntEncoding) (res []byte) {
 }
 
 func DecodeInt(bz []byte, enc IntEncoding) (res uint64, err error) {
+	if bz == nil {
+		return 0, nil
+	}
 	switch enc {
 	case Dec:
 		return strconv.ParseUint(string(bz), 10, 64)

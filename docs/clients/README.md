@@ -16,3 +16,13 @@ Light-clients enable users to interact with your application without having to d
 
 - [Command-Line interface for SDK-based blockchain](./cli.md)
 - [Service provider doc](./service-providers.md)
+
+## Genesis upgrade
+
+If you need to upgrade your node you could export the genesis and migrate it to the new version through this script:
+
+```bash
+go run contrib/export/main.go -v 036 -g genesis_0_34.json -o ~/.gaiad/genesis.json 
+```
+
+The resulting genesis will be importable into the targeted version of the SDK.

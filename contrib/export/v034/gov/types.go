@@ -3,6 +3,7 @@ package gov
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"time"
 )
 
@@ -29,9 +30,9 @@ type VoteWithMetadata struct {
 type Proposal struct {
 	Content `json:"content"` // Proposal content interface
 
-	ProposalID       uint64         `json:"proposal_id"`        //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
+	ProposalID       uint64             `json:"proposal_id"`        //  ID of the proposal
+	Status           gov.ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult        `json:"final_tally_result"` // Result of Tallys
 
 	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
 	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
@@ -54,11 +55,21 @@ type Deposits []Deposit
 type Vote struct {
 	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
 	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
-	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
+	Option     gov.VoteOption `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
 type Votes []Vote
+
 type VoteOption byte
+
+// Vote options
+const (
+	OptionEmpty      VoteOption = 0x00
+	OptionYes        VoteOption = 0x01
+	OptionAbstain    VoteOption = 0x02
+	OptionNo         VoteOption = 0x03
+	OptionNoWithVeto VoteOption = 0x04
+)
 
 // Param around deposits for governance
 type DepositParams struct {

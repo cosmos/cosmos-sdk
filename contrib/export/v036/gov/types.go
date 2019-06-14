@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
 )
@@ -98,4 +99,8 @@ type TallyResult struct {
 	Abstain    sdk.Int `json:"abstain"`
 	No         sdk.Int `json:"no"`
 	NoWithVeto sdk.Int `json:"no_with_veto"`
+}
+
+func RegisterCodec(codec *codec.Codec) {
+	codec.RegisterInterface((*Content)(nil), nil)
 }

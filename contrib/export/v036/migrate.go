@@ -78,6 +78,7 @@ func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	var govState v034gov.GenesisState
 	v034gov.RegisterCodec(cdc)
 	cdc.MustUnmarshalJSON(appState[gov.ModuleName], &govState)
+	v036gov.RegisterCodec(cdc)
 	appState[gov.ModuleName] = cdc.MustMarshalJSON(migrateGovernance(govState))
 
 	// migration below are only sanity check:

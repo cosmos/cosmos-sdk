@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	SlackConfigSep = ","
+	GithubConfigSep = ","
+	SlackConfigSep  = ","
 )
 
 var (
@@ -49,12 +50,17 @@ var (
 	period       string
 	testname     string
 	genesis      string
+	seedsStrRepr string
+	exitOnFail   bool
+	githubConfig string
+	slackConfig  string
+
+	// integration with Slack and Github
+	githubToken  string
+	githubPr     string
 	slackToken   string
 	slackChannel string
 	slackThread  string
-	seedsStrRepr string
-	exitOnFail   bool
-	slackConfig  string
 
 	// logs temporary directory
 	tempdir string
@@ -71,11 +77,12 @@ func init() {
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 	flag.StringVar(&seedOverrideList, "seeds", "", "run the supplied comma-separated list of seeds instead of defaults")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
+	flag.StringVar(&githubConfig, "github", "", "Report results to Github's PR")
 	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-slack token,channel,thread] [package] [blocks] [period] [testname]
+			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-github token,pr-url] [-slack token,channel,thread] [package] [blocks] [period] [testname]
 Run simulations in parallel
 
 `, filepath.Base(os.Args[0]))
@@ -91,10 +98,18 @@ func main() {
 		log.Fatal("wrong number of arguments")
 	}
 
+	if githubConfig != "" {
+		opts := strings.Split(githubConfig, GithubConfigSep)
+		if len(opts) != 2 {
+			log.Fatal("incorrect github config string format")
+		}
+		githubToken, githubPr = opts[0], opts[1]
+	}
+
 	if slackConfig != "" {
 		opts := strings.Split(slackConfig, SlackConfigSep)
 		if len(opts) != 3 {
-			log.Fatal("please don't fuck with slack config format")
+			log.Fatal("incorrect slack config string format")
 		}
 		slackToken, slackChannel, slackThread = opts[0], opts[1], opts[2]
 	}

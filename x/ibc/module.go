@@ -6,10 +6,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 
 type AppModuleBasic struct{}
@@ -21,7 +25,7 @@ func (AppModuleBasic) Name() string {
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	ibc.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
@@ -41,12 +45,12 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd("ibc", cdc)
+	return nil // cli.GetQueryCmd("ibc", cdc)
 }
 
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper ibc.Keeper
 }
 
 func (AppModule) Name() string {
@@ -62,7 +66,7 @@ func (AppModule) Route() string {
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return ibc.NewHandler(am.keeper)
 }
 
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {

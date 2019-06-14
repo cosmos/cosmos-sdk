@@ -30,10 +30,10 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 }
 
 // Query performs a query to a Tendermint node with the provided path.
-// It returns the result and height of the query upon success
-// or an error if the query fails.
-func (ctx CLIContext) Query(path string, data cmn.HexBytes) ([]byte, int64, error) {
-	return ctx.query(path, data)
+// It returns the result and height of the query upon success or an error if
+// the query fails.
+func (ctx CLIContext) Query(path string) ([]byte, int64, error) {
+	return ctx.query(path, nil)
 }
 
 // QueryWithData performs a query to a Tendermint node with the provided path

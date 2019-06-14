@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// AccountWithHeight wraps the embedded Account
-// with the height it was queried at
+// AccountWithHeight wraps the embedded Account with the height it was queried
+// at.
 type AccountWithHeight struct {
 	types.Account
 	Height int64 `json:"height"`

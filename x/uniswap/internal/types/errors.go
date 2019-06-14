@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,8 +38,8 @@ func ErrInvalidBound(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidBound, "bound is not positive")
 }
 
-func ErrInvalidDeadline(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDeadline, "deadline not initialized")
+func ErrInvalidDeadline(codespace sdk.CodespaceType, msgName string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDeadline, fmt.Sprintf("deadline for %s not initialized", msgName))
 }
 
 func ErrInsufficientAmount(codespace sdk.CodespaceType, msg string) sdk.Error {

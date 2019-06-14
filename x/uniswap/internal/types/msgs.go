@@ -70,7 +70,7 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 		return ErrInvalidBound(DefaultCodespace, "")
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace)
+		return ErrInvalidDeadline(DefaultCodespace, "MsgSwapOrder")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -142,7 +142,7 @@ func (msg MsgAddLiquidity) ValidateBasic() sdk.Error {
 		return ErrInvalidBound(DefaultCodespace, "maxmimum coins is not positive")
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace)
+		return ErrInvalidDeadline(DefaultCodespace, "MsgAddLiquidity")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -211,7 +211,7 @@ func (msg MsgRemoveLiquidity) ValidateBasic() sdk.Error {
 		return ErrInvalidBound(DefaultCodespace, "minimum coins is not positive")
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace)
+		return ErrInvalidDeadline(DefaultCodespace, "MsgRemoveLiquidity")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")

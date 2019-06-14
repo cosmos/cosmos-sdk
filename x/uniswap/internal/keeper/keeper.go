@@ -51,7 +51,7 @@ func (keeper Keeper) CreateExchange(ctx sdk.Context, exchangeDenom string) {
 	key := GetExchangeKey(exchangeDenom)
 	bz := store.Get(key)
 	if bz != nil {
-		panic("exchange already exists")
+		panic(fmt.Sprintf("exchange %s already exists", exchangeDenom))
 	}
 
 	store.Set(key, keeper.encode(sdk.ZeroInt()))
@@ -101,7 +101,7 @@ func (keeper Keeper) GetExchange(ctx sdk.Context, denom string) sdk.Int {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(GetExchangeKey(denom))
 	if bz == nil {
-		panic(fmt.Sprintf("exchange for denomination: %s does not exist"), denom)
+		panic(fmt.Sprintf("exchange %s does not exist"), denom)
 	}
 	return keeper.decode(bz)
 }
@@ -112,7 +112,7 @@ func (keeper Keeper) GetFeeParams(ctx sdk.Context) (feeParams types.FeeParams) {
 	return feeParams
 }
 
-func (keeper Keeper) setFeeParams(ctx sdk.Context, feeParams types.FeeParams) {
+func (keeper Keeper) SetFeeParams(ctx sdk.Context, feeParams types.FeeParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyFeeParams, &feeParams)
 }
 

@@ -28,10 +28,16 @@ func NewHandler(k Keeper) sdk.Handler {
 func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result {
 	if msg.IsBuyOrder {
 		inputAmount := k.GetInputAmount(ctx, msg.SwapDenom, msg.Amount)
+		coinSold = sdk.NewCoin(msg.ExchangeDenom, inputAmount)
 
+		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(coinSold))
+		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(msg.Amount))
 	} else {
 		outputAmount := k.GetOutputAmount(ctx, msg.SwapDenom, msg.Amount)
+		coinBought := sdk.NewCoin(msg.ExchangeDenom, outputAmount)
 
+		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(msg.Amount))
+		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(coinBought))
 	}
 
 	return sdk.Result{}
@@ -41,7 +47,7 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 // If the exchange does not exist, it will be created.
 func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.Result {
 	// create exchange if it does not exist
-	coinLiquidity, err := k.GetExchange(ctx, msg.ExchangeDenom)
+	coinLiquidity := k.GetExchange(ctx, msg.ExchangeDenom)
 	if err != nil {
 		k.CreateExchange(ctx, msg.Denom)
 	}
@@ -64,7 +70,7 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 	exchangeCoin := sdk.NewCoin(msg.ExchangeDenom, coinDeposited)
 
 	// transfer deposited liquidity into uniswaps ModuleAccount
-	err := k.SendCoinsAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
+	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
 	if err != nil {
 		return err
 	}
@@ -107,7 +113,7 @@ func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper)
 	exchangeCoin = sdk.NewCoin(msg.ExchangeDenom, coinWithdrawn)
 
 	// transfer withdrawn liquidity from uniswaps ModuleAccount to sender's account
-	err := k.SendCoinsModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
+	err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
 	if err != nil {
 		return err
 	}

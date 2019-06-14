@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,14 +25,13 @@ import (
 )
 
 const (
-	FlagNode1                = "node1"
-	FlagNode2                = "node2"
 	FlagStatePath            = "state"
 	FlagClientID             = "client-id"
 	FlagConnectionID         = "connection-id"
 	FlagChannelID            = "channel-id"
 	FlagCounterpartyID       = "counterparty-id"
 	FlagCounterpartyClientID = "counterparty-client-id"
+	FlagSourceNode           = "source-node"
 )
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -45,6 +43,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcTxCmd.AddCommand(client.PostCommands(
+		GetCmdCreateClient(cdc),
 		GetCmdEstablish(cdc),
 		GetCmdRelay(cdc),
 	)...)
@@ -99,8 +98,7 @@ func GetCmdEstablish(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(cdc).
-				WithNodeURI(viper.GetString(FlagNode1))
+				WithAccountDecoder(cdc)
 
 			msg := ibc.MsgOpenConnection{
 				ConnectionID:         viper.GetString(FlagConnectionID),
@@ -122,6 +120,85 @@ func GetCmdEstablish(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+func GetCmdRelay(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "relay",
+		Short: "relay packets",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			cliCtxSource := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc).
+				WithNodeURI(viper.GetString(FlagSourceNode))
+
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
+
+			log := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+
+			keeper := ibc.DummyKeeper()
+			cdc := cliCtx.Codec
+
+			connid := viper.GetString(FlagConnectionID)
+			chanid := viper.GetString(FlagChannelID)
+
+			obj := keeper.Channel.Object(connid, chanid)
+
+			seqbz, _, err := query(cliCtx, obj.Seqrecv.Key())
+			if err != nil {
+				return err
+			}
+			seq, err := state.DecodeInt(seqbz, state.Dec)
+			if err != nil {
+				return err
+			}
+
+			sentbz, _, err := query(cliCtxSource, obj.Seqsend.Key())
+			if err != nil {
+				return err
+			}
+			sent, err := state.DecodeInt(sentbz, state.Dec)
+			if err != nil {
+				return err
+			}
+
+			if seq == sent {
+				log.Info("No packets detected")
+				return nil
+			}
+
+			log.Info("Relaying packet", "sequence", seq)
+
+			var packet ibc.Packet
+			packetbz, proof, err := query(cliCtxSource, obj.Packets.Value(seq).Key())
+			if err != nil {
+				return err
+			}
+			cdc.MustUnmarshalBinaryBare(packetbz, &packet)
+
+			msg := ibc.MsgReceive{
+				ConnectionID: connid,
+				ChannelID:    chanid,
+				Packet:       packet,
+				Proofs:       []commitment.Proof{proof},
+				Signer:       cliCtx.GetFromAddress(),
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.MarkFlagRequired(FlagConnectionID)
+	cmd.MarkFlagRequired(FlagClientID)
+	cmd.MarkFlagRequired(FlagCounterpartyID)
+	cmd.MarkFlagRequired(FlagCounterpartyClientID)
+
+	return cmd
+}
+
+/*
 // gaiad tx ibc relay
 func GetCmdRelay(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -147,7 +224,7 @@ func GetCmdRelay(cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
-
+*/
 // Copied from client/context/query.go
 func query(ctx context.CLIContext, key []byte) ([]byte, merkle.Proof, error) {
 	node, err := ctx.GetNode()
@@ -176,6 +253,7 @@ func query(ctx context.CLIContext, key []byte) ([]byte, merkle.Proof, error) {
 	}, nil
 }
 
+/*
 func relayLoop(ctx1, ctx2 context.CLIContext, txBldr auth.TxBuilder, connid, chanid string) error {
 	log := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	for {
@@ -241,3 +319,4 @@ func relay(fromCtx, toCtx context.CLIContext, txBldr auth.TxBuilder, log log.Log
 
 	return nil
 }
+*/

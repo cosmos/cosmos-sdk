@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	//	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type MsgCreateClient struct {
@@ -72,6 +72,7 @@ func (msg MsgOpenConnection) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+/*
 type MsgReceive struct {
 	ConnectionID string
 	ChannelID    string
@@ -105,3 +106,4 @@ func (msg MsgReceive) GetSignBytes() []byte {
 func (msg MsgReceive) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
+*/

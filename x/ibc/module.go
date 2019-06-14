@@ -43,3 +43,40 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd("ibc", cdc)
 }
+
+type AppModule struct {
+	AppModuleBasic
+	keeper Keeper
+}
+
+func (AppModule) Name() string {
+	return "ibc"
+}
+
+func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	// noop
+}
+
+func (AppModule) Route() string {
+	return "ibc"
+}
+
+func (am AppModule) NewHandler() sdk.Handler {
+	return NewHandler(am.keeper)
+}
+
+func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	return nil
+}
+
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	return nil
+}
+
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
+	return sdk.EmptyTags()
+}
+
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+	return nil, sdk.EmptyTags()
+}

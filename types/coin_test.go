@@ -48,6 +48,25 @@ func TestIsEqualCoin(t *testing.T) {
 	}
 }
 
+func TestCoinIsValid(t *testing.T) {
+	cases := []struct {
+		coin       Coin
+		expectPass bool
+	}{
+		{Coin{testDenom1, NewInt(-1)}, false},
+		{Coin{testDenom1, NewInt(0)}, false},
+		{Coin{testDenom1, NewInt(1)}, true},
+		{Coin{"Atom", NewInt(1)}, false},
+		{Coin{"a", NewInt(1)}, false},
+		{Coin{"a very long coin denom", NewInt(1)}, false},
+		{Coin{"atOm", NewInt(1)}, false},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+	}
+}
+
 func TestAddCoin(t *testing.T) {
 	cases := []struct {
 		inputOne    Coin

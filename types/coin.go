@@ -51,7 +51,7 @@ func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
-// IsValid asserts that the Coin has a postive amount and the Denom does not contain
+// IsValid asserts that the Coin has a positive amount and the Denom does not contain
 // upper case characters and has a length of 3 ~ 16 characters.
 func (coin Coin) IsValid() bool {
 	if err := validateDenom(coin.Denom); err != nil {

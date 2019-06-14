@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"log"
 	"net/http"
 
@@ -11,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-var errInvalidGasAdjustment = errors.New("invalid gas adjustment")
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
 func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext, br rest.BaseReq, msgs []sdk.Msg) {

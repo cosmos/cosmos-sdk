@@ -15,17 +15,18 @@ func TestMsgSwapOrder(t *testing.T) {
 		msg        MsgSwapOrder
 		expectPass bool
 	}{
-		{"empty swap denomination", NewMsgSwapOrder(emptyDenom, amount, bound, deadline, sender, recipient, true), false},
-		{"empty coin", NewMsgSwapOrder(denom0, sdk.NewCoins(sdk.NewCoin(denom1, zero)), bound, deadline, sender, recipient, true), false},
-		{"no coin", NewMsgSwapOrder(denom0, sdk.Coins{}, bound, deadline, sender, recipient, true), false},
-		{"too many coins", NewMsgSwapOrder(denom0, sdk.NewCoins(coin, sdk.NewCoin(denom2, baseValue)), bound, deadline, sender, recipient, true), false},
-		{"swap and coin denomination are equal", NewMsgSwapOrder(denom0, sdk.NewCoins(sdk.NewCoin(denom0, baseValue)), bound, deadline, sender, recipient, true), false},
-		{"bound is not positive", NewMsgSwapOrder(denom0, amount, zero, deadline, sender, recipient, true), false},
-		{"deadline not initialized", NewMsgSwapOrder(denom0, amount, bound, emptyTime, sender, recipient, true), false},
-		{"no sender", NewMsgSwapOrder(denom0, amount, bound, deadline, emptyAddr, recipient, true), false},
-		{"no recipient", NewMsgSwapOrder(denom0, amount, bound, deadline, sender, emptyAddr, true), false},
-		{"valid MsgSwapOrder", NewMsgSwapOrder(denom0, amount, bound, deadline, sender, recipient, true), true},
-		{"sender and recipient are same", NewMsgSwapOrder(denom0, amount, bound, deadline, sender, sender, true), true},
+		{"no input coin", NewMsgSwapOrder(sdk.Coin{}, output, deadline, sender, recipient, true), false},
+		{"zero input coin", NewMsgSwapOrder(sdk.NewCoin(denom0, zero), output, deadline, sender, recipient, true), false},
+		{"invalid input denom", NewMsgSwapOrder(sdk.NewCoin(emptyDenom, amt), output, deadline, sender, recipient, true), false},
+		{"no output coin", NewMsgSwapOrder(input, sdk.Coin{}, deadline, sender, recipient, false), false},
+		{"zero output coin", NewMsgSwapOrder(input, sdk.NewCoin(denom1, zero), deadline, sender, recipient, true), false},
+		{"invalid output denom", NewMsgSwapOrder(input, sdk.NewCoin(emptyDenom, amt), deadline, sender, recipient, true), false},
+		{"swap and coin denomination are equal", NewMsgSwapOrder(input, sdk.NewCoin(denom0, amt), deadline, sender, recipient, true), false},
+		{"deadline not initialized", NewMsgSwapOrder(input, output, emptyTime, sender, recipient, true), false},
+		{"no sender", NewMsgSwapOrder(input, output, deadline, emptyAddr, recipient, true), false},
+		{"no recipient", NewMsgSwapOrder(input, output, deadline, sender, emptyAddr, true), false},
+		{"valid MsgSwapOrder", NewMsgSwapOrder(input, output, deadline, sender, recipient, true), true},
+		{"sender and recipient are same", NewMsgSwapOrder(input, output, deadline, sender, sender, true), true},
 	}
 
 	for _, tc := range tests {
@@ -47,13 +48,14 @@ func TestMsgAddLiquidity(t *testing.T) {
 		msg        MsgAddLiquidity
 		expectPass bool
 	}{
-		{"invalid withdraw amount", NewMsgAddLiquidity(denom1, zero, one, one, deadline, sender), false},
-		{"empty exchange denom", NewMsgAddLiquidity(emptyDenom, baseValue, one, one, deadline, sender), false},
-		{"invalid minumum liquidity bound", NewMsgAddLiquidity(denom1, baseValue, zero, one, deadline, sender), false},
-		{"invalid maximum coins bound", NewMsgAddLiquidity(denom1, baseValue, one, zero, deadline, sender), false},
-		{"deadline not initialized", NewMsgAddLiquidity(denom1, baseValue, one, one, emptyTime, sender), false},
-		{"empty sender", NewMsgAddLiquidity(denom1, baseValue, one, one, deadline, emptyAddr), false},
-		{"valid MsgAddLiquidity", NewMsgAddLiquidity(denom1, baseValue, one, one, deadline, sender), true},
+		{"no deposit coin", NewMsgAddLiquidity(sdk.Coin{}, amt, one, deadline, sender), false},
+		{"zero deposit coin", NewMsgAddLiquidity(sdk.NewCoin(denom1, zero), amt, one, deadline, sender), false},
+		{"invalid deposit denom", NewMsgAddLiquidity(sdk.NewCoin(emptyDenom, amt), amt, one, deadline, sender), false},
+		{"invalid withdraw amount", NewMsgAddLiquidity(input, zero, one, deadline, sender), false},
+		{"invalid minumum reward bound", NewMsgAddLiquidity(input, amt, zero, deadline, sender), false},
+		{"deadline not initialized", NewMsgAddLiquidity(input, amt, one, emptyTime, sender), false},
+		{"empty sender", NewMsgAddLiquidity(input, amt, one, deadline, emptyAddr), false},
+		{"valid MsgAddLiquidity", NewMsgAddLiquidity(input, amt, one, deadline, sender), true},
 	}
 
 	for _, tc := range tests {
@@ -75,13 +77,14 @@ func TestMsgRemoveLiquidity(t *testing.T) {
 		msg        MsgRemoveLiquidity
 		expectPass bool
 	}{
-		{"invalid deposit amount", NewMsgRemoveLiquidity(denom1, zero, one, one, deadline, sender), false},
-		{"empty exchange denom", NewMsgRemoveLiquidity(emptyDenom, baseValue, one, one, deadline, sender), false},
-		{"invalid minimum native bound", NewMsgRemoveLiquidity(denom1, baseValue, zero, one, deadline, sender), false},
-		{"invalid minumum coins bound", NewMsgRemoveLiquidity(denom1, baseValue, one, zero, deadline, sender), false},
-		{"deadline not initialized", NewMsgRemoveLiquidity(denom1, baseValue, one, one, emptyTime, sender), false},
-		{"empty sender", NewMsgRemoveLiquidity(denom1, baseValue, one, one, deadline, emptyAddr), false},
-		{"valid MsgRemoveLiquidity", NewMsgRemoveLiquidity(denom1, baseValue, one, one, deadline, sender), true},
+		{"no withdraw coin", NewMsgRemoveLiquidity(sdk.Coin{}, amt, one, deadline, sender), false},
+		{"zero withdraw coin", NewMsgRemoveLiquidity(sdk.NewCoin(denom1, zero), amt, one, deadline, sender), false},
+		{"invalid withdraw denom", NewMsgRemoveLiquidity(sdk.NewCoin(emptyDenom, amt), amt, one, deadline, sender), false},
+		{"invalid deposit amount", NewMsgRemoveLiquidity(input, zero, one, deadline, sender), false},
+		{"invalid minimum native bound", NewMsgRemoveLiquidity(input, amt, zero, deadline, sender), false},
+		{"deadline not initialized", NewMsgRemoveLiquidity(input, amt, one, emptyTime, sender), false},
+		{"empty sender", NewMsgRemoveLiquidity(input, amt, one, deadline, emptyAddr), false},
+		{"valid MsgRemoveLiquidity", NewMsgRemoveLiquidity(input, amt, one, deadline, sender), true},
 	}
 
 	for _, tc := range tests {

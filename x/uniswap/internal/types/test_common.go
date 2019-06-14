@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	zero      = sdk.NewInt(0)
-	one       = sdk.NewInt(1)
-	baseValue = sdk.NewInt(100)
+	zero = sdk.NewInt(0)
+	one  = sdk.NewInt(1)
+	amt  = sdk.NewInt(100)
 
 	sender_pk    = ed25519.GenPrivKey().PubKey()
 	recipient_pk = ed25519.GenPrivKey().PubKey()
@@ -19,11 +19,9 @@ var (
 
 	denom0 = "atom"
 	denom1 = "btc"
-	denom2 = "eth"
 
-	coin     = sdk.NewCoin(denom1, sdk.NewInt(1000))
-	amount   = sdk.NewCoins(coin)
-	bound    = sdk.NewInt(100)
+	input    = sdk.NewCoin(denom0, sdk.NewInt(1000))
+	output   = sdk.NewCoin(denom1, sdk.NewInt(500))
 	deadline = time.Now()
 
 	emptyAddr  sdk.AccAddress

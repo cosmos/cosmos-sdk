@@ -26,18 +26,28 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // HandleMsgSwapOrder handler for MsgSwapOrder
 func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result {
-	if msg.IsBuyOrder {
-		inputAmount := k.GetInputAmount(ctx, msg.SwapDenom, msg.Amount)
-		coinSold = sdk.NewCoin(msg.ExchangeDenom, inputAmount)
+	var caclulatedAmount sdk.Int
 
-		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(coinSold))
-		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(msg.Amount))
+	if msg.IsBuyOrder {
+		calculatedAmount := k.GetInputAmount(ctx, msg.SwapDenom, msg.Amount)
+		// ensure the maximum amount sender is willing to sell is less than
+		// the calculated amount
+		if msg.Input.Amount.LT(calculatedAmount) {
+			return types.ErrInvalidBound(DefaultCodespace, "maximum amount (%d) to be sold was exceeded (%d)", msg.Input.Amount, calculatedAmount).Result()
+		}
+		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(sdk.NewCoin(msg.Input.Denom, calculatedAmount)))
+		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(msg.Output))
+
 	} else {
 		outputAmount := k.GetOutputAmount(ctx, msg.SwapDenom, msg.Amount)
-		coinBought := sdk.NewCoin(msg.ExchangeDenom, outputAmount)
+		// ensure the minimum amount the sender is willing to buy is greater than
+		// the calculated amount
+		if msg.Output.Amount.GT(outputAmount) {
+			return sdk.ErrInvalidBound(DefaultCodespace, "minimum amount (%d) to be sold was not met (%d)", msg.Output.Amount, calculatedAmount).Result()
+		}
+		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(msg.Input))
+		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(sdk.NewCoin(msg.Output.Denom, calculatedAmount)))
 
-		k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(msg.Amount))
-		k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, ModuleName, msg.Sender, sdk.NewCoins(coinBought))
 	}
 
 	return sdk.Result{}
@@ -47,7 +57,7 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 // If the exchange does not exist, it will be created.
 func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.Result {
 	// create exchange if it does not exist
-	coinLiquidity := k.GetExchange(ctx, msg.ExchangeDenom)
+	coinLiquidity := k.GetExchange(ctx, msg.Deposit.Denom)
 	if err != nil {
 		k.CreateExchange(ctx, msg.Denom)
 	}
@@ -67,7 +77,7 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 	MintedUNI := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
 	coinDeposited := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
 	nativeCoin := sdk.NewCoin(NativeAsset, msg.DepositAmount)
-	exchangeCoin := sdk.NewCoin(msg.ExchangeDenom, coinDeposited)
+	exchangeCoin := sdk.NewCoin(msg.Deposit.Denom, coinDeposited)
 
 	// transfer deposited liquidity into uniswaps ModuleAccount
 	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
@@ -90,9 +100,9 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 // HandleMsgRemoveLiquidity handler for MsgRemoveLiquidity
 func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper) sdk.Result {
 	// check if exchange exists
-	coinLiquidity, err := k.GetExchange(ctx, msg.ExchangeDenom)
+	coinLiquidity, err := k.GetExchange(ctx, msg.Withdraw.Denom)
 	if err != nil {
-		panic(fmt.Sprintf("error retrieving total liquidity for denomination: %s", msg.ExchangeDenom))
+		panic(fmt.Sprintf("error retrieving total liquidity for denomination: %s", msg.Withdraw.Denom))
 	}
 
 	nativeLiquidity, err := k.GetExchange(ctx, NativeAsset)
@@ -110,7 +120,7 @@ func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper)
 	nativeWithdrawn := msg.WithdrawAmount.Mul(nativeLiquidity).Quo(totalUNI)
 	coinWithdrawn := msg.WithdrawAmount.Mul(coinLiqudity).Quo(totalUNI)
 	nativeCoin := sdk.NewCoin(nativeDenom, nativeWithdrawn)
-	exchangeCoin = sdk.NewCoin(msg.ExchangeDenom, coinWithdrawn)
+	exchangeCoin = sdk.NewCoin(msg.Withdraw.Denom, coinWithdrawn)
 
 	// transfer withdrawn liquidity from uniswaps ModuleAccount to sender's account
 	err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))

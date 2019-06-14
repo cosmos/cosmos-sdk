@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,8 +35,8 @@ func TestParseQueryResponse(t *testing.T) {
 
 func TestCalculateGas(t *testing.T) {
 	cdc := makeCodec()
-	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, int64, error) {
-		return func(string, common.HexBytes) ([]byte, int64, error) {
+	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
+		return func(string, []byte) ([]byte, int64, error) {
 			if wantErr {
 				return nil, 0, errors.New("")
 			}

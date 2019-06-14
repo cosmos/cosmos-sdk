@@ -45,12 +45,19 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return nil // cli.GetQueryCmd("ibc", cdc)
+	return cli.GetQueryCmd("ibc", cdc)
 }
 
 type AppModule struct {
 	AppModuleBasic
 	keeper ibc.Keeper
+}
+
+func NewAppModule(k ibc.Keeper) module.AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         k,
+	}
 }
 
 func (AppModule) Name() string {
@@ -65,8 +72,16 @@ func (AppModule) Route() string {
 	return "ibc"
 }
 
+func (AppModule) QuerierRoute() string {
+	return "ibc"
+}
+
 func (am AppModule) NewHandler() sdk.Handler {
 	return ibc.NewHandler(am.keeper)
+}
+
+func (AppModule) NewQuerierHandler() sdk.Querier {
+	return nil
 }
 
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
@@ -82,5 +97,5 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
 }
 
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return nil, sdk.EmptyTags()
+	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
 }

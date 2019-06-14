@@ -19,9 +19,9 @@ type Keeper struct {
 	cdc *codec.Codec
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, cidgen client.IDGenerator) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	base := state.NewBase(cdc, key)
-	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), cidgen, cdc)
+	return newKeeper(base.Prefix([]byte{0x00}), base.Prefix([]byte{0x01}), client.IntegerIDGenerator, cdc)
 }
 
 func DummyKeeper() Keeper {

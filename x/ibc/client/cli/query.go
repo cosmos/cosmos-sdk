@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 )
 
-func GetQuertyCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcQueryCmd := &cobra.Command{
 		Use:                        "ibc",
 		Short:                      "IBC query subcommands",
@@ -40,8 +40,13 @@ func GetCmdQueryConsensusState(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			height := ctx.Height
-			prevheight := ctx.Height - 1
+			info, err := node.ABCIInfo()
+			if err != nil {
+				return err
+			}
+
+			height := info.Response.LastBlockHeight
+			prevheight := height - 1
 
 			commit, err := node.Commit(&height)
 			if err != nil {
@@ -56,7 +61,7 @@ func GetCmdQueryConsensusState(cdc *codec.Codec) *cobra.Command {
 			state := tendermint.ConsensusState{
 				ChainID:          commit.ChainID,
 				Height:           uint64(commit.Height),
-				Root:             commit.AppHash,
+				Root:             []byte(commit.AppHash),
 				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 			}
 

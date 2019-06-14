@@ -61,9 +61,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			statePath := viper.GetString(FlagStatePath)
-
-			contents, err := ioutil.ReadFile(statePath)
+			contents, err := ioutil.ReadFile(args[0])
 			if err != nil {
 				return err
 			}

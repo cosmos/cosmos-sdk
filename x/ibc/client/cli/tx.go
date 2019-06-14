@@ -3,23 +3,23 @@ package cli
 import (
 	"errors"
 	"io/ioutil"
-	"os"
+	//	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/libs/log"
+	//	"github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	//	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
@@ -45,7 +45,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcTxCmd.AddCommand(client.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdEstablish(cdc),
-		GetCmdRelay(cdc),
+		//		GetCmdRelay(cdc),
 	)...)
 
 	return ibcTxCmd
@@ -120,6 +120,7 @@ func GetCmdEstablish(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+/*
 func GetCmdRelay(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "relay",
@@ -197,7 +198,7 @@ func GetCmdRelay(cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
-
+*/
 /*
 // gaiad tx ibc relay
 func GetCmdRelay(cdc *codec.Codec) *cobra.Command {

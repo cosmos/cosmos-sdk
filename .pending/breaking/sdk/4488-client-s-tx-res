@@ -1,0 +1,1 @@
+#4488 client's tx, rest, and utils sub-packages now live under x/auth/client/

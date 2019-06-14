@@ -1,4 +1,4 @@
-package invariants
+package keeper
 
 import (
 	"errors"

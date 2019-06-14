@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"

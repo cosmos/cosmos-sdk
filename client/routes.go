@@ -9,5 +9,4 @@ import (
 // Register routes
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	RegisterRPCRoutes(cliCtx, r)
-	RegisterTxRoutes(cliCtx, r)
 }

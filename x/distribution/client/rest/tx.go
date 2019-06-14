@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -77,7 +77,7 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
 	}
 }
 
@@ -112,7 +112,7 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -142,7 +142,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -173,7 +173,7 @@ func withdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
 	}
 }
 

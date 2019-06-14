@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )

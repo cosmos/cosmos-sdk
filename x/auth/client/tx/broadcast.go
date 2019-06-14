@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -9,12 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	"io/ioutil"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 )
 
 // BroadcastReq defines a tx broadcasting request.

@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/libs/common"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -127,7 +125,7 @@ func EnrichWithGas(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs [
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, int64, error),
+func CalculateGas(queryFunc func(string, []byte) ([]byte, int64, error),
 	cdc *codec.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
 
 	// run a simulation (via /app/simulate query) to
@@ -275,7 +273,7 @@ func simulateMsgs(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs []
 	if err != nil {
 		return
 	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment())
+	estimated, adjusted, err = CalculateGas(cliCtx.QueryWithData, cliCtx.Codec, txBytes, txBldr.GasAdjustment())
 	return
 }
 

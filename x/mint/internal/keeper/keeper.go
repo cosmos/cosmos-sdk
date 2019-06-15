@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -71,18 +69,9 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 //______________________________________________________________________
 
-// GetMinterAccount returns the mint ModuleAccount
-func (k Keeper) GetMinterAccount(ctx sdk.Context) supply.ModuleAccount {
+// GetMintAccount returns the mint ModuleAccount
+func (k Keeper) GetMintAccount(ctx sdk.Context) supply.ModuleAccount {
 	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
-}
-
-// SetMinterAccount stores the minter account
-func (k Keeper) SetMinterAccount(ctx sdk.Context, macc supply.ModuleAccount) {
-	if macc.Name() != types.ModuleName {
-		panic(fmt.Sprintf("invalid name for minter module account (%s ≠ %s)", macc.Name(), types.ModuleName))
-	}
-
-	k.supplyKeeper.SetModuleAccount(ctx, macc)
 }
 
 //______________________________________________________________________

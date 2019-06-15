@@ -5,11 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// AccountKeeper defines the expected account keeper
-type AccountKeeper interface {
-	GetNextAccountNumber(ctx sdk.Context) uint64
-}
-
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
 	StakingTokenSupply(ctx sdk.Context) sdk.Int

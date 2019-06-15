@@ -84,6 +84,15 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
+	// set module accounts
+	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
+	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+
+	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 	_ = staking.InitGenesis(ctx, sk, accountKeeper, genesis)
 
 	for _, addr := range addrs {

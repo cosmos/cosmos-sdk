@@ -155,7 +155,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.distrKeeper,
-		app.bankKeeper)
+		app.supplyKeeper)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -178,8 +178,8 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper, app.accountKeeper),
-		gov.NewAppModule(app.govKeeper, app.accountKeeper),
-		mint.NewAppModule(app.mintKeeper, app.accountKeeper),
+		gov.NewAppModule(app.govKeeper),
+		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper),
 	)
@@ -208,7 +208,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.supplyKeeper, auth.DefaultSigVerificationGasConsumer))
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -232,6 +232,65 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+
+	// create module accounts
+	// TODO: move to module manager logic
+	feeCollectorAcc := app.accountKeeper.GetAccount(ctx, auth.FeeCollectorAddr)
+	if feeCollectorAcc == nil {
+		feeCollectorAcc = supply.NewModuleHolderAccount(auth.FeeCollectorName)
+	}
+
+	bondedPool := app.stakingKeeper.GetBondedPool(ctx)
+	if bondedPool == nil {
+		bondedPool = supply.NewModuleHolderAccount(staking.BondedTokensName)
+	}
+
+	notBondedPool := app.stakingKeeper.GetNotBondedPool(ctx)
+	if notBondedPool == nil {
+		notBondedPool = supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+	}
+
+	governanceAcc := app.govKeeper.GetGovernanceAccount(ctx)
+	if governanceAcc == nil {
+		governanceAcc = supply.NewModuleHolderAccount(gov.ModuleName)
+	}
+
+	distributionAcc := app.distrKeeper.GetDistributionAccount(ctx)
+	if distributionAcc == nil {
+		distributionAcc = supply.NewModuleHolderAccount(distr.ModuleName)
+	}
+
+	mintAcc := app.mintKeeper.GetMintAccount(ctx)
+	if mintAcc == nil {
+		mintAcc = supply.NewModuleMinterAccount(mint.ModuleName)
+	}
+
+	if err := feeCollectorAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	if err := bondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	if err := notBondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	if err := distributionAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	if err := governanceAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	if err := mintAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+
+	app.accountKeeper.SetAccount(ctx, feeCollectorAcc)
+	app.accountKeeper.SetAccount(ctx, bondedPool)
+	app.accountKeeper.SetAccount(ctx, notBondedPool)
+	app.accountKeeper.SetAccount(ctx, distributionAcc)
+	app.accountKeeper.SetAccount(ctx, governanceAcc)
+	app.accountKeeper.SetAccount(ctx, mintAcc)
+
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, genesisState)

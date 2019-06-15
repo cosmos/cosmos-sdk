@@ -21,7 +21,6 @@ type BankKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetNextAccountNumber(ctx sdk.Context) uint64
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
 }
 

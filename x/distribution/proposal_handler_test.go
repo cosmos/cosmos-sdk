@@ -27,7 +27,7 @@ func testProposal(recipient sdk.AccAddress, amount sdk.Coins) types.CommunityPoo
 }
 
 func TestProposalHandlerPassed(t *testing.T) {
-	ctx, accountKeeper, keeper, _ := CreateTestInputDefault(t, false, 10)
+	ctx, accountKeeper, keeper, _, supplyKeeper := CreateTestInputDefault(t, false, 10)
 	recipient := delAddr1
 
 	// add coins to the module account
@@ -35,7 +35,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	err := macc.SetCoins(macc.GetCoins().Add(amount))
 	require.NoError(t, err)
 
-	keeper.SetDistributionAccount(ctx, macc)
+	supplyKeeper.SetModuleAccount(ctx, macc)
 
 	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
 	require.True(t, account.GetCoins().IsZero())
@@ -52,7 +52,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 }
 
 func TestProposalHandlerFailed(t *testing.T) {
-	ctx, accountKeeper, keeper, _ := CreateTestInputDefault(t, false, 10)
+	ctx, accountKeeper, keeper, _, _ := CreateTestInputDefault(t, false, 10)
 	recipient := delAddr1
 
 	account := accountKeeper.NewAccountWithAddress(ctx, recipient)

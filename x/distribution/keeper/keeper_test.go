@@ -9,7 +9,7 @@ import (
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInputDefault(t, false, 1000)
+	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
 	keeper.SetWithdrawAddrEnabled(ctx, false)
 
@@ -23,7 +23,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
-	ctx, ak, keeper, _ := CreateTestInputDefault(t, false, 1000)
+	ctx, ak, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),
@@ -36,7 +36,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewCoin("mytoken", sdk.NewInt(2)),
 		sdk.NewCoin("stake", sdk.NewInt(2)),
 	))
-	keeper.SetDistributionAccount(ctx, distrAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
@@ -71,7 +71,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInputDefault(t, false, 1000)
+	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),

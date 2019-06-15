@@ -603,7 +603,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			authsim.SimulateDeductFee(app.accountKeeper),
+			authsim.SimulateDeductFee(app.accountKeeper, app.supplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

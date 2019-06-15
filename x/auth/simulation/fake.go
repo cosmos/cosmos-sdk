@@ -9,21 +9,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateDeductFee
-func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
+func SimulateDeductFee(ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
-		stored := m.GetAccount(ctx, account.Address)
+		stored := ak.GetAccount(ctx, account.Address)
 		initCoins := stored.GetCoins()
 		opMsg = simulation.NewOperationMsgBasic(auth.ModuleName, "deduct_fee", "", false, nil)
 
-		feeCollector := m.GetAccount(ctx, auth.FeeCollectorAddr)
+		feeCollector := ak.GetAccount(ctx, auth.FeeCollectorAddr)
 		if feeCollector == nil {
 			panic(fmt.Errorf("fee collector account hasn't been set"))
 		}
@@ -49,22 +50,15 @@ func SimulateDeductFee(m auth.AccountKeeper) simulation.Operation {
 		}
 
 		// get the new account balance
-		newCoins, hasNeg := initCoins.SafeSub(fees)
+		_, hasNeg := initCoins.SafeSub(fees)
 		if hasNeg {
 			return opMsg, nil, nil
 		}
 
-		if err := stored.SetCoins(newCoins); err != nil {
-			panic(err)
-		}
-
-		err = feeCollector.SetCoins(feeCollector.GetCoins().Add(fees))
+		err = supplyKeeper.SendCoinsFromAccountToModule(ctx, stored.GetAddress(), types.FeeCollectorName, fees)
 		if err != nil {
 			panic(err)
 		}
-
-		m.SetAccount(ctx, stored)
-		m.SetAccount(ctx, feeCollector)
 
 		opMsg.OK = true
 		return opMsg, nil, nil

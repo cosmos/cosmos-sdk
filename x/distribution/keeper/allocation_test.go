@@ -12,7 +12,7 @@ import (
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -39,7 +39,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 }
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
-	ctx, ak, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -110,7 +110,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	communityTax := sdk.NewDec(0)
-	ctx, ak, _, k, sk, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
+	ctx, ak, _, k, sk, _, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 10% commission

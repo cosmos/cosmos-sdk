@@ -43,7 +43,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(stakingKeeper))
-	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper))
+	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper, supplyKeeper))
 
 	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keySupply, keySlashing))
 
@@ -62,8 +62,15 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		// set module accounts
+		notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
+		bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
+
+		supplyKeeper.SetModuleAccount(ctx, bondPool)
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
 		validators := staking.InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)

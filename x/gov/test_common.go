@@ -107,19 +107,19 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 		// set module accounts
-		moduleAcc := supply.NewModuleHolderAccount(ModuleName)
+		govAcc := supply.NewModuleHolderAccount(ModuleName)
 		notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
 		bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
 
-		keeper.SetGovernanceAccount(ctx, moduleAcc)
-		stakingKeeper.SetBondedPool(ctx, bondPool)
-		stakingKeeper.SetNotBondedPool(ctx, notBondedPool)
+		supplyKeeper.SetModuleAccount(ctx, govAcc)
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+		supplyKeeper.SetModuleAccount(ctx, bondPool)
 
 		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, stakingGenesis)
 		if genState.IsEmpty() {
-			InitGenesis(ctx, keeper, mapp.AccountKeeper, DefaultGenesisState())
+			InitGenesis(ctx, keeper, DefaultGenesisState())
 		} else {
-			InitGenesis(ctx, keeper, mapp.AccountKeeper, genState)
+			InitGenesis(ctx, keeper, genState)
 		}
 		return abci.ResponseInitChain{
 			Validators: validators,

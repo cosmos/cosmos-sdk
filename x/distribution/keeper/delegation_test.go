@@ -10,7 +10,7 @@ import (
 )
 
 func TestCalculateRewardsBasic(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -63,7 +63,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -126,7 +126,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -200,7 +200,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -263,13 +263,13 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	balancePower := int64(1000)
 	balanceTokens := sdk.TokensFromTendermintPower(balancePower)
-	ctx, ak, k, sk := CreateTestInputDefault(t, false, balancePower)
+	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, balancePower)
 	sh := staking.NewHandler(sk)
 
 	// set module account coins
 	distrAcc := k.GetDistributionAccount(ctx)
 	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens)))
-	k.SetDistributionAccount(ctx, distrAcc)
+	k.supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
 	power := int64(100)
@@ -334,7 +334,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -401,7 +401,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -476,14 +476,14 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
-	ctx, _, k, sk := CreateTestInputDefault(t, false, 1000)
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 	initial := int64(20)
 
 	// set module account coins
 	distrAcc := k.GetDistributionAccount(ctx)
 	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))))
-	k.SetDistributionAccount(ctx, distrAcc)
+	k.supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	totalRewards := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial*2))}
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}

@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 const chainID = ""
@@ -62,9 +63,9 @@ func NewApp() *App {
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
+	// define keepers
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
 
-	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
@@ -72,10 +73,12 @@ func NewApp() *App {
 		auth.ProtoBaseAccount,
 	)
 
+	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
+
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
 
 	// Not sealing for custom extension
 
@@ -109,6 +112,9 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 // InitChainer performs custom logic for initialization.
 // nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
+	feeCollectorAcc := supplytypes.NewModuleHolderAccount(auth.FeeCollectorName)
+	app.AccountKeeper.SetAccount(ctx, feeCollectorAcc)
+
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, genacc.GetAddress())

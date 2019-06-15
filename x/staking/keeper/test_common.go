@@ -136,16 +136,16 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
+	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
 	bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)
 
-	accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	keeper.SetBondedPool(ctx, bondPool)
-	keeper.SetNotBondedPool(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {

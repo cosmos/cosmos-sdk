@@ -93,15 +93,13 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
-	ak     AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-		ak:             ak,
 	}
 }
 
@@ -139,7 +137,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.ak, genesisState)
+	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

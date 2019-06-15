@@ -6,11 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// AccountKeeper defines the expected account keeper
-type AccountKeeper interface {
-	GetNextAccountNumber(ctx sdk.Context) uint64
-}
-
 // SupplyKeeper defines the supply Keeper for module accounts
 type SupplyKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins

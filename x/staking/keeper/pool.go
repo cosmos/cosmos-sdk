@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -18,24 +16,6 @@ func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccount)
 func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccount) {
 	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.NotBondedTokensName)
 	return notBondedPool
-}
-
-// SetBondedPool sets the bonded tokens pool account
-func (k Keeper) SetBondedPool(ctx sdk.Context, bondedPool supply.ModuleAccount) {
-	// safety check
-	if bondedPool.Name() != types.BondedTokensName {
-		panic(fmt.Sprintf("invalid name for bonded pool (%s ≠ %s)", types.BondedTokensName, bondedPool.Name()))
-	}
-	k.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-}
-
-// SetNotBondedPool sets the not bonded tokens pool account
-func (k Keeper) SetNotBondedPool(ctx sdk.Context, notBondedPool supply.ModuleAccount) {
-	// safety check
-	if notBondedPool.Name() != types.NotBondedTokensName {
-		panic(fmt.Sprintf("invalid name for unbonded pool (%s ≠ %s)", types.NotBondedTokensName, notBondedPool.Name()))
-	}
-	k.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking

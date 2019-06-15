@@ -75,15 +75,6 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccount 
 	return keeper.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
 }
 
-// SetGovernanceAccount stores the governance module account
-func (keeper Keeper) SetGovernanceAccount(ctx sdk.Context, macc supply.ModuleAccount) {
-	if macc.Name() != types.ModuleName {
-		panic(fmt.Sprintf("invalid name for governance module account (%s ≠ %s)", macc.Name(), types.ModuleName))
-	}
-
-	keeper.supplyKeeper.SetModuleAccount(ctx, macc)
-}
-
 // Params
 
 // Returns the current DepositParams from the global param store

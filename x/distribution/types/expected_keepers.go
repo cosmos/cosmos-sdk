@@ -7,12 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// AccountKeeper defines the expected account keeper
-type AccountKeeper interface {
-	GetNextAccountNumber(ctx sdk.Context) uint64
-}
-
-// StakingKeeper expected staking keeper
+// StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
@@ -50,7 +45,7 @@ type StakingKeeper interface {
 	GetAllSDKDelegations(ctx sdk.Context) []staking.Delegation
 }
 
-// StakingHooks event hooks for staking validator object
+// StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
 	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) // Must be called when a validator is deleted
@@ -61,7 +56,7 @@ type StakingHooks interface {
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
 }
 
-// SupplyKeeper defines the supply Keeper for pool accounts
+// SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
 	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
 	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
@@ -69,5 +64,4 @@ type SupplyKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }

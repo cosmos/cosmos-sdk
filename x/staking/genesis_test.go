@@ -70,12 +70,6 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	ctx, accKeeper, keeper := keep.CreateTestInput(t, false, 1000)
 
-	// Assigning 2 to the first 100 vals, 1 to the rest
-	bondPool := keeper.GetBondedPool(ctx)
-	bondedTokens := sdk.TokensFromTendermintPower(int64(200 + (size - 100)))
-	bondPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), bondedTokens)))
-	keeper.SetBondedPool(ctx, bondPool)
-
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
 	validators := make([]Validator, size)

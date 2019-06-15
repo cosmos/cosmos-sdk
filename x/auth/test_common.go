@@ -3,6 +3,7 @@ package auth
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -17,6 +18,7 @@ type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
 	ak  AccountKeeper
+	sk  types.SupplyKeeper
 }
 
 func setupTestInput() testInput {
@@ -38,6 +40,8 @@ func setupTestInput() testInput {
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, types.DefaultParamspace)
 	ak := NewAccountKeeper(cdc, authCapKey, ps, types.ProtoBaseAccount)
+	sk := NewDummySupplyKeeper(ak)
+
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
@@ -45,5 +49,45 @@ func setupTestInput() testInput {
 
 	ak.SetParams(ctx, types.DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak}
+	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}
+}
+
+// DummySupplyKeeper defines a supply keeper used only for testing to avoid
+// circle dependencies
+type DummySupplyKeeper struct {
+	ak AccountKeeper
+}
+
+// NewDummySupplyKeeper creates a DummySupplyKeeper instance
+func NewDummySupplyKeeper(ak AccountKeeper) DummySupplyKeeper {
+	return DummySupplyKeeper{ak}
+}
+
+// SendCoinsFromAccountToModule for the dummy supply keeper
+func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
+
+	moduleAddr := sdk.AccAddress(crypto.AddressHash([]byte(recipientModule)))
+
+	fromAcc := sk.ak.GetAccount(ctx, fromAddr)
+	moduleAcc := sk.ak.GetAccount(ctx, moduleAddr)
+
+	newFromCoins, hasNeg := fromAcc.GetCoins().SafeSub(amt)
+	if hasNeg {
+		return sdk.ErrInsufficientCoins(fromAcc.GetCoins().String())
+	}
+
+	newToCoins := moduleAcc.GetCoins().Add(amt)
+
+	if err := fromAcc.SetCoins(newFromCoins); err != nil {
+		return sdk.ErrInternal(err.Error())
+	}
+
+	if err := moduleAcc.SetCoins(newToCoins); err != nil {
+		return sdk.ErrInternal(err.Error())
+	}
+
+	sk.ak.SetAccount(ctx, fromAcc)
+	sk.ak.SetAccount(ctx, moduleAcc)
+
+	return nil
 }

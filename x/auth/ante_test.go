@@ -49,7 +49,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -97,7 +97,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -154,7 +154,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(0)
 
 	// keys and addresses
@@ -210,7 +210,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -288,7 +288,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -327,7 +327,7 @@ func TestAnteHandlerFees(t *testing.T) {
 func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -367,7 +367,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -417,7 +417,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -494,7 +494,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -690,7 +690,7 @@ func TestCountSubkeys(t *testing.T) {
 func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	input := setupTestInput()
-	anteHandler := NewAnteHandler(input.ak, DefaultSigVerificationGasConsumer)
+	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
 	// keys and addresses
@@ -779,7 +779,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := NewAnteHandler(input.ak, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
+	anteHandler := NewAnteHandler(input.ak, input.sk, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

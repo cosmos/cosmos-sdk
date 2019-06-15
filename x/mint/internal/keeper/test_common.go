@@ -65,15 +65,15 @@ func newTestInput(t *testing.T) testInput {
 	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper)
 
 	// set module accounts
-	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
-	moduleAcc := supply.NewModuleMinterAccount(types.ModuleName)
+	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
+	minterAcc := supply.NewModuleMinterAccount(types.ModuleName)
 	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
 	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
 
-	accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	mintKeeper.SetMinterAccount(ctx, moduleAcc)
-	stakingKeeper.SetNotBondedPool(ctx, notBondedPool)
-	stakingKeeper.SetBondedPool(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	supplyKeeper.SetModuleAccount(ctx, minterAcc)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
 
 	mintKeeper.SetParams(ctx, types.DefaultParams())
 	mintKeeper.SetMinter(ctx, types.DefaultInitialMinter())

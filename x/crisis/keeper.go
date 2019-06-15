@@ -17,20 +17,20 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper DistrKeeper
-	bankKeeper  BankKeeper
+	distrKeeper  types.DistributionKeeper
+	supplyKeeper types.SupplyKeeper
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper DistrKeeper, bankKeeper BankKeeper) Keeper {
+	distrKeeper types.DistributionKeeper, supplyKeeper types.SupplyKeeper) Keeper {
 
 	return Keeper{
 		routes:         []types.InvarRoute{},
 		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod: invCheckPeriod,
 		distrKeeper:    distrKeeper,
-		bankKeeper:     bankKeeper,
+		supplyKeeper:   supplyKeeper,
 	}
 }
 

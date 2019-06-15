@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 const (
@@ -93,7 +92,7 @@ func ValidateGenesis(data GenesisState) error {
 
 // InitGenesis - store genesis parameters
 
-func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 
 	k.setProposalID(ctx, data.StartingProposalID)
 	k.setDepositParams(ctx, data.DepositParams)
@@ -103,17 +102,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState)
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
 	if moduleAcc == nil {
-		moduleAcc = supply.NewModuleHolderAccount(ModuleName)
-		if err := moduleAcc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
-
-	var totalDeposits sdk.Coins
 
 	for _, deposit := range data.Deposits {
 		k.setDeposit(ctx, deposit.ProposalID, deposit.Depositor, deposit)
-		totalDeposits = totalDeposits.Add(deposit.Amount)
 	}
 
 	for _, vote := range data.Votes {
@@ -128,14 +121,6 @@ func InitGenesis(ctx sdk.Context, k Keeper, ak AccountKeeper, data GenesisState)
 			k.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, proposal)
-	}
-
-	// add coins if not provided on genesis
-	if moduleAcc.GetCoins().IsZero() {
-		if err := moduleAcc.SetCoins(totalDeposits); err != nil {
-			panic(err)
-		}
-		k.SetGovernanceAccount(ctx, moduleAcc)
 	}
 }
 

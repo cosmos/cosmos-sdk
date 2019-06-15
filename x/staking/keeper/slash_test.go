@@ -17,7 +17,7 @@ import (
 func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) {
 
 	// setup
-	ctx, _, keeper := CreateTestInput(t, false, power)
+	ctx, _, keeper:= CreateTestInput(t, false, power)
 	params := keeper.GetParams(ctx)
 	numVals := int64(3)
 	amt := sdk.TokensFromTendermintPower(power)
@@ -26,7 +26,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	bondedPool := keeper.GetBondedPool(ctx)
 	err := bondedPool.SetCoins(bondedCoins)
 	require.NoError(t, err)
-	keeper.SetBondedPool(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// add numVals validators
 	for i := int64(0); i < numVals; i++ {
@@ -119,7 +119,7 @@ func TestSlashRedelegation(t *testing.T) {
 	bondedPool := keeper.GetBondedPool(ctx)
 	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(startCoins))
 	require.NoError(t, err)
-	keeper.SetBondedPool(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
@@ -373,7 +373,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
 	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(rdCoins))
 	require.NoError(t, err)
-	keeper.SetBondedPool(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	oldBonded := bondedPool.GetCoins().AmountOf(bondDenom)
 	oldNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
@@ -521,8 +521,8 @@ func TestSlashBoth(t *testing.T) {
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(bondedCoins)))
 	require.NoError(t, bondedPool.SetCoins(notBondedPool.GetCoins().Add(notBondedCoins)))
-	keeper.SetBondedPool(ctx, bondedPool)
-	keeper.SetNotBondedPool(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	oldBonded := bondedPool.GetCoins().AmountOf(bondDenom)
 	oldNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)

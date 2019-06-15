@@ -76,18 +76,18 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
-	return ctx, ak, dk, sk
+	ctx, ak, _, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	return ctx, ak, dk, sk, supplyKeeper
 }
 
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
-	Keeper, staking.Keeper, params.Keeper) {
+	Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper) {
 
 	initTokens := sdk.TokensFromTendermintPower(initPower)
 
@@ -137,15 +137,15 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create module accounts
-	feeCollectorAcc := accountKeeper.NewAccountWithAddress(ctx, auth.FeeCollectorAddr)
+	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
 	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
 	distrAcc := supply.NewModuleHolderAccount(types.ModuleName)
 
-	accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	sk.SetNotBondedPool(ctx, notBondedPool)
-	sk.SetBondedPool(ctx, bondPool)
-	keeper.SetDistributionAccount(ctx, distrAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())
@@ -156,5 +156,5 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountKeeper, bankKeeper, keeper, sk, pk
+	return ctx, accountKeeper, bankKeeper, keeper, sk, pk, supplyKeeper
 }

@@ -140,7 +140,7 @@ func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 	supply.RegisterCodec(cdc)
-	ctx, _, keeper, sk := CreateTestInputDefault(t, false, 100)
+	ctx, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
 	querier := NewQuerier(keeper)
 
 	// test param queries

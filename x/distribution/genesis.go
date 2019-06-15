@@ -1,27 +1,26 @@
 package distribution
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data types.GenesisState) {
-	var moduleHoldings sdk.DecCoins
-
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
 	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
 	keeper.SetWithdrawAddrEnabled(ctx, data.WithdrawAddrEnabled)
+
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
 	}
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
 		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
-		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
@@ -39,23 +38,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data ty
 		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Event)
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool)
-	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
-
-	// check if the module account exists and create it if not
+	// check if the module account exists
 	moduleAcc := keeper.GetDistributionAccount(ctx)
 	if moduleAcc == nil {
-		moduleAcc = supply.NewModuleHolderAccount(types.ModuleName)
-		if err := moduleAcc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-	}
-
-	if moduleAcc.GetCoins().IsZero() {
-		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
-			panic(err)
-		}
-		keeper.SetDistributionAccount(ctx, moduleAcc)
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 }
 

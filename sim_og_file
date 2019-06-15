@@ -1,0 +1,32 @@
+Allocating 4 workers...
+[W1] Worker is up and running
+[W0] Worker is up and running
+[W2] Worker is up and running
+[W3] Worker is up and running
+[W0] Spawned simulation with pid 29466 [seed=1 stdout=/tmp/072305267/app-simulation-seed-1-date-06-15-2019_10:01:50.600508046.stdout stderr=/tmp/072305267/app-simulation-seed-1-date-06-15-2019_10:01:50.600202281.stderr]
+[W1] Spawned simulation with pid 29465 [seed=0 stdout=/tmp/072305267/app-simulation-seed-0-date-06-15-2019_10:01:50.600339519.stdout stderr=/tmp/072305267/app-simulation-seed-0-date-06-15-2019_10:01:50.600183215.stderr]
+[W3] Spawned simulation with pid 29467 [seed=3 stdout=/tmp/072305267/app-simulation-seed-3-date-06-15-2019_10:01:50.600488980.stdout stderr=/tmp/072305267/app-simulation-seed-3-date-06-15-2019_10:01:50.600270097.stderr]
+[W2] Spawned simulation with pid 29468 [seed=2 stdout=/tmp/072305267/app-simulation-seed-2-date-06-15-2019_10:01:50.600666027.stdout stderr=/tmp/072305267/app-simulation-seed-2-date-06-15-2019_10:01:50.600254173.stderr]
+[W3] Seed 3: OK
+[W3] no seeds left, shutting down
+[W0] Seed 1: OK
+[W0] no seeds left, shutting down
+[W2] Seed 2: OK
+[W2] no seeds left, shutting down
+[W1] Seed 0: OK
+[W1] no seeds left, shutting down
+Allocating 4 workers...
+[W2] Worker is up and running
+[W3] Worker is up and running
+[W0] Worker is up and running
+[W1] Worker is up and running
+[W1] Spawned simulation with pid 30440 [seed=3 stdout=/tmp/491694325/app-simulation-seed-3-date-06-15-2019_10:07:11.426841175.stdout stderr=/tmp/491694325/app-simulation-seed-3-date-06-15-2019_10:07:11.426762394.stderr]
+[W2] Spawned simulation with pid 30441 [seed=0 stdout=/tmp/491694325/app-simulation-seed-0-date-06-15-2019_10:07:11.426795778.stdout stderr=/tmp/491694325/app-simulation-seed-0-date-06-15-2019_10:07:11.426577943.stderr]
+[W3] Spawned simulation with pid 30442 [seed=1 stdout=/tmp/491694325/app-simulation-seed-1-date-06-15-2019_10:07:11.426980508.stdout stderr=/tmp/491694325/app-simulation-seed-1-date-06-15-2019_10:07:11.426647505.stderr]
+[W0] Spawned simulation with pid 30443 [seed=2 stdout=/tmp/491694325/app-simulation-seed-2-date-06-15-2019_10:07:11.427014870.stdout stderr=/tmp/491694325/app-simulation-seed-2-date-06-15-2019_10:07:11.426679911.stderr]
+[W1] Seed 3: OK
+[W1] no seeds left, shutting down
+[W3] Seed 1: OK
+[W3] no seeds left, shutting down
+Draining seeds queue...
+Kill all remaining processes...

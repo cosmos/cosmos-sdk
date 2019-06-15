@@ -22,6 +22,7 @@ const (
 // NewQuerier is the module level router for state queries
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+		fmt.Println("querier", path)
 		switch path[0] {
 		case QuerySupply:
 			return querySupply(ctx, path[1:], req, k)
@@ -58,6 +59,7 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 }
 
 func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	fmt.Println("queryOwnerByDenom")
 	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -76,14 +78,15 @@ func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k 
 }
 
 func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	fmt.Println("queryOwner")
 	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
-
+	fmt.Println("params.Owner", params.Owner)
 	owner := k.GetOwner(ctx, params.Owner)
-
+	fmt.Println("owner", owner)
 	bz := types.ModuleCdc.MustMarshalJSON(owner)
 	return bz, nil
 }

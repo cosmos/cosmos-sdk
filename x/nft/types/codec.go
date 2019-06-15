@@ -14,6 +14,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&Owner{}, "cosmos-sdk/Owner", nil)
 	cdc.RegisterConcrete(MsgTransferNFT{}, "cosmos-sdk/MsgTransferNFT", nil)
 	cdc.RegisterConcrete(MsgEditNFTMetadata{}, "cosmos-sdk/MsgEditNFTMetadata", nil)
+	cdc.RegisterConcrete(MsgMintNFT{}, "cosmos-sdk/MsgMintNFT", nil)
+	cdc.RegisterConcrete(MsgBurnNFT{}, "cosmos-sdk/MsgBurnNFT", nil)
 }
 
 // ModuleCdc generic sealed codec to be used throughout this module

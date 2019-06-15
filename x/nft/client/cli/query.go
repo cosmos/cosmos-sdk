@@ -62,6 +62,7 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Println("route?", fmt.Sprintf("custom/%s/owner", queryRoute))
 
 			var res []byte
 			if denom == "" {
@@ -75,6 +76,8 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			var out types.Owner
+			fmt.Println("out1", out)
+			fmt.Println("res", res)
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

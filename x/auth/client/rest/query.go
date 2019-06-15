@@ -17,8 +17,8 @@ import (
 // AccountWithHeight wraps the embedded Account with the height it was queried
 // at.
 type AccountWithHeight struct {
-	types.Account
-	Height int64 `json:"height"`
+	types.Account `json:"account"`
+	Height        int64 `json:"height"`
 }
 
 // query accountREST Handler

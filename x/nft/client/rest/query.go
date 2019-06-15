@@ -13,8 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
-	cdc *codec.Codec, queryRoute string) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, queryRoute string) {
 
 	// Get the total supply of a collection
 	r.HandleFunc(

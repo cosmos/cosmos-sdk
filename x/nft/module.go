@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/nft/client"
+	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
 )
 
 var (
@@ -53,17 +53,17 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+	rest.RegisterRoutes(ctx, rtr, ModuleCdc, RouterKey)
 }
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(StoreKey, cdc)
+	return client.NewModuleClient(StoreKey, cdc).GetTxCmd()
 }
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+	return client.NewModuleClient(StoreKey, cdc).GetQueryCmd()
 }
 
 //___________________________

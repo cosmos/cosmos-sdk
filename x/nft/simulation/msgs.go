@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateMsgTransferNFT
+// SimulateMsgTransferNFT Simulates the transfer of an NFT
 func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,

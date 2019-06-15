@@ -328,7 +328,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(obj.client.Value(ctx).GetHeight() > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -412,7 +412,7 @@ func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) CloseTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(obj.client.Value(ctx).GetHeight() > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

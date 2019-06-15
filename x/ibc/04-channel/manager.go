@@ -266,7 +266,7 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("send on non-open connection")
 	}
 
-	if uint64(obj.connection.Client(ctx).GetHeight()) >= packet.Timeout() {
+	if obj.connection.Client(ctx).GetHeight() >= packet.Timeout() {
 		return errors.New("timeout height higher than the latest known")
 	}
 

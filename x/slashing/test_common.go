@@ -93,7 +93,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	supplyKeeper.SetModuleAccount(ctx, bondPool)
 	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	_ = staking.InitGenesis(ctx, sk, accountKeeper, genesis)
+	_ = staking.InitGenesis(ctx, sk, accountKeeper, supplyKeeper, genesis)
 
 	for _, addr := range addrs {
 		_, err = ck.AddCoins(ctx, sdk.AccAddress(addr), initCoins)

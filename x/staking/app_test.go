@@ -63,7 +63,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 		stakingGenesis := DefaultGenesisState()
-		validators := InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
+		validators := InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

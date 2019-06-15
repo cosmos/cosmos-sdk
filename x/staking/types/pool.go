@@ -9,9 +9,9 @@ import (
 
 // names used as root for pool module accounts:
 //
-// - NotBondedPool -> "NotBondedTokens"
+// - NotBondedPool -> "NotBondedTokensPool"
 //
-// - BondedPool -> "BondedTokens"
+// - BondedPool -> "BondedTokensPool"
 const (
 	NotBondedTokensName = "NotBondedTokensPool"
 	BondedTokensName    = "BondedTokensPool"

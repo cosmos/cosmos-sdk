@@ -92,7 +92,7 @@ func ValidateGenesis(data GenesisState) error {
 
 // InitGenesis - store genesis parameters
 
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper SupplyKeeper, data GenesisState) {
 
 	k.setProposalID(ctx, data.StartingProposalID)
 	k.setDepositParams(ctx, data.DepositParams)
@@ -105,8 +105,10 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
+	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
 		k.setDeposit(ctx, deposit.ProposalID, deposit.Depositor, deposit)
+		totalDeposits = totalDeposits.Add(deposit.Amount)
 	}
 
 	for _, vote := range data.Votes {
@@ -121,6 +123,14 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 			k.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, proposal)
+	}
+
+	// add coins if not provided on genesis
+	if moduleAcc.GetCoins().IsZero() {
+		if err := moduleAcc.SetCoins(totalDeposits); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 

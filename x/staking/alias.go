@@ -179,6 +179,8 @@ var (
 	MustUnmarshalValidator             = types.MustUnmarshalValidator
 	UnmarshalValidator                 = types.UnmarshalValidator
 	NewDescription                     = types.NewDescription
+	BondedPoolAddr                     = types.BondedPoolAddr
+	NotBondedPoolAddr                  = types.NotBondedPoolAddr
 
 	// variable aliases
 	ModuleCdc                        = types.ModuleCdc

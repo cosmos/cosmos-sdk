@@ -17,7 +17,7 @@ import (
 //_______________________________________________________
 
 func TestSetValidator(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 10)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 10)
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
@@ -70,7 +70,7 @@ func TestSetValidator(t *testing.T) {
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 0)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 
@@ -111,7 +111,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	maxVals := 5
 
 	// create context, keeper, and pool for tests
-	ctx, _, keeper:= CreateTestInput(t, false, 0)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 
@@ -165,7 +165,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// initialize setup
-	ctx, _, keeper:= CreateTestInput(t, false, 100)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 100)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -195,7 +195,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
 func TestValidatorBasics(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	//construct the validators
 	var validators [3]types.Validator
@@ -294,7 +294,7 @@ func TestValidatorBasics(t *testing.T) {
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower
 func GetValidatorSortingUnmixed(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// initialize some validators into the state
 	amts := []int64{0, 100, 1, 400, 200}
@@ -369,7 +369,7 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 }
 
 func GetValidatorSortingMixed(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
@@ -434,7 +434,7 @@ func GetValidatorSortingMixed(t *testing.T) {
 
 // TODO separate out into multiple tests
 func TestGetValidatorsEdgeCases(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	var found bool
 
 	// now 2 max resValidators
@@ -511,7 +511,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 }
 
 func TestValidatorBondHeight(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
@@ -558,7 +558,7 @@ func TestValidatorBondHeight(t *testing.T) {
 }
 
 func TestFullValidatorSetPowerChange(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	max := 2
 	params.MaxValidators = uint16(2)
@@ -600,7 +600,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -630,7 +630,7 @@ func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -653,7 +653,7 @@ func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -682,7 +682,7 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -714,7 +714,7 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20, 5, 15, 25}
 	var validators [5]types.Validator
@@ -760,7 +760,7 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := types.DefaultParams()
 	params.MaxValidators = 2
 	keeper.SetParams(ctx, params)
@@ -801,7 +801,7 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{100, 100}
 	var validators [2]types.Validator
@@ -842,7 +842,7 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(3)
 
@@ -923,7 +923,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(2)
 
@@ -1000,7 +1000,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 }
 
 func TestUpdateValidatorCommission(t *testing.T) {
-	ctx, _, keeper:= CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Now().UTC()})
 
 	commission1 := types.NewCommissionWithTime(

@@ -95,19 +95,22 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 // app module
 type AppModule struct {
 	AppModuleBasic
-	keeper      Keeper
-	distrKeeper DistributionKeeper
-	accKeeper   AccountKeeper
+	keeper       Keeper
+	distrKeeper  DistributionKeeper
+	accKeeper    AccountKeeper
+	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper AccountKeeper,
+	supplyKeeper types.SupplyKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 		distrKeeper:    distrKeeper,
 		accKeeper:      accKeeper,
+		supplyKeeper:   supplyKeeper,
 	}
 }
 
@@ -145,7 +148,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.keeper, am.accKeeper, genesisState)
+	return InitGenesis(ctx, am.keeper, am.accKeeper, am.supplyKeeper, genesisState)
 }
 
 // module export genesis

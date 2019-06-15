@@ -16,7 +16,11 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
+	supplyKeeper types.SupplyKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+
+	bondedTokens := sdk.ZeroInt()
+	notBondedTokens := sdk.ZeroInt()
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -44,6 +48,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
+
+		// FIXME: use switch for each of the statuses
+		bondedTokens = bondedTokens.Add(validator.GetTokens())
 	}
 
 	for _, delegation := range data.Delegations {
@@ -79,9 +86,26 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedTokensName))
 	}
 
+	// add coins if not provided on genesis
+	if bondedPool.GetCoins().IsZero() {
+		bondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, bondedTokens))
+		if err := bondedPool.SetCoins(bondedCoins); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	}
+
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	if notBondedPool == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedTokensName))
+	}
+
+	if notBondedPool.GetCoins().IsZero() {
+		notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
+		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
 	// don't need to run Tendermint updates if we exported

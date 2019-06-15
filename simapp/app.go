@@ -177,11 +177,11 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		distr.NewAppModule(app.distrKeeper, app.accountKeeper),
-		gov.NewAppModule(app.govKeeper),
+		distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper),
+		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -238,58 +238,56 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	feeCollectorAcc := app.accountKeeper.GetAccount(ctx, auth.FeeCollectorAddr)
 	if feeCollectorAcc == nil {
 		feeCollectorAcc = supply.NewModuleHolderAccount(auth.FeeCollectorName)
+		if err := feeCollectorAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, feeCollectorAcc)
 	}
 
 	bondedPool := app.stakingKeeper.GetBondedPool(ctx)
 	if bondedPool == nil {
 		bondedPool = supply.NewModuleHolderAccount(staking.BondedTokensName)
+		if err := bondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, bondedPool)
 	}
 
 	notBondedPool := app.stakingKeeper.GetNotBondedPool(ctx)
 	if notBondedPool == nil {
 		notBondedPool = supply.NewModuleHolderAccount(staking.NotBondedTokensName)
+		if err := notBondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, notBondedPool)
 	}
 
 	governanceAcc := app.govKeeper.GetGovernanceAccount(ctx)
 	if governanceAcc == nil {
 		governanceAcc = supply.NewModuleHolderAccount(gov.ModuleName)
+		if err := governanceAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, governanceAcc)
 	}
 
 	distributionAcc := app.distrKeeper.GetDistributionAccount(ctx)
 	if distributionAcc == nil {
 		distributionAcc = supply.NewModuleHolderAccount(distr.ModuleName)
+		if err := distributionAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, distributionAcc)
 	}
 
 	mintAcc := app.mintKeeper.GetMintAccount(ctx)
 	if mintAcc == nil {
 		mintAcc = supply.NewModuleMinterAccount(mint.ModuleName)
+		if err := mintAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
+			panic(err)
+		}
+		app.accountKeeper.SetAccount(ctx, mintAcc)
 	}
-
-	if err := feeCollectorAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	if err := bondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	if err := notBondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	if err := distributionAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	if err := governanceAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	if err := mintAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-
-	app.accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	app.accountKeeper.SetAccount(ctx, bondedPool)
-	app.accountKeeper.SetAccount(ctx, notBondedPool)
-	app.accountKeeper.SetAccount(ctx, distributionAcc)
-	app.accountKeeper.SetAccount(ctx, governanceAcc)
-	app.accountKeeper.SetAccount(ctx, mintAcc)
 
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)

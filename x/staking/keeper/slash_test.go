@@ -17,7 +17,7 @@ import (
 func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) {
 
 	// setup
-	ctx, _, keeper:= CreateTestInput(t, false, power)
+	ctx, _, keeper, _ := CreateTestInput(t, false, power)
 	params := keeper.GetParams(ctx)
 	numVals := int64(3)
 	amt := sdk.TokensFromTendermintPower(power)

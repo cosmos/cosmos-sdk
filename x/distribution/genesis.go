@@ -8,7 +8,9 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper, data types.GenesisState) {
+	var moduleHoldings sdk.DecCoins
+
 	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
@@ -21,6 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
 		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
+		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
@@ -38,10 +41,20 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Event)
 	}
 
+	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool)
+	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
+
 	// check if the module account exists
 	moduleAcc := keeper.GetDistributionAccount(ctx)
 	if moduleAcc == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	if moduleAcc.GetCoins().IsZero() {
+		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 

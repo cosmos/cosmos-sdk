@@ -1,1 +1,2 @@
-#4488 client's tx, rest, and utils sub-packages now live under x/auth/client/
+#4488 Decouple client tx, REST, and ultil packages from auth. These packages have
+been restructured and retrofitted into the `x/auth` module.

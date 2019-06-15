@@ -19,7 +19,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Slashing transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	slashingTxCmd.AddCommand(client.PostCommands(

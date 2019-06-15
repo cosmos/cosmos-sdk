@@ -6,13 +6,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // BroadcastReq defines a tx broadcasting request.
 type BroadcastReq struct {
-	Tx   auth.StdTx `json:"tx"`
-	Mode string     `json:"mode"`
+	Tx   types.StdTx `json:"tx"`
+	Mode string      `json:"mode"`
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible

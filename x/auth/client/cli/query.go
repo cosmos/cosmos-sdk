@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +32,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Querying commands for the auth module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(GetAccountCmd(cdc))
@@ -115,7 +116,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 			limit := viper.GetInt(flagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := utils.SearchTxs(cliCtx, tmTags, page, limit)
+			txs, err := utils.QueryTxsByTags(cliCtx, tmTags, page, limit)
 			if err != nil {
 				return err
 			}

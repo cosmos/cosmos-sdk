@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -44,7 +44,7 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalPa
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams)
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositP
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func QueryProposerByTxQuery(cliCtx context.CLIContext, proposalID uint64) (Propo
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return Proposer{}, err
 	}

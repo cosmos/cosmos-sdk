@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // EncodeResp defines a tx encoding response.
@@ -20,7 +20,7 @@ type EncodeResp struct {
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req auth.StdTx
+		var req types.StdTx
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {

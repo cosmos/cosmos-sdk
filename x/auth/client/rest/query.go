@@ -141,7 +141,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		searchResult, err := utils.SearchTxs(cliCtx, tags, page, limit)
+		searchResult, err := utils.QueryTxsByTags(cliCtx, tags, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -12,11 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-const (
-	flagTo     = "to"
-	flagAmount = "amount"
-)
-
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
@@ -24,7 +19,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Bank transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
 		SendTxCmd(cdc),

@@ -1,4 +1,4 @@
-package bank
+package keeper
 
 import (
 	"fmt"
@@ -6,8 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/tags"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -340,7 +339,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 		}
 
 		allTags = allTags.AppendTag(
-			tags.Sender, in.Address.String(),
+			types.Sender, in.Address.String(),
 		)
 	}
 
@@ -350,7 +349,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 			return nil, err
 		}
 		allTags = allTags.AppendTag(
-			tags.Recipient, out.Address.String(),
+			types.Recipient, out.Address.String(),
 		)
 	}
 
@@ -386,7 +385,7 @@ func delegateCoins(
 	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
-		sdk.TagAction, tags.ActionDelegateCoins,
+		sdk.TagAction, types.ActionDelegateCoins,
 		sdk.TagDelegator, addr.String(),
 	), nil
 }
@@ -411,7 +410,7 @@ func undelegateCoins(
 	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
-		sdk.TagAction, tags.ActionUndelegateCoins,
+		sdk.TagAction, types.ActionUndelegateCoins,
 		sdk.TagDelegator, addr.String(),
 	), nil
 }

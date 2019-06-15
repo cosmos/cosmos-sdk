@@ -60,6 +60,7 @@ func TestCoinIsValid(t *testing.T) {
 		{Coin{"a", NewInt(1)}, false},
 		{Coin{"a very long coin denom", NewInt(1)}, false},
 		{Coin{"atOm", NewInt(1)}, false},
+		{Coin{"  ", NewInt(1)}, false},
 	}
 
 	for i, tc := range cases {

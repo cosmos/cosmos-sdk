@@ -241,7 +241,7 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context /*expheight uint64,*/, timeoutH
 		return err
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -283,7 +283,7 @@ func (obj Object) OpenAck(ctx sdk.Context /*expheight uint64, */, timeoutHeight,
 		return err
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 	// XXX: disabled
@@ -294,7 +294,7 @@ func (obj Object) OpenAck(ctx sdk.Context /*expheight uint64, */, timeoutHeight,
 			return errors.New("unexpected counterparty client value")
 		}
 	*/
-	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
+	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }

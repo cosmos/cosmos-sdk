@@ -48,11 +48,8 @@ func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState,
 		return nil, errors.New("invalid type")
 	}
 
-	nextvalset := cs.NextValidatorSet
-	nexthash := nextvalset.Hash()
-
 	if cs.Height == uint64(header.Height-1) {
-		nexthash = cs.NextValidatorSet.Hash()
+		nexthash := cs.NextValidatorSet.Hash()
 		if !bytes.Equal(header.ValidatorsHash, nexthash) {
 			return nil, lerr.ErrUnexpectedValidators(header.ValidatorsHash, nexthash)
 		}

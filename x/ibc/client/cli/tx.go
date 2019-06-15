@@ -67,7 +67,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			}
 
 			var state ibc.ConsensusState
-			if cdc.UnmarshalJSON(contents, &state); err != nil {
+			if err := cdc.UnmarshalJSON(contents, &state); err != nil {
 				return err
 			}
 

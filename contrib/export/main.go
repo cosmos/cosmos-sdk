@@ -15,7 +15,7 @@ import (
 
 var (
 	migrationMap = extypes.MigrationMap{
-		"036": v036.Migrate,
+		"v0.36": v036.Migrate,
 	}
 	source        string
 	target        string

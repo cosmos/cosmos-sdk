@@ -9,7 +9,7 @@ import (
 
 // IDCollection of non fungible tokens
 type IDCollection struct {
-	Denom string   `json:"denom,string,omitempty"`
+	Denom string   `json:"denom"`
 	IDs   []string `json:"IDs"`
 }
 
@@ -100,8 +100,8 @@ IDs:        	%s`,
 
 // Owner of non fungible tokens
 type Owner struct {
-	Address       sdk.AccAddress
-	IDCollections IDCollections
+	Address       sdk.AccAddress `json:"address"`
+	IDCollections IDCollections  `json:"IDCollections"`
 }
 
 // String follows stringer interface

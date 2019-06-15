@@ -10,7 +10,7 @@ import (
 //
 // - Colections: 0x00<denom_bytes_key> :<Collection>
 //
-// - Balances: 0x01<address_bytes_key><denom_bytes_key>: <Collections>
+// - Owners: 0x01<address_bytes_key><denom_bytes_key>: <Collections>
 var (
 	CollectionsKeyPrefix = []byte{0x00} // key for NFT collections
 	OwnersKeyPrefix      = []byte{0x01} // key for balance of NFTs held by an address
@@ -31,7 +31,7 @@ func GetCollectionKey(denom string) []byte {
 
 // SplitOwnerKey gets an address and denom from an owner key
 func SplitOwnerKey(key []byte) (sdk.AccAddress, []byte) {
-	if len(key) != sdk.AddrLen {
+	if len(key) != 41 {
 		panic("unexpected key length")
 	}
 	address := key[1 : sdk.AddrLen+1]

@@ -191,6 +191,17 @@ func (k Keeper) GetCollections(ctx sdk.Context) (collections []types.Collection)
 	return
 }
 
+// GetDenoms returns all the NFT denoms
+func (k Keeper) GetDenoms(ctx sdk.Context) (denoms []string) {
+	k.IterateCollections(ctx,
+		func(collection types.Collection) (stop bool) {
+			denoms = append(denoms, collection.Denom)
+			return false
+		},
+	)
+	return
+}
+
 // GetOwners returns all the Owners ID Collections
 func (k Keeper) GetOwners(ctx sdk.Context) (owners []types.Owner) {
 	k.IterateOwners(ctx,

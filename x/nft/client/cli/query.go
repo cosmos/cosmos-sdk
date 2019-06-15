@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,7 +63,6 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("route?", fmt.Sprintf("custom/%s/owner", queryRoute))
 
 			var res []byte
 			if denom == "" {
@@ -76,8 +76,6 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			var out types.Owner
-			fmt.Println("out1", out)
-			fmt.Println("res", res)
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -89,7 +87,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "collection [denom]",
 		Short: "get all the NFTs from a given collection",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			denom := args[0]
@@ -135,6 +133,31 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			var out types.NFT
+			cdc.MustUnmarshalJSON(res, &out)
+			return cliCtx.PrintOutput(out)
+		},
+	}
+}
+
+type stringArray []string
+
+func (s stringArray) String() string { return strings.Join(s[:], ",") }
+
+// GetCmdQueryDenoms queries all denoms
+func GetCmdQueryDenoms(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "denoms",
+		Short: "queries all denoms of all NFTs",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), nil)
+			if err != nil {
+				return err
+			}
+
+			var out stringArray
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

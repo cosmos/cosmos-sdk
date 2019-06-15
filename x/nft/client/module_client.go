@@ -32,6 +32,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		nftcmd.GetCmdQueryOwner(mc.storeKey, mc.cdc),
 		nftcmd.GetCmdQueryCollection(mc.storeKey, mc.cdc),
 		nftcmd.GetCmdQueryNFT(mc.storeKey, mc.cdc),
+		nftcmd.GetCmdQueryDenoms(mc.storeKey, mc.cdc),
 	)...)
 
 	return nftQueryCmd

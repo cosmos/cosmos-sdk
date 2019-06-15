@@ -24,5 +24,6 @@ var ModuleCdc *codec.Codec
 func init() {
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
+	RegisterCodec(cdc)
 	ModuleCdc = cdc.Seal()
 }

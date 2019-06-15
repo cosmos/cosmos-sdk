@@ -98,7 +98,7 @@ func testAddr(addr string, bech string) sdk.AccAddress {
 	return res
 }
 
-// nolint: unparam
+// CreateTestAddrs creates test addresses
 func CreateTestAddrs(numAddrs int) []sdk.AccAddress {
 	var addresses []sdk.AccAddress
 	var buffer bytes.Buffer

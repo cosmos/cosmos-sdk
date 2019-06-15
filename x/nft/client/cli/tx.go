@@ -79,7 +79,6 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-
 // GetCmdMintNFT is the CLI command for a MintNFT transaction
 func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -103,7 +102,7 @@ func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), recipient, denom, tokenID, name, description, image, tokenURI)
+			msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), recipient, tokenID, denom, name, description, image, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

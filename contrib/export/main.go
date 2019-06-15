@@ -19,7 +19,6 @@ var (
 	source        string
 	target        string
 	importGenesis string
-	exportGenesis string
 )
 
 func init() {

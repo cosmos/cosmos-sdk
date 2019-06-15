@@ -27,15 +27,14 @@ func init() {
 	log.SetFlags(0)
 
 	// this flag seems unnecessary, we can reintriduce it once we support multiple versions migration at once
-	//flag.StringVar(&source, "s", "034", "SDK version that exported the genesis")
-	flag.StringVar(&target, "target", "036", "Goal SDK version that will import the genesis")
+	flag.StringVar(&source, "source", "v0.34", "The SDK version that exported the genesis")
+	flag.StringVar(&target, "target", "", "The target SDK genesis version")
 	flag.StringVar(&importGenesis, "genesis", "genesis.json", "Source genesis file")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-target 036] [-genesis genesis.json]
+			`Usage: %s [-target v0.36] [-genesis genesis.json]
 Migrate the source genesis into the target version and export it as standard output
-
 `, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
@@ -49,7 +48,6 @@ func main() {
 	// - Reading old types,
 	// - converting to new ones
 	// - reading the committed new genesis and see if all works
-
 	// We could add an invariant test for genesis, conversion should be identical to exporting the target genesis once imported
 
 	cdc := codec.New()
@@ -57,18 +55,20 @@ func main() {
 	// Dump here an example genesis for CCI to test import from old types, and export to new ones
 	genDoc, err := types.GenesisDocFromFile(importGenesis)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	var initialState extypes.AppMap
 	cdc.MustUnmarshalJSON(genDoc.AppState, &initialState)
 
 	if migrationMap[target] == nil {
-		panic(fmt.Sprintf("Missing migration function for version %s", target))
+		log.Fatalln(fmt.Sprintf("Missing migration function for version %s", target))
 	}
 	newGenState := migrationMap[target](initialState, cdc)
-
 	genDoc.AppState = cdc.MustMarshalJSON(newGenState)
 
 	out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	fmt.Println(string(out))
 }

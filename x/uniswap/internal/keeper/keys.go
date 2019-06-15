@@ -6,14 +6,14 @@ import (
 
 // keys
 var (
-	ExchangePrefix    = []byte{0x00} // prefix for exchange liquidity keys
+	ReservePoolPrefix = []byte{0x00} // prefix for reserve pool keys
 	UNIBalancesPrefix = []byte{0x01} // prefix for UNI balances keys
 	TotalUNIKey       = []byte{0x02} // key for total
 )
 
-// GetExchangeKey gets the key for an exchanges total liquidity
-func GetExchangeKey(denom string) []byte {
-	return append(ExchangePrefix, []byte(denom)...)
+// GetReservePoolKey gets the key for a reserve pool's total liquidity
+func GetReservePoolKey(denom string) []byte {
+	return append(ReservePoolPrefix, []byte(denom)...)
 }
 
 // GetUNIBalancesKey gets the key for an addresses UNI balance

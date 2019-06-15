@@ -84,7 +84,7 @@ func DefaultParams() Params {
 
 // ValidateParams validates the set params
 func ValidateParams(p Params) error {
-	if p.FeeParams.FeeN.GT(p.FeeD) {
+	if p.FeeParams.FeeN.GT(p.FeeParams.FeeD) {
 		return fmt.Errorf("fee numerator must be less than or equal to fee denominator")
 	}
 	if p.FeeParams.FeeD.Mod(sdk.NewInt(10)) != sdk.NewInt(0) {

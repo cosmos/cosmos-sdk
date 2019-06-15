@@ -22,11 +22,11 @@ var (
 // A calculated coin has the desired denomination and bounded amount
 // the sender is willing to buy or sell in this order.
 type MsgSwapOrder struct {
-	Input      sdk.Coin       `json:"input"`        // the amount the sender is trading
-	Output     sdk.Coin       `json:"output"`       // the amount the sender is recieivng
-	Deadline   time.Time      `json:"deadline"`     // deadline for the transaction to still be considered valid
-	Sender     sdk.AccAddress `json:"sender"`       // address swapping coin
-	Recipient  sdk.AccAddress `json:"recipient"`    // address output coin is being sent to
+	Input      sdk.Coin       `json:"input"`    // the amount the sender is trading
+	Output     sdk.Coin       `json:"output"`   // the amount the sender is recieivng
+	Deadline   time.Time      `json:"deadline"` // deadline for the transaction to still be considered valid
+	Sender     sdk.AccAddress `json:"sender"`
+	Recipient  sdk.AccAddress `json:"recipient"`
 	IsBuyOrder bool           `json:"is_buy_order"` // boolean indicating whether the order should be treated as a buy or sell
 }
 
@@ -64,7 +64,7 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 		return ErrEqualDenom(DefaultCodespace)
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace, "MsgSwapOrder")
+		return ErrInvalidDeadline(DefaultCodespace, "deadline for MsgSwapOrder not initialized")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -89,7 +89,7 @@ func (msg MsgSwapOrder) GetSigners() []sdk.AccAddress {
 // MsgAddLiquidity
 /* --------------------------------------------------------------------------- */
 
-// MsgAddLiquidity - struct for adding liquidity to an exchange
+// MsgAddLiquidity - struct for adding liquidity to a reserve pool
 type MsgAddLiquidity struct {
 	Deposit       sdk.Coin       `json:"deposit"`        // coin to be deposited as liquidity with an upper bound for its amount
 	DepositAmount sdk.Int        `json:"deposit_amount"` // exact amount of native asset being add to the liquidity pool
@@ -122,16 +122,16 @@ func (msg MsgAddLiquidity) Type() string { return "add_liquidity" }
 // ValidateBasic Implements Msg.
 func (msg MsgAddLiquidity) ValidateBasic() sdk.Error {
 	if !msg.Deposit.IsValid() {
-		return sdk.ErrInvalidCoins("coin is invalid: " + msg.Deposit.IsValid())
+		return sdk.ErrInvalidCoins("coin is invalid: " + msg.Deposit.String())
 	}
 	if !msg.DepositAmount.IsPositive() {
-		return ErrInsufficientAmount(DefaultCodespace, "deposit amount provided is not positive")
+		return ErrNotPositive(DefaultCodespace, "deposit amount provided is not positive")
 	}
 	if !msg.MinReward.IsPositive() {
-		return ErrInvalidBound(DefaultCodespace, "minimum liquidity is not positive")
+		return ErrNotPositive(DefaultCodespace, "minimum liquidity is not positive")
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace, "MsgAddLiquidity")
+		return ErrInvalidDeadline(DefaultCodespace, "deadline for MsgAddLiquidity not initialized")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
@@ -153,10 +153,10 @@ func (msg MsgAddLiquidity) GetSigners() []sdk.AccAddress {
 // MsgRemoveLiquidity
 /* --------------------------------------------------------------------------- */
 
-// MsgRemoveLiquidity - struct for removing liquidity from an exchange
+// MsgRemoveLiquidity - struct for removing liquidity from a reserve pool
 type MsgRemoveLiquidity struct {
 	Withdraw       sdk.Coin       `json:"withdraw"`        // coin to be withdrawn with a lower bound for its amount
-	WithdrawAmount sdk.Int        `json:"withdraw_amount"` // amount of UNI to be burned to withdraw liquidity from an exchange
+	WithdrawAmount sdk.Int        `json:"withdraw_amount"` // amount of UNI to be burned to withdraw liquidity from a reserve pool
 	MinNative      sdk.Int        `json:"min_native"`      // minimum amount of the native asset the sender is willing to accept
 	Deadline       time.Time      `json:"deadline"`
 	Sender         sdk.AccAddress `json:"sender"`
@@ -186,16 +186,16 @@ func (msg MsgRemoveLiquidity) Type() string { return "remove_liquidity" }
 // ValidateBasic Implements Msg.
 func (msg MsgRemoveLiquidity) ValidateBasic() sdk.Error {
 	if !msg.WithdrawAmount.IsPositive() {
-		return ErrInsufficientAmount(DefaultCodespace, "withdraw amount is not positive")
+		return ErrNotPositive(DefaultCodespace, "withdraw amount is not positive")
 	}
 	if !msg.Withdraw.IsValid() {
 		return sdk.ErrInvalidCoins("coin is invalid: " + msg.Withdraw.String())
 	}
 	if !msg.MinNative.IsPositive() {
-		return ErrInvalidBound(DefaultCodespace, "minimum native is not positive")
+		return ErrNotPositive(DefaultCodespace, "minimum native amount is not positive")
 	}
 	if msg.Deadline.IsZero() {
-		return ErrInvalidDeadline(DefaultCodespace, "MsgRemoveLiquidity")
+		return ErrInvalidDeadline(DefaultCodespace, "deadline for MsgRemoveLiquidity not initialized")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")

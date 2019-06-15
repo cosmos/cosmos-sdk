@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register concrete types on codec
+// RegisterCodec registers concrete types on the codec.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSwapOrder{}, "cosmos-sdk/MsgSwapOrder", nil)
 	cdc.RegisterConcrete(MsgAddLiquidity{}, "cosmos-sdk/MsgAddLiquidity", nil)

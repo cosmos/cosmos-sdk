@@ -1,50 +1,39 @@
 package types
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeNoDenom               sdk.CodeType = 101
-	CodeExchangeAlreadyExists sdk.CodeType = 102
-	CodeEqualDenom            sdk.CodeType = 103
-	CodeInvalidBound          sdk.CodeType = 104
-	CodeInvalidDeadline       sdk.CodeType = 105
-	CodeInsufficientAmount    sdk.CodeType = 106
+	CodeReservePoolAlreadyExists sdk.CodeType = 101
+	CodeEqualDenom               sdk.CodeType = 102
+	CodeInvalidDeadline          sdk.CodeType = 103
+	CodeNotPositive              sdk.CodeType = 104
 )
 
-func ErrNoDenom(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeNoDenom, "denomination is empty")
-}
-
-func ErrExchangeAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Error {
+func ErrReservePoolAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Error {
 	if msg != "" {
-		return sdk.NewError(codespace, CodeExchangeAlreadyExists, msg)
+		return sdk.NewError(codespace, CodeReservePoolAlreadyExists, msg)
 	}
-	return sdk.NewError(codespace, CodeExchangeAlreadyExists, "exchange already exists")
+	return sdk.NewError(codespace, CodeReservePoolAlreadyExists, "reserve pool already exists")
 }
 
 func ErrEqualDenom(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeEqualDenom, "coin and swap denomination are equal")
+	return sdk.NewError(codespace, CodeEqualDenom, "input and output denomination are equal")
 }
 
-func ErrInvalidBound(codespace sdk.CodespaceType, msg string) sdk.Error {
+func ErrInvalidDeadline(codespace sdk.CodespaceType, msg string) sdk.Error {
 	if msg != "" {
-		return sdk.NewError(codespace, CodeInvalidBound, msg)
+		return sdk.NewError(codespace, CodeInvalidDeadline, msg)
 	}
-	return sdk.NewError(codespace, CodeInvalidBound, "bound is not positive")
+	return sdk.NewError(codespace, CodeInvalidDeadline, "invalid deadline")
 }
 
-func ErrInvalidDeadline(codespace sdk.CodespaceType, msgName string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDeadline, fmt.Sprintf("deadline for %s not initialized", msgName))
-}
-
-func ErrInsufficientAmount(codespace sdk.CodespaceType, msg string) sdk.Error {
+func ErrNotPositive(codespace sdk.CodespaceType, msg string) sdk.Error {
 	if msg != "" {
-		return sdk.NewError(codespace, CodeInsufficientAmount, msg)
+		return sdk.NewError(codespace, CodeNotPositive, msg)
 	}
-	return sdk.NewError(codespace, CodeInsufficientAmount, "insufficient amount provided")
+	return sdk.NewError(codespace, CodeNotPositive, "amount is not positive")
 }

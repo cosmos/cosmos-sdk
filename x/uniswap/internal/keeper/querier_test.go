@@ -29,7 +29,7 @@ func TestNewQuerier(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(res)
 
-	// query for non existent exchange should return an error
+	// query for non existent reserve pool should return an error
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryLiquidity)
 	req.Data = keeper.cdc.MustMarshalJSON("btc")
 	res, err = querier(ctx, []string{"liquidity"}, req)

@@ -16,8 +16,11 @@ type Keeper struct {
 	// The key used to access the uniswap store
 	storeKey sdk.StoreKey
 
+	// The reference to the BankKeeper to retrieve account balances
+	bk types.BankKeeper
+
 	// The reference to the SupplyKeeper to hold coins for this module
-	types.SupplyKeeper
+	sk types.SupplyKeeper
 
 	// The codec codec for binary encoding/decoding.
 	cdc *codec.Codec
@@ -27,16 +30,17 @@ type Keeper struct {
 }
 
 // NewKeeper returns a uniswap keeper. It handles:
-// - creating new exchanges
+// - creating new reserve pools
 // - facilitating swaps
-// - users adding liquidity to exchanges
-// - users removing liquidity to exchanges
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, supplyKeeper supply.Keeper, paramSpace params.Subspace) Keeper {
+// - users adding liquidity to a reserve pool
+// - users removing liquidity from a reserve pool
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, bk types.BankKeeper, sk supply.Keeper, paramSpace params.Subspace) Keeper {
 	return Keeper{
-		storeKey:     key,
-		supplyKeeper: supplyKeeper,
-		cdc:          cdc,
-		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
+		storeKey:   key,
+		bk:         bk,
+		sk:         sk,
+		cdc:        cdc,
+		paramSpace: paramSpace.WithKeyTable(types.ParamKeyTable()),
 	}
 }
 
@@ -45,13 +49,13 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", types.ModuleName)
 }
 
-// CreateExchange initializes a new exchange pair between the new coin and the native asset
-func (keeper Keeper) CreateExchange(ctx sdk.Context, exchangeDenom string) {
+// CreateReservePool initializes a new reserve pool for the new denomination
+func (keeper Keeper) CreateReservePool(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(keeper.storeKey)
-	key := GetExchangeKey(exchangeDenom)
+	key := GetReservePoolKey(denom)
 	bz := store.Get(key)
 	if bz != nil {
-		panic(fmt.Sprintf("exchange %s already exists", exchangeDenom))
+		panic(fmt.Sprintf("reserve pool for %s already exists", denom))
 	}
 
 	store.Set(key, keeper.encode(sdk.ZeroInt()))
@@ -96,12 +100,12 @@ func (keeper Keeper) SetTotalUNI(ctx sdk.Context, totalUNI sdk.Int) {
 	store.Set(TotalUNIKey, keeper.encode(totalUNI))
 }
 
-// GetExchange returns the total balance of an exchange at the provided denomination
-func (keeper Keeper) GetExchange(ctx sdk.Context, denom string) sdk.Int {
+// GetReservePool returns the total balance of an reserve pool at the provided denomination
+func (keeper Keeper) GetReservePool(ctx sdk.Context, denom string) sdk.Int {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(GetExchangeKey(denom))
+	bz := store.Get(GetReservePoolKey(denom))
 	if bz == nil {
-		panic(fmt.Sprintf("exchange %s does not exist"), denom)
+		panic(fmt.Sprintf("reserve pool for %s does not exist"), denom)
 	}
 	return keeper.decode(bz)
 }

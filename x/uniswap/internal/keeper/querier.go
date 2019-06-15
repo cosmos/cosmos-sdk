@@ -12,8 +12,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryBalance(ctx, req, k)
 		case types.QueryLiquidity:
 			return queryLiquidity(ctx, req, k)
-		case types.Parameters:
-			return queryLiquidity(ctx, req, k)
+		case types.QueryParameters:
+			return queryParameters(ctx, req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 		}
@@ -38,7 +38,7 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 	return bz, nil
 }
 
-// queryLiquidity returns the total liquidity avaliable at the provided exchange
+// queryLiquidity returns the total liquidity avaliable for the provided denomination
 // upon success or an error if the query fails.
 func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QueryLiquidity
@@ -47,7 +47,7 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	liquidity := k.GetExchange(ctx, params.Denom)
+	liquidity := k.GetReservePool(ctx, params.Denom)
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, liquidity)
 	if err != nil {

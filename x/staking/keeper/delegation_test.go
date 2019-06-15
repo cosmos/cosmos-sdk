@@ -207,7 +207,7 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 1)
+	ctx, ak, keeper := CreateTestInput(t, false, 1)
 	pool := keeper.GetPool(ctx)
 	startTokens := sdk.TokensFromConsensusPower(10)
 	pool.NotBondedTokens = startTokens
@@ -236,14 +236,45 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	// delegator shares should be reduced by 7
+	delegator, _ := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
+	require.Equal(t, sdk.NewDec(9999993), delegator.GetShares())
+
+	acc := ak.GetAccount(ctx, addrDels[0])
+	require.Equal(t, int64(1000000), acc.GetCoins().AmountOf("stake").Int64())
+
 	// an additional unbond should fail due to max entries
 	_, err := keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 	require.Error(t, err)
+
+	// delegator shares should not reduced
+	delegator, _ = keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
+	require.Equal(t, sdk.NewDec(9999993), delegator.GetShares())
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
 	err = keeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
+
+	// delegator account balance should be increased by 7
+	acc = ak.GetAccount(ctx, addrDels[0])
+	require.Equal(t, int64(1000007), acc.GetCoins().AmountOf("stake").Int64())
+
+	completionTime, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(3))
+	require.NoError(t, err)
+
+	// delegator shares should be reduced by 3
+	dele2, _ := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
+	require.Equal(t, sdk.NewDec(9999990), dele2.GetShares())
+
+	// mature unbonding delegations
+	ctx = ctx.WithBlockTime(completionTime)
+	err = keeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+	require.NoError(t, err)
+
+	// delegator account balance should be increased by 3
+	acc = ak.GetAccount(ctx, addrDels[0])
+	require.Equal(t, int64(1000010), acc.GetCoins().AmountOf("stake").Int64())
 
 	// unbonding  should work again
 	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))

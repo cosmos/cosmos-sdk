@@ -76,7 +76,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 func QueryTxsByTagsCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
-		Short: "Search for paginated transactions that match a set of tags",
+		Short: "Query for paginated transactions that match a set of tags",
 		Long: strings.TrimSpace(`
 Search for transactions that match the exact given tags where results are paginated.
 
@@ -154,7 +154,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
-		Short: "Find a transaction by hash in a committed block.",
+		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

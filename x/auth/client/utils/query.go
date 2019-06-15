@@ -1,4 +1,4 @@
-package tx
+package utils
 
 import (
 	"encoding/hex"
@@ -67,6 +67,43 @@ func SearchTxs(cliCtx context.CLIContext, tags []string, page, limit int) (*sdk.
 	result := sdk.NewSearchTxsResult(resTxs.TotalCount, len(txs), page, limit, txs)
 
 	return &result, nil
+}
+
+// QueryTx queries for a single transaction by a hash string in hex format. An
+// error is returned if the transaction does not exist or cannot be queried.
+func QueryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
+	hash, err := hex.DecodeString(hashHexStr)
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	node, err := cliCtx.GetNode()
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	resTx, err := node.Tx(hash, !cliCtx.TrustNode)
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	if !cliCtx.TrustNode {
+		if err = ValidateTxResult(cliCtx, resTx); err != nil {
+			return sdk.TxResponse{}, err
+		}
+	}
+
+	resBlocks, err := getBlocksForTxResults(cliCtx, []*ctypes.ResultTx{resTx})
+	if err != nil {
+		return sdk.TxResponse{}, err
+	}
+
+	out, err := formatTxResult(cliCtx.Codec, resTx, resBlocks[resTx.Height])
+	if err != nil {
+		return out, err
+	}
+
+	return out, nil
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
@@ -138,39 +175,4 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	}
 
 	return tx, nil
-}
-
-func queryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
-	hash, err := hex.DecodeString(hashHexStr)
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	node, err := cliCtx.GetNode()
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	resTx, err := node.Tx(hash, !cliCtx.TrustNode)
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	if !cliCtx.TrustNode {
-		if err = ValidateTxResult(cliCtx, resTx); err != nil {
-			return sdk.TxResponse{}, err
-		}
-	}
-
-	resBlocks, err := getBlocksForTxResults(cliCtx, []*ctypes.ResultTx{resTx})
-	if err != nil {
-		return sdk.TxResponse{}, err
-	}
-
-	out, err := formatTxResult(cliCtx.Codec, resTx, resBlocks[resTx.Height])
-	if err != nil {
-		return out, err
-	}
-
-	return out, nil
 }

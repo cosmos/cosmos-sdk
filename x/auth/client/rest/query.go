@@ -1,14 +1,16 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -17,19 +19,6 @@ import (
 type AccountWithHeight struct {
 	types.Account
 	Height int64 `json:"height"`
-}
-
-// register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
-	r.HandleFunc(
-		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
-	).Methods("GET")
-
-	r.HandleFunc(
-		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
-	).Methods("GET")
 }
 
 // query accountREST Handler
@@ -116,5 +105,78 @@ func QueryBalancesRequestHandlerFn(
 		}
 
 		rest.PostProcessResponse(w, cliCtx, account.GetCoins())
+	}
+}
+
+// QueryTxsByTagsRequestHandlerFn implements a REST handler that searches for
+// transactions by tags.
+func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			tags        []string
+			txs         []sdk.TxResponse
+			page, limit int
+		)
+
+		err := r.ParseForm()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest,
+				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			return
+		}
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		if len(r.Form) == 0 {
+			rest.PostProcessResponse(w, cliCtx, txs)
+			return
+		}
+
+		tags, page, limit, err = rest.ParseHTTPArgs(r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		searchResult, err := utils.QueryTxsByTags(cliCtx, tags, page, limit)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cliCtx, searchResult)
+	}
+}
+
+// QueryTxRequestHandlerFn implements a REST handler that queries a transaction
+// by hash in a committed block.
+func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		hashHexStr := vars["hash"]
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		output, err := utils.QueryTx(cliCtx, hashHexStr)
+		if err != nil {
+			if strings.Contains(err.Error(), hashHexStr) {
+				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if output.Empty() {
+			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
+		}
+
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

@@ -18,10 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 const (
@@ -94,7 +91,6 @@ var (
 	NewInMemoryKeyBase                 = keys.NewInMemoryKeyBase
 	NewRestServer                      = lcd.NewRestServer
 	ServeCommand                       = lcd.ServeCommand
-	WriteGenerateStdTxResponse         = rest.WriteGenerateStdTxResponse
 	BlockCommand                       = rpc.BlockCommand
 	GetChainHeight                     = rpc.GetChainHeight
 	BlockRequestHandlerFn              = rpc.BlockRequestHandlerFn
@@ -109,27 +105,6 @@ var (
 	GetValidators                      = rpc.GetValidators
 	ValidatorSetRequestHandlerFn       = rpc.ValidatorSetRequestHandlerFn
 	LatestValidatorSetRequestHandlerFn = rpc.LatestValidatorSetRequestHandlerFn
-	BroadcastTxRequest                 = tx.BroadcastTxRequest
-	GetBroadcastCommand                = tx.GetBroadcastCommand
-	EncodeTxRequestHandlerFn           = tx.EncodeTxRequestHandlerFn
-	GetEncodeCommand                   = tx.GetEncodeCommand
-	SearchTxCmd                        = tx.SearchTxCmd
-	QueryTxCmd                         = tx.QueryTxCmd
-	QueryTxsByTagsRequestHandlerFn     = tx.QueryTxsByTagsRequestHandlerFn
-	QueryTxRequestHandlerFn            = tx.QueryTxRequestHandlerFn
-	RegisterTxRoutes                   = tx.RegisterTxRoutes
-	SearchTxs                          = tx.SearchTxs
-	ValidateTxResult                   = tx.ValidateTxResult
-	GenerateOrBroadcastMsgs            = utils.GenerateOrBroadcastMsgs
-	CompleteAndBroadcastTxCLI          = utils.CompleteAndBroadcastTxCLI
-	EnrichWithGas                      = utils.EnrichWithGas
-	CalculateGas                       = utils.CalculateGas
-	PrintUnsignedStdTx                 = utils.PrintUnsignedStdTx
-	SignStdTx                          = utils.SignStdTx
-	SignStdTxWithSignerAddress         = utils.SignStdTxWithSignerAddress
-	ReadStdTxFromFile                  = utils.ReadStdTxFromFile
-	GetTxEncoder                       = utils.GetTxEncoder
-	PrepareTxBuilder                   = utils.PrepareTxBuilder
 	BufferStdin                        = input.BufferStdin
 	OverrideStdin                      = input.OverrideStdin
 	GetPassword                        = input.GetPassword
@@ -153,7 +128,4 @@ type (
 	RestServer             = lcd.RestServer
 	ValidatorOutput        = rpc.ValidatorOutput
 	ResultValidatorsOutput = rpc.ResultValidatorsOutput
-	BroadcastReq           = tx.BroadcastReq
-	EncodeResp             = tx.EncodeResp
-	GasEstimateResponse    = utils.GasEstimateResponse
 )

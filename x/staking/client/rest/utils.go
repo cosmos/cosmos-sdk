@@ -7,9 +7,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/tags"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -33,7 +33,7 @@ func queryTxs(cliCtx context.CLIContext, tag string, delegatorAddr string) (*sdk
 		fmt.Sprintf("%s='%s'", tags.Sender, delegatorAddr),
 	}
 
-	return tx.SearchTxs(cliCtx, tags, page, limit)
+	return utils.QueryTxsByTags(cliCtx, tags, page, limit)
 }
 
 func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {

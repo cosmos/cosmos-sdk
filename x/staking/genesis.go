@@ -49,8 +49,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
 
-		// FIXME: use switch for each of the statuses
-		bondedTokens = bondedTokens.Add(validator.GetTokens())
+		switch validator.GetStatus() {
+		case sdk.Bonded:
+			bondedTokens = bondedTokens.Add(validator.GetBondedTokens())
+		case sdk.Unbonding, sdk.Unbonded:
+			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
+		}
 	}
 
 	for _, delegation := range data.Delegations {
@@ -80,6 +84,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		}
 	}
 
+	bondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, bondedTokens))
+	notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
+
 	// check if the unbonded and bonded pools accounts exists
 	bondedPool := keeper.GetBondedPool(ctx)
 	if bondedPool == nil {
@@ -88,7 +95,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 	// add coins if not provided on genesis
 	if bondedPool.GetCoins().IsZero() {
-		bondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, bondedTokens))
 		if err := bondedPool.SetCoins(bondedCoins); err != nil {
 			panic(err)
 		}
@@ -101,7 +107,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	}
 
 	if notBondedPool.GetCoins().IsZero() {
-		notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
 		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
 			panic(err)
 		}

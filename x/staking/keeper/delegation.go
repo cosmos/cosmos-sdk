@@ -480,7 +480,15 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 
 	if subtractAccount {
 		bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, types.BondedPoolAddr, bondedCoins)
+		var err sdk.Error
+		switch {
+		case validator.IsBonded():
+			_, err = k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, types.BondedPoolAddr, bondedCoins)
+
+		case validator.IsUnbonding(), validator.IsUnbonded():
+			_, err = k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, types.NotBondedPoolAddr, bondedCoins)
+		}
+
 		if err != nil {
 			return sdk.Dec{}, err
 		}
@@ -634,15 +642,15 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 			i--
 
 			// track undelegation only when remaining or truncated shares are non-zero
-
 			if !entry.Balance.IsZero() {
 				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
 				_, err := k.bankKeeper.UndelegateCoins(ctx, types.NotBondedPoolAddr, ubd.DelegatorAddress, amt)
 				if err != nil {
 					return err
 				}
-				removedAmt = removedAmt.Add(entry.Balance)
 			}
+
+			removedAmt = removedAmt.Add(entry.Balance)
 		}
 	}
 

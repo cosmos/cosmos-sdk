@@ -57,8 +57,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		switch {
 		case validator.IsUnbonded():
 			validator = k.unbondedToBonded(ctx, validator)
+			k.notBondedTokensToBonded(ctx, validator.GetTokens())
 		case validator.IsUnbonding():
 			validator = k.unbondingToBonded(ctx, validator)
+			k.notBondedTokensToBonded(ctx, validator.GetTokens())
 		case validator.IsBonded():
 			// no state change
 		default:

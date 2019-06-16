@@ -16,7 +16,7 @@ type DistributionKeeper interface {
 // BankKeeper defines the expected bank keeper (noalias)
 type BankKeeper interface {
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	UndelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)

@@ -28,4 +28,5 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/MsgCreateClient", nil)
 	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/MsgUpdateClient", nil)
 	cdc.RegisterConcrete(MsgOpenConnection{}, "ibc/MsgOpenConnection", nil)
+	cdc.RegisterConcrete(MsgOpenChannel{}, "ibc/MsgOpenChannel", nil)
 }

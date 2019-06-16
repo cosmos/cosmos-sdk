@@ -44,6 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcTxCmd.AddCommand(client.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdOpenConnection(cdc),
+		GetCmdOpenChannel(cdc),
 		//		GetCmdRelay(cdc),
 		GetCmdUpdateClient(cdc),
 	)...)
@@ -136,6 +137,38 @@ func GetCmdOpenConnection(cdc *codec.Codec) *cobra.Command {
 				ClientID:             args[1],
 				CounterpartyID:       args[2],
 				CounterpartyClientID: args[3],
+				Signer:               cliCtx.GetFromAddress(),
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.MarkFlagRequired(FlagConnectionID)
+	cmd.MarkFlagRequired(FlagClientID)
+	cmd.MarkFlagRequired(FlagCounterpartyID)
+	cmd.MarkFlagRequired(FlagCounterpartyClientID)
+
+	return cmd
+}
+
+func GetCmdOpenChannel(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-channel",
+		Short: "open channel connection between two chains",
+		Args:  cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
+
+			msg := ibc.MsgOpenChannel{
+				ChannelID:            args[0],
+				ModuleID:             args[1],
+				ConnectionID:         args[2],
+				CounterpartyID:       args[3],
+				CounterpartyModuleID: args[4],
 				Signer:               cliCtx.GetFromAddress(),
 			}
 

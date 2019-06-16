@@ -28,7 +28,7 @@ func init() {
 	// this flag seems unnecessary, we can reintriduce it once we support multiple versions migration at once
 	flag.StringVar(&source, "source", "v0.34", "The SDK version that exported the genesis")
 	flag.StringVar(&target, "target", "", "The target SDK genesis version")
-	flag.StringVar(&importGenesis, "genesis", "genesis.json", "Source genesis file")
+	flag.StringVar(&importGenesis, "genesis", "", "Source genesis file")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
@@ -41,6 +41,12 @@ Migrate the source genesis into the target version and export it as standard out
 
 func main() {
 	flag.Parse()
+	if target == "" {
+		log.Fatalln("Target version must be specified: -target v0.36")
+	}
+	if importGenesis == "" {
+		log.Fatalln("Source genesis file must be specified: -genesis genesis.json")
+	}
 
 	// This function should be modularized, for now we read and dump genesis committed to git,
 	// to simplify the creation of a CCI script that tests three different things:

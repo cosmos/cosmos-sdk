@@ -108,21 +108,22 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	fmt.Println("collection", collection)
+	// fmt.Println("collection", collection)
 
 	// collections := types.NewCollections(collection)
 	// fmt.Println("collections", collections)
 
 	bz := types.ModuleCdc.MustMarshalJSON(collection)
-
+	// fmt.Println("bytes collection", bz)
+	// fmt.Println("bytes collection string", string(bz))
 	// bz, err := collections.MarshalJSON()
 	// if err != nil {
 	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	// }
 
-	var collectionBack types.Collection
-	types.ModuleCdc.MustUnmarshalJSON(bz, &collectionBack)
-	fmt.Println("collectionBack", collectionBack)
+	// var collectionBack types.Collection
+	// types.ModuleCdc.MustUnmarshalJSON(bz, &collectionBack)
+	// fmt.Println("collectionBack", collectionBack)
 
 	return bz, nil
 }
@@ -141,11 +142,12 @@ func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (
 	}
 
 	nfts := types.NewNFTs(nft)
+	bz := types.ModuleCdc.MustMarshalJSON(nfts)
 
-	bz, err := nfts.MarshalJSON()
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
+	// bz, err := nfts.MarshalJSON()
+	// if err != nil {
+	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	// }
 
 	return bz, nil
 }

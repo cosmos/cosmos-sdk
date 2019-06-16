@@ -188,30 +188,23 @@ func (nfts NFTs) find(id string) int {
 // Encoding
 
 // NFTJSON is the exported NFT format for clients
-type NFTJSON map[string]NFT
+type NFTJSON map[string]BaseNFT
 
 // MarshalJSON for NFTs
 func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	nftJSON := make(NFTJSON)
-
 	for _, nft := range nfts {
 		id := nft.GetID()
-
-		bnft, ok := nft.(*BaseNFT)
-		if !ok {
-			continue
-		}
-		bnft.setID("")
+		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
+		// bnft.setID("")
 		nftJSON[id] = bnft
 	}
-
 	return json.Marshal(nftJSON)
 }
 
 // UnmarshalJSON for NFTs
 func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	nftJSON := make(NFTJSON)
-
 	if err := json.Unmarshal(b, &nftJSON); err != nil {
 		return err
 	}
@@ -220,7 +213,6 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
 		*nfts = append(*nfts, &bnft)
 	}
-
 	return nil
 }
 

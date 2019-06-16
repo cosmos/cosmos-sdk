@@ -241,7 +241,12 @@ func (k Keeper) GetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom str
 func (k Keeper) SetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom string, ids []string) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetOwnerKey(owner, denom)
-	store.Set(key, k.cdc.MustMarshalBinaryLengthPrefixed(ids))
+
+	var idCollection types.IDCollection
+	idCollection.Denom = denom
+	idCollection.IDs = ids
+
+	store.Set(key, k.cdc.MustMarshalBinaryLengthPrefixed(idCollection))
 }
 
 // SetOwner sets an entire Owner
@@ -266,11 +271,11 @@ func (k Keeper) IterateIDCollections(ctx sdk.Context, prefix []byte,
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var idCollection types.IDCollection
 
-		owner, _ := SplitOwnerKey(iterator.Key())
+		var idCollection types.IDCollection
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &idCollection)
 
+		owner, _ := SplitOwnerKey(iterator.Key())
 		if handler(owner, idCollection) {
 			break
 		}

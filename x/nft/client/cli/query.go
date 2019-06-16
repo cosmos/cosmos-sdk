@@ -124,7 +124,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out types.Collection
+			var out types.Collections
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

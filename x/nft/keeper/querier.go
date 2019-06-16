@@ -92,10 +92,6 @@ func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper)
 	}
 	owner := k.GetOwner(ctx, params.Owner)
 	bz := types.ModuleCdc.MustMarshalJSON(owner)
-
-	var foo types.Owner
-	types.ModuleCdc.MustUnmarshalJSON(bz, &foo)
-
 	return bz, nil
 }
 
@@ -113,11 +109,17 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 	}
 
 	collections := types.NewCollections(collection)
+	fmt.Println("collections", collections)
 
 	bz, err := collections.MarshalJSON()
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
+
+	var collectionsBack types.Collections
+	types.ModuleCdc.MustUnmarshalJSON(bz, &collectionsBack)
+	fmt.Println("collectionsBack", collectionsBack)
+
 	return bz, nil
 }
 

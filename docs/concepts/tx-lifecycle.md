@@ -98,7 +98,7 @@ The nodes validating transactions call an ABCI validation function, `CheckTx` to
 * The `runTx` function is called to run in `runTxModeCheck` mode, meaning the function will not execute the messages.
 * The transaction is unpacked into its messages and `validateBasic` is run for each one.
 * If an `AnteHandler` is defined, it is run. A deep copy of the internal state, `checkTxState`, is made and the `AnteHandler` performs the actions required for each message on it. Using a copy allows the handler to validate the transaction without modifying the last committed state, and revert back to the original if the execution fails.  The stateful check is able to detect errors such as insufficient funds held by an address.
-* The `[Context]`(https://github.com/cosmos/cosmos-sdk/blob/5f9c3fdf88952ea43316f1a18de572e7ae3c13f6/types/context.go) used to keep track of important data during execution of the transaction keeps a `GasMeter` which tracks how much gas has been used.
+* The [`Context`](https://github.com/cosmos/cosmos-sdk/blob/5f9c3fdf88952ea43316f1a18de572e7ae3c13f6/types/context.go) used to keep track of important data during execution of the transaction keeps a `GasMeter` which tracks how much gas has been used.
 * `RunTx` returns a result, which `CheckTx` formats into an ABCI `Response` which includes a log, data pertaining to the messages involved, and information about the amount of gas used.
 
 ### Gas Checking

@@ -4,12 +4,33 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/spf13/cobra"
 )
+
+// GetQueryCmd returns the cli query commands for this module
+func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	// Group nameservice queries under a subcommand
+	nftQueryCmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Querying commands for the NFT module",
+	}
+
+	nftQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryCollectionSupply(queryRoute, cdc),
+		GetCmdQueryOwner(queryRoute, cdc),
+		GetCmdQueryCollection(queryRoute, cdc),
+		GetCmdQueryNFT(queryRoute, cdc),
+		GetCmdQueryDenoms(queryRoute, cdc),
+	)...)
+
+	return nftQueryCmd
+}
 
 // GetCmdQueryCollectionSupply queries the supply of a nft collection
 func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -27,7 +48,7 @@ func GetCmdQueryCollectionSupply(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/supply/%s", queryRoute, denom), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/supply/%s", queryRoute, denom), bz)
 			if err != nil {
 				return err
 			}
@@ -66,9 +87,9 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 			var res []byte
 			if denom == "" {
-				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/owner", queryRoute), bz)
+				res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/owner", queryRoute), bz)
 			} else {
-				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/ownerByDenom", queryRoute), bz)
+				res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/ownerByDenom", queryRoute), bz)
 			}
 
 			if err != nil {
@@ -98,7 +119,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/collection", queryRoute), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/collection", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -127,7 +148,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -152,7 +173,7 @@ func GetCmdQueryDenoms(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), nil)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/nft", queryRoute), nil)
 			if err != nil {
 				return err
 			}

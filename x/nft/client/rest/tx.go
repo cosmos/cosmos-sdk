@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 
 	"github.com/gorilla/mux"
@@ -18,12 +18,14 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 	// Transfer an NFT to an address
 	r.HandleFunc(
-		"/nfts/transfer", transferNFTHandler(cdc, cliCtx),
+		"/nfts/transfer",
+		transferNFTHandler(cdc, cliCtx),
 	).Methods("POST")
 
 	// Update an NFT metadata
 	r.HandleFunc(
-		"/nfts/collection/{denom}/nft/{id}/metadata", editNFTMetadataHandler(cdc, cliCtx),
+		"/nfts/collection/{denom}/nft/{id}/metadata",
+		editNFTMetadataHandler(cdc, cliCtx),
 	).Methods("PUT")
 }
 
@@ -53,7 +55,7 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		// create the message
 		msg := types.NewMsgTransferNFT(cliCtx.GetFromAddress(), recipient, req.Denom, req.TokenID)
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -84,6 +86,6 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			req.Name, req.Description, req.Image, req.TokenURI,
 		)
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }

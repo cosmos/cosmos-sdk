@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,6 +20,23 @@ const (
 	flagImage       = "image"
 	flagTokenURI    = "tokenURI"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	nftTxCmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "NFT transactions subcommands",
+	}
+
+	nftTxCmd.AddCommand(client.PostCommands(
+		GetCmdTransferNFT(cdc),
+		GetCmdEditNFTMetadata(cdc),
+		GetCmdMintNFT(cdc),
+		GetCmdBurnNFT(cdc),
+	)...)
+
+	return nftTxCmd
+}
 
 // GetCmdTransferNFT is the CLI command for sending a TransferNFT transaction
 func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {

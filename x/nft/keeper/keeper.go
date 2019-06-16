@@ -227,14 +227,14 @@ func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress) (owner types.O
 
 // GetOwnerByDenom gets the ID Collection owned by an address of a specific denom
 func (k Keeper) GetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom string) (idCollection types.IDCollection, found bool) {
-	var ids []string
+
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetOwnerKey(owner, denom))
 	if b == nil {
 		return types.NewIDCollection(denom, []string{}), false
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &ids)
-	return types.NewIDCollection(denom, ids), true
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &idCollection)
+	return idCollection, true
 }
 
 // SetOwnerByDenom sets a collection of NFT IDs owned by an address

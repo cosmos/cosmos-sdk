@@ -10,6 +10,7 @@ var cdc = codec.New()
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*NFT)(nil), nil)
 	cdc.RegisterConcrete(&BaseNFT{}, "cosmos-sdk/BaseNFT", nil)
+	cdc.RegisterConcrete(NFTs{}, "cosmos-sdk/NFTs", nil)
 	cdc.RegisterConcrete(&IDCollections{}, "cosmos-sdk/IDCollections", nil)
 	cdc.RegisterConcrete(&IDCollection{}, "cosmos-sdk/IDCollection", nil)
 	cdc.RegisterConcrete(&Collection{}, "cosmos-sdk/Collection", nil)

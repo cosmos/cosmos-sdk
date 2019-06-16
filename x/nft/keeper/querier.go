@@ -108,17 +108,21 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	collections := types.NewCollections(collection)
-	fmt.Println("collections", collections)
+	fmt.Println("collection", collection)
 
-	bz, err := collections.MarshalJSON()
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
+	// collections := types.NewCollections(collection)
+	// fmt.Println("collections", collections)
 
-	var collectionsBack types.Collections
-	types.ModuleCdc.MustUnmarshalJSON(bz, &collectionsBack)
-	fmt.Println("collectionsBack", collectionsBack)
+	bz := types.ModuleCdc.MustMarshalJSON(collection)
+
+	// bz, err := collections.MarshalJSON()
+	// if err != nil {
+	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	// }
+
+	var collectionBack types.Collection
+	types.ModuleCdc.MustUnmarshalJSON(bz, &collectionBack)
+	fmt.Println("collectionBack", collectionBack)
 
 	return bz, nil
 }

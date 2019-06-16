@@ -92,6 +92,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 func TestCheckGenTx(t *testing.T) {
 	mApp := getMockApp(t)
 	mApp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
+	supplytypes.RegisterCodec(mApp.Cdc)
 
 	SetGenesis(mApp, accs)
 

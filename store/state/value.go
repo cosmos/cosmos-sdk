@@ -25,12 +25,7 @@ func (v Value) store(ctx Context) KVStore {
 func (v Value) Cdc() *codec.Codec {
 	return v.base.Cdc()
 }
-
 func (v Value) Get(ctx Context, ptr interface{}) {
-	v.base.cdc.MustUnmarshalBinaryBare(v.store(ctx).Get(v.key), ptr)
-}
-
-func (v Value) GetIfExists(ctx Context, ptr interface{}) {
 	bz := v.store(ctx).Get(v.key)
 	if bz != nil {
 		v.base.cdc.MustUnmarshalBinaryBare(bz, ptr)

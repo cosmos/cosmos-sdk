@@ -193,6 +193,10 @@ type CounterObject struct {
 	connection connection.CounterObject
 }
 
+func (obj Object) Key() []byte {
+	return obj.channel.Key()
+}
+
 func (obj Object) ChanID() string {
 	return obj.chanid
 }

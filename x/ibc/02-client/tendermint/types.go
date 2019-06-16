@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 var _ client.ConsensusState = ConsensusState{}
@@ -37,7 +38,7 @@ func (cs ConsensusState) update(header Header) ConsensusState {
 	return ConsensusState{
 		ChainID:          cs.ChainID,
 		Height:           uint64(header.Height),
-		Root:             header.AppHash,
+		Root:             merkle.Root(header.AppHash),
 		NextValidatorSet: header.NextValidatorSet,
 	}
 }

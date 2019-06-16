@@ -40,6 +40,38 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+type MsgUpdateClient struct {
+	ClientID string
+	Header   client.Header
+	Signer   sdk.AccAddress
+}
+
+var _ sdk.Msg = MsgUpdateClient{}
+
+func (msg MsgUpdateClient) Route() string {
+	return "ibc"
+}
+
+func (msg MsgUpdateClient) Type() string {
+	return "update-client"
+}
+
+func (msg MsgUpdateClient) ValidateBasic() sdk.Error {
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("empty address")
+	}
+	return nil
+}
+
+func (msg MsgUpdateClient) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
 type MsgOpenConnection struct {
 	ConnectionID         string
 	ClientID             string
@@ -48,17 +80,19 @@ type MsgOpenConnection struct {
 	Signer               sdk.AccAddress
 }
 
+var _ sdk.Msg = MsgOpenConnection{}
+
 func (msg MsgOpenConnection) Route() string {
 	return "ibc"
 }
 
 func (msg MsgOpenConnection) Type() string {
-	return "create-connection"
+	return "open-connection"
 }
 
 func (msg MsgOpenConnection) ValidateBasic() sdk.Error {
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("empty address")
+		return sdk.ErrInvalidAddress(msg.Signer.String())
 	}
 	return nil
 }
@@ -69,6 +103,43 @@ func (msg MsgOpenConnection) GetSignBytes() []byte {
 }
 
 func (msg MsgOpenConnection) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+type MsgOpenChannel struct {
+	ChannelID    string
+	ModuleID     string
+	ConnectionID string
+
+	CounterpartyID       string
+	CounterpartyModuleID string
+
+	Signer sdk.AccAddress
+}
+
+var _ sdk.Msg = MsgOpenConnection{}
+
+func (msg MsgOpenChannel) Route() string {
+	return "ibc"
+}
+
+func (msg MsgOpenChannel) Type() string {
+	return "open-channel"
+}
+
+func (msg MsgOpenChannel) ValidateBasic() sdk.Error {
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress(msg.Signer.String())
+	}
+	return nil
+}
+
+func (msg MsgOpenChannel) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgOpenChannel) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 

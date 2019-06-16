@@ -2,6 +2,7 @@ package connection
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -53,7 +54,7 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 }
 
 // CONTRACT: client and remote must be filled by the caller
-func (man Manager) object(id string) Object {
+func (man Manager) Object(id string) Object {
 	return Object{
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
@@ -75,22 +76,26 @@ func (man CounterpartyManager) object(id string) CounterObject {
 }
 
 func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (nobj NihiloObject, err error) {
-	obj := man.object(id)
+	obj := man.Object(id)
+	fmt.Println(111)
 	if obj.exists(ctx) {
 		err = errors.New("connection already exists for the provided id")
 		return
 	}
+	fmt.Println(222)
 	obj.client, err = man.client.Query(ctx, connection.Client)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
+	fmt.Println(333)
 
 	obj.connection.Set(ctx, connection)
 	return NihiloObject(obj), nil
 }
 
 func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
-	obj = man.object(key)
+	obj = man.Object(key)
 	if !obj.exists(ctx) {
 		return Object{}, errors.New("connection not exists for the provided id")
 	}
@@ -136,6 +141,10 @@ type CounterObject struct {
 
 func (obj Object) ID() string {
 	return obj.id
+}
+
+func (obj Object) Key() []byte {
+	return obj.connection.Key()
 }
 
 func (obj Object) ClientID() string {
@@ -196,6 +205,7 @@ func (obj Object) Value(ctx sdk.Context) (res Connection) {
 }
 
 func (nobj NihiloObject) Open(ctx sdk.Context) error {
+	fmt.Println(111)
 	obj := Object(nobj)
 	if !obj.state.Transit(ctx, Idle, Open) {
 		return errors.New("init on non-idle connection")
@@ -204,7 +214,6 @@ func (nobj NihiloObject) Open(ctx sdk.Context) error {
 }
 
 func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
-
 	obj := Object(nobj)
 	if !obj.state.Transit(ctx, Idle, Init) {
 		return errors.New("init on non-idle connection")

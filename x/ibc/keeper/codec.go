@@ -15,6 +15,7 @@ var ModuleCdc *codec.Codec
 func init() {
 	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
+	codec.RegisterCrypto(ModuleCdc)
 }
 
 func RegisterCodec(cdc *codec.Codec) {
@@ -23,4 +24,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	channel.RegisterCodec(cdc)
 	commitment.RegisterCodec(cdc)
 	merkle.RegisterCodec(cdc)
+
+	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/MsgCreateClient", nil)
+	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/MsgUpdateClient", nil)
+	cdc.RegisterConcrete(MsgOpenConnection{}, "ibc/MsgOpenConnection", nil)
 }

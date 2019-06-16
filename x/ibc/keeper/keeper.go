@@ -32,10 +32,14 @@ func DummyKeeper() Keeper {
 type ContextKeyRemoteKVStore struct{}
 
 func newKeeper(protocol state.Base, free state.Base, cidgen client.IDGenerator, cdc *codec.Codec) (k Keeper) {
+	client := client.NewManager(protocol, free, cidgen)
+	connection := connection.NewManager(protocol, free, client)
+	channel := channel.NewManager(protocol, connection)
+
 	k = Keeper{
-		Client:     client.NewManager(protocol, free, cidgen),
-		Connection: connection.NewManager(protocol, free, k.Client),
-		Channel:    channel.NewManager(protocol, k.Connection),
+		Client:     client,
+		Connection: connection,
+		Channel:    channel,
 		cdc:        cdc,
 	}
 

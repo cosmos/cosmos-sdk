@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -53,7 +54,7 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 	return man
 }
 */
-func (man Manager) object(id string) Object {
+func (man Manager) Object(id string) Object {
 	return Object{
 		id:     id,
 		client: man.protocol.Value([]byte(id)),
@@ -62,7 +63,7 @@ func (man Manager) object(id string) Object {
 }
 
 func (man Manager) Create(ctx sdk.Context, id string, cs ConsensusState) (Object, error) {
-	obj := man.object(id)
+	obj := man.Object(id)
 	if obj.exists(ctx) {
 		return Object{}, errors.New("Create client on already existing id")
 	}
@@ -71,10 +72,13 @@ func (man Manager) Create(ctx sdk.Context, id string, cs ConsensusState) (Object
 }
 
 func (man Manager) Query(ctx sdk.Context, id string) (Object, error) {
-	res := man.object(id)
+	res := man.Object(id)
+	fmt.Printf("%d %+v\n", 777, res)
 	if !res.exists(ctx) {
+		fmt.Println(id, 999)
 		return Object{}, errors.New("client not exists")
 	}
+	fmt.Println(888)
 	return res, nil
 }
 
@@ -104,6 +108,10 @@ func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.client.Exists(ctx)
 }
 
+func (obj Object) Key() []byte {
+	return obj.client.Key()
+}
+
 func (obj Object) ID() string {
 	return obj.id
 }
@@ -131,7 +139,7 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 	}
 
 	var stored ConsensusState
-	obj.client.GetIfExists(ctx, &stored)
+	obj.client.Get(ctx, &stored)
 	updated, err := stored.Validate(header)
 	if err != nil {
 		return err

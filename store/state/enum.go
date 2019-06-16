@@ -1,5 +1,7 @@
 package state
 
+import "fmt"
+
 type Enum struct {
 	Value
 }
@@ -9,10 +11,6 @@ func NewEnum(v Value) Enum {
 }
 
 func (v Enum) Get(ctx Context) byte {
-	return v.Value.GetRaw(ctx)[0]
-}
-
-func (v Enum) GetIfExists(ctx Context) byte {
 	res := v.Value.GetRaw(ctx)
 	if res != nil {
 		return res[0]
@@ -33,13 +31,14 @@ func (v Enum) Set(ctx Context, value byte) {
 }
 
 func (v Enum) Incr(ctx Context) (res byte) {
-	res = v.GetIfExists(ctx) + 1
+	res = v.Get(ctx) + 1
 	v.Set(ctx, res)
 	return
 }
 
 func (v Enum) Transit(ctx Context, from, to byte) bool {
-	if v.GetIfExists(ctx) != from {
+	if v.Get(ctx) != from {
+		fmt.Println("nnnnnnn", from, to, v.Get(ctx))
 		return false
 	}
 	v.Set(ctx, to)

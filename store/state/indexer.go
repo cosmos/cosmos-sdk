@@ -67,10 +67,6 @@ func (ix Indexer) Get(ctx Context, index uint64, ptr interface{}) {
 	ix.Value(index).Get(ctx, ptr)
 }
 
-func (ix Indexer) GetIfExists(ctx Context, index uint64, ptr interface{}) {
-	ix.Value(index).GetIfExists(ctx, ptr)
-}
-
 func (ix Indexer) GetSafe(ctx Context, index uint64, ptr interface{}) error {
 	return ix.Value(index).GetSafe(ctx, ptr)
 }

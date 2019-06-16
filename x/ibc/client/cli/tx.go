@@ -6,7 +6,6 @@ import (
 	//	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	//	"github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -44,8 +43,9 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ibcTxCmd.AddCommand(client.PostCommands(
 		GetCmdCreateClient(cdc),
-		GetCmdEstablish(cdc),
+		GetCmdOpenConnection(cdc),
 		//		GetCmdRelay(cdc),
+		GetCmdUpdateClient(cdc),
 	)...)
 
 	return ibcTxCmd
@@ -55,13 +55,14 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-client",
 		Short: "create new client with a consensus state",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			contents, err := ioutil.ReadFile(args[0])
+			contents, err := ioutil.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
@@ -72,7 +73,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg := ibc.MsgCreateClient{
-				ClientID:       viper.GetString(FlagClientID),
+				ClientID:       args[0],
 				ConsensusState: state,
 				Signer:         cliCtx.GetFromAddress(),
 			}
@@ -81,17 +82,49 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.MarkFlagRequired(FlagStatePath)
-	cmd.MarkFlagRequired(FlagClientID)
+	return cmd
+}
+
+func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-client",
+		Short: "update existing client with a header",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
+
+			contents, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
+			var header ibc.Header
+			if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				return err
+			}
+
+			msg := ibc.MsgUpdateClient{
+				ClientID: args[0],
+				Header:   header,
+				Signer:   cliCtx.GetFromAddress(),
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
 
 	return cmd
 }
 
-// gaiad tx ibc establish --node1 tcp://() --node2 tcp://() clientid connectionid channelid
-func GetCmdEstablish(cdc *codec.Codec) *cobra.Command {
+// gaiad tx ibc open-connection --node1 tcp://() --node2 tcp://() clientid connectionid channelid
+func GetCmdOpenConnection(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "establish",
-		Short: "establish connection between two chains",
+		Use:   "open-connection",
+		Short: "open connection connection between two chains",
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -99,10 +132,10 @@ func GetCmdEstablish(cdc *codec.Codec) *cobra.Command {
 				WithAccountDecoder(cdc)
 
 			msg := ibc.MsgOpenConnection{
-				ConnectionID:         viper.GetString(FlagConnectionID),
-				ClientID:             viper.GetString(FlagClientID),
-				CounterpartyID:       viper.GetString(FlagCounterpartyID),
-				CounterpartyClientID: viper.GetString(FlagCounterpartyClientID),
+				ConnectionID:         args[0],
+				ClientID:             args[1],
+				CounterpartyID:       args[2],
+				CounterpartyClientID: args[3],
 				Signer:               cliCtx.GetFromAddress(),
 			}
 

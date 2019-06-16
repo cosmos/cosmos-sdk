@@ -98,7 +98,7 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" {
+		if response == "y" || response == "yes" || response == "" {
 			return true, nil
 		} else if response == "n" || response == "no" {
 			return false, nil

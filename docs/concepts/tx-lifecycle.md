@@ -38,11 +38,11 @@ Up until broadcast, the transaction creation steps can be done offline (although
 ## Addition to Mempool
 Each full node that receives a transaction performs local checks to filter out invalid transactions before they get included in a block. The transactions approved by a node are held in its [**Mempool**](https://github.com/tendermint/tendermint/blob/75ffa2bf1c7d5805460d941a75112e6a0a38c039/mempool/mempool.go) (memory pool unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
 
-### Stateless Checks
-**Stateless** checks do not require the node to access the previous state - any light client or offline node can do them. Upon first receiving the transaction, an optional `PreCheckFunc` can be called to reject transactions that are clearly invalid as early as possible, such as ones exceeding the block size. Afterward, the next step is to unwrap the transaction into its message(s) and run each `validateBasic` function, which is simply a stateless sanity check (e.g. nonnegative numbers, nil strings, empty addresses).
+### Internal State
+**Stateless** checks do not require the node to access the previous state - a light client or offline node can do them. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the `Msg` definition. Upon first receiving the transaction, `PreCheckFunc` can be called to reject transactions that are clearly invalid as early as possible, such as ones exceeding the block size. **Stateful** checks validate transactions and messages based on a committed state. After running stateless checks, nodes should also check that the relevant values exist and are able to be transacted with, the address has sufficient funds, and the sender is authorized or has the correct ownership to transact.
 
-### Stateful Checks
-**Stateful** checks validate transactions and messages based on a committed state. An ABCI validation function, `CheckTx`, is run: the message's `AnteHandler` performs the actions required for each message using a deep copy of the internal state, `checkTxState`, to validate the transaction without modifying the last committed state. At a given moment, full nodes typically have multiple versions of the application's internal state that may differ from one another; they are synced upon each commit to reflect the new state of the network. The stateful check is able to detect errors such as insufficient funds held by an address.
+At a given moment, full nodes typically have multiple versions of the application's internal state for different purposes. For example, nodes will execute state changes while in the process of validating transactions, but still need a copy of the last committed state in order to answer queries - they should not respond using state that has not been committed yet. The nodes' internal states start off at the most recent state agreed upon by the network, diverge as transactions are validated and executed, then re-sync after a new block's transactions are executed and committed.
+
 
 ```
 		To perform state checks	  	   To execute state 		   To answer queries
@@ -92,9 +92,19 @@ States synced:  | CheckTxState(t+1)   |         | DeliverTxState(t+1) |		|   Que
 			  .				   .  				   .
 
 ```
-### PostChecks
-`CheckTx` also returns `GasUsed` which may or may not be less than the user's provided `GasWanted`. A `PostCheckFunc` is an optional filter run after `CheckTx` that can be used to enforce that users provide enough gas.
+### CheckTx
+The nodes validating transactions call an ABCI validation function, `CheckTx` to run stateful checks:
+* Nodes running Tendermint broadcast transactions in the generic `[]byte` form. Interfacing with the application, the transaction is first decoded.
+* The `runTx` function is called to run in `runTxModeCheck` mode, meaning the function will not execute the messages.
+* The transaction is unpacked into its messages and `validateBasic` is run for each one.
+* If an `AnteHandler` is defined, it is run. A deep copy of the internal state, `checkTxState`, is made and the `AnteHandler` performs the actions required for each message on it. Using a copy allows the handler to validate the transaction without modifying the last committed state, and revert back to the original if the execution fails.  The stateful check is able to detect errors such as insufficient funds held by an address.
+* The `[Context]`(https://github.com/cosmos/cosmos-sdk/blob/5f9c3fdf88952ea43316f1a18de572e7ae3c13f6/types/context.go) used to keep track of important data during execution of the transaction keeps a `GasMeter` which tracks how much gas has been used.
+* `RunTx` returns a result, which `CheckTx` formats into an ABCI `Response` which includes a log, data pertaining to the messages involved, and information about the amount of gas used.
 
+### Gas Checking
+If the transaction sender inputted maximum gas previously, it is known as the value `GasWanted`. `CheckTx` returns `GasUsed` which may or may not be less than the user's provided `GasWanted`. A `PostCheckFunc` is an optional filter run after `CheckTx` that can be used to enforce that users provide enough gas.
+
+If at any point during the checking stage the transaction is found to be invalid, the default protocol is to discard it and the transaction's lifecycle ends here. Otherwise, the transaction is a candidate to be included in the next block.
 
 ## Consensus
 At each round, a proposer is chosen amongst the validators to create and propose the next block. This validator (presumably honest) has generated a Mempool of validated transactions and now includes them in a block. The validators execute [Tendermint BFT Consensus](https://tendermint.com/docs/spec/consensus/consensus.html#terms); with 2/3 approval from the validators, the block is committed. Note that not all blocks have the same number of transactions and it is possible for consensus to result in a nil block or one with no transactions - here, it is assumed that the transaction has made it this far.

@@ -11,7 +11,7 @@ import (
 )
 
 // register all staking invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, f types.FeeCollectionKeeper,
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper, f types.FeeCollectionKeeper,
 	d types.DistributionKeeper, am types.AccountKeeper) {
 
 	ir.RegisterRoute(types.ModuleName, "supply",
@@ -126,7 +126,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v",
-					validator.GetTendermintPower(), powerKey, iterator.Key())
+					validator.GetConsensusPower(), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {

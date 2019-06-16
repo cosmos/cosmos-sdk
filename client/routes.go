@@ -4,11 +4,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Register routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	RegisterRPCRoutes(cliCtx, r)
-	RegisterTxRoutes(cliCtx, r, cdc)
 }

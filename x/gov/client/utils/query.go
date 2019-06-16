@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -37,10 +36,7 @@ func (p Proposer) String() string {
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func QueryDepositsByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params types.QueryProposalParams,
-) ([]byte, error) {
-
+func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposalParams) ([]byte, error) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, types.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
@@ -48,7 +44,7 @@ func QueryDepositsByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -70,10 +66,10 @@ func QueryDepositsByTxQuery(
 	}
 
 	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(deposits, "", "  ")
+		return cliCtx.Codec.MarshalJSONIndent(deposits, "", "  ")
 	}
 
-	return cdc.MarshalJSON(deposits)
+	return cliCtx.Codec.MarshalJSON(deposits)
 }
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
@@ -82,10 +78,7 @@ func QueryDepositsByTxQuery(
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func QueryVotesByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params types.QueryProposalParams,
-) ([]byte, error) {
-
+func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalParams) ([]byte, error) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, types.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
@@ -93,7 +86,7 @@ func QueryVotesByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -115,17 +108,14 @@ func QueryVotesByTxQuery(
 	}
 
 	if cliCtx.Indent {
-		return cdc.MarshalJSONIndent(votes, "", "  ")
+		return cliCtx.Codec.MarshalJSONIndent(votes, "", "  ")
 	}
 
-	return cdc.MarshalJSON(votes)
+	return cliCtx.Codec.MarshalJSON(votes)
 }
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func QueryVoteByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params types.QueryVoteParams,
-) ([]byte, error) {
-
+func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams) ([]byte, error) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, types.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
@@ -134,7 +124,7 @@ func QueryVoteByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +142,10 @@ func QueryVoteByTxQuery(
 				}
 
 				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(vote, "", "  ")
+					return cliCtx.Codec.MarshalJSONIndent(vote, "", "  ")
 				}
 
-				return cdc.MarshalJSON(vote)
+				return cliCtx.Codec.MarshalJSON(vote)
 			}
 		}
 	}
@@ -165,10 +155,7 @@ func QueryVoteByTxQuery(
 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
-func QueryDepositByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params types.QueryDepositParams,
-) ([]byte, error) {
-
+func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositParams) ([]byte, error) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, types.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
@@ -177,7 +164,7 @@ func QueryDepositByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -195,10 +182,10 @@ func QueryDepositByTxQuery(
 				}
 
 				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(deposit, "", "  ")
+					return cliCtx.Codec.MarshalJSONIndent(deposit, "", "  ")
 				}
 
-				return cdc.MarshalJSON(deposit)
+				return cliCtx.Codec.MarshalJSON(deposit)
 			}
 		}
 	}
@@ -208,10 +195,7 @@ func QueryDepositByTxQuery(
 
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by
 // ID.
-func QueryProposerByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
-) (Proposer, error) {
-
+func QueryProposerByTxQuery(cliCtx context.CLIContext, proposalID uint64) (Proposer, error) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, types.MsgSubmitProposal{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
@@ -219,7 +203,7 @@ func QueryProposerByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
+	searchResult, err := utils.QueryTxsByTags(cliCtx, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return Proposer{}, err
 	}
@@ -233,20 +217,22 @@ func QueryProposerByTxQuery(
 			}
 		}
 	}
+
 	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }
 
 // QueryProposalByID takes a proposalID and returns a proposal
-func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
+func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, queryRoute string) ([]byte, error) {
 	params := types.NewQueryProposalParams(proposalID)
-	bz, err := cdc.MarshalJSON(params)
+	bz, err := cliCtx.Codec.MarshalJSON(params)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, err
 }

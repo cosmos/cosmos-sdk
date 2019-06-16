@@ -9,7 +9,7 @@ import (
 )
 
 // register all distribution invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "can-withdraw",

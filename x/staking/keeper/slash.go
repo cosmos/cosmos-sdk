@@ -89,8 +89,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 		}
 
-		// Iterate through redelegations from slashed validator
-		redelegations := k.GetRedelegationsFromValidator(ctx, operatorAddress)
+		// Iterate through redelegations from slashed source validator
+		redelegations := k.GetRedelegationsFromSrcValidator(ctx, operatorAddress)
 		for _, redelegation := range redelegations {
 			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
@@ -218,13 +218,13 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
-// nolint: unparam
-func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
+// NOTE this is only slashing for prior infractions from the source validator
+func (k Keeper) slashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
-	burnedAmount := sdk.ZeroInt()
+	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
@@ -262,10 +262,18 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
-		burnedAmount = burnedAmount.Add(tokensToBurn)
+		switch {
+		case srcValidator.IsBonded():
+			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
+		case srcValidator.IsUnbonded(), srcValidator.IsUnbonding():
+			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
+		}
 	}
 
-	if err := k.removeBondedTokens(ctx, burnedAmount); err != nil {
+	if err := k.removeBondedTokens(ctx, bondedBurnedAmount); err != nil {
+		panic(err)
+	}
+	if err := k.removeNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
 		panic(err)
 	}
 

@@ -39,6 +39,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	defer iterator.Close()
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
+		// everything that is iterated in this loop is becoming or already a
+		// part of the bonded validator set
+
 		// fetch the validator
 		valAddr := sdk.ValAddress(iterator.Value())
 		validator := k.mustGetValidator(ctx, valAddr)
@@ -103,6 +106,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// bonded to unbonding
 		validator = k.bondedToUnbonding(ctx, validator)
+		k.bondedTokensToNotBonded(ctx, validator.GetTokens())
 
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())

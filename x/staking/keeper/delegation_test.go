@@ -171,12 +171,13 @@ func TestUnbondDelegation(t *testing.T) {
 
 	startTokens := sdk.TokensFromTendermintPower(10)
 
-	bondedPool := keeper.GetBondedPool(ctx)
-	err := bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
+	notBondedPool := keeper.GetNotBondedPool(ctx)
+	err := notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens)))
 	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	//create a validator and a delegator to that validator
+	// create a validator and a delegator to that validator
+	// note this validator starts not-bonded
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
@@ -286,10 +287,10 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
 
 	// add bonded tokens to pool for delegations
-	bondedPool := keeper.GetBondedPool(ctx)
-	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(startCoins))
+	notBondedPool := keeper.GetNotBondedPool(ctx)
+	err := notBondedPool.SetCoins(notBondedPool.GetCoins().Add(startCoins))
 	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -530,7 +531,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state
-func TestGetRedelegationsFromValidator(t *testing.T) {
+func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
@@ -543,12 +544,12 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 	require.True(t, found)
 
 	// get the redelegations one time
-	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	redelegations := keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))
 
 	// get the redelegations a second time, should be exactly the same
-	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	redelegations = keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))
 }
@@ -570,7 +571,7 @@ func TestRedelegation(t *testing.T) {
 	resRed, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 
-	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	redelegations := keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
@@ -594,7 +595,7 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.True(t, rd.Equal(resRed))
 
-	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	redelegations = keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 

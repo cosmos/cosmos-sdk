@@ -25,14 +25,12 @@ func init() {
 	log.SetPrefix("")
 	log.SetFlags(0)
 
-	// this flag seems unnecessary, we can reintriduce it once we support multiple versions migration at once
-	flag.StringVar(&source, "source", "v0.34", "The SDK version that exported the genesis")
-	flag.StringVar(&target, "target", "", "The target SDK genesis version")
-	flag.StringVar(&importGenesis, "genesis", "", "Source genesis file")
+	// this flag will be used once we support more than one previous version
+	flag.StringVar(&source, "source", "", "The SDK version that exported the genesis")
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-target v0.36] [-genesis genesis.json]
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(),
+			`Usage: %s [v0.36] [genesis.json] [-source v0.34]
 Migrate the source genesis into the target version and export it as standard output
 `, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
@@ -41,12 +39,13 @@ Migrate the source genesis into the target version and export it as standard out
 
 func main() {
 	flag.Parse()
-	if target == "" {
-		log.Fatalln("Target version must be specified: -target v0.36")
+	if flag.NArg() < 2 || flag.NArg() > 4 {
+		log.Println("wrong number of arguments provided")
+		flag.Usage()
+		os.Exit(1)
 	}
-	if importGenesis == "" {
-		log.Fatalln("Source genesis file must be specified: -genesis genesis.json")
-	}
+	target = flag.Arg(0)
+	importGenesis = flag.Arg(1)
 
 	// This function should be modularized, for now we read and dump genesis committed to git,
 	// to simplify the creation of a CCI script that tests three different things:

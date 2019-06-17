@@ -8,9 +8,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 func TestBalances(t *testing.T) {
@@ -26,8 +26,8 @@ func TestBalances(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, res)
 
-	_, _, addr := types.KeyTestPubAddr()
-	req.Data = input.cdc.MustMarshalJSON(sdk.NewQueryAccountParams(addr))
+	_, _, addr := authtypes.KeyTestPubAddr()
+	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
 	res, err = querier(input.ctx, []string{"balances"}, req)
 	require.Nil(t, err) // the account does not exist, no error returned anyway
 	require.NotNil(t, res)

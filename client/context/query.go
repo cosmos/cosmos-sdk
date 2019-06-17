@@ -133,7 +133,7 @@ func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 // queryAccount queries an account using custom query endpoint of auth module
 // returns an error if result is `null` otherwise account data
 func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
-	bz, err := ctx.Codec.MarshalJSON(sdk.NewQueryAccountParams(addr))
+	bz, err := ctx.Codec.MarshalJSON(authtypes.NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, err
 	}

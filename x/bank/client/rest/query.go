@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 // query accountREST Handler
@@ -29,7 +30,7 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		params := sdk.NewQueryAccountParams(addr)
+		params := types.NewQueryAccountParams(addr)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

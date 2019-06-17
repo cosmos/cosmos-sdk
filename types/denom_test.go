@@ -50,9 +50,9 @@ func TestConvertCoins(t *testing.T) {
 		result Coin
 		expErr bool
 	}{
-		{NewCoin("foo", ZeroInt()), atom, Coin{}, true},
-		{NewCoin(atom, ZeroInt()), "foo", Coin{}, true},
-		{NewCoin(atom, ZeroInt()), "FOO", Coin{}, true},
+		{Coin{"foo", ZeroInt()}, atom, Coin{}, true},
+		{Coin{atom, ZeroInt()}, "foo", Coin{}, true},
+		{Coin{atom, ZeroInt()}, "FOO", Coin{}, true},
 
 		{NewCoin(atom, NewInt(5)), matom, NewCoin(matom, NewInt(5000)), false},       // atom => matom
 		{NewCoin(atom, NewInt(5)), uatom, NewCoin(uatom, NewInt(5000000)), false},    // atom => uatom

@@ -128,11 +128,11 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, rest.ResponseWithHeight{res, height})
 	}
 }

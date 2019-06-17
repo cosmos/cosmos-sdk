@@ -44,7 +44,7 @@ The files in each sub-folders do not matter and will likely change. What matters
 - `concepts`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
 - `clients`: Contains specs and info about the various SDK clients.
 - `spec`: Contains specs of modules, and others.
-- `modules`: Contains links to godocs and the spec of the modules.
+- `modules`: Contains links to `godocs` and the spec of the modules.
 - `architecture`: Contains architecture-related docs like the present one.
 - `translations`: Contains different translations of the documentation.
 

@@ -26,8 +26,6 @@ var (
 // app module basics object
 type AppModuleBasic struct{}
 
-var _ module.AppModuleBasic = AppModuleBasic{}
-
 // module name
 func (AppModuleBasic) Name() string { return ModuleName }
 
@@ -94,10 +92,12 @@ func (AppModule) Route() string { return RouterKey }
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string { return RouterKey }
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return keeper.NewQuerier(am.keeper)
+}
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {

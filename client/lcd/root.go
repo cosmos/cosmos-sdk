@@ -3,20 +3,25 @@ package lcd
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+
+	// unnamed import of statik for swagger UI support
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
 // RestServer represents the Light Client Rest server
@@ -24,7 +29,6 @@ type RestServer struct {
 	Mux     *mux.Router
 	CliCtx  context.CLIContext
 	KeyBase keybase.Keybase
-	Cdc     *codec.Codec
 
 	log         log.Logger
 	listener    net.Listener
@@ -40,7 +44,6 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 	return &RestServer{
 		Mux:    r,
 		CliCtx: cliCtx,
-		Cdc:    cdc,
 		log:    logger,
 	}
 }
@@ -65,7 +68,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	rs.log.Info(
 		fmt.Sprintf(
 			"Starting application REST service (chain-id: %q)...",
-			viper.GetString(client.FlagChainID),
+			viper.GetString(flags.FlagChainID),
 		),
 	)
 
@@ -83,18 +86,28 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
+			rs.registerSwaggerUI()
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(
-				viper.GetString(client.FlagListenAddr),
-				viper.GetInt(client.FlagMaxOpenConnections),
-				uint(viper.GetInt(client.FlagRPCReadTimeout)),
-				uint(viper.GetInt(client.FlagRPCWriteTimeout)),
+				viper.GetString(flags.FlagListenAddr),
+				viper.GetInt(flags.FlagMaxOpenConnections),
+				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
+				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
 			)
 
 			return err
 		},
 	}
 
-	return client.RegisterRestServerFlags(cmd)
+	return flags.RegisterRestServerFlags(cmd)
+}
+
+func (rs *RestServer) registerSwaggerUI() {
+	statikFS, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+	staticServer := http.FileServer(statikFS)
+	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }

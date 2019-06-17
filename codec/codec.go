@@ -3,6 +3,7 @@ package codec
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	amino "github.com/tendermint/go-amino"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -12,8 +13,7 @@ import (
 type Codec = amino.Codec
 
 func New() *Codec {
-	cdc := amino.NewCodec()
-	return cdc
+	return amino.NewCodec()
 }
 
 // Register the go-crypto to the codec
@@ -34,6 +34,16 @@ func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return out.Bytes(), nil
+}
+
+// MustMarshalJSONIndent executes MarshalJSONIndent except it panics upon failure.
+func MustMarshalJSONIndent(cdc *Codec, obj interface{}) []byte {
+	bz, err := MarshalJSONIndent(cdc, obj)
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal JSON: %s", err))
+	}
+
+	return bz
 }
 
 //__________________________________________________________________

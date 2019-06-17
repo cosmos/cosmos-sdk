@@ -19,7 +19,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	lInfo := ledgerInfo{
 		"some_name",
 		tmpKey,
-		*hd.NewFundraiserParams(5, 1)}
+		*hd.NewFundraiserParams(5, types.CoinType, 1)}
 	assert.Equal(t, TypeLedger, lInfo.GetType())
 
 	path, err := lInfo.GetPath()

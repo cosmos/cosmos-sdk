@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -26,8 +27,6 @@ func (spc simParamChange) compKey() string {
 // paramChangePool defines a static slice of possible simulated parameter changes
 // where each simParamChange corresponds to a ParamChange with a simValue
 // function to generate a simulated new value.
-//
-// TODO: governance parameters (blocked on an upgrade to go-amino)
 var paramChangePool = []simParamChange{
 	// staking parameters
 	{
@@ -35,7 +34,7 @@ var paramChangePool = []simParamChange{
 		"MaxValidators",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("%d", simulation.ModuleParamSimulator["MaxValidators"](r).(uint16))
+			return fmt.Sprintf("%d", simulation.ModuleParamSimulator[simulation.MaxValidators](r).(uint16))
 		},
 	},
 	{
@@ -43,7 +42,7 @@ var paramChangePool = []simParamChange{
 		"UnbondingTime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.UnbondingTime](r).(time.Duration))
 		},
 	},
 	// slashing parameters
@@ -52,7 +51,7 @@ var paramChangePool = []simParamChange{
 		"SignedBlocksWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.SignedBlocksWindow](r).(int64))
 		},
 	},
 	{
@@ -60,7 +59,7 @@ var paramChangePool = []simParamChange{
 		"MinSignedPerWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.MinSignedPerWindow](r).(sdk.Dec))
 		},
 	},
 	{
@@ -68,7 +67,7 @@ var paramChangePool = []simParamChange{
 		"SlashFractionDowntime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.SlashFractionDowntime](r).(sdk.Dec))
 		},
 	},
 	// minting parameters
@@ -77,7 +76,56 @@ var paramChangePool = []simParamChange{
 		"InflationRateChange",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.InflationRateChange](r).(sdk.Dec))
+		},
+	},
+	// gov parameters
+	{
+		"gov",
+		"votingparams",
+		"",
+		func(r *rand.Rand) string {
+			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator[simulation.VotingParamsVotingPeriod](r).(time.Duration))
+		},
+	},
+	{
+		"gov",
+		"depositparams",
+		"",
+		func(r *rand.Rand) string {
+			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator[simulation.VotingParamsVotingPeriod](r).(time.Duration))
+		},
+	},
+	{
+		"gov",
+		"tallyparams",
+		"",
+		func(r *rand.Rand) string {
+			changes := []struct {
+				key   string
+				value sdk.Dec
+			}{
+				{"quorum", simulation.ModuleParamSimulator[simulation.TallyParamsQuorum](r).(sdk.Dec)},
+				{"threshold", simulation.ModuleParamSimulator[simulation.TallyParamsThreshold](r).(sdk.Dec)},
+				{"veto", simulation.ModuleParamSimulator[simulation.TallyParamsVeto](r).(sdk.Dec)},
+			}
+
+			pc := make(map[string]string)
+			numChanges := simulation.RandIntBetween(r, 1, len(changes))
+			for i := 0; i < numChanges; i++ {
+				c := changes[r.Intn(len(changes))]
+
+				_, ok := pc[c.key]
+				for ok {
+					c := changes[r.Intn(len(changes))]
+					_, ok = pc[c.key]
+				}
+
+				pc[c.key] = c.value.String()
+			}
+
+			bz, _ := json.Marshal(pc)
+			return string(bz)
 		},
 	},
 	// auth parameters
@@ -86,7 +134,7 @@ var paramChangePool = []simParamChange{
 		"MaxMemoCharacters",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.MaxMemoChars](r).(uint64))
 		},
 	},
 	{
@@ -94,7 +142,7 @@ var paramChangePool = []simParamChange{
 		"TxSigLimit",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.TxSigLimit](r).(uint64))
 		},
 	},
 	{
@@ -102,7 +150,7 @@ var paramChangePool = []simParamChange{
 		"TxSizeCostPerByte",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.TxSizeCostPerByte](r).(uint64))
 		},
 	},
 }
@@ -126,7 +174,7 @@ func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.
 		}
 
 		paramChangesKeys[spc.compKey()] = struct{}{}
-		paramChanges[i] = params.NewParamChange(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
+		paramChanges[i] = params.NewParamChangeWithSubkey(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
 	}
 
 	return params.NewParameterChangeProposal(

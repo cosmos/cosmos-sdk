@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -53,7 +54,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		}
 
 		// Set timeslice if necessary
-		if validator.Status == sdk.Unbonding {
+		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
 		}
 	}
@@ -143,10 +144,10 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
-	keeper.IterateLastValidators(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator exported.ValidatorI) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetConsPubKey(),
-			Power:  validator.GetTendermintPower(),
+			Power:  validator.GetConsensusPower(),
 			Name:   validator.GetMoniker(),
 		})
 
@@ -179,10 +180,10 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		if _, ok := addrMap[strKey]; ok {
 			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.Jailed && val.Status == sdk.Bonded {
+		if val.Jailed && val.IsBonded() {
 			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.DelegatorShares.IsZero() && val.Status != sdk.Unbonding {
+		if val.DelegatorShares.IsZero() && !val.IsUnbonding() {
 			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)
 		}
 		addrMap[strKey] = true

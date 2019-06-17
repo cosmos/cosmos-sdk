@@ -1,4 +1,4 @@
-package keeper
+package keeper // noalias
 
 import (
 	"bytes"
@@ -79,7 +79,7 @@ func MakeTestCodec() *codec.Codec {
 // If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromConsensusPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
@@ -225,11 +225,11 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	keeper.SetValidator(ctx, validator)
 	{ // Remove any existing power key for validator.
 		store := ctx.KVStore(keeper.storeKey)
-		iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
+		iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 		defer iterator.Close()
 		deleted := false
 		for ; iterator.Valid(); iterator.Next() {
-			valAddr := parseValidatorPowerRankKey(iterator.Key())
+			valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
 			if bytes.Equal(valAddr, validator.OperatorAddress) {
 				if deleted {
 					panic("found duplicate power index key")

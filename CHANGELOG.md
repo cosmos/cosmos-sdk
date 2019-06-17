@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.34.7
+
+### Bug Fixes
+
+#### SDK
+
+* Fix gas consumption bug in `Undelegate` preventing the ability to sync from
+genesis.
+
+## 0.34.6
+
+### Bug Fixes
+
+#### SDK
+
+* Unbonding from a validator is now only considered "complete" after the full
+unbonding period has elapsed regardless of the validator's status.
+
 ## 0.34.5
 
 ### Bug Fixes

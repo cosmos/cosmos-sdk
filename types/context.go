@@ -257,7 +257,7 @@ type cloner interface {
 	Clone() interface{} // deep copy
 }
 
-// XXX add description
+// TODO add description
 type Op struct {
 	// type is always 'with'
 	gen   int

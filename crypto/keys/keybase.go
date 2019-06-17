@@ -115,13 +115,15 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	}
 
 	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
+	fullFundraiserPath := types.GetConfig().GetFullFundraiserPath()
+	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
 	return
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := hd.NewFundraiserParams(account, index)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -142,7 +144,8 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, acco
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	hdPath := hd.NewFundraiserParams(account, index)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err
@@ -334,6 +337,35 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return
 	}
 	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes()), nil
+}
+
+// ExportPrivKey returns a private key in ASCII armored format.
+// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
+func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
+	encryptPassphrase string) (armor string, err error) {
+	priv, err := kb.ExportPrivateKeyObject(name, decryptPassphrase)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase), nil
+}
+
+// ImportPrivKey imports a private key in ASCII armor format.
+// It returns an error if a key with the same name exists or a wrong encryption passphrase is
+// supplied.
+func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+	if _, err := kb.Get(name); err == nil {
+		return errors.New("Cannot overwrite key " + name)
+	}
+
+	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	if err != nil {
+		return errors.Wrap(err, "couldn't import private key")
+	}
+
+	kb.writeLocalKey(name, privKey, passphrase)
+	return nil
 }
 
 func (kb dbKeybase) Import(name string, armor string) (err error) {

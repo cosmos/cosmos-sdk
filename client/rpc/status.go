@@ -11,8 +11,9 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
@@ -24,9 +25,9 @@ func StatusCommand() *cobra.Command {
 		RunE:  printNodeStatus,
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -44,7 +45,7 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
 	// No need to verify proof in getting node status
-	viper.Set(client.FlagTrustNode, true)
+	viper.Set(flags.FlagTrustNode, true)
 	cliCtx := context.NewCLIContext()
 	status, err := getNodeStatus(cliCtx)
 	if err != nil {
@@ -53,9 +54,9 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 
 	var output []byte
 	if cliCtx.Indent {
-		output, err = cdc.MarshalJSONIndent(status, "", "  ")
+		output, err = codec.Cdc.MarshalJSONIndent(status, "", "  ")
 	} else {
-		output, err = cdc.MarshalJSON(status)
+		output, err = codec.Cdc.MarshalJSON(status)
 	}
 	if err != nil {
 		return err
@@ -77,7 +78,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		rest.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, nodeInfo)
 	}
 }
 

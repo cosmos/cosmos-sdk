@@ -1,9 +1,8 @@
 package keys
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func listKeysCmd() *cobra.Command {
@@ -14,7 +13,7 @@ func listKeysCmd() *cobra.Command {
 along with their associated name and address.`,
 		RunE: runListCmd,
 	}
-	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 

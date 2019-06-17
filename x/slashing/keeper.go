@@ -10,27 +10,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey     sdk.StoreKey
-	cdc          *codec.Codec
-	validatorSet sdk.ValidatorSet
-	paramspace   params.Subspace
+	storeKey   sdk.StoreKey
+	cdc        *codec.Codec
+	sk         types.StakingKeeper
+	paramspace params.Subspace
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:     key,
-		cdc:          cdc,
-		validatorSet: vs,
-		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
-		codespace:    codespace,
+		storeKey:   key,
+		cdc:        cdc,
+		sk:         sk,
+		paramspace: paramspace.WithKeyTable(ParamKeyTable()),
+		codespace:  codespace,
 	}
 	return keeper
 }
@@ -40,7 +41,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("m
 
 // handle a validator signing two blocks at the same height
 // power: power of the double-signing validator at the height of infraction
-func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
+func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := k.Logger(ctx)
 
 	// calculate the age of the evidence
@@ -71,8 +72,8 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	}
 
 	// Get validator and signing info
-	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.GetStatus() == sdk.Unbonded {
+	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+	if validator == nil || validator.IsUnbonded() {
 		// Defensive.
 		// Simulation doesn't take unbonding periods into account, and
 		// Tendermint might break this assumption at some point.
@@ -108,19 +109,19 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
 	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
-	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
 	if !validator.IsJailed() {
-		k.validatorSet.Jail(ctx, consAddr)
+		k.sk.Jail(ctx, consAddr)
 	}
 
 	// Set tombstoned to be true
 	signInfo.Tombstoned = true
 
 	// Set jailed until to be forever (max time)
-	signInfo.JailedUntil = DoubleSignJailEndTime
+	signInfo.JailedUntil = types.DoubleSignJailEndTime
 
 	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
@@ -128,7 +129,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 // handle a validator signature, must be called once per validator per block
 // TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
-func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
+func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
 	consAddr := sdk.ConsAddress(addr)
@@ -175,7 +176,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
-		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.IsJailed() {
 
 			// Downtime confirmed: slash and jail the validator
@@ -188,8 +189,8 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
-			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
-			k.validatorSet.Jail(ctx, consAddr)
+			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+			k.sk.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
@@ -215,7 +216,7 @@ func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 	var pubkey crypto.PubKey
-	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
 		return nil, fmt.Errorf("address %v not found", address)
 	}
@@ -225,10 +226,10 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(pubkey)
-	store.Set(getAddrPubkeyRelationKey(addr), bz)
+	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(getAddrPubkeyRelationKey(addr))
+	store.Delete(types.GetAddrPubkeyRelationKey(addr))
 }

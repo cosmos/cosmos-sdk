@@ -29,6 +29,8 @@ module.exports = {
         collapsable: true,
         children: [
           "/intro/",
+          "/intro/why-app-specific",
+          "/intro/sdk-app-architecture",
           "/intro/sdk-design",
           "/intro/ocap"
         ]
@@ -40,6 +42,7 @@ module.exports = {
           "/tutorial/",
           "/tutorial/app-design",
           "/tutorial/app-init",
+          "/tutorial/types",
           "/tutorial/keeper",
           "/tutorial/msgs-handlers",
           "/tutorial/set-name",
@@ -48,9 +51,11 @@ module.exports = {
           "/tutorial/codec",
           "/tutorial/cli",
           "/tutorial/rest",
+          "/tutorial/module",
+          "/tutorial/genesis",
           "/tutorial/app-complete",
           "/tutorial/entrypoint",
-          "/tutorial/dep",
+          "/tutorial/gomod",
           "/tutorial/build-run",
           "/tutorial/run-rest"
         ]

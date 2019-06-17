@@ -13,13 +13,19 @@ import (
 
 const aminoCacheSize = 500
 
+// Implements ValidatorSet interface
+var _ types.ValidatorSet = Keeper{}
+
+// Implements DelegationSet interface
+var _ types.DelegationSet = Keeper{}
+
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
 	bankKeeper         types.BankKeeper
-	hooks              sdk.StakingHooks
+	hooks              types.StakingHooks
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
 	validatorCacheList *list.List
@@ -49,7 +55,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper,
 func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/staking") }
 
 // Set the validator hooks
-func (k *Keeper) SetHooks(sh sdk.StakingHooks) *Keeper {
+func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
@@ -65,7 +71,7 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 // get the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(PoolKey)
+	b := store.Get(types.PoolKey)
 	if b == nil {
 		panic("stored pool should not have been nil")
 	}
@@ -77,13 +83,13 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
-	store.Set(PoolKey, b)
+	store.Set(types.PoolKey, b)
 }
 
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(LastTotalPowerKey)
+	b := store.Get(types.LastTotalPowerKey)
 	if b == nil {
 		return sdk.ZeroInt()
 	}
@@ -95,5 +101,5 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
-	store.Set(LastTotalPowerKey, b)
+	store.Set(types.LastTotalPowerKey, b)
 }

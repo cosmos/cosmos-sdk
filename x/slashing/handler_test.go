@@ -15,7 +15,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
-	amt := sdk.TokensFromTendermintPower(100)
+	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := addrs[0], pks[0]
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := staking.NewHandler(sk)(ctx, msg)
@@ -40,7 +40,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], sdk.TokensFromTendermintPower(amtInt)
+	addr, val, amt := addrs[0], pks[0], sdk.TokensFromConsensusPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	got := staking.NewHandler(sk)(ctx, msg)
@@ -73,7 +73,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	// create a validator
-	bondAmount := sdk.TokensFromTendermintPower(10)
+	bondAmount := sdk.TokensFromConsensusPower(10)
 	valPubKey := pks[0]
 	valAddr, consAddr := addrs[1], sdk.ConsAddress(addrs[0])
 

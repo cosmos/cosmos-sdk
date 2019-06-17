@@ -45,6 +45,59 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	return tree, types.CommitID{ver, hash}
 }
 
+func TestGetImmutable(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, cID := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree, 10, 10)
+
+	require.True(t, tree.Set([]byte("hello"), []byte("adios")))
+	hash, ver, err := tree.SaveVersion()
+	cID = types.CommitID{ver, hash}
+	require.Nil(t, err)
+
+	_, err = store.GetImmutable(cID.Version + 1)
+	require.Error(t, err)
+
+	newStore, err := store.GetImmutable(cID.Version - 1)
+	require.NoError(t, err)
+	require.Equal(t, newStore.Get([]byte("hello")), []byte("goodbye"))
+
+	newStore, err = store.GetImmutable(cID.Version)
+	require.NoError(t, err)
+	require.Equal(t, newStore.Get([]byte("hello")), []byte("adios"))
+
+	res := newStore.Query(abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
+	require.Equal(t, res.Value, []byte("adios"))
+	require.NotNil(t, res.Proof)
+
+	require.Panics(t, func() { newStore.Set(nil, nil) })
+	require.Panics(t, func() { newStore.Delete(nil) })
+	require.Panics(t, func() { newStore.Commit() })
+}
+
+func TestTestGetImmutableIterator(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, cID := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree, 10, 10)
+
+	newStore, err := store.GetImmutable(cID.Version)
+	require.NoError(t, err)
+
+	iter := newStore.Iterator([]byte("aloha"), []byte("hellz"))
+	expected := []string{"aloha", "hello"}
+	var i int
+
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
+		i++
+	}
+
+	require.Equal(t, len(expected), i)
+}
+
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)

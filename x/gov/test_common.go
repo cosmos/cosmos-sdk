@@ -2,6 +2,7 @@ package gov
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"sort"
 	"testing"
@@ -40,9 +41,11 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
-	rtr := NewRouter().AddRoute(RouterKey, ProposalHandler)
-
 	pk := mApp.ParamsKeeper
+
+	rtr := NewRouter().
+		AddRoute(RouterKey, ProposalHandler)
+
 	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace, rtr)
@@ -55,7 +58,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
 
-	valTokens := sdk.TokensFromTendermintPower(42)
+	valTokens := sdk.TokensFromConsensusPower(42)
 
 	var (
 		addrs    []sdk.AccAddress
@@ -91,7 +94,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
+		tokens := sdk.TokensFromConsensusPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		validators := staking.InitGenesis(ctx, stakingKeeper, accountKeeper, stakingGenesis)
@@ -153,6 +156,28 @@ func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
 
+const contextKeyBadProposal = "contextKeyBadProposal"
+
+// badProposalHandler implements a governance proposal handler that is identical
+// to the actual handler except this fails if the context doesn't contain a value
+// for the key contextKeyBadProposal or if the value is false.
+func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
+	switch c.ProposalType() {
+	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
+		v := ctx.Value(contextKeyBadProposal)
+
+		if v == nil || !v.(bool) {
+			return sdk.ErrInternal("proposal failed")
+		}
+
+		return nil
+
+	default:
+		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
+		return sdk.ErrUnknownRequest(errMsg)
+	}
+}
+
 // checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
@@ -166,8 +191,8 @@ var (
 		ed25519.GenPrivKey().PubKey(),
 	}
 
-	testDescription   = staking.NewDescription("T", "E", "S", "T")
-	testCommissionMsg = staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	testDescription     = staking.NewDescription("T", "E", "S", "T")
+	testCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
@@ -175,10 +200,10 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			testDescription, testCommissionMsg, sdk.OneInt(),
+			testDescription, testCommissionRates, sdk.OneInt(),
 		)
 
 		res := stakingHandler(ctx, valCreateMsg)

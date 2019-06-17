@@ -2,13 +2,9 @@ package context
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"strings"
 
 	"github.com/pkg/errors"
-
-	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -19,6 +15,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -31,28 +29,34 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	return ctx.Client, nil
 }
 
-// Query performs a query for information about the connected node.
-func (ctx CLIContext) Query(path string, data cmn.HexBytes) (res []byte, err error) {
+// Query performs a query to a Tendermint node with the provided path.
+// It returns the result and height of the query upon success or an error if
+// the query fails.
+func (ctx CLIContext) Query(path string) ([]byte, int64, error) {
+	return ctx.query(path, nil)
+}
+
+// QueryWithData performs a query to a Tendermint node with the provided path
+// and a data payload. It returns the result and height of the query upon success
+// or an error if the query fails.
+func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, error) {
 	return ctx.query(path, data)
 }
 
-// Query information about the connected node with a data payload
-func (ctx CLIContext) QueryWithData(path string, data []byte) (res []byte, err error) {
-	return ctx.query(path, data)
-}
-
-// QueryStore performs a query from a Tendermint node with the provided key and
-// store name.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {
+// QueryStore performs a query to a Tendermint node with the provided key and
+// store name. It returns the result and height of the query upon success
+// or an error if the query fails.
+func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
-// QuerySubspace performs a query from a Tendermint node with the provided
-// store name and subspace.
-func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, err error) {
-	resRaw, err := ctx.queryStore(subspace, storeName, "subspace")
+// QuerySubspace performs a query to a Tendermint node with the provided
+// store name and subspace. It returns key value pair and height of the query
+// upon success or an error if the query fails.
+func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, height int64, err error) {
+	resRaw, height, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
-		return res, err
+		return res, height, err
 	}
 
 	ctx.Codec.MustUnmarshalBinaryLengthPrefixed(resRaw, &res)
@@ -61,7 +65,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
+func (ctx CLIContext) GetAccount(address []byte) (authtypes.Account, error) {
 	if ctx.AccDecoder == nil {
 		return nil, errors.New("account decoder required but not provided")
 	}
@@ -71,7 +75,7 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 		return nil, err
 	}
 
-	var account auth.Account
+	var account authtypes.Account
 	if err := ctx.Codec.UnmarshalJSON(res, &account); err != nil {
 		return nil, err
 	}
@@ -129,14 +133,14 @@ func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 // queryAccount queries an account using custom query endpoint of auth module
 // returns an error if result is `null` otherwise account data
 func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
-	bz, err := ctx.Codec.MarshalJSON(auth.NewQueryAccountParams(addr))
+	bz, err := ctx.Codec.MarshalJSON(authtypes.NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, err
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, auth.QueryAccount)
+	route := fmt.Sprintf("custom/%s/%s", ctx.AccountStore, authtypes.QueryAccount)
 
-	res, err := ctx.QueryWithData(route, bz)
+	res, _, err := ctx.query(route, bz)
 	if err != nil {
 		return nil, err
 	}
@@ -144,12 +148,13 @@ func (ctx CLIContext) queryAccount(addr sdk.AccAddress) ([]byte, error) {
 	return res, nil
 }
 
-// query performs a query from a Tendermint node with the provided store name
-// and path.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err error) {
+// query performs a query to a Tendermint node with the provided store name
+// and path. It returns the result and height of the query upon success
+// or an error if the query fails.
+func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return res, err
+		return res, height, err
 	}
 
 	opts := rpcclient.ABCIQueryOptions{
@@ -159,25 +164,25 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
-		return res, err
+		return res, height, err
 	}
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, errors.New(resp.Log)
+		return res, height, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
 	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return resp.Value, nil
+		return resp.Value, resp.Height, nil
 	}
 
 	err = ctx.verifyProof(path, resp)
 	if err != nil {
-		return nil, err
+		return res, height, err
 	}
 
-	return resp.Value, nil
+	return resp.Value, resp.Height, nil
 }
 
 // Verify verifies the consensus proof at given height.
@@ -233,9 +238,10 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	return nil
 }
 
-// queryStore performs a query from a Tendermint node with the provided a store
-// name and path.
-func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, error) {
+// queryStore performs a query to a Tendermint node with the provided a store
+// name and path. It returns the result and height of the query upon success
+// or an error if the query fails.
+func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

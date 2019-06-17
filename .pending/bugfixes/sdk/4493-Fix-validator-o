@@ -1,0 +1,2 @@
+#4493 Fix validator-outstanding-rewards command. It now takes as an argument
+a validator address.

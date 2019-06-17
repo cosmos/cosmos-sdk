@@ -142,7 +142,7 @@ func (keeper BaseKeeper) UndelegateCoins(
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	oldCoins := delegatorAcc.GetCoins()
+	oldCoins := moduleAcc.GetCoins()
 
 	_, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {

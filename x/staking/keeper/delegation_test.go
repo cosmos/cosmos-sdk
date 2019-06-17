@@ -229,8 +229,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	maxEntries := keeper.MaxEntries(ctx)
 
-	oldBonded := bondedPool.GetCoins().AmountOf(bondDenom)
-	oldNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
+	oldBonded := keeper.GetBondedPool(ctx).GetCoins().AmountOf(bondDenom)
+	oldNotBonded := keeper.GetNotBondedPool(ctx).GetCoins().AmountOf(bondDenom)
 
 	// should all pass
 	var completionTime time.Time

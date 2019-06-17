@@ -14,13 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// AccountWithHeight wraps the embedded Account with the height it was queried
-// at.
-type AccountWithHeight struct {
-	types.Account `json:"account"`
-	Height        int64 `json:"height"`
-}
-
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
 	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
@@ -60,7 +53,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, AccountWithHeight{account, height})
+		rest.PostProcessResponse(w, cliCtx, rest.ResponseWithHeight{account, height})
 	}
 }
 

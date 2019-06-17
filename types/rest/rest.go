@@ -28,6 +28,13 @@ type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
 }
 
+// ResponseWithHeight wraps the embedded interface with the height it was queried
+// at.
+type ResponseWithHeight struct {
+	RespValue interface{} `json:"response"`
+	Height    int64       `json:"height"`
+}
+
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {

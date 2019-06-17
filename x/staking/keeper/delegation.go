@@ -502,7 +502,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 		}
 	} else {
 
-		// potentialy transfer tokens between pools, if
+		// potentially transfer tokens between pools, if
 		switch {
 		case tokenSrc == sdk.Bonded && validator.IsBonded():
 			// do nothing

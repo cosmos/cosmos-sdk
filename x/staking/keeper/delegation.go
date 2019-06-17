@@ -706,6 +706,16 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return time.Time{}, types.ErrSelfRedelegation(k.Codespace())
 	}
 
+	dstValidator, found := k.GetValidator(ctx, valDstAddr)
+	if !found {
+		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
+	}
+
+	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
+	if !found {
+		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
+	}
+
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
 		return time.Time{}, types.ErrTransitiveRedelegation(k.Codespace())
@@ -722,14 +732,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	if returnAmount.IsZero() {
 		return time.Time{}, types.ErrVerySmallRedelegation(k.Codespace())
-	}
-	dstValidator, found := k.GetValidator(ctx, valDstAddr)
-	if !found {
-		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
-	}
-	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
-	if !found {
-		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
 
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)

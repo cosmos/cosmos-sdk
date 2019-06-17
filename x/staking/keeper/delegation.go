@@ -665,7 +665,6 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	ctxTime := ctx.BlockHeader().Time
-	removedAmt := sdk.ZeroInt()
 
 	// loop through all the entries and complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
@@ -682,8 +681,6 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 					return err
 				}
 			}
-
-			removedAmt = removedAmt.Add(entry.Balance)
 		}
 	}
 

@@ -27,7 +27,7 @@ func TestBalances(t *testing.T) {
 	require.Nil(t, res)
 
 	_, _, addr := authtypes.KeyTestPubAddr()
-	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
+	req.Data = input.cdc.MustMarshalJSON(types.NewQueryBalanceParams(addr))
 	res, err = querier(input.ctx, []string{"balances"}, req)
 	require.Nil(t, err) // the account does not exist, no error returned anyway
 	require.NotNil(t, res)

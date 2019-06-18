@@ -32,7 +32,8 @@ type Result struct {
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed uint64
 
-	// Events are used for transaction indexing and pubsub.
+	// Events contains a slice of Event objects that were emmitted during some
+	// execution.
 	Events Events
 }
 

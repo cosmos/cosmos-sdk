@@ -107,9 +107,13 @@ func (keeper BaseKeeper) DelegateCoins(
 	}
 
 	// TODO: return error on account.TrackDelegation
-	trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt)
+	if err := trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt); err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
+	}
 
-	err := sendDelegatedCoins(ctx, keeper.ak, delegatorAddr, moduleAccAddr, amt)
+	setAccount(ctx, keeper.ak, delegatorAcc)
+
+	_, err := addCoins(ctx, keeper.ak, moduleAccAddr, amt)
 	if err != nil {
 		return nil, err
 	}
@@ -144,20 +148,24 @@ func (keeper BaseKeeper) UndelegateCoins(
 
 	oldCoins := moduleAcc.GetCoins()
 
-	_, hasNeg := oldCoins.SafeSub(amt)
+	newCoins, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {
 		return nil, sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
 		)
 	}
 
-	// TODO: return error on account.TrackUndelegation
-	trackUndelegation(delegatorAcc, amt)
-
-	err := sendDelegatedCoins(ctx, keeper.ak, moduleAccAddr, delegatorAddr, amt)
+	err := setCoins(ctx, keeper.ak, moduleAccAddr, newCoins)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: return error on account.TrackUndelegation
+	if err := trackUndelegation(delegatorAcc, amt); err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
+	}
+
+	setAccount(ctx, keeper.ak, delegatorAcc)
 
 	return sdk.NewTags(
 		sdk.TagAction, tags.ActionUndelegateCoins,
@@ -429,17 +437,23 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackDelegation(acc auth.Account, blockTime time.Time, amt sdk.Coins) {
+func trackDelegation(acc auth.Account, blockTime time.Time, amt sdk.Coins) error {
 	vacc, ok := acc.(auth.VestingAccount)
 	if ok {
 		vacc.TrackDelegation(blockTime, amt)
+		return nil
 	}
+
+	return acc.SetCoins(acc.GetCoins().Sub(amt))
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackUndelegation(acc auth.Account, amt sdk.Coins) {
+func trackUndelegation(acc auth.Account, amt sdk.Coins) error {
 	vacc, ok := acc.(auth.VestingAccount)
 	if ok {
 		vacc.TrackUndelegation(amt)
+		return nil
 	}
+
+	return acc.SetCoins(acc.GetCoins().Add(amt))
 }

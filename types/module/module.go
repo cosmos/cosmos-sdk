@@ -139,6 +139,7 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
+	AnteHandle(sdk.Context, sdk.Tx, bool) (sdk.Context, sdk.Result, bool)
 	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
 	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
 }
@@ -188,6 +189,7 @@ type Manager struct {
 	Modules            map[string]AppModule
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
+	OrderAnteHandlers  []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
 }
@@ -206,6 +208,7 @@ func NewManager(modules ...AppModule) *Manager {
 		Modules:            moduleMap,
 		OrderInitGenesis:   modulesStr,
 		OrderExportGenesis: modulesStr,
+		OrderAnteHandlers:  modulesStr,
 		OrderBeginBlockers: modulesStr,
 		OrderEndBlockers:   modulesStr,
 	}
@@ -219,6 +222,11 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 // set the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 	m.OrderExportGenesis = moduleNames
+}
+
+// set the order of module antehandlers
+func (m *Manager) SetOrderAnteHandler(moduleNames ...string) {
+	m.OrderAnteHandlers = moduleNames
 }
 
 // set the order of set begin-blocker calls
@@ -280,6 +288,20 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx)
 	}
 	return genesisData
+}
+
+// perform antehandle functionality for modules
+func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	anteCtx := ctx
+	var res sdk.Result
+	var abort bool
+	for _, moduleName := range m.OrderAnteHandlers {
+		anteCtx, res, abort = m.Modules[moduleName].AnteHandle(anteCtx, tx, simulate)
+		if abort {
+			return anteCtx, res, abort
+		}
+	}
+	return anteCtx, res, abort
 }
 
 // perform begin block functionality for modules

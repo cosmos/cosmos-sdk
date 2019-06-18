@@ -40,6 +40,7 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 			Depositor:  p.Deposit.Depositor,
 		})
 	}
+
 	targetGov.Deposits = deposits
 
 	var votes v036gov.Votes
@@ -50,6 +51,7 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 			Voter:      p.Vote.Voter,
 		})
 	}
+
 	targetGov.Votes = votes
 
 	var proposals v036gov.Proposals
@@ -68,8 +70,8 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 
 		proposals = append(proposals, proposal)
 	}
-	targetGov.Proposals = proposals
 
+	targetGov.Proposals = proposals
 	return targetGov
 }
 

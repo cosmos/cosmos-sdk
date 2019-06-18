@@ -643,7 +643,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Log:       result.Log,
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
-		Tags:      result.Tags,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
@@ -665,7 +665,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		Log:       result.Log,
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
-		Tags:      result.Tags,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
@@ -705,11 +705,15 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
-	var data []byte   // NOTE: we just append them all (?!)
-	var tags sdk.Tags // also just append them all
-	var code sdk.CodeType
-	var codespace sdk.CodespaceType
+	var (
+		data      []byte
+		code      sdk.CodeType
+		codespace sdk.CodespaceType
+	)
 
+	events := make(sdk.Events, 0)
+
+	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIdx, msg := range msgs {
 		// match message route
 		msgRoute := msg.Route()
@@ -725,12 +729,13 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 			msgResult = handler(ctx, msg)
 		}
 
-		// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-
-		// Result.Data must be length prefixed in order to separate each result
+		// Each message result's Data must be length prefixed in order to separate
+		// each result.
 		data = append(data, msgResult.Data...)
-		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
-		tags = append(tags, msgResult.Tags...)
+
+		// append events from the message's execution and a message action event
+		events = events.AppendEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type()))
+		events = events.AppendEvents(msgResult.Events)
 
 		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
 
@@ -755,7 +760,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Data:      data,
 		Log:       strings.TrimSpace(string(logJSON)),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Tags:      tags,
+		Events:    events,
 	}
 
 	return result

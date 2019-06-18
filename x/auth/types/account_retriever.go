@@ -14,23 +14,26 @@ type NodeQuerier interface {
 	QueryWithData(path string, data []byte) ([]byte, int64, error)
 }
 
-type AccountGetter struct {
+// AccountRetriever defines the properties of a type that can be used to
+// retrieve accounts.
+type AccountRetriever struct {
 	querier NodeQuerier
 }
 
-func NewAccountGetter(querier NodeQuerier) AccountGetter {
-	return AccountGetter{querier: querier}
+// NewAccountRetriever initialises a new AccountRetriever instance.
+func NewAccountRetriever(querier NodeQuerier) AccountRetriever {
+	return AccountRetriever{querier: querier}
 }
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ag AccountGetter) GetAccount(addr sdk.AccAddress) (Account, error) {
+func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (Account, error) {
 	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, err
 	}
 
-	res, _, err := ag.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
+	res, _, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
 	if err != nil {
 		return nil, err
 	}
@@ -43,15 +46,18 @@ func (ag AccountGetter) GetAccount(addr sdk.AccAddress) (Account, error) {
 	return account, nil
 }
 
-func (ag AccountGetter) EnsureExists(addr sdk.AccAddress) error {
-	if _, err := ag.GetAccount(addr); err != nil {
+// EnsureExists returns an error if no account exists for the given address else nil.
+func (ar AccountRetriever) EnsureExists(addr sdk.AccAddress) error {
+	if _, err := ar.GetAccount(addr); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ag AccountGetter) GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error) {
-	acc, err := ag.GetAccount(addr)
+// GetAccountNumberSequence returns sequence and account number for the given address.
+// It returns an error if the account couldn't be retrieved from the state.
+func (ar AccountRetriever) GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error) {
+	acc, err := ar.GetAccount(addr)
 	if err != nil {
 		return 0, 0, err
 	}

@@ -109,7 +109,7 @@ func (keeper BaseKeeper) DelegateCoins(
 	// TODO: return error on account.TrackDelegation
 	trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt)
 
-	err := sendCoins(ctx, keeper.ak, delegatorAddr, moduleAccAddr, amt)
+	err := sendDelegatedCoins(ctx, keeper.ak, delegatorAddr, moduleAccAddr, amt)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (keeper BaseKeeper) UndelegateCoins(
 	// TODO: return error on account.TrackUndelegation
 	trackUndelegation(delegatorAcc, amt)
 
-	err := sendCoins(ctx, keeper.ak, moduleAccAddr, delegatorAddr, amt)
+	err := sendDelegatedCoins(ctx, keeper.ak, moduleAccAddr, delegatorAddr, amt)
 	if err != nil {
 		return nil, err
 	}
@@ -365,6 +365,32 @@ func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr, toAddr sdk.AccA
 	}
 
 	return nil
+}
+
+// sendDelegatedCoins moves coins from one account to another without performing the
+// vesting account's SpendableCoins check
+// Returns ErrInvalidCoins if amt is invalid.
+func sendDelegatedCoins(ctx sdk.Context, ak auth.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+
+	if !amt.IsValid() {
+		return sdk.ErrInvalidCoins(amt.String())
+	}
+
+	oldFromCoins := getCoins(ctx, ak, fromAddr)
+	newFromCoins, hasNeg := oldFromCoins.SafeSub(amt)
+	if hasNeg {
+		return sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", oldFromCoins, amt),
+		)
+	}
+
+	err := setCoins(ctx, ak, fromAddr, newFromCoins)
+	if err != nil {
+		return err
+	}
+
+	_, err = addCoins(ctx, ak, toAddr, amt)
+	return err
 }
 
 // InputOutputCoins handles a list of inputs and outputs

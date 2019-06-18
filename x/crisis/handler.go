@@ -13,6 +13,8 @@ const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEvents(sdk.EmptyEvents())
+
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
@@ -25,21 +27,23 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
-
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
+
 	_, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
 	if err != nil {
 		return err.Result()
 	}
+
 	_ = k.feeCollectionKeeper.AddCollectedFees(ctx, constantFee)
 
 	// use a cached context to avoid gas costs during invariants
 	cacheCtx, _ := ctx.CacheContext()
 
 	found := false
-	var invarianceErr error
 	msgFullRoute := msg.FullInvariantRoute()
+
+	var invarianceErr error
 	for _, invarRoute := range k.routes {
 		if invarRoute.FullRoute() == msgFullRoute {
 			invarianceErr = invarRoute.Invar(cacheCtx)
@@ -47,12 +51,12 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 			break
 		}
 	}
+
 	if !found {
 		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
 	}
 
 	if invarianceErr != nil {
-
 		// NOTE currently, because the chain halts here, this transaction will never be included
 		// in the blockchain thus the constant fee will have never been deducted. Thus no
 		// refund is required.
@@ -72,11 +76,17 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		panic(invarianceErr)
 	}
 
-	resTags := sdk.NewTags(
-		tags.Sender, msg.Sender.String(),
-		tags.Invariant, msg.InvariantRoute,
-	)
-	return sdk.Result{
-		Tags: resTags,
-	}
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			tags.Invariant,
+			sdk.NewAttribute(tags.Route, msg.InvariantRoute),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+		),
+	})
+
+	return sdk.Result{Events: ctx.Events()}
 }

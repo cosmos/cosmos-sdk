@@ -11,6 +11,8 @@ import (
 // NewHandler returns a handler for "bank" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEvents(sdk.EmptyEvents())
+
 		switch msg := msg.(type) {
 		case types.MsgSend:
 			return handleMsgSend(ctx, k, msg)
@@ -30,20 +32,20 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg types.MsgSend) sdk.Result {
 	if !k.GetSendEnabled(ctx) {
 		return types.ErrSendDisabled(k.Codespace()).Result()
 	}
+
 	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
-	resTags := sdk.NewTags(
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.FromAddress.String(),
-		tags.Recipient, msg.ToAddress.String(),
-	)
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeCategory,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+		),
+	})
 
-	return sdk.Result{
-		Tags: resTags,
-	}
+	return sdk.Result{Events: ctx.Events()}
 }
 
 // Handle MsgMultiSend.
@@ -52,13 +54,18 @@ func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg types.MsgMultiSend) sdk.R
 	if !k.GetSendEnabled(ctx) {
 		return types.ErrSendDisabled(k.Codespace()).Result()
 	}
-	resTags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+
+	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
 	}
 
-	resTags = resTags.AppendTag(tags.Category, tags.TxCategory)
-	return sdk.Result{
-		Tags: resTags,
-	}
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeCategory,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+		),
+	})
+
+	return sdk.Result{Events: ctx.Events()}
 }

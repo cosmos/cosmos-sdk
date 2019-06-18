@@ -10,13 +10,13 @@ import (
 )
 
 // register bank invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, ak auth.AccountKeeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, ak types.AccountKeeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))
 }
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
-func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
+func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		accts := ak.GetAllAccounts(ctx)
 		for _, acc := range accts {
@@ -33,7 +33,7 @@ func NonnegativeBalanceInvariant(ak auth.AccountKeeper) sdk.Invariant {
 
 // TotalCoinsInvariant checks that the sum of the coins across all accounts
 // is what is expected
-func TotalCoinsInvariant(ak auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
+func TotalCoinsInvariant(ak types.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.NewCoins()
 

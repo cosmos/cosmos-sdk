@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// QueryAccountParams defines the params for querying accounts.
-type QueryAccountParams struct {
+// QueryBalanceParams defines the params for querying an account balance.
+type QueryBalanceParams struct {
 	Address sdk.AccAddress
 }
 
-// NewQueryAccountParams creates a new instance of QueryAccountParams.
-func NewQueryAccountParams(addr sdk.AccAddress) QueryAccountParams {
+// NewQueryBalanceParams creates a new instance of QueryBalanceParams.
+func NewQueryBalanceParams(addr sdk.AccAddress) QueryAccountParams {
 	return QueryAccountParams{Address: addr}
 }

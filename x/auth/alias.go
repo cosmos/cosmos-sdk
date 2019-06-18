@@ -42,7 +42,6 @@ var (
 	NewParams                      = types.NewParams
 	ParamKeyTable                  = types.ParamKeyTable
 	DefaultParams                  = types.DefaultParams
-	NewQueryAccountParams          = types.NewQueryAccountParams
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
@@ -75,7 +74,6 @@ type (
 	FeeCollectionKeeper      = types.FeeCollectionKeeper
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
-	QueryAccountParams       = types.QueryAccountParams
 	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee

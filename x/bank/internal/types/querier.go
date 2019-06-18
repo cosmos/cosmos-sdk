@@ -10,6 +10,6 @@ type QueryBalanceParams struct {
 }
 
 // NewQueryBalanceParams creates a new instance of QueryBalanceParams.
-func NewQueryBalanceParams(addr sdk.AccAddress) QueryAccountParams {
-	return QueryAccountParams{Address: addr}
+func NewQueryBalanceParams(addr sdk.AccAddress) QueryBalanceParams {
+	return QueryBalanceParams{Address: addr}
 }

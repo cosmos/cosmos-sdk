@@ -51,7 +51,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 		switch validator.GetStatus() {
 		case sdk.Bonded:
-			bondedTokens = bondedTokens.Add(validator.GetBondedTokens())
+			bondedTokens = bondedTokens.Add(validator.GetTokens())
 		case sdk.Unbonding, sdk.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 		}
@@ -74,6 +74,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		keeper.SetUnbondingDelegation(ctx, ubd)
 		for _, entry := range ubd.Entries {
 			keeper.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+			notBondedTokens = notBondedTokens.Add(entry.Balance)
 		}
 	}
 

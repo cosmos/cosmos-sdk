@@ -13,7 +13,7 @@ const (
 	StoreKey = "acc"
 
 	// FeeCollectorName the root string for the fee collector account address
-	FeeCollectorName = "fees"
+	FeeCollectorName = "FeeCollector"
 
 	// QuerierRoute is the querier route for acc
 	QuerierRoute = StoreKey

@@ -28,6 +28,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := sdk.ZeroInt()
+	amtToNotBonded, amtToBonded := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
@@ -60,10 +61,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		switch {
 		case validator.IsUnbonded():
 			validator = k.unbondedToBonded(ctx, validator)
-			k.notBondedTokensToBonded(ctx, validator.GetTokens())
+			amtToBonded = amtToBonded.Add(validator.GetTokens())
 		case validator.IsUnbonding():
 			validator = k.unbondingToBonded(ctx, validator)
-			k.notBondedTokensToBonded(ctx, validator.GetTokens())
+			amtToBonded = amtToBonded.Add(validator.GetTokens())
 		case validator.IsBonded():
 			// no state change
 		default:
@@ -106,13 +107,23 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// bonded to unbonding
 		validator = k.bondedToUnbonding(ctx, validator)
-		k.bondedTokensToNotBonded(ctx, validator.GetTokens())
+		amtToNotBonded = amtToNotBonded.Add(validator.GetTokens())
 
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
+
+	// update the pools based on the recent updates in the validator set
+	switch {
+	case amtToBonded.GT(amtToNotBonded):
+		k.notBondedTokensToBonded(ctx, amtToBonded.Sub(amtToNotBonded))
+	case amtToBonded.LT(amtToNotBonded):
+		k.bondedTokensToNotBonded(ctx, amtToNotBonded.Sub(amtToBonded))
+	default:
+		// equal amounts
 	}
 
 	// set total power on lookup index if there are any updates

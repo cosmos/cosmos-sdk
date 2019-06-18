@@ -51,6 +51,7 @@ var (
 	NewTxBuilder                   = types.NewTxBuilder
 	NewTxBuilderFromCLI            = types.NewTxBuilderFromCLI
 	MakeSignature                  = types.MakeSignature
+	NewAccountGetter               = types.NewAccountGetter
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc

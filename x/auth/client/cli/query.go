@@ -50,17 +50,18 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).WithAccountDecoder(cdc)
+			accGetter := types.NewAccountGetter(cliCtx)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			if err = cliCtx.EnsureAccountExistsFromAddr(key); err != nil {
+			if err := accGetter.EnsureExists(key); err != nil {
 				return err
 			}
 
-			acc, err := cliCtx.GetAccount(key)
+			acc, err := accGetter.GetAccount(key)
 			if err != nil {
 				return err
 			}

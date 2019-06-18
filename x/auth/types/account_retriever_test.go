@@ -24,13 +24,17 @@ func TestAccountRetriever(t *testing.T) {
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),
 		gomock.Eq(bs)).Return(nil, int64(0), dummyError).Times(1)
-	accRetr.GetAccount(addr)
+	_, err = accRetr.GetAccount(addr)
+	require.Error(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),
 		gomock.Eq(bs)).Return(nil, int64(0), dummyError).Times(1)
-	accRetr.GetAccountNumberSequence(addr)
+	n, s, err := accRetr.GetAccountNumberSequence(addr)
+	require.Error(t, err)
+	require.Equal(t, uint64(0), n)
+	require.Equal(t, uint64(0), s)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),
 		gomock.Eq(bs)).Return(nil, int64(0), dummyError).Times(1)
-	accRetr.EnsureExists(addr)
+	require.Error(t, accRetr.EnsureExists(addr))
 }

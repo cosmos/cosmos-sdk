@@ -38,6 +38,9 @@ type Tx interface {
 	// ValidateBasic does a simple and lightweight validation check that doesn't
 	// require access to any other information.
 	ValidateBasic() Error
+
+	// Gas returns the amount of Gas this tx is allowed to consume
+	Gas() uint64
 }
 
 //__________________________________________________________

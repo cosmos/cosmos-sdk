@@ -172,6 +172,11 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+// module ante-handle
+func (gam GenesisOnlyAppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	return ctx, sdk.Result{}, false
+} 
+
 // module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
 	return sdk.EmptyTags()
@@ -292,16 +297,39 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 
 // perform antehandle functionality for modules
 func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-	anteCtx := ctx
-	var res sdk.Result
-	var abort bool
+	ctx = sdk.SetGasMeter(simulate, ctx, tx.Gas())
+
+	// AnteHandlers must have their own defer/recover in order for the BaseApp
+	// to know how much gas was used! This is because the GasMeter is created in
+	// the AnteHandler, but if it panics the context won't be set properly in
+	// runTx's recover call.
+	defer func() {
+		if r := recover(); r != nil {
+			switch rType := r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf(
+					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+					rType.Descriptor, tx.Gas(), newCtx.GasMeter().GasConsumed(),
+				)
+				res = sdk.ErrOutOfGas(log).Result()
+
+				res.GasWanted = tx.Gas()
+				res.GasUsed = newCtx.GasMeter().GasConsumed()
+				abort = true
+			default:
+				panic(r)
+			}
+		}
+	}()
+
+	// must somehow consume gas cost for validating tx (tx size cost/byte)
 	for _, moduleName := range m.OrderAnteHandlers {
-		anteCtx, res, abort = m.Modules[moduleName].AnteHandle(anteCtx, tx, simulate)
+		ctx, res, abort = m.Modules[moduleName].AnteHandle(ctx, tx, simulate)
 		if abort {
-			return anteCtx, res, abort
+			return ctx, res, abort
 		}
 	}
-	return anteCtx, res, abort
+	return ctx, res, abort
 }
 
 // perform begin block functionality for modules

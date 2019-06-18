@@ -70,6 +70,7 @@ type AppModule struct {
 	AppModuleBasic
 	accountKeeper       AccountKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
+	sigGasConsumer      SignatureVerificationGasConsumer
 }
 
 // NewAppModule creates a new AppModule object
@@ -118,6 +119,12 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper, am.feeCollectionKeeper)
 	return types.ModuleCdc.MustMarshalJSON(gs)
+}
+
+// module ante-handle
+func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	antehandler := NewAnteHandler(am.accountKeeper, sigGasConsumer)
+	return antehandler(ctx, tx, simulate)
 }
 
 // module begin-block

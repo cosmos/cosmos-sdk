@@ -40,7 +40,7 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg types.MsgSend) sdk.Result {
 
 	ctx = ctx.WithEvents(sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeCategory,
+			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
 		),
 	})
@@ -62,7 +62,7 @@ func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg types.MsgMultiSend) sdk.R
 
 	ctx = ctx.WithEvents(sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeCategory,
+			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
 		),
 	})

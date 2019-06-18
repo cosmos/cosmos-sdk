@@ -47,13 +47,6 @@ func main() {
 	target = flag.Arg(0)
 	importGenesis = flag.Arg(1)
 
-	// This function should be modularized, for now we read and dump genesis committed to git,
-	// to simplify the creation of a CCI script that tests three different things:
-	// - Reading old types,
-	// - converting to new ones
-	// - reading the committed new genesis and see if all works
-	// We could add an invariant test for genesis, conversion should be identical to exporting the target genesis once imported
-
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
 	// Dump here an example genesis for CCI to test import from old types, and export to new ones

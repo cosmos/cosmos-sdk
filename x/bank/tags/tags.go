@@ -6,12 +6,9 @@ import (
 
 // Tag keys and values
 var (
-	ActionUndelegateCoins = "undelegateCoins"
-	ActionDelegateCoins   = "delegateCoins"
-	TxCategory            = "bank"
-
-	Action    = sdk.TagAction
-	Category  = sdk.TagCategory
-	Recipient = "recipient"
-	Sender    = "sender"
+	Category   = sdk.EventTypeCategory
+	TxCategory = "bank"
+	Transfer   = "transfer"
+	Recipient  = "recipient"
+	Sender     = "sender"
 )

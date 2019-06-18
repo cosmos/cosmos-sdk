@@ -711,7 +711,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		codespace sdk.CodespaceType
 	)
 
-	events := make(sdk.Events, 0)
+	events := sdk.EmptyEvents()
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIdx, msg := range msgs {

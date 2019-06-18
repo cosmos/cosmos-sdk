@@ -282,7 +282,7 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 
 // perform begin block functionality for modules
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	ctx = ctx.WithEvents(sdk.Events{})
+	ctx = ctx.WithEvents(sdk.EmptyEvents())
 
 	for _, moduleName := range m.OrderBeginBlockers {
 		m.Modules[moduleName].BeginBlock(ctx, req)
@@ -295,6 +295,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 
 // perform end block functionality for modules
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	ctx = ctx.WithEvents(sdk.EmptyEvents())
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {

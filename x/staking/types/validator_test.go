@@ -331,8 +331,8 @@ func TestValidatorMarshalYAML(t *testing.T) {
   conspubkey: %s
   jailed: false
   status: 0
-  tokens: {}
-  delegatorshares: "0"
+  tokens: "0"
+  delegatorshares: "0.000000000000000000"
   description:
     moniker: ""
     identity: ""
@@ -342,11 +342,11 @@ func TestValidatorMarshalYAML(t *testing.T) {
   unbondingcompletiontime: 1970-01-01T00:00:00Z
   commission:
     commissionrates:
-      rate: "0"
-      maxrate: "0"
-      maxchangerate: "0"
+      rate: "0.000000000000000000"
+      maxrate: "0.000000000000000000"
+      maxchangerate: "0.000000000000000000"
     updatetime: 1970-01-01T00:00:00Z
-  minselfdelegation: {}
+  minselfdelegation: "1"
 `, validator.OperatorAddress.String(), bechifiedPub)
 	require.Equal(t, want, string(bs))
 }

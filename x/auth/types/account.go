@@ -191,12 +191,18 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
+	var bs []byte
+	var err error
 	var pubkey string
-	if acc.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(acc.PubKey)
 
+	if acc.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(acc.PubKey)
+		if err != nil {
+			return nil, err
+		}
 	}
-	bs, err := yaml.Marshal(struct {
+
+	bs, err = yaml.Marshal(struct {
 		Address       sdk.AccAddress
 		Coins         sdk.Coins
 		PubKey        string

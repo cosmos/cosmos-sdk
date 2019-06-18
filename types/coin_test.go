@@ -20,7 +20,6 @@ var (
 func TestCoin(t *testing.T) {
 	require.Panics(t, func() { NewInt64Coin(testDenom1, -1) })
 	require.Panics(t, func() { NewCoin(testDenom1, NewInt(-1)) })
-	require.Panics(t, func() { NewCoin(testDenom1, NewInt(0)) })
 	require.Panics(t, func() { NewInt64Coin(strings.ToUpper(testDenom1), 10) })
 	require.Panics(t, func() { NewCoin(strings.ToUpper(testDenom1), NewInt(10)) })
 	require.Equal(t, NewInt(5), NewInt64Coin(testDenom1, 5).Amount)
@@ -55,7 +54,7 @@ func TestCoinIsValid(t *testing.T) {
 		expectPass bool
 	}{
 		{Coin{testDenom1, NewInt(-1)}, false},
-		{Coin{testDenom1, NewInt(0)}, false},
+		{Coin{testDenom1, NewInt(0)}, true},
 		{Coin{testDenom1, NewInt(1)}, true},
 		{Coin{"Atom", NewInt(1)}, false},
 		{Coin{"a", NewInt(1)}, false},
@@ -77,7 +76,7 @@ func TestAddCoin(t *testing.T) {
 		shouldPanic bool
 	}{
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 2), false},
-		{NewInt64Coin(testDenom1, 1), Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom1, 1), false},
+		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom1, 1), false},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), NewInt64Coin(testDenom1, 1), true},
 	}
 
@@ -101,7 +100,7 @@ func TestSubCoin(t *testing.T) {
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), NewInt64Coin(testDenom1, 1), true},
 		{NewInt64Coin(testDenom1, 10), NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 9), false},
 		{NewInt64Coin(testDenom1, 5), NewInt64Coin(testDenom1, 3), NewInt64Coin(testDenom1, 2), false},
-		{NewInt64Coin(testDenom1, 5), Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom1, 5), false},
+		{NewInt64Coin(testDenom1, 5), NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom1, 5), false},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 5), Coin{}, true},
 	}
 
@@ -154,7 +153,7 @@ func TestIsLTCoin(t *testing.T) {
 	}{
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false, false},
 		{NewInt64Coin(testDenom1, 2), NewInt64Coin(testDenom1, 1), false, false},
-		{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1), false, true},
+		{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1), false, true},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom2, 1), false, true},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 1), false, false},
 		{NewInt64Coin(testDenom1, 1), NewInt64Coin(testDenom1, 2), true, false},
@@ -171,7 +170,7 @@ func TestIsLTCoin(t *testing.T) {
 }
 
 func TestCoinIsZero(t *testing.T) {
-	coin := Coin{testDenom1, NewInt(0)}
+	coin := NewInt64Coin(testDenom1, 0)
 	res := coin.IsZero()
 	require.True(t, res)
 
@@ -189,10 +188,10 @@ func TestIsZeroCoins(t *testing.T) {
 		expected bool
 	}{
 		{Coins{}, true},
-		{Coins{Coin{testDenom1, NewInt(0)}}, true},
-		{Coins{Coin{testDenom1, NewInt(0)}, Coin{testDenom2, NewInt(0)}}, true},
+		{Coins{NewInt64Coin(testDenom1, 0)}, true},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 0)}, true},
 		{Coins{NewInt64Coin(testDenom1, 1)}, false},
-		{Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, false},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, false},
 	}
 
 	for _, tc := range cases {
@@ -209,12 +208,12 @@ func TestEqualCoins(t *testing.T) {
 		panics   bool
 	}{
 		{Coins{}, Coins{}, true, false},
-		{Coins{Coin{testDenom1, NewInt(0)}}, Coins{Coin{testDenom1, NewInt(0)}}, true, false},
-		{Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, true, false},
-		{Coins{Coin{testDenom1, NewInt(0)}}, Coins{Coin{testDenom2, NewInt(0)}}, false, true},
-		{Coins{Coin{testDenom1, NewInt(0)}}, Coins{NewInt64Coin(testDenom1, 1)}, false, false},
-		{Coins{Coin{testDenom1, NewInt(0)}}, Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, false, false},
-		{Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, Coins{Coin{testDenom1, NewInt(0)}, NewInt64Coin(testDenom2, 1)}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0)}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, true, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom2, 0)}, false, true},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 1)}, false, false},
+		{Coins{NewInt64Coin(testDenom1, 0)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, false, false},
+		{Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, Coins{NewInt64Coin(testDenom1, 0), NewInt64Coin(testDenom2, 1)}, true, false},
 	}
 
 	for tcnum, tc := range cases {
@@ -423,7 +422,7 @@ func TestSortCoins(t *testing.T) {
 		NewInt64Coin("tree", 1),
 	}
 	empty := Coins{
-		Coin{"gold", NewInt(0)},
+		NewInt64Coin("gold", 0),
 	}
 	badSort1 := Coins{
 		NewInt64Coin("tree", 1),
@@ -437,7 +436,7 @@ func TestSortCoins(t *testing.T) {
 	}
 	badAmt := Coins{
 		NewInt64Coin("gas", 1),
-		Coin{"tree", NewInt(0)},
+		NewInt64Coin("tree", 0),
 		NewInt64Coin("mineral", 1),
 	}
 	dup := Coins{
@@ -468,7 +467,7 @@ func TestSortCoins(t *testing.T) {
 func TestAmountOf(t *testing.T) {
 	case0 := Coins{}
 	case1 := Coins{
-		Coin{"gold", NewInt(0)},
+		NewInt64Coin("gold", 0),
 	}
 	case2 := Coins{
 		NewInt64Coin("gas", 1),
@@ -572,7 +571,7 @@ func TestCoinsIsAllGTE(t *testing.T) {
 func TestNewCoins(t *testing.T) {
 	tenatom := NewInt64Coin("atom", 10)
 	tenbtc := NewInt64Coin("btc", 10)
-	zeroeth := Coin{"eth", NewInt(0)}
+	zeroeth := NewInt64Coin("eth", 0)
 	tests := []struct {
 		name      string
 		coins     Coins

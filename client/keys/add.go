@@ -110,9 +110,12 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation
-			if response, err2 := input.GetConfirmation(
-				fmt.Sprintf("override the existing name %s", name), buf); err2 != nil || !response {
+			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), buf)
+			if err2 != nil {
 				return err2
+			}
+			if !response {
+				return errors.New("aborted")
 			}
 		}
 

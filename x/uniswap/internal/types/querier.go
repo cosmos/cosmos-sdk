@@ -11,7 +11,7 @@ const (
 	QueryParameters = "parameters"
 
 	ParamFee         = "fee"
-	ParamNativeAsset = "nativeAsset"
+	ParamNativeDenom = "nativeDenom"
 )
 
 // QueryBalanceParams defines the params for the query:

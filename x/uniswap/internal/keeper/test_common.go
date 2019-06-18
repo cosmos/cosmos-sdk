@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-func createTestInput(t *testing.T) (sdk.Context, Keeper) {
+func createTestInput(t *testing.Ti, amt sdk.Int, nAccs int64) (sdk.Context, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -37,10 +37,27 @@ func createTestInput(t *testing.T) (sdk.Context, Keeper) {
 	ak := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
+	initialCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
+	accs := createTestAccs(ctx, int(nAccs), initialCoins, &ak)
+
 	sk := supply.NewKeeper(cdc, keySupply, ak, bk, suppy.DefaultCodespace)
 	keeper := NewKeeper(cdc, keyUniswap, sk, DefaultCodespace)
 	feeParams := types.NewFeeParams()
 	keeper.SetFeeParams(ctx, types.DefaultParams())
 
-	return ctx, keeper
+	return ctx, keeper, accs
+}
+
+func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *auth.AccountKeeper) (accs []auth.Account) {
+	for i := 0; i < numAccs; i++ {
+		privKey := secp256k1.GenPrivKey()
+		pubKey := privKey.PubKey()
+		addr := sdk.AccAddress(pubKey.Address())
+		acc := auth.NewBaseAccountWithAddress(addr)
+		acc.Coins = initialCoins
+		acc.PubKey = pubKey
+		acc.AccountNumber = uint64(i)
+		ak.SetAccount(ctx, &acc)
+	}
+	return
 }

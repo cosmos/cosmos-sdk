@@ -8,9 +8,7 @@ import (
 )
 
 var (
-	zero = sdk.NewInt(0)
-	one  = sdk.NewInt(1)
-	amt  = sdk.NewInt(100)
+	amt = sdk.NewInt(100)
 
 	sender_pk    = ed25519.GenPrivKey().PubKey()
 	recipient_pk = ed25519.GenPrivKey().PubKey()

@@ -13,8 +13,3 @@ const (
 	// QuerierRoute is the querier route for the uniswap module.
 	QuerierRoute = StoreKey
 )
-
-// native asset to the module
-type (
-	NativeAsset string
-)

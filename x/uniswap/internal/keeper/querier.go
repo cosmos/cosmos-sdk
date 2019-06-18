@@ -61,13 +61,13 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 func queryParameters(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	switch path[0] {
 	case ParamFee:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetFeeParams(ctx))
+		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetFeeParam(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamNativeAsset:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetNativeAsset())
+	case ParamNativeDenom:
+		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetNativeDenom(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}

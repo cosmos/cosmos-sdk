@@ -22,6 +22,12 @@ func TestNewQuerier(t *testing.T) {
 
 	querier := NewQuerier(keeper)
 
+	// query with incorrect path
+	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, "other")
+	res, err := querier(ctx, []string("other"), req)
+	require.NotNil(t, err)
+	require.Nil(res)
+
 	// query for non existent address should return an error
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 	req.Data = keeper.cdc.MustMarshalJSON(addr)
@@ -36,19 +42,22 @@ func TestNewQuerier(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(res)
 
-	// query for set fee params
-	var feeParams types.FeeParams
+	// query for fee params
+	var fee sdk.Dec
 	req.Path = fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryParameters, types.ParamFee)
 	req.Data = []byte{}
 	res, err = querier(ctx, []string{types.QueryParameters, types.ParamFee}, req)
-	keeper.cdc.UnmarshalJSON(res, &feeParams)
+	keeper.cdc.UnmarshalJSON(res, &fee)
 	require.Nil(t, err)
-	require.Equal(t, feeParams, types.DefaultParams())
+	require.Equal(t, fee, types.DefaultParams().Fee)
 
-	// query for set native asset param
-	req.Path = fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryParameters, types.ParamNativeAsset)
-	res, err = querier(ctx, []string{types.QueryParameters, types.ParamNativeAsset}, req)
+	// query for native denom param
+	var nativeDenom string
+	req.Path = fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryParameters, types.ParamNativeDenom)
+	res, err = querier(ctx, []string{types.QueryParameters, types.ParamNativeDenom}, req)
+	keeper.cdc.UnmsrahlJSON(res, &nativeDenom)
 	require.Nil(t, err)
+	require.Equal(t, nativeDenom, types.DefaultParams().NativeDenom)
 }
 
 // TODO: Add tests for valid UNI balance queries and valid liquidity queries

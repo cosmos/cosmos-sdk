@@ -110,14 +110,20 @@ func (keeper Keeper) GetReservePool(ctx sdk.Context, denom string) sdk.Int {
 	return keeper.decode(bz)
 }
 
-// GetFeeParams returns the current FeeParams from the global param store
-func (keeper Keeper) GetFeeParams(ctx sdk.Context) (feeParams types.FeeParams) {
-	keeper.paramSpace.Get(ctx, types.ParamStoreKeyFeeParams, &feeParams)
-	return feeParams
+// GetNativeDenom returns the native denomination for this module from the global param store
+func (keeper Keeper) GetNativeDenom(ctx sdk.Context) (nativeDenom string) {
+	keeper.paramSpace.Get(ctx, types.KeyNativeDenom, &nativeDenom)
+	return
 }
 
-func (keeper Keeper) SetFeeParams(ctx sdk.Context, feeParams types.FeeParams) {
-	keeper.paramSpace.Set(ctx, types.ParamStoreKeyFeeParams, &feeParams)
+// GetFeeParams returns the current FeeParams from the global param store
+func (keeper Keeper) GetFeeParams(ctx sdk.Context) (feeParams sdk.Dec) {
+	keeper.paramSpace.Get(ctx, types.KeyFee, &feeParams)
+	return
+}
+
+func (keeper Keeper) SetFeeParam(ctx sdk.Context, feeParams sdk.Dec) {
+	keeper.paramSpace.Set(ctx, types.KeyFee, &feeParams)
 }
 
 // -----------------------------------------------------------------------------

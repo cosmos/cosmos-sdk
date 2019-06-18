@@ -188,7 +188,8 @@ func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper)
 
 // GetInputAmount returns the amount of coins sold (calculated) given the output amount being bought (exact)
 // The fee is included in the output coins being bought
-// https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdfhttps://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+// https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+// TODO: replace FeeD and FeeN with updated formula using fee as sdk.Dec
 func getInputAmount(ctx sdk.Context, k Keeper, outputAmt sdk.Int, inputDenom, outputDenom string) sdk.Int {
 	inputReserve := k.GetReservePool(inputDenom)
 	outputReserve := k.GetReservePool(outputDenom)
@@ -202,6 +203,7 @@ func getInputAmount(ctx sdk.Context, k Keeper, outputAmt sdk.Int, inputDenom, ou
 // GetOutputAmount returns the amount of coins bought (calculated) given the input amount being sold (exact)
 // The fee is included in the input coins being bought
 // https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+// TODO: replace FeeD and FeeN with updated formula using fee as sdk.Dec
 func getOutputAmount(ctx sdk.Context, k Keeper, inputAmt sdk.Int, inputDenom, outputDenom string) sdk.Int {
 	inputReserve := k.GetReservePool(inputDenom)
 	outputReserve := k.GetReservePool(outputDenom)

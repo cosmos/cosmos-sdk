@@ -139,8 +139,8 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
-	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
-	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
+	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
 //___________________________
@@ -172,13 +172,11 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // module end-block
-func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
+func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 //____________________________________________________________________________
@@ -284,24 +282,23 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 
 // perform begin block functionality for modules
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := sdk.EmptyTags()
+	ctx = ctx.WithEvents(sdk.Events{})
+
 	for _, moduleName := range m.OrderBeginBlockers {
-		moduleTags := m.Modules[moduleName].BeginBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		m.Modules[moduleName].BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
+		Events: ctx.Events().ToABCIEvents(),
 	}
 }
 
 // perform end block functionality for modules
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := []abci.ValidatorUpdate{}
-	tags := sdk.EmptyTags()
+
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates, moduleTags := m.Modules[moduleName].EndBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -309,13 +306,14 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 			if len(validatorUpdates) > 0 {
 				panic("validator EndBlock updates already set by a previous module")
 			}
+
 			validatorUpdates = moduleValUpdates
 		}
 	}
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
-		Tags:             tags,
+		Events:           ctx.Events().ToABCIEvents(),
 	}
 }
 

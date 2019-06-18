@@ -31,3 +31,11 @@ func TestEmptyEvents(t *testing.T) {
 func TestAttributeString(t *testing.T) {
 	require.Equal(t, "foo: bar", NewAttribute("foo", "bar").String())
 }
+
+func TestToABCIEvents(t *testing.T) {
+	e := Events{NewEvent("transfer", NewAttribute("sender", "foo"))}
+	abciEvents := e.ToABCIEvents()
+	require.Len(t, abciEvents, 1)
+	require.Equal(t, abciEvents[0].Type, e[0].Type)
+	require.Equal(t, abciEvents[0].Attributes, e[0].Attributes)
+}

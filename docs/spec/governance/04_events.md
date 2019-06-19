@@ -1,6 +1,6 @@
-# Tags
+# Events
 
-The governance module emits the following events/tags:
+The governance module emits the following events:
 
 ## EndBlocker
 

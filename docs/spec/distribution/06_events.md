@@ -1,6 +1,6 @@
-# Tags
+# Events
 
-The distribution module emits the following events/tags:
+The distribution module emits the following events:
 
 ## BeginBlocker
 

@@ -1,6 +1,6 @@
-# Tags
+# Events
 
-The bank module emits the following events/tags:
+The bank module emits the following events:
 
 ## Handlers
 

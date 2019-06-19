@@ -1,6 +1,6 @@
-# Tags
+# Events
 
-The crisis module emits the following events/tags:
+The crisis module emits the following events:
 
 ## Handlers
 

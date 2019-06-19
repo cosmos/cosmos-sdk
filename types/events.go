@@ -8,6 +8,41 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
+// ----------------------------------------------------------------------------
+// Event Manager
+// ----------------------------------------------------------------------------
+
+// EventManager implements a simple wrapper around a slice of Event objects that
+// can be emitted from.
+type EventManager struct {
+	events Events
+}
+
+func NewEventManager() *EventManager {
+	return &EventManager{EmptyEvents()}
+}
+
+func (em *EventManager) Events() Events { return em.events }
+
+// EmitEvent stores a single Event object.
+func (em *EventManager) EmitEvent(event Event) {
+	em.events = em.events.AppendEvent(event)
+}
+
+// EmitEvents stores a series of Event objects.
+func (em *EventManager) EmitEvents(events Events) {
+	em.events = em.events.AppendEvents(events)
+}
+
+// ABCIEvents returns all stored Event objects as abci.Event objects.
+func (em EventManager) ABCIEvents() []abci.Event {
+	return em.events.ToABCIEvents()
+}
+
+// ----------------------------------------------------------------------------
+// Events
+// ----------------------------------------------------------------------------
+
 type (
 	// Event is a type alias for an ABCI Event
 	Event abci.Event
@@ -63,8 +98,8 @@ func (e Event) AppendAttributes(attrs ...Attribute) Event {
 }
 
 // AppendEvent adds an Event to a slice of events.
-func (e Events) AppendEvent(ty string, attrs ...Attribute) Events {
-	return append(e, NewEvent(ty, attrs...))
+func (e Events) AppendEvent(event Event) Events {
+	return append(e, event)
 }
 
 // AppendEvents adds a slice of Event objects to an exist slice of Event objects.
@@ -94,17 +129,13 @@ func toBytes(i interface{}) []byte {
 	}
 }
 
-// ----------------------------------------------------------------------------
-
-// common tags
-// TODO: ....
+// Common event types and attribute keys
 var (
-	Action          = "action"
-	TagCategory     = "category"
-	TagSender       = "sender"
-	TagSrcValidator = "source-validator"
-	TagDstValidator = "destination-validator"
-	TagDelegator    = "delegator"
+	EventTypeMessage = "message"
+
+	AttributeKeyAction = "action"
+	AttributeKeyModule = "module"
+	AttributeKeySender = "sender"
 )
 
 type (

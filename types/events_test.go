@@ -13,7 +13,7 @@ func TestAppendEvents(t *testing.T) {
 	b := Events{e2}
 	c := a.AppendEvents(b)
 	require.Equal(t, c, Events{e1, e2})
-	require.Equal(t, c, Events{e1}.AppendEvent("transfer", NewAttribute("sender", "bar")))
+	require.Equal(t, c, Events{e1}.AppendEvent(NewEvent("transfer", NewAttribute("sender", "bar"))))
 	require.Equal(t, c, Events{e1}.AppendEvents(Events{e2}))
 }
 
@@ -38,4 +38,16 @@ func TestToABCIEvents(t *testing.T) {
 	require.Len(t, abciEvents, 1)
 	require.Equal(t, abciEvents[0].Type, e[0].Type)
 	require.Equal(t, abciEvents[0].Attributes, e[0].Attributes)
+}
+
+func TestEventManager(t *testing.T) {
+	em := NewEventManager()
+	event := NewEvent("reward", NewAttribute("x", "y"))
+	events := Events{NewEvent("transfer", NewAttribute("sender", "foo"))}
+
+	em.EmitEvents(events)
+	em.EmitEvent(event)
+
+	require.Len(t, em.Events(), 2)
+	require.Equal(t, em.Events(), events.AppendEvent(event))
 }

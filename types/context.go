@@ -41,6 +41,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 		pst:     newThePast(),
 		gen:     0,
 	}
+
 	c = c.WithMultiStore(ms)
 	c = c.WithBlockHeader(header)
 	c = c.WithBlockHeight(header.Height)
@@ -52,7 +53,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithGasMeter(stypes.NewInfiniteGasMeter())
 	c = c.WithMinGasPrices(DecCoins{})
 	c = c.WithConsensusParams(nil)
-	c = c.WithEvents(Events{})
+	c = c.WithEventManager(NewEventManager())
 
 	return c
 }
@@ -81,7 +82,7 @@ const (
 	contextKeyBlockGasMeter
 	contextKeyMinGasPrices
 	contextKeyConsensusParams
-	contextKeyEvents
+	contextKeyEventManager
 )
 
 // context value for the provided key
@@ -126,7 +127,7 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
 }
 
-func (c Context) Events() Events { return c.Value(contextKeyEvents).(Events) }
+func (c Context) EventManager() *EventManager { return c.Value(contextKeyEventManager).(*EventManager) }
 
 // ----------------------------------------------------------------------------
 // Setters
@@ -226,8 +227,8 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	return c.withValue(contextKeyConsensusParams, params)
 }
 
-func (c Context) WithEvents(e Events) Context {
-	return c.WithValue(contextKeyEvents, e)
+func (c Context) WithEventManager(em *EventManager) Context {
+	return c.WithValue(contextKeyEventManager, em)
 }
 
 // ----------------------------------------------------------------------------

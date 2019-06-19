@@ -33,20 +33,24 @@ gaiacli tx send [from_key_or_address] [to_address] [amount] --gas-prices=0.025ua
 
 ### Subcommands
 
-The SDK uses [Cobra Commands](https://godoc.org/github.com/spf13/cobra#Command) to instruct nodes what to do. The command called for `tx` is `txCmd`, which includes one or more subcommands that depend on the application's functionalities and what `tx` is defined to do. The following are common subcommands already defined in SDK modules:
-* `SendTxCmd` generates a command created from the [`bank`]() module to send value from one address to another. Sending value is very common but not all transactions are strictly financial (state changes of many types are possible).
-* `GetSignCommand` generates a command from the [`auth`]() module to sign the transaction and prints the JSON encoding of the transaction. It may also output the JSON encoding of the generated signature. If the --validate-signatures flag is toggled on, it also verifies that the signers required for the transaction have provided valid signatures in the correct order.
+The SDK uses [Cobra Commands](https://godoc.org/github.com/spf13/cobra#Command) to instruct nodes what to do. The command called for `tx` is `txCmd`, which includes one or more subcommands that depend on the application's functionalities and what `tx` is defined to do. The following are common subcommands, some already defined:
+* `SendTxCmd` generates a command to send value from one address to another. Sending value is very common but not all transactions are strictly financial (state changes of many types are possible).
+* `GetSignCommand` generates a command to sign the transaction and prints the JSON encoding of the transaction. It may also output the JSON encoding of the generated signature. If the --validate-signatures flag is toggled on, it also verifies that the signers required for the transaction have provided valid signatures in the correct order.
 * `GetEncodeCommand` creates a command that uses the [Amino]() format to encode the transaction.
 * `GetBroadcastCommand` creates the Tx Broadcast command used to share the transaction, inputted as a JSON file, with a full node.
 * Other commands defined by the application developer.
 
 ### Broadcast
 
-Up until broadcast, the transaction creation steps can be done offline (although may result in an invalid transaction). The previously generated Tx Broadcast command is generated within the SDK, then executed by the originating node running Tendermint Core. `Tx` is broadcasted at this layer in the generic `[]byte` form.
+Up until broadcast, the transaction creation steps can be done offline (although may result in an invalid transaction). It is possible for the transaction to be created, then signed, then broadcasted using separate commands. The previously generated Tx Broadcast command is generated within the SDK, then executed by the originating node running Tendermint Core. `Tx` is broadcasted at this layer in the generic `[]byte` form.
 
 ## Addition to Mempool
 
+<<<<<<< HEAD
 Each full node that receives `tx` performs local checks to ensure it is not invalid. If approved, `tx` is held in the nodes' [**Mempool**](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#external-functionality)s (memory pools unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
+=======
+Each full node that receives `tx` performs local checks to ensure it is not invalid. If `tx` passes the checks, it is held in the nodes' [**Mempool**](https://github.com/tendermint/tendermint/blob/a0234affb6959a0aec285eebf3a3963251d2d186/state/services.go#L17-L34)s (memory pools unique to each node) pending inclusion in a block. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+>>>>>>> links
 
 ### Internal State
 
@@ -110,7 +114,7 @@ States synced:  | CheckTxState(t+1)   |         | DeliverTxState(t+1) |		|   Que
 The nodes validating `tx` call an ABCI validation function, `CheckTx` which includes both stateless and stateful checks:
 * **Decoding:** Interfacing with the application, `tx` is first decoded.
 * **RunTx:** The [`runTx`](./baseapp.md#runtx) function is called to run in `runTxModeCheck` mode, meaning the function will not execute the messages.
-* **ValidateBasic:** `Tx` is unpacked into its messages and `validateBasic`, a function required for every message to implement the `Msg` interface, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `validateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+* **ValidateBasic:** `Tx` is unpacked into its messages and [`validateBasic`](./msg-tx.md#validatebasic), a function required for every message to implement the `Msg` interface, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `validateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 * **AnteHandler:** If an `AnteHandler` is defined, it is run. A deep copy of the internal state, `checkTxState`, is made and the `AnteHandler` performs the actions required for each message on it. Using a copy allows the handler to validate the transaction without modifying the last committed state, and revert back to the original if the execution fails.
 * **Gas:** The `Context` used to keep track of important data while `AnteHandler` is executing `tx` keeps a `GasMeter` which tracks how much gas has been used.
 * **Response:** `RunTx` returns a result, which `CheckTx` formats into an ABCI `Response` which includes a log, data pertaining to the messages involved, and information about the amount of gas used.
@@ -119,13 +123,13 @@ The nodes validating `tx` call an ABCI validation function, `CheckTx` which incl
 
 If the transaction sender inputted maximum gas previously, it is known as the value `GasWanted`. `CheckTx` returns `GasUsed` which may or may not be less than the user's provided `GasWanted`. A `PostCheckFunc` is an optional filter run after `CheckTx` that can be used to enforce that users provide enough gas.
 
-If at any point during the checking stage `tx` is found to be invalid, the default protocol is to discard it and the transaction's lifecycle ends here. Otherwise, the default protocol is to add it to the Mempool, and `tx` becomes a candidate to be included in the next block.
+If at any point during the checking stage `tx` is found to be invalid, the default protocol is to discard it and the transaction's lifecycle ends here. Otherwise, the default protocol is to add it to the Mempool, and `tx` becomes a candidate to be included in the next block. Note that even if `tx` passes all checks at this stage, it is still possible to be found invalid later on as these checks are limited.
 
 ## Consensus
 
 Consensus happens in **rounds**: each round begins with a proposer creating a block of the most recent transactions and ends with validators agreeing to accept the block or go with a nil block instead. One proposer is chosen amongst the validators to create and propose their chosen block. In the previous step, this validator generated a Mempool of validated transactions, including `tx`, and now includes them in a block.
 
-The validators execute [Tendermint BFT Consensus](https://tendermint.com/docs/spec/consensus/consensus.html#terms); with +2/3 approval from the validators, the block is committed. Note that not all blocks have the same number of transactions and it is possible for consensus to result in a nil block or one with no transactions.
+The validators execute [Tendermint BFT Consensus](https://tendermint.com/docs/spec/consensus/consensus.html#terms); with +2/3 commits from the validators, the block is committed. Note that not all blocks have the same number of transactions and it is possible for consensus to result in a nil block or one with no transactions.
 
 ### Byzantine Validators
 
@@ -174,7 +178,7 @@ The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk
 * * **Decoding:** `Tx` is decoded.
 * **Initializations:** The `Context`, `Multistore`, and `GasMeter` are initialized.
 * **Checks:** The nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because nodes may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid transactions.
-* **Route and Handler:** The extra step is to run `runMsgs` to fully execute each `Msg` within the transaction. Since `tx` may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the `Route()` function is called to retrieve the route name and find the `MsgHandler`.
+* **Route and Handler:** The extra step is to run `runMsgs` to fully execute each `Msg` within the transaction. Since `tx` may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `MsgHandler`.
 * **MsgHandler:** The `MsgHandler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.
 * **Gas:** While the transaction is being delivered, a `GasMeter` is used to keep track of how much gas is left for each transaction; GasUsed is deducted from it and returned in the `Response`. Deferred functions run at the end of `runTx` for the purpose of checking how much gas was used and outputting `GasUsed` and `GasWanted` in the `Response`. If `GasMeter` has run out or something else goes wrong, it appropriately errors or panics.
 

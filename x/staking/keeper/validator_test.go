@@ -90,6 +90,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(sdk.NewDec(2)))
 	require.Equal(t, int64(50), burned.Int64())
 	TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
+	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
 
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -443,13 +444,12 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{Moniker: moniker})
 		tokens := sdk.TokensFromConsensusPower(power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+		notBondedPool := keeper.GetNotBondedPool(ctx)
+		require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens)))))
+		keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
 
-	for i := range powers {
-		validators[i], found = keeper.GetValidator(ctx, validators[i].OperatorAddress)
-		require.True(t, found)
-	}
 	resValidators := keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint16(len(resValidators)))
 	assert.True(ValEq(t, validators[2], resValidators[0]))
@@ -458,6 +458,11 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[0])
 	delTokens := sdk.TokensFromConsensusPower(500)
 	validators[0], _ = validators[0].AddTokensFromDel(delTokens)
+
+	notBondedPool := keeper.GetNotBondedPool(ctx)
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, delTokens)))))
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint16(len(resValidators)))
@@ -475,6 +480,11 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	require.True(t, found)
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(1))
+
+	notBondedPool = keeper.GetNotBondedPool(ctx)
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.OneInt())))))
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint16(len(resValidators)))
@@ -483,7 +493,13 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 3 kicked out temporarily
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
+	rmTokens := validators[3].TokensFromShares(sdk.NewDec(201)).TruncateInt()
 	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
+
+	bondedPool := keeper.GetBondedPool(ctx)
+	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens)))))
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
+
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint16(len(resValidators)))
@@ -493,6 +509,11 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// validator 4 does not get spot back
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
+
+	notBondedPool = keeper.GetNotBondedPool(ctx)
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200))))))
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, nMax, uint16(len(resValidators)))

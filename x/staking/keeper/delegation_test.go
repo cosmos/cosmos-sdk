@@ -267,12 +267,13 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(sdk.IntEq(t, bondedPool.GetCoins().AmountOf(bondDenom), oldBonded))
 	require.True(sdk.IntEq(t, notBondedPool.GetCoins().AmountOf(bondDenom), oldNotBonded.SubRaw(int64(maxEntries))))
 
+	oldNotBonded = notBondedPool.GetCoins().AmountOf(bondDenom)
+
 	// unbonding  should work again
 	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 	require.NoError(t, err)
 
 	bondedPool = keeper.GetBondedPool(ctx)
-	oldNotBonded = notBondedPool.GetCoins().AmountOf(bondDenom)
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
 	require.True(sdk.IntEq(t, bondedPool.GetCoins().AmountOf(bondDenom), oldBonded.SubRaw(1)))

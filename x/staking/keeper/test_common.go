@@ -238,23 +238,24 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 // update validator for testing
 func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	keeper.SetValidator(ctx, validator)
-	{ // Remove any existing power key for validator.
-		store := ctx.KVStore(keeper.storeKey)
-		iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
-		defer iterator.Close()
-		deleted := false
-		for ; iterator.Valid(); iterator.Next() {
-			valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
-			if bytes.Equal(valAddr, validator.OperatorAddress) {
-				if deleted {
-					panic("found duplicate power index key")
-				} else {
-					deleted = true
-				}
-				store.Delete(iterator.Key())
+
+	// Remove any existing power key for validator.
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	defer iterator.Close()
+	deleted := false
+	for ; iterator.Valid(); iterator.Next() {
+		valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
+		if bytes.Equal(valAddr, validator.OperatorAddress) {
+			if deleted {
+				panic("found duplicate power index key")
+			} else {
+				deleted = true
 			}
+			store.Delete(iterator.Key())
 		}
 	}
+
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 	if apply {
 		keeper.ApplyAndReturnValidatorSetUpdates(ctx)

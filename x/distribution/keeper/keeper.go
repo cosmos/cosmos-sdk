@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
@@ -46,8 +47,15 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 		return types.ErrSetWithdrawAddrDisabled(k.codespace)
 	}
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			tags.SetWithdrawAddress,
+			sdk.NewAttribute(sdk.AttributeKeySender, delegatorAddr.String()),
+			sdk.NewAttribute(tags.WithdrawAddress, withdrawAddr.String()),
+		),
+	})
 
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	return nil
 }
 
@@ -69,35 +77,51 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			tags.Rewards,
+			sdk.NewAttribute(tags.Amount, rewards.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, delAddr.String()),
+			sdk.NewAttribute(tags.Validator, valAddr.String()),
+		),
+	})
+
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
-
 	return rewards, nil
 }
 
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 	// fetch validator accumulated commission
-	commission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if commission.IsZero() {
+	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	if accumCommission.IsZero() {
 		return nil, types.ErrNoValidatorCommission(k.codespace)
 	}
 
-	coins, remainder := commission.TruncateDecimal()
+	commission, remainder := accumCommission.TruncateDecimal()
 	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder) // leave remainder to withdraw later
 
 	// update outstanding
 	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)
-	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(coins)))
+	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(commission)))
 
-	if !coins.IsZero() {
+	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
-		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, commission); err != nil {
 			return nil, err
 		}
 	}
 
-	return coins, nil
+	ctx = ctx.WithEvents(sdk.Events{
+		sdk.NewEvent(
+			tags.Commission,
+			sdk.NewAttribute(tags.Amount, commission.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, valAddr.String()),
+		),
+	})
+
+	return commission, nil
 }

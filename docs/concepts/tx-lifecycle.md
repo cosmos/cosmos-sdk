@@ -22,7 +22,7 @@ Each application may include one or more **modules** that compartmentalize the a
 
 ### User Creation
 
-The transaction `tx` is created by running `appcli tx [tx]` from the command-line, providing transaction data in `[tx]` and, optionally, configurations such as fees or gas, broadcast mode, and whether to only generate offline by appending [flags](https://github.com/cosmos/cosmos-sdk/blob/8c89023e9f7ce67492142c92acc9ba0d9f876c0e/client/flags/flags.go#L15-L58) at the end.
+The transaction `tx` is created by running `appcli tx [tx]` from the command-line, providing transaction data in `[tx]` and, optionally, configurations such as fees or gas, broadcast mode, and whether to only generate offline by appending flags at the end.
 
 Transaction senders may supply **fees** (similar to transaction fees in Bitcoin) or **gas prices** (similar to gas in Ethereum) using the `--fees` or `--gas-prices` flags, respectively. Note that only one of the two can be used. Later, validators may decide whether or not to include `tx` in their block depending on the fees or gas prices given. Generally, higher fees or gas prices generally earn higher priority, but the senders are also able to indicate the maximum fees or gas they are willing to pay.
 
@@ -46,7 +46,7 @@ Up until broadcast, the transaction creation steps can be done offline (although
 
 ## Addition to Mempool
 
-Each full node that receives `tx` performs local checks to ensure it is not invalid. If approved, `tx` is held in the nodes' [**Mempool**](https://github.com/tendermint/tendermint/blob/a0234affb6959a0aec285eebf3a3963251d2d186/state/services.go#L17-L34)s (memory pools unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
+Each full node that receives `tx` performs local checks to ensure it is not invalid. If approved, `tx` is held in the nodes' [**Mempool**](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#external-functionality)s (memory pools unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
 
 ### Internal State
 
@@ -112,7 +112,7 @@ The nodes validating `tx` call an ABCI validation function, `CheckTx` which incl
 * **RunTx:** The [`runTx`](./baseapp.md#runtx) function is called to run in `runTxModeCheck` mode, meaning the function will not execute the messages.
 * **ValidateBasic:** `Tx` is unpacked into its messages and `validateBasic`, a function required for every message to implement the `Msg` interface, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `validateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 * **AnteHandler:** If an `AnteHandler` is defined, it is run. A deep copy of the internal state, `checkTxState`, is made and the `AnteHandler` performs the actions required for each message on it. Using a copy allows the handler to validate the transaction without modifying the last committed state, and revert back to the original if the execution fails.
-* **Gas:** The [`Context`](https://github.com/cosmos/cosmos-sdk/blob/5f9c3fdf88952ea43316f1a18de572e7ae3c13f6/types/context.go) used to keep track of important data while `AnteHandler` is executing `tx` keeps a `GasMeter` which tracks how much gas has been used.
+* **Gas:** The `Context` used to keep track of important data while `AnteHandler` is executing `tx` keeps a `GasMeter` which tracks how much gas has been used.
 * **Response:** `RunTx` returns a result, which `CheckTx` formats into an ABCI `Response` which includes a log, data pertaining to the messages involved, and information about the amount of gas used.
 
 ### Gas Checking

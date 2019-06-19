@@ -1,7 +1,10 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -63,8 +66,16 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		deposit = NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
 
-	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			tags.ProposalDeposit,
+			sdk.NewAttribute(sdk.AttributeKeySender, depositorAddr.String()),
+			sdk.NewAttribute(tags.Amount, depositAmount.String()),
+			sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposalID)),
+		),
+	)
 
+	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
 	return nil, activatedVotingPeriod
 }
 

@@ -7,18 +7,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
-// EndBlocker called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
+// EndBlocker called every block, process inflation, update validator set.
+func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	logger := keeper.Logger(ctx)
-	resTags := sdk.NewTags()
 
 	// delete inactive proposal from store and its deposits
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.ProposalID)
 		keeper.DeleteDeposits(ctx, proposal.ProposalID)
 
-		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID))
-		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				tags.InactiveProposal,
+				sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(tags.ProposalResult, tags.ActionProposalDropped),
+			),
+		)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
@@ -81,11 +85,13 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			),
 		)
 
-		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID))
-		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
-
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				tags.ActiveProposal,
+				sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(tags.ProposalResult, tagValue),
+			),
+		)
 		return false
 	})
-
-	return resTags
 }

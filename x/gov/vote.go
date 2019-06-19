@@ -1,7 +1,10 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -21,6 +24,15 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 	vote := NewVote(proposalID, voterAddr, option)
 	keeper.setVote(ctx, proposalID, voterAddr, vote)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			tags.ProposalVote,
+			sdk.NewAttribute(sdk.AttributeKeySender, voterAddr.String()),
+			sdk.NewAttribute(tags.Option, option.String()),
+			sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposalID)),
+		),
+	)
 
 	return nil
 }

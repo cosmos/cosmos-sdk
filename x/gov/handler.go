@@ -10,6 +10,8 @@ import (
 // Handle all "gov" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
@@ -38,20 +40,29 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return err.Result()
 	}
 
-	proposalIDStr := fmt.Sprintf("%d", proposal.ProposalID)
-	resTags := sdk.NewTags(
-		tags.ProposalID, proposalIDStr,
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.Proposer.String(),
-	)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			tags.SubmitProposal,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+		),
+	})
 
 	if votingStarted {
-		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDStr)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				tags.SubmitProposal,
+				sdk.NewAttribute(tags.VotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
+			),
+		)
 	}
 
 	return sdk.Result{
-		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.ProposalID),
-		Tags: resTags,
+		Data:   keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.ProposalID),
+		Events: ctx.EventManager().Events(),
 	}
 }
 
@@ -61,21 +72,23 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return err.Result()
 	}
 
-	proposalIDStr := fmt.Sprintf("%d", msg.ProposalID)
-
-	resTags := sdk.NewTags(
-		tags.ProposalID, proposalIDStr,
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.Depositor.String(),
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+		),
 	)
 
 	if votingStarted {
-		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDStr)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				tags.ProposalDeposit,
+				sdk.NewAttribute(tags.VotingPeriodStart, fmt.Sprintf("%d", msg.ProposalID)),
+			),
+		)
 	}
 
-	return sdk.Result{
-		Tags: resTags,
-	}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
@@ -84,13 +97,13 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return err.Result()
 	}
 
-	proposalIDStr := fmt.Sprintf("%d", msg.ProposalID)
-
-	return sdk.Result{
-		Tags: sdk.NewTags(
-			tags.ProposalID, proposalIDStr,
-			tags.Category, tags.TxCategory,
-			tags.Sender, msg.Voter.String(),
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
 		),
-	}
+	)
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
+
 }

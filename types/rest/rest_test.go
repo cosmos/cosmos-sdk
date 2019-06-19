@@ -3,13 +3,19 @@
 package rest
 
 import (
+	//	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
+	//	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -136,6 +142,61 @@ func TestParseQueryHeight(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProcessPostResponse(t *testing.T) {
+	expectedJSONWithHeight := []byte(`{"height":194423","type":"cosmos-sdk/BaseAccount","value":{"address":"cosmos1gc72g4guwg2efa03xgkx3u6ft6t39xqzelfx04","coins":[{"denom":"atom","amount":"100"},{"denom":"tree","amount":"125"}],"public_key":{"type":"tendermint/PubKeySecp256k1","value":"A0tS6HI8Goq1lXEK2+g2nT5Hq3qteBVtL0va9kn9BB++"},"account_number":"104","sequence":"32"}}`)
+
+	// setup
+	var w http.ResponseWriter
+
+	privKey := secp256k1.GenPrivKey()
+	pubKey := privKey.PubKey()
+	addr := types.AccAddress(pubKey.Address())
+	coins := types.NewCoins(types.NewCoin("atom", types.NewInt(100)), types.NewCoin("tree", types.NewInt(125)))
+	//height := int64(194423)
+	accNumber := uint64(104)
+	sequence := uint64(32)
+
+	acc := authtypes.NewBaseAccount(addr, coins, pubKey, accNumber, sequence)
+	cdc := codec.New()
+	authtypes.RegisterBaseAccount(cdc)
+
+	// expected json response with zero height
+	expectedJSONNoHeight, err := cdc.MarshalJSON(acc)
+	require.Nil(t, err)
+
+	ProcessPostResponse(w)
+
+	/*
+		To test
+		- no height marshaled struct returns same thing
+		- not marhsaled no height returns expected no height
+		- height marshaled struct returns expected with heigh
+		- height no marshaled returns exected with height
+		- all the above with indent
+
+			expectedOutput, err := cdc.MarshalJSONIndent(expectedMockAcc, "", " ")
+			require.Nil(t, err)
+			fmt.Printf("%s\n", expectedOutput)
+			fmt.Printf("%s\n", actualOutput)
+			//	require.Equal(t, expectedOutput, actualOutput)
+
+			// test that JSONMarshal returns equivalent output
+			actualOutput, err = cdc.MarshalJSON(mockAcc)
+			require.Nil(t, err)
+			m := make(map[string]interface{})
+			err = json.Unmarshal(actualOutput, &m)
+			require.Nil(t, err)
+			fmt.Printf("%s\n", m)
+			m["height"] = height
+			actualOutput, err = json.MarshalIndent(m, "", " ")
+			fmt.Printf("%s\n", actualOutput)
+			var i mockAccount
+			err = cdc.UnmarshalJSON(actualOutput, &i)
+			require.Nil(t, err)
+			fmt.Printf("%v\n", i)
+	*/
 }
 
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {

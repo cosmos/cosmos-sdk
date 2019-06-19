@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -26,13 +27,6 @@ const (
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
-}
-
-// ResponseWithHeight wraps the embedded interface with the height it was queried
-// at.
-type ResponseWithHeight struct {
-	RespValue interface{} `json:"response"`
-	Height    int64       `json:"height"`
 }
 
 // BaseReq defines a structure that can be embedded in other request structures
@@ -229,7 +223,7 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 }
 
 // PostProcessResponse performs post processing for a REST response.
-func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}, height int64) {
 	var output []byte
 
 	switch response.(type) {
@@ -238,15 +232,33 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 
 	default:
 		var err error
-		if cliCtx.Indent {
-			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
-		} else {
-			output, err = cliCtx.Codec.MarshalJSON(response)
-		}
+		output, err = cliCtx.Codec.MarshalJSON(response)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+	}
+
+	// inject the height into the json response by
+	// - decoding into the map
+	// - adding the height to the map
+	// - encoding using standard json library
+	var m map[string]interface{}
+	err := json.Unmarshal(output, &m)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	}
+	m["height"] = height
+
+	if cliCtx.Indent {
+		output, err = json.MarshalIndent(m, "", "  ")
+	} else {
+		output, err = json.Marshal(m)
+	}
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

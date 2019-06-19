@@ -715,8 +715,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIdx, msg := range msgs {
-		ctx = ctx.WithEvents(sdk.EmptyEvents())
-
 		// match message route
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
@@ -736,7 +734,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		data = append(data, msgResult.Data...)
 
 		// append events from the message's execution and a message action event
-		events = events.AppendEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type()))
+		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
 		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}

@@ -108,7 +108,7 @@ States synced:  | CheckTxState(t+1)   |         | DeliverTxState(t+1) |		|   Que
 ### CheckTx
 
 The nodes validating `tx` call an ABCI validation function, `CheckTx` which includes both stateless and stateful checks:
-* **Decoding:** Interfacing with the application, the transaction is first decoded.
+* **Decoding:** Interfacing with the application, `tx` is first decoded.
 * **RunTx:** The [`runTx`](./baseapp.md#runtx) function is called to run in `runTxModeCheck` mode, meaning the function will not execute the messages.
 * **ValidateBasic:** `Tx` is unpacked into its messages and `validateBasic`, a function required for every message to implement the `Msg` interface, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `validateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 * **AnteHandler:** If an `AnteHandler` is defined, it is run. A deep copy of the internal state, `checkTxState`, is made and the `AnteHandler` performs the actions required for each message on it. Using a copy allows the handler to validate the transaction without modifying the last committed state, and revert back to the original if the execution fails.
@@ -171,7 +171,8 @@ In order to execute `tx`, the following ABCI function calls are made in order to
 
 The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx) function in deliver mode instead of check mode. Instead of using their `checkTxState` or `queryState`, nodes select a new copy, `deliverTxState`, to deliver transactions:
 
-* **Initializations:** First, the `Context`, `Multistore`, and `GasMeter` are initialized.
+* * **Decoding:** `Tx` is decoded.
+* **Initializations:** The `Context`, `Multistore`, and `GasMeter` are initialized.
 * **Checks:** The nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because nodes may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid transactions.
 * **Route and Handler:** The extra step is to run `runMsgs` to fully execute each `Msg` within the transaction. Since `tx` may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the `Route()` function is called to retrieve the route name and find the `MsgHandler`.
 * **MsgHandler:** The `MsgHandler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.

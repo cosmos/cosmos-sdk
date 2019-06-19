@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
@@ -78,13 +77,13 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			tags.Invariant,
-			sdk.NewAttribute(tags.Route, msg.InvariantRoute),
+			types.EventTypeInvariant,
+			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
 		),
 	})
 

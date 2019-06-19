@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/tags"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -151,9 +150,9 @@ func (keeper BaseSendKeeper) SendCoins(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.Transfer,
-			sdk.NewAttribute(tags.Sender, fromAddr.String()),
-			sdk.NewAttribute(tags.Recipient, toAddr.String()),
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 		),
 	)
 
@@ -339,8 +338,8 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.Transfer,
-				sdk.NewAttribute(tags.Sender, in.Address.String()),
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
 			),
 		)
 	}
@@ -353,8 +352,8 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.Transfer,
-				sdk.NewAttribute(tags.Recipient, out.Address.String()),
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
 			),
 		)
 	}

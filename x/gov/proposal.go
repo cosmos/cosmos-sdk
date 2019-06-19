@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -39,8 +38,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.SubmitProposal,
-			sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposalID)),
+			types.EventTypeSubmitProposal,
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
 	)
 

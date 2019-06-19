@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -68,10 +67,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.ProposalDeposit,
+			types.EventTypeProposalDeposit,
 			sdk.NewAttribute(sdk.AttributeKeySender, depositorAddr.String()),
-			sdk.NewAttribute(tags.Amount, depositAmount.String()),
-			sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposalID)),
+			sdk.NewAttribute(types.AttributeKeyAmount, depositAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
 	)
 

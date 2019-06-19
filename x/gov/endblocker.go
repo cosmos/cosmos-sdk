@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // EndBlocker called every block, process inflation, update validator set.
@@ -18,9 +18,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.InactiveProposal,
-				sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
-				sdk.NewAttribute(tags.ProposalResult, tags.ActionProposalDropped),
+				types.EventTypeInactiveProposal,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
 			),
 		)
 
@@ -57,19 +57,19 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			err := handler(cacheCtx, proposal.Content)
 			if err == nil {
 				proposal.Status = StatusPassed
-				tagValue = tags.ActionProposalPassed
+				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
 				proposal.Status = StatusFailed
-				tagValue = tags.ActionProposalFailed
+				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
 			}
 		} else {
 			proposal.Status = StatusRejected
-			tagValue = tags.ActionProposalRejected
+			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}
 
@@ -87,9 +87,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.ActiveProposal,
-				sdk.NewAttribute(tags.ProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
-				sdk.NewAttribute(tags.ProposalResult, tagValue),
+				types.EventTypeActiveProposal,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
 			),
 		)
 		return false

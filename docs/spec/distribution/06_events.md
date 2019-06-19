@@ -28,9 +28,9 @@ The distribution module emits the following events:
 
 | Type    | Attribute Key | Attribute Value           |
 |---------|---------------|---------------------------|
-| rewards | amount        | {rewardAmount}            |
-| rewards | sender        | {senderAddress}           |
-| rewards | validator     | {validatorAddress}        |
+| withdraw_rewards | amount        | {rewardAmount}            |
+| withdraw_rewards | sender        | {senderAddress}           |
+| withdraw_rewards | validator     | {validatorAddress}        |
 | message | module        | distribution              |
 | message | action        | withdraw_delegator_reward |
 
@@ -38,7 +38,7 @@ The distribution module emits the following events:
 
 | Type       | Attribute Key | Attribute Value               |
 |------------|---------------|-------------------------------|
-| commission | amount        | {commissionAmount}            |
-| commission | sender        | {senderAddress}               |
+| withdraw_commission | amount        | {commissionAmount}            |
+| withdraw_commission | sender        | {senderAddress}               |
 | message    | module        | distribution                  |
 | message    | action        | withdraw_validator_commission |

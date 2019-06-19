@@ -6,7 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
@@ -50,9 +50,9 @@ func (k Keeper) AllocateTokens(
 	if proposerValidator != nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.ProposerReward,
-				sdk.NewAttribute(tags.Reward, proposerReward.String()),
-				sdk.NewAttribute(tags.Validator, proposerValidator.GetOperator().String()),
+				types.EventTypeProposerReward,
+				sdk.NewAttribute(types.AttributeKeyAmount, proposerReward.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
 			),
 		)
 
@@ -102,9 +102,9 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	// update current commission
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.Commission,
-			sdk.NewAttribute(tags.Amount, commission.String()),
-			sdk.NewAttribute(tags.Validator, val.GetOperator().String()),
+			types.EventTypeCommission,
+			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
@@ -119,9 +119,9 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	// update outstanding rewards
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.Rewards,
-			sdk.NewAttribute(tags.Amount, tokens.String()),
-			sdk.NewAttribute(tags.Validator, val.GetOperator().String()),
+			types.EventTypeRewards,
+			sdk.NewAttribute(types.AttributeKeyAmount, tokens.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())

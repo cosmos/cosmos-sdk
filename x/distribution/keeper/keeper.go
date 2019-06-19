@@ -3,7 +3,6 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
@@ -47,13 +46,13 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 		return types.ErrSetWithdrawAddrDisabled(k.codespace)
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.SetWithdrawAddress,
+			types.EventTypeSetWithdrawAddress,
 			sdk.NewAttribute(sdk.AttributeKeySender, delegatorAddr.String()),
-			sdk.NewAttribute(tags.WithdrawAddress, withdrawAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
 		),
-	})
+	)
 
 	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	return nil
@@ -77,14 +76,14 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.Rewards,
-			sdk.NewAttribute(tags.Amount, rewards.String()),
+			types.EventTypeWithdrawRewards,
+			sdk.NewAttribute(types.AttributeKeyAmount, rewards.String()),
 			sdk.NewAttribute(sdk.AttributeKeySender, delAddr.String()),
-			sdk.NewAttribute(tags.Validator, valAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
 		),
-	})
+	)
 
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
@@ -115,13 +114,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		}
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			tags.Commission,
-			sdk.NewAttribute(tags.Amount, commission.String()),
+			types.EventTypeWithdrawCommission,
+			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
 			sdk.NewAttribute(sdk.AttributeKeySender, valAddr.String()),
 		),
-	})
+	)
 
 	return commission, nil
 }

@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/tags"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		// NOTE msg already has validate basic run
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
 		case MsgUnjail:
 			return handleMsgUnjail(ctx, msg, k)
@@ -61,15 +62,18 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrValidatorJailed(k.codespace).Result()
 	}
 
-	// unjail the validator
 	k.sk.Unjail(ctx, consAddr)
 
-	tags := sdk.NewTags(
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.ValidatorAddr.String(),
-	)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUnjail,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
 
-	return sdk.Result{
-		Tags: tags,
-	}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -38,14 +37,14 @@ func (p Proposer) String() string {
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
 func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposalParams) ([]byte, error) {
-	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, types.MsgDeposit{}.Type()),
-		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+	events := []string{
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := tx.SearchTxs(cliCtx, tags, defaultPage, defaultLimit)
+	searchResult, err := tx.SearchTxs(cliCtx, events, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +80,8 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 // support configurable pagination.
 func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.MsgVote{}.Type()),
-		fmt.Sprintf("%s.%s='%s'", tags.ProposalVote, tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -118,9 +117,9 @@ func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalPa
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.MsgVote{}.Type()),
-		fmt.Sprintf("%s.%s='%s'", tags.ProposalVote, tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", tags.ProposalVote, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, sdk.AttributeKeySender, []byte(params.Voter.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -158,9 +157,9 @@ func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams)
 // query.
 func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.MsgDeposit{}.Type()),
-		fmt.Sprintf("%s.%s='%s'", tags.ProposalDeposit, tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", tags.ProposalDeposit, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, sdk.AttributeKeySender, []byte(params.Depositor.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -198,8 +197,8 @@ func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositP
 // ID.
 func QueryProposerByTxQuery(cliCtx context.CLIContext, proposalID uint64) (Proposer, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.MsgSubmitProposal{}.Type()),
-		fmt.Sprintf("%s.%s='%s'", tags.SubmitProposal, tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
+		fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently

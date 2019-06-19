@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Handle all "gov" type messages.
@@ -42,20 +42,20 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			tags.SubmitProposal,
+			types.EventTypeSubmitProposal,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
 	if votingStarted {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.SubmitProposal,
-				sdk.NewAttribute(tags.VotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
+				types.EventTypeSubmitProposal,
+				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 			),
 		)
 	}
@@ -75,15 +75,15 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	)
 
 	if votingStarted {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				tags.ProposalDeposit,
-				sdk.NewAttribute(tags.VotingPeriodStart, fmt.Sprintf("%d", msg.ProposalID)),
+				types.EventTypeProposalDeposit,
+				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalID)),
 			),
 		)
 	}
@@ -100,7 +100,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	)
 

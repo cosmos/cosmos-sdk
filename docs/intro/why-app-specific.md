@@ -75,5 +75,5 @@ The fundamental issue here is that the governance of the application and the gov
 
 Clearly, application-specific blockchains are awesome. The Cosmos SDK makes it easier than ever to build them. What are you waiting for?
 
-- Learn how to build an application-specific blockchain from scratch with the [SDK tutorial](https://cosmos.network/docs/tutorial)
 - Learn more about the [high-level architecture](./sdk-app-architecture) of an SDK application.
+- Learn how to build an application-specific blockchain from scratch with the [SDK tutorial](https://cosmos.network/docs/tutorial)

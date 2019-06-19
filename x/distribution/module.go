@@ -3,14 +3,22 @@ package distribution
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
@@ -41,6 +49,21 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterRoutes(ctx, rtr, StoreKey)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetTxCmd(StoreKey, cdc)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
 // app module
 type AppModule struct {
 	AppModuleBasic
@@ -61,7 +84,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
 }
 

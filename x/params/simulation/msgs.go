@@ -34,7 +34,7 @@ var paramChangePool = []simParamChange{
 		"MaxValidators",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("%d", simulation.ModuleParamSimulator["MaxValidators"](r).(uint16))
+			return fmt.Sprintf("%d", simulation.ModuleParamSimulator[simulation.MaxValidators](r).(uint16))
 		},
 	},
 	{
@@ -42,7 +42,7 @@ var paramChangePool = []simParamChange{
 		"UnbondingTime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["UnbondingTime"](r).(time.Duration))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.UnbondingTime](r).(time.Duration))
 		},
 	},
 	// slashing parameters
@@ -51,7 +51,7 @@ var paramChangePool = []simParamChange{
 		"SignedBlocksWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["SignedBlocksWindow"](r).(int64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.SignedBlocksWindow](r).(int64))
 		},
 	},
 	{
@@ -59,7 +59,7 @@ var paramChangePool = []simParamChange{
 		"MinSignedPerWindow",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["MinSignedPerWindow"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.MinSignedPerWindow](r).(sdk.Dec))
 		},
 	},
 	{
@@ -67,7 +67,7 @@ var paramChangePool = []simParamChange{
 		"SlashFractionDowntime",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["SlashFractionDowntime"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.SlashFractionDowntime](r).(sdk.Dec))
 		},
 	},
 	// minting parameters
@@ -76,7 +76,7 @@ var paramChangePool = []simParamChange{
 		"InflationRateChange",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator["InflationRateChange"](r).(sdk.Dec))
+			return fmt.Sprintf("\"%s\"", simulation.ModuleParamSimulator[simulation.InflationRateChange](r).(sdk.Dec))
 		},
 	},
 	// gov parameters
@@ -85,7 +85,7 @@ var paramChangePool = []simParamChange{
 		"votingparams",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+			return fmt.Sprintf(`{"voting_period": "%d"}`, simulation.ModuleParamSimulator[simulation.VotingParamsVotingPeriod](r).(time.Duration))
 		},
 	},
 	{
@@ -93,7 +93,7 @@ var paramChangePool = []simParamChange{
 		"depositparams",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator["VotingParams/VotingPeriod"](r).(time.Duration))
+			return fmt.Sprintf(`{"max_deposit_period": "%d"}`, simulation.ModuleParamSimulator[simulation.VotingParamsVotingPeriod](r).(time.Duration))
 		},
 	},
 	{
@@ -105,9 +105,9 @@ var paramChangePool = []simParamChange{
 				key   string
 				value sdk.Dec
 			}{
-				{"quorum", simulation.ModuleParamSimulator["TallyParams/Quorum"](r).(sdk.Dec)},
-				{"threshold", simulation.ModuleParamSimulator["TallyParams/Threshold"](r).(sdk.Dec)},
-				{"veto", simulation.ModuleParamSimulator["TallyParams/Veto"](r).(sdk.Dec)},
+				{"quorum", simulation.ModuleParamSimulator[simulation.TallyParamsQuorum](r).(sdk.Dec)},
+				{"threshold", simulation.ModuleParamSimulator[simulation.TallyParamsThreshold](r).(sdk.Dec)},
+				{"veto", simulation.ModuleParamSimulator[simulation.TallyParamsVeto](r).(sdk.Dec)},
 			}
 
 			pc := make(map[string]string)
@@ -134,7 +134,7 @@ var paramChangePool = []simParamChange{
 		"MaxMemoCharacters",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["MaxMemoCharacters"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.MaxMemoChars](r).(uint64))
 		},
 	},
 	{
@@ -142,7 +142,7 @@ var paramChangePool = []simParamChange{
 		"TxSigLimit",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSigLimit"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.TxSigLimit](r).(uint64))
 		},
 	},
 	{
@@ -150,7 +150,7 @@ var paramChangePool = []simParamChange{
 		"TxSizeCostPerByte",
 		"",
 		func(r *rand.Rand) string {
-			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator["TxSizeCostPerByte"](r).(uint64))
+			return fmt.Sprintf("\"%d\"", simulation.ModuleParamSimulator[simulation.TxSizeCostPerByte](r).(uint64))
 		},
 	},
 }

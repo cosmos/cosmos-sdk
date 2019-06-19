@@ -4,10 +4,9 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -16,17 +15,17 @@ import (
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param
 // change REST handler with a given sub-route.
-func ProposalRESTHandler(cliCtx context.CLIContext, cdc *codec.Codec) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "param_change",
-		Handler:  postProposalHandlerFn(cdc, cliCtx),
+		Handler:  postProposalHandlerFn(cliCtx),
 	}
 }
 
-func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req paramscutils.ParamChangeProposalReq
-		if !rest.ReadRESTReq(w, r, cdc, &req) {
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
 
@@ -43,6 +42,6 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

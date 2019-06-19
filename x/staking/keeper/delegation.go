@@ -537,7 +537,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// remove the shares and coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+	if validator.DelegatorShares.IsZero() && validator.IsUnbonded() {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.OperatorAddress)
 	}
@@ -556,16 +556,17 @@ func (k Keeper) getBeginInfo(
 
 	// TODO: When would the validator not be found?
 	switch {
-	case !found || validator.Status == sdk.Bonded:
+	case !found || validator.IsBonded():
+
 		// the longest wait - just unbonding period from now
 		completionTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 		height = ctx.BlockHeight()
 		return completionTime, height, false
 
-	case validator.Status == sdk.Unbonded:
+	case validator.IsUnbonded():
 		return completionTime, height, true
 
-	case validator.Status == sdk.Unbonding:
+	case validator.IsUnbonding():
 		return validator.UnbondingCompletionTime, validator.UnbondingHeight, false
 
 	default:
@@ -582,13 +583,13 @@ func (k Keeper) Undelegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (time.Time, sdk.Error) {
 
+	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
+		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
+	}
+
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return time.Time{}, err
-	}
-
-	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
 	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))

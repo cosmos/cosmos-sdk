@@ -3,14 +3,20 @@ package genutil
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 var (
-	_ sdk.AppModuleGenesis = AppModule{}
-	_ sdk.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // module name
@@ -42,6 +48,15 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+
 //___________________________
 // app module
 type AppModule struct {
@@ -53,9 +68,9 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper AccountKeeper,
-	stakingKeeper StakingKeeper, deliverTx deliverTxfn) sdk.AppModule {
+	stakingKeeper StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
-	return sdk.NewGenesisOnlyAppModule(AppModule{
+	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
 		stakingKeeper:  stakingKeeper,

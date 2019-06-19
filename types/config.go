@@ -85,11 +85,13 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.addressVerifier = addressVerifier
 }
 
+// Set the BIP-0044 CoinType code on the config
 func (config *Config) SetCoinType(coinType uint32) {
 	config.assertNotSealed()
 	config.coinType = coinType
 }
 
+// Set the FullFundraiserPath (BIP44Prefix) on the config
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath
@@ -144,10 +146,12 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
 }
 
+// Get the BIP-0044 CoinType code on the config
 func (config *Config) GetCoinType() uint32 {
 	return config.coinType
 }
 
+// Get the FullFundraiserPath (BIP44Prefix) on the config
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
 }

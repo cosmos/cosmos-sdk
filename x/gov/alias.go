@@ -39,6 +39,17 @@ const (
 	StatusFailed                 = types.StatusFailed
 	ProposalTypeText             = types.ProposalTypeText
 	ProposalTypeSoftwareUpgrade  = types.ProposalTypeSoftwareUpgrade
+	QueryParams                  = types.QueryParams
+	QueryProposals               = types.QueryProposals
+	QueryProposal                = types.QueryProposal
+	QueryDeposits                = types.QueryDeposits
+	QueryDeposit                 = types.QueryDeposit
+	QueryVotes                   = types.QueryVotes
+	QueryVote                    = types.QueryVote
+	QueryTally                   = types.QueryTally
+	ParamDeposit                 = types.ParamDeposit
+	ParamVoting                  = types.ParamVoting
+	ParamTallying                = types.ParamTallying
 	OptionEmpty                  = types.OptionEmpty
 	OptionYes                    = types.OptionYes
 	OptionAbstain                = types.OptionAbstain
@@ -79,6 +90,11 @@ var (
 	NewMsgSubmitProposal          = types.NewMsgSubmitProposal
 	NewMsgDeposit                 = types.NewMsgDeposit
 	NewMsgVote                    = types.NewMsgVote
+	ParamKeyTable                 = types.ParamKeyTable
+	NewDepositParams              = types.NewDepositParams
+	NewTallyParams                = types.NewTallyParams
+	NewVotingParams               = types.NewVotingParams
+	NewParams                     = types.NewParams
 	NewProposal                   = types.NewProposal
 	ProposalStatusFromString      = types.ProposalStatusFromString
 	ValidProposalStatus           = types.ValidProposalStatus
@@ -91,6 +107,10 @@ var (
 	ContentFromProposalType       = types.ContentFromProposalType
 	IsValidProposalType           = types.IsValidProposalType
 	ProposalHandler               = types.ProposalHandler
+	NewQueryProposalParams        = types.NewQueryProposalParams
+	NewQueryDepositParams         = types.NewQueryDepositParams
+	NewQueryVoteParams            = types.NewQueryVoteParams
+	NewQueryProposalsParams       = types.NewQueryProposalsParams
 	NewVote                       = types.NewVote
 	VoteOptionFromString          = types.VoteOptionFromString
 	ValidVoteOption               = types.ValidVoteOption
@@ -103,6 +123,9 @@ var (
 	ProposalIDKey               = types.ProposalIDKey
 	DepositsKeyPrefix           = types.DepositsKeyPrefix
 	VotesKeyPrefix              = types.VotesKeyPrefix
+	ParamStoreKeyDepositParams  = types.ParamStoreKeyDepositParams
+	ParamStoreKeyVotingParams   = types.ParamStoreKeyVotingParams
+	ParamStoreKeyTallyParams    = types.ParamStoreKeyTallyParams
 )
 
 type (
@@ -113,6 +136,10 @@ type (
 	MsgSubmitProposal       = types.MsgSubmitProposal
 	MsgDeposit              = types.MsgDeposit
 	MsgVote                 = types.MsgVote
+	DepositParams           = types.DepositParams
+	TallyParams             = types.TallyParams
+	VotingParams            = types.VotingParams
+	Params                  = types.Params
 	Proposal                = types.Proposal
 	Proposals               = types.Proposals
 	ProposalQueue           = types.ProposalQueue
@@ -120,6 +147,10 @@ type (
 	TallyResult             = types.TallyResult
 	TextProposal            = types.TextProposal
 	SoftwareUpgradeProposal = types.SoftwareUpgradeProposal
+	QueryProposalParams     = types.QueryProposalParams
+	QueryDepositParams      = types.QueryDepositParams
+	QueryVoteParams         = types.QueryVoteParams
+	QueryProposalsParams    = types.QueryProposalsParams
 	Vote                    = types.Vote
 	Votes                   = types.Votes
 	VoteOption              = types.VoteOption

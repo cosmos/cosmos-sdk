@@ -1,4 +1,4 @@
-package keeper
+package keeper // noalias
 
 import (
 	"bytes"
@@ -79,7 +79,7 @@ func MakeTestCodec() *codec.Codec {
 // If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromConsensusPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)

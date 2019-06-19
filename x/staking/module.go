@@ -3,6 +3,8 @@ package staking
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,20 +14,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
 type AppModuleBasic struct{}
 
-var _ sdk.AppModuleBasic = AppModuleBasic{}
+var _ module.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string {
@@ -52,6 +56,21 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterRoutes(ctx, rtr)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetTxCmd(StoreKey, cdc)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
 //_____________________________________
 // extra helpers
 
@@ -69,7 +88,7 @@ func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeI
 
 // BuildCreateValidatorMsg - used for gen-tx
 func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
-	txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error) {
+	txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
 	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 }
 
@@ -77,14 +96,14 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 type AppModule struct {
 	AppModuleBasic
 	keeper      Keeper
-	fcKeeper    FeeCollectionKeeper
-	distrKeeper DistributionKeeper
-	accKeeper   AccountKeeper
+	fcKeeper    types.FeeCollectionKeeper
+	distrKeeper types.DistributionKeeper
+	accKeeper   types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
-	distrKeeper types.DistributionKeeper, accKeeper AccountKeeper) AppModule {
+	distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -101,7 +120,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper, am.fcKeeper, am.distrKeeper, am.accKeeper)
 }
 

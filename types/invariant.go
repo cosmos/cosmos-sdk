@@ -9,7 +9,7 @@ type Invariant func(ctx Context) error
 // Invariants defines a group of invariants
 type Invariants []Invariant
 
-// expected interface for routing invariants
-type InvariantRouter interface {
+// expected interface for registering invariants
+type InvariantRegistry interface {
 	RegisterRoute(moduleName, route string, invar Invariant)
 }

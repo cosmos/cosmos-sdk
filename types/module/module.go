@@ -280,22 +280,26 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
-// perform begin block functionality for modules
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	ctx = ctx.WithEvents(sdk.EmptyEvents())
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
 		m.Modules[moduleName].BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
-		Events: ctx.Events().ToABCIEvents(),
+		Events: ctx.EventManager().ABCIEvents(),
 	}
 }
 
-// perform end block functionality for modules
+// EndBlock performs end block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	ctx = ctx.WithEvents(sdk.EmptyEvents())
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
@@ -314,7 +318,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
-		Events:           ctx.Events().ToABCIEvents(),
+		Events:           ctx.EventManager().ABCIEvents(),
 	}
 }
 

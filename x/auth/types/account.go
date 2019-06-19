@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -59,10 +60,6 @@ type VestingAccount interface {
 	GetDelegatedFree() sdk.Coins
 	GetDelegatedVesting() sdk.Coins
 }
-
-// AccountDecoder unmarshals account bytes
-// TODO: Think about removing
-type AccountDecoder func(accountBytes []byte) (Account, error)
 
 //-----------------------------------------------------------------------------
 // BaseAccount
@@ -186,6 +183,39 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 // this is simply the base coins.
 func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 	return acc.GetCoins()
+}
+
+// MarshalYAML returns the YAML representation of an account.
+func (acc BaseAccount) MarshalYAML() (interface{}, error) {
+	var bs []byte
+	var err error
+	var pubkey string
+
+	if acc.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(acc.PubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bs, err = yaml.Marshal(struct {
+		Address       sdk.AccAddress
+		Coins         sdk.Coins
+		PubKey        string
+		AccountNumber uint64
+		Sequence      uint64
+	}{
+		Address:       acc.Address,
+		Coins:         acc.Coins,
+		PubKey:        pubkey,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), err
 }
 
 //-----------------------------------------------------------------------------

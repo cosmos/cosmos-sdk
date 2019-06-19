@@ -44,7 +44,6 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 
 	c = c.WithMultiStore(ms)
 	c = c.WithBlockHeader(header)
-	c = c.WithBlockHeight(header.Height)
 	c = c.WithChainID(header.ChainID)
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(nil)
@@ -72,7 +71,6 @@ type contextKey int // local to the context module
 const (
 	contextKeyMultiStore contextKey = iota
 	contextKeyBlockHeader
-	contextKeyBlockHeight
 	contextKeyChainID
 	contextKeyIsCheckTx
 	contextKeyTxBytes
@@ -103,7 +101,7 @@ func (c Context) MultiStore() MultiStore {
 
 func (c Context) BlockHeader() abci.Header { return c.Value(contextKeyBlockHeader).(abci.Header) }
 
-func (c Context) BlockHeight() int64 { return c.Value(contextKeyBlockHeight).(int64) }
+func (c Context) BlockHeight() int64 { return c.BlockHeader().Height }
 
 func (c Context) ChainID() string { return c.Value(contextKeyChainID).(string) }
 
@@ -196,7 +194,7 @@ func (c Context) WithProposer(addr ConsAddress) Context {
 func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
-	return c.withValue(contextKeyBlockHeight, height).withValue(contextKeyBlockHeader, newHeader)
+	return c.WithBlockHeader(newHeader)
 }
 
 func (c Context) WithChainID(chainID string) Context { return c.withValue(contextKeyChainID, chainID) }

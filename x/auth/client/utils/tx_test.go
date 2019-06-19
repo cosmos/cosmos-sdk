@@ -7,11 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,12 +34,12 @@ func TestParseQueryResponse(t *testing.T) {
 
 func TestCalculateGas(t *testing.T) {
 	cdc := makeCodec()
-	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, error) {
-		return func(string, common.HexBytes) ([]byte, error) {
+	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
+		return func(string, []byte) ([]byte, int64, error) {
 			if wantErr {
-				return nil, errors.New("")
+				return nil, 0, errors.New("")
 			}
-			return cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: gasUsed}), nil
+			return cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: gasUsed}), 0, nil
 		}
 	}
 	type args struct {
@@ -112,49 +110,6 @@ func TestReadStdTxFromFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.Memo, "foomemo")
 }
-
-func TestValidateCmd(t *testing.T) {
-	// Setup root and subcommands
-	rootCmd := &cobra.Command{
-		Use: "root",
-	}
-	queryCmd := &cobra.Command{
-		Use: "query",
-	}
-	rootCmd.AddCommand(queryCmd)
-
-	// Command being tested
-	distCmd := &cobra.Command{
-		Use:                        "distr",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-	queryCmd.AddCommand(distCmd)
-
-	commissionCmd := &cobra.Command{
-		Use: "commission",
-	}
-	distCmd.AddCommand(commissionCmd)
-
-	tests := []struct {
-		reason  string
-		args    []string
-		wantErr bool
-	}{
-		{"misspelled command", []string{"comission"}, true},
-		{"no command provided", []string{}, false},
-		{"help flag", []string{"comission", "--help"}, false},
-		{"shorthand help flag", []string{"comission", "-h"}, false},
-	}
-
-	for _, tt := range tests {
-		err := ValidateCmd(distCmd, tt.args)
-		assert.Equal(t, tt.wantErr, err != nil, tt.reason)
-	}
-
-}
-
-// aux functions
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}

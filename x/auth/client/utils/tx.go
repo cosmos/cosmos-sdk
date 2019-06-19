@@ -7,10 +7,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -62,7 +59,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		}
 
 		gasEst := GasEstimateResponse{GasEstimate: txBldr.Gas()}
-		fmt.Fprintf(os.Stderr, "%s\n", gasEst.String())
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", gasEst.String())
 	}
 
 	if cliCtx.Simulate {
@@ -85,12 +82,12 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
 		}
 
-		fmt.Fprintf(os.Stderr, "%s\n\n", json)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := input.BufferStdin()
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
 		if err != nil || !ok {
-			fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
 		}
 	}
@@ -122,26 +119,31 @@ func EnrichWithGas(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs [
 	if err != nil {
 		return txBldr, err
 	}
+
 	return txBldr.WithGas(adjusted), nil
 }
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error),
-	cdc *codec.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
+func CalculateGas(
+	queryFunc func(string, []byte) ([]byte, int64, error), cdc *codec.Codec,
+	txBytes []byte, adjustment float64,
+) (estimate, adjusted uint64, err error) {
 
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
-	rawRes, err := queryFunc("/app/simulate", txBytes)
+	rawRes, _, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
-		return
+		return estimate, adjusted, err
 	}
+
 	estimate, err = parseQueryResponse(cdc, rawRes)
 	if err != nil {
 		return
 	}
+
 	adjusted = adjustGasEstimate(estimate, adjustment)
-	return
+	return estimate, adjusted, nil
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
@@ -227,17 +229,21 @@ func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLICo
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
 func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
 	var bytes []byte
+
 	if filename == "-" {
 		bytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		bytes, err = ioutil.ReadFile(filename)
 	}
+
 	if err != nil {
 		return
 	}
+
 	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
 		return
 	}
+
 	return
 }
 
@@ -245,17 +251,12 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	accNum, err := cliCtx.GetAccountNumber(addr)
+	num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(addr)
 	if err != nil {
 		return txBldr, err
 	}
 
-	accSeq, err := cliCtx.GetAccountSequence(addr)
-	if err != nil {
-		return txBldr, err
-	}
-
-	return txBldr.WithAccountNumber(accNum).WithSequence(accSeq), nil
+	return txBldr.WithAccountNumber(num).WithSequence(seq), nil
 }
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
@@ -265,7 +266,8 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 	if encoder == nil {
 		encoder = authtypes.DefaultTxEncoder(cdc)
 	}
-	return
+
+	return encoder
 }
 
 // nolint
@@ -275,7 +277,8 @@ func simulateMsgs(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs []
 	if err != nil {
 		return
 	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment())
+
+	estimated, adjusted, err = CalculateGas(cliCtx.QueryWithData, cliCtx.Codec, txBytes, txBldr.GasAdjustment())
 	return
 }
 
@@ -288,36 +291,36 @@ func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
 	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &simulationResult); err != nil {
 		return 0, err
 	}
+
 	return simulationResult.GasUsed, nil
 }
 
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (authtypes.TxBuilder, error) {
-	if err := cliCtx.EnsureAccountExists(); err != nil {
+	from := cliCtx.GetFromAddress()
+
+	accGetter := authtypes.NewAccountRetriever(cliCtx)
+	if err := accGetter.EnsureExists(from); err != nil {
 		return txBldr, err
 	}
 
-	from := cliCtx.GetFromAddress()
-
+	txbldrAccNum, txbldrAccSeq := txBldr.AccountNumber(), txBldr.Sequence()
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.AccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(from)
+	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
+		num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(from)
 		if err != nil {
 			return txBldr, err
 		}
-		txBldr = txBldr.WithAccountNumber(accNum)
+
+		if txbldrAccNum == 0 {
+			txBldr = txBldr.WithAccountNumber(num)
+		}
+		if txbldrAccSeq == 0 {
+			txBldr = txBldr.WithSequence(seq)
+		}
 	}
 
-	// TODO: (ref #1903) Allow for user supplied account sequence without
-	// automatically doing a manual lookup.
-	if txBldr.Sequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(from)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
-	}
 	return txBldr, nil
 }
 
@@ -332,7 +335,7 @@ func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 			return stdTx, err
 		}
 
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
+		_, _ = fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
 	}
 
 	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
@@ -351,34 +354,4 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 	}
 
 	return false
-}
-
-// ValidateCmd returns unknown command error or Help display if help flag set
-func ValidateCmd(cmd *cobra.Command, args []string) error {
-	var cmds []string
-	var help bool
-
-	// construct array of commands and search for help flag
-	for _, arg := range args {
-		if arg == "--help" || arg == "-h" {
-			help = true
-		} else if len(arg) > 0 && !(arg[0] == '-') {
-			cmds = append(cmds, arg)
-		}
-	}
-
-	if !help && len(cmds) > 0 {
-		err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", cmds[0], cmd.CalledAs())
-
-		// build suggestions for unknown argument
-		if suggestions := cmd.SuggestionsFor(cmds[0]); len(suggestions) > 0 {
-			err += "\n\nDid you mean this?\n"
-			for _, s := range suggestions {
-				err += fmt.Sprintf("\t%v\n", s)
-			}
-		}
-		return errors.New(err)
-	}
-
-	return cmd.Help()
 }

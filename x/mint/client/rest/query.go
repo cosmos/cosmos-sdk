@@ -37,7 +37,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(route, nil)
+		res, _, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -56,7 +56,7 @@ func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(route, nil)
+		res, _, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -75,7 +75,7 @@ func queryAnnualProvisionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(route, nil)
+		res, _, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

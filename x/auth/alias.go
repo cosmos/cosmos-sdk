@@ -42,7 +42,6 @@ var (
 	NewParams                      = types.NewParams
 	ParamKeyTable                  = types.ParamKeyTable
 	DefaultParams                  = types.DefaultParams
-	NewQueryAccountParams          = types.NewQueryAccountParams
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
@@ -52,6 +51,7 @@ var (
 	NewTxBuilder                   = types.NewTxBuilder
 	NewTxBuilderFromCLI            = types.NewTxBuilderFromCLI
 	MakeSignature                  = types.MakeSignature
+	NewAccountRetriever            = types.NewAccountRetriever
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -67,7 +67,6 @@ var (
 type (
 	Account                  = types.Account
 	VestingAccount           = types.VestingAccount
-	AccountDecoder           = types.AccountDecoder
 	BaseAccount              = types.BaseAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
@@ -75,7 +74,6 @@ type (
 	FeeCollectionKeeper      = types.FeeCollectionKeeper
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
-	QueryAccountParams       = types.QueryAccountParams
 	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee

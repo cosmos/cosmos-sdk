@@ -8,9 +8,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -107,7 +107,7 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -144,7 +144,7 @@ func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -187,7 +187,7 @@ func voteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -201,7 +201,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
@@ -240,7 +240,7 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -273,7 +273,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -291,7 +291,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryDepositsByTxQuery(cliCtx, params)
 		} else {
-			res, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
+			res, _, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
 		}
 
 		if err != nil {
@@ -370,7 +370,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -392,7 +392,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 				return
 			}
 
-			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
+			res, _, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
 				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -452,7 +452,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/vote", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/vote", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -474,7 +474,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 				return
 			}
 
-			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
+			res, _, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
 				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -522,7 +522,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -540,7 +540,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 		} else {
-			res, err = cliCtx.QueryWithData("custom/gov/votes", bz)
+			res, _, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		}
 
 		if err != nil {
@@ -607,7 +607,7 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -647,7 +647,7 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+		res, _, err := cliCtx.QueryWithData("custom/gov/tally", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -24,7 +24,7 @@ var (
 	barAcc    = types.NewModuleHolderAccount(bar)
 	minterAcc = types.NewModuleMinterAccount(minter)
 
-	initTokens = sdk.TokensFromTendermintPower(initialPower)
+	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 

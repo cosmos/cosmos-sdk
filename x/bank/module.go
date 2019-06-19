@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 )
 
 var (
@@ -26,27 +26,21 @@ var (
 // app module basics object
 type AppModuleBasic struct{}
 
-var _ module.AppModuleBasic = AppModuleBasic{}
-
 // module name
-func (AppModuleBasic) Name() string {
-	return types.ModuleName
-}
+func (AppModuleBasic) Name() string { return ModuleName }
 
 // register module codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
-}
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) { RegisterCodec(cdc) }
 
 // default genesis state
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return types.ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := types.ModuleCdc.UnmarshalJSON(bz, &data)
+	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
@@ -84,35 +78,31 @@ func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
 }
 
 // module name
-func (AppModule) Name() string {
-	return types.ModuleName
-}
+func (AppModule) Name() string { return ModuleName }
 
 // register invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	RegisterInvariants(ir, am.accountKeeper)
+	keeper.RegisterInvariants(ir, am.accountKeeper)
 }
 
 // module message route name
-func (AppModule) Route() string {
-	return types.RouterKey
-}
+func (AppModule) Route() string { return RouterKey }
 
 // module handler
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
-}
+func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string { return RouterKey }
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return keeper.NewQuerier(am.keeper)
+}
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
+	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
@@ -120,7 +110,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // module export genesis
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
-	return types.ModuleCdc.MustMarshalJSON(gs)
+	return ModuleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

@@ -738,6 +738,7 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		input      StdFee
 		expectedOK bool
 	}{
+		{NewStdFee(200000, sdk.Coins{}), false},
 		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
 		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
 		{NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},

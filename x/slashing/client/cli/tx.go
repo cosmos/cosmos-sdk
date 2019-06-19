@@ -5,10 +5,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -19,7 +19,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Slashing transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	slashingTxCmd.AddCommand(client.PostCommands(

@@ -36,7 +36,7 @@ var (
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
 	}
-	initTokens = sdk.TokensFromTendermintPower(200)
+	initTokens = sdk.TokensFromConsensusPower(200)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 

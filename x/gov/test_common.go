@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	valTokens  = sdk.TokensFromTendermintPower(42)
-	initTokens = sdk.TokensFromTendermintPower(100000)
+	valTokens  = sdk.TokensFromConsensusPower(42)
+	initTokens = sdk.TokensFromConsensusPower(100000)
 	valCoins   = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
@@ -218,7 +218,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			testDescription, testCommissionRates, sdk.OneInt(),

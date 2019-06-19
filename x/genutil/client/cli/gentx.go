@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -117,7 +118,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return err
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(client.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := client.NewCLIContext().WithCodec(cdc)
 
 			// Set the generate-only flag here after the CLI context has
@@ -140,14 +141,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 
 			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
 				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
-				return client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
 
-			if err = client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
+			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
 				return err
 			}
 
@@ -158,7 +159,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			// sign the transaction and write it to the output file
-			signedTx, err := client.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
+			signedTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
 			if err != nil {
 				return err
 			}

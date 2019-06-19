@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -24,7 +23,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short:                      "Querying commands for the distribution module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	distQueryCmd.AddCommand(client.GetCommands(
@@ -86,7 +85,7 @@ $ %s query distr validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc6
 				return err
 			}
 
-			resp, err := cliCtx.QueryWithData(
+			resp, _, err := cliCtx.QueryWithData(
 				fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorOutstandingRewards),
 				bz,
 			)
@@ -178,7 +177,7 @@ $ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_slashes", queryRoute), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_slashes", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -252,7 +251,7 @@ $ %s query distr community-pool
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 			if err != nil {
 				return err
 			}

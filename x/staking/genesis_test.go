@@ -19,7 +19,7 @@ import (
 func TestInitGenesis(t *testing.T) {
 	ctx, accKeeper, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
 
-	valTokens := sdk.TokensFromTendermintPower(1)
+	valTokens := sdk.TokensFromConsensusPower(1)
 
 	params := keeper.GetParams(ctx)
 	validators := make([]Validator, 2)
@@ -80,9 +80,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 		validators[i].Status = sdk.Bonded
 
-		tokens := sdk.TokensFromTendermintPower(1)
+		tokens := sdk.TokensFromConsensusPower(1)
 		if i < 100 {
-			tokens = sdk.TokensFromTendermintPower(2)
+			tokens = sdk.TokensFromConsensusPower(2)
 		}
 		validators[i].Tokens = tokens
 		validators[i].DelegatorShares = tokens.ToDec()

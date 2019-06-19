@@ -126,7 +126,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace)
 
-	initTokens := sdk.TokensFromTendermintPower(initPower)
+	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(Addrs)))))
 

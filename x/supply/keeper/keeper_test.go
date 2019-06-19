@@ -10,7 +10,7 @@ import (
 
 func TestSupply(t *testing.T) {
 	initialPower := int64(100)
-	initTokens := sdk.TokensFromTendermintPower(initialPower)
+	initTokens := sdk.TokensFromConsensusPower(initialPower)
 	nAccs := int64(4)
 
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)

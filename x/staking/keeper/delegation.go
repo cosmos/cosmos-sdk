@@ -633,13 +633,13 @@ func (k Keeper) Undelegate(
 		return time.Time{}, types.ErrNoDelegatorForAddress(k.Codespace())
 	}
 
+	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
+		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
+	}
+
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return time.Time{}, err
-	}
-
-	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-		return time.Time{}, types.ErrMaxUnbondingDelegationEntries(k.Codespace())
 	}
 
 	// transfer the validator tokens to the not bonded pool

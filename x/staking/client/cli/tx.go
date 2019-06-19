@@ -14,11 +14,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -29,7 +29,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short:                      "Staking transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	stakingTxCmd.AddCommand(client.PostCommands(
@@ -258,7 +258,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 //__________________________________________________________
 
 var (
-	defaultTokens                  = sdk.TokensFromTendermintPower(100)
+	defaultTokens                  = sdk.TokensFromConsensusPower(100)
 	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"

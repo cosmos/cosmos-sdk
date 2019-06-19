@@ -1,11 +1,13 @@
-package bank
+package bank_test
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 
@@ -97,11 +99,11 @@ func getMockApp(t *testing.T) *mock.App {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper BaseKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper keeper.BaseKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		bankGenesis := DefaultGenesisState()
-		InitGenesis(ctx, keeper, bankGenesis)
+		bankGenesis := bank.DefaultGenesisState()
+		bank.InitGenesis(ctx, keeper, bankGenesis)
 
 		return abci.ResponseInitChain{}
 	}

@@ -40,7 +40,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check initial balance
 	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
-	expTokens := sdk.TokensFromTendermintPower(1000)
+	expTokens := sdk.TokensFromConsensusPower(1000)
 	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
 	require.Equal(t, expCoins, balance)
 

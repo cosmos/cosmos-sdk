@@ -102,8 +102,8 @@ func checkDelegation(
 func TestStakingMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genTokens := sdk.TokensFromTendermintPower(42)
-	bondTokens := sdk.TokensFromTendermintPower(10)
+	genTokens := sdk.TokensFromConsensusPower(42)
+	bondTokens := sdk.TokensFromConsensusPower(10)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 

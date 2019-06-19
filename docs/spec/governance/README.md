@@ -43,7 +43,7 @@ staking token of the chain.
     - [Proposal Submission](03_messages.md#proposal-submission)
     - [Deposit](03_messages.md#deposit)
     - [Vote](03_messages.md#vote)
-4. **[Tags](04_events.md)**
+4. **[Events](04_events.md)**
     - [EndBlocker](04_events.md#endblocker)
     - [Handlers](04_events.md#handlers)
 5. **[Future Improvements](05_future_improvements.md)**

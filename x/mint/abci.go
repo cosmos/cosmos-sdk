@@ -2,6 +2,7 @@ package mint
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
 // BeginBlocker mints new tokens for the previous block.
@@ -21,4 +22,14 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	mintedCoin := minter.BlockProvision(params)
 	k.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
 	k.InflateSupply(ctx, mintedCoin.Amount)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.Mint,
+			sdk.NewAttribute(types.BondedRatio, bondedRatio.String()),
+			sdk.NewAttribute(types.Inflation, minter.Inflation.String()),
+			sdk.NewAttribute(types.AnnualProvisions, minter.AnnualProvisions.String()),
+			sdk.NewAttribute(types.Amount, mintedCoin.Amount.String()),
+		),
+	})
 }

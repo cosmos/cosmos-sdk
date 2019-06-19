@@ -22,13 +22,13 @@ Light-clients enable users to interact with your application without having to d
 If you need to upgrade your node you could export the genesis and migrate it to the new version through this script:
 
 ```bash
-go run contrib/export/main.go v0.36 genesis_0_34.json [-source v0.34] > ~/.gaiad/genesis.json 
+go run contrib/export/main.go genesis v0.36 genesis_0_34.json [-source v0.34] > ~/.gaiad/genesis.json 
 ```
 
 To build and run the binary:
 ```bash
 make build-genesis-migrate
-./build/migrate v0.36 genesis_0_34.json > genesis.json
+./build/migrate genesis v0.36 genesis_0_34.json > genesis.json
 ```
 
 The resulting genesis will be importable into the targeted version of the SDK.

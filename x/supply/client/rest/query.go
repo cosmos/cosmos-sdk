@@ -11,22 +11,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
+// RegisterRoutes registers staking-related REST handlers to a router
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+	registerQueryRoutes(cliCtx, r)
+}
+
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	// Query the total supply of coins
 	r.HandleFunc(
 		"/supply/total/",
-		totalSupplyHandlerFn(cliCtx, queryRoute),
+		totalSupplyHandlerFn(cliCtx),
 	).Methods("GET")
 
 	// Query the supply of a single denom
 	r.HandleFunc(
 		"/supply/total/{denom}",
-		supplyOfHandlerFn(cliCtx, queryRoute),
+		supplyOfHandlerFn(cliCtx),
 	).Methods("GET")
 }
 
 // HTTP request handler to query the total supply of coins
-func totalSupplyHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
@@ -46,7 +51,7 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryTotalSupply), bz)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -57,7 +62,7 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Han
 }
 
 // HTTP request handler to query the supply of a single denom
-func supplyOfHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
@@ -72,7 +77,7 @@ func supplyOfHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handle
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QuerySupplyOf), bz)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySupplyOf), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

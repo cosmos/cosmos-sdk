@@ -13,6 +13,8 @@ const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
@@ -74,7 +76,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		panic(invarianceErr)
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			tags.Invariant,
 			sdk.NewAttribute(tags.Route, msg.InvariantRoute),
@@ -86,5 +88,5 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		),
 	})
 
-	return sdk.Result{Events: ctx.Events()}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

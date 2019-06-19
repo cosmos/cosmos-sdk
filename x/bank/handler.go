@@ -11,6 +11,8 @@ import (
 // NewHandler returns a handler for "bank" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
 		case types.MsgSend:
 			return handleMsgSend(ctx, k, msg)
@@ -36,14 +38,14 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg types.MsgSend) sdk.Result {
 		return err.Result()
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
 		),
-	})
+	)
 
-	return sdk.Result{Events: ctx.Events()}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 // Handle MsgMultiSend.
@@ -58,12 +60,12 @@ func handleMsgMultiSend(ctx sdk.Context, k Keeper, msg types.MsgMultiSend) sdk.R
 		return err.Result()
 	}
 
-	ctx = ctx.WithEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, tags.TxCategory),
 		),
-	})
+	)
 
-	return sdk.Result{Events: ctx.Events()}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

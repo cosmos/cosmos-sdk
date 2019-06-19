@@ -2,16 +2,16 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // expected account keeper
 type AccountKeeper interface {
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.Account
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) authtypes.Account
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.Account
-	GetAllAccounts(ctx sdk.Context) []auth.Account
-	SetAccount(ctx sdk.Context, acc auth.Account)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.Account
+	GetAllAccounts(ctx sdk.Context) []authtypes.Account
+	SetAccount(ctx sdk.Context, acc authtypes.Account)
 
-	IterateAccounts(ctx sdk.Context, process func(auth.Account) bool)
+	IterateAccounts(ctx sdk.Context, process func(authtypes.Account) bool)
 }

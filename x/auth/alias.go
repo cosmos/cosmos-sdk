@@ -67,7 +67,6 @@ var (
 type (
 	Account                  = types.Account
 	VestingAccount           = types.VestingAccount
-	AccountDecoder           = types.AccountDecoder
 	BaseAccount              = types.BaseAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount

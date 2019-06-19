@@ -48,8 +48,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query account balance",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			accGetter := types.NewAccountRetriever(cliCtx)
 
 			key, err := sdk.AccAddressFromBech32(args[0])

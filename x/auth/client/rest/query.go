@@ -22,9 +22,7 @@ type AccountWithHeight struct {
 }
 
 // query accountREST Handler
-func QueryAccountRequestHandlerFn(
-	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
-) http.HandlerFunc {
+func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -41,26 +39,20 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, height, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
+		accGetter := types.NewAccountRetriever(cliCtx)
 		// the query will return empty account if there is no data
-		if len(res) == 0 {
+		if err := accGetter.EnsureExists(addr); err != nil {
 			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{})
 			return
 		}
 
-		// decode the value
-		account, err := decoder(res)
+		account, err := accGetter.GetAccount(addr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, AccountWithHeight{account, height})
+		rest.PostProcessResponse(w, cliCtx, AccountWithHeight{account, cliCtx.Height})
 	}
 }
 

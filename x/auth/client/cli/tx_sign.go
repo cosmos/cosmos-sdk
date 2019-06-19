@@ -99,7 +99,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		}
 
 		offline := viper.GetBool(flagOffline)
-		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {

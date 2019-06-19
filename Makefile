@@ -27,11 +27,11 @@ build: go.sum
 	@go build -mod=readonly ./...
 
 build-genesis-migrate:
-    ifeq ($(OS),Windows_NT)
-    	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate.exe ./contrib/export
-    else
-    	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate ./contrib/export
-    endif
+	ifeq ($(OS),Windows_NT)
+		go build -mod=readonly $(BUILD_FLAGS) -o build/migrate.exe ./contrib/export
+	else
+		go build -mod=readonly $(BUILD_FLAGS) -o build/migrate ./contrib/export
+	endif
 
 update-swagger-docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m

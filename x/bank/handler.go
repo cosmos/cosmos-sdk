@@ -11,8 +11,6 @@ import (
 // NewHandler returns a handler for "bank" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx = ctx.WithEvents(sdk.EmptyEvents())
-
 		switch msg := msg.(type) {
 		case types.MsgSend:
 			return handleMsgSend(ctx, k, msg)

@@ -13,8 +13,6 @@ const RouterKey = ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx = ctx.WithEvents(sdk.EmptyEvents())
-
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)

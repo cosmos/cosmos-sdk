@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -34,7 +33,6 @@ var (
 // transaction handling and queries.
 type CLIContext struct {
 	Codec         *codec.Codec
-	AccDecoder    authtypes.AccountDecoder
 	Client        rpcclient.Client
 	Keybase       cryptokeys.Keybase
 	Output        io.Writer
@@ -42,7 +40,6 @@ type CLIContext struct {
 	Height        int64
 	NodeURI       string
 	From          string
-	AccountStore  string
 	TrustNode     bool
 	UseLedger     bool
 	BroadcastMode string
@@ -88,7 +85,6 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  authtypes.StoreKey,
 		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
@@ -162,34 +158,9 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	return ctx
 }
 
-// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-func GetAccountDecoder(cdc *codec.Codec) authtypes.AccountDecoder {
-	return func(accBytes []byte) (acct authtypes.Account, err error) {
-		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
-		if err != nil {
-			panic(err)
-		}
-
-		return acct, err
-	}
-}
-
-// WithAccountDecoder returns a copy of the context with an updated account
-// decoder.
-func (ctx CLIContext) WithAccountDecoder(cdc *codec.Codec) CLIContext {
-	ctx.AccDecoder = GetAccountDecoder(cdc)
-	return ctx
-}
-
 // WithOutput returns a copy of the context with an updated output writer (e.g. stdout).
 func (ctx CLIContext) WithOutput(w io.Writer) CLIContext {
 	ctx.Output = w
-	return ctx
-}
-
-// WithAccountStore returns a copy of the context with an updated AccountStore.
-func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
-	ctx.AccountStore = accountStore
 	return ctx
 }
 

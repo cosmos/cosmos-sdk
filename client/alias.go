@@ -67,7 +67,6 @@ var (
 	// functions aliases
 	NewCLIContextWithFrom              = context.NewCLIContextWithFrom
 	NewCLIContext                      = context.NewCLIContext
-	GetAccountDecoder                  = context.GetAccountDecoder
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount
 	ErrVerifyCommit                    = context.ErrVerifyCommit

@@ -61,10 +61,6 @@ type VestingAccount interface {
 	GetDelegatedVesting() sdk.Coins
 }
 
-// AccountDecoder unmarshals account bytes
-// TODO: Think about removing
-type AccountDecoder func(accountBytes []byte) (Account, error)
-
 //-----------------------------------------------------------------------------
 // BaseAccount
 

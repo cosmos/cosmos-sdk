@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	NotBondedTokensName                = types.NotBondedTokensName
-	BondedTokensName                   = types.BondedTokensName
 	DefaultParamspace                  = keeper.DefaultParamspace
 	DefaultCodespace                   = types.DefaultCodespace
 	CodeInvalidValidator               = types.CodeInvalidValidator
@@ -33,6 +31,8 @@ const (
 	DefaultUnbondingTime               = types.DefaultUnbondingTime
 	DefaultMaxValidators               = types.DefaultMaxValidators
 	DefaultMaxEntries                  = types.DefaultMaxEntries
+	NotBondedTokensName                = types.NotBondedTokensName
+	BondedTokensName                   = types.BondedTokensName
 	QueryValidators                    = types.QueryValidators
 	QueryValidator                     = types.QueryValidator
 	QueryDelegatorDelegations          = types.QueryDelegatorDelegations
@@ -179,8 +179,6 @@ var (
 	MustUnmarshalValidator             = types.MustUnmarshalValidator
 	UnmarshalValidator                 = types.UnmarshalValidator
 	NewDescription                     = types.NewDescription
-	BondedPoolAddr                     = types.BondedPoolAddr
-	NotBondedPoolAddr                  = types.NotBondedPoolAddr
 
 	// variable aliases
 	ModuleCdc                        = types.ModuleCdc
@@ -203,6 +201,8 @@ var (
 	KeyMaxValidators                 = types.KeyMaxValidators
 	KeyMaxEntries                    = types.KeyMaxEntries
 	KeyBondDenom                     = types.KeyBondDenom
+	NotBondedPoolAddr                = types.NotBondedPoolAddr
+	BondedPoolAddr                   = types.BondedPoolAddr
 )
 
 type (

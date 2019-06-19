@@ -10,8 +10,8 @@ import (
 
 const (
 	ModuleName                    = types.ModuleName
-	FeeCollectorName              = types.FeeCollectorName
 	StoreKey                      = types.StoreKey
+	FeeCollectorName              = types.FeeCollectorName
 	QuerierRoute                  = types.QuerierRoute
 	DefaultParamspace             = types.DefaultParamspace
 	DefaultMaxMemoCharacters      = types.DefaultMaxMemoCharacters
@@ -40,6 +40,7 @@ var (
 	NewParams                      = types.NewParams
 	ParamKeyTable                  = types.ParamKeyTable
 	DefaultParams                  = types.DefaultParams
+	NewQueryAccountParams          = types.NewQueryAccountParams
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
@@ -54,12 +55,12 @@ var (
 	ModuleCdc                 = types.ModuleCdc
 	AddressStoreKeyPrefix     = types.AddressStoreKeyPrefix
 	GlobalAccountNumberKey    = types.GlobalAccountNumberKey
+	FeeCollectorAddr          = types.FeeCollectorAddr
 	KeyMaxMemoCharacters      = types.KeyMaxMemoCharacters
 	KeyTxSigLimit             = types.KeyTxSigLimit
 	KeyTxSizeCostPerByte      = types.KeyTxSizeCostPerByte
 	KeySigVerifyCostED25519   = types.KeySigVerifyCostED25519
 	KeySigVerifyCostSecp256k1 = types.KeySigVerifyCostSecp256k1
-	FeeCollectorAddr          = types.FeeCollectorAddr
 )
 
 type (
@@ -72,6 +73,7 @@ type (
 	DelayedVestingAccount    = types.DelayedVestingAccount
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
+	QueryAccountParams       = types.QueryAccountParams
 	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee

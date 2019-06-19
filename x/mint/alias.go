@@ -36,6 +36,7 @@ var (
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc
 	MinterKey              = types.MinterKey
+	ModuleAddress          = types.ModuleAddress
 	KeyMintDenom           = types.KeyMintDenom
 	KeyInflationRateChange = types.KeyInflationRateChange
 	KeyInflationMax        = types.KeyInflationMax

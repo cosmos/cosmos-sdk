@@ -28,7 +28,7 @@ go run contrib/export/main.go genesis v0.36 genesis_0_34.json [--time "2019-04-2
 To build and run the binary:
 ```bash
 make build-genesis-migrate
-./build/migrate genesis v0.36 genesis_0_34.json > genesis.json
+./build/migrate genesis v0.36 genesis_0_34.json --time "2019-04-22T17:00:11Z" --chain-id test > genesis.json
 ```
 
 The resulting genesis will be importable into the targeted version of the SDK.

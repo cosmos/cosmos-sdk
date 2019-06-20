@@ -52,3 +52,5 @@ func SetupViper(t *testing.T) func() {
 		}
 	}
 }
+
+// DONTCOVER

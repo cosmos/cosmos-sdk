@@ -46,7 +46,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
 		),
-	})
+	)
 
 	if votingStarted {
 		ctx.EventManager().EmitEvent(

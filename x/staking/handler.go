@@ -108,7 +108,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 
-	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Value.Denom != k.BondDenom(ctx) {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -228,7 +228,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
-	if msg.Amount.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Amount.Denom != k.BondDenom(ctx) {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -261,6 +261,10 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return err.Result()
 	}
 
+	if msg.Amount.Denom != k.BondDenom(ctx) {
+		return ErrBadDenom(k.Codespace()).Result()
+	}
+
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
 	if err != nil {
 		return err.Result()
@@ -290,6 +294,10 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	)
 	if err != nil {
 		return err.Result()
+	}
+
+	if msg.Amount.Denom != k.BondDenom(ctx) {
+		return ErrBadDenom(k.Codespace()).Result()
 	}
 
 	completionTime, err := k.BeginRedelegation(

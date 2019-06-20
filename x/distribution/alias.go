@@ -9,7 +9,6 @@ package distribution
 import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/tags"
 )
 
 const (
@@ -122,8 +121,6 @@ var (
 	EventTypeCommission                  = types.EventTypeCommission
 	AttributeValueCategory               = types.AttributeValueCategory
 	AttributeKeyValidator                = types.AttributeKeyValidator
-	Category                             = tags.Category
-	Sender                               = tags.Sender
 	ModuleCdc                            = types.ModuleCdc
 )
 

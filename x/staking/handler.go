@@ -70,7 +70,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress.String()),
 				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress.String()),
 			),
-		})
+		)
 	}
 
 	// Remove all mature redelegations from the red queue.

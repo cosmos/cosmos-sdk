@@ -14,7 +14,7 @@ misc. parameters that affect simulation speed.
 
 It is intended that every module provides a list of Operations which will
 randomly create and run a message / tx in a manner that is interesting to fuzz,
-and verify that the state transition was executed as expected. Each module
+and verify that the state transition was executed as exported. Each module
 should additionally provide methods to assert that the desired invariants hold.
 
 Then to perform a randomized simulation, select the set of desired operations,

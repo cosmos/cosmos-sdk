@@ -6,11 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // register all staking invariants
-func RegisterInvariants(ir sdk.InvariantRouter, k Keeper, f types.FeeCollectionKeeper,
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper, f types.FeeCollectionKeeper,
 	d types.DistributionKeeper, am types.AccountKeeper) {
 
 	ir.RegisterRoute(types.ModuleName, "supply",
@@ -72,7 +73,7 @@ func SupplyInvariants(k Keeper, f types.FeeCollectionKeeper,
 			}
 			return false
 		})
-		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
+		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetBondedTokens().ToDec())
@@ -125,7 +126,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v",
-					validator.GetTendermintPower(), powerKey, iterator.Key())
+					validator.GetConsensusPower(), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {

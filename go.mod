@@ -10,6 +10,7 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.1.1
+	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/golang/protobuf v1.3.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.0
@@ -19,9 +20,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
-	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
@@ -43,9 +42,9 @@ require (
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.31.5
-	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/grpc v1.19.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )
 
 replace golang.org/x/crypto => github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5

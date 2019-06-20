@@ -7,28 +7,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// query endpoints supported by the governance Querier
-const (
-	QueryParams    = "params"
-	QueryProposals = "proposals"
-	QueryProposal  = "proposal"
-	QueryDeposits  = "deposits"
-	QueryDeposit   = "deposit"
-	QueryVotes     = "votes"
-	QueryVote      = "vote"
-	QueryTally     = "tally"
-
-	ParamDeposit  = "deposit"
-	ParamVoting   = "voting"
-	ParamTallying = "tallying"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func NewQuerier(keeper Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
-		case QueryParams:
+		case types.QueryParams:
 			return queryParams(ctx, path[1:], req, keeper)
 		case QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
@@ -75,22 +60,6 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 	}
 }
 
-// Params for queries:
-// - 'custom/gov/proposal'
-// - 'custom/gov/deposits'
-// - 'custom/gov/tally'
-// - 'custom/gov/votes'
-type QueryProposalParams struct {
-	ProposalID uint64
-}
-
-// creates a new instance of QueryProposalParams
-func NewQueryProposalParams(proposalID uint64) QueryProposalParams {
-	return QueryProposalParams{
-		ProposalID: proposalID,
-	}
-}
-
 // nolint: unparam
 func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var params QueryProposalParams
@@ -111,20 +80,6 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	return bz, nil
 }
 
-// Params for query 'custom/gov/deposit'
-type QueryDepositParams struct {
-	ProposalID uint64
-	Depositor  sdk.AccAddress
-}
-
-// creates a new instance of QueryDepositParams
-func NewQueryDepositParams(proposalID uint64, depositor sdk.AccAddress) QueryDepositParams {
-	return QueryDepositParams{
-		ProposalID: proposalID,
-		Depositor:  depositor,
-	}
-}
-
 // nolint: unparam
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var params QueryDepositParams
@@ -139,20 +94,6 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 	return bz, nil
-}
-
-// Params for query 'custom/gov/vote'
-type QueryVoteParams struct {
-	ProposalID uint64
-	Voter      sdk.AccAddress
-}
-
-// creates a new instance of QueryVoteParams
-func NewQueryVoteParams(proposalID uint64, voter sdk.AccAddress) QueryVoteParams {
-	return QueryVoteParams{
-		ProposalID: proposalID,
-		Voter:      voter,
-	}
 }
 
 // nolint: unparam
@@ -179,14 +120,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	var deposits []Deposit
-	depositsIterator := keeper.GetDeposits(ctx, params.ProposalID)
-	defer depositsIterator.Close()
-	for ; depositsIterator.Valid(); depositsIterator.Next() {
-		deposit := Deposit{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-		deposits = append(deposits, deposit)
-	}
+	deposits := keeper.GetDeposits(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
 	if err != nil {
@@ -237,38 +171,13 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	var votes []Vote
-	votesIterator := keeper.GetVotes(ctx, params.ProposalID)
-	defer votesIterator.Close()
-	for ; votesIterator.Valid(); votesIterator.Next() {
-		vote := Vote{}
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
-		votes = append(votes, vote)
-	}
+	votes := keeper.GetVotes(ctx, params.ProposalID)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 	return bz, nil
-}
-
-// Params for query 'custom/gov/proposals'
-type QueryProposalsParams struct {
-	Voter          sdk.AccAddress
-	Depositor      sdk.AccAddress
-	ProposalStatus ProposalStatus
-	Limit          uint64
-}
-
-// creates a new instance of QueryProposalsParams
-func NewQueryProposalsParams(status ProposalStatus, limit uint64, voter, depositor sdk.AccAddress) QueryProposalsParams {
-	return QueryProposalsParams{
-		Voter:          voter,
-		Depositor:      depositor,
-		ProposalStatus: status,
-		Limit:          limit,
-	}
 }
 
 // nolint: unparam

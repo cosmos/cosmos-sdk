@@ -3,12 +3,12 @@ package simapp
 import (
 	"io"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.

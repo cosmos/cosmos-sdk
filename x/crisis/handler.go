@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // RouterKey
@@ -13,7 +14,7 @@ const RouterKey = ModuleName
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case MsgVerifyInvariant:
+		case types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
@@ -23,7 +24,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper) sdk.Result {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
 
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
@@ -47,7 +48,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		}
 	}
 	if !found {
-		return ErrUnknownInvariant(DefaultCodespace).Result()
+		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
 	}
 
 	if invarianceErr != nil {

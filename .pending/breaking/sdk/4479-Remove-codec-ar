@@ -1,0 +1,2 @@
+#4479 Remove codec argument redundency in client usage where
+the CLIContext's codec should be used instead.

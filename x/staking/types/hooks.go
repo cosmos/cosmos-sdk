@@ -5,9 +5,9 @@ import (
 )
 
 // combine multiple staking hooks, all hook functions are run in array sequence
-type MultiStakingHooks []sdk.StakingHooks
+type MultiStakingHooks []StakingHooks
 
-func NewMultiStakingHooks(hooks ...sdk.StakingHooks) MultiStakingHooks {
+func NewMultiStakingHooks(hooks ...StakingHooks) MultiStakingHooks {
 	return hooks
 }
 

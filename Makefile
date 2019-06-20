@@ -7,6 +7,7 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = github.com/cosmos/cosmos-sdk/simapp
+MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
@@ -33,6 +34,12 @@ dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh
 
+mocks: $(MOCKS_DIR)
+	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+
+$(MOCKS_DIR):
+	mkdir -p $(MOCKS_DIR)
+
 ########################################
 ### Tools & dependencies
 
@@ -43,11 +50,6 @@ go-mod-cache: go.sum
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
-
-draw_deps: tools
-	@# requires brew install graphviz or apt-get install graphviz
-	go get github.com/RobotsAndPencils/goviz
-	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
 	rm -rf snapcraft-local.yaml build/
@@ -191,7 +193,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist clean draw_deps test test_unit test_cover lint \
+.PHONY: build dist clean test test_unit test_cover lint mocks \
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \

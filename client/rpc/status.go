@@ -78,7 +78,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		rest.PostProcessResponse(w, codec.Cdc, nodeInfo, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, nodeInfo)
 	}
 }
 

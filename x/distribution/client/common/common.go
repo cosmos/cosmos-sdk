@@ -4,118 +4,113 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // QueryParams actually queries distribution params.
 func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
-	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamCommunityTax)
+	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamCommunityTax)
 
-	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
+	retCommunityTax, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBaseProposerReward)
-	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBaseProposerReward)
+	retBaseProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamBonusProposerReward)
-	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBonusProposerReward)
+	retBonusProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, distr.ParamWithdrawAddrEnabled)
-	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
+	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamWithdrawAddrEnabled)
+	retWithdrawAddrEnabled, _, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	return NewPrettyParams(retCommunityTax, retBaseProposerReward,
-		retBonusProposerReward, retWithdrawAddrEnabled), nil
+	return NewPrettyParams(
+		retCommunityTax, retBaseProposerReward, retBonusProposerReward, retWithdrawAddrEnabled,
+	), nil
 }
 
 // QueryDelegatorTotalRewards queries delegator total rewards.
-func QueryDelegatorTotalRewards(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr string) ([]byte, error) {
-
+func QueryDelegatorTotalRewards(cliCtx context.CLIContext, queryRoute, delAddr string) ([]byte, error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorTotalRewards),
-		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+	res, _, err := cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards),
+		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
+	return res, err
 }
 
 // QueryDelegationRewards queries a delegation rewards.
-func QueryDelegationRewards(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr, valAddr string) ([]byte, error) {
-
+func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valAddr string) ([]byte, error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
 		return nil, err
 	}
+
 	validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegationRewards),
-		cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
+	res, _, err := cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegationRewards),
+		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
 	)
+	return res, err
 }
 
 // QueryDelegatorValidators returns delegator's list of validators
 // it submitted delegations to.
-func QueryDelegatorValidators(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
-
-	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryDelegatorValidators),
-		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+func QueryDelegatorValidators(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
+	res, _, err := cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorValidators),
+		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
+	return res, err
 }
 
 // QueryValidatorCommission returns a validator's commission.
-func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
-
-	return cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, distr.QueryValidatorCommission),
-		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
+func QueryValidatorCommission(cliCtx context.CLIContext, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
+	res, _, err := cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorCommission),
+		cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
+	return res, err
 }
 
 // WithdrawAllDelegatorRewards builds a multi-message slice to be used
 // to withdraw all delegations rewards for the given delegator.
-func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {
-
+func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {
 	// retrieve the comprehensive list of all validators which the
 	// delegator had submitted delegations to
-	bz, err := QueryDelegatorValidators(cliCtx, cdc, queryRoute, delegatorAddr)
+	bz, err := QueryDelegatorValidators(cliCtx, queryRoute, delegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	var validators []sdk.ValAddress
-	if err := cdc.UnmarshalJSON(bz, &validators); err != nil {
+	if err := cliCtx.Codec.UnmarshalJSON(bz, &validators); err != nil {
 		return nil, err
 	}
 
 	// build multi-message transaction
 	var msgs []sdk.Msg
 	for _, valAddr := range validators {
-		msg := distr.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
+		msg := types.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			return nil, err
 		}
@@ -128,15 +123,13 @@ func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 // WithdrawValidatorRewardsAndCommission builds a two-message message slice to be
 // used to withdraw both validation's commission and self-delegation reward.
 func WithdrawValidatorRewardsAndCommission(validatorAddr sdk.ValAddress) ([]sdk.Msg, error) {
-
-	commissionMsg := distr.NewMsgWithdrawValidatorCommission(validatorAddr)
+	commissionMsg := types.NewMsgWithdrawValidatorCommission(validatorAddr)
 	if err := commissionMsg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
 	// build and validate MsgWithdrawDelegatorReward
-	rewardMsg := distr.NewMsgWithdrawDelegatorReward(
-		sdk.AccAddress(validatorAddr.Bytes()), validatorAddr)
+	rewardMsg := types.NewMsgWithdrawDelegatorReward(sdk.AccAddress(validatorAddr.Bytes()), validatorAddr)
 	if err := rewardMsg.ValidateBasic(); err != nil {
 		return nil, err
 	}

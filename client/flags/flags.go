@@ -50,7 +50,6 @@ const (
 	FlagGenerateOnly       = "generate-only"
 	FlagIndentResponse     = "indent"
 	FlagListenAddr         = "laddr"
-	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
 	FlagRPCReadTimeout     = "read-timeout"
 	FlagRPCWriteTimeout    = "write-timeout"
@@ -71,7 +70,9 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
-		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
+		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
+
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
@@ -120,7 +121,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().String(FlagCORS, "", "Set the domains that can make CORS requests (* for all)")
 	cmd.Flags().Uint(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Uint(FlagRPCReadTimeout, 10, "The RPC read timeout (in seconds)")
 	cmd.Flags().Uint(FlagRPCWriteTimeout, 10, "The RPC write timeout (in seconds)")

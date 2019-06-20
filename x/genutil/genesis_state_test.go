@@ -18,7 +18,7 @@ var (
 func TestValidateGenesisMultipleMessages(t *testing.T) {
 
 	desc := staking.NewDescription("testname", "", "", "")
-	comm := staking.CommissionMsg{}
+	comm := staking.CommissionRates{}
 
 	msg1 := staking.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())

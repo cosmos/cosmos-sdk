@@ -42,8 +42,8 @@ Each block the validator queue is to be checked for mature unbonding validators
 (namely with a completion time <= current time). At this point any mature
 validators which do not have any delegations remaining are deleted from state.
 For all other mature unbonding validators that still have remaining
-delegations, the validator.Status is switched from sdk.Unbonding to
-sdk.Unbonded.
+delegations, the `validator.Status` is switched from `sdk.Unbonding` to
+`sdk.Unbonded`.
 
 ### Unbonding Delegations
 

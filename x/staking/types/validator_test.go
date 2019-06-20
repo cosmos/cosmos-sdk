@@ -1,14 +1,16 @@
 package types
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"gopkg.in/yaml.v2"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
@@ -316,4 +318,35 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 			)
 		}
 	}
+}
+
+func TestValidatorMarshalYAML(t *testing.T) {
+	validator := NewValidator(valAddr1, pk1, Description{})
+	bechifiedPub, err := sdk.Bech32ifyConsPub(validator.ConsPubKey)
+	require.NoError(t, err)
+	bs, err := yaml.Marshal(validator)
+	require.NoError(t, err)
+	want := fmt.Sprintf(`|
+  operatoraddress: %s
+  conspubkey: %s
+  jailed: false
+  status: 0
+  tokens: "0"
+  delegatorshares: "0.000000000000000000"
+  description:
+    moniker: ""
+    identity: ""
+    website: ""
+    details: ""
+  unbondingheight: 0
+  unbondingcompletiontime: 1970-01-01T00:00:00Z
+  commission:
+    commissionrates:
+      rate: "0.000000000000000000"
+      maxrate: "0.000000000000000000"
+      maxchangerate: "0.000000000000000000"
+    updatetime: 1970-01-01T00:00:00Z
+  minselfdelegation: "1"
+`, validator.OperatorAddress.String(), bechifiedPub)
+	require.Equal(t, want, string(bs))
 }

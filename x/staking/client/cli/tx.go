@@ -14,14 +14,34 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	stakingTxCmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      "Staking transaction subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	stakingTxCmd.AddCommand(client.PostCommands(
+		GetCmdCreateValidator(cdc),
+		GetCmdEditValidator(cdc),
+		GetCmdDelegate(cdc),
+		GetCmdRedelegate(storeKey, cdc),
+		GetCmdUnbond(storeKey, cdc),
+	)...)
+
+	return stakingTxCmd
+}
 
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
@@ -29,10 +49,8 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
@@ -67,10 +85,8 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.Description{
@@ -132,10 +148,8 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -170,10 +184,8 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -213,10 +225,8 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -238,7 +248,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 //__________________________________________________________
 
 var (
-	defaultTokens                  = sdk.TokensFromTendermintPower(100)
+	defaultTokens                  = sdk.TokensFromConsensusPower(100)
 	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
@@ -320,7 +330,7 @@ func PrepareFlagsForTxCreateValidator(
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 	if err != nil {
@@ -346,7 +356,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 	rateStr := viper.GetString(FlagCommissionRate)
 	maxRateStr := viper.GetString(FlagCommissionMaxRate)
 	maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
-	commissionMsg, err := buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr)
+	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -359,7 +369,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 	}
 
 	msg := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
 
 	if viper.GetBool(client.FlagGenerateOnly) {

@@ -35,14 +35,14 @@ func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 // connected node version REST handler endpoint
 func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		version, err := cliCtx.Query("/app/version", nil)
+		res, _, err := cliCtx.Query("/app/version")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if _, err := w.Write(version); err != nil {
+		if _, err := w.Write(res); err != nil {
 			log.Printf("could not write response: %v", err)
 		}
 	}

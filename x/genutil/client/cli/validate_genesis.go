@@ -10,11 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // Validate genesis command takes
-func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager) *cobra.Command {
+func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),

@@ -9,9 +9,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // nolint
@@ -22,6 +24,9 @@ const (
 	MaxWebsiteLength  = 140
 	MaxDetailsLength  = 280
 )
+
+// Implements Validator interface
+var _ exported.ValidatorI = Validator{}
 
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
@@ -44,6 +49,40 @@ type Validator struct {
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // validator's self declared minimum self delegation
 }
 
+// custom marshal yaml function due to consensus pubkey
+func (v Validator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		OperatorAddress         sdk.ValAddress
+		ConsPubKey              string
+		Jailed                  bool
+		Status                  sdk.BondStatus
+		Tokens                  sdk.Int
+		DelegatorShares         sdk.Dec
+		Description             Description
+		UnbondingHeight         int64
+		UnbondingCompletionTime time.Time
+		Commission              Commission
+		MinSelfDelegation       sdk.Int
+	}{
+		OperatorAddress:         v.OperatorAddress,
+		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		Jailed:                  v.Jailed,
+		Status:                  v.Status,
+		Tokens:                  v.Tokens,
+		DelegatorShares:         v.DelegatorShares,
+		Description:             v.Description,
+		UnbondingHeight:         v.UnbondingHeight,
+		UnbondingCompletionTime: v.UnbondingCompletionTime,
+		Commission:              v.Commission,
+		MinSelfDelegation:       v.MinSelfDelegation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
+}
+
 // Validators is a collection of Validator
 type Validators []Validator
 
@@ -55,7 +94,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -201,6 +240,21 @@ func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
+// IsBonded checks if the validator status equals Bonded
+func (v Validator) IsBonded() bool {
+	return v.GetStatus().Equal(sdk.Bonded)
+}
+
+// IsUnbonded checks if the validator status equals Unbonded
+func (v Validator) IsUnbonded() bool {
+	return v.GetStatus().Equal(sdk.Unbonded)
+}
+
+// IsUnbonding checks if the validator status equals Unbonding
+func (v Validator) IsUnbonding() bool {
+	return v.GetStatus().Equal(sdk.Unbonding)
+}
+
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
@@ -269,7 +323,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.TendermintPower(),
+		Power:  v.ConsensusPower(),
 	}
 }
 
@@ -327,7 +381,7 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
 	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		pool = pool.bondedTokensToNotBonded(tokens)
 	}
 	return v, pool
@@ -362,7 +416,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		issuedShares = shares
 	}
 
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		pool = pool.notBondedTokensToBonded(amount)
 	}
 
@@ -397,7 +451,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	}
 
 	v.DelegatorShares = remainingShares
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		pool = pool.bondedTokensToNotBonded(issuedTokens)
 	}
 
@@ -449,30 +503,27 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
 
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		return v.Tokens
 	}
 	return sdk.ZeroInt()
 }
 
-// get the Tendermint Power
+// get the consensus-engine power
 // a reduction of 10^6 from validator tokens is applied
-func (v Validator) TendermintPower() int64 {
-	if v.Status == sdk.Bonded {
-		return v.PotentialTendermintPower()
+func (v Validator) ConsensusPower() int64 {
+	if v.IsBonded() {
+		return v.PotentialConsensusPower()
 	}
 	return 0
 }
 
-// potential Tendermint power
-func (v Validator) PotentialTendermintPower() int64 {
-	return sdk.TokensToTendermintPower(v.Tokens)
+// potential consensus-engine power
+func (v Validator) PotentialConsensusPower() int64 {
+	return sdk.TokensToConsensusPower(v.Tokens)
 }
 
-// ensure fulfills the sdk validator types
-var _ sdk.Validator = Validator{}
-
-// nolint - for sdk.Validator
+// nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
@@ -481,7 +532,7 @@ func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
-func (v Validator) GetTendermintPower() int64     { return v.TendermintPower() }
+func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }

@@ -4,19 +4,17 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/gorilla/mux"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
-	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cliCtx)).Methods("POST")
 }
 
 type transferReq struct {
@@ -26,7 +24,7 @@ type transferReq struct {
 
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC.
-func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func TransferRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		destChainID := vars["destchain"]
@@ -39,7 +37,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		var req transferReq
-		if !rest.ReadRESTReq(w, r, cdc, &req) {
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
 
@@ -57,6 +55,6 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		packet := ibc.NewIBCPacket(from, to, req.Amount, req.BaseReq.ChainID, destChainID)
 		msg := ibc.MsgIBCTransfer{IBCPacket: packet}
 
-		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

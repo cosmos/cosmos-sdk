@@ -24,13 +24,13 @@ func NewHandler(k Keeper) sdk.Handler {
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
-	validator := k.validatorSet.Validator(ctx, msg.ValidatorAddr)
+	validator := k.sk.Validator(ctx, msg.ValidatorAddr)
 	if validator == nil {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
 	// cannot be unjailed if no self-delegation exists
-	selfDel := k.validatorSet.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
+	selfDel := k.sk.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
 	if selfDel == nil {
 		return ErrMissingSelfDelegation(k.codespace).Result()
 	}
@@ -62,7 +62,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	}
 
 	// unjail the validator
-	k.validatorSet.Unjail(ctx, consAddr)
+	k.sk.Unjail(ctx, consAddr)
 
 	tags := sdk.NewTags(
 		tags.Category, tags.TxCategory,

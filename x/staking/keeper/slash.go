@@ -29,7 +29,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := sdk.TokensFromTendermintPower(power)
+	amount := sdk.TokensFromConsensusPower(power)
 	slashAmountDec := amount.ToDec().Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
@@ -48,7 +48,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// should not be slashing an unbonded validator
-	if validator.Status == sdk.Unbonded {
+	if validator.IsUnbonded() {
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 

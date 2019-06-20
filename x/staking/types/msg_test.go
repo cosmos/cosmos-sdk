@@ -16,12 +16,12 @@ var (
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgCreateValidator(t *testing.T) {
-	commission1 := NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	commission2 := NewCommissionMsg(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
+	commission1 := NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission2 := NewCommissionRates(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
 
 	tests := []struct {
 		name, moniker, identity, website, details string
-		commissionMsg                             CommissionMsg
+		CommissionRates                           CommissionRates
 		minSelfDelegation                         sdk.Int
 		validatorAddr                             sdk.ValAddress
 		pubkey                                    crypto.PubKey
@@ -41,7 +41,7 @@ func TestMsgCreateValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation)
+		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

@@ -199,7 +199,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5))}
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
 	newProposalMsg := NewMsgSubmitProposal(testProposal(), proposalCoins, input.addrs[0])
 
 	res := govHandler(ctx, newProposalMsg)
@@ -232,7 +232,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)
-	depositsIterator := input.keeper.GetDeposits(ctx, proposalID)
+	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	depositsIterator.Close()
 	activeQueue.Close()
@@ -264,7 +264,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(10))}
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
@@ -278,4 +278,51 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	resTags := EndBlocker(ctx, input.keeper)
 	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
+}
+
+func TestEndBlockerProposalHandlerFailed(t *testing.T) {
+	input := getMockApp(t, 1, GenesisState{}, nil)
+	SortAddresses(input.addrs)
+
+	// hijack the router to one that will fail in a proposal's handler
+	input.keeper.router = NewRouter().AddRoute(RouterKey, badProposalHandler)
+
+	handler := NewHandler(input.keeper)
+	stakingHandler := staking.NewHandler(input.sk)
+
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+
+	valAddr := sdk.ValAddress(input.addrs[0])
+
+	input.keeper.ck.SetSendEnabled(ctx, true)
+	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	staking.EndBlocker(ctx, input.sk)
+
+	// Create a proposal where the handler will pass for the test proposal
+	// because the value of contextKeyBadProposal is true.
+	ctx = ctx.WithValue(contextKeyBadProposal, true)
+	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	require.NoError(t, err)
+
+	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
+	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
+	res := handler(ctx, newDepositMsg)
+	require.True(t, res.IsOK())
+
+	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
+	require.NoError(t, err)
+
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
+	// Set the contextKeyBadProposal value to false so that the handler will fail
+	// during the processing of the proposal in the EndBlocker.
+	ctx = ctx.WithValue(contextKeyBadProposal, false)
+
+	// validate that the proposal fails/has been rejected
+	resTags := EndBlocker(ctx, input.keeper)
+	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalFailed), resTags[1])
 }

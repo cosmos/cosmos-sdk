@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	extypes "github.com/cosmos/cosmos-sdk/contrib/export/types"
 	"github.com/cosmos/cosmos-sdk/contrib/export/v036"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
 )
 
 var migrationMap = extypes.MigrationMap{
@@ -18,18 +19,18 @@ var migrationMap = extypes.MigrationMap{
 }
 
 const (
-	flagGenesisTime = "time"
+	flagGenesisTime = "genesis-time"
 	flagChainId     = "chain-id"
 )
 
 func migrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "genesis [-version] [genesis.json]",
-		Short: "Migrate genesis to a specified version",
-		Long: strings.TrimSpace(`Migrate the source genesis into the target version and export it as standard output.
+		Use:   "genesis [target-version] [genesis-file]",
+		Short: "Migrate genesis to a specified target version",
+		Long: strings.TrimSpace(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-$ genesis TODO...
+$ genesis v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
 `),
 		Args: cobra.ExactArgs(2),
 		RunE: runMigrateCmd,

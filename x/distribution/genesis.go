@@ -6,7 +6,8 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, fck types.FeeCollectionKeeper, data types.GenesisState) {
+	fck.AddCollectedFees(ctx, data.CollectedFees)
 	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
@@ -37,7 +38,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper Keeper, fck types.FeeCollectionKeeper) types.GenesisState {
+	collectedFees := fck.GetCollectedFees(ctx)
 	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
@@ -115,6 +117,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
-	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
+	return types.NewGenesisState(feePool, collectedFees, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
 		dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

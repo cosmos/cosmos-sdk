@@ -17,10 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func NewAnteHandler(fck auth.FeeCollectionKeeper) sdk.AnteHandler {
-	return func(
-		ctx sdk.Context, tx sdk.Tx, simulate bool,
-	) (newCtx sdk.Context, res sdk.Result, abort bool) {
+func NewAnteHandler(fck auth.FeeCollectionKeeper, ctx sdk.Context, tx sdk.Tx, simulate bool)
+ (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(auth.StdTx)

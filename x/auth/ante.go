@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -35,72 +34,70 @@ type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pub
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
-	return func(
+func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer,
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		// all transactions must be of type auth.StdTx
-		stdTx, ok := tx.(StdTx)
-		if !ok {
-			// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
-			// during runTx.
-			newCtx = sdk.SetGasMeter(simulate, ctx, 0)
-			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
+	// all transactions must be of type auth.StdTx
+	stdTx, ok := tx.(StdTx)
+	if !ok {
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
+		// during runTx.
+		newCtx = sdk.SetGasMeter(simulate, ctx, 0)
+		return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
+	}
+
+	params := ak.GetParams(ctx)
+
+	if res := ValidateTxBasic(ctx, tx, params); !res.IsOK() {
+		return newCtx, res, true
+	}
+
+	if res := ValidateSigCount(stdTx, params); !res.IsOK() {
+		return newCtx, res, true
+	}
+
+	if res := ValidateMemo(stdTx, params); !res.IsOK() {
+		return newCtx, res, true
+	}
+
+	// stdSigs contains the sequence number, account number, and signatures.
+	// When simulating, this would just be a 0-length slice.
+	signerAddrs := stdTx.GetSigners()
+	signerAccs := make([]Account, len(signerAddrs))
+	isGenesis := ctx.BlockHeight() == 0
+
+	// fetch first signer, who's going to pay the fees
+	signerAccs[0], res = GetSignerAcc(newCtx, ak, signerAddrs[0])
+	if !res.IsOK() {
+		return newCtx, res, true
+	}
+
+	// stdSigs contains the sequence number, account number, and signatures.
+	// When simulating, this would just be a 0-length slice.
+	stdSigs := stdTx.GetSignatures()
+
+	for i := 0; i < len(stdSigs); i++ {
+		// skip the fee payer, account is cached and fees were deducted already
+		if i != 0 {
+			signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
 		}
 
-		params := ak.GetParams(ctx)
-
-		if res := ValidateTxBasic(ctx, tx, params); res != nil {
-			return newCtx, res, true
-		}
-
-		if res := ValidateSigCount(stdTx, params); !res.IsOK() {
-			return newCtx, res, true
-		}
-
-		if res := ValidateMemo(stdTx, params); !res.IsOK() {
-			return newCtx, res, true
-		}
-
-		// stdSigs contains the sequence number, account number, and signatures.
-		// When simulating, this would just be a 0-length slice.
-		signerAddrs := stdTx.GetSigners()
-		signerAccs := make([]Account, len(signerAddrs))
-		isGenesis := ctx.BlockHeight() == 0
-
-		// fetch first signer, who's going to pay the fees
-		signerAccs[0], res = GetSignerAcc(newCtx, ak, signerAddrs[0])
+		// check signature, return account with incremented nonce
+		signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
+		signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params, sigGasConsumer)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
 
-		// stdSigs contains the sequence number, account number, and signatures.
-		// When simulating, this would just be a 0-length slice.
-		stdSigs := stdTx.GetSignatures()
-
-		for i := 0; i < len(stdSigs); i++ {
-			// skip the fee payer, account is cached and fees were deducted already
-			if i != 0 {
-				signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
-				if !res.IsOK() {
-					return newCtx, res, true
-				}
-			}
-
-			// check signature, return account with incremented nonce
-			signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
-			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params, sigGasConsumer)
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
-
-			ak.SetAccount(newCtx, signerAccs[i])
-		}
-
-		// TODO: tx tags (?)
-		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
+		ak.SetAccount(newCtx, signerAccs[i])
 	}
+
+	// TODO: tx tags (?)
+	return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign
@@ -136,7 +133,7 @@ func ValidateTxBasic(ctx sdk.Context, tx sdk.Tx, params Params) sdk.Result {
 		return err.Result()
 	}
 
-	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(newCtx.TxBytes())), "txSize")
+	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
 	return sdk.Result{}
 }
 

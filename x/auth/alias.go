@@ -72,7 +72,6 @@ type (
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
 	DelayedVestingAccount    = types.DelayedVestingAccount
-	FeeCollectionKeeper      = types.FeeCollectionKeeper
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
 	QueryAccountParams       = types.QueryAccountParams

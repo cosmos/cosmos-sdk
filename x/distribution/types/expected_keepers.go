@@ -61,9 +61,3 @@ type StakingHooks interface {
 type BankKeeper interface {
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 }
-
-// expected fee collection keeper
-type FeeCollectionKeeper interface {
-	GetCollectedFees(ctx sdk.Context) sdk.Coins
-	ClearCollectedFees(ctx sdk.Context)
-}

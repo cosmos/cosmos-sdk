@@ -2,27 +2,23 @@ package types
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	CollectedFees sdk.Coins `json:"collected_fees"`
 	Params        Params    `json:"params"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
+func NewGenesisState(params Params) GenesisState {
 	return GenesisState{
-		CollectedFees: collectedFees,
 		Params:        params,
 	}
 }
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(sdk.NewCoins(), DefaultParams())
+	return NewGenesisState(DefaultParams())
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an

@@ -59,6 +59,11 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// Returns the Gas this tx is allowed to consume
+func (tx StdTx) Gas() uint64 {
+	return tx.Fee.Gas
+}
+
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
 	v, ok := pub.(multisig.PubKeyMultisigThreshold)

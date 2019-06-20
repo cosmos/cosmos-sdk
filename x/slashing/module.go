@@ -126,6 +126,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 
+// module ante-handle
+func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	return ctx, sdk.Result{}. false
+}
+
 // module begin-block
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
 	return BeginBlocker(ctx, req, am.keeper)

@@ -28,6 +28,7 @@ needlessly defining many placeholder functions
 package module
 
 import (
+	"fmt"
 	"encoding/json"
 
 	"github.com/gorilla/mux"

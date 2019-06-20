@@ -55,6 +55,7 @@ type ValidatorSlashEventRecord struct {
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
 	FeePool                         FeePool                                `json:"fee_pool"`
+	CollectedFees                   sdk.Coins                              `json:"collected_fees"`
 	CommunityTax                    sdk.Dec                                `json:"community_tax"`
 	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward"`
 	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward"`
@@ -69,7 +70,7 @@ type GenesisState struct {
 	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
+func NewGenesisState(feePool FeePool, collectedFees sdk.Coins, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
 	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
@@ -77,6 +78,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 
 	return GenesisState{
 		FeePool:                         feePool,
+		CollectedFees:                   collectedFees,
 		CommunityTax:                    communityTax,
 		BaseProposerReward:              baseProposerReward,
 		BonusProposerReward:             bonusProposerReward,
@@ -96,6 +98,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeePool:                         InitialFeePool(),
+		CollectedFees:                   sdk.NewCoins(),
 		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
 		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%

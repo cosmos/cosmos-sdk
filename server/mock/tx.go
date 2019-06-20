@@ -38,6 +38,10 @@ func (tx kvstoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx}
 }
 
+func (tx kvstoreTx) Gas() uint64 {
+	return 0
+}
+
 func (tx kvstoreTx) GetMemo() string {
 	return ""
 }

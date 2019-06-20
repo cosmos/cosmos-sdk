@@ -123,8 +123,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 
 // module ante-handle
 func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-	antehandler := NewAnteHandler(am.accountKeeper, sigGasConsumer)
-	return antehandler(ctx, tx, simulate)
+	return AnteHandler(am.accountKeeper, am.sigGasConsumer, ctx, tx, simulate)
 }
 
 // module begin-block

@@ -56,7 +56,11 @@ $ %s query %s total
 			}
 
 			var totalSupply sdk.Coins
-			cdc.MustUnmarshalJSON(res, &totalSupply)
+			err := cdc.UnmarshalJSON(res, &totalSupply)
+			if err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(totalSupply)
 		},
 	}
@@ -94,7 +98,11 @@ $ %s query %s total-of stake
 			}
 
 			var totalSupply sdk.Coins
-			cdc.MustUnmarshalJSON(res, &totalSupply)
+			err := cdc.UnmarshalJSON(res, &totalSupply)
+			if err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(totalSupply)
 		},
 	}

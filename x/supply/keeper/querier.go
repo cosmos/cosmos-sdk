@@ -32,17 +32,19 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	}
 
 	totalSupply := k.GetSupply(ctx).Total
+	totalSupplyLen := len(totalSupply)
+
 	if params.Limit == 0 {
-		params.Limit = len(totalSupply)
+		params.Limit = totalSupplyLen
 	}
 
 	start := (params.Page - 1) * params.Limit
 	end := params.Limit + start
-	if end >= len(totalSupply) {
-		end = len(totalSupply)
+	if end >= totalSupplyLen {
+		end = totalSupplyLen
 	}
 
-	if start >= len(totalSupply) {
+	if start >= totalSupplyLen {
 		// page is out of bounds
 		totalSupply = sdk.Coins{}
 	} else {

@@ -23,7 +23,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	k.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
 	k.InflateSupply(ctx, mintedCoin.Amount)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeMint,
 			sdk.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),

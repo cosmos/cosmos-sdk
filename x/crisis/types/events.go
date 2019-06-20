@@ -4,6 +4,6 @@ package types
 var (
 	EventTypeInvariant = "invariant"
 
-	AttributeValueCrisis = "crisis"
+	AttributeValueCrisis = ModuleName
 	AttributeKeyRoute    = "route"
 )

@@ -2,7 +2,7 @@
 
 ## Supply
 
-The `Supply` is a passive tracker of the total supply of the chain:
+The `Supply` is a passive tracker of the supply of the chain:
 
 - Supply: `0x0 -> amino(Supply)`
 

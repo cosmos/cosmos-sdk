@@ -6,25 +6,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
+)
+
+var (
+	_ ModuleAccount = (*ModuleHolderAccount)(nil)
+	_ ModuleAccount = (*ModuleMinterAccount)(nil)
+	_ ModuleAccount = (*ModuleBurnerAccount)(nil)
 )
 
 // ModuleAccount defines an account type for pools that hold tokens in an escrow
 type ModuleAccount interface {
 	auth.Account
-
 	Name() string
-	IsMinter() bool
 }
 
-//-----------------------------------------------------------------------------
+// _____________________________________________________________________
 // Module Holder Account
-
-var _ ModuleAccount = (*ModuleHolderAccount)(nil)
 
 // ModuleHolderAccount defines an account for modules that holds coins on a pool
 type ModuleHolderAccount struct {
 	*auth.BaseAccount
-
 	ModuleName string `json:"name"` // name of the module
 }
 
@@ -39,62 +41,102 @@ func NewModuleHolderAccount(name string) *ModuleHolderAccount {
 	}
 }
 
+// InitNewModuleHolderAccount initializes and creates a new module holder account
+func InitNewModuleHolderAccount(ctx sdk.Context, name string, accKeeper AccountKeeper) *ModuleHolderAccount {
+	acc := NewModuleHolderAccount(name)
+	if err := acc.SetAccountNumber(accKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	accKeeper.SetAccount(ctx, acc)
+	return acc
+}
+
 // Name returns the the name of the holder's module
 func (mha ModuleHolderAccount) Name() string {
 	return mha.ModuleName
 }
 
-// IsMinter false for ModuleHolderAccount
-func (mha ModuleHolderAccount) IsMinter() bool { return false }
-
 // SetPubKey - Implements Account
 func (mha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
-	return fmt.Errorf("not supported for pool accounts")
+	return fmt.Errorf("not supported for module accounts")
 }
 
 // SetSequence - Implements Account
 func (mha *ModuleHolderAccount) SetSequence(seq uint64) error {
-	return fmt.Errorf("not supported for pool accounts")
+	return fmt.Errorf("not supported for module accounts")
 }
 
 // String follows stringer interface
 func (mha ModuleHolderAccount) String() string {
-	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Holder Account:
-Name:     			%s
-Address:  			%s
-Coins:    			%s
-Account Number: %d`,
-		mha.ModuleName, mha.Address, mha.Coins, mha.AccountNumber)
+	b, err := yaml.Marshal(mha)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 
-//-----------------------------------------------------------------------------
-// Module Minter Account
+// ___________________________________________________________________
 
-var _ ModuleAccount = (*ModuleMinterAccount)(nil)
-
-// ModuleMinterAccount defines an account for modules that holds coins on a pool
+// ModuleMinterAccount defines an account for modules that can hold and mint tokens
 type ModuleMinterAccount struct {
 	*ModuleHolderAccount
 }
 
 // NewModuleMinterAccount creates a new  ModuleMinterAccount instance
 func NewModuleMinterAccount(name string) *ModuleMinterAccount {
-	moduleHolderAcc := NewModuleHolderAccount(name)
+	acc := NewModuleHolderAccount(name)
 
-	return &ModuleMinterAccount{ModuleHolderAccount: moduleHolderAcc}
+	return &ModuleMinterAccount{ModuleHolderAccount: acc}
 }
 
-// IsMinter true for ModuleMinterAccount
-func (mma ModuleMinterAccount) IsMinter() bool { return true }
+// InitNewModuleMinterAccount initializes and creates a new module minter account
+func InitNewModuleMinterAccount(ctx sdk.Context, name string, accKeeper AccountKeeper) *ModuleMinterAccount {
+	acc := NewModuleMinterAccount(name)
+	if err := acc.SetAccountNumber(accKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	accKeeper.SetAccount(ctx, acc)
+	return acc
+}
 
 // String follows stringer interface
 func (mma ModuleMinterAccount) String() string {
-	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Minter Account:
-Name:    				%s
-Address: 				%s
-Coins:   				%s
-Account Number: %d`,
-		mma.ModuleName, mma.Address, mma.Coins, mma.AccountNumber)
+	b, err := yaml.Marshal(mma)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+// ___________________________________________________________________
+
+// ModuleBurnerAccount defines an account for modules that can hold and mint tokens
+type ModuleBurnerAccount struct {
+	*ModuleHolderAccount
+}
+
+// NewModuleBurnerAccount creates a new  ModuleBurnerAccount instance
+func NewModuleBurnerAccount(name string) *ModuleBurnerAccount {
+	acc := NewModuleHolderAccount(name)
+
+	return &ModuleBurnerAccount{ModuleHolderAccount: acc}
+}
+
+// InitNewModuleBurnerAccount initializes and creates a new module burner account
+func InitNewModuleBurnerAccount(ctx sdk.Context, name string, accKeeper AccountKeeper) *ModuleBurnerAccount {
+	acc := NewModuleBurnerAccount(name)
+	if err := acc.SetAccountNumber(accKeeper.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
+	accKeeper.SetAccount(ctx, acc)
+	return acc
+}
+
+// String follows stringer interface
+func (mba ModuleBurnerAccount) String() string {
+	b, err := yaml.Marshal(mba)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }

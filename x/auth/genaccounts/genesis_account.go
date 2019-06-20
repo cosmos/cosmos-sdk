@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -27,7 +26,15 @@ type GenesisAccount struct {
 
 	// module account fields
 	ModuleName string `json:"module_name"` // name of the module account
+	ModuleKind string `json:"module_kind"` // kind of module
 }
+
+// module kinds
+const (
+	HolderModule = "holder"
+	BurnerModule = "burner"
+	MinterModule = "minter"
+)
 
 // Validate checks for errors on the vesting and module account parameters
 func (ga GenesisAccount) Validate() error {
@@ -90,18 +97,22 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 		return gacc, err
 	}
 
-	vacc, ok := acc.(auth.VestingAccount)
-	if ok {
-		gacc.OriginalVesting = vacc.GetOriginalVesting()
-		gacc.DelegatedFree = vacc.GetDelegatedFree()
-		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
-		gacc.StartTime = vacc.GetStartTime()
-		gacc.EndTime = vacc.GetEndTime()
-	}
-
-	macc, ok := acc.(supply.ModuleAccount)
-	if ok {
-		gacc.ModuleName = macc.Name()
+	switch acc := acc.(type) {
+	case auth.VestingAccount:
+		gacc.OriginalVesting = acc.GetOriginalVesting()
+		gacc.DelegatedFree = acc.GetDelegatedFree()
+		gacc.DelegatedVesting = acc.GetDelegatedVesting()
+		gacc.StartTime = acc.GetStartTime()
+		gacc.EndTime = acc.GetEndTime()
+	case supply.ModuleHolderAccount:
+		gacc.ModuleName = acc.Name()
+		gacc.ModuleKind = HolderModule
+	case supply.ModuleBurnerAccount:
+		gacc.ModuleName = acc.Name()
+		gacc.ModuleKind = BurnerModule
+	case supply.ModuleMinterAccount:
+		gacc.ModuleName = acc.Name()
+		gacc.ModuleKind = MinterModule
 	}
 
 	return gacc, nil
@@ -130,10 +141,16 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		if ga.ModuleName == mint.ModuleName {
+		switch ga.ModuleKind {
+		case HolderModule:
+			return supply.NewModuleHolderAccount(ga.ModuleName)
+		case BurnerModule:
+			return supply.NewModuleBurnerAccount(ga.ModuleName)
+		case MinterModule:
 			return supply.NewModuleMinterAccount(ga.ModuleName)
+		default:
+			panic("unknown module kind")
 		}
-		return supply.NewModuleHolderAccount(ga.ModuleName)
 	}
 
 	return bacc

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // SendCoinsFromModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
@@ -49,8 +50,9 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
-	if !macc.IsMinter() {
-		panic(fmt.Sprintf("Account holder %s is not allowed to mint coins", moduleName))
+	_, ok := macc.(types.ModuleMinterAccount)
+	if !ok {
+		panic(fmt.Sprintf("Account %s does not have permissions to mint tokens", moduleName))
 	}
 
 	_, err := k.bk.AddCoins(ctx, macc.GetAddress(), amt)
@@ -71,6 +73,11 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	macc := k.GetModuleAccountByName(ctx, moduleName)
 	if macc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
+	}
+
+	_, ok := macc.(types.ModuleBurnerAccount)
+	if !ok {
+		panic(fmt.Sprintf("Account %s does not have permissions to burn tokens", moduleName))
 	}
 
 	_, err := k.bk.SubtractCoins(ctx, macc.GetAddress(), amt)

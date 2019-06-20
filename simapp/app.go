@@ -233,61 +233,13 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 // application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 
-	// create module accounts
-	// TODO: move to module manager logic
-	feeCollectorAcc := app.accountKeeper.GetAccount(ctx, auth.FeeCollectorAddr)
-	if feeCollectorAcc == nil {
-		feeCollectorAcc = supply.NewModuleHolderAccount(auth.FeeCollectorName)
-		if err := feeCollectorAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, feeCollectorAcc)
-	}
-
-	bondedPool := app.stakingKeeper.GetBondedPool(ctx)
-	if bondedPool == nil {
-		bondedPool = supply.NewModuleHolderAccount(staking.BondedTokensName)
-		if err := bondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, bondedPool)
-	}
-
-	notBondedPool := app.stakingKeeper.GetNotBondedPool(ctx)
-	if notBondedPool == nil {
-		notBondedPool = supply.NewModuleHolderAccount(staking.NotBondedTokensName)
-		if err := notBondedPool.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, notBondedPool)
-	}
-
-	governanceAcc := app.govKeeper.GetGovernanceAccount(ctx)
-	if governanceAcc == nil {
-		governanceAcc = supply.NewModuleHolderAccount(gov.ModuleName)
-		if err := governanceAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, governanceAcc)
-	}
-
-	distributionAcc := app.distrKeeper.GetDistributionAccount(ctx)
-	if distributionAcc == nil {
-		distributionAcc = supply.NewModuleHolderAccount(distr.ModuleName)
-		if err := distributionAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, distributionAcc)
-	}
-
-	mintAcc := app.mintKeeper.GetMintAccount(ctx)
-	if mintAcc == nil {
-		mintAcc = supply.NewModuleMinterAccount(mint.ModuleName)
-		if err := mintAcc.SetAccountNumber(app.accountKeeper.GetNextAccountNumber(ctx)); err != nil {
-			panic(err)
-		}
-		app.accountKeeper.SetAccount(ctx, mintAcc)
-	}
+	// init all module accounts
+	feeCollectorAcc := supply.InitNewModuleHolderAccount(ctx, auth.FeeCollectorName, app.accountKeeper)
+	bondedPool := supply.InitNewModuleBurnerAccount(ctx, staking.BondedTokensName, app.accountKeeper)
+	notBondedPool := supply.InitNewModuleBurnerAccount(ctx, staking.NotBondedTokensName, app.accountKeeper)
+	govAcc := supply.InitNewModuleBurnerAccount(ctx, gov.ModuleName, app.accountKeeper)
+	distrAcc := supply.InitNewModuleHolderAccount(ctx, distr.ModuleName, app.accountKeeper)
+	mintAcc := supply.InitNewModuleMinterAccount(ctx, mint.ModuleName, app.accountKeeper)
 
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)

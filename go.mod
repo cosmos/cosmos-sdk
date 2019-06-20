@@ -1,7 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/ValarDragon/maligned v0.0.0-20180625235545-aaa9b7683c28 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
@@ -19,7 +18,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
 	github.com/mitchellh/mapstructure v1.1.2 // indirect

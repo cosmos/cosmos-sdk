@@ -24,6 +24,7 @@ import (
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
+// nolint: unused
 var (
 	pks = []crypto.PubKey{
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
@@ -38,6 +39,7 @@ var (
 	initCoins = sdk.TokensFromConsensusPower(200)
 )
 
+// nolint: unused deadcode
 func createTestCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
@@ -48,6 +50,7 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
+// nolint: deadcode unused
 func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
@@ -95,6 +98,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	return ctx, ck, sk, paramstore, keeper
 }
 
+// nolint: unused
 func newPubKey(pk string) (res crypto.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)
 	if err != nil {
@@ -105,6 +109,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pkEd
 }
 
+// nolint: deadcode unused
 func testAddr(addr string) sdk.AccAddress {
 	res := []byte(addr)
 	return res
@@ -118,6 +123,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	)
 }
 
+// nolint: deadcode unused
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)

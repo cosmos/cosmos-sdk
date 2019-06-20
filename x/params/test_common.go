@@ -10,12 +10,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: deadcode unused
 type invalid struct{}
 
+// nolint: deadcode unused
 type s struct {
 	I int
 }
 
+// nolint: deadcode unused
 func createTestCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
@@ -24,6 +27,7 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
+// nolint: deadcode unused
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
@@ -37,6 +41,7 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
+// nolint: deadcode unused
 func testComponents() (*codec.Codec, sdk.Context, sdk.StoreKey, sdk.StoreKey, Keeper) {
 	cdc := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")

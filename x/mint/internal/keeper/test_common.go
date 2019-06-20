@@ -22,12 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
+// nolint: deadcode unused
 type testInput struct {
 	ctx        sdk.Context
 	cdc        *codec.Codec
 	mintKeeper Keeper
 }
 
+// nolint: deadcode unused
 func newTestInput(t *testing.T) testInput {
 	db := dbm.NewMemDB()
 

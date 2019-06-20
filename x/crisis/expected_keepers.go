@@ -5,16 +5,16 @@ import (
 )
 
 // expected bank keeper
-type DistrKeeper interface {
+type distrKeeper interface {
 	DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error
 }
 
 // expected fee collection keeper
-type FeeCollectionKeeper interface {
+type feeCollectionKeeper interface {
 	AddCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins
 }
 
 // expected bank keeper
-type BankKeeper interface {
+type bankKeeper interface {
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -17,15 +17,15 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper         DistrKeeper
-	bankKeeper          BankKeeper
-	feeCollectionKeeper FeeCollectionKeeper
+	distrKeeper         distrKeeper
+	bankKeeper          bankKeeper
+	feeCollectionKeeper feeCollectionKeeper
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper DistrKeeper, bankKeeper BankKeeper,
-	feeCollectionKeeper FeeCollectionKeeper) Keeper {
+	distrKeeper distrKeeper, bankKeeper bankKeeper,
+	feeCollectionKeeper feeCollectionKeeper) Keeper {
 
 	return Keeper{
 		routes:              []types.InvarRoute{},

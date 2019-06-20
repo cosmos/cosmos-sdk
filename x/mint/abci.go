@@ -31,5 +31,5 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 			sdk.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, mintedCoin.Amount.String()),
 		),
-	})
+	)
 }

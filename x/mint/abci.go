@@ -25,11 +25,11 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.Mint,
-			sdk.NewAttribute(types.BondedRatio, bondedRatio.String()),
-			sdk.NewAttribute(types.Inflation, minter.Inflation.String()),
-			sdk.NewAttribute(types.AnnualProvisions, minter.AnnualProvisions.String()),
-			sdk.NewAttribute(types.Amount, mintedCoin.Amount.String()),
+			types.EventTypeMint,
+			sdk.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
+			sdk.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),
+			sdk.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
+			sdk.NewAttribute(types.AttributeKeyAmount, mintedCoin.Amount.String()),
 		),
 	})
 }

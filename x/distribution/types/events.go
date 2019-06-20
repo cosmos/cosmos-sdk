@@ -13,5 +13,5 @@ var (
 	AttributeKeyAmount          = "amount"
 	AttributeKeyValidator       = "validator"
 
-	AttributeValueCategory = "distribution"
+	AttributeValueCategory = ModuleName
 )

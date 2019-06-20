@@ -1,7 +1,12 @@
 package keeper
 
 import (
+	"fmt"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
 )
 
 // NewQuerier creates a querier for uniswap REST endpoints
@@ -13,7 +18,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case types.QueryLiquidity:
 			return queryLiquidity(ctx, req, k)
 		case types.QueryParameters:
-			return queryParameters(ctx, req, k)
+			return queryParameters(ctx, path[1:], req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 		}
@@ -23,15 +28,15 @@ func NewQuerier(k Keeper) sdk.Querier {
 // queryBalance returns the provided addresses UNI balance upon success
 // or an error if the query fails.
 func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryBalance
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	var address sdk.AccAddress
+	err := k.cdc.UnmarshalJSON(req.Data, &address)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	balance := k.GetUNIForAddress(params.Address)
+	balance := k.GetUNIForAddress(ctx, address)
 
-	bz, err := codec.MarshalJSONIndent(k.cdc, balance)
+	bz, err := k.cdc.MarshalJSONIndent(balance, "", " ")
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -41,15 +46,15 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 // queryLiquidity returns the total liquidity avaliable for the provided denomination
 // upon success or an error if the query fails.
 func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryLiquidity
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	var denom string
+	err := k.cdc.UnmarshalJSON(req.Data, &denom)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	liquidity := k.GetReservePool(ctx, params.Denom)
+	liquidity := k.GetReservePool(ctx, denom)
 
-	bz, err := codec.MarshalJSONIndent(k.cdc, liquidity)
+	bz, err := k.cdc.MarshalJSONIndent(liquidity, "", " ")
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -60,14 +65,14 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 // or an error if the query fails
 func queryParameters(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	switch path[0] {
-	case ParamFee:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetFeeParam(ctx))
+	case types.ParamFee:
+		bz, err := k.cdc.MarshalJSONIndent(k.GetFeeParam(ctx), "", " ")
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamNativeDenom:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetNativeDenom(ctx))
+	case types.ParamNativeDenom:
+		bz, err := k.cdc.MarshalJSONIndent(k.GetNativeDenom(ctx), "", " ")
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}

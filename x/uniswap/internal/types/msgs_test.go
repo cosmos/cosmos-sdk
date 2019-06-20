@@ -17,10 +17,8 @@ func TestMsgSwapOrder(t *testing.T) {
 	}{
 		{"no input coin", NewMsgSwapOrder(sdk.Coin{}, output, deadline, sender, recipient, true), false},
 		{"zero input coin", NewMsgSwapOrder(sdk.NewCoin(denom0, sdk.ZeroInt()), output, deadline, sender, recipient, true), false},
-		{"invalid input denom", NewMsgSwapOrder(sdk.NewCoin(emptyDenom, amt), output, deadline, sender, recipient, true), false},
 		{"no output coin", NewMsgSwapOrder(input, sdk.Coin{}, deadline, sender, recipient, false), false},
 		{"zero output coin", NewMsgSwapOrder(input, sdk.NewCoin(denom1, sdk.ZeroInt()), deadline, sender, recipient, true), false},
-		{"invalid output denom", NewMsgSwapOrder(input, sdk.NewCoin(emptyDenom, amt), deadline, sender, recipient, true), false},
 		{"swap and coin denomination are equal", NewMsgSwapOrder(input, sdk.NewCoin(denom0, amt), deadline, sender, recipient, true), false},
 		{"deadline not initialized", NewMsgSwapOrder(input, output, emptyTime, sender, recipient, true), false},
 		{"no sender", NewMsgSwapOrder(input, output, deadline, emptyAddr, recipient, true), false},
@@ -50,7 +48,6 @@ func TestMsgAddLiquidity(t *testing.T) {
 	}{
 		{"no deposit coin", NewMsgAddLiquidity(sdk.Coin{}, amt, sdk.OneInt(), deadline, sender), false},
 		{"zero deposit coin", NewMsgAddLiquidity(sdk.NewCoin(denom1, sdk.ZeroInt()), amt, sdk.OneInt(), deadline, sender), false},
-		{"invalid deposit denom", NewMsgAddLiquidity(sdk.NewCoin(emptyDenom, amt), amt, sdk.OneInt(), deadline, sender), false},
 		{"invalid withdraw amount", NewMsgAddLiquidity(input, sdk.ZeroInt(), sdk.OneInt(), deadline, sender), false},
 		{"invalid minumum reward bound", NewMsgAddLiquidity(input, amt, sdk.ZeroInt(), deadline, sender), false},
 		{"deadline not initialized", NewMsgAddLiquidity(input, amt, sdk.OneInt(), emptyTime, sender), false},
@@ -79,7 +76,6 @@ func TestMsgRemoveLiquidity(t *testing.T) {
 	}{
 		{"no withdraw coin", NewMsgRemoveLiquidity(sdk.Coin{}, amt, sdk.OneInt(), deadline, sender), false},
 		{"zero withdraw coin", NewMsgRemoveLiquidity(sdk.NewCoin(denom1, sdk.ZeroInt()), amt, sdk.OneInt(), deadline, sender), false},
-		{"invalid withdraw denom", NewMsgRemoveLiquidity(sdk.NewCoin(emptyDenom, amt), amt, sdk.OneInt(), deadline, sender), false},
 		{"invalid deposit amount", NewMsgRemoveLiquidity(input, sdk.ZeroInt(), sdk.OneInt(), deadline, sender), false},
 		{"invalid minimum native bound", NewMsgRemoveLiquidity(input, amt, sdk.ZeroInt(), deadline, sender), false},
 		{"deadline not initialized", NewMsgRemoveLiquidity(input, amt, sdk.OneInt(), emptyTime, sender), false},

@@ -22,7 +22,6 @@ var (
 	output   = sdk.NewCoin(denom1, sdk.NewInt(500))
 	deadline = time.Now()
 
-	emptyAddr  sdk.AccAddress
-	emptyDenom = "   "
-	emptyTime  time.Time
+	emptyAddr sdk.AccAddress
+	emptyTime time.Time
 )

@@ -35,9 +35,9 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 
 	if msg.IsBuyOrder {
 		calculatedAmount := k.GetInputAmount(ctx, msg.SwapDenom, msg.Amount)
-		// ensure the maximum amount sender is willing to sell is less than
-		// the calculated amount
-		if msg.Input.Amount.LT(calculatedAmount) {
+		// ensure the calculated amount is less than or equal to the amount
+		// the sender is willing to pay.
+		if !calculatedAmount.LTE(msg.Input.Amount) {
 			return types.ErrInvalidBound(DefaultCodespace, "maximum amount (%d) to be sold was exceeded (%d)", msg.Input.Amount, calculatedAmount).Result()
 		}
 
@@ -57,10 +57,10 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 		}
 
 	} else {
-		outputAmount := k.GetOutputAmount(ctx, msg.SwapDenom, msg.Amount)
-		// ensure the minimum amount the sender is willing to buy is greater than
-		// the calculated amount
-		if msg.Output.Amount.GT(outputAmount) {
+		calculatedAmount := k.GetOutputAmount(ctx, msg.SwapDenom, msg.Amount)
+		// ensure the calculated amount is greater than the minimum amount
+		// the sender is willing to buy.
+		if !calculatedAmount.GTE(msg.Output.Amount) {
 			return sdk.ErrInvalidBound(DefaultCodespace, "minimum amount (%d) to be sold was not met (%d)", msg.Output.Amount, calculatedAmount).Result()
 		}
 
@@ -98,7 +98,7 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 		k.CreateReservePool(ctx, msg.Denom)
 	}
 
-	nativeLiqudiity, err := k.GetReservePool(ctx, NativeAsset)
+	nativeLiqudity, err := k.GetReservePool(ctx, NativeAsset)
 	if err != nil {
 		panic("error retrieving native asset total liquidity")
 	}

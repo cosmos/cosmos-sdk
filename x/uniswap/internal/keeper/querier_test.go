@@ -12,8 +12,8 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	cdc := codec.New()
-	ctx, keeper := createNewInput()
+	cdc := makeTestCodec()
+	ctx, keeper, accs := createTestInput(t, sdk.NewInt(100), 2)
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -24,23 +24,23 @@ func TestNewQuerier(t *testing.T) {
 
 	// query with incorrect path
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, "other")
-	res, err := querier(ctx, []string("other"), req)
+	res, err := querier(ctx, []string{"other"}, req)
 	require.NotNil(t, err)
-	require.Nil(res)
+	require.Nil(t, res)
 
 	// query for non existent address should return an error
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
-	req.Data = keeper.cdc.MustMarshalJSON(addr)
-	res, err := querier(ctx, []string{"balance"}, req)
+	req.Data = keeper.cdc.MustMarshalJSON(accs[0].Address)
+	res, err = querier(ctx, []string{"balance"}, req)
 	require.NotNil(t, err)
-	require.Nil(res)
+	require.Nil(t, res)
 
 	// query for non existent reserve pool should return an error
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryLiquidity)
 	req.Data = keeper.cdc.MustMarshalJSON("btc")
 	res, err = querier(ctx, []string{"liquidity"}, req)
 	require.NotNil(t, err)
-	require.Nil(res)
+	require.Nil(t, res)
 
 	// query for fee params
 	var fee sdk.Dec

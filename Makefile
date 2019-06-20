@@ -28,9 +28,9 @@ build: go.sum
 
 build-genesis-migrate:
 ifeq ($(OS),Windows_NT)
-    go build -mod=readonly $(BUILD_FLAGS) -o build/migrate.exe ./contrib/export
+	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate.exe ./contrib/export
 else
-    go build -mod=readonly $(BUILD_FLAGS) -o build/migrate ./contrib/export
+	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate ./contrib/export
 endif
 
 update-swagger-docs:

@@ -34,19 +34,13 @@ func migrateGenesisCmd() *cobra.Command {
 		RunE:  runMigrateCmd,
 	}
 
+	// TODO: add support for multiple version upgrades by looping sequentially to migration functions
 	cmd.Flags().String(FlagSource, "", "The SDK version that exported the genesis")
 
 	return cmd
 }
 
 func runMigrateCmd(cmd *cobra.Command, args []string) (err error) {
-	if len(args) != 2 {
-		errMessage := "Wrong number of arguments provided, target version and genesis path are mandatory"
-		log.Println(errMessage)
-		return errors.New(errMessage)
-	}
-	// TODO: add support for multiple version upgrades by looping sequentially to migration functions
-	//_ := cmd.Flag(FlagSource)
 	target = args[0]
 	importGenesis = args[1]
 

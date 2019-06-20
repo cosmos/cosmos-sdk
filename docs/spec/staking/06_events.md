@@ -18,40 +18,42 @@ The staking module emits the following events:
 
 | Type             | Attribute Key | Attribute Value    |
 |------------------|---------------|--------------------|
-| create_validator | sender        | {senderAddress}    |
 | create_validator | validator     | {validatorAddress} |
 | create_validator | amount        | {delegationAmount} |
 | message          | module        | staking            |
 | message          | action        | create_validator   |
+| message | sender        | {senderAddress}    |
 
 ### MsgEditValidator
 
 | Type           | Attribute Key | Attribute Value |
 |----------------|---------------|-----------------|
-| edit_validator | sender        | {senderAddress} |
+| edit_validator | commission_rate        | {commissionRate} |
+| edit_validator | min_self_delegation        | {minSelfDelegation} |
 | message        | module        | staking         |
 | message        | action        | edit_validator  |
+| message | sender        | {senderAddress}    |
 
 ### MsgDelegate
 
 | Type     | Attribute Key | Attribute Value    |
 |----------|---------------|--------------------|
-| delegate | sender        | {senderAddress}    |
 | delegate | validator     | {validatorAddress} |
 | delegate | amount        | {delegationAmount} |
 | message  | module        | staking            |
 | message  | action        | delegate           |
+| message | sender        | {senderAddress}    |
 
 ### MsgUndelegate
 
 | Type    | Attribute Key   | Attribute Value    |
 |---------|-----------------|--------------------|
-| unbond  | sender          | {senderAddress}    |
 | unbond  | validator       | {validatorAddress} |
 | unbond  | amount          | {unbondAmount}     |
 | unbond  | completion_time [0] | {completionTime}   |
 | message | module          | staking            |
 | message | action          | begin_unbonding    |
+| message | sender        | {senderAddress}    |
 
 * [0] Time is formatted in the RFC3339 standard
 
@@ -59,12 +61,12 @@ The staking module emits the following events:
 
 | Type       | Attribute Key         | Attribute Value       |
 |------------|-----------------------|-----------------------|
-| redelegate | sender                | {senderAddress}       |
 | redelegate | source_validator      | {srcValidatorAddress} |
 | redelegate | destination_validator | {dstValidatorAddress} |
 | redelegate | amount                | {unbondAmount}        |
 | redelegate | completion_time [0]   | {completionTime}      |
 | message    | module                | staking               |
 | message    | action                | begin_redelegate      |
+| message | sender        | {senderAddress}    |
 
 * [0] Time is formatted in the RFC3339 standard

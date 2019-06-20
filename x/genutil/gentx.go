@@ -14,10 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var (
-	defaultTokens = sdk.TokensFromConsensusPower(100)
-)
-
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,

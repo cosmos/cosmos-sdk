@@ -142,20 +142,6 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 	return acc.GetSequence(), nil
 }
 
-func (ak AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence uint64) sdk.Error {
-	acc := ak.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
-	}
-
-	if err := acc.SetSequence(newSequence); err != nil {
-		panic(err)
-	}
-
-	ak.SetAccount(ctx, acc)
-	return nil
-}
-
 // GetNextAccountNumber Returns and increments the global account number counter
 func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64

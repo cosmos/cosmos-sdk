@@ -1,3 +1,4 @@
+// nolint:deadcode unused
 package gov
 
 import (
@@ -31,7 +32,6 @@ type testInput struct {
 	privKeys []crypto.PrivKey
 }
 
-// nolint: deadcode unused
 func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) testInput {
 	mApp := mock.NewApp()
 
@@ -153,7 +153,6 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
-// nolint: deadcode unused
 func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
@@ -163,7 +162,6 @@ const contextKeyBadProposal = "contextKeyBadProposal"
 // badProposalHandler implements a governance proposal handler that is identical
 // to the actual handler except this fails if the context doesn't contain a value
 // for the key contextKeyBadProposal or if the value is false.
-// nolint: deadcode unused
 func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	switch c.ProposalType() {
 	case ProposalTypeText, ProposalTypeSoftwareUpgrade:

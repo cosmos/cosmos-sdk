@@ -33,6 +33,7 @@ require (
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.32.0-dev0
+	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2

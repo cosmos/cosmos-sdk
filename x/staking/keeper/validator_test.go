@@ -492,12 +492,12 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// validator 3 enters bonded validator set
 	ctx = ctx.WithBlockHeight(40)
 
+	validators[3] = keeper.mustGetValidator(ctx, validators[3].OperatorAddress)
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(1))
+	validators[3], _ = validators[3].AddTokensFromDel(sdk.TokensFromConsensusPower(1))
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
-	validators[3] = keeper.mustGetValidator(ctx, validators[3].OperatorAddress)
-	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.OneInt()))
+	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
 	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 

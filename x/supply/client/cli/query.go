@@ -14,7 +14,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	// Group supply queries under a subcommand
 	supplyQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -25,17 +25,17 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	supplyQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryTotalSupply(queryRoute, cdc),
-		GetCmdQuerySupplyOf(queryRoute, cdc))...)
+		GetCmdQueryTotalSupply(cdc),
+	)...)
 
 	return supplyQueryCmd
 }
 
 // GetCmdQueryTotalSupply implements the query total supply command.
-func GetCmdQueryTotalSupply(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryTotalSupply(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "total",
-		Args:  cobra.ExactArgs(0),
+		Use:   "total [denom (optional)]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "Query the total supply of coins of the chain",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query total supply of coins that are held by accounts in the
@@ -43,67 +43,62 @@ func GetCmdQueryTotalSupply(queryRoute string, cdc *codec.Codec) *cobra.Command 
 
 Example:
 $ %s query %s total
+
+To query for the total supply of a specific coin denomination use:
+$ %s query %s total stake
 `,
-				version.ClientName, types.ModuleName,
+				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryTotalSupply))
-			if err != nil {
-				return err
+			if len(args) == 0 {
+				return queryTotalSupply(cliCtx, cdc)
 			}
-
-			var totalSupply sdk.Coins
-			err := cdc.UnmarshalJSON(res, &totalSupply)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(totalSupply)
+			return querySupplyOf(cliCtx, cdc, args[0])
 		},
 	}
 }
 
-// GetCmdQuerySupplyOf implements the query supply of a coin command.
-func GetCmdQuerySupplyOf(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "total-of [denom]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query the total supply of a specific coin denomination",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the total supply of a specific coin denomination that is held by accounts in the
-			chain.
-
-Example:
-$ %s query %s total-of stake
-`,
-				version.ClientName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			params := types.NewQuerySupplyOfParams(args[0])
-
-			bz, err := cdc.MarshalJSON(params)
-			if err != nil {
-				return err
-			}
-
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QuerySupplyOf), bz)
-			if err != nil {
-				return err
-			}
-
-			var totalSupply sdk.Coins
-			err := cdc.UnmarshalJSON(res, &totalSupply)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(totalSupply)
-		},
+func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
+	params := types.NewQueryTotalSupplyParams(1, 0) // no pagination
+	bz, err := cdc.MarshalJSON(params)
+	if err != nil {
+		return err
 	}
+
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
+	if err != nil {
+		return err
+	}
+
+	var totalSupply sdk.Coins
+	err = cdc.UnmarshalJSON(res, &totalSupply)
+	if err != nil {
+		return err
+	}
+
+	return cliCtx.PrintOutput(totalSupply)
+}
+
+func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) error {
+	params := types.NewQuerySupplyOfParams(denom)
+	bz, err := cdc.MarshalJSON(params)
+	if err != nil {
+		return err
+	}
+
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySupplyOf), bz)
+	if err != nil {
+		return err
+	}
+
+	var supply sdk.Int
+	err = cdc.UnmarshalJSON(res, &supply)
+	if err != nil {
+		return err
+	}
+
+	return cliCtx.PrintOutput(supply)
 }

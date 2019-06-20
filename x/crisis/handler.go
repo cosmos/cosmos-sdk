@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/tags"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 // RouterKey
 const RouterKey = ModuleName
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
@@ -24,7 +24,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) sdk.Result {
 
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
@@ -73,8 +73,8 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 	}
 
 	resTags := sdk.NewTags(
-		tags.Sender, msg.Sender.String(),
-		tags.Invariant, msg.InvariantRoute,
+		types.Sender, msg.Sender.String(),
+		types.Invariant, msg.InvariantRoute,
 	)
 	return sdk.Result{
 		Tags: resTags,

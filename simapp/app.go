@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -95,7 +96,7 @@ type SimApp struct {
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
-	crisisKeeper        crisis.Keeper
+	crisisKeeper        keeper.Keeper
 	paramsKeeper        params.Keeper
 
 	// the module manager
@@ -152,7 +153,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		app.feeCollectionKeeper, distr.DefaultCodespace)
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
-	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.distrKeeper,
+	app.crisisKeeper = keeper.NewKeeper(crisisSubspace, invCheckPeriod, app.distrKeeper,
 		app.bankKeeper, app.feeCollectionKeeper)
 
 	// register the proposal types

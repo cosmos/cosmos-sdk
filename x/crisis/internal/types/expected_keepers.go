@@ -1,20 +1,20 @@
-package crisis
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // expected bank keeper
-type distrKeeper interface {
+type DistrKeeper interface {
 	DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error
 }
 
 // expected fee collection keeper
-type feeCollectionKeeper interface {
+type FeeCollectionKeeper interface {
 	AddCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins
 }
 
 // expected bank keeper
-type bankKeeper interface {
+type BankKeeper interface {
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 }

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,4 +23,12 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		ConstantFee: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
 	}
+}
+
+// ValidateGenesis validates crisis genesis data
+func ValidateGenesis(data GenesisState) error {
+	if !data.ConstantFee.IsPositive() {
+		return fmt.Errorf("constant fee must be positive: %s", data.ConstantFee)
+	}
+	return nil
 }

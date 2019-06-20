@@ -1,4 +1,4 @@
-package crisis
+package keeper
 
 import (
 	"fmt"
@@ -17,15 +17,15 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper         distrKeeper
-	bankKeeper          bankKeeper
-	feeCollectionKeeper feeCollectionKeeper
+	distrKeeper         types.DistrKeeper
+	bankKeeper          types.BankKeeper
+	feeCollectionKeeper types.FeeCollectionKeeper
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper distrKeeper, bankKeeper bankKeeper,
-	feeCollectionKeeper feeCollectionKeeper) Keeper {
+	distrKeeper types.DistrKeeper, bankKeeper types.BankKeeper,
+	feeCollectionKeeper types.FeeCollectionKeeper) Keeper {
 
 	return Keeper{
 		routes:              []types.InvarRoute{},
@@ -78,5 +78,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 
 	logger.With("module", "x/crisis").Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
+
+func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // DONTCOVER

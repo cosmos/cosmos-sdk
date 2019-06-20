@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 )
 
 var (
@@ -62,12 +63,12 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 // app module for bank
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper keeper.Keeper
 	logger log.Logger
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, logger log.Logger) AppModule {
+func NewAppModule(keeper keeper.Keeper, logger log.Logger) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,

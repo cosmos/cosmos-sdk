@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
@@ -22,14 +23,14 @@ var (
 	addrs                 = distr.TestAddrs
 )
 
-func CreateTestInput(t *testing.T) (sdk.Context, crisis.Keeper, auth.AccountKeeper, distr.Keeper) {
+func CreateTestInput(t *testing.T) (sdk.Context, keeper.Keeper, auth.AccountKeeper, distr.Keeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 	ctx, accKeeper, bankKeeper, distrKeeper, _, feeCollectionKeeper, paramsKeeper :=
 		distr.CreateTestInputAdvanced(t, false, 10, communityTax)
 
 	paramSpace := paramsKeeper.Subspace(crisis.DefaultParamspace)
-	crisisKeeper := crisis.NewKeeper(paramSpace, 1, distrKeeper, bankKeeper, feeCollectionKeeper)
+	crisisKeeper := keeper.NewKeeper(paramSpace, 1, distrKeeper, bankKeeper, feeCollectionKeeper)
 	constantFee := sdk.NewInt64Coin("stake", 10000000)
 	crisisKeeper.SetConstantFee(ctx, constantFee)
 
@@ -109,7 +110,7 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 }
 
 func TestInvalidMsg(t *testing.T) {
-	k := crisis.Keeper{}
+	k := keeper.Keeper{}
 	h := crisis.NewHandler(k)
 
 	res := h(sdk.Context{}, sdk.NewTestMsg())

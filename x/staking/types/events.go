@@ -18,5 +18,5 @@ var (
 	AttributeKeyDelegator         = "delegator"
 	AttributeKeyAmount            = "amount"
 	AttributeKeyCompletionTime    = "completion_time"
-	AttributeValueCategory        = "staking"
+	AttributeValueCategory        = ModuleName
 )

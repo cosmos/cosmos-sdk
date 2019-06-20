@@ -11,5 +11,5 @@ var (
 
 	AttributeValueDoubleSign       = "double_sign"
 	AttributeValueMissingSignature = "missing_signature"
-	AttributeValueCategory         = "slashing"
+	AttributeValueCategory         = ModuleName
 )

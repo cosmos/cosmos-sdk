@@ -3,21 +3,23 @@
 package rest
 
 import (
-	//	"encoding/json"
 	"fmt"
+	"strconv"
+	//	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	//	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type mockResponseWriter struct{}
@@ -145,58 +147,84 @@ func TestParseQueryHeight(t *testing.T) {
 }
 
 func TestProcessPostResponse(t *testing.T) {
-	expectedJSONWithHeight := []byte(`{"height":194423","type":"cosmos-sdk/BaseAccount","value":{"address":"cosmos1gc72g4guwg2efa03xgkx3u6ft6t39xqzelfx04","coins":[{"denom":"atom","amount":"100"},{"denom":"tree","amount":"125"}],"public_key":{"type":"tendermint/PubKeySecp256k1","value":"A0tS6HI8Goq1lXEK2+g2nT5Hq3qteBVtL0va9kn9BB++"},"account_number":"104","sequence":"32"}}`)
-
 	// setup
-	var w http.ResponseWriter
+	ctx := context.NewCLIContext()
+	height := int64(194423)
 
 	privKey := secp256k1.GenPrivKey()
 	pubKey := privKey.PubKey()
 	addr := types.AccAddress(pubKey.Address())
 	coins := types.NewCoins(types.NewCoin("atom", types.NewInt(100)), types.NewCoin("tree", types.NewInt(125)))
-	//height := int64(194423)
 	accNumber := uint64(104)
 	sequence := uint64(32)
 
 	acc := authtypes.NewBaseAccount(addr, coins, pubKey, accNumber, sequence)
 	cdc := codec.New()
 	authtypes.RegisterBaseAccount(cdc)
+	ctx = ctx.WithCodec(cdc)
 
-	// expected json response with zero height
-	expectedJSONNoHeight, err := cdc.MarshalJSON(acc)
+	// setup expected json responses with zero height
+	jsonNoHeight, err := cdc.MarshalJSON(acc)
+	require.Nil(t, err)
+	require.NotNil(t, jsonNoHeight)
+	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", " ")
+	require.Nil(t, err)
+	require.NotNil(t, jsonIndentNoHeight)
+	fmt.Println(strconv.Itoa(int(height)))
+	jsonWithHeight := append(append([]byte(`{"height":`), []byte(strconv.Itoa(int(height))+",")...), jsonNoHeight[1:]...)
+
+	// check that negative height writes an error
+	w := httptest.NewRecorder()
+	PostProcessResponse(w, ctx, acc, -1)
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+
+	// check that zero height returns expected response
+	runPostProcessResponse(t, ctx, acc, jsonNoHeight, 0, false)
+	// chcek zero height with indent
+	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, 0, true)
+	// check that height returns expected response
+	runPostProcessResponse(t, ctx, acc, jsonWithHeight, height, false)
+	// check height with indent
+	//runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, height, true)
+}
+
+// asserts that ResponseRecorder returns the expected code and body
+// runs account
+func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
+	expectedBody []byte, height int64, indent bool,
+) {
+	if indent {
+		ctx.Indent = indent
+	}
+
+	// test using unmarshalled struct
+	w := httptest.NewRecorder()
+	PostProcessResponse(w, ctx, obj, height)
+	require.Equal(t, http.StatusOK, w.Code, w.Body)
+	resp := w.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	require.Nil(t, err)
+	require.Equal(t, expectedBody, body)
+
+	var marshalled []byte
+	if indent {
+		marshalled, err = ctx.Codec.MarshalJSONIndent(obj, "", " ")
+	} else {
+		marshalled, err = ctx.Codec.MarshalJSON(obj)
+	}
 	require.Nil(t, err)
 
-	ProcessPostResponse(w)
-
-	/*
-		To test
-		- no height marshaled struct returns same thing
-		- not marhsaled no height returns expected no height
-		- height marshaled struct returns expected with heigh
-		- height no marshaled returns exected with height
-		- all the above with indent
-
-			expectedOutput, err := cdc.MarshalJSONIndent(expectedMockAcc, "", " ")
-			require.Nil(t, err)
-			fmt.Printf("%s\n", expectedOutput)
-			fmt.Printf("%s\n", actualOutput)
-			//	require.Equal(t, expectedOutput, actualOutput)
-
-			// test that JSONMarshal returns equivalent output
-			actualOutput, err = cdc.MarshalJSON(mockAcc)
-			require.Nil(t, err)
-			m := make(map[string]interface{})
-			err = json.Unmarshal(actualOutput, &m)
-			require.Nil(t, err)
-			fmt.Printf("%s\n", m)
-			m["height"] = height
-			actualOutput, err = json.MarshalIndent(m, "", " ")
-			fmt.Printf("%s\n", actualOutput)
-			var i mockAccount
-			err = cdc.UnmarshalJSON(actualOutput, &i)
-			require.Nil(t, err)
-			fmt.Printf("%v\n", i)
-	*/
+	// test using marshalled struct, expects passed in byte slice to be written
+	w = httptest.NewRecorder()
+	PostProcessResponse(w, ctx, marshalled, height)
+	require.Equal(t, http.StatusOK, w.Code, w.Body)
+	resp = w.Result()
+	body, err = ioutil.ReadAll(resp.Body)
+	require.Nil(t, err)
+	fmt.Println()
+	fmt.Printf("%s\n", body)
+	fmt.Printf("%v\n", w.Body)
+	require.Equal(t, expectedBody, body)
 }
 
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {

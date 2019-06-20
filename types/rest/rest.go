@@ -226,40 +226,58 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}, height int64) {
 	var output []byte
 
+	if height < 0 {
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height").Error())
+		return
+	}
+
 	switch response.(type) {
 	case []byte:
 		output = response.([]byte)
 
 	default:
 		var err error
-		output, err = cliCtx.Codec.MarshalJSON(response)
+		if cliCtx.Indent {
+			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", " ")
+		} else {
+			output, err = cliCtx.Codec.MarshalJSON(response)
+		}
+
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
 	}
-
-	// inject the height into the json response by
-	// - decoding into the map
-	// - adding the height to the map
-	// - encoding using standard json library
-	var m map[string]interface{}
-	err := json.Unmarshal(output, &m)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	fmt.Println("before height")
+	if height > 0 {
+		fmt.Println("height")
+		fmt.Println(height)
+		// inject the height into the json response by
+		// - decoding into the map
+		// - adding the height to the map
+		// - encoding using standard json library
+		m := make(map[string]interface{})
+		err := json.Unmarshal(output, &m)
+		if err != nil {
+			fmt.Println("first marshal error")
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		m["height"] = height
+		fmt.Printf("%s\n", m)
+		if cliCtx.Indent {
+			output, err = json.MarshalIndent(m, "", "  ")
+		} else {
+			output, err = json.Marshal(m)
+		}
+		fmt.Printf("%s\n", output)
+		if err != nil {
+			fmt.Println("second marshal error")
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
-	m["height"] = height
-
-	if cliCtx.Indent {
-		output, err = json.MarshalIndent(m, "", "  ")
-	} else {
-		output, err = json.Marshal(m)
-	}
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+	fmt.Printf("%s\n", output)
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(output)

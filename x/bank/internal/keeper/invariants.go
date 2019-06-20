@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
@@ -37,7 +36,7 @@ func TotalCoinsInvariant(ak types.AccountKeeper, totalSupplyFn func() sdk.Coins)
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.NewCoins()
 
-		chkAccount := func(acc authtypes.Account) bool {
+		chkAccount := func(acc types.Account) bool {
 			coins := acc.GetCoins()
 			totalCoins = totalCoins.Add(coins)
 			return false

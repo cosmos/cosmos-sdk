@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -239,11 +238,11 @@ func hasCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt 
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
-func getAccount(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress) authtypes.Account {
+func getAccount(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress) types.Account {
 	return ak.GetAccount(ctx, addr)
 }
 
-func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc authtypes.Account) {
+func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc types.Account) {
 	ak.SetAccount(ctx, acc)
 }
 
@@ -416,8 +415,8 @@ func undelegateCoins(
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackDelegation(acc authtypes.Account, blockTime time.Time, amt sdk.Coins) error {
-	vacc, ok := acc.(authtypes.VestingAccount)
+func trackDelegation(acc types.Account, blockTime time.Time, amt sdk.Coins) error {
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		vacc.TrackDelegation(blockTime, amt)
 		return nil
@@ -427,8 +426,8 @@ func trackDelegation(acc authtypes.Account, blockTime time.Time, amt sdk.Coins) 
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackUndelegation(acc authtypes.Account, amt sdk.Coins) error {
-	vacc, ok := acc.(authtypes.VestingAccount)
+func trackUndelegation(acc types.Account, amt sdk.Coins) error {
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		vacc.TrackUndelegation(amt)
 		return nil

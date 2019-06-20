@@ -43,7 +43,6 @@ type CLIContext struct {
 	TrustNode     bool
 	UseLedger     bool
 	BroadcastMode string
-	PrintResponse bool
 	Verifier      tmlite.Verifier
 	VerifierHome  string
 	Simulate      bool
@@ -91,7 +90,6 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		TrustNode:     viper.GetBool(flags.FlagTrustNode),
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
-		PrintResponse: viper.GetBool(flags.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(flags.FlagDryRun),
 		GenerateOnly:  genOnly,

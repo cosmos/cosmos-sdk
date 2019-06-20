@@ -64,7 +64,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			continue
 		}
 
-		ctx.EventManager().EmitEvents(sdk.Events{
+		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EvenTypeCompleteUnbonding,
 				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress.String()),

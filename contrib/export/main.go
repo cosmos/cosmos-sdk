@@ -18,7 +18,6 @@ var migrationMap = extypes.MigrationMap{
 }
 
 const (
-	flagSource      = "source"
 	flagGenesisTime = "time"
 	flagChainId     = "chain-id"
 )
@@ -36,9 +35,6 @@ $ genesis TODO...
 		RunE: runMigrateCmd,
 	}
 
-	// TODO: Add support for multiple version upgrades by looping sequentially
-	// to migration functions.
-	cmd.Flags().String(flagSource, "", "The SDK version that exported the genesis")
 	cmd.Flags().String(flagGenesisTime, "", "Override genesis_time with this flag")
 	cmd.Flags().String(flagChainId, "", "Override chain_id with this flag")
 

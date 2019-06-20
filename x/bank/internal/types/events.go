@@ -7,5 +7,5 @@ var (
 	AttributeKeyRecipient = "recipient"
 	AttributeKeySender    = "sender"
 
-	AttributeValueCategory = "bank"
+	AttributeValueCategory = ModuleName
 )

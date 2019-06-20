@@ -49,7 +49,6 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetWithdrawAddress,
-			sdk.NewAttribute(sdk.AttributeKeySender, delegatorAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
 		),
 	)
@@ -80,7 +79,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(types.AttributeKeyAmount, rewards.String()),
-			sdk.NewAttribute(sdk.AttributeKeySender, delAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
 		),
 	)
@@ -118,7 +116,6 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		sdk.NewEvent(
 			types.EventTypeWithdrawCommission,
 			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(sdk.AttributeKeySender, valAddr.String()),
 		),
 	)
 

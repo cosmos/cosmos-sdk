@@ -148,13 +148,16 @@ func (keeper BaseSendKeeper) SendCoins(
 		return sdk.ErrInvalidCoins(amt.String())
 	}
 
-	ctx.EventManager().EmitEvent(
+	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 		),
-	)
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+		),
+	})
 
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
 }
@@ -338,7 +341,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeTransfer,
+				sdk.EventTypeMessage,
 				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
 			),
 		)

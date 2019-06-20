@@ -19,26 +19,26 @@ The distribution module emits the following events:
 
 | Type                 | Attribute Key    | Attribute Value      |
 |----------------------|------------------|----------------------|
-| set_withdraw_address | sender           | {senderAddress}      |
 | set_withdraw_address | withdraw_address | {withdrawAddress}    |
 | message              | module           | distribution         |
 | message              | action           | set_withdraw_address |
+| message              | sender           | {senderAddress}      |
 
 ### MsgWithdrawDelegatorReward
 
 | Type    | Attribute Key | Attribute Value           |
 |---------|---------------|---------------------------|
 | withdraw_rewards | amount        | {rewardAmount}            |
-| withdraw_rewards | sender        | {senderAddress}           |
 | withdraw_rewards | validator     | {validatorAddress}        |
-| message | module        | distribution              |
-| message | action        | withdraw_delegator_reward |
+| message          | module        | distribution              |
+| message          | action        | withdraw_delegator_reward |
+| message          | sender        | {senderAddress}           |
 
 ### MsgWithdrawValidatorCommission
 
 | Type       | Attribute Key | Attribute Value               |
 |------------|---------------|-------------------------------|
 | withdraw_commission | amount        | {commissionAmount}            |
-| withdraw_commission | sender        | {senderAddress}               |
 | message    | module        | distribution                  |
 | message    | action        | withdraw_validator_commission |
+| message    | sender        | {senderAddress}               |

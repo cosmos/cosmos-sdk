@@ -119,7 +119,7 @@ func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams)
 	events := []string{
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -159,7 +159,7 @@ func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositP
 	events := []string{
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
 	}
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently

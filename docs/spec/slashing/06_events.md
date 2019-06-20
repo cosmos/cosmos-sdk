@@ -19,6 +19,6 @@ The slashing module emits the following events/tags:
 
 | Type    | Attribute Key | Attribute Value |
 |---------|---------------|-----------------|
-| unjail  | sender        | {senderAddress} |
 | message | module        | slashing        |
 | message | action        | unjail          |
+| message | sender        | {senderAddress} |

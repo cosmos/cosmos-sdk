@@ -2,8 +2,7 @@ package types
 
 // Slashing module event types
 var (
-	EventTypeSlash  = "slash"
-	EventTypeUnjail = "unjail"
+	EventTypeSlash = "slash"
 
 	AttributeKeyAddress = "address"
 	AttributeKeyPower   = "power"

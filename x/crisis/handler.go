@@ -79,11 +79,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		sdk.NewEvent(
 			types.EventTypeInvariant,
 			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 	})
 

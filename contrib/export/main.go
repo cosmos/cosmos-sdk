@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 	"log"
+	"time"
 )
 
 var (
@@ -22,7 +23,9 @@ var (
 
 const (
 	// FlagSource will support multiple version upgrades
-	FlagSource = "source"
+	FlagSource      = "source"
+	FlagGenesisTime = "time"
+	FlagChainId     = "chain-id"
 )
 
 func migrateGenesisCmd() *cobra.Command {
@@ -35,7 +38,9 @@ func migrateGenesisCmd() *cobra.Command {
 	}
 
 	// TODO: add support for multiple version upgrades by looping sequentially to migration functions
-	cmd.Flags().String(FlagSource, "", "The SDK version that exported the genesis")
+	cmd.Flags().String(FlagSource, "", "[Optional] The SDK version that exported the genesis")
+	cmd.Flags().String(FlagGenesisTime, "", "[Optional] Override genesis_time with this flag")
+	cmd.Flags().String(FlagChainId, "", "[Optional] Override chain_id with this flag")
 
 	return cmd
 }
@@ -62,6 +67,21 @@ func runMigrateCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 	newGenState := migrationMap[target](initialState, cdc)
 	genDoc.AppState = cdc.MustMarshalJSON(newGenState)
+
+	genesisTime := cmd.Flag(FlagGenesisTime).Value.String()
+	chainId := cmd.Flag(FlagChainId).Value.String()
+	if genesisTime != "" {
+		var t time.Time
+		err := t.UnmarshalText([]byte(genesisTime))
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+		genDoc.GenesisTime = t
+	}
+	if chainId != "" {
+		genDoc.ChainID = chainId
+	}
 
 	out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
 	if err != nil {

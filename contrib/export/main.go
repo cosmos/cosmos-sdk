@@ -30,7 +30,7 @@ func migrateGenesisCmd() *cobra.Command {
 		Use:   "genesis [v0.34] [~/my/genesis.json]",
 		Short: "Migrate genesis to a specified version",
 		Long:  `Migrate the source genesis into the target version and export it as standard output.`,
-		Args:  cobra.RangeArgs(2, 2),
+		Args:  cobra.ExactArgs(2),
 		RunE:  runMigrateCmd,
 	}
 

@@ -161,7 +161,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "couldn't parse block height. Assumed format is '/validatorsets/{height}'.")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse block height; assumed format is '/validatorsets/{height}'")
 			return
 		}
 

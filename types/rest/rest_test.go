@@ -3,17 +3,15 @@
 package rest
 
 import (
-	"fmt"
-	"strconv"
-	//	"encoding/json"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	//	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -170,8 +168,16 @@ func TestProcessPostResponse(t *testing.T) {
 	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", " ")
 	require.Nil(t, err)
 	require.NotNil(t, jsonIndentNoHeight)
-	fmt.Println(strconv.Itoa(int(height)))
-	jsonWithHeight := append(append([]byte(`{"height":`), []byte(strconv.Itoa(int(height))+",")...), jsonNoHeight[1:]...)
+
+	// decode into map to order alphabetically
+	m := make(map[string]interface{})
+	err = json.Unmarshal(jsonNoHeight, &m)
+	require.Nil(t, err)
+	jsonMap, err := json.Marshal(m)
+	require.Nil(t, err)
+	jsonWithHeight := append(append([]byte(`{"height":`), []byte(strconv.Itoa(int(height))+",")...), jsonMap[1:]...)
+	jsonIndentMap, err := json.MarshalIndent(m, "", " ")
+	jsonIndentWithHeight := append(append([]byte(`{`+"\n "+`"height": `), []byte(strconv.Itoa(int(height))+",")...), jsonIndentMap[1:]...)
 
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
@@ -179,17 +185,18 @@ func TestProcessPostResponse(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 
 	// check that zero height returns expected response
-	runPostProcessResponse(t, ctx, acc, jsonNoHeight, 0, false)
+	runPostProcessResponse(t, ctx, acc, jsonMap, 0, false)
 	// chcek zero height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, 0, true)
+	runPostProcessResponse(t, ctx, acc, jsonIndentMap, 0, true)
 	// check that height returns expected response
 	runPostProcessResponse(t, ctx, acc, jsonWithHeight, height, false)
 	// check height with indent
-	//runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, height, true)
+	runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, height, true)
 }
 
 // asserts that ResponseRecorder returns the expected code and body
-// runs account
+// runs PostProcessResponse on the objects regular interface and on
+// the marshalled struct.
 func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
 	expectedBody []byte, height int64, indent bool,
 ) {
@@ -197,7 +204,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 		ctx.Indent = indent
 	}
 
-	// test using unmarshalled struct
+	// test using regular struct
 	w := httptest.NewRecorder()
 	PostProcessResponse(w, ctx, obj, height)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
@@ -214,16 +221,13 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	}
 	require.Nil(t, err)
 
-	// test using marshalled struct, expects passed in byte slice to be written
+	// test using marshalled struct
 	w = httptest.NewRecorder()
 	PostProcessResponse(w, ctx, marshalled, height)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result()
 	body, err = ioutil.ReadAll(resp.Body)
 	require.Nil(t, err)
-	fmt.Println()
-	fmt.Printf("%s\n", body)
-	fmt.Printf("%v\n", w.Body)
 	require.Equal(t, expectedBody, body)
 }
 

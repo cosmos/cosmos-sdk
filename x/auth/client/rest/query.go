@@ -53,7 +53,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, rest.ResponseWithHeight{account, height})
+		rest.PostProcessResponse(w, cliCtx, account, height)
 	}
 }
 

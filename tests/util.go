@@ -215,3 +215,5 @@ var cdc = codec.New()
 func init() {
 	ctypes.RegisterAmino(cdc)
 }
+
+//DONTCOVER

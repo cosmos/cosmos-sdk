@@ -241,7 +241,7 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 	default:
 		var err error
 		if cliCtx.Indent {
-			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", " ")
+			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
 		} else {
 			output, err = cliCtx.Codec.MarshalJSON(response)
 		}
@@ -267,7 +267,7 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 		m["height"] = height
 
 		if cliCtx.Indent {
-			output, err = json.MarshalIndent(m, "", " ")
+			output, err = json.MarshalIndent(m, "", "  ")
 		} else {
 			output, err = json.Marshal(m)
 		}

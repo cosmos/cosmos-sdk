@@ -4,6 +4,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -165,7 +166,7 @@ func TestProcessPostResponse(t *testing.T) {
 	jsonNoHeight, err := cdc.MarshalJSON(acc)
 	require.Nil(t, err)
 	require.NotNil(t, jsonNoHeight)
-	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", " ")
+	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", "  ")
 	require.Nil(t, err)
 	require.NotNil(t, jsonIndentNoHeight)
 
@@ -176,8 +177,8 @@ func TestProcessPostResponse(t *testing.T) {
 	jsonMap, err := json.Marshal(m)
 	require.Nil(t, err)
 	jsonWithHeight := append(append([]byte(`{"height":`), []byte(strconv.Itoa(int(height))+",")...), jsonMap[1:]...)
-	jsonIndentMap, err := json.MarshalIndent(m, "", " ")
-	jsonIndentWithHeight := append(append([]byte(`{`+"\n "+`"height": `), []byte(strconv.Itoa(int(height))+",")...), jsonIndentMap[1:]...)
+	jsonIndentMap, err := json.MarshalIndent(m, "", "  ")
+	jsonIndentWithHeight := append(append([]byte(`{`+"\n "+` "height": `), []byte(strconv.Itoa(int(height))+",")...), jsonIndentMap[1:]...)
 
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
@@ -215,7 +216,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	var marshalled []byte
 	if indent {
-		marshalled, err = ctx.Codec.MarshalJSONIndent(obj, "", " ")
+		marshalled, err = ctx.Codec.MarshalJSONIndent(obj, "", "  ")
 	} else {
 		marshalled, err = ctx.Codec.MarshalJSON(obj)
 	}

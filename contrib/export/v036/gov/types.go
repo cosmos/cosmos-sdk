@@ -5,7 +5,26 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 	"time"
+)
+
+// Keys
+const (
+	// ModuleName is the name of the module
+	ModuleName = "gov"
+
+	// StoreKey is the store key string for gov
+	StoreKey = ModuleName
+
+	// RouterKey is the message route for gov
+	RouterKey = ModuleName
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = ModuleName
+
+	// DefaultParamspace default name for parameter store
+	DefaultParamspace = ModuleName
 )
 
 // GenesisState represents v0.34.x genesis state for the governance module.
@@ -293,9 +312,142 @@ func (vo VoteOption) Format(s fmt.State, verb rune) {
 }
 
 // ----------------------------------------------------------------------------
+// Tally
+// ----------------------------------------------------------------------------
+
+// Equals returns if two proposals are equal.
+func (tr TallyResult) Equals(comp TallyResult) bool {
+	return tr.Yes.Equal(comp.Yes) &&
+		tr.Abstain.Equal(comp.Abstain) &&
+		tr.No.Equal(comp.No) &&
+		tr.NoWithVeto.Equal(comp.NoWithVeto)
+}
+
+func (tr TallyResult) String() string {
+	return fmt.Sprintf(`Tally Result:
+  Yes:        %s
+  Abstain:    %s
+  No:         %s
+  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
+}
+
+// ----------------------------------------------------------------------------
+// Proposal
+// ----------------------------------------------------------------------------
+
+// Proposal types
+const (
+	ProposalTypeText            string = "Text"
+	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
+)
+
+// Text Proposal
+type TextProposal struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+func NewTextProposal(title, description string) Content {
+	return TextProposal{title, description}
+}
+
+// Implements Proposal Interface
+var _ Content = TextProposal{}
+
+// nolint
+func (tp TextProposal) GetTitle() string         { return tp.Title }
+func (tp TextProposal) GetDescription() string   { return tp.Description }
+func (tp TextProposal) ProposalRoute() string    { return RouterKey }
+func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
+func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
+
+const (
+	DefaultCodespace sdk.CodespaceType = "gov"
+
+	CodeInvalidContent      sdk.CodeType = 6
+	CodeInvalidProposalType sdk.CodeType = 7
+)
+
+func ErrInvalidProposalContent(cs sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(cs, CodeInvalidContent, fmt.Sprintf("invalid proposal content: %s", msg))
+}
+
+func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("proposal type '%s' is not valid", proposalType))
+}
+
+// ValidateAbstract validates a proposal's abstract contents returning an error
+// if invalid.
+func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
+	title := c.GetTitle()
+	if len(strings.TrimSpace(title)) == 0 {
+		return ErrInvalidProposalContent(codespace, "proposal title cannot be blank")
+	}
+	if len(title) > MaxTitleLength {
+		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
+	}
+
+	description := c.GetDescription()
+	if len(description) == 0 {
+		return ErrInvalidProposalContent(codespace, "proposal description cannot be blank")
+	}
+	if len(description) > MaxDescriptionLength {
+		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
+	}
+
+	return nil
+}
+
+// Constants pertaining to a Content object
+const (
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
+)
+
+func (tp TextProposal) String() string {
+	return fmt.Sprintf(`Text Proposal:
+  Title:       %s
+  Description: %s
+`, tp.Title, tp.Description)
+}
+
+// Software Upgrade Proposals
+// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
+// upgrade date, etc.
+type SoftwareUpgradeProposal struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+func NewSoftwareUpgradeProposal(title, description string) Content {
+	return SoftwareUpgradeProposal{title, description}
+}
+
+// Implements Proposal Interface
+var _ Content = SoftwareUpgradeProposal{}
+
+// nolint
+func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
+func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
+	return ValidateAbstract(DefaultCodespace, sup)
+}
+
+func (sup SoftwareUpgradeProposal) String() string {
+	return fmt.Sprintf(`Software Upgrade Proposal:
+  Title:       %s
+  Description: %s
+`, sup.Title, sup.Description)
+}
+
+// ----------------------------------------------------------------------------
 // Codec
 // ----------------------------------------------------------------------------
 
-func RegisterCodec(codec *codec.Codec) {
-	codec.RegisterInterface((*Content)(nil), nil)
+func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterInterface((*Content)(nil), nil)
+	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
+	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

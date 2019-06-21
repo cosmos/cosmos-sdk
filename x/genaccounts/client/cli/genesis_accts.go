@@ -60,7 +60,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 				return err
 			}
 
-			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "")
+			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "", "")
 			if err := genAcc.Validate(); err != nil {
 				return err
 			}

@@ -14,8 +14,8 @@ var _ ModuleAccountI = (*ModuleAccount)(nil)
 // ModuleAccount defines an account type for pools that hold tokens in an escrow
 type ModuleAccountI interface {
 	auth.Account
-	Name() string
-	Permission() string
+	GetName() string
+	GetPermission() string
 }
 
 // ModuleAccount defines an account for modules that holds coins on a pool
@@ -42,12 +42,12 @@ func NewModuleAccount(name, permission string) *ModuleAccount {
 }
 
 // Name returns the the name of the holder's module
-func (ma ModuleAccount) Name() string {
+func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
 
 // Name returns the the name of the holder's module
-func (ma ModuleAccount) Permission() string {
+func (ma ModuleAccount) GetPermission() string {
 	return ma.Permission
 }
 

@@ -65,8 +65,8 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
-		notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
-		bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
+		notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName)
+		bondPool := supply.NewModuleAccount(types.BondedTokensName)
 
 		supplyKeeper.SetModuleAccount(ctx, bondPool)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)

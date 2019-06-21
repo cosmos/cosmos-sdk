@@ -99,8 +99,8 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 		gacc.StartTime = acc.GetStartTime()
 		gacc.EndTime = acc.GetEndTime()
 	case supply.ModuleAccountI:
-		gacc.ModuleName = acc.Name()
-		gacc.ModulePermission = acc.Permission()
+		gacc.ModuleName = acc.GetName()
+		gacc.ModulePermission = acc.GetPermission()
 	}
 
 	return gacc, nil

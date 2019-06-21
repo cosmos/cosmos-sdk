@@ -56,8 +56,8 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
-		notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
-		bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
+		notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName)
+		bondPool := supply.NewModuleAccount(types.BondedTokensName)
 
 		supplyKeeper.SetModuleAccount(ctx, bondPool)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)

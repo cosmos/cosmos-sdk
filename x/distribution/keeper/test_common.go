@@ -119,7 +119,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace, []string{}, []string{}, []string{})
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
@@ -137,10 +137,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create module accounts
-	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
-	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
-	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
-	distrAcc := supply.NewModuleHolderAccount(types.ModuleName)
+	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+	notBondedPool := supply.NewModuleAccount(staking.NotBondedTokensName, supply.Burner)
+	bondPool := supply.NewModuleAccount(staking.BondedTokensName, supply.Burner)
+	distrAcc := supply.NewModuleAccount(types.ModuleName, supply.Holder)
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)

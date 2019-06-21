@@ -20,8 +20,8 @@ const (
 )
 
 var (
-	fooAcc    = types.NewModuleHolderAccount(foo)
-	barAcc    = types.NewModuleHolderAccount(bar)
+	fooAcc    = types.NewModuleAccount(foo)
+	barAcc    = types.NewModuleAccount(bar)
 	minterAcc = types.NewModuleMinterAccount(minter)
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)

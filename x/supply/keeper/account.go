@@ -24,16 +24,23 @@ func (k Keeper) GetModuleAddressAndPermission(moduleName string) (addr sdk.AccAd
 }
 
 // GetModuleAccount gets the module account to the auth account store
-func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccount {
-	addr := GetModuleAddress(moduleName)
+func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
+	addr := k.GetModuleAddress(moduleName)
 	if addr == nil {
 		return nil
 	}
-	return k.ak.GetAccount(ctx, moduleAddress)
+
+	acc := k.ak.GetAccount(ctx, addr)
+	macc, ok := acc.(types.ModuleAccountI)
+	if !ok {
+		return nil
+	}
+
+	return macc
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (k Keeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccount) {
+func (k Keeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
 	k.ak.SetAccount(ctx, macc)
 }
 

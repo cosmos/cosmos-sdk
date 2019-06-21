@@ -70,8 +70,8 @@ func MakeTestCodec() *codec.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
-	cdc.RegisterInterface((*supply.ModuleAccount)(nil), nil)
-	cdc.RegisterConcrete(&supply.ModuleHolderAccount{}, "test/staking/ModuleHolderAccount", nil)
+	cdc.RegisterInterface((*supply.ModuleAccountI)(nil), nil)
+	cdc.RegisterConcrete(&supply.ModuleAccount{}, "test/staking/ModuleAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
@@ -124,28 +124,29 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		bank.DefaultCodespace,
 	)
 
-	sk := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
+		[]string{}, []string{}, []string{types.ModuleName})
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(Addrs)))))
 
-	sk.SetSupply(ctx, supply.NewSupply(totalSupply))
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, sk, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
-	notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
-	bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
+	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+	notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName, supply.Burner)
+	bondPool := supply.NewModuleAccount(types.BondedTokensName, supply.Burner)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)
 
-	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
@@ -155,7 +156,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		}
 	}
 
-	return ctx, accountKeeper, keeper, sk
+	return ctx, accountKeeper, keeper, supplyKeeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {

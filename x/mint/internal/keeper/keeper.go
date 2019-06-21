@@ -20,11 +20,10 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper,
-) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper) Keeper {
 
 	// ensure mint module account is set
-	if addr := k.supplyKeeper.GetModuleAddress(types.ModuleName); addr != nil {
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr != nil {
 		panic("the mint module account has not been set")
 	}
 

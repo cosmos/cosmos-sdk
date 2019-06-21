@@ -23,7 +23,7 @@ func NewKeeper(
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper) Keeper {
 
 	// ensure mint module account is set
-	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr != nil {
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the mint module account has not been set")
 	}
 

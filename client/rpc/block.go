@@ -126,7 +126,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 		if height > chainHeight {
-			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length.")
+			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length")
 			return
 		}
 		output, err := getBlock(cliCtx, &height)

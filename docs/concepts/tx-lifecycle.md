@@ -123,7 +123,7 @@ In order to execute `tx`, the following ABCI function calls are made in order to
 
 The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx) function in deliver mode instead of check mode. Instead of using their `checkTxState` or `queryState`, full-nodes select a new copy, `deliverTxState`, to deliver transactions:
 
-* * **Decoding:** `Tx` is decoded.
+* **Decoding:** `Tx` is decoded.
 * **Initializations:** The `Context`, `Multistore`, and `GasMeter` are initialized.
 * **Checks:** The full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid transactions.
 * **Route and Handler:** The extra step is to run `runMsgs` to fully execute each `Msg` within the transaction. Since `tx` may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `MsgHandler`.

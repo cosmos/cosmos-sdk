@@ -14,11 +14,6 @@ const (
 	GasDeleteDesc           = "Delete"
 )
 
-var (
-	cachedKVGasConfig        = KVGasConfig()
-	cachedTransientGasConfig = TransientGasConfig()
-)
-
 // Gas measured by the SDK
 type Gas = uint64
 

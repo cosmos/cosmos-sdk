@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"math/big"
-	"math/rand"
 )
 
 const maxBitLen = 255
@@ -36,8 +35,6 @@ func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
-
-func random(i *big.Int) *big.Int { return new(big.Int).Rand(rand.New(rand.NewSource(rand.Int63())), i) }
 
 func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {

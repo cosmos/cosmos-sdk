@@ -46,8 +46,7 @@ func retrieveSimLog(storeName string, appA, appB SimApp, kvA, kvB cmn.KVPair) (l
 	case mint.StoreKey:
 		return decodeMintStore(appA.cdc, appB.cdc, kvA.Value, kvB.Value)
 	case staking.StoreKey:
-		// return decodeStakingStore(appA.cdc, appB.cdc, kvA, kvB)
-		return
+		return decodeStakingStore(appA.cdc, appB.cdc, kvA, kvB)
 	case gov.StoreKey:
 		return decodeGovStore(appA.cdc, appB.cdc, kvA, kvB)
 	case distribution.StoreKey:
@@ -96,6 +95,86 @@ func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log 
 		cdcA.MustUnmarshalBinaryBare(kvA.Value, &infoA)
 		cdcB.MustUnmarshalBinaryBare(kvB.Value, &infoB)
 		log = fmt.Sprintf("%v\n%v", infoA, infoB)
+
+	case bytes.Equal(kvA.Key[:1], distribution.ValidatorHistoricalRewardsPrefix):
+		var infoA, infoB distribution.DelegatorStartingInfo
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &infoA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &infoB)
+		log = fmt.Sprintf("%v\n%v", infoA, infoB)
+
+	case bytes.Equal(kvA.Key[:1], distribution.ValidatorCurrentRewardsPrefix):
+		var rewardsA, rewardsB distribution.ValidatorCurrentRewards
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+		log = fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
+
+	case bytes.Equal(kvA.Key[:1], distribution.ValidatorAccumulatedCommissionPrefix):
+		var commissionA, commissionB distribution.ValidatorAccumulatedCommission
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &commissionA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &commissionB)
+		log = fmt.Sprintf("%v\n%v", commissionA, commissionB)
+
+	case bytes.Equal(kvA.Key[:1], distribution.ValidatorSlashEventPrefix):
+		var eventA, eventB distribution.ValidatorSlashEvent
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &eventA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &eventB)
+		log = fmt.Sprintf("%v\n%v", eventA, eventB)
+
+	default:
+		panic(fmt.Sprintf("invalid key prefix %X", kvA.Key[:1]))
+
+	}
+	return log
+}
+
+func decodeStakingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
+	switch {
+	case bytes.Equal(kvA.Key[:1], staking.PoolKey):
+		var feePoolA, feePoolB staking.Pool
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &feePoolA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &feePoolB)
+		log = fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
+
+	case bytes.Equal(kvA.Key[:1], staking.LastTotalPowerKey):
+		var powerA, powerB sdk.Int
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &powerA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &powerB)
+		log = fmt.Sprintf("%v\n%v", powerA, powerB)
+
+	case bytes.Equal(kvA.Key[:1], staking.ValidatorsKey):
+		var validatorA, validatorB staking.Validator
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &validatorA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &validatorB)
+		log = fmt.Sprintf("%v\n%v", validatorA, validatorB)
+
+	case bytes.Equal(kvA.Key[:1], staking.LastValidatorPowerKey),
+		bytes.Equal(kvA.Key[:1], staking.ValidatorsByConsAddrKey),
+		bytes.Equal(kvA.Key[:1], staking.ValidatorsByPowerIndexKey):
+		var valAddrA, valAddrB sdk.ValAddress
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &valAddrA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &valAddrB)
+		log = fmt.Sprintf("%v\n%v", valAddrA, valAddrB)
+
+	case bytes.Equal(kvA.Key[:1], staking.DelegationKey):
+		var delegationA, delegationB staking.Delegation
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &delegationA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &delegationB)
+		log = fmt.Sprintf("%v\n%v", delegationA, delegationB)
+
+	case bytes.Equal(kvA.Key[:1], staking.UnbondingDelegationKey),
+		bytes.Equal(kvA.Key[:1], staking.UnbondingDelegationByValIndexKey):
+		var ubdA, ubdB staking.UnbondingDelegation
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &ubdA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &ubdB)
+		log = fmt.Sprintf("%v\n%v", ubdA, ubdB)
+
+	case bytes.Equal(kvA.Key[:1], staking.RedelegationKey),
+		bytes.Equal(kvA.Key[:1], staking.RedelegationByValSrcIndexKey):
+		var redA, redB staking.Redelegation
+		cdcA.MustUnmarshalBinaryBare(kvA.Value, &redA)
+		cdcB.MustUnmarshalBinaryBare(kvB.Value, &redB)
+		log = fmt.Sprintf("%v\n%v", redA, redB)
+
 	default:
 		panic(fmt.Sprintf("invalid key prefix %X", kvA.Key[:1]))
 
@@ -129,6 +208,7 @@ func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 		cdcA.MustUnmarshalBinaryBare(kvA.Value, &voteA)
 		cdcB.MustUnmarshalBinaryBare(kvB.Value, &voteB)
 		log = fmt.Sprintf("%v\n%v", voteA, voteB)
+
 	default:
 		panic(fmt.Sprintf("invalid key prefix %X", kvA.Key[:1]))
 

@@ -167,8 +167,8 @@ github.com/tendermint/go-amino v0.15.0 h1:TC4e66P59W7ML9+bxio17CPKnxW3nKIRAYsknt
 github.com/tendermint/go-amino v0.15.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tendermint/iavl v0.12.2 h1:Ls5p5VINCM1HRT9g5Vvs2zmDOCU/CCIvIHzd/pZ8P0E=
 github.com/tendermint/iavl v0.12.2/go.mod h1:EoKMMv++tDOL5qKKVnoIqtVPshRrEPeJ0WsgDOLAauM=
-github.com/tendermint/tendermint v0.32.0-dev0 h1:/LGvt1VyRwM9IY1MuHlRM+/uP6i+TjYTczY6o/0/EEs=
-github.com/tendermint/tendermint v0.32.0-dev0/go.mod h1:gmUQxIhqaKyt51CkAIadahUVDVwQpFMKPJT64Q1qtuA=
+github.com/tendermint/tendermint v0.32.0-dev1 h1:WuZJVtfehwKITTltI1r3u0NHDN5dj0CuuARDsyJhs8o=
+github.com/tendermint/tendermint v0.32.0-dev1/go.mod h1:gmUQxIhqaKyt51CkAIadahUVDVwQpFMKPJT64Q1qtuA=
 github.com/zondax/hid v0.9.0 h1:eiT3P6vNxAEVxXMw66eZUAAnU2zD33JBkfG/EnfAKl8=
 github.com/zondax/hid v0.9.0/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 go.etcd.io/bbolt v1.3.3 h1:MUGmc65QhB3pIlaQ5bB4LwqSj6GIonVJXpZiaKNyaKk=

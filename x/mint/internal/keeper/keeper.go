@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Keeper of the mint store
@@ -23,6 +22,11 @@ func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper,
 ) Keeper {
+
+	// ensure mint module account is set
+	if addr := k.supplyKeeper.GetModuleAddress(types.ModuleName); addr != nil {
+		panic("the mint module account has not been set")
+	}
 
 	return Keeper{
 		cdc:          cdc,
@@ -65,13 +69,6 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
-}
-
-//______________________________________________________________________
-
-// GetMintAccount returns the mint ModuleAccount
-func (k Keeper) GetMintAccount(ctx sdk.Context) supply.ModuleAccount {
-	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
 }
 
 //______________________________________________________________________

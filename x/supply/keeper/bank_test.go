@@ -28,6 +28,15 @@ var (
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
+func getCoinsByName(ctx sdk.Context, k Keeper, moduleName string) sdk.Coins {
+	addr := k.GetModuleAddress(moduleName)
+	macc := k.ak.GetAccount(ctx, moduleAddress)
+	if macc == nil {
+		return sdk.Coins(nil)
+	}
+	return macc.GetCoins()
+}
+
 func TestSendCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, ak, keeper := createTestInput(t, false, initialPower, nAccs)
@@ -55,18 +64,18 @@ func TestSendCoins(t *testing.T) {
 
 	err = keeper.SendCoinsFromModuleToModule(ctx, foo, bar, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, foo))
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, bar))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, foo))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, bar))
 
 	err = keeper.SendCoinsFromModuleToAccount(ctx, bar, baseAcc.GetAddress(), initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, bar))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, bar))
 	require.Equal(t, initCoins, keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 
 	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), foo, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, foo))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, foo))
 }
 
 func TestMintCoins(t *testing.T) {
@@ -83,7 +92,7 @@ func TestMintCoins(t *testing.T) {
 
 	err = keeper.MintCoins(ctx, minter, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, minter))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, minter))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, foo, initCoins) })
@@ -109,6 +118,6 @@ func TestBurnCoins(t *testing.T) {
 
 	err = keeper.BurnCoins(ctx, foo, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, foo))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, foo))
 	require.Equal(t, initialSupply.Total.Sub(initCoins), keeper.GetSupply(ctx).Total)
 }

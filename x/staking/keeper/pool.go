@@ -8,13 +8,13 @@ import (
 
 // GetPools returns the bonded and unbonded tokens pool accounts
 func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccount) {
-	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.BondedTokensName)
+	bondedPool = k.supplyKeeper.GetModuleAccount(ctx, types.BondedTokensName)
 	return bondedPool
 }
 
 // GetPools returns the bonded and unbonded tokens pool accounts
 func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccount) {
-	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.NotBondedTokensName)
+	notBondedPool = k.supplyKeeper.GetModuleAccount(ctx, types.NotBondedTokensName)
 	return notBondedPool
 }
 

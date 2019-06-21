@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // StakingKeeper expected staking keeper (noalias)
@@ -58,8 +57,7 @@ type StakingHooks interface {
 
 // SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
-	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
-	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
+	GetModuleAddressByName(name string) sdk.AccAddress
 
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error

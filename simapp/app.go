@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -143,10 +143,16 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 
+	// account permissions
+	holderAccs := []string{auth.FeeCollectorName, distr.ModuleName}
+	minterAccs := []string{mint.ModuleName}
+	burnerAccs := []string{staking.BondedTokensName, staking.NotBondedTokensName, gov.ModuleName}
+
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, app.keyAccount, authSubspace, auth.ProtoBaseAccount)
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper, bankSubspace, bank.DefaultCodespace)
-	app.supplyKeeper = supply.NewKeeper(app.cdc, app.keySupply, app.accountKeeper, app.bankKeeper, supply.DefaultCodespace)
+	app.supplyKeeper = supply.NewKeeper(app.cdc, app.keySupply, app.accountKeeper,
+		app.bankKeeper, supply.DefaultCodespace, holderAccs, minterAccs, burnerAccs)
 	stakingKeeper := staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking,
 		app.bankKeeper, app.supplyKeeper, stakingSubspace, staking.DefaultCodespace)
 	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.supplyKeeper)
@@ -232,15 +238,6 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-
-	// init all module accounts
-	feeCollectorAcc := supply.InitNewModuleHolderAccount(ctx, auth.FeeCollectorName, app.accountKeeper)
-	bondedPool := supply.InitNewModuleBurnerAccount(ctx, staking.BondedTokensName, app.accountKeeper)
-	notBondedPool := supply.InitNewModuleBurnerAccount(ctx, staking.NotBondedTokensName, app.accountKeeper)
-	govAcc := supply.InitNewModuleBurnerAccount(ctx, gov.ModuleName, app.accountKeeper)
-	distrAcc := supply.InitNewModuleHolderAccount(ctx, distr.ModuleName, app.accountKeeper)
-	mintAcc := supply.InitNewModuleMinterAccount(ctx, mint.ModuleName, app.accountKeeper)
-
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, genesisState)

@@ -15,21 +15,23 @@ const (
 	StoreKey     = types.StoreKey
 	RouterKey    = types.RouterKey
 	QuerierRoute = types.QuerierRoute
+	Holder       = types.Holder
+	Minter       = types.Minter
+	Burner       = types.Burner
 )
 
 var (
 	// functions aliases
-	RegisterInvariants     = keeper.RegisterInvariants
-	AllInvariants          = keeper.AllInvariants
-	TotalSupply            = keeper.TotalSupply
-	NewKeeper              = keeper.NewKeeper
-	NewModuleHolderAccount = types.NewModuleHolderAccount
-	NewModuleMinterAccount = types.NewModuleMinterAccount
-	RegisterCodec          = types.RegisterCodec
-	NewGenesisState        = types.NewGenesisState
-	DefaultGenesisState    = types.DefaultGenesisState
-	NewSupply              = types.NewSupply
-	DefaultSupply          = types.DefaultSupply
+	RegisterInvariants  = keeper.RegisterInvariants
+	AllInvariants       = keeper.AllInvariants
+	TotalSupply         = keeper.TotalSupply
+	NewKeeper           = keeper.NewKeeper
+	NewModuleAccount    = types.NewModuleAccount
+	RegisterCodec       = types.RegisterCodec
+	NewGenesisState     = types.NewGenesisState
+	DefaultGenesisState = types.DefaultGenesisState
+	NewSupply           = types.NewSupply
+	DefaultSupply       = types.DefaultSupply
 
 	// variable aliases
 	DefaultCodespace = keeper.DefaultCodespace
@@ -37,10 +39,11 @@ var (
 )
 
 type (
-	Keeper              = keeper.Keeper
-	ModuleAccount       = types.ModuleAccount
-	ModuleHolderAccount = types.ModuleHolderAccount
-	ModuleMinterAccount = types.ModuleMinterAccount
-	GenesisState        = types.GenesisState
-	Supply              = types.Supply
+	Keeper         = keeper.Keeper
+	ModuleAccountI = types.ModuleAccountI
+	ModuleAccount  = types.ModuleAccount
+	AccountKeeper  = types.AccountKeeper
+	BankKeeper     = types.BankKeeper
+	GenesisState   = types.GenesisState
+	Supply         = types.Supply
 )

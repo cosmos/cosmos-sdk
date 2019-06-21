@@ -18,5 +18,5 @@ func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
 
 // GetDistributionAccount returns the distribution ModuleAccount
 func (k Keeper) GetDistributionAccount(ctx sdk.Context) supply.ModuleAccount {
-	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
+	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

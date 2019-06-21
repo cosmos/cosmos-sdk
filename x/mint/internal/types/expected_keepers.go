@@ -2,7 +2,6 @@ package types // noalias
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // StakingKeeper defines the expected staking keeper
@@ -13,8 +12,7 @@ type StakingKeeper interface {
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
-	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
+	GetModuleAddressByName(name string) sdk.AccAddress
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error

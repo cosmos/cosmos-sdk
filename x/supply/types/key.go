@@ -13,3 +13,10 @@ const (
 	// QuerierRoute is the querier route for supply
 	QuerierRoute = ModuleName
 )
+
+// permissions
+const (
+	Holder = "holder"
+	Minter = "minter"
+	Burner = "burner"
+)

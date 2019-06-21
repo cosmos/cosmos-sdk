@@ -25,16 +25,9 @@ type GenesisAccount struct {
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 
 	// module account fields
-	ModuleName string `json:"module_name"` // name of the module account
-	ModuleKind string `json:"module_kind"` // kind of module
+	ModuleName       string `json:"module_name"`       // name of the module account
+	ModulePermission string `json:"module_permission"` // permission of module account
 }
-
-// module kinds
-const (
-	HolderModule = "holder"
-	BurnerModule = "burner"
-	MinterModule = "minter"
-)
 
 // Validate checks for errors on the vesting and module account parameters
 func (ga GenesisAccount) Validate() error {
@@ -58,7 +51,7 @@ func (ga GenesisAccount) Validate() error {
 // NewGenesisAccountRaw creates a new GenesisAccount object
 func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 	vestingAmount sdk.Coins, vestingStartTime, vestingEndTime int64,
-	module string) GenesisAccount {
+	module, permission string) GenesisAccount {
 
 	return GenesisAccount{
 		Address:          address,
@@ -71,6 +64,7 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 		StartTime:        vestingStartTime,
 		EndTime:          vestingEndTime,
 		ModuleName:       module,
+		ModulePermission: permission,
 	}
 }
 
@@ -104,15 +98,9 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 		gacc.DelegatedVesting = acc.GetDelegatedVesting()
 		gacc.StartTime = acc.GetStartTime()
 		gacc.EndTime = acc.GetEndTime()
-	case supply.ModuleHolderAccount:
+	case supply.ModuleAccountI:
 		gacc.ModuleName = acc.Name()
-		gacc.ModuleKind = HolderModule
-	case supply.ModuleBurnerAccount:
-		gacc.ModuleName = acc.Name()
-		gacc.ModuleKind = BurnerModule
-	case supply.ModuleMinterAccount:
-		gacc.ModuleName = acc.Name()
-		gacc.ModuleKind = MinterModule
+		gacc.ModulePermission = acc.Permission()
 	}
 
 	return gacc, nil
@@ -141,16 +129,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		switch ga.ModuleKind {
-		case HolderModule:
-			return supply.NewModuleHolderAccount(ga.ModuleName)
-		case BurnerModule:
-			return supply.NewModuleBurnerAccount(ga.ModuleName)
-		case MinterModule:
-			return supply.NewModuleMinterAccount(ga.ModuleName)
-		default:
-			panic("unknown module kind")
-		}
+		return supply.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
 	}
 
 	return bacc

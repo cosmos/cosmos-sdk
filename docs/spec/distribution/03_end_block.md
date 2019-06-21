@@ -4,7 +4,7 @@ At each `EndBlock`, the fees received are transfered to the distribution `Module
 
 The amount of proposer reward is calculated from pre-commits Tendermint messages in order to incentivize validators to wait and include additional pre-commits in the block. All provision rewards are added to a provision reward pool which validator holds individually (`ValidatorDistribution.ProvisionsRewardPool`).
 
-```golang
+```go
 func AllocateTokens(feesCollected sdk.Coins, feePool FeePool, proposer ValidatorDistribution, 
               sumPowerPrecommitValidators, totalBondedTokens, communityTax, 
               proposerCommissionRate sdk.Dec)

@@ -12,31 +12,28 @@ The total `Supply` of the network is equal to the sum of all coins from the `Acc
 
 To keep track of the `Supply`, this module introduces a new type of `Account` used by other modules to control the flow of coins that come into and out of each of their modules. This design replaces the pools of coins that were stored on each of the modules, such as the `FeeCollectorKeeper` and the  staking `Pool`. The resoning of having this new `Account` type is to calculate the total supply without having to access each of the modules' pools of coins (previously stored in the `Store`), thus reducing the dependencies.
 
-A `ModuleAccount` extends the `BaseAccount` functionallity by providing a root `Name` that is used to create the `ModuleAccount` address based on the hash of the `Name`:
-
-```go
-moduleAddress = AccAddress(AddressHash([]byte(name)))
-```
-
 The `ModuleAccount` interface is defined as follows:
 
 ```go
 type ModuleAccount interface {
-  auth.Account   // same methods as the Account interface
-  Name() string  // module's or pool's name; used to obtain the address  
+  auth.Account            // same methods as the Account interface
+  GetName() string        // name of the module; used to obtain the address
+  GetPermission() string  // permission of module account (minter/burner/holder)
 }
 ```
 
-The supply `Keeper` also introduces new wrapper functions for the `AccountKeeper` and the bank `Keeper` to be able to:
+The supply `Keeper` also introduces new wrapper functions for the `AccountKeeper` and the bank `Keeper` that are related to the `ModuleAccount`s in order to be able to:
 
 - Get and set `ModuleAccount`s by providing the `Name`.
 - Send coins from and to other `ModuleAccount`s or standard `Account`s (`BaseAccount` or `VestingAccount`) by passing only the `Name`.
-- `Mint` and `Burn` coins. These methods are restricted to the different `ModuleAccount` [types](./01_concepts#types).
+- `Mint` or `Burn` `Coins` for a `ModuleAccount` (restricted to its permissions).
 
-### Types
+### Permissions
 
-A `ModuleAccount` can be one of three types:
+Each `ModuleAccount` has a `Permission` that provides different object capabilities to perform certain actions. The avaliable permissions are:
 
-- `ModuleHolderAccount`: is allowed to only hold and transfer `Coins`.
-- `ModuleBurnerAccount`: allows for a module to burn a specific amount of `Coins`.
-- `ModuleMinterAccount`: allows for a module to mint a specific amount of `Coins`.
+- `Holder`: is allowed to only hold and transfer `Coins` to other accounts.
+- `Minter`: allows for a module to mint a specific amount of `Coins` as well as perform the `Holder` permissioned actions.
+- `Burner`: allows for a module to burn a specific amount of `Coins` as well as perform the `Holder` permissioned actions.
+
+Permissions need to be registered upon the creation of the supply `Keeper` so that every time a `ModuleAccount` calls the `Burn` or `Mint` functions, the `Keeper` can lookup the permission to that specific account and perform or not the action.

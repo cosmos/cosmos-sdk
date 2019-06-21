@@ -6,7 +6,7 @@ In this section we describe the processing of the staking messages and the corre
 
 A validator is created using the `MsgCreateValidator` message.
 
-```golang
+```go
 type MsgCreateValidator struct {
     Description    Description
     Commission     Commission
@@ -40,7 +40,7 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditCandidacy`.  
 
-```golang
+```go
 type MsgEditCandidacy struct {
     Description     Description
     ValidatorAddr   sdk.ValAddress
@@ -63,7 +63,7 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-```golang
+```go
 type MsgDelegate struct {
   DelegatorAddr sdk.AccAddress
   ValidatorAddr sdk.ValAddress
@@ -86,7 +86,7 @@ exist than it is created as part of this message otherwise the existing
 The begin unbonding message allows delegators to undelegate their tokens from
 validator.
 
-```golang
+```go
 type MsgBeginUnbonding struct {
   DelegatorAddr sdk.AccAddress
   ValidatorAddr sdk.ValAddress
@@ -121,7 +121,7 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-```golang
+```go
 type MsgBeginRedelegate struct {
   DelegatorAddr    sdk.AccAddress
   ValidatorSrcAddr sdk.ValAddress

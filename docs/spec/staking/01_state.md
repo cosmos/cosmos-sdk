@@ -13,7 +13,7 @@ and defines overall functioning of the staking module.
 
 - Params: `Paramsspace("staking") -> amino(params)`
 
-```golang
+```go
 type Params struct {
     UnbondingTime time.Duration // time duration of unbonding
     MaxValidators uint16        // maximum number of validators
@@ -58,7 +58,7 @@ is updated during the validator set update process which takes place in [`EndBlo
 
 Each validator's state is stored in a `Validator` struct:
 
-```golang
+```go
 type Validator struct {
     OperatorAddress         sdk.ValAddress  // address of the validator's operator; bech encoded in JSON
     ConsPubKey              crypto.PubKey   // the consensus public key of the validator; bech encoded in JSON
@@ -104,7 +104,7 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
-```golang
+```go
 type Delegation struct {
     DelegatorAddr sdk.AccAddress
     ValidatorAddr sdk.ValAddress
@@ -132,7 +132,7 @@ slashed.
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
-```golang
+```go
 type UnbondingDelegation struct {
     DelegatorAddr sdk.AccAddress             // delegator
     ValidatorAddr sdk.ValAddress             // validator unbonding from operator addr
@@ -173,7 +173,7 @@ with a destination to a validator (let's call it `Validator X`)
 - and, the (re)delegator is attempting to create a _new_ redelegation
 where the source validator for this new redelegation is `Validator-X`.
 
-```golang
+```go
 type Redelegation struct {
     DelegatorAddr    sdk.AccAddress      // delegator
     ValidatorSrcAddr sdk.ValAddress      // validator redelegation source operator addr
@@ -210,7 +210,7 @@ delegations queue is kept.
 
 - UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
-```golang
+```go
 type DVPair struct {
     DelegatorAddr sdk.AccAddress
     ValidatorAddr sdk.ValAddress
@@ -224,7 +224,7 @@ kept.
 
 - UnbondingDelegation: `0x42 | format(time) -> []DVVTriplet`
 
-```golang
+```go
 type DVVTriplet struct {
     DelegatorAddr    sdk.AccAddress
     ValidatorSrcAddr sdk.ValAddress

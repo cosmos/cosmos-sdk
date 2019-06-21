@@ -15,20 +15,21 @@ const (
 	CodeInvalidInputsOutputs = types.CodeInvalidInputsOutputs
 	ModuleName               = types.ModuleName
 	RouterKey                = types.RouterKey
+	QuerierRoute             = types.QuerierRoute
 	DefaultParamspace        = types.DefaultParamspace
 )
 
 var (
 	// functions aliases
-	RegisterCodec                   = types.RegisterCodec
-	ErrNoInputs                     = types.ErrNoInputs
-	ErrNoOutputs                    = types.ErrNoOutputs
-	ErrInputOutputMismatch          = types.ErrInputOutputMismatch
-	ErrSendDisabled                 = types.ErrSendDisabled
-	NewBaseKeeper                   = keeper.NewBaseKeeper
-	NewInput                        = types.NewInput
-	NewOutput                       = types.NewOutput
-	ParamKeyTable                   = types.ParamKeyTable
+	RegisterCodec          = types.RegisterCodec
+	ErrNoInputs            = types.ErrNoInputs
+	ErrNoOutputs           = types.ErrNoOutputs
+	ErrInputOutputMismatch = types.ErrInputOutputMismatch
+	ErrSendDisabled        = types.ErrSendDisabled
+	NewBaseKeeper          = keeper.NewBaseKeeper
+	NewInput               = types.NewInput
+	NewOutput              = types.NewOutput
+	ParamKeyTable          = types.ParamKeyTable
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc

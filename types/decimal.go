@@ -596,6 +596,9 @@ func (d *Dec) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// MarshalYAML returns Ythe AML representation.
+func (d Dec) MarshalYAML() (interface{}, error) { return d.String(), nil }
+
 //___________________________________________________________________________________
 // helpers
 

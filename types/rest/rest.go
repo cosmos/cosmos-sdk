@@ -224,10 +224,7 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 
 // PostProcessResponse performs post processing for a REST response.
 // If the height is greater than zero it will be injected into the body of
-// the response. All responses are decoded into the map and encoded again
-// using JSON standard library. This is to ensure all responses are ordered
-// alphabetically rather than by their positioning within their respective
-// structs. An internal server error is written to the response if the
+// the response.An internal server error is written to the response if the
 // height is negative or an encoding/decoding error occurs.
 func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}, height int64) {
 	var output []byte
@@ -255,25 +252,29 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 		}
 	}
 
-	m := make(map[string]interface{})
-	err := json.Unmarshal(output, &m)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
+	// inject the height into the response by:
+	// - decoding into a map
+	// - adding the height to the map
+	// - encoding using standard JSON library
 	if height > 0 {
-		m["height"] = height
-	}
+		m := make(map[string]interface{})
+		err := json.Unmarshal(output, &m)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	if cliCtx.Indent {
-		output, err = json.MarshalIndent(m, "", " ")
-	} else {
-		output, err = json.Marshal(m)
-	}
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+		m["height"] = height
+
+		if cliCtx.Indent {
+			output, err = json.MarshalIndent(m, "", " ")
+		} else {
+			output, err = json.Marshal(m)
+		}
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -79,7 +79,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -97,7 +97,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -115,13 +115,13 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute stri
 		}
 
 		bz := cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -179,7 +179,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 
 		// Prepare response
 		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -203,7 +203,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -221,7 +221,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, params)
+		rest.PostProcessResponse(w, cliCtx, params, cliCtx.Height)
 	}
 }
 
@@ -232,7 +232,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -244,7 +244,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, result)
+		rest.PostProcessResponse(w, cliCtx, result, height)
 	}
 }
 
@@ -262,13 +262,13 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 		}
 
 		bin := cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 

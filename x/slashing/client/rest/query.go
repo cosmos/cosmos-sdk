@@ -53,13 +53,13 @@ func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySigningInfo)
-		res, _, err := cliCtx.QueryWithData(route, bz)
+		res, height, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -85,13 +85,13 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySigningInfos)
-		res, _, err := cliCtx.QueryWithData(route, bz)
+		res, height, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -104,12 +104,12 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
 
-		res, _, err := cliCtx.QueryWithData(route, nil)
+		res, height, err := cliCtx.QueryWithData(route, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }

@@ -176,7 +176,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponse(w, cliCtx, output, 0)
 	}
 }
 
@@ -189,6 +189,6 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponse(w, cliCtx, output, 0)
 	}
 }

@@ -43,7 +43,6 @@ const (
 	FlagFees               = flags.FlagFees
 	FlagGasPrices          = flags.FlagGasPrices
 	FlagBroadcastMode      = flags.FlagBroadcastMode
-	FlagPrintResponse      = flags.FlagPrintResponse
 	FlagDryRun             = flags.FlagDryRun
 	FlagGenerateOnly       = flags.FlagGenerateOnly
 	FlagIndentResponse     = flags.FlagIndentResponse
@@ -67,7 +66,6 @@ var (
 	// functions aliases
 	NewCLIContextWithFrom              = context.NewCLIContextWithFrom
 	NewCLIContext                      = context.NewCLIContext
-	GetAccountDecoder                  = context.GetAccountDecoder
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount
 	ErrVerifyCommit                    = context.ErrVerifyCommit

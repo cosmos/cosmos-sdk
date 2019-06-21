@@ -201,13 +201,13 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -240,13 +240,13 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -299,7 +299,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -324,7 +324,7 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -406,7 +406,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -488,7 +488,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -548,7 +548,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
 	}
 }
 
@@ -607,13 +607,13 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }
 
@@ -647,12 +647,12 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/tally", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponse(w, cliCtx, res, height)
 	}
 }

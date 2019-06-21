@@ -251,17 +251,12 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	accNum, err := cliCtx.GetAccountNumber(addr)
+	num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(addr)
 	if err != nil {
 		return txBldr, err
 	}
 
-	accSeq, err := cliCtx.GetAccountSequence(addr)
-	if err != nil {
-		return txBldr, err
-	}
-
-	return txBldr.WithAccountNumber(accNum).WithSequence(accSeq), nil
+	return txBldr.WithAccountNumber(num).WithSequence(seq), nil
 }
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
@@ -302,30 +297,28 @@ func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
 
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (authtypes.TxBuilder, error) {
-	if err := cliCtx.EnsureAccountExists(); err != nil {
+	from := cliCtx.GetFromAddress()
+
+	accGetter := authtypes.NewAccountRetriever(cliCtx)
+	if err := accGetter.EnsureExists(from); err != nil {
 		return txBldr, err
 	}
 
-	from := cliCtx.GetFromAddress()
-
+	txbldrAccNum, txbldrAccSeq := txBldr.AccountNumber(), txBldr.Sequence()
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.AccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(from)
+	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
+		num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(from)
 		if err != nil {
 			return txBldr, err
 		}
-		txBldr = txBldr.WithAccountNumber(accNum)
-	}
 
-	// TODO: (ref #1903) Allow for user supplied account sequence without
-	// automatically doing a manual lookup.
-	if txBldr.Sequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(from)
-		if err != nil {
-			return txBldr, err
+		if txbldrAccNum == 0 {
+			txBldr = txBldr.WithAccountNumber(num)
 		}
-		txBldr = txBldr.WithSequence(accSeq)
+		if txbldrAccSeq == 0 {
+			txBldr = txBldr.WithSequence(seq)
+		}
 	}
 
 	return txBldr, nil

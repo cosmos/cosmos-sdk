@@ -15,9 +15,7 @@ import (
 )
 
 // query accountREST Handler
-func QueryAccountRequestHandlerFn(
-	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
-) http.HandlerFunc {
+func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -34,70 +32,20 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, height, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
+		accGetter := types.NewAccountRetriever(cliCtx)
 		// the query will return empty account if there is no data
-		if len(res) == 0 {
-			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{})
+		if err := accGetter.EnsureExists(addr); err != nil {
+			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{}, cliCtx.Height)
 			return
 		}
 
-		// decode the value
-		account, err := decoder(res)
+		account, err := accGetter.GetAccount(addr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, account, height)
-	}
-}
-
-// query accountREST Handler
-func QueryBalancesRequestHandlerFn(
-	storeName string, decoder types.AccountDecoder, cliCtx context.CLIContext,
-) http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		vars := mux.Vars(r)
-		bech32addr := vars["address"]
-
-		addr, err := sdk.AccAddressFromBech32(bech32addr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		if !ok {
-			return
-		}
-
-		res, _, err := cliCtx.QueryStore(types.AddressStoreKey(addr), storeName)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		// the query will return empty if there is no data for this account
-		if len(res) == 0 {
-			rest.PostProcessResponse(w, cliCtx, sdk.Coins{})
-			return
-		}
-
-		// decode the value
-		account, err := decoder(res)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		rest.PostProcessResponse(w, cliCtx, account.GetCoins())
+		rest.PostProcessResponse(w, cliCtx, account, cliCtx.Height)
 	}
 }
 
@@ -124,7 +72,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 		}
 
 		if len(r.Form) == 0 {
-			rest.PostProcessResponse(w, cliCtx, txs)
+			rest.PostProcessResponse(w, cliCtx, txs, cliCtx.Height)
 			return
 		}
 
@@ -140,7 +88,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, searchResult)
+		rest.PostProcessResponse(w, cliCtx, searchResult, cliCtx.Height)
 	}
 }
 
@@ -170,6 +118,6 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponse(w, cliCtx, output, cliCtx.Height)
 	}
 }

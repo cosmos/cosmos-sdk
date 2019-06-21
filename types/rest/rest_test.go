@@ -185,9 +185,9 @@ func TestProcessPostResponse(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 
 	// check that zero height returns expected response
-	runPostProcessResponse(t, ctx, acc, jsonMap, 0, false)
+	runPostProcessResponse(t, ctx, acc, jsonNoHeight, 0, false)
 	// chcek zero height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentMap, 0, true)
+	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, 0, true)
 	// check that height returns expected response
 	runPostProcessResponse(t, ctx, acc, jsonWithHeight, height, false)
 	// check height with indent

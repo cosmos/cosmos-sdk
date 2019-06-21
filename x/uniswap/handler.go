@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // NewHandler routes the messages to the handlers
@@ -29,21 +28,21 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 	var caclulatedAmount sdk.Int
 
 	// check that deadline has not passed
-	if msg.ctx.BlockTime.After(msg.Deadline) {
-		return ErrInvalidDeadline(DefaultCodespace, "deadline has passed for MsgSwapOrder")
+	if ctx.BlockHeader().Time.After(msg.Deadline) {
+		return ErrInvalidDeadline(DefaultCodespace, "deadline has passed for MsgSwapOrder").Result()
 	}
 
 	if msg.IsBuyOrder {
-		calculatedAmount := k.GetInputAmount(ctx, msg.SwapDenom, msg.Amount)
+		calculatedAmount := getInputAmount(ctx, k, msg.Output.Amount, msg.Input.Denom, msg.Input.Denom)
 		// ensure the calculated amount is less than or equal to the amount
 		// the sender is willing to pay.
 		if !calculatedAmount.LTE(msg.Input.Amount) {
-			return types.ErrInvalidBound(DefaultCodespace, "maximum amount (%d) to be sold was exceeded (%d)", msg.Input.Amount, calculatedAmount).Result()
+			return ErrNotPositive(DefaultCodespace, fmt.Sprintf("maximum amount (%d) to be sold was exceeded (%d)", msg.Input.Amount, calculatedAmount)).Result()
 		}
 
 		coinSold := sdk.NewCoins(sdk.NewCoin(msg.Input.Denom, calculatedAmount))
-		if !s.bk.HasCoins(ctx, msg.Sender, coinSold) {
-			return ErrInsufficientAmount(DefaultCodespace, "sender account does not have sufficient funds to fulfill the swap order").Result()
+		if !k.bk.HasCoins(ctx, msg.Sender, coinSold) {
+			return sdk.ErrInsufficientCoins("sender account does not have sufficient funds to fulfill the swap order").Result()
 		}
 
 		err := k.sk.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, coinSold)
@@ -57,16 +56,17 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 		}
 
 	} else {
-		calculatedAmount := k.GetOutputAmount(ctx, msg.SwapDenom, msg.Amount)
+		calculatedAmount := getOutputAmount(ctx, k, msg.Input.Amount, msg.Input.Denom, msg.Output.Denom)
 		// ensure the calculated amount is greater than the minimum amount
 		// the sender is willing to buy.
 		if !calculatedAmount.GTE(msg.Output.Amount) {
-			return sdk.ErrInvalidBound(DefaultCodespace, "minimum amount (%d) to be sold was not met (%d)", msg.Output.Amount, calculatedAmount).Result()
+			// TODO: add custom error for these
+			return Err(DefaultCodespace, "minimum amount (%d) to be sold was not met (%d)", msg.Output.Amount, calculatedAmount).Result()
 		}
 
 		coinSold := sdk.NewCoins(msg.Input)
-		if !s.bk.HasCoins(ctx, msg.Sender, coinSold) {
-			return ErrInsifficientAmount(DefaultCodespace, "sender account does not have sufficient funds to fulfill the swap order").Result()
+		if !k.bk.HasCoins(ctx, msg.Sender, coinSold) {
+			return sdk.ErrInsufficientCoins("sender account does not have sufficient funds to fulfill the swap order").Result()
 		}
 
 		err := k.sk.SendCoinsFromAccountToModule(ctx, msg.Sender, ModuleName, sdk.NewCoins(msg.Input))
@@ -88,36 +88,31 @@ func HandleMsgSwapOrder(ctx sdk.Context, msg MsgSwapOrder, k Keeper) sdk.Result 
 // If the reserve pool does not exist, it will be created.
 func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.Result {
 	// check that deadline has not passed
-	if msg.ctx.BlockTime.After(msg.Deadline) {
-		return ErrInvalidDeadline(DefaultCodespace, "deadline has passed for MsgAddLiquidity")
+	if ctx.BlockHeader().Time.After(msg.Deadline) {
+		return ErrInvalidDeadline(DefaultCodespace, "deadline has passed for MsgAddLiquidity").Result()
 	}
 
 	// create reserve pool if it does not exist
-	coinLiquidity := k.GetReservePool(ctx, msg.Deposit.Denom)
-	if err != nil {
-		k.CreateReservePool(ctx, msg.Denom)
+	var coinLiquidity sdk.Int
+	if !k.HasReservePool(ctx, msg.Deposit.Denom) {
+		k.CreateReservePool(ctx, msg.Deposit.Denom)
+	} else {
+		coinLiquidity = k.GetReservePool(ctx, msg.Deposit.Denom)
 	}
 
-	nativeLiqudity, err := k.GetReservePool(ctx, NativeAsset)
-	if err != nil {
-		panic("error retrieving native asset total liquidity")
-	}
-
-	totalUNI, err := k.GetTotalUNI(ctx)
-	if err != nil {
-		panic("error retrieving total UNI")
-	}
+	nativeLiquidity := k.GetReservePool(ctx, k.GetNativeDenom(ctx))
+	totalUNI := k.GetTotalUNI(ctx)
 
 	// calculate amount of UNI to be minted for sender
 	// and coin amount to be deposited
 	MintedUNI := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
 	coinAmountDeposited := (totalUNI.Mul(msg.DepositAmount)).Quo(nativeLiquidity)
-	nativeCoinDeposited := sdk.NewCoin(NativeAsset, msg.DepositAmount)
+	nativeCoinDeposited := sdk.NewCoin(k.GetNativeDenom(ctx), msg.DepositAmount)
 	coinDeposited := sdk.NewCoin(msg.Deposit.Denom, coinAmountDeposited)
 
 	coins := sdk.NewCoins(nativeCoinDeposited, coinDeposited)
-	if !s.bk.HasCoins(ctx, msg.Sender, coins) {
-		return ErrInsufficientCoins(DefaultCodespace, "sender does not have sufficient funds to add liquidity").Result()
+	if !k.bk.HasCoins(ctx, msg.Sender, coins) {
+		return sdk.ErrInsufficientCoins("sender does not have sufficient funds to add liquidity").Result()
 	}
 
 	// transfer deposited liquidity into uniswaps ModuleAccount
@@ -141,7 +136,7 @@ func HandleMsgAddLiquidity(ctx sdk.Context, msg MsgAddLiquidity, k Keeper) sdk.R
 // HandleMsgRemoveLiquidity handler for MsgRemoveLiquidity
 func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper) sdk.Result {
 	// check that deadline has not passed
-	if msg.ctx.BlockTime.After(msg.Deadline) {
+	if ctx.BlockHeader().Time.After(msg.Deadline) {
 		return ErrInvalidDeadline(DefaultCodespace, "deadline has passed for MsgRemoveLiquidity")
 	}
 
@@ -169,7 +164,7 @@ func HandleMsgRemoveLiquidity(ctx sdk.Context, msg MsgRemoveLiquidity, k Keeper)
 	exchangeCoin = sdk.NewCoin(msg.Withdraw.Denom, coinWithdrawn)
 
 	// transfer withdrawn liquidity from uniswaps ModuleAccount to sender's account
-	err := k.sk.SendCoinsFromModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
+	err = k.sk.SendCoinsFromModuleToAccount(ctx, msg.Sender, ModuleName, sdk.NewCoins(nativeCoin, coinDeposited))
 	if err != nil {
 		return err.Result()
 	}

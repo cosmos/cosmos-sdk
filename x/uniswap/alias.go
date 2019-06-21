@@ -7,12 +7,17 @@ import (
 
 type (
 	Keeper             = keeper.Keeper
-	NativeAsset        = types.NativeAsset
 	MsgSwapOrder       = types.MsgSwapOrder
 	MsgAddLiquidity    = types.MsgAddLiquidity
 	MsgRemoveLiquidity = types.MsgRemoveLiquidity
 )
 
+var (
+	ErrInvalidDeadline = types.ErrInvalidDeadline
+	ErrNotPositive     = types.ErrNotPositive
+)
+
 const (
-	ModuleName = types.ModuleName
+	DefaultCodespace = types.DefaultCodespace
+	ModuleName       = types.ModuleName
 )

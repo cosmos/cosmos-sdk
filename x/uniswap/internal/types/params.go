@@ -25,16 +25,19 @@ type Params struct {
 }
 
 func NewParams(nativeDenom string, fee sdk.Dec) Params {
-
 	return Params{
 		NativeDenom: nativeDenom,
 		Fee:         fee,
 	}
 }
 
-// Implements params.ParamSet.
-func (p *Params) ParamSetPair() params.ParamSetPairs {
+// ParamKeyTable returns the KeyTable for uniswap module
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
+}
 
+// Implements params.ParamSet.
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		{KeyNativeDenom, &p.NativeDenom},
 		{KeyFee, &p.Fee},

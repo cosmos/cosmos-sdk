@@ -1,5 +1,6 @@
 package keeper
 
+/*
 import (
 	"testing"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
 	//supply "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
+
+// TODO: uncomment when supply is merged into master
 
 // create a codec used only for testing
 func makeTestCodec() *codec.Codec {
@@ -62,7 +65,7 @@ func createTestInput(t *testing.T, amt sdk.Int, nAccs int64) (sdk.Context, Keepe
 	accs := createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
 	sk := supply.NewKeeper(cdc, keySupply, ak, bk, suppy.DefaultCodespace)
-	keeper := NewKeeper(cdc, keyUniswap, bk, sk, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyUniswap, bk, sk, pk.Subspace(types.DefaultParamspace))
 	params := types.DefaultParams()
 	keeper.SetFeeParam(ctx, params.Fee)
 
@@ -82,3 +85,4 @@ func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *au
 	}
 	return
 }
+*/

@@ -110,6 +110,13 @@ func (keeper Keeper) GetReservePool(ctx sdk.Context, denom string) (balance sdk.
 	return
 }
 
+// HasReservePool returns true if the reserve pool exists
+func (keeper Keeper) HasReservePool(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(GetReservePoolKey(denom))
+	return bz != nil
+}
+
 // GetNativeDenom returns the native denomination for this module from the global param store
 func (keeper Keeper) GetNativeDenom(ctx sdk.Context) (nativeDenom string) {
 	keeper.paramSpace.Get(ctx, types.KeyNativeDenom, &nativeDenom)

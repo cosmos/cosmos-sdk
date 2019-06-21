@@ -161,18 +161,17 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "ERROR: Couldn't parse block height. Assumed format is '/validatorsets/{height}'.")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "couldn't parse block height. Assumed format is '/validatorsets/{height}'.")
 			return
 		}
 
 		chainHeight, err := GetChainHeight(cliCtx)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest,
-				"ERROR: Could not receive chain height.")
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, "could not receive chain height.")
 			return
 		}
 		if height > chainHeight {
-			rest.WriteErrorResponse(w, http.StatusNotFound, "ERROR: Requested block height is bigger then the chain length.")
+			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length.")
 			return
 		}
 

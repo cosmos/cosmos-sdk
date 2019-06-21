@@ -142,9 +142,8 @@ type (
 	// StringAttribute defines en Event object wrapper where all the attributes
 	// contain key/value pairs that are strings instead of raw bytes.
 	StringEvent struct {
-		Event
-		// override attributes
-		Attributes []Attribute `json:"attributes,omitempty"` // nolint: govet
+		Type       string      `json:"type,omitempty"`
+		Attributes []Attribute `json:"attributes,omitempty"`
 	}
 
 	// StringAttributes defines a slice of StringEvents objects.

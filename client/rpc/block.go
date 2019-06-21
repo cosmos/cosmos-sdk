@@ -123,7 +123,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		chainHeight, err := GetChainHeight(cliCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,
-				"ERROR: Could not recieve chain height. ")
+				"ERROR: Could not receive chain height. ")
 			return
 		}
 		if height > chainHeight {

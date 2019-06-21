@@ -38,5 +38,5 @@ The supply `Keeper` also introduces new wrapper functions for the `AccountKeeper
 A `ModuleAccount` can be one of three types:
 
 - `ModuleHolderAccount`: is allowed to only hold and transfer `Coins`.
-- `ModuleBurnerAccount`: allows for a module to call the `Burn` function to burn a specific amount of `Coins`.
-- `ModuleMinterAccount`: allows for a module to call the `Mint` function to mint a specific amount of `Coins`.
+- `ModuleBurnerAccount`: allows for a module to burn a specific amount of `Coins`.
+- `ModuleMinterAccount`: allows for a module to mint a specific amount of `Coins`.

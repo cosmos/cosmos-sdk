@@ -23,6 +23,7 @@ set in the governance module.
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueue`
+* Transfer `Coins` from the `InitialDeposit` to the governance `ModuleAccount`
 
 A `TxGovSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -88,6 +89,7 @@ type TxGovDeposit struct {
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueueEnd`
+* Transfer `Coins` from the `Deposit` to the governance `ModuleAccount`
 
 A `TxGovDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.

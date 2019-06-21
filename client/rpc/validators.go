@@ -166,6 +166,11 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		chainHeight, err := GetChainHeight(cliCtx)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest,
+				"ERROR: Could not recieve chain height.")
+			return
+		}
 		if height > chainHeight {
 			rest.WriteErrorResponse(w, http.StatusNotFound, "ERROR: Requested block height is bigger then the chain length.")
 			return

@@ -223,14 +223,14 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 }
 
 // PostProcessResponse performs post processing for a REST response.
-// If the height is greater than zero it will be injected into the body of
-// the response.An internal server error is written to the response if the
-// height is negative or an encoding/decoding error occurs.
+// If the height is greater than zero it will be injected into the body
+// of the response. An internal server error is written to the response
+// if the height is negative or an encoding/decoding error occurs.
 func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}, height int64) {
 	var output []byte
 
 	if height < 0 {
-		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height").Error())
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height used in query").Error())
 		return
 	}
 

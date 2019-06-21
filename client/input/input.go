@@ -87,23 +87,21 @@ func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error)
 // "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
 // If the input is not recognized, it returns false and a nil error.
 func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
-	for {
-		if inputIsTty() {
-			fmt.Print(fmt.Sprintf("%s [y/N]: ", prompt))
-		}
-
-		response, err := readLineFromBuf(buf)
-		if err != nil {
-			return false, err
-		}
-
-		response = strings.ToLower(strings.TrimSpace(response))
-		if response[0] == 'y' {
-			return true, nil
-		} else {
-			return false, nil
-		}
+	if inputIsTty() {
+		fmt.Print(fmt.Sprintf("%s [y/N]: ", prompt))
 	}
+
+	response, err := readLineFromBuf(buf)
+	if err != nil {
+		return false, err
+	}
+
+	response = strings.ToLower(strings.TrimSpace(response))
+	if response[0] == 'y' {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // GetString simply returns the trimmed string output of a given reader.

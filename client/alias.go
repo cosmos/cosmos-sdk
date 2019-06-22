@@ -103,8 +103,6 @@ var (
 	GetValidators                      = rpc.GetValidators
 	ValidatorSetRequestHandlerFn       = rpc.ValidatorSetRequestHandlerFn
 	LatestValidatorSetRequestHandlerFn = rpc.LatestValidatorSetRequestHandlerFn
-	BufferStdin                        = input.BufferStdin
-	OverrideStdin                      = input.OverrideStdin
 	GetPassword                        = input.GetPassword
 	GetCheckPassword                   = input.GetCheckPassword
 	GetConfirmation                    = input.GetConfirmation

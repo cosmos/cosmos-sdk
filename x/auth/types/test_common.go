@@ -35,7 +35,7 @@ func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "", nil)
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -45,14 +45,14 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", nil)
 	return tx
 }
 
 func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo, nil)
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -62,7 +62,7 @@ func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, memo)
+	tx := NewStdTx(msgs, fee, sigs, memo, nil)
 	return tx
 }
 
@@ -77,6 +77,6 @@ func NewTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []ui
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, memo)
+	tx := NewStdTx(msgs, fee, sigs, memo, nil)
 	return tx
 }

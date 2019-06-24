@@ -53,7 +53,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 		return
 	}
 
-	output, err := cliCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	output, err := cliCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo, stdMsg.FeeAccount))
 	if err != nil {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

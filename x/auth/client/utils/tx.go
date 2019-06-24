@@ -67,6 +67,17 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		return nil
 	}
 
+	// support delegated fee payments
+	feeAccount := viper.GetString(flags.FlagFeeAccount)
+	if len(feeAccount) != 0 {
+		feeAcccountAddr, err := sdk.AccAddressFromBech32(feeAccount)
+		if err != nil {
+			return err
+		}
+        txBldr.WithFeeAccount(feeAcccountAddr)
+	}
+
+
 	if !cliCtx.SkipConfirm {
 		stdSignMsg, err := txBldr.BuildSignMsg(msgs)
 		if err != nil {
@@ -344,7 +355,7 @@ func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		return stdTx, nil
 	}
 
-	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
+	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo, stdSignMsg.FeeAccount), nil
 }
 
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {

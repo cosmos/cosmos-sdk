@@ -24,7 +24,7 @@ func TestStdTx(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", nil)
 	require.Equal(t, msgs, tx.GetMsgs())
 	require.Equal(t, sigs, tx.GetSignatures())
 
@@ -48,11 +48,11 @@ func TestStdSignBytes(t *testing.T) {
 	}{
 		{
 			args{"1234", 3, 6, defaultFee, []sdk.Msg{sdk.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"50000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
+			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"50000\"},\"fee_account\":null,\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
 		},
 	}
 	for i, tc := range tests {
-		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.fee, tc.args.msgs, tc.args.memo))
+		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.fee, tc.args.msgs, tc.args.memo, nil))
 		require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 	}
 }
@@ -123,7 +123,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", nil)
 
 	cdcBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 

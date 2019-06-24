@@ -32,10 +32,16 @@ func init() {
 // and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
 
+type FeeDelegationHandler interface {
+	// AllowDelegatedFees checks if the grantee can use the granter's account to spend the specified fees, updating
+	// any fee allowance in accordance with the provided fees
+	AllowDelegatedFees(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, fee sdk.Coins) bool
+}
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, feeDelegationHandler FeeDelegationHandler, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -110,15 +116,29 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 		signerAccs := make([]Account, len(signerAddrs))
 		isGenesis := ctx.BlockHeight() == 0
 
-		// fetch first signer, who's going to pay the fees
-		signerAccs[0], res = GetSignerAcc(newCtx, ak, signerAddrs[0])
+		feeAddr := stdTx.FeeAccount
+		if len(feeAddr) != 0 {
+			// check if fees can be delegated
+			if feeDelegationHandler == nil {
+                return newCtx, sdk.ErrUnknownRequest("delegated fees aren't supported").Result(), true
+			}
+			if !feeDelegationHandler.AllowDelegatedFees(ctx, signerAddrs[0], feeAddr, stdTx.Fee.Amount) {
+				return newCtx, res, true
+			}
+		} else {
+			// use first signer, who's going to pay the fees
+			feeAddr = signerAddrs[0]
+		}
+
+		// pay fees with the fee account
+		feeAccount, res := GetSignerAcc(newCtx, ak, feeAddr)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
 
 		// deduct the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], stdTx.Fee.Amount)
+			res = DeductFees(supplyKeeper, newCtx, feeAccount, stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -127,13 +147,21 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			signerAccs[0] = ak.GetAccount(newCtx, signerAccs[0].GetAddress())
 		}
 
+		if len(stdTx.FeeAccount) != 0 {
+			if err := feeAccount.SetSequence(feeAccount.GetSequence() + 1); err != nil {
+				panic(err)
+			}
+		}
+
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
 
 		for i := 0; i < len(stdSigs); i++ {
-			// skip the fee payer, account is cached and fees were deducted already
-			if i != 0 {
+			// use cached fee account if not using a delegated fee account
+			if i == 0 && len(stdTx.FeeAccount) == 0 {
+				signerAccs[0] = feeAccount
+			} else {
 				signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
 				if !res.IsOK() {
 					return newCtx, res, true
@@ -417,6 +445,6 @@ func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) []byte
 	}
 
 	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), stdTx.Fee, stdTx.Msgs, stdTx.Memo,
+		chainID, accNum, acc.GetSequence(), stdTx.Fee, stdTx.Msgs, stdTx.Memo, stdTx.FeeAccount,
 	)
 }

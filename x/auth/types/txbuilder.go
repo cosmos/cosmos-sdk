@@ -26,6 +26,7 @@ type TxBuilder struct {
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	feeAccount         sdk.AccAddress
 }
 
 // NewTxBuilder returns a new initialized TxBuilder.
@@ -104,6 +105,8 @@ func (bldr TxBuilder) Memo() string { return bldr.memo }
 // Fees returns the fees for the transaction
 func (bldr TxBuilder) Fees() sdk.Coins { return bldr.fees }
 
+func (bldr *TxBuilder) FeeAccount() sdk.AccAddress { return bldr.feeAccount; }
+
 // GasPrices returns the gas prices set for the transaction, if any.
 func (bldr TxBuilder) GasPrices() sdk.DecCoins { return bldr.gasPrices }
 
@@ -135,6 +138,11 @@ func (bldr TxBuilder) WithFees(fees string) TxBuilder {
 	bldr.fees = parsedFees
 	return bldr
 }
+
+func (bldr *TxBuilder) WithFeeAccount(addr sdk.AccAddress) {
+	bldr.feeAccount = addr
+}
+
 
 // WithGasPrices returns a copy of the context with updated gas prices.
 func (bldr TxBuilder) WithGasPrices(gasPrices string) TxBuilder {
@@ -203,6 +211,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 		Memo:          bldr.memo,
 		Msgs:          msgs,
 		Fee:           NewStdFee(bldr.gas, fees),
+		FeeAccount:    bldr.feeAccount,
 	}, nil
 }
 
@@ -214,7 +223,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo))
+	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo, bldr.feeAccount))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -238,7 +247,7 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 
 	// the ante handler will populate with a sentinel pubkey
 	sigs := []StdSignature{{}}
-	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
+	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo, bldr.feeAccount))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If append
@@ -255,6 +264,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 		Fee:           stdTx.Fee,
 		Msgs:          stdTx.GetMsgs(),
 		Memo:          stdTx.GetMemo(),
+		FeeAccount:    bldr.feeAccount,
 	})
 	if err != nil {
 		return
@@ -266,7 +276,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
-	signedStdTx = NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	signedStdTx = NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo(), bldr.feeAccount)
 	return
 }
 

@@ -43,7 +43,8 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -62,7 +63,8 @@ func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -81,6 +83,7 @@ func queryAnnualProvisionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

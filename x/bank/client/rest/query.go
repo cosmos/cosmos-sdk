@@ -43,12 +43,14 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
+
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			rest.PostProcessResponse(w, cliCtx, sdk.Coins{}, height)
+			rest.PostProcessResponse(w, cliCtx, sdk.Coins{})
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

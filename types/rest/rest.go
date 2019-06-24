@@ -226,11 +226,11 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 // If the height is greater than zero it will be injected into the body
 // of the response. An internal server error is written to the response
 // if the height is negative or an encoding/decoding error occurs.
-func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}, height int64) {
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
 	var output []byte
 
-	if height < 0 {
-		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height used in query").Error())
+	if cliCtx.Height < 0 {
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
 		return
 	}
 
@@ -256,7 +256,7 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 	// - decoding into a map
 	// - adding the height to the map
 	// - encoding using standard JSON library
-	if height > 0 {
+	if cliCtx.Height > 0 {
 		m := make(map[string]interface{})
 		err := json.Unmarshal(output, &m)
 		if err != nil {
@@ -264,7 +264,7 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 			return
 		}
 
-		m["height"] = height
+		m["height"] = cliCtx.Height
 
 		if cliCtx.Indent {
 			output, err = json.MarshalIndent(m, "", "  ")

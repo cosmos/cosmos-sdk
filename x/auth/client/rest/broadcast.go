@@ -48,6 +48,6 @@ func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, 0)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

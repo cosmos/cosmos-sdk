@@ -35,7 +35,7 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 		accGetter := types.NewAccountRetriever(cliCtx)
 		// the query will return empty account if there is no data
 		if err := accGetter.EnsureExists(addr); err != nil {
-			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{}, cliCtx.Height)
+			rest.PostProcessResponse(w, cliCtx, types.BaseAccount{})
 			return
 		}
 
@@ -45,7 +45,7 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, account, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, account)
 	}
 }
 
@@ -72,7 +72,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 		}
 
 		if len(r.Form) == 0 {
-			rest.PostProcessResponse(w, cliCtx, txs, cliCtx.Height)
+			rest.PostProcessResponse(w, cliCtx, txs)
 			return
 		}
 
@@ -88,7 +88,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, searchResult, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, searchResult)
 	}
 }
 
@@ -118,6 +118,6 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

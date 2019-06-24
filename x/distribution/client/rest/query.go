@@ -79,7 +79,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -97,7 +97,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -121,7 +121,8 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute stri
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -179,7 +180,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 
 		// Prepare response
 		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -203,7 +204,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -221,7 +222,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, params, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, params)
 	}
 }
 
@@ -244,7 +245,8 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, result, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, result)
 	}
 }
 
@@ -268,7 +270,8 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 

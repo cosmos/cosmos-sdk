@@ -181,24 +181,27 @@ func TestProcessPostResponse(t *testing.T) {
 
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
-	PostProcessResponse(w, ctx, acc, -1)
+	ctx = ctx.WithHeight(-1)
+	PostProcessResponse(w, ctx, acc)
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 
 	// check that zero height returns expected response
-	runPostProcessResponse(t, ctx, acc, jsonNoHeight, 0, false)
+	ctx = ctx.WithHeight(0)
+	runPostProcessResponse(t, ctx, acc, jsonNoHeight, false)
 	// chcek zero height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, 0, true)
+	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, true)
 	// check that height returns expected response
-	runPostProcessResponse(t, ctx, acc, jsonWithHeight, height, false)
+	ctx = ctx.WithHeight(height)
+	runPostProcessResponse(t, ctx, acc, jsonWithHeight, false)
 	// check height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, height, true)
+	runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, true)
 }
 
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
 func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
-	expectedBody []byte, height int64, indent bool,
+	expectedBody []byte, indent bool,
 ) {
 	if indent {
 		ctx.Indent = indent
@@ -206,7 +209,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	// test using regular struct
 	w := httptest.NewRecorder()
-	PostProcessResponse(w, ctx, obj, height)
+	PostProcessResponse(w, ctx, obj)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp := w.Result()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -223,7 +226,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	// test using marshalled struct
 	w = httptest.NewRecorder()
-	PostProcessResponse(w, ctx, marshalled, height)
+	PostProcessResponse(w, ctx, marshalled)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result()
 	body, err = ioutil.ReadAll(resp.Body)

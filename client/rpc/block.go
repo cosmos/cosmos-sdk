@@ -131,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, output, 0)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }
 
@@ -144,6 +144,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output, 0)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

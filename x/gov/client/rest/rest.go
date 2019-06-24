@@ -207,7 +207,8 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -246,7 +247,8 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -299,7 +301,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -324,7 +326,7 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -406,7 +408,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -488,7 +490,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -548,7 +550,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, cliCtx.Height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -613,7 +615,8 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -653,6 +656,7 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res, height)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

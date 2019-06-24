@@ -30,9 +30,8 @@ type RestServer struct {
 	CliCtx  context.CLIContext
 	KeyBase keybase.Keybase
 
-	log         log.Logger
-	listener    net.Listener
-	fingerprint string
+	log      log.Logger
+	listener net.Listener
 }
 
 // NewRestServer creates a new rest server instance

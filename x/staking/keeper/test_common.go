@@ -26,11 +26,10 @@ import (
 )
 
 // dummy addresses used for testing
+// nolint: unused deadcode
 var (
-	Addrs       = createTestAddrs(500)
-	PKs         = createTestPubKeys(500)
-	emptyAddr   sdk.AccAddress
-	emptyPubkey crypto.PubKey
+	Addrs = createTestAddrs(500)
+	PKs   = createTestPubKeys(500)
 
 	addrDels = []sdk.AccAddress{
 		Addrs[0],
@@ -258,6 +257,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	return validator
 }
 
+// nolint: deadcode unused
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)

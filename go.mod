@@ -24,10 +24,10 @@ require (
 	github.com/prometheus/procfs v0.0.0-20190227231451-bbced9601137 // indirect
 	github.com/rakyll/statik v0.1.4
 	github.com/spf13/afero v1.2.1 // indirect
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.0.3
+	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.15.0

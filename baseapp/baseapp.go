@@ -627,14 +627,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 // the route match to see whether a handler exists.
 //
 // NOTE:CheckTx does not run the actual Msg handler function(s).
-func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
+func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	var result sdk.Result
 
-	tx, err := app.txDecoder(txBytes)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeCheck, txBytes, tx)
+		result = app.runTx(runTxModeCheck, req.Tx, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -648,14 +648,14 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 }
 
 // DeliverTx implements the ABCI interface.
-func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	var result sdk.Result
 
-	tx, err := app.txDecoder(txBytes)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeDeliver, txBytes, tx)
+		result = app.runTx(runTxModeDeliver, req.Tx, tx)
 	}
 
 	return abci.ResponseDeliverTx{

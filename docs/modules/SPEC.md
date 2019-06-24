@@ -50,7 +50,8 @@ x/{module}
 to improve developer ergonomics by only needing to import a single package. Note,
 there is nothing preventing developers from importing other packages from the module
 (not including `internal/`) but it is recommended that `alias.go` have everything
-exposed that other modules may need.
+exposed that other modules may need. A majority of the exported values here will
+typically come from `internal/` (see below).
 - `client/`: The module's CLI and REST client functionality implementation and 
 testing.
 - `exported/`: The module's exported types -- typically type interfaces. If a module

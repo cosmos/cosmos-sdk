@@ -2,5 +2,6 @@ package types
 
 const (
 	// module name
-	ModuleName = "bank"
+	ModuleName   = "bank"
+	QuerierRoute = ModuleName
 )

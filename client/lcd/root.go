@@ -30,15 +30,14 @@ type RestServer struct {
 	CliCtx  context.CLIContext
 	KeyBase keybase.Keybase
 
-	log         log.Logger
-	listener    net.Listener
-	fingerprint string
+	log      log.Logger
+	listener net.Listener
 }
 
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+	cliCtx := context.NewCLIContext().WithCodec(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{

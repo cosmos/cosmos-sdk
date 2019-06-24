@@ -31,7 +31,6 @@ const (
 type relayCommander struct {
 	cdc       *codec.Codec
 	address   sdk.AccAddress
-	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
 	accStore  string
@@ -43,7 +42,6 @@ type relayCommander struct {
 func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:   context.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: bam.MainStoreKey,
 		accStore:  auth.StoreKey,
@@ -168,21 +166,12 @@ func (c relayCommander) broadcastTx(node string, tx []byte) error {
 }
 
 func (c relayCommander) getSequence(node string) uint64 {
-	res, err := query(node, auth.AddressStoreKey(c.address), c.accStore)
+	account, err := auth.NewAccountRetriever(context.NewCLIContext().WithNodeURI(node)).GetAccount(c.address)
 	if err != nil {
 		panic(err)
 	}
 
-	if nil != res {
-		account, err := c.decoder(res)
-		if err != nil {
-			panic(err)
-		}
-
-		return account.GetSequence()
-	}
-
-	return 0
+	return account.GetSequence()
 }
 
 func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase string) []byte {

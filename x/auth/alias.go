@@ -34,7 +34,6 @@ var (
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
 	RegisterCodec                  = types.RegisterCodec
 	RegisterBaseAccount            = types.RegisterBaseAccount
-	NewFeeCollectionKeeper         = types.NewFeeCollectionKeeper
 	NewGenesisState                = types.NewGenesisState
 	DefaultGenesisState            = types.DefaultGenesisState
 	ValidateGenesis                = types.ValidateGenesis

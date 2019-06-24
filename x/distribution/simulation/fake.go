@@ -8,11 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	dist "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateDeductFee
-func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulation.Operation {
+func SimulateDeductFee(m auth.AccountKeeper, f dist.FeeCollectionKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {

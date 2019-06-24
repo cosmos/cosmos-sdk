@@ -17,7 +17,6 @@ type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
 	ak  AccountKeeper
-	fck types.FeeCollectionKeeper
 }
 
 func setupTestInput() testInput {
@@ -27,23 +26,20 @@ func setupTestInput() testInput {
 	types.RegisterBaseAccount(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
-	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(fckCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, types.DefaultParamspace)
 	ak := NewAccountKeeper(cdc, authCapKey, ps, types.ProtoBaseAccount)
-	fck := types.NewFeeCollectionKeeper(cdc, fckCapKey)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, types.DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, fck: fck}
+	return testInput{cdc: cdc, ctx: ctx, ak: ak}
 }

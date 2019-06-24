@@ -128,7 +128,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 
 // module ante-handle
 func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-	return ctx, sdk.Result{}. false
+	return ctx, sdk.Result{}, false
 }
 
 // module begin-block

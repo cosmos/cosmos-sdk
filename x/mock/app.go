@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"sort"
+	"encoding/json"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -17,6 +18,7 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -31,13 +33,12 @@ type App struct {
 	Cdc              *codec.Codec // Cdc is public since the codec is passed into the module anyways
 	KeyMain          *sdk.KVStoreKey
 	KeyAccount       *sdk.KVStoreKey
-	KeyFeeCollection *sdk.KVStoreKey
 	KeyParams        *sdk.KVStoreKey
 	TKeyParams       *sdk.TransientStoreKey
+	Manager          *module.Manager
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
-	FeeCollectionKeeper auth.FeeCollectionKeeper
 	ParamsKeeper        params.Keeper
 
 	GenesisAccounts  []auth.Account
@@ -46,7 +47,7 @@ type App struct {
 
 // NewApp partially constructs a new app on the memstore for module and genesis
 // testing.
-func NewApp() *App {
+func NewApp(m *module.Manager) *App {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
 
@@ -59,9 +60,9 @@ func NewApp() *App {
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		Manager:          m,
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
@@ -74,15 +75,11 @@ func NewApp() *App {
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
-	app.FeeCollectionKeeper = auth.NewFeeCollectionKeeper(
-		app.Cdc,
-		app.KeyFeeCollection,
-	)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(m.AnteHandler)
 
 	// Not sealing for custom extension
 
@@ -94,7 +91,7 @@ func NewApp() *App {
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 	newKeys = append(
 		newKeys,
-		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams, app.KeyFeeCollection,
+		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams,
 	)
 
 	for _, key := range newKeys {
@@ -123,9 +120,15 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
-	auth.InitGenesis(ctx, app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultGenesisState())
+	// Load GenesisState with Defaults genesis of all registered modules
+	genmap := make(map[string]json.RawMessage)
+	for name, module := range app.Manager.Modules {
+		genmap[name] = module.DefaultGenesis()
+	}
 
-	return abci.ResponseInitChain{}
+	res := app.Manager.InitGenesis(ctx, genmap)
+
+	return res
 }
 
 // Type that combines an Address with the privKey and pubKey to that address

@@ -33,7 +33,7 @@ func GetCmdGetFeeAllowances(queryRoute string, cdc *codec.Codec) *cobra.Command 
 			id := args[0]
 
 			route := fmt.Sprintf("custom/delegation/%s/%s", QueryGetFeeAllowances, id)
-			res, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}

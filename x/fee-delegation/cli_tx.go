@@ -2,10 +2,10 @@ package fee_delegation
 
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	utils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -15,13 +15,9 @@ func GetCmdDelegateFees(cdc *codec.Codec) *cobra.Command {
 		Short: "delegate",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
 
 			account := cliCtx.GetFromAddress()
 
@@ -38,8 +34,6 @@ func GetCmdDelegateFees(cdc *codec.Codec) *cobra.Command {
 
 			msg := NewMsgDelegateFeeAllowance(account, grantee, allowance)
 
-			cliCtx.PrintResponse = true
-
 			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
@@ -51,13 +45,9 @@ func GetCmdRevokeDelegatedFees(cdc *codec.Codec) *cobra.Command {
 		Short: "revoke",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
 
 			account := cliCtx.GetFromAddress()
 
@@ -67,8 +57,6 @@ func GetCmdRevokeDelegatedFees(cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg := NewMsgRevokeFeeAllowance(account, grantee)
-
-			cliCtx.PrintResponse = true
 
 			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},

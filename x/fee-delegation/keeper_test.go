@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/fee-delegation"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -59,7 +58,7 @@ func setupTestInput() testInput {
 	)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id", Time: time.Now().UTC()}, false, log.NewNopLogger())
 
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(banktypes.DefaultParamspace), banktypes.DefaultCodespace)
+	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	bk.SetSendEnabled(ctx, true)
 
 	dk := fee_delegation.NewKeeper(delCapKey, cdc)

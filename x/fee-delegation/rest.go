@@ -36,7 +36,7 @@ func getAllowFeesHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		grantee := vars["granteeAddr"]
 		route := fmt.Sprintf("custom/fee-delegation/%s/%s", QueryGetFeeAllowances, grantee)
 
-		res, err := cliCtx.QueryWithData(route, []byte{})
+		res, _, err := cliCtx.QueryWithData(route, []byte{})
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

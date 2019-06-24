@@ -40,7 +40,7 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		feeCollector := ak.GetAccount(ctx, types.FeeCollectorAddr)
+		feeCollector := supplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 		if feeCollector == nil {
 			panic("fee collector account hasn't been set")
 		}

@@ -55,7 +55,6 @@ var (
 	ModuleCdc                 = types.ModuleCdc
 	AddressStoreKeyPrefix     = types.AddressStoreKeyPrefix
 	GlobalAccountNumberKey    = types.GlobalAccountNumberKey
-	FeeCollectorAddr          = types.FeeCollectorAddr
 	KeyMaxMemoCharacters      = types.KeyMaxMemoCharacters
 	KeyTxSigLimit             = types.KeyTxSigLimit
 	KeyTxSizeCostPerByte      = types.KeyTxSizeCostPerByte

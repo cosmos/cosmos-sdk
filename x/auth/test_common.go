@@ -44,8 +44,8 @@ func setupTestInput() testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
-	ak.SetAccount(ctx, feeCollector)
+	//feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
+	//ak.SetAccount(ctx, feeCollector)
 
 	ak.SetParams(ctx, types.DefaultParams())
 
@@ -90,4 +90,17 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 	sk.ak.SetAccount(ctx, moduleAcc)
 
 	return nil
+}
+
+func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) Account {
+
+	addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+
+	acc := sk.ak.GetAccount(ctx, addr)
+	if acc != nil {
+		return acc
+	}
+
+	// create a new module account
+	return sk.ak.NewAccountWithAddress(ctx, addr)
 }

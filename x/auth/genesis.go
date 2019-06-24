@@ -1,10 +1,7 @@
 package auth
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // InitGenesis - Init store state from genesis data
@@ -14,10 +11,10 @@ import (
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 
-	feeCollectorAcc := ak.GetAccount(ctx, types.FeeCollectorAddr)
-	if feeCollectorAcc == nil {
-		panic(fmt.Sprintf("fee collector module account has not been set"))
-	}
+	//feeCollectorAcc := ak.GetAccount(ctx, types.FeeCollectorAddr)
+	//if feeCollectorAcc == nil {
+	//panic(fmt.Sprintf("fee collector module account has not been set"))
+	//}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper

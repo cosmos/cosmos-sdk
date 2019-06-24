@@ -55,8 +55,9 @@ func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
 
 	var proposals v036gov.Proposals
 	for _, p := range initialState.Proposals {
+		content := migrateContent(p.ProposalContent)
 		proposal := v036gov.Proposal{
-			Content:          migrateContent(p.ProposalContent),
+			Content:          content,
 			ProposalID:       p.ProposalID,
 			Status:           v036gov.ProposalStatus(p.Status),
 			FinalTallyResult: v036gov.TallyResult(p.FinalTallyResult),

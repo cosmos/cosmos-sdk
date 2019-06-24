@@ -15,7 +15,7 @@ x/{module}
 ├── alias.go
 ├── client
 │   ├── cli
-│   |   ├── query.go
+│   │   ├── query.go
 │   │   └── tx.go
 │   └── rest
 │       ├── query.go
@@ -51,3 +51,15 @@ to improve developer ergonomics by only needing to import a single package. Note
 there is nothing preventing developers from importing other packages from the module
 (not including `internal/`) but it is recommended that `alias.go` have everything
 exposed that other modules may need.
+- `client/`: The module's CLI and REST client functionality implementation and 
+testing.
+- `exported/`: The module's exported types -- typically type interfaces. If a module
+relies on other module keepers, it is expected to receive them as interface
+contracts through `expected_keepers.go` (which are detailed below) to avoid having
+a direct dependency on that module. However, these contracts can define methods
+that operate on and/or return types that are specific to the contract's implementing
+module and this is where `exported/` comes into play. Types defined here allow for
+`expected_keepers.go` in other modules to define contracts that use single
+canonical types and allows for code to remain DRY.
+- `genesis.go`: The module's genesis related business logic (e.g. `InitGenesis`).
+- `handler.go`: The module's message handlers.

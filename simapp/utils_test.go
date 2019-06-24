@@ -14,8 +14,10 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
@@ -38,6 +40,29 @@ func makeTestCodec() (cdc *codec.Codec) {
 	gov.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
 	return
+}
+
+func TestGetSimulationLog(t *testing.T) {
+	cdc := makeTestCodec()
+
+	tests := []struct {
+		store  string
+		kvPair cmn.KVPair
+	}{
+		{authtypes.StoreKey, cmn.KVPair{Value: cdc.MustMarshalBinaryBare(authtypes.BaseAccount{})}},
+		{mint.StoreKey, cmn.KVPair{Value: cdc.MustMarshalBinaryLengthPrefixed(minttypes.Minter{})}},
+		{staking.StoreKey, cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
+		{gov.StoreKey, cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
+		{distribution.StoreKey, cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
+		{"Empty", cmn.KVPair{}},
+		{"OtherStore", cmn.KVPair{Key: []byte("key"), Value: []byte("value")}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.store, func(t *testing.T) {
+			require.NotPanics(t, func() { getSimulationLog(tt.store, cdc, cdc, tt.kvPair, tt.kvPair) }, tt.store)
+		})
+	}
 }
 
 func TestDecodeAccountStore(t *testing.T) {

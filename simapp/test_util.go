@@ -32,7 +32,9 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
 }
 
-func retrieveSimLog(storeName string, appA, appB SimApp, kvA, kvB cmn.KVPair) (log string) {
+// getSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
+// each's module store key and the prefix bytes of the KVPair's key.
+func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 	log = fmt.Sprintf("store A %X => %X\n"+
 		"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 
@@ -42,15 +44,15 @@ func retrieveSimLog(storeName string, appA, appB SimApp, kvA, kvB cmn.KVPair) (l
 
 	switch storeName {
 	case authtypes.StoreKey:
-		return decodeAccountStore(appA.cdc, appB.cdc, kvA.Value, kvB.Value)
+		return decodeAccountStore(cdcA, cdcB, kvA.Value, kvB.Value)
 	case mint.StoreKey:
-		return decodeMintStore(appA.cdc, appB.cdc, kvA.Value, kvB.Value)
+		return decodeMintStore(cdcA, cdcB, kvA.Value, kvB.Value)
 	case staking.StoreKey:
-		return decodeStakingStore(appA.cdc, appB.cdc, kvA, kvB)
+		return decodeStakingStore(cdcA, cdcB, kvA, kvB)
 	case gov.StoreKey:
-		return decodeGovStore(appA.cdc, appB.cdc, kvA, kvB)
+		return decodeGovStore(cdcA, cdcB, kvA, kvB)
 	case distribution.StoreKey:
-		return decodeDistributionStore(appA.cdc, appB.cdc, kvA, kvB)
+		return decodeDistributionStore(cdcA, cdcB, kvA, kvB)
 	default:
 		return
 	}
@@ -65,9 +67,9 @@ func decodeAccountStore(cdcA, cdcB *codec.Codec, valueA, valueB []byte) string {
 
 func decodeMintStore(cdcA, cdcB *codec.Codec, valueA, valueB []byte) string {
 	var minterA, minterB mint.Minter
-	cdcA.MustUnmarshalBinaryBare(valueA, &minterA)
-	cdcB.MustUnmarshalBinaryBare(valueB, &minterB)
-	return fmt.Sprintf("%v\n%v", minterA, minterA)
+	cdcA.MustUnmarshalBinaryLengthPrefixed(valueA, &minterA)
+	cdcB.MustUnmarshalBinaryLengthPrefixed(valueB, &minterB)
+	return fmt.Sprintf("%v\n%v", minterA, minterB)
 }
 
 func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
@@ -186,8 +188,8 @@ func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 	switch {
 	case bytes.Equal(kvA.Key[:1], gov.ProposalsKeyPrefix):
 		var proposalA, proposalB gov.Proposal
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &proposalA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &proposalB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &proposalA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &proposalB)
 		log = fmt.Sprintf("%v\n%v", proposalA, proposalB)
 
 	case bytes.Equal(kvA.Key[:1], gov.ActiveProposalQueuePrefix),
@@ -199,14 +201,14 @@ func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 
 	case bytes.Equal(kvA.Key[:1], gov.DepositsKeyPrefix):
 		var depositA, depositB gov.Deposit
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &depositA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &depositB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &depositA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &depositB)
 		log = fmt.Sprintf("%v\n%v", depositA, depositB)
 
 	case bytes.Equal(kvA.Key[:1], gov.VotesKeyPrefix):
 		var voteA, voteB gov.Vote
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &voteA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &voteB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &voteA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &voteB)
 		log = fmt.Sprintf("%v\n%v", voteA, voteB)
 
 	default:

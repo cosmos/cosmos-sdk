@@ -76,50 +76,50 @@ func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log 
 	switch {
 	case bytes.Equal(kvA.Key[:1], distribution.FeePoolKey):
 		var feePoolA, feePoolB distribution.FeePool
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &feePoolA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &feePoolB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &feePoolA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &feePoolB)
 		log = fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.ProposerKey):
+		log = fmt.Sprintf("%v\n%v", sdk.ConsAddress(kvA.Value), sdk.ConsAddress(kvB.Value))
+
+	case bytes.Equal(kvA.Key[:1], distribution.ValidatorOutstandingRewardsPrefix):
 		var rewardsA, rewardsB distribution.ValidatorOutstandingRewards
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
 		log = fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.DelegatorWithdrawAddrPrefix):
-		var addrA, addrB gov.Deposit
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &addrA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &addrB)
-		log = fmt.Sprintf("%v\n%v", addrA, addrB)
+		log = fmt.Sprintf("%v\n%v", sdk.AccAddress(kvA.Value), sdk.AccAddress(kvB.Value))
 
 	case bytes.Equal(kvA.Key[:1], distribution.DelegatorStartingInfoPrefix):
 		var infoA, infoB distribution.DelegatorStartingInfo
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &infoA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &infoB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
 		log = fmt.Sprintf("%v\n%v", infoA, infoB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.ValidatorHistoricalRewardsPrefix):
-		var infoA, infoB distribution.DelegatorStartingInfo
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &infoA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &infoB)
-		log = fmt.Sprintf("%v\n%v", infoA, infoB)
+		var rewardsA, rewardsB distribution.ValidatorHistoricalRewards
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
+		log = fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.ValidatorCurrentRewardsPrefix):
 		var rewardsA, rewardsB distribution.ValidatorCurrentRewards
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
 		log = fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.ValidatorAccumulatedCommissionPrefix):
 		var commissionA, commissionB distribution.ValidatorAccumulatedCommission
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &commissionA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &commissionB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &commissionA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &commissionB)
 		log = fmt.Sprintf("%v\n%v", commissionA, commissionB)
 
 	case bytes.Equal(kvA.Key[:1], distribution.ValidatorSlashEventPrefix):
 		var eventA, eventB distribution.ValidatorSlashEvent
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &eventA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &eventB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &eventA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &eventB)
 		log = fmt.Sprintf("%v\n%v", eventA, eventB)
 
 	default:
@@ -132,49 +132,46 @@ func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log 
 func decodeStakingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 	switch {
 	case bytes.Equal(kvA.Key[:1], staking.PoolKey):
-		var feePoolA, feePoolB staking.Pool
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &feePoolA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &feePoolB)
-		log = fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
+		var poolA, poolB staking.Pool
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &poolA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &poolB)
+		log = fmt.Sprintf("%v\n%v", poolA, poolB)
 
 	case bytes.Equal(kvA.Key[:1], staking.LastTotalPowerKey):
 		var powerA, powerB sdk.Int
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &powerA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &powerB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &powerA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &powerB)
 		log = fmt.Sprintf("%v\n%v", powerA, powerB)
 
 	case bytes.Equal(kvA.Key[:1], staking.ValidatorsKey):
 		var validatorA, validatorB staking.Validator
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &validatorA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &validatorB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &validatorA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &validatorB)
 		log = fmt.Sprintf("%v\n%v", validatorA, validatorB)
 
 	case bytes.Equal(kvA.Key[:1], staking.LastValidatorPowerKey),
 		bytes.Equal(kvA.Key[:1], staking.ValidatorsByConsAddrKey),
 		bytes.Equal(kvA.Key[:1], staking.ValidatorsByPowerIndexKey):
-		var valAddrA, valAddrB sdk.ValAddress
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &valAddrA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &valAddrB)
-		log = fmt.Sprintf("%v\n%v", valAddrA, valAddrB)
+		log = fmt.Sprintf("%v\n%v", sdk.ValAddress(kvA.Value), sdk.ValAddress(kvB.Value))
 
 	case bytes.Equal(kvA.Key[:1], staking.DelegationKey):
 		var delegationA, delegationB staking.Delegation
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &delegationA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &delegationB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &delegationA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &delegationB)
 		log = fmt.Sprintf("%v\n%v", delegationA, delegationB)
 
 	case bytes.Equal(kvA.Key[:1], staking.UnbondingDelegationKey),
 		bytes.Equal(kvA.Key[:1], staking.UnbondingDelegationByValIndexKey):
 		var ubdA, ubdB staking.UnbondingDelegation
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &ubdA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &ubdB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &ubdA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &ubdB)
 		log = fmt.Sprintf("%v\n%v", ubdA, ubdB)
 
 	case bytes.Equal(kvA.Key[:1], staking.RedelegationKey),
 		bytes.Equal(kvA.Key[:1], staking.RedelegationByValSrcIndexKey):
 		var redA, redB staking.Redelegation
-		cdcA.MustUnmarshalBinaryBare(kvA.Value, &redA)
-		cdcB.MustUnmarshalBinaryBare(kvB.Value, &redB)
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &redA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &redB)
 		log = fmt.Sprintf("%v\n%v", redA, redB)
 
 	default:

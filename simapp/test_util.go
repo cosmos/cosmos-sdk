@@ -27,7 +27,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
 }
 
-// nolint: deadcode
+// nolint
 func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (log string) {
 
 	log = fmt.Sprintf("store A %X => %X\n"+

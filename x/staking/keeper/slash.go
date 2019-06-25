@@ -206,8 +206,10 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 	}
 
-	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
-		panic(err)
+	if burnedAmount.IsPositive() {
+		if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
+			panic(err)
+		}
 	}
 
 	return totalSlashAmount

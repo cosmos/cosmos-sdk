@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
@@ -207,6 +209,11 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 // Codespace returns the keeper's codespace.
 func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 	return keeper.codespace
+}
+
+// Logger returns a module-specific logger.
+func (keeper BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/bank")
 }
 
 func getCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress) sdk.Coins {

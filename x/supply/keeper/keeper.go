@@ -54,6 +54,11 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk ty
 	}
 }
 
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/supply")
+}
+
 // GetSupply retrieves the Supply from store
 func (k Keeper) GetSupply(ctx sdk.Context) (supply types.Supply) {
 	store := ctx.KVStore(k.storeKey)

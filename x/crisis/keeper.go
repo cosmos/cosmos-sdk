@@ -39,7 +39,7 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/crisis")
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // register routes for the

@@ -213,7 +213,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 
 // Logger returns a module-specific logger.
 func (keeper BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/bank")
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func getCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress) sdk.Coins {

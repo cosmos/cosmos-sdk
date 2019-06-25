@@ -58,7 +58,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetBondedTokens())
+				bonded = bonded.Add(validator.GetTokens())
 			case sdk.Unbonding, sdk.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
 			}

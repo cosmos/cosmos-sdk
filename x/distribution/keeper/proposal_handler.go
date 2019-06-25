@@ -9,15 +9,7 @@ import (
 
 // Handler for executing a passed community spend proposal
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p types.CommunityPoolSpendProposal) sdk.Error {
-	feePool := k.GetFeePool(ctx)
-	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoins(p.Amount))
-	if negative {
-		return types.ErrBadDistribution(k.codespace)
-	}
-	feePool.CommunityPool = newPool
-	k.SetFeePool(ctx, feePool)
-
-	err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, p.Recipient, p.Amount)
+	err := k.DistributeFeePool(ctx, p.Amount, p.Recipient)
 	if err != nil {
 		return err
 	}

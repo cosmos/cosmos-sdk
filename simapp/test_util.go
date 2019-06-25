@@ -27,6 +27,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
 }
 
+// nolint
 func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (log string) {
 
 	log = fmt.Sprintf("store A %X => %X\n"+
@@ -41,7 +42,8 @@ func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (
 		var accB auth.Account
 		appA.cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)
 		appB.cdc.MustUnmarshalBinaryBare(kvB.Value, &accB)
-		log = fmt.Sprintf("%v\n%v", accA, accB)
+
+		return fmt.Sprintf("%v\n%v", accA, accB)
 	}
 
 	return log

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -60,7 +60,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 				return err
 			}
 
-			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "")
+			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "", "")
 			if err := genAcc.Validate(); err != nil {
 				return err
 			}

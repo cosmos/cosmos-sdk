@@ -1,10 +1,5 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
-)
-
 // the one key to use for the keeper store
 var MinterKey = []byte{0x00}
 
@@ -27,6 +22,3 @@ const (
 	QueryInflation        = "inflation"
 	QueryAnnualProvisions = "annual_provisions"
 )
-
-// ModuleAddress distribution module account address
-var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))

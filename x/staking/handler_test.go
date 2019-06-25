@@ -1281,3 +1281,46 @@ func TestInvalidMsg(t *testing.T) {
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized staking message type"))
 }
+
+func TestInvalidCoinDenom(t *testing.T) {
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
+	valA, valB, delAddr := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1]), keep.Addrs[2]
+
+	valTokens := sdk.TokensFromConsensusPower(100)
+	invalidCoin := sdk.NewCoin("churros", valTokens)
+	validCoin := sdk.NewCoin(sdk.DefaultBondDenom, valTokens)
+	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+
+	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
+
+	msgCreate := types.NewMsgCreateValidator(valA, keep.PKs[0], invalidCoin, Description{}, commission, sdk.OneInt())
+	got := handleMsgCreateValidator(ctx, msgCreate, keeper)
+	require.False(t, got.IsOK())
+	msgCreate = types.NewMsgCreateValidator(valA, keep.PKs[0], validCoin, Description{}, commission, sdk.OneInt())
+	got = handleMsgCreateValidator(ctx, msgCreate, keeper)
+	require.True(t, got.IsOK())
+	msgCreate = types.NewMsgCreateValidator(valB, keep.PKs[1], validCoin, Description{}, commission, sdk.OneInt())
+	got = handleMsgCreateValidator(ctx, msgCreate, keeper)
+	require.True(t, got.IsOK())
+
+	msgDelegate := types.NewMsgDelegate(delAddr, valA, invalidCoin)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.False(t, got.IsOK())
+	msgDelegate = types.NewMsgDelegate(delAddr, valA, validCoin)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK())
+
+	msgUndelegate := types.NewMsgUndelegate(delAddr, valA, invalidCoin)
+	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
+	require.False(t, got.IsOK())
+	msgUndelegate = types.NewMsgUndelegate(delAddr, valA, oneCoin)
+	got = handleMsgUndelegate(ctx, msgUndelegate, keeper)
+	require.True(t, got.IsOK())
+
+	msgRedelegate := types.NewMsgBeginRedelegate(delAddr, valA, valB, invalidCoin)
+	got = handleMsgBeginRedelegate(ctx, msgRedelegate, keeper)
+	require.False(t, got.IsOK())
+	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
+	got = handleMsgBeginRedelegate(ctx, msgRedelegate, keeper)
+	require.True(t, got.IsOK())
+}

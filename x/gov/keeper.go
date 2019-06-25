@@ -71,8 +71,8 @@ func NewKeeper(
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
 
 // GetGovernanceAccount returns the governance ModuleAccount
-func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccount {
-	return keeper.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
+func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) supply.ModuleAccountI {
+	return keeper.supplyKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // Params

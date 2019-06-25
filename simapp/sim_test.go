@@ -23,11 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -773,6 +773,11 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
+
+	// TODO fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
+	if period == 1 {
+		return app.crisisKeeper.Invariants()
+	}
 	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
 }
 
@@ -940,9 +945,8 @@ func TestAppImportExport(t *testing.T) {
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
-			"unequal %s stores: \n"+
-				"%s",
-			storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB),
+			fmt.Sprintf("unequal %s stores: \n%s",
+				storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
 		)
 	}
 

@@ -487,16 +487,16 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 			panic("delegation token source cannot be bonded")
 		}
 
-		bondedCoins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		var sendAddr sdk.AccAddress
+		var sendName string
 		switch {
 		case validator.IsBonded():
-			sendAddr = types.BondedPoolAddr
+			sendName = types.BondedPoolName
 		case validator.IsUnbonding(), validator.IsUnbonded():
-			sendAddr = types.NotBondedPoolAddr
+			sendName = types.NotBondedPoolName
 		}
 
-		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddress, sendAddr, bondedCoins)
+		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
+		err := k.supplyKeeper.DelegateCoinsFromAccountToModule(ctx, delegation.DelegatorAddress, sendName, coins)
 		if err != nil {
 			return sdk.Dec{}, err
 		}
@@ -676,7 +676,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
 				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
-				_, err := k.bankKeeper.UndelegateCoins(ctx, types.NotBondedPoolAddr, ubd.DelegatorAddress, amt)
+				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, ubd.DelegatorAddress, amt)
 				if err != nil {
 					return err
 				}

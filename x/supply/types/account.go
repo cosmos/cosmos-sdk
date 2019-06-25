@@ -4,97 +4,95 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	yaml "gopkg.in/yaml.v2"
 )
 
-// ModuleAccount defines an account type for pools that hold tokens in an escrow
-type ModuleAccount interface {
-	auth.Account
+var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
-	Name() string
-	IsMinter() bool
+// ModuleAccount defines an account for modules that holds coins on a pool
+type ModuleAccount struct {
+	*authtypes.BaseAccount
+	Name       string `json:"name"`       // name of the module
+	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
 }
 
-//-----------------------------------------------------------------------------
-// Module Holder Account
-
-var _ ModuleAccount = (*ModuleHolderAccount)(nil)
-
-// ModuleHolderAccount defines an account for modules that holds coins on a pool
-type ModuleHolderAccount struct {
-	*auth.BaseAccount
-
-	ModuleName string `json:"name"` // name of the module
+// NewModuleAddress creates an AccAddress from the hash of the module's name
+func NewModuleAddress(name string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
-// NewModuleHolderAccount creates a new ModuleHolderAccount instance
-func NewModuleHolderAccount(name string) *ModuleHolderAccount {
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
+// NewModuleAccount creates a new ModuleAccount instance
+func NewModuleAccount(name, permission string) *ModuleAccount {
+	moduleAddress := NewModuleAddress(name)
+	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
-	return &ModuleHolderAccount{
+	if err := validatePermission(permission); err != nil {
+		panic(err)
+	}
+
+	return &ModuleAccount{
 		BaseAccount: &baseAcc,
-		ModuleName:  name,
+		Name:        name,
+		Permission:  permission,
 	}
 }
 
-// Name returns the the name of the holder's module
-func (mha ModuleHolderAccount) Name() string {
-	return mha.ModuleName
+// GetName returns the the name of the holder's module
+func (ma ModuleAccount) GetName() string {
+	return ma.Name
 }
 
-// IsMinter false for ModuleHolderAccount
-func (mha ModuleHolderAccount) IsMinter() bool { return false }
+// GetPermission returns permission granted to the module account (holder/minter/burner)
+func (ma ModuleAccount) GetPermission() string {
+	return ma.Permission
+}
 
 // SetPubKey - Implements Account
-func (mha *ModuleHolderAccount) SetPubKey(pubKey crypto.PubKey) error {
-	return fmt.Errorf("not supported for pool accounts")
+func (ma ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
+	return fmt.Errorf("not supported for module accounts")
 }
 
 // SetSequence - Implements Account
-func (mha *ModuleHolderAccount) SetSequence(seq uint64) error {
-	return fmt.Errorf("not supported for pool accounts")
+func (ma ModuleAccount) SetSequence(seq uint64) error {
+	return fmt.Errorf("not supported for module accounts")
 }
 
 // String follows stringer interface
-func (mha ModuleHolderAccount) String() string {
-	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Holder Account:
-Name:     			%s
-Address:  			%s
-Coins:    			%s
-Account Number: %d`,
-		mha.ModuleName, mha.Address, mha.Coins, mha.AccountNumber)
+func (ma ModuleAccount) String() string {
+	b, err := yaml.Marshal(ma)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 
-//-----------------------------------------------------------------------------
-// Module Minter Account
+// MarshalYAML returns the YAML representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		Address       sdk.AccAddress
+		Coins         sdk.Coins
+		PubKey        string
+		AccountNumber uint64
+		Sequence      uint64
+		Name          string
+		Permission    string
+	}{
+		Address:       ma.Address,
+		Coins:         ma.Coins,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permission:    ma.Permission,
+	})
 
-var _ ModuleAccount = (*ModuleMinterAccount)(nil)
+	if err != nil {
+		return nil, err
+	}
 
-// ModuleMinterAccount defines an account for modules that holds coins on a pool
-type ModuleMinterAccount struct {
-	*ModuleHolderAccount
-}
-
-// NewModuleMinterAccount creates a new  ModuleMinterAccount instance
-func NewModuleMinterAccount(name string) *ModuleMinterAccount {
-	moduleHolderAcc := NewModuleHolderAccount(name)
-
-	return &ModuleMinterAccount{ModuleHolderAccount: moduleHolderAcc}
-}
-
-// IsMinter true for ModuleMinterAccount
-func (mma ModuleMinterAccount) IsMinter() bool { return true }
-
-// String follows stringer interface
-func (mma ModuleMinterAccount) String() string {
-	// we ignore the other fields as they will always be empty
-	return fmt.Sprintf(`Module Minter Account:
-Name:    				%s
-Address: 				%s
-Coins:   				%s
-Account Number: %d`,
-		mma.ModuleName, mma.Address, mma.Coins, mma.AccountNumber)
+	return string(bs), nil
 }

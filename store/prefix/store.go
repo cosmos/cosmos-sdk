@@ -188,31 +188,3 @@ func stripPrefix(key []byte, prefix []byte) []byte {
 func cpIncr(bz []byte) []byte {
 	return types.PrefixEndBytes(bz)
 }
-
-// copied from github.com/tendermint/tendermint/libs/db/util.go
-func cpDecr(bz []byte) (ret []byte) {
-	if len(bz) == 0 {
-		panic("cpDecr expects non-zero bz length")
-	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
-	for i := len(bz) - 1; i >= 0; i-- {
-		if ret[i] > byte(0x00) {
-			ret[i]--
-			return
-		}
-		ret[i] = byte(0xFF)
-		if i == 0 {
-			return nil
-		}
-	}
-	return nil
-}
-
-func skipOne(iter types.Iterator, skipKey []byte) {
-	if iter.Valid() {
-		if bytes.Equal(iter.Key(), skipKey) {
-			iter.Next()
-		}
-	}
-}

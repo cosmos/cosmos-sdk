@@ -36,7 +36,8 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
 	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
@@ -65,9 +66,11 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
-		notBondedPool := supply.NewModuleHolderAccount(types.NotBondedTokensName)
-		bondPool := supply.NewModuleHolderAccount(types.BondedTokensName)
+		feeCollector := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+		notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
 
+		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 

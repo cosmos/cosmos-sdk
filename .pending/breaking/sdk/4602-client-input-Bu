@@ -1,0 +1,1 @@
+#4602 client/input.{Buffer,Override}Stdin() functions are removed. Thanks to cobra's new release they are now redundant.

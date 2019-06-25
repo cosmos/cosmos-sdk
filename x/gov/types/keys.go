@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 const (
@@ -25,9 +24,6 @@ const (
 	// DefaultParamspace default name for parameter store
 	DefaultParamspace = ModuleName
 )
-
-// ModuleAddress governance module account address
-var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 
 // Keys for governance store
 // Items are stored with the following key: values

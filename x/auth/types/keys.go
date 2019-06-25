@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 const (
@@ -25,9 +24,6 @@ var (
 
 	// param key for global account number
 	GlobalAccountNumberKey = []byte("globalAccountNumber")
-
-	// FeeCollectorAddr is the address generated from the FeeCollectorName string
-	FeeCollectorAddr = sdk.AccAddress(crypto.AddressHash([]byte(FeeCollectorName)))
 )
 
 // AddressStoreKey turn an address to key used to get it from the account store

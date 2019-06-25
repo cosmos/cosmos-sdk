@@ -3,8 +3,6 @@ package keys
 import (
 	"bufio"
 	"errors"
-	"fmt"
-	"os"
 
 	"github.com/spf13/viper"
 
@@ -53,7 +51,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := input.BufferStdin()
+	buf := bufio.NewReader(cmd.InOrStdin())
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
 		if !viper.GetBool(flagYes) {
 			if err := confirmDeletion(buf); err != nil {
@@ -63,7 +61,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		if err := kb.Delete(name, "", true); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, "Public key reference deleted")
+		cmd.PrintErrln("Public key reference deleted")
 		return nil
 	}
 
@@ -81,7 +79,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stderr, "Key deleted forever (uh oh!)")
+	cmd.PrintErrln("Key deleted forever (uh oh!)")
 	return nil
 }
 

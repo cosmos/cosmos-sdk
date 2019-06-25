@@ -117,7 +117,6 @@ var (
 
 	// variable aliases
 	ModuleCdc                   = types.ModuleCdc
-	ModuleAddress               = types.ModuleAddress
 	ProposalsKeyPrefix          = types.ProposalsKeyPrefix
 	ActiveProposalQueuePrefix   = types.ActiveProposalQueuePrefix
 	InactiveProposalQueuePrefix = types.InactiveProposalQueuePrefix

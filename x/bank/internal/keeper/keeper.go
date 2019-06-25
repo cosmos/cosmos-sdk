@@ -205,6 +205,7 @@ func NewBaseSendKeeper(ak types.AccountKeeper,
 	}
 }
 
+// TODO combine with sendCoins
 // SendCoins moves coins from one account to another
 func (keeper BaseSendKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
@@ -372,32 +373,6 @@ func sendCoins(ctx sdk.Context, am types.AccountKeeper, fromAddr, toAddr sdk.Acc
 	}
 
 	return nil
-}
-
-// sendDelegatedCoins moves coins from one account to another without performing the
-// vesting account's SpendableCoins check
-// Returns ErrInvalidCoins if amt is invalid.
-func sendDelegatedCoins(ctx sdk.Context, ak types.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-
-	if !amt.IsValid() {
-		return sdk.ErrInvalidCoins(amt.String())
-	}
-
-	oldFromCoins := getCoins(ctx, ak, fromAddr)
-	newFromCoins, hasNeg := oldFromCoins.SafeSub(amt)
-	if hasNeg {
-		return sdk.ErrInsufficientCoins(
-			fmt.Sprintf("insufficient account funds; %s < %s", oldFromCoins, amt),
-		)
-	}
-
-	err := setCoins(ctx, ak, fromAddr, newFromCoins)
-	if err != nil {
-		return err
-	}
-
-	_, err = addCoins(ctx, ak, toAddr, amt)
-	return err
 }
 
 // InputOutputCoins handles a list of inputs and outputs

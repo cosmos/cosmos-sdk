@@ -1,9 +1,9 @@
-package tx
+package rest
 
 import (
 	"encoding/base64"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
 	"io/ioutil"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 type (
@@ -27,7 +26,7 @@ type (
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
 // it takes base64-decoded bytes, decodes it from the Amino wire protocol,
 // and responds with a json-formatted transaction.
-func DecodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req DecodeReq
 
@@ -37,7 +36,7 @@ func DecodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 			return
 		}
 
-		err = cdc.UnmarshalJSON(body, &req)
+		err = cliCtx.Codec.UnmarshalJSON(body, &req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -57,7 +56,7 @@ func DecodeTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.
 		}
 
 		response := DecodeResp(stdTx)
-		rest.PostProcessResponse(w, cdc, response, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, response)
 	}
 }
 

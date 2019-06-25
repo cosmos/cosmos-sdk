@@ -21,7 +21,6 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/nlopes/slack v0.5.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1

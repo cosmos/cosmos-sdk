@@ -146,7 +146,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	// account permissions
 	holderAccs := []string{auth.FeeCollectorName, distr.ModuleName}
 	minterAccs := []string{mint.ModuleName}
-	burnerAccs := []string{staking.BondedTokensName, staking.NotBondedTokensName, gov.ModuleName}
+	burnerAccs := []string{staking.BondedPoolName, staking.NotBondedPoolName, gov.ModuleName}
 
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, app.keyAccount, authSubspace, auth.ProtoBaseAccount)

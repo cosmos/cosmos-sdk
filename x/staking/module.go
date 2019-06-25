@@ -96,13 +96,13 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 type AppModule struct {
 	AppModuleBasic
 	keeper       Keeper
-	distrKeeper  DistributionKeeper
-	accKeeper    AccountKeeper
+	distrKeeper  types.DistributionKeeper
+	accKeeper    types.AccountKeeper
 	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper AccountKeeper,
+func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper,
 	supplyKeeper types.SupplyKeeper) AppModule {
 
 	return AppModule{

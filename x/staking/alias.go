@@ -31,8 +31,8 @@ const (
 	DefaultUnbondingTime               = types.DefaultUnbondingTime
 	DefaultMaxValidators               = types.DefaultMaxValidators
 	DefaultMaxEntries                  = types.DefaultMaxEntries
-	NotBondedTokensName                = types.NotBondedTokensName
-	BondedTokensName                   = types.BondedTokensName
+	NotBondedPoolName                  = types.NotBondedPoolName
+	BondedPoolName                     = types.BondedPoolName
 	QueryValidators                    = types.QueryValidators
 	QueryValidator                     = types.QueryValidator
 	QueryDelegatorDelegations          = types.QueryDelegatorDelegations
@@ -201,8 +201,6 @@ var (
 	KeyMaxValidators                 = types.KeyMaxValidators
 	KeyMaxEntries                    = types.KeyMaxEntries
 	KeyBondDenom                     = types.KeyBondDenom
-	NotBondedPoolAddr                = types.NotBondedPoolAddr
-	BondedPoolAddr                   = types.BondedPoolAddr
 )
 
 type (
@@ -225,9 +223,6 @@ type (
 	RedelegationEntryResponse = types.RedelegationEntryResponse
 	RedelegationResponses     = types.RedelegationResponses
 	CodeType                  = types.CodeType
-	DistributionKeeper        = types.DistributionKeeper
-	AccountKeeper             = types.AccountKeeper
-	SupplyKeeper              = types.SupplyKeeper
 	GenesisState              = types.GenesisState
 	LastValidatorPower        = types.LastValidatorPower
 	MultiStakingHooks         = types.MultiStakingHooks

@@ -124,7 +124,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedTokensName, types.BondedTokensName})
+		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -137,8 +137,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	// set module accounts
 	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
-	notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName, supply.Burner)
-	bondPool := supply.NewModuleAccount(types.BondedTokensName, supply.Burner)
+	notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)

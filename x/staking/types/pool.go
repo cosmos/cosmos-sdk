@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // names used as root for pool module accounts:
@@ -13,14 +12,8 @@ import (
 //
 // - BondedPool -> "BondedTokensPool"
 const (
-	NotBondedTokensName = "NotBondedTokensPool"
-	BondedTokensName    = "BondedTokensPool"
-)
-
-// nolint
-var (
-	NotBondedPoolAddr = sdk.AccAddress(crypto.AddressHash([]byte(NotBondedTokensName)))
-	BondedPoolAddr    = sdk.AccAddress(crypto.AddressHash([]byte(BondedTokensName)))
+	NotBondedPoolName = "NotBondedTokensPool"
+	BondedPoolName    = "BondedTokensPool"
 )
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination

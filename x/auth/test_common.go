@@ -11,8 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 type testInput struct {
@@ -27,6 +28,7 @@ func setupTestInput() testInput {
 
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
+	supplytypes.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
@@ -67,10 +69,8 @@ func NewDummySupplyKeeper(ak AccountKeeper) DummySupplyKeeper {
 // SendCoinsFromAccountToModule for the dummy supply keeper
 func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
 
-	moduleAddr := sdk.AccAddress(crypto.AddressHash([]byte(recipientModule)))
-
 	fromAcc := sk.ak.GetAccount(ctx, fromAddr)
-	moduleAcc := sk.ak.GetAccount(ctx, moduleAddr)
+	moduleAcc := sk.GetModuleAccount(ctx, recipientModule)
 
 	newFromCoins, hasNeg := fromAcc.GetCoins().SafeSub(amt)
 	if hasNeg {
@@ -98,16 +98,17 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 
 	acc := sk.ak.GetAccount(ctx, addr)
-	if acc == nil {
-		return nil
+	if acc != nil {
+		macc, ok := acc.(exported.ModuleAccountI)
+		if !ok {
+			return nil
+		}
+		return macc
 	}
 
-	macc, ok := acc.(exported.ModuleAccountI)
-	if !ok {
-		return nil
-	}
-
-	return macc
+	// create a new module account
+	macc := supplytypes.NewModuleAccount(moduleName, "holder")
+	return (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
 }
 
 // GetModuleAddress for dummy supply keeper

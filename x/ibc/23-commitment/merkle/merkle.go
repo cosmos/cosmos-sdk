@@ -31,6 +31,25 @@ func (Root) CommitmentKind() string {
 	return "merkle"
 }
 
+func (r Root) Update(cupdate commitment.RootUpdate) (commitment.Root, error) {
+	update, ok := cupdate.(RootUpdate)
+	if !ok {
+		return nil, errors.New("invalid type")
+	}
+	return Root{
+		Hash:      update.Hash,
+		KeyPrefix: r.KeyPrefix,
+	}, nil
+}
+
+type RootUpdate struct {
+	Hash []byte
+}
+
+func (RootUpdate) CommitmentKind() string {
+	return "merkle"
+}
+
 var _ commitment.Proof = Proof{}
 
 type Proof struct {

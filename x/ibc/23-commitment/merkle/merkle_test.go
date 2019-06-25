@@ -46,9 +46,11 @@ func query(t *testing.T, cms types.CommitMultiStore, k string) (value []byte, pr
 	return
 }
 
-func commit(cms types.CommitMultiStore) (root Root) {
+func commit(t *testing.T, cms types.CommitMultiStore, root commitment.Root) commitment.Root {
 	cid := cms.Commit()
-	return NewRoot(cid.Hash, [][]byte{[]byte("test"), []byte{0x00}})
+	res, err := root.Update(RootUpdate{cid.Hash})
+	require.NoError(t, err)
+	return res
 }
 
 func TestStore(t *testing.T) {
@@ -59,7 +61,7 @@ func TestStore(t *testing.T) {
 	kvstore.Set(key("merkle"), []byte("tree"))
 	kvstore.Set(key("block"), []byte("chain"))
 
-	root := commit(cms)
+	root := commit(t, cms, Root{KeyPrefix: [][]byte{[]byte("test"), []byte{0x00}}})
 
 	v1, p1 := query(t, cms, "hello")
 	require.Equal(t, []byte("world"), v1)
@@ -74,4 +76,24 @@ func TestStore(t *testing.T) {
 	require.True(t, cstore.Prove([]byte("hello"), []byte("world")))
 	require.True(t, cstore.Prove([]byte("merkle"), []byte("tree")))
 	require.True(t, cstore.Prove([]byte("block"), []byte("chain")))
+
+	kvstore.Set(key("12345"), []byte("67890"))
+	kvstore.Set(key("qwerty"), []byte("zxcv"))
+	kvstore.Set(key("hello"), []byte("dlrow"))
+
+	root = commit(t, cms, root)
+
+	v1, p1 = query(t, cms, "12345")
+	require.Equal(t, []byte("67890"), v1)
+	v2, p2 = query(t, cms, "qwerty")
+	require.Equal(t, []byte("zxcv"), v2)
+	v3, p3 = query(t, cms, "hello")
+	require.Equal(t, []byte("dlrow"), v3)
+
+	cstore, err = commitment.NewStore(root, []commitment.Proof{p1, p2, p3})
+	require.NoError(t, err)
+
+	require.True(t, cstore.Prove([]byte("12345"), []byte("67890")))
+	require.True(t, cstore.Prove([]byte("qwerty"), []byte("zxcv")))
+	require.True(t, cstore.Prove([]byte("hello"), []byte("dlrow")))
 }

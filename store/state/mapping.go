@@ -24,10 +24,6 @@ func (m Mapping) Get(ctx Context, key []byte, ptr interface{}) {
 	m.Value(key).Get(ctx, ptr)
 }
 
-func (m Mapping) GetIfExists(ctx Context, key []byte, ptr interface{}) {
-	m.Value(key).GetIfExists(ctx, ptr)
-}
-
 func (m Mapping) GetSafe(ctx Context, key []byte, ptr interface{}) error {
 	return m.Value(key).GetSafe(ctx, ptr)
 }

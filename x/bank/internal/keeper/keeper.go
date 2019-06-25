@@ -295,12 +295,12 @@ func hasCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt 
 }
 
 // getAccount implements AccountKeeper
-func getAccount(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress) auth.Account {
+func getAccount(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress) exported.Account {
 	return ak.GetAccount(ctx, addr)
 }
 
 // setAccount implements AccountKeeper
-func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc auth.Account) {
+func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc exported.Account) {
 	ak.SetAccount(ctx, acc)
 }
 
@@ -377,7 +377,7 @@ func sendCoins(ctx sdk.Context, am types.AccountKeeper, fromAddr, toAddr sdk.Acc
 // sendDelegatedCoins moves coins from one account to another without performing the
 // vesting account's SpendableCoins check
 // Returns ErrInvalidCoins if amt is invalid.
-func sendDelegatedCoins(ctx sdk.Context, ak auth.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func sendDelegatedCoins(ctx sdk.Context, ak types.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())

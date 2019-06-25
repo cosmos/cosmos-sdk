@@ -8,6 +8,7 @@ package supply
 import (
 	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 const (
@@ -40,7 +41,7 @@ var (
 
 type (
 	Keeper         = keeper.Keeper
-	ModuleAccountI = types.ModuleAccountI
+	ModuleAccountI = exported.ModuleAccountI
 	ModuleAccount  = types.ModuleAccount
 	AccountKeeper  = types.AccountKeeper
 	BankKeeper     = types.BankKeeper

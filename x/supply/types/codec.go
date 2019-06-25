@@ -2,11 +2,12 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // RegisterCodec registers the account types and interface
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 }
 

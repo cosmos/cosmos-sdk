@@ -4,31 +4,25 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	yaml "gopkg.in/yaml.v2"
 )
 
-var _ ModuleAccountI = (*ModuleAccount)(nil)
-
-// ModuleAccount defines an account type for pools that hold tokens in an escrow
-type ModuleAccountI interface {
-	auth.Account
-	GetName() string
-	GetPermission() string
-}
+var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
-	*auth.BaseAccount
+	*authtypes.BaseAccount
 	Name       string `json:"name"` // name of the module
-	Permission string `json:"perm"` // permission of module account (minter/burner/holder)
+	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
 }
 
 // NewModuleAccount creates a new ModuleAccount instance
 func NewModuleAccount(name, permission string) *ModuleAccount {
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
-	baseAcc := auth.NewBaseAccountWithAddress(moduleAddress)
+	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
 	if err := validatePermission(permission); err != nil {
 		panic(err)
@@ -41,12 +35,12 @@ func NewModuleAccount(name, permission string) *ModuleAccount {
 	}
 }
 
-// Name returns the the name of the holder's module
+// GetName returns the the name of the holder's module
 func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
 
-// Name returns the the name of the holder's module
+// GetPermission returns permission granted to the module account (holder/minter/burner)
 func (ma ModuleAccount) GetPermission() string {
 	return ma.Permission
 }

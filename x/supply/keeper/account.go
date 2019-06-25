@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // GetModuleAddress returns a an address  based on the name
@@ -24,7 +25,7 @@ func (k Keeper) GetModuleAddressAndPermission(moduleName string) (addr sdk.AccAd
 }
 
 // GetModuleAccount gets the module account to the auth account store
-func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
+func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
 	addr, perm := k.GetModuleAddressAndPermission(moduleName)
 	if addr == nil {
 		return nil
@@ -32,7 +33,7 @@ func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.Modul
 
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
-		macc, ok := acc.(types.ModuleAccountI)
+		macc, ok := acc.(exported.ModuleAccountI)
 		if !ok {
 			return nil
 		}
@@ -41,11 +42,11 @@ func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.Modul
 
 	// create a new module account
 	macc := types.NewModuleAccount(moduleName, perm)
-	return (k.ak.NewAccount(ctx, macc)).(types.ModuleAccountI) // set the account number
+	return (k.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (k Keeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
+func (k Keeper) SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI) {
 	k.ak.SetAccount(ctx, macc)
 }
 

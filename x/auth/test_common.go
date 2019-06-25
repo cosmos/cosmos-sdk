@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -92,15 +93,24 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 	return nil
 }
 
-func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) Account {
-
+// GetModuleAccount for dummy supply keeper
+func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
 	addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 
 	acc := sk.ak.GetAccount(ctx, addr)
-	if acc != nil {
-		return acc
+	if acc == nil {
+		return nil
 	}
 
-	// create a new module account
-	return sk.ak.NewAccountWithAddress(ctx, addr)
+	macc, ok := acc.(exported.ModuleAccountI)
+	if !ok {
+		return nil
+	}
+
+	return macc
+}
+
+// GetModuleAddress for dummy supply keeper
+func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 }

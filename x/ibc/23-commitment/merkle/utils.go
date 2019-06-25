@@ -23,6 +23,10 @@ func (root Root) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, 
 	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
 }
 
-func (root Root) Key(key []byte) []byte {
+func (root Root) QueryKey(key []byte) []byte {
 	return append(root.KeyPrefix, key...) // XXX: cloneAppend
+}
+
+func (root Root) QueryPath() []byte {
+
 }

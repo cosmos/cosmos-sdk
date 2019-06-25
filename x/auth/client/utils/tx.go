@@ -155,7 +155,7 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, m
 	}
 
 	var json []byte
-	if viper.GetBool(client.FlagIndentResponse) {
+	if viper.GetBool(flags.FlagIndentResponse) {
 		json, err = cliCtx.Codec.MarshalJSONIndent(stdTx, "", "  ")
 	} else {
 		json, err = cliCtx.Codec.MarshalJSON(stdTx)

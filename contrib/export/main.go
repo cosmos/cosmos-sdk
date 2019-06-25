@@ -25,12 +25,12 @@ const (
 
 func migrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "genesis [target-version] [genesis-file]",
+		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
 		Long: strings.TrimSpace(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-$ genesis v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
+$ migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
 `),
 		Args: cobra.ExactArgs(2),
 		RunE: runMigrateCmd,
@@ -91,8 +91,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) (err error) {
 }
 
 func main() {
-	var rootCmd = &cobra.Command{Use: "migrate"}
-	rootCmd.AddCommand(migrateGenesisCmd())
+	var rootCmd = migrateGenesisCmd()
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)

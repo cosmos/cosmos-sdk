@@ -30,6 +30,7 @@ x/{module}
 │       ├── errors.go
 │       ├── events.go
 │       ├── expected_keepers.go
+│       ├── genesis.go
 │       ├── keys.go
 │       ├── msgs.go
 │       ├── params.go

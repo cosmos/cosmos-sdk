@@ -1,10 +1,5 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
-)
-
 const (
 	// ModuleName is the module name constant used in many places
 	ModuleName = "distribution"
@@ -21,6 +16,3 @@ const (
 	// QuerierRoute is the querier route for distribution
 	QuerierRoute = ModuleName
 )
-
-// ModuleAddress distribution module account address
-var ModuleAddress = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))

@@ -3,7 +3,6 @@ package auth
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -95,7 +94,7 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 
 // GetModuleAccount for dummy supply keeper
 func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
-	addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+	addr := sk.GetModuleAddress(moduleName)
 
 	acc := sk.ak.GetAccount(ctx, addr)
 	if acc != nil {
@@ -113,5 +112,5 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 
 // GetModuleAddress for dummy supply keeper
 func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+	return supplytypes.NewModuleAddress(moduleName)
 }

@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -15,13 +15,17 @@ var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount
-	Name       string `json:"name"` // name of the module
+	Name       string `json:"name"`       // name of the module
 	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
+}
+
+func NewModuleAddress(name string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
 // NewModuleAccount creates a new ModuleAccount instance
 func NewModuleAccount(name, permission string) *ModuleAccount {
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
 	if err := validatePermission(permission); err != nil {

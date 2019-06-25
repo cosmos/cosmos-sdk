@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +26,7 @@ type permAddr struct {
 func newPermAddr(permission, name string) permAddr {
 	return permAddr{
 		permission: permission,
-		address:    sdk.AccAddress(crypto.AddressHash([]byte(name))),
+		address:    types.NewModuleAddress(name),
 	}
 }
 

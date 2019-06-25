@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
@@ -34,7 +33,7 @@ func TestSendCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, ak, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	baseAcc := ak.NewAccountWithAddress(ctx, sdk.AccAddress(crypto.AddressHash([]byte("baseAcc"))))
+	baseAcc := ak.NewAccountWithAddress(ctx, types.NewModuleAddress("baseAcc"))
 
 	err := holderAcc.SetCoins(initCoins)
 	require.NoError(t, err)

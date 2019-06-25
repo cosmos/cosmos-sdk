@@ -188,7 +188,7 @@ func TestProcessPostResponse(t *testing.T) {
 	// check that zero height returns expected response
 	ctx = ctx.WithHeight(0)
 	runPostProcessResponse(t, ctx, acc, jsonNoHeight, false)
-	// chcek zero height with indent
+	// check zero height with indent
 	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, true)
 	// check that height returns expected response
 	ctx = ctx.WithHeight(height)

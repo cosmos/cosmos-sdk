@@ -106,9 +106,6 @@ func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 // Human readable string
 func (u Uint) String() string { return u.i.String() }
 
-// Testing purpose random Uint generator
-func randomUint(u Uint) Uint { return NewUintFromBigInt(random(u.i)) }
-
 // MarshalAmino defines custom encoding scheme
 func (u Uint) MarshalAmino() (string, error) {
 	if u.i == nil { // Necessary since default Uint initialization has i.i as nil

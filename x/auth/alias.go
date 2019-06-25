@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -50,6 +51,7 @@ var (
 	NewTxBuilder                   = types.NewTxBuilder
 	NewTxBuilderFromCLI            = types.NewTxBuilderFromCLI
 	MakeSignature                  = types.MakeSignature
+	NewAccountRetriever            = types.NewAccountRetriever
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -63,9 +65,8 @@ var (
 )
 
 type (
-	Account                  = types.Account
-	VestingAccount           = types.VestingAccount
-	AccountDecoder           = types.AccountDecoder
+	Account                  = exported.Account
+	VestingAccount           = exported.VestingAccount
 	BaseAccount              = types.BaseAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount

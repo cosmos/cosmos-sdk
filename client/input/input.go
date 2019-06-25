@@ -14,28 +14,6 @@ import (
 // MinPassLength is the minimum acceptable password length
 const MinPassLength = 8
 
-var currentStdin *bufio.Reader
-
-func init() {
-	currentStdin = bufio.NewReader(os.Stdin)
-}
-
-// BufferStdin is used to allow reading prompts for stdin
-// multiple times, when we read from non-tty
-func BufferStdin() *bufio.Reader {
-	return currentStdin
-}
-
-// OverrideStdin allows to temporarily override stdin
-func OverrideStdin(newStdin *bufio.Reader) (cleanUp func()) {
-	prevStdin := currentStdin
-	currentStdin = newStdin
-	cleanUp = func() {
-		currentStdin = prevStdin
-	}
-	return cleanUp
-}
-
 // GetPassword will prompt for a password one-time (to sign a tx)
 // It enforces the password length
 func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {

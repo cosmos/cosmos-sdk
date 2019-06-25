@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -30,12 +30,12 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	ak         auth.AccountKeeper
+	ak         types.AccountKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(ak auth.AccountKeeper,
+func NewBaseKeeper(ak types.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
@@ -190,12 +190,12 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	ak         auth.AccountKeeper
+	ak         types.AccountKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(ak auth.AccountKeeper,
+func NewBaseSendKeeper(ak types.AccountKeeper,
 	paramSpace params.Subspace, codespace sdk.CodespaceType) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -238,12 +238,12 @@ type ViewKeeper interface {
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	ak        auth.AccountKeeper
+	ak        types.AccountKeeper
 	codespace sdk.CodespaceType
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType) BaseViewKeeper {
+func NewBaseViewKeeper(ak types.AccountKeeper, codespace sdk.CodespaceType) BaseViewKeeper {
 	return BaseViewKeeper{ak: ak, codespace: codespace}
 }
 
@@ -263,7 +263,7 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 }
 
 // getCoins returns the account coins
-func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
+func getCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.NewCoins()
@@ -272,7 +272,7 @@ func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 }
 
 // setCoins replaces the account coins for a new amount
-func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func setCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())
 	}
@@ -290,24 +290,24 @@ func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
+func hasCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
 // getAccount implements AccountKeeper
-func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
+func getAccount(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress) auth.Account {
 	return ak.GetAccount(ctx, addr)
 }
 
 // setAccount implements AccountKeeper
-func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
+func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc auth.Account) {
 	ak.SetAccount(ctx, acc)
 }
 
 // subtractCoins subtracts amt coins from an account with the given address addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
-func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func subtractCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
@@ -337,7 +337,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 }
 
 // AddCoins adds amt to the coins at the addr.
-func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func addCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
@@ -359,7 +359,7 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 
 // SendCoins moves coins from one account to another
 // Returns ErrInvalidCoins if amt is invalid.
-func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func sendCoins(ctx sdk.Context, am types.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	_, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
@@ -402,7 +402,7 @@ func sendDelegatedCoins(ctx sdk.Context, ak auth.AccountKeeper, fromAddr, toAddr
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error) {
+func inputOutputCoins(ctx sdk.Context, am types.AccountKeeper, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error) {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
 	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
@@ -436,8 +436,8 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []types.Inp
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackDelegation(acc auth.Account, blockTime time.Time, amt sdk.Coins) error {
-	vacc, ok := acc.(auth.VestingAccount)
+func trackDelegation(acc exported.Account, blockTime time.Time, amt sdk.Coins) error {
+	vacc, ok := acc.(exported.VestingAccount)
 	if ok {
 		vacc.TrackDelegation(blockTime, amt)
 		return nil
@@ -447,8 +447,8 @@ func trackDelegation(acc auth.Account, blockTime time.Time, amt sdk.Coins) error
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackUndelegation(acc auth.Account, amt sdk.Coins) error {
-	vacc, ok := acc.(auth.VestingAccount)
+func trackUndelegation(acc exported.Account, amt sdk.Coins) error {
+	vacc, ok := acc.(exported.VestingAccount)
 	if ok {
 		vacc.TrackUndelegation(amt)
 		return nil

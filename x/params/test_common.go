@@ -1,3 +1,4 @@
+// nolint: deadcode unused
 package params
 
 import (

@@ -1,10 +1,11 @@
 package commitment
 
-// XXX: []byte?
-type Root interface{}
+type Root interface {
+	CommitmentKind() string
+}
 
-// XXX: need to separate membership and non membership proof types
 type Proof interface {
+	CommitmentKind() string
 	GetKey() []byte
 	Verify(Root, []byte) error
 }

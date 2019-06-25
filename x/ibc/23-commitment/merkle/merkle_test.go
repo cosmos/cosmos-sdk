@@ -18,7 +18,7 @@ import (
 )
 
 func defaultComponents() (sdk.StoreKey, sdk.Context, types.CommitMultiStore, *codec.Codec) {
-	key := sdk.NewKVStoreKey("ibc")
+	key := sdk.NewKVStoreKey("test")
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
@@ -36,7 +36,7 @@ func key(str string) []byte {
 }
 
 func query(t *testing.T, cms types.CommitMultiStore, k string) (value []byte, proof Proof) {
-	qres := cms.(types.Queryable).Query(abci.RequestQuery{Path: "/ibc/key", Data: key(k), Prove: true})
+	qres := cms.(types.Queryable).Query(abci.RequestQuery{Path: "/test/key", Data: key(k), Prove: true})
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	value = qres.Value
 	proof = Proof{
@@ -44,6 +44,11 @@ func query(t *testing.T, cms types.CommitMultiStore, k string) (value []byte, pr
 		Proof: qres.Proof,
 	}
 	return
+}
+
+func commit(cms types.CommitMultiStore) (root Root) {
+	cid := cms.Commit()
+	return NewRoot(cid.Hash, [][]byte{[]byte("test"), []byte{0x00}})
 }
 
 func TestStore(t *testing.T) {
@@ -54,7 +59,7 @@ func TestStore(t *testing.T) {
 	kvstore.Set(key("merkle"), []byte("tree"))
 	kvstore.Set(key("block"), []byte("chain"))
 
-	cid := cms.Commit()
+	root := commit(cms)
 
 	v1, p1 := query(t, cms, "hello")
 	require.Equal(t, []byte("world"), v1)
@@ -63,7 +68,7 @@ func TestStore(t *testing.T) {
 	v3, p3 := query(t, cms, "block")
 	require.Equal(t, []byte("chain"), v3)
 
-	cstore, err := commitment.NewStore(cid.Hash, []commitment.Proof{p1, p2, p3})
+	cstore, err := commitment.NewStore(root, []commitment.Proof{p1, p2, p3})
 	require.NoError(t, err)
 
 	require.True(t, cstore.Prove([]byte("hello"), []byte("world")))

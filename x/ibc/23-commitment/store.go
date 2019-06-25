@@ -2,7 +2,7 @@ package commitment
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 )
 
 type Store interface {
@@ -44,6 +44,10 @@ func NewStore(root Root, proofs []Proof) (res store, err error) {
 	}
 
 	for _, proof := range proofs {
+		if proof.CommitmentKind() != root.CommitmentKind() {
+			err = errors.New("proof type not matching with root's")
+			return
+		}
 		res.proofs[string(proof.GetKey())] = proof
 	}
 
@@ -58,17 +62,14 @@ func (store store) Get(key []byte) ([]byte, bool) {
 func (store store) Prove(key, value []byte) bool {
 	stored, ok := store.Get(key)
 	if ok && bytes.Equal(stored, value) {
-		fmt.Println(1)
 		return true
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
-		fmt.Println(2)
 		return false
 	}
 	err := proof.Verify(store.root, value)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	store.verified[string(key)] = value

@@ -15,13 +15,31 @@ import (
 
 var _ commitment.Root = Root{}
 
-type Root = []byte
+type Root struct {
+	Hash      []byte
+	KeyPrefix [][]byte
+}
+
+func NewRoot(hash []byte, prefixes [][]byte) Root {
+	return Root{
+		Hash:      hash,
+		KeyPrefix: prefixes,
+	}
+}
+
+func (Root) CommitmentKind() string {
+	return "merkle"
+}
 
 var _ commitment.Proof = Proof{}
 
 type Proof struct {
 	Proof *merkle.Proof
 	Key   []byte
+}
+
+func (Proof) CommitmentKind() string {
+	return "merkle"
 }
 
 func (proof Proof) GetKey() []byte {
@@ -34,24 +52,24 @@ func (proof Proof) Verify(croot commitment.Root, value []byte) error {
 		return errors.New("invalid commitment root type")
 	}
 
-	keypath, err := PrefixKeyPath(SDKPrefix().String(), proof.Key)
+	keypath := merkle.KeyPath{}
+
+	for _, key := range root.KeyPrefix {
+		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
+	}
+
+	keypath, err := PrefixKeyPath(keypath.String(), proof.Key)
 	if err != nil {
 		return err
 	}
+
 	// Hard coded for now
 	runtime := rootmulti.DefaultProofRuntime()
 
 	if value != nil {
-		return runtime.VerifyValue(proof.Proof, root, keypath.String(), value)
+		return runtime.VerifyValue(proof.Proof, root.Hash, keypath.String(), value)
 	}
-	return runtime.VerifyAbsence(proof.Proof, root, keypath.String())
-}
-
-// Hard coded for now
-func SDKPrefix() merkle.KeyPath {
-	return new(merkle.KeyPath).
-		AppendKey([]byte("ibc"), merkle.KeyEncodingHex).
-		AppendKey([]byte{0x00}, merkle.KeyEncodingHex)
+	return runtime.VerifyAbsence(proof.Proof, root.Hash, keypath.String())
 }
 
 func PrefixKeyPath(prefix string, key []byte) (res merkle.KeyPath, err error) {

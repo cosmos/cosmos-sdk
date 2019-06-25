@@ -19,19 +19,6 @@ func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule strin
 	return k.bk.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
-// SendCoinsFromModuleToAccount trasfers coins from a ModuleAccount to an AccAddress
-func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string,
-	recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-
-	senderAddr := k.GetModuleAddress(senderModule)
-	if senderAddr == nil {
-		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
-	}
-
-	_, err := k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
-	return err
-}
-
 // SendCoinsFromModuleToModule trasfers coins from a ModuleAccount to another
 func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error {
 
@@ -60,7 +47,8 @@ func (k Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.Acc
 	return k.bk.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
-// SendCoinsFromAccountToModule trasfers coins from an AccAddress to a ModuleAccount
+// DelegateCoinsFromAccountToModule delegates coins and transfers
+// them from a delegator account to a module account
 func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress,
 	recipientModule string, amt sdk.Coins) sdk.Error {
 
@@ -73,15 +61,26 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 	return err
 }
 
+// UndelegateCoinsFromModuleToAccount undalegates the unbonding coins and transfers
+// them from a module account to the delegator account
+func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string,
+	recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+
+	senderAddr := k.GetModuleAddress(senderModule)
+	if senderAddr == nil {
+		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
+	}
+
+	_, err := k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
+	return err
+}
+
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
 // Panics if the name maps to a HolderAccount
 func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 	if amt.Empty() {
-		panic("cannot mint no coins!")
+		panic("cannot mint empty coins")
 	}
-
-	logger := k.Logger(ctx)
-
 	addr, perm := k.GetModuleAddressAndPermission(moduleName)
 	if addr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
@@ -101,6 +100,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	supply.Inflate(amt)
 	k.SetSupply(ctx, supply)
 
+	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("minted %s from %s module account", amt.String(), moduleName))
 
 	return nil
@@ -109,10 +109,8 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 // BurnCoins burns coins deletes coins from the balance of the module account
 func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 	if amt.Empty() {
-		panic("cannot burn no coins!")
+		panic("cannot burn empty coins")
 	}
-
-	logger := k.Logger(ctx)
 
 	addr, perm := k.GetModuleAddressAndPermission(moduleName)
 	if addr == nil {
@@ -133,6 +131,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	supply.Deflate(amt)
 	k.SetSupply(ctx, supply)
 
+	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("burned %s from %s module account", amt.String(), moduleName))
 
 	return nil

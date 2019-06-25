@@ -66,14 +66,10 @@ func getBlockSize(r *rand.Rand, params Params,
 func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {
-
 		outInvariant := func(ctx sdk.Context) error {
-
 			if int(ctx.BlockHeight())%period == offset {
 				return invariant(ctx)
 			}
-			panic(fmt.Sprintf("debug BlockHeight: %v\n", ctx.BlockHeight()))
-
 			return nil
 		}
 		outInvariants = append(outInvariants, outInvariant)

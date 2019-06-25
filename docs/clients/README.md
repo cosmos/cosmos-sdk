@@ -59,7 +59,7 @@ mkdir -p ${GOPATH}/src/github.com/cosmos/cosmos-sdk
 cd ${GOPATH}/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk.git
 cd cosmos-sdk
-git checkout v0.34.7
+git checkout v0.33.2
 make install
 gaiad init ${ACCOUNT} --chain-id ${NETWORK}
 curl https://raw.githubusercontent.com/cosmos/testnets/master/${NETWORK}/genesis.json -o ~/.gaiad/config/genesis.json
@@ -67,6 +67,15 @@ sed -i '/persistent_peers = ""/c\persistent_peers = "c24f496b951148697f8a24fd749
 gaiad start
 [kill gaiad]
 
+# First we need to upgrade from 0.33 to 0.34
+gaiad export > ~/v0_33_2_genesis.json
+git checkout v0.34.7
+make install
+python3 contrib/export/v0.33.x-to-v0.34.0.py --chain-id=gaia-13k-034 ~/v0_33_2_genesis.json > ~/.gaiad/config/genesis.json
+gaiad start
+[kill gaiad]
+
+# Now let's upgrade from 0.34 to 0.36
 gaiad export > ~/v0_34_7_genesis.json
 git checkout master # TODO: replace with v0.36.0 once the tag is released
 make build-genesis-migrate

@@ -37,7 +37,7 @@ func (cs ConsensusState) update(header Header) ConsensusState {
 	return ConsensusState{
 		ChainID:          cs.ChainID,
 		Height:           uint64(header.Height),
-		Root:             header.AppHash,
+		Root:             cs.GetRoot().Update(header.AppHash),
 		NextValidatorSet: header.NextValidatorSet,
 	}
 }

@@ -11,8 +11,6 @@ A typical Cosmos SDK module can be structured as follows:
 
 ```shell
 x/{module}
-├── abci.go
-├── alias.go
 ├── client
 │   ├── cli
 │   │   ├── query.go
@@ -22,8 +20,6 @@ x/{module}
 │       └── tx.go
 ├── exported
 │   └── exported.go
-├── genesis.go
-├── handler.go
 ├── internal
 │   ├── keeper
 │   │   ├── invariants.go
@@ -40,6 +36,10 @@ x/{module}
 │       ├── params.go
 │       ├── ...
 │       └── querier.go
+├── abci.go
+├── alias.go
+├── genesis.go
+├── handler.go
 ├── module.go
 ├── ...
 └── simulation.go

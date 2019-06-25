@@ -28,10 +28,8 @@ type Coin struct {
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
-	mustValidateDenom(denom)
-
-	if amount.LT(ZeroInt()) {
-		panic(fmt.Errorf("negative coin amount: %v", amount))
+	if err := validate(denom, amount); err != nil {
+		panic(err)
 	}
 
 	return Coin{
@@ -49,6 +47,28 @@ func NewInt64Coin(denom string, amount int64) Coin {
 // String provides a human-readable representation of a coin
 func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+// validate returns an error if the Coin has a negative amount or if
+// the denom is invalid.
+func validate(denom string, amount Int) error {
+	if err := validateDenom(denom); err != nil {
+		return err
+	}
+
+	if amount.LT(ZeroInt()) {
+		return fmt.Errorf("negative coin amount: %v", amount)
+	}
+
+	return nil
+}
+
+// IsValid returns true if the Coin has a non-negative amount and the denom is vaild.
+func (coin Coin) IsValid() bool {
+	if err := validate(coin.Denom, coin.Amount); err != nil {
+		return false
+	}
+	return true
 }
 
 // IsZero returns if this represents no money
@@ -547,12 +567,6 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
-}
-
-func copyCoins(coins Coins) Coins {
-	copyCoins := make(Coins, len(coins))
-	copy(copyCoins, coins)
-	return copyCoins
 }
 
 //-----------------------------------------------------------------------------

@@ -1,10 +1,8 @@
 package keys
 
 import (
-	"bufio"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -12,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -37,7 +34,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 	// Now enter password
-	cleanUp1 := input.OverrideStdin(bufio.NewReader(strings.NewReader("123456789\n")))
-	defer cleanUp1()
+	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
+	mockIn.Reset("123456789\n")
 	assert.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
 }

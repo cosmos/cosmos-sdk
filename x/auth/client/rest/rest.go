@@ -9,14 +9,7 @@ import (
 // RegisterRoutes registers the auth module REST routes.
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
 	r.HandleFunc(
-		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
-	).Methods("GET")
-
-	// TODO: Change path or mount under x/bank if possible
-	r.HandleFunc(
-		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, context.GetAccountDecoder(cliCtx.Codec), cliCtx),
+		"/auth/accounts/{address}", QueryAccountRequestHandlerFn(storeName, cliCtx),
 	).Methods("GET")
 }
 

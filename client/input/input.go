@@ -14,28 +14,6 @@ import (
 // MinPassLength is the minimum acceptable password length
 const MinPassLength = 8
 
-var currentStdin *bufio.Reader
-
-func init() {
-	currentStdin = bufio.NewReader(os.Stdin)
-}
-
-// BufferStdin is used to allow reading prompts for stdin
-// multiple times, when we read from non-tty
-func BufferStdin() *bufio.Reader {
-	return currentStdin
-}
-
-// OverrideStdin allows to temporarily override stdin
-func OverrideStdin(newStdin *bufio.Reader) (cleanUp func()) {
-	prevStdin := currentStdin
-	currentStdin = newStdin
-	cleanUp = func() {
-		currentStdin = prevStdin
-	}
-	return cleanUp
-}
-
 // GetPassword will prompt for a password one-time (to sign a tx)
 // It enforces the password length
 func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
@@ -85,11 +63,11 @@ func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error)
 
 // GetConfirmation will request user give the confirmation from stdin.
 // "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
-// If the input is not recognized, it will ask again.
+// If the input is not recognized, it returns false and a nil error.
 func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 	for {
 		if inputIsTty() {
-			fmt.Print(fmt.Sprintf("%s [Y/n]: ", prompt))
+			fmt.Print(fmt.Sprintf("%s [y/N]: ", prompt))
 		}
 
 		response, err := readLineFromBuf(buf)
@@ -98,11 +76,11 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" || response == "" {
+		if response[0] == 'y' {
 			return true, nil
-		} else if response == "n" || response == "no" {
-			return false, nil
 		}
+
+		return false, nil
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -17,7 +16,7 @@ import (
 
 // SendTx tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(mapper auth.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateMsgSend(mapper types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	handler := NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -35,7 +34,7 @@ func SimulateMsgSend(mapper auth.AccountKeeper, bk keeper.Keeper) simulation.Ope
 	}
 }
 
-func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (
+func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper types.AccountKeeper) (
 	fromAcc simulation.Account, comment string, msg types.MsgSend, ok bool) {
 
 	fromAcc = simulation.RandomAcc(r, accs)
@@ -65,7 +64,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 }
 
 // Sends and verifies the transition of a msg send.
-func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 	fromAcc := mapper.GetAccount(ctx, msg.FromAddress)
 	AccountNumbers := []uint64{fromAcc.GetAccountNumber()}
 	SequenceNumbers := []uint64{fromAcc.GetSequence()}
@@ -111,7 +110,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg t
 
 // SingleInputSendMsg tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
-func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateSingleInputMsgMultiSend(mapper types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	handler := NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -129,7 +128,7 @@ func SimulateSingleInputMsgMultiSend(mapper auth.AccountKeeper, bk keeper.Keeper
 	}
 }
 
-func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (
+func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper types.AccountKeeper) (
 	fromAcc simulation.Account, comment string, msg types.MsgMultiSend, ok bool) {
 
 	fromAcc = simulation.RandomAcc(r, accs)
@@ -164,7 +163,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
-func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg types.MsgMultiSend,
+func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg types.MsgMultiSend,
 	ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))

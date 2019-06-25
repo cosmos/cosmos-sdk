@@ -1,1 +1,1 @@
-#4564 Allow empty answer to evaluate as 'Y' on tx submission prompt.
+#4564 client/input.GetConfirmation()'s default is changed to No.

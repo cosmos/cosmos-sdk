@@ -12,10 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 var (
@@ -25,8 +25,6 @@ var (
 
 // app module basics object
 type AppModuleBasic struct{}
-
-var _ module.AppModuleBasic = AppModuleBasic{}
 
 // module name
 func (AppModuleBasic) Name() string { return ModuleName }
@@ -67,11 +65,11 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	accountKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -94,10 +92,12 @@ func (AppModule) Route() string { return RouterKey }
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // module querier route name
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string { return RouterKey }
 
 // module querier
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return keeper.NewQuerier(am.keeper)
+}
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {

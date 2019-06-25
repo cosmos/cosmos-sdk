@@ -65,6 +65,10 @@ func (v Value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.key)
 }
 
+func (v Value) Key() []byte {
+	return v.base.key(v.key)
+}
+
 type GetSafeErrorType byte
 
 const (

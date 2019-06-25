@@ -81,8 +81,8 @@ func (man Manager) Query(ctx sdk.Context, id string) (Object, error) {
 
 func (man CounterpartyManager) object(id string) CounterObject {
 	return CounterObject{
-		id:     id,
-		client: man.protocol.Value([]byte(id)),
+		id:             id,
+		consensusState: man.protocol.Value([]byte(id)),
 	}
 }
 
@@ -97,8 +97,8 @@ type Object struct {
 }
 
 type CounterObject struct {
-	id     string
-	client commitment.Value
+	id             string
+	consensusState commitment.Value
 }
 
 func (obj Object) ID() string {
@@ -115,7 +115,7 @@ func (obj Object) Frozen(ctx sdk.Context) bool {
 }
 
 func (obj CounterObject) Is(ctx sdk.Context, client ConsensusState) bool {
-	return obj.client.Is(ctx, client)
+	return obj.consensusState.Is(ctx, client)
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
@@ -132,13 +132,13 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 	}
 
 	var stored ConsensusState
-	obj.client.Get(ctx, &stored)
+	obj.consensusState.Get(ctx, &stored)
 	updated, err := stored.Validate(header)
 	if err != nil {
 		return err
 	}
 
-	obj.client.Set(ctx, updated)
+	obj.consensusState.Set(ctx, updated)
 
 	return nil
 }
@@ -148,11 +148,11 @@ func (obj Object) Freeze(ctx sdk.Context) error {
 		panic("should not freeze nonexisting client")
 	}
 
-	if obj.freeze.Get(ctx) {
+	if obj.Frozen(ctx) {
 		return errors.New("client is already frozen")
 	}
 
-	obj.freeze.Set(ctx, true)
+	obj.frozen.Set(ctx, true)
 
 	return nil
 }
@@ -162,12 +162,12 @@ func (obj Object) Delete(ctx sdk.Context) error {
 		panic("should not delete nonexisting client")
 	}
 
-	if !obj.freeze.Get(ctx) {
+	if !obj.Frozen(ctx) {
 		return errors.New("client is not frozen")
 	}
 
-	obj.client.Delete(ctx)
-	obj.freeze.Delete(ctx)
+	obj.consensusState.Delete(ctx)
+	obj.frozen.Delete(ctx)
 
 	return nil
 }

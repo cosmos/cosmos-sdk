@@ -124,7 +124,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
-		[]string{}, []string{}, []string{types.ModuleName})
+		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedTokensName, types.BondedTokensName})
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

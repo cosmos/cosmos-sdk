@@ -1283,7 +1283,7 @@ func TestInvalidMsg(t *testing.T) {
 }
 
 func TestInvalidCoinDenom(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _  := keep.CreateTestInput(t, false, 1000)
 	valA, valB, delAddr := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1]), keep.Addrs[2]
 
 	valTokens := sdk.TokensFromConsensusPower(100)

@@ -77,7 +77,8 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace, []string{}, []string{}, []string{})
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedTokensName, staking.BondedTokensName})
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))

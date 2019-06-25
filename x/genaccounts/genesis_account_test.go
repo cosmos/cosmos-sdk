@@ -11,7 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 func TestGenesisAccountValidate(t *testing.T) {
@@ -28,7 +28,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid module account",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "mint", supply.Minter),
+			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "mint", supplytypes.Minter),
 			nil,
 		},
 		{
@@ -88,10 +88,10 @@ func TestToAccount(t *testing.T) {
 	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
 
 	// module account
-	macc := supply.NewModuleAccount("mint", supply.Minter)
+	macc := supplytypes.NewModuleAccount("mint", supplytypes.Minter)
 	genAcc, err = NewGenesisAccountI(macc)
 	require.NoError(t, err)
 	acc = genAcc.ToAccount()
-	require.IsType(t, &supply.ModuleAccount{}, acc)
-	require.Equal(t, macc, acc.(*supply.ModuleAccount))
+	require.IsType(t, &supplytypes.ModuleAccount{}, acc)
+	require.Equal(t, macc, acc.(*supplytypes.ModuleAccount))
 }

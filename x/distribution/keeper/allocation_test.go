@@ -39,7 +39,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 }
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
-	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	ctx, ak, k, sk, supplyKeeper := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -74,7 +74,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	feeCollector := ak.GetAccount(ctx, auth.FeeCollectorAddr)
+	feeCollector := supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err := feeCollector.SetCoins(fees)
@@ -110,7 +110,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	communityTax := sdk.NewDec(0)
-	ctx, ak, _, k, sk, _, _ := CreateTestInputAdvanced(t, false, 1000000, communityTax)
+	ctx, ak, _, k, sk, _, supplyKeeper := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 10% commission
@@ -157,7 +157,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)))
 
-	feeCollector := ak.GetAccount(ctx, auth.FeeCollectorAddr)
+	feeCollector := supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err := feeCollector.SetCoins(fees)

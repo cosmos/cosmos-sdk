@@ -26,7 +26,8 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedTokensName, types.BondedTokensName})
 	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -56,9 +57,11 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
-		notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName)
-		bondPool := supply.NewModuleAccount(types.BondedTokensName)
+		feeCollector := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+		notBondedPool := supply.NewModuleAccount(types.NotBondedTokensName, supply.Burner)
+		bondPool := supply.NewModuleAccount(types.BondedTokensName, supply.Burner)
 
+		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 

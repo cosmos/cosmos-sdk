@@ -5,13 +5,6 @@ import (
 	extypes "github.com/cosmos/cosmos-sdk/contrib/migrate/types"
 	v034gov "github.com/cosmos/cosmos-sdk/contrib/migrate/v034/gov"
 	v036gov "github.com/cosmos/cosmos-sdk/contrib/migrate/v036/gov"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func migrateGovernance(initialState v034gov.GenesisState) v036gov.GenesisState {
@@ -99,52 +92,6 @@ func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 		v036gov.RegisterCodec(v036Codec)
 		delete(appState, v034gov.ModuleName) // Drop old key, in case it changed name
 		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(migrateGovernance(govState))
-	}
-	// migration below are only sanity check:
-	// used as unmarshal guarantee,
-	// so if anyone change the types without a migrations we panic
-	// We could move this next steps to a test OR use the outcome on CCI for re-import.
-
-	if appState[auth.ModuleName] != nil {
-		var authState auth.GenesisState
-		cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authState)
-		appState[auth.ModuleName] = cdc.MustMarshalJSON(authState)
-	}
-
-	if appState[bank.ModuleName] != nil {
-		var bankState bank.GenesisState
-		cdc.MustUnmarshalJSON(appState[bank.ModuleName], &bankState)
-		appState[bank.ModuleName] = cdc.MustMarshalJSON(bankState)
-	}
-
-	if appState[crisis.ModuleName] != nil {
-		var crisisState crisis.GenesisState
-		cdc.MustUnmarshalJSON(appState[crisis.ModuleName], &crisisState)
-		appState[crisis.ModuleName] = cdc.MustMarshalJSON(crisisState)
-	}
-
-	if appState[distribution.ModuleName] != nil {
-		var distributionState distribution.GenesisState
-		cdc.MustUnmarshalJSON(appState[distribution.ModuleName], &distributionState)
-		appState[distribution.ModuleName] = cdc.MustMarshalJSON(distributionState)
-	}
-
-	if appState[mint.ModuleName] != nil {
-		var mintState mint.GenesisState
-		cdc.MustUnmarshalJSON(appState[mint.ModuleName], &mintState)
-		appState[mint.ModuleName] = cdc.MustMarshalJSON(mintState)
-	}
-
-	if appState[slashing.ModuleName] != nil {
-		var slashingState slashing.GenesisState
-		cdc.MustUnmarshalJSON(appState[slashing.ModuleName], &slashingState)
-		appState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingState)
-	}
-
-	if appState[staking.ModuleName] != nil {
-		var stakingState staking.GenesisState
-		cdc.MustUnmarshalJSON(appState[staking.ModuleName], &stakingState)
-		appState[staking.ModuleName] = cdc.MustMarshalJSON(stakingState)
 	}
 	return appState
 }

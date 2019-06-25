@@ -46,11 +46,9 @@ func query(t *testing.T, cms types.CommitMultiStore, k string) (value []byte, pr
 	return
 }
 
-func commit(t *testing.T, cms types.CommitMultiStore, root commitment.Root) commitment.Root {
+func commit(cms types.CommitMultiStore, root Root) Root {
 	cid := cms.Commit()
-	res, err := root.Update(RootUpdate{cid.Hash})
-	require.NoError(t, err)
-	return res
+	return root.Update(cid.Hash).(Root)
 }
 
 func TestStore(t *testing.T) {
@@ -61,7 +59,7 @@ func TestStore(t *testing.T) {
 	kvstore.Set(key("merkle"), []byte("tree"))
 	kvstore.Set(key("block"), []byte("chain"))
 
-	root := commit(t, cms, Root{KeyPrefix: [][]byte{[]byte("test"), []byte{0x00}}})
+	root := commit(cms, Root{KeyPrefix: [][]byte{[]byte("test"), []byte{0x00}}})
 
 	v1, p1 := query(t, cms, "hello")
 	require.Equal(t, []byte("world"), v1)
@@ -81,7 +79,7 @@ func TestStore(t *testing.T) {
 	kvstore.Set(key("qwerty"), []byte("zxcv"))
 	kvstore.Set(key("hello"), []byte("dlrow"))
 
-	root = commit(t, cms, root)
+	root = commit(cms, root)
 
 	v1, p1 = query(t, cms, "12345")
 	require.Equal(t, []byte("67890"), v1)

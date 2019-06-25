@@ -2,11 +2,7 @@ package commitment
 
 type Root interface {
 	CommitmentKind() string
-	Update(RootUpdate) (Root, error)
-}
-
-type RootUpdate interface {
-	CommitmentKind() string
+	Update([]byte) Root
 }
 
 type Proof interface {

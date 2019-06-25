@@ -46,3 +46,38 @@ git checkout v0.36.0 && make build-genesis-migrate
 The resulting genesis will be importable into the targeted version of the dapp using the SDK.
 
 
+
+
+### Practical testnet upgrade example
+
+Given a fresh machine, with a working go 12.5 environment we can experiment on migrating by doing:
+
+```bash
+ACCOUNT=myexample
+NETWORK=gaia-13k
+mkdir -p ${GOPATH}/src/github.com/cosmos/cosmos-sdk
+cd ${GOPATH}/src/github.com/cosmos
+git clone https://github.com/cosmos/cosmos-sdk.git
+cd cosmos-sdk
+git checkout v0.34.7
+make install
+gaiad init ${ACCOUNT} --chain-id ${NETWORK}
+curl https://raw.githubusercontent.com/cosmos/testnets/master/${NETWORK}/genesis.json -o ~/.gaiad/config/genesis.json
+sed -i '/persistent_peers = ""/c\persistent_peers = "c24f496b951148697f8a24fd749786075c128f00@35.203.176.214:26656"' .gaiad/config/config.toml
+gaiad start
+[kill gaiad]
+
+gaiad export > ~/v0_34_7_genesis.json
+git checkout master # TODO: replace with v0.36.0 once the tag is released
+make build-genesis-migrate
+./build/migrate genesis v0.36 ~/v0_34_7_genesis.json --time <genesis-start-time-rfc3339> --chain-id <new-chain-id> > ~/.gaiad/config/genesis.json
+cd ${GOPATH}/src/github.com/cosmos
+
+# Needed since v0.36.0 as gaia has been removed from the SDK repo
+git clone https://github.com/cosmos/gaia.git
+git checkout master # TODO: replace with proper tag when released
+cd gaia
+make install
+gaiad start
+
+```

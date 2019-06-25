@@ -773,6 +773,11 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
+
+	// TODO fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
+	if period == 1 {
+		return app.crisisKeeper.Invariants()
+	}
 	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
 }
 
@@ -941,7 +946,7 @@ func TestAppImportExport(t *testing.T) {
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
 			fmt.Sprintf("unequal %s stores: \n%s",
-			storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
+				storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
 		)
 	}
 

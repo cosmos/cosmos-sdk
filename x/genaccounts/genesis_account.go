@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	//supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 

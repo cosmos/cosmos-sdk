@@ -121,11 +121,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	switch validator.GetStatus() {
 	case sdk.Bonded:
-		if err := k.removeBondedTokens(ctx, tokensToBurn); err != nil {
+		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
 	case sdk.Unbonding, sdk.Unbonded:
-		if err := k.removeNotBondedTokens(ctx, tokensToBurn); err != nil {
+		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
 	}
@@ -206,7 +206,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 	}
 
-	if err := k.removeNotBondedTokens(ctx, burnedAmount); err != nil {
+	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
 		panic(err)
 	}
 
@@ -262,19 +262,33 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
+
+		dstValidator, found := k.GetValidator(ctx, redelegation.ValidatorDstAddress)
+		if !found {
+			panic("destination validator not found")
+		}
+
+		// tokens of a redelegation currently live in the destination validator
+		// therefor we must burn tokens from the destination-validator's bonding status
 		switch {
-		case srcValidator.IsBonded():
+		case dstValidator.IsBonded():
 			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
-		case srcValidator.IsUnbonded(), srcValidator.IsUnbonding():
+		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
+		default:
+			panic("unknown validator status")
 		}
 	}
 
-	if err := k.removeBondedTokens(ctx, bondedBurnedAmount); err != nil {
-		panic(err)
+	if bondedBurnedAmount.IsPositive() {
+		if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
+			panic(err)
+		}
 	}
-	if err := k.removeNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
-		panic(err)
+	if notBondedBurnedAmount.IsPositive() {
+		if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
+			panic(err)
+		}
 	}
 
 	return totalSlashAmount

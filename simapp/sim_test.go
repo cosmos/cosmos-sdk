@@ -23,11 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -940,9 +940,8 @@ func TestAppImportExport(t *testing.T) {
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
-			"unequal %s stores: \n"+
-				"%s",
-			storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB),
+			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
+			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
 		)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Supply represents a struct that passively keeps track of the total supply amounts in the network
@@ -29,10 +30,11 @@ func (supply *Supply) Deflate(amount sdk.Coins) {
 
 // String returns a human readable string representation of a supplier.
 func (supply Supply) String() string {
-	return fmt.Sprintf(`Supply:
-Total: %s
-`,
-		supply.Total)
+	b, err := yaml.Marshal(supply)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 
 // ValidateBasic validates the Supply coins and returns error if invalid

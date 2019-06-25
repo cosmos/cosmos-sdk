@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
-	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -19,6 +20,7 @@ type ModuleAccount struct {
 	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
 }
 
+// NewModuleAddress creates an AccAddress from the hash of the module's name
 func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
@@ -50,12 +52,12 @@ func (ma ModuleAccount) GetPermission() string {
 }
 
 // SetPubKey - Implements Account
-func (ma *ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (ma ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
 // SetSequence - Implements Account
-func (ma *ModuleAccount) SetSequence(seq uint64) error {
+func (ma ModuleAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
@@ -66,4 +68,31 @@ func (ma ModuleAccount) String() string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// MarshalYAML returns the YAML representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		Address       sdk.AccAddress
+		Coins         sdk.Coins
+		PubKey        string
+		AccountNumber uint64
+		Sequence      uint64
+		Name          string
+		Permission    string
+	}{
+		Address:       ma.Address,
+		Coins:         ma.Coins,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permission:    ma.Permission,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
 }

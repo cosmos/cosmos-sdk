@@ -940,8 +940,8 @@ func TestAppImportExport(t *testing.T) {
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
-			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
-			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
+			fmt.Sprintf("unequal %s stores: \n%s",
+			storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
 		)
 	}
 

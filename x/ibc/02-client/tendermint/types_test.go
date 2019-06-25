@@ -24,7 +24,7 @@ import (
 const chainid = "testchain"
 
 func defaultComponents() (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
-	key := sdk.NewKVStoreKey("ibc")
+	key := sdk.NewKVStoreKey("test")
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
@@ -91,6 +91,13 @@ func (node *node) Commit() tmtypes.SignedHeader {
 	return commit
 }
 
+func keyPrefix() [][]byte {
+	return [][]byte{
+		[]byte("test"),
+		[]byte{0x00},
+	}
+}
+
 type Verifier struct {
 	ConsensusState
 }
@@ -100,7 +107,7 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators) *Verifi
 		ConsensusState{
 			ChainID:          chainid,
 			Height:           uint64(header.Height),
-			Root:             header.AppHash,
+			Root:             merkle.NewRoot(header.AppHash, keyPrefix()),
 			NextValidatorSet: nextvalset.ValidatorSet(),
 		},
 	}
@@ -168,7 +175,7 @@ func key(str []byte) []byte {
 }
 
 func (node *node) query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	qres := node.cms.(stypes.Queryable).Query(abci.RequestQuery{Path: "/ibc/key", Data: key(k), Prove: true})
+	qres := node.cms.(stypes.Queryable).Query(abci.RequestQuery{Path: "/test/key", Data: key(k), Prove: true})
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	proof := merkle.Proof{
 		Key:   []byte(k),
@@ -203,7 +210,7 @@ func testProof(t *testing.T) {
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore([]byte(header.AppHash), proofs)
+		cstore, err := commitment.NewStore(merkle.NewRoot([]byte(header.AppHash), keyPrefix()), proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

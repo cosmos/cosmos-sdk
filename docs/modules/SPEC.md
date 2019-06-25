@@ -64,6 +64,7 @@ Types defined here allow for `expected_keepers.go` in other modules to define
 contracts that use single canonical types. This pattern allows for code to remain
 DRY and also alleviates import cycle chaos.
 - `genesis.go`: The module's genesis related business logic (e.g. `InitGenesis`).
+Note, genesis types are defined in `internal/types`.
 - `handler.go`: The module's message handlers.
 - `internal/`: The module's internal types and implementations. The purpose of
 this package is mainly two fold. First, it signals that this package is not

@@ -11,7 +11,7 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr
 
 	// NOTE the community pool isn't a module account, however its coins
 	// are held in the distribution module account. Thus the community pool
-	// must be reduced seperately from the SendCoinsFromModuleToAccount call
+	// must be reduced separately from the SendCoinsFromModuleToAccount call
 	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoins(amount))
 	if negative {
 		return types.ErrBadDistribution(k.codespace)

@@ -91,23 +91,16 @@ func (node *node) Commit() tmtypes.SignedHeader {
 	return commit
 }
 
-func keyPrefix() [][]byte {
-	return [][]byte{
-		[]byte("test"),
-		[]byte{0x00},
-	}
-}
-
 type Verifier struct {
 	ConsensusState
 }
 
-func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators) *Verifier {
+func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root merkle.Root) *Verifier {
 	return &Verifier{
 		ConsensusState{
 			ChainID:          chainid,
 			Height:           uint64(header.Height),
-			Root:             merkle.NewRoot(header.AppHash, keyPrefix()),
+			Root:             root.Update(header.AppHash),
 			NextValidatorSet: nextvalset.ValidatorSet(),
 		},
 	}
@@ -129,12 +122,18 @@ func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset Mock
 	return nil
 }
 
+func newRoot() merkle.Root {
+	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, []byte{0x12, 0x34})
+}
+
 func testUpdate(t *testing.T, interval int, ok bool) {
 	node := NewNode(NewMockValidators(100, 10))
 
 	node.Commit()
 
-	verifier := NewVerifier(node.last(), node.valset)
+	root := newRoot()
+
+	verifier := NewVerifier(node.last(), node.valset, root)
 
 	for i := 0; i < 100; i++ {
 		header := node.Commit()
@@ -170,22 +169,14 @@ func TestTenthBlockUpdate(t *testing.T) {
 }
 */
 
-func key(str []byte) []byte {
-	return append([]byte{0x00}, str...)
-}
-
-func (node *node) query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	qres := node.cms.(stypes.Queryable).Query(abci.RequestQuery{Path: "/test/key", Data: key(k), Prove: true})
-	require.Equal(t, uint32(0), qres.Code, qres.Log)
-	proof := merkle.Proof{
-		Key:   []byte(k),
-		Proof: qres.Proof,
-	}
-	return qres.Value, proof
+func (node *node) query(t *testing.T, root merkle.Root, k []byte) ([]byte, commitment.Proof) {
+	code, value, proof := root.Query(node.cms, k)
+	require.Equal(t, uint32(0), code)
+	return value, proof
 }
 
 func (node *node) Set(k, value []byte) {
-	node.store.Set(key(k), value)
+	node.store.Set(newRoot().Key(k), value)
 }
 
 func testProof(t *testing.T) {
@@ -205,12 +196,13 @@ func testProof(t *testing.T) {
 		}
 		header := node.Commit()
 		proofs := []commitment.Proof{}
+		root := newRoot().Update(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.query(t, []byte(kvp.Key))
+			v, p := node.query(t, root.(merkle.Root), []byte(kvp.Key))
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(merkle.NewRoot([]byte(header.AppHash), keyPrefix()), proofs)
+		cstore, err := commitment.NewStore(root, proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

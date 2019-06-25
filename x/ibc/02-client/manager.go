@@ -55,9 +55,9 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 */
 func (man Manager) object(id string) Object {
 	return Object{
-		id:     id,
-		client: man.protocol.Value([]byte(id)),
-		freeze: state.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
+		id:             id,
+		consensusState: man.protocol.Value([]byte(id)),
+		frozen:         state.NewBoolean(man.protocol.Value([]byte(id + "/freeze"))),
 	}
 }
 
@@ -67,7 +67,7 @@ func (man Manager) Create(ctx sdk.Context, cs ConsensusState) (Object, error) {
 	if obj.exists(ctx) {
 		return Object{}, errors.New("Create client on already existing id")
 	}
-	obj.client.Set(ctx, cs)
+	obj.consensusState.Set(ctx, cs)
 	return obj, nil
 }
 
@@ -91,9 +91,9 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 }
 
 type Object struct {
-	id     string
-	client state.Value // ConsensusState
-	freeze state.Boolean
+	id             string
+	consensusState state.Value // ConsensusState
+	frozen         state.Boolean
 }
 
 type CounterObject struct {
@@ -101,21 +101,25 @@ type CounterObject struct {
 	client commitment.Value
 }
 
-func (obj Object) exists(ctx sdk.Context) bool {
-	return obj.client.Exists(ctx)
-}
-
 func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) Value(ctx sdk.Context) (res ConsensusState) {
-	obj.client.Get(ctx, &res)
+func (obj Object) ConsensusState(ctx sdk.Context) (res ConsensusState) {
+	obj.consensusState.Get(ctx, &res)
 	return
+}
+
+func (obj Object) Frozen(ctx sdk.Context) bool {
+	return obj.frozen.Get(ctx)
 }
 
 func (obj CounterObject) Is(ctx sdk.Context, client ConsensusState) bool {
 	return obj.client.Is(ctx, client)
+}
+
+func (obj Object) exists(ctx sdk.Context) bool {
+	return obj.consensusState.Exists(ctx)
 }
 
 func (obj Object) Update(ctx sdk.Context, header Header) error {
@@ -123,12 +127,12 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 		panic("should not update nonexisting client")
 	}
 
-	if obj.freeze.Get(ctx) {
+	if obj.Frozen(ctx) {
 		return errors.New("client is frozen")
 	}
 
 	var stored ConsensusState
-	obj.client.GetIfExists(ctx, &stored)
+	obj.client.Get(ctx, &stored)
 	updated, err := stored.Validate(header)
 	if err != nil {
 		return err

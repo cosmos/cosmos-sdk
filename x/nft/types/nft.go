@@ -80,10 +80,6 @@ func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) Base
 	return bnft
 }
 
-func (bnft *BaseNFT) setID(id string) {
-	bnft.ID = id
-}
-
 func (bnft BaseNFT) String() string {
 	return fmt.Sprintf(`ID:				%s
 Owner:			%s
@@ -196,7 +192,6 @@ func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	for _, nft := range nfts {
 		id := nft.GetID()
 		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
-		// bnft.setID("")
 		nftJSON[id] = bnft
 	}
 	return json.Marshal(nftJSON)

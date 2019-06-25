@@ -7,7 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
+	//supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // GenesisAccount is a struct for account initialization used exclusively during genesis
@@ -129,7 +130,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		return supplytypes.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
+		return supply.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
 	}
 
 	return bacc

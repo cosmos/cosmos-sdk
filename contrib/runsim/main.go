@@ -72,7 +72,7 @@ func init() {
 	log.SetPrefix("")
 	log.SetFlags(0)
 
-	runsimLogfile, err := os.OpenFile("sim_log_file", os.O_RDWR | os.O_APPEND | os.O_CREATE, 0666)
+	runsimLogfile, err := os.OpenFile("sim_log_file", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		log.Printf("ERROR: opening log file: %v", err.Error())
 	} else {
@@ -90,11 +90,9 @@ func init() {
 	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(),
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(),
 			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-github token,pr-url] [-slack token,channel,thread] [package] [blocks] [period] [testname]
-Run simulations in parallel
-
-`, filepath.Base(os.Args[0]))
+Run simulations in parallel`, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
 }

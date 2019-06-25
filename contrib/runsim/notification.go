@@ -73,8 +73,8 @@ func createCheckRun(client *github.Client, payload GithubPayload, pr PullRequest
 	return err
 }
 
-func getPrDetails(pr_url string) (*PullRequestDetails, error) {
-	request, err := http.Get(pr_url)
+func getPrDetails(prUrl string) (*PullRequestDetails, error) {
+	request, err := http.Get(prUrl)
 	if err != nil {
 		return nil, err
 	}

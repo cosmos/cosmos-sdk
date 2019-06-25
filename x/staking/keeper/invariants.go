@@ -48,6 +48,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 // ModuleAccountInvariants checks that the bonded and notBonded ModuleAccounts pools
 // reflects the tokens actively bonded and not bonded
 func ModuleAccountInvariants(k Keeper) sdk.Invariant {
+	fmt.Printf("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
 	return func(ctx sdk.Context) error {
 		bonded := sdk.ZeroInt()
 		notBonded := sdk.ZeroInt()

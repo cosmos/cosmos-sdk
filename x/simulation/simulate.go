@@ -48,6 +48,7 @@ func SimulateFromSeed(
 	invariants sdk.Invariants,
 	numBlocks, blockSize int, commit, lean, onOperation bool,
 ) (stopEarly bool, simError error) {
+	fmt.Printf("debug onOperation: %v\n", onOperation)
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)

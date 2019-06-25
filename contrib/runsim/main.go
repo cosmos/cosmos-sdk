@@ -50,22 +50,17 @@ var (
 	period       string
 	testname     string
 	genesis      string
-	seedsStrRepr string
 	exitOnFail   bool
 	githubConfig string
 	slackConfig  string
 
 	// integration with Slack and Github
-	githubToken  string
-	githubPr     string
 	slackToken   string
 	slackChannel string
 	slackThread  string
 
 	// logs temporary directory
 	tempdir string
-
-	runsimLogfile *os.File
 )
 
 func init() {
@@ -110,7 +105,6 @@ func main() {
 		if len(opts) != 2 {
 			log.Fatal("incorrect github config string format")
 		}
-		githubToken, githubPr = opts[0], opts[1]
 	}
 
 	if slackConfig != "" {

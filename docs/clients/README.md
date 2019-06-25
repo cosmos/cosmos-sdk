@@ -25,10 +25,24 @@ If you need to upgrade your node you could export the genesis and migrate it to 
 go run contrib/export/main.go genesis v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
 ```
 
-To build and run the binary:
+Example from old version:
 ```bash
-make build-genesis-migrate
-./build/migrate genesis v0.36 genesis_0_34.json --time "2019-04-22T17:00:11Z" --chain-id test > genesis.json
+# if using a 0.34.7 chain
+git checkout v0.34.7 && make install
+
+# export your current state into a genesis file
+gaiad export > v0_34_7_genesis.json
+
+# reset all data
+gaiad unsafe-reset-all
+
+# checkout the current release
+git checkout v0.36.0 && make build-genesis-migrate
+
+# modify the genesis to be compatible with 0.34
+./build/migrate genesis v0.36 v0_34_7_genesis.json --time <genesis-start-time-rfc3339> --chain-id=<new-chain-id> > [path_to_genesis.json]
 ```
 
-The resulting genesis will be importable into the targeted version of the SDK.
+The resulting genesis will be importable into the targeted version of the dapp using the SDK.
+
+

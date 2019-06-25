@@ -4,8 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc = codec.New()
-
 // RegisterCodec concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*NFT)(nil), nil)
@@ -26,8 +24,8 @@ func RegisterCodec(cdc *codec.Codec) {
 var ModuleCdc *codec.Codec
 
 func init() {
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	RegisterCodec(cdc)
-	ModuleCdc = cdc.Seal()
+	ModuleCdc = codec.New()
+	codec.RegisterCrypto(ModuleCdc)
+	RegisterCodec(ModuleCdc)
+	ModuleCdc.Seal()
 }

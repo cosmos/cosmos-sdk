@@ -30,13 +30,15 @@ func EmptyCollection() Collection {
 
 // GetNFT gets a NFT from the collection
 func (collection Collection) GetNFT(id string) (nft NFT, err sdk.Error) {
-
+	fmt.Println("GetNFT report", collection.NFTs)
 	for _, nft := range collection.NFTs {
+		fmt.Println("want:got", id, nft.GetID(), id == nft.GetID())
 		if nft.GetID() == id {
+			fmt.Println("got the NFT!")
 			return nft, nil
 		}
 	}
-
+	fmt.Println("DIDNT FIND THE NFT")
 	return nil, ErrUnknownNFT(DefaultCodespace,
 		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
 	)
@@ -49,40 +51,41 @@ func (collection Collection) ContainsNFT(id string) bool {
 }
 
 // AddNFT adds an NFT to the collection
-func (collection *Collection) AddNFT(nft NFT) sdk.Error {
+func (collection Collection) AddNFT(nft NFT) (Collection, sdk.Error) {
 	id := nft.GetID()
 	exists := collection.ContainsNFT(id)
 	if exists {
-		return ErrNFTAlreadyExists(DefaultCodespace,
+		return collection, ErrNFTAlreadyExists(DefaultCodespace,
 			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
 		)
 	}
 	collection.NFTs = append(collection.NFTs, nft)
-	return nil
+	return collection, nil
 }
 
 // UpdateNFT updates an NFT from a collection
-func (collection *Collection) UpdateNFT(nft NFT) sdk.Error {
+func (collection Collection) UpdateNFT(nft NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
+	fmt.Println("UPDATE NFTS", nfts)
 	if !ok {
-		return ErrUnknownNFT(DefaultCodespace,
+		return collection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
-	(*collection).NFTs = nfts
-	return nil
+	collection.NFTs = nfts
+	return collection, nil
 }
 
 // DeleteNFT deletes an NFT from a collection
-func (collection *Collection) DeleteNFT(nft NFT) sdk.Error {
+func (collection Collection) DeleteNFT(nft NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
-		return ErrUnknownNFT(DefaultCodespace,
+		return collection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
-	(*collection).NFTs = nfts
-	return nil
+	collection.NFTs = nfts
+	return collection, nil
 }
 
 // Supply gets the total supply of NFTs of a collection
@@ -115,8 +118,8 @@ func NewCollections(collections ...Collection) Collections {
 }
 
 // Add appends two sets of Collections
-func (collections *Collections) Add(collectionsB Collections) {
-	*collections = append(*collections, collectionsB...)
+func (collections Collections) Add(collectionsB Collections) Collections {
+	return append(collections, collectionsB...)
 }
 
 // Find returns the searched collection from the set

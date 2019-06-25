@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +12,7 @@ func TestMintNFT(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 	addresses := CreateTestAddrs(1)
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -37,7 +37,7 @@ func TestGetNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -85,7 +85,7 @@ func TestUpdateNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -122,7 +122,7 @@ func TestDeleteNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -134,7 +134,7 @@ func TestDeleteNFT(t *testing.T) {
 	err := keeper.DeleteNFT(ctx, denom, id1)
 	require.NotNil(t, err)
 
-	// MintNFT shouldn't fail when collection does not exist
+	// MintNFT should not fail when collection does not exist
 	nft := types.NewBaseNFT(id1, address1, name1, description1, image1, tokenURI1)
 	err = keeper.MintNFT(ctx, denom, &nft)
 	require.Nil(t, err)
@@ -152,13 +152,17 @@ func TestDeleteNFT(t *testing.T) {
 	// NFT should no longer exist
 	isNFT := keeper.IsNFT(ctx, denom, id1)
 	require.False(t, isNFT)
+
+	owner := keeper.GetOwner(ctx, address1)
+	fmt.Println(owner)
+	require.Equal(t, owner.Supply(), 0)
 }
 
 func TestIsNFT(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -184,7 +188,7 @@ func TestSetCollection(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -203,7 +207,7 @@ func TestSetCollection(t *testing.T) {
 
 	id2 := "2"
 	nft2 := types.NewBaseNFT(id2, address1, name1, description1, image1, tokenURI1)
-	err = collection.AddNFT(&nft2)
+	collection, err = collection.AddNFT(&nft2)
 	require.Nil(t, err)
 	keeper.SetCollection(ctx, denom, collection)
 
@@ -216,7 +220,7 @@ func TestGetCollection(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"
@@ -243,7 +247,7 @@ func TestGetCollections(t *testing.T) {
 	addresses := CreateTestAddrs(1)
 	ctx, keeper, _ := Initialize()
 
-	denom := sdk.DefaultBondDenom
+	denom := "test-denom"
 	id1 := "1"
 	address1 := addresses[0]
 	tokenURI1 := "https://google.com"

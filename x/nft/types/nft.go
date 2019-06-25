@@ -116,8 +116,8 @@ func NewNFTs(nfts ...NFT) NFTs {
 }
 
 // Add appends two sets of NFTs
-func (nfts *NFTs) Add(nftsB NFTs) {
-	*nfts = append(*nfts, nftsB...)
+func (nfts NFTs) Add(nftsB NFTs) NFTs {
+	return append(nfts, nftsB...)
 }
 
 // Find returns the searched collection from the set

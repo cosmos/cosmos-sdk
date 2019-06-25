@@ -36,6 +36,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom, id string) (nft types.NFT, err sd
 	if !found {
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
+	fmt.Println("collection", collection)
 	nft, err = collection.GetNFT(id)
 
 	if err != nil {
@@ -63,7 +64,7 @@ func (k Keeper) UpdateNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk
 			return err
 		}
 	}
-	err = collection.UpdateNFT(nft)
+	collection, err = collection.UpdateNFT(nft)
 	if err != nil {
 		return err
 	}
@@ -73,11 +74,11 @@ func (k Keeper) UpdateNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk
 
 // MintNFT mints an NFT and manages that NFTs existence within Collections and Owners
 func (k Keeper) MintNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
-
+	fmt.Println("MintNFT")
 	// var replaces types.NFT
 	collection, found := k.GetCollection(ctx, denom)
 	if found {
-		err := collection.AddNFT(nft)
+		collection, err = collection.AddNFT(nft)
 		if err != nil {
 			return err
 		}
@@ -87,7 +88,7 @@ func (k Keeper) MintNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.E
 	k.SetCollection(ctx, denom, collection)
 
 	ownerIDCollection, _ := k.GetOwnerByDenom(ctx, nft.GetOwner(), denom)
-	ownerIDCollection.AddID(nft.GetID())
+	ownerIDCollection = ownerIDCollection.AddID(nft.GetID())
 	k.SetOwnerByDenom(ctx, nft.GetOwner(), denom, ownerIDCollection.IDs)
 	return
 }
@@ -108,14 +109,14 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, denom, id string) (err sdk.Error) {
 			fmt.Sprintf("ID Collection #%s doesn't exist for owner %s", denom, nft.GetOwner()),
 		)
 	}
-	err = ownerIDCollection.DeleteID(nft.GetID())
+	ownerIDCollection, err = ownerIDCollection.DeleteID(nft.GetID())
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("owner collection after delete", ownerIDCollection)
 	k.SetOwnerByDenom(ctx, nft.GetOwner(), denom, ownerIDCollection.IDs)
 
-	err = collection.DeleteNFT(nft)
+	collection, err = collection.DeleteNFT(nft)
 	if err != nil {
 		return err
 	}
@@ -134,7 +135,7 @@ func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress 
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, oldAddress),
 		)
 	}
-	err = oldOwnerIDCollection.DeleteID(id)
+	oldOwnerIDCollection, err = oldOwnerIDCollection.DeleteID(id)
 	if err != nil {
 		return err
 	}

@@ -35,16 +35,19 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
+		fmt.Println("DID NOT FIND THE NFT", nft)
 		return err.Result()
 	}
+	fmt.Println("FOUND THE NFT", nft)
 
 	if !nft.GetOwner().Equals(msg.Sender) {
 		return sdk.ErrInvalidAddress(fmt.Sprintf("%s is not the owner of NFT #%s", msg.Sender.String(), msg.ID)).Result()
 	}
+	fmt.Println("here???")
 
 	// update NFT owner
 	nft = nft.SetOwner(msg.Recipient)
-
+	fmt.Println("here?")
 	// update the NFT (owners are updated within the keeper)
 	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {

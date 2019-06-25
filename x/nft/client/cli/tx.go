@@ -45,7 +45,7 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 		Short: "transfer a token of some denom with some tokenID to some recipient",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			sender, err := sdk.AccAddressFromBech32(args[0])
@@ -75,7 +75,7 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			denom := args[0]
@@ -105,7 +105,7 @@ func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 		Short: "mints a token of some denom with some tokenID to some recipient",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			denom := args[1]
@@ -139,9 +139,9 @@ func GetCmdBurnNFT(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "burn [denom] [tokenID]",
 		Short: "burn a token of some denom with some tokenID",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			denom := args[0]

@@ -51,7 +51,7 @@ func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgTransferNFT) GetSignBytes() []byte {
-	bz := cdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -106,7 +106,7 @@ func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgEditNFTMetadata) GetSignBytes() []byte {
-	bz := cdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -164,7 +164,7 @@ func (msg MsgMintNFT) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgMintNFT) GetSignBytes() []byte {
-	bz := cdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -212,7 +212,7 @@ func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgBurnNFT) GetSignBytes() []byte {
-	bz := cdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 

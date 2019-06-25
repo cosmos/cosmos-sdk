@@ -56,20 +56,21 @@ func (idCollection IDCollection) Exists(id string) (exists bool) {
 }
 
 // AddID adds an ID to the idCollection
-func (idCollection *IDCollection) AddID(id string) {
+func (idCollection IDCollection) AddID(id string) IDCollection {
 	idCollection.IDs = append(idCollection.IDs, id)
+	return idCollection
 }
 
 // DeleteID deletes an ID from an ID Collection
-func (idCollection *IDCollection) DeleteID(id string) sdk.Error {
+func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
 	index := StringArray(idCollection.IDs).find(id)
 	if index == -1 {
-		return ErrUnknownNFT(DefaultCodespace,
+		return idCollection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
 		)
 	}
-	(*idCollection).IDs = append(idCollection.IDs[:index], idCollection.IDs[:index+1]...)
-	return nil
+	idCollection.IDs = append(idCollection.IDs[:index], idCollection.IDs[:index+1]...)
+	return idCollection, nil
 }
 
 // Supply gets the total supply of an Owner
@@ -165,35 +166,34 @@ func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
 }
 
 // UpdateIDCollection updates the ID Collection of an owner
-func (owner *Owner) UpdateIDCollection(denom string, idCollection IDCollection) sdk.Error {
+func (owner Owner) UpdateIDCollection(denom string, idCollection IDCollection) (Owner, sdk.Error) {
 	index := owner.IDCollections.find(denom)
 	if index == -1 {
-		return ErrUnknownCollection(DefaultCodespace,
+		return owner, ErrUnknownCollection(DefaultCodespace,
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
 		)
 	}
-
-	(*owner).IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
-	return nil
+	owner.IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
+	return owner, nil
 }
 
 // DeleteID deletes an ID from an owners ID Collection
-func (owner *Owner) DeleteID(denom string, id string) (err sdk.Error) {
+func (owner Owner) DeleteID(denom string, id string) (Owner, sdk.Error) {
 	idCollection, found := owner.GetIDCollection(denom)
 	if !found {
-		return ErrUnknownNFT(DefaultCodespace,
+		return owner, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("ID #%s doesn't exist in ID Collection %s", id, denom),
 		)
 	}
-	err = idCollection.DeleteID(id)
+	idCollection, err := idCollection.DeleteID(id)
 	if err != nil {
-		return err
+		return owner, err
 	}
-	err = owner.UpdateIDCollection(denom, idCollection)
+	owner, err = owner.UpdateIDCollection(denom, idCollection)
 	if err != nil {
-		return err
+		return owner, err
 	}
-	return nil
+	return owner, nil
 }
 
 // // String follows stringer interface

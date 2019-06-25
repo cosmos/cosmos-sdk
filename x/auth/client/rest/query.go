@@ -39,12 +39,13 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 			return
 		}
 
-		account, err := accGetter.GetAccount(addr)
+		account, height, err := accGetter.GetAccountWithHeight(addr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, account)
 	}
 }

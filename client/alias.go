@@ -43,7 +43,6 @@ const (
 	FlagFees               = flags.FlagFees
 	FlagGasPrices          = flags.FlagGasPrices
 	FlagBroadcastMode      = flags.FlagBroadcastMode
-	FlagPrintResponse      = flags.FlagPrintResponse
 	FlagDryRun             = flags.FlagDryRun
 	FlagGenerateOnly       = flags.FlagGenerateOnly
 	FlagIndentResponse     = flags.FlagIndentResponse
@@ -104,8 +103,6 @@ var (
 	GetValidators                      = rpc.GetValidators
 	ValidatorSetRequestHandlerFn       = rpc.ValidatorSetRequestHandlerFn
 	LatestValidatorSetRequestHandlerFn = rpc.LatestValidatorSetRequestHandlerFn
-	BufferStdin                        = input.BufferStdin
-	OverrideStdin                      = input.OverrideStdin
 	GetPassword                        = input.GetPassword
 	GetCheckPassword                   = input.GetCheckPassword
 	GetConfirmation                    = input.GetConfirmation

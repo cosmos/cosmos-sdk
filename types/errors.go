@@ -301,6 +301,7 @@ func AppendMsgToErr(msg string, err string) string {
 }
 
 // returns the index of the message in the ABCI Log
+// nolint: deadcode unused
 func mustGetMsgIndex(abciLog string) int {
 	msgIdx := strings.Index(abciLog, "message\":\"")
 	if msgIdx == -1 {

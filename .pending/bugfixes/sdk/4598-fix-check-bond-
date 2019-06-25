@@ -1,0 +1,1 @@
+#4598 Fix redelegation and undelegation txs that were not checking for the correct bond denomination.

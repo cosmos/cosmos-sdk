@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"fmt"
 
@@ -36,7 +37,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 
 	if userEntropy {
 		// prompt the user to enter some entropy
-		buf := input.BufferStdin()
+		buf := bufio.NewReader(cmd.InOrStdin())
 		inputEntropy, err := input.GetString("> WARNING: Generate at least 256-bits of entropy and enter the results here:", buf)
 		if err != nil {
 			return err
@@ -68,8 +69,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(mnemonic)
+	cmd.Println(mnemonic)
 
 	return nil
 }

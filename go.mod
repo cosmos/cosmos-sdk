@@ -19,10 +19,7 @@ require (
 	github.com/google/go-github/v26 v26.0.2
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/nlopes/slack v0.5.0
@@ -36,11 +33,10 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 // indirect
 	github.com/rs/cors v1.6.0 // indirect
 	github.com/spf13/afero v1.2.1 // indirect
-	github.com/spf13/cast v1.3.0 // indirect
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.0.3
+	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 // indirect
 	github.com/tendermint/btcd v0.1.1

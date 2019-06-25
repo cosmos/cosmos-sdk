@@ -108,8 +108,6 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	// fmt.Println("collection", collection)
-
 	// collections := types.NewCollections(collection)
 	// fmt.Println("collections", collections)
 

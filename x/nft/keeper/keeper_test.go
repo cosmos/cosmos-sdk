@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
@@ -154,8 +153,7 @@ func TestDeleteNFT(t *testing.T) {
 	require.False(t, isNFT)
 
 	owner := keeper.GetOwner(ctx, address1)
-	fmt.Println(owner)
-	require.Equal(t, owner.Supply(), 0)
+	require.Equal(t, 0, owner.Supply())
 }
 
 func TestIsNFT(t *testing.T) {

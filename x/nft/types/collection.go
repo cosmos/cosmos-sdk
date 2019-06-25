@@ -30,15 +30,11 @@ func EmptyCollection() Collection {
 
 // GetNFT gets a NFT from the collection
 func (collection Collection) GetNFT(id string) (nft NFT, err sdk.Error) {
-	fmt.Println("GetNFT report", collection.NFTs)
 	for _, nft := range collection.NFTs {
-		fmt.Println("want:got", id, nft.GetID(), id == nft.GetID())
 		if nft.GetID() == id {
-			fmt.Println("got the NFT!")
 			return nft, nil
 		}
 	}
-	fmt.Println("DIDNT FIND THE NFT")
 	return nil, ErrUnknownNFT(DefaultCodespace,
 		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
 	)
@@ -66,7 +62,6 @@ func (collection Collection) AddNFT(nft NFT) (Collection, sdk.Error) {
 // UpdateNFT updates an NFT from a collection
 func (collection Collection) UpdateNFT(nft NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
-	fmt.Println("UPDATE NFTS", nfts)
 	if !ok {
 		return collection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),

@@ -69,7 +69,8 @@ func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
 		)
 	}
-	idCollection.IDs = append(idCollection.IDs[:index], idCollection.IDs[:index+1]...)
+	idCollection.IDs[len(idCollection.IDs)-1], idCollection.IDs[index] = idCollection.IDs[index], idCollection.IDs[len(idCollection.IDs)-1]
+	idCollection.IDs = idCollection.IDs[:len(idCollection.IDs)-1]
 	return idCollection, nil
 }
 

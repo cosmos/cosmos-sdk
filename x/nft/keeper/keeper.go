@@ -36,7 +36,6 @@ func (k Keeper) GetNFT(ctx sdk.Context, denom, id string) (nft types.NFT, err sd
 	if !found {
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("collection of %s doesn't exist", denom))
 	}
-	fmt.Println("collection", collection)
 	nft, err = collection.GetNFT(id)
 
 	if err != nil {
@@ -74,8 +73,6 @@ func (k Keeper) UpdateNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk
 
 // MintNFT mints an NFT and manages that NFTs existence within Collections and Owners
 func (k Keeper) MintNFT(ctx sdk.Context, denom string, nft types.NFT) (err sdk.Error) {
-	fmt.Println("MintNFT")
-	// var replaces types.NFT
 	collection, found := k.GetCollection(ctx, denom)
 	if found {
 		collection, err = collection.AddNFT(nft)
@@ -113,7 +110,6 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, denom, id string) (err sdk.Error) {
 	if err != nil {
 		return err
 	}
-	fmt.Println("owner collection after delete", ownerIDCollection)
 	k.SetOwnerByDenom(ctx, nft.GetOwner(), denom, ownerIDCollection.IDs)
 
 	collection, err = collection.DeleteNFT(nft)

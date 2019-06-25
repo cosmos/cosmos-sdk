@@ -2,9 +2,9 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	extypes "github.com/cosmos/cosmos-sdk/contrib/export/types"
-	v034gov "github.com/cosmos/cosmos-sdk/contrib/export/v034/gov"
-	v036gov "github.com/cosmos/cosmos-sdk/contrib/export/v036/gov"
+	extypes "github.com/cosmos/cosmos-sdk/contrib/migrate/types"
+	v034gov "github.com/cosmos/cosmos-sdk/contrib/migrate/v034/gov"
+	v036gov "github.com/cosmos/cosmos-sdk/contrib/migrate/v036/gov"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"

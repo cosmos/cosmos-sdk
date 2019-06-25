@@ -10,8 +10,8 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	extypes "github.com/cosmos/cosmos-sdk/contrib/export/types"
-	"github.com/cosmos/cosmos-sdk/contrib/export/v036"
+	extypes "github.com/cosmos/cosmos-sdk/contrib/migrate/types"
+	"github.com/cosmos/cosmos-sdk/contrib/migrate/v036"
 )
 
 var migrationMap = extypes.MigrationMap{

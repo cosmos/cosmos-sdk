@@ -22,7 +22,7 @@ Light-clients enable users to interact with your application without having to d
 If you need to upgrade your node you could export the genesis and migrate it to the new version through this script:
 
 ```bash
-go run contrib/export/main.go genesis v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
+./build/migrate genesis v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
 ```
 
 Example from old version:
@@ -71,7 +71,7 @@ gaiad start
 gaiad export > ~/v0_33_2_genesis.json
 git checkout v0.34.7
 make install
-python3 contrib/export/v0.33.x-to-v0.34.0.py --chain-id=gaia-13k-034 ~/v0_33_2_genesis.json > ~/.gaiad/config/genesis.json
+python3 contrib/migrate/v0.33.x-to-v0.34.0.py --chain-id=gaia-13k-034 ~/v0_33_2_genesis.json > ~/.gaiad/config/genesis.json
 gaiad start
 [kill gaiad]
 

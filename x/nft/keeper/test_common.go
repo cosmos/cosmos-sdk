@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -58,21 +57,6 @@ func CreateTestInput(t *testing.T) (sdk.Context, auth.AccountKeeper, Keeper) {
 	keeper := NewKeeper(cdc, keyNft)
 
 	return ctx, ak, keeper
-}
-
-// nolint: unparam
-func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *auth.AccountKeeper) (accs []auth.Account) {
-	for i := 0; i < numAccs; i++ {
-		privKey := secp256k1.GenPrivKey()
-		pubKey := privKey.PubKey()
-		addr := sdk.AccAddress(pubKey.Address())
-		acc := auth.NewBaseAccountWithAddress(addr)
-		acc.Coins = initialCoins
-		acc.PubKey = pubKey
-		acc.AccountNumber = uint64(i)
-		ak.SetAccount(ctx, &acc)
-	}
-	return
 }
 
 // for incode address generation

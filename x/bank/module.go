@@ -12,10 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 var (
@@ -65,11 +65,11 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 	keeper        Keeper
-	accountKeeper auth.AccountKeeper
+	accountKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,

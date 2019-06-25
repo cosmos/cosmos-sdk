@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // NodeQuerier is an interface that is satisfied by types that provide the QueryWithData method
@@ -27,7 +28,7 @@ func NewAccountRetriever(querier NodeQuerier) AccountRetriever {
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (Account, error) {
+func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, error) {
 	account, _, err := ar.GetAccountWithHeight(addr)
 	return account, err
 }
@@ -46,7 +47,7 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (Account, i
 		return nil, 0, err
 	}
 
-	var account Account
+	var account exported.Account
 	if err := ModuleCdc.UnmarshalJSON(res, &account); err != nil {
 		return nil, 0, err
 	}

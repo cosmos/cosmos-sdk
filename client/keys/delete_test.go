@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -52,10 +51,9 @@ func Test_runDeleteCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Now there is a confirmation
-		cleanUp := input.OverrideStdin(bufio.NewReader(strings.NewReader("y\n")))
-		defer cleanUp()
-		err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
-		require.NoError(t, err)
+		mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
+		mockIn.Reset("y\n")
+		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
 		require.Error(t, err) // Key1 is gone

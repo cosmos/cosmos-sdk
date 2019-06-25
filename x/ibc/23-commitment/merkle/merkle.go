@@ -17,13 +17,15 @@ var _ commitment.Root = Root{}
 
 type Root struct {
 	Hash      []byte
-	KeyPrefix [][]byte
+	KeyPath   [][]byte
+	KeyPrefix []byte
 }
 
-func NewRoot(hash []byte, prefixes [][]byte) Root {
+func NewRoot(hash []byte, keypath [][]byte, prefix []byte) Root {
 	return Root{
 		Hash:      hash,
-		KeyPrefix: prefixes,
+		KeyPath:   keypath,
+		KeyPrefix: prefix,
 	}
 }
 
@@ -34,6 +36,7 @@ func (Root) CommitmentKind() string {
 func (r Root) Update(hash []byte) commitment.Root {
 	return Root{
 		Hash:      hash,
+		KeyPath:   r.KeyPath,
 		KeyPrefix: r.KeyPrefix,
 	}
 }
@@ -60,15 +63,10 @@ func (proof Proof) Verify(croot commitment.Root, value []byte) error {
 	}
 
 	keypath := merkle.KeyPath{}
-
-	for _, key := range root.KeyPrefix {
+	for _, key := range root.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-
-	keypath, err := PrefixKeyPath(keypath.String(), proof.Key)
-	if err != nil {
-		return err
-	}
+	keypath = keypath.AppendKey(append(root.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
 
 	// Hard coded for now
 	runtime := rootmulti.DefaultProofRuntime()
@@ -77,19 +75,4 @@ func (proof Proof) Verify(croot commitment.Root, value []byte) error {
 		return runtime.VerifyValue(proof.Proof, root.Hash, keypath.String(), value)
 	}
 	return runtime.VerifyAbsence(proof.Proof, root.Hash, keypath.String())
-}
-
-func PrefixKeyPath(prefix string, key []byte) (res merkle.KeyPath, err error) {
-	keys, err := merkle.KeyPathToKeys(prefix)
-	if err != nil {
-		return
-	}
-
-	keys[len(keys)-1] = append(keys[len(keys)-1], key...)
-
-	for _, key := range keys {
-		res = res.AppendKey(key, merkle.KeyEncodingHex)
-	}
-
-	return
 }

@@ -31,21 +31,31 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 // Query performs a query to a Tendermint node with the provided path.
 // It returns the result and height of the query upon success or an error if
 // the query fails.
-func (ctx CLIContext) Query(path string) ([]byte, int64, error) {
-	return ctx.query(path, nil)
+func (ctx CLIContext) Query(path string) (val []byte, height int64, err error) {
+	val, _, height, err = ctx.query(path, nil)
+	return
 }
 
 // QueryWithData performs a query to a Tendermint node with the provided path
 // and a data payload. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, error) {
-	return ctx.query(path, data)
+func (ctx CLIContext) QueryWithData(path string, data []byte) (val []byte, height int64, err error) {
+	val, _, height, err = ctx.query(path, data)
+	return
 }
 
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (val []byte, height int64, err error) {
+	val, _, height, err = ctx.queryStore(key, storeName, "key")
+	return
+}
+
+// QueryProof performs a query to a Tendermint node with the provided key and
+// store name. It returns the result, the proof, and height of the query
+// upon success or an error if the query fails.
+func (ctx CLIContext) QueryProof(key cmn.HexBytes, storeName string) (val []byte, proof *merkle.Proof, height int64, err error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
@@ -53,7 +63,7 @@ func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, in
 // store name and subspace. It returns key value pair and height of the query
 // upon success or an error if the query fails.
 func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, height int64, err error) {
-	resRaw, height, err := ctx.queryStore(subspace, storeName, "subspace")
+	resRaw, _, height, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
 		return res, height, err
 	}
@@ -75,10 +85,10 @@ func (ctx CLIContext) GetFromName() string {
 // query performs a query to a Tendermint node with the provided store name
 // and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, proof *merkle.Proof, height int64, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return res, height, err
+		return res, proof, height, err
 	}
 
 	opts := rpcclient.ABCIQueryOptions{
@@ -88,25 +98,25 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
-		return res, height, err
+		return res, proof, height, err
 	}
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, height, errors.New(resp.Log)
+		return res, proof, height, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
 	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return resp.Value, resp.Height, nil
+		return resp.Value, resp.Proof, resp.Height, nil
 	}
 
 	err = ctx.verifyProof(path, resp)
 	if err != nil {
-		return res, height, err
+		return res, proof, height, err
 	}
 
-	return resp.Value, resp.Height, nil
+	return resp.Value, resp.Proof, resp.Height, nil
 }
 
 // Verify verifies the consensus proof at given height.
@@ -165,7 +175,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 // queryStore performs a query to a Tendermint node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, *merkle.Proof, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

@@ -4,23 +4,53 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Keeper of the supply store
 type Keeper struct {
-	cdc      *codec.Codec
-	storeKey sdk.StoreKey
-	ak       types.AccountKeeper
-	bk       types.BankKeeper
+	cdc       *codec.Codec
+	storeKey  sdk.StoreKey
+	ak        types.AccountKeeper
+	bk        types.BankKeeper
+	permAddrs map[string]permAddr
+}
+
+type permAddr struct {
+	permission string // holder/minter/burner
+	address    sdk.AccAddress
+}
+
+// NewpermAddr creates a new permAddr object
+func newPermAddr(permission, name string) permAddr {
+	return permAddr{
+		permission: permission,
+		address:    sdk.AccAddress(crypto.AddressHash([]byte(name))),
+	}
 }
 
 // NewKeeper creates a new Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
+	codespace sdk.CodespaceType, holders, minters, burners []string) Keeper {
+
+	// set the addresses
+	permAddrs := make(map[string]permAddr)
+	for _, name := range holders {
+		permAddrs[name] = newPermAddr(types.Holder, name)
+	}
+	for _, name := range minters {
+		permAddrs[name] = newPermAddr(types.Minter, name)
+	}
+	for _, name := range burners {
+		permAddrs[name] = newPermAddr(types.Burner, name)
+	}
+
 	return Keeper{
-		cdc,
-		key,
-		ak,
-		bk,
+		cdc:       cdc,
+		storeKey:  key,
+		ak:        ak,
+		bk:        bk,
+		permAddrs: permAddrs,
 	}
 }
 

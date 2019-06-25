@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -44,8 +45,8 @@ func setupTestInput() testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
-	ak.SetAccount(ctx, feeCollector)
+	//feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
+	//ak.SetAccount(ctx, feeCollector)
 
 	ak.SetParams(ctx, types.DefaultParams())
 
@@ -90,4 +91,26 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 	sk.ak.SetAccount(ctx, moduleAcc)
 
 	return nil
+}
+
+// GetModuleAccount for dummy supply keeper
+func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
+	addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+
+	acc := sk.ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return nil
+	}
+
+	macc, ok := acc.(exported.ModuleAccountI)
+	if !ok {
+		return nil
+	}
+
+	return macc
+}
+
+// GetModuleAddress for dummy supply keeper
+func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 }

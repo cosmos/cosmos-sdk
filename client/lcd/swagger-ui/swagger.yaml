@@ -5,19 +5,25 @@ info:
   title: Gaia-Lite for Cosmos
   description: A REST interface for state queries, transaction generation and broadcasting.
 tags:
-  - name: ICS0
+  - name: Transactions
+    description: Search, encode, or broadcast transactions.
+  - name: Tendermint RPC
     description: Tendermint APIs, such as query blocks, transactions and validatorset
-  - name: ICS20
+  - name: Auth
+    description: Authenticate accounts
+  - name: Bank
     description: Create and broadcast transactions
-  - name: ICS21
+  - name: Staking
     description: Stake module APIs
-  - name: ICS22
+  - name: Governance
     description: Governance module APIs
-  - name: ICS23
+  - name: Slashing
     description: Slashing module APIs
-  - name: ICS24
+  - name: Distribution
     description: Fee distribution module APIs
-  - name: version
+  - name: Mint
+    description: Minting module APIs
+  - name: Misc
     description: Query app version
 schemes:
   - https
@@ -30,28 +36,17 @@ paths:
     get:
       summary: Version of Gaia-lite
       tags:
-        - version
+        - Misc
       description: Get the version of gaia-lite running locally to compare against expected
       responses:
         200:
           description: Plaintext version i.e. "v0.25.0"
-  /node_version:
-    get:
-      summary: Version of the connected node
-      tags:
-        - version
-      description: Get the version of the SDK running on the connected node to compare against expected
-      responses:
-        200:
-          description: Plaintext version i.e. "v0.25.0"
-        500:
-          description: failed to query node version
   /node_info:
     get:
       description: Information about the connected node
       summary: The properties of the connected node
       tags:
-        - ICS0
+        - Tendermint RPC
       produces:
         - application/json
       responses:
@@ -104,7 +99,7 @@ paths:
     get:
       summary: Syncing state of node
       tags:
-        - ICS0
+        - Tendermint RPC
       description: Get if the node is currently syning with other nodes
       responses:
         200:
@@ -115,7 +110,7 @@ paths:
     get:
       summary: Get the latest block
       tags:
-        - ICS0
+        - Tendermint RPC
       produces:
         - application/json
       responses:
@@ -129,7 +124,7 @@ paths:
     get:
       summary: Get a block at a certain height
       tags:
-        - ICS0
+        - Tendermint RPC
       produces:
         - application/json
       parameters:
@@ -154,7 +149,7 @@ paths:
     get:
       summary: Get the latest validator set
       tags:
-        - ICS0
+        - Tendermint RPC
       produces:
         - application/json
       responses:
@@ -175,7 +170,7 @@ paths:
     get:
       summary: Get a validator set a certain height
       tags:
-        - ICS0
+        - Tendermint RPC
       produces:
         - application/json
       parameters:
@@ -207,7 +202,8 @@ paths:
     get:
       summary: Get a Tx by hash
       tags:
-        - ICS0
+        - Transactions
+      description: Retrieve a transaction using its hash.
       produces:
         - application/json
       parameters:
@@ -227,7 +223,7 @@ paths:
   /txs:
     get:
       tags:
-        - ICS0
+        - Transactions
       summary: Search transactions
       description: Search transactions by tag(s).
       produces:
@@ -238,13 +234,13 @@ paths:
           type: string
           description: "transaction tags such as 'action=send' which results in the following endpoint: 'GET /txs?action=send'"
           required: true
-          x-example: 'send'
+          x-example: "send"
         - in: query
           name: sender
           type: string
           description: "transaction tags with sender: 'GET /txs?action=send&sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
           required: true
-          x-example: 'cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'
+          x-example: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv"
         - in: query
           name: page
           description: Page number
@@ -266,7 +262,7 @@ paths:
           description: Internal Server Error
     post:
       tags:
-        - ICS0
+        - Transactions
       summary: Broadcast a signed tx
       description: Broadcast a signed tx to a full node
       consumes:
@@ -296,7 +292,7 @@ paths:
   /txs/encode:
     post:
       tags:
-        - ICS0
+        - Transactions
       summary: Encode a transaction to the Amino wire format
       description: Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
       consumes:
@@ -330,7 +326,7 @@ paths:
     get:
       summary: Get the account balances
       tags:
-        - ICS20
+        - Bank
       produces:
         - application/json
       parameters:
@@ -353,7 +349,7 @@ paths:
     post:
       summary: Send coins from one account to another
       tags:
-        - ICS20
+        - Bank
       consumes:
         - application/json
       produces:
@@ -391,7 +387,7 @@ paths:
     get:
       summary: Get the account information on blockchain
       tags:
-        - ICS1
+        - Auth
       produces:
         - application/json
       parameters:
@@ -437,7 +433,7 @@ paths:
     get:
       summary: Get all delegations from a delegator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -469,7 +465,7 @@ paths:
               delegation:
                 $ref: "#/definitions/Coin"
       tags:
-        - ICS21
+        - Staking
       consumes:
         - application/json
       produces:
@@ -502,7 +498,7 @@ paths:
     get:
       summary: Query the current delegation between a delegator and a validator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -525,7 +521,7 @@ paths:
     get:
       summary: Get all unbonding delegations from a delegator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -558,7 +554,7 @@ paths:
                 type: string
                 example: "100"
       tags:
-        - ICS21
+        - Staking
       consumes:
         - application/json
       produces:
@@ -591,7 +587,7 @@ paths:
     get:
       summary: Query all unbonding delegations between a delegator and a validator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -623,7 +619,7 @@ paths:
     get:
       summary: Get all redelegations (filter by query params)
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -664,7 +660,7 @@ paths:
                 type: string
                 example: "100"
       tags:
-        - ICS21
+        - Staking
       consumes:
         - application/json
       produces:
@@ -689,7 +685,7 @@ paths:
     get:
       summary: Query all validators that a delegator is bonded to
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -720,7 +716,7 @@ paths:
     get:
       summary: Query a validator that a delegator is bonded to
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -730,31 +726,6 @@ paths:
             $ref: "#/definitions/Validator"
         400:
           description: Invalid delegator address or validator address
-        500:
-          description: Internal Server Error
-  /staking/delegators/{delegatorAddr}/txs:
-    parameters:
-      - in: path
-        name: delegatorAddr
-        description: Bech32 AccAddress of Delegator
-        required: true
-        type: string
-        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
-    get:
-      summary: Get all staking txs (i.e msgs) from a delegator
-      tags:
-        - ICS21
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/TxQuery"
-        400:
-          description: Invalid delegator address
         500:
           description: Internal Server Error
   /staking/validators:
@@ -777,7 +748,7 @@ paths:
           type: integer
           x-example: 1
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -800,7 +771,7 @@ paths:
     get:
       summary: Query the information from a single validator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -823,7 +794,7 @@ paths:
     get:
       summary: Get all delegations from a validator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -848,7 +819,7 @@ paths:
     get:
       summary: Get all unbonding delegations from a validator
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -866,7 +837,7 @@ paths:
     get:
       summary: Get the current state of the staking pool
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -893,7 +864,7 @@ paths:
     get:
       summary: Get the current staking parameter values
       tags:
-        - ICS21
+        - Staking
       produces:
         - application/json
       responses:
@@ -926,7 +897,7 @@ paths:
   #      produces:
   #        - application/json
   #      tags:
-  #        - ICS23
+  #        - Slashing
   #      parameters:
   #        - type: string
   #          description: Bech32 validator public key
@@ -950,7 +921,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS23
+        - Slashing
       parameters:
         - in: query
           name: page
@@ -984,7 +955,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS23
+        - Slashing
       parameters:
         - type: string
           description: Bech32 validator address
@@ -1014,7 +985,7 @@ paths:
     get:
       summary: Get the current slashing parameters
       tags:
-        - ICS23
+        - Slashing
       produces:
         - application/json
       responses:
@@ -1048,7 +1019,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - description: valid value of `"proposal_type"` can be `"text"`, `"parameter_change"`, `"software_upgrade"`
           name: post_proposal_body
@@ -1087,7 +1058,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - in: query
           name: voter
@@ -1124,7 +1095,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - description: The parameter change proposal body that contains all parameter changes
           name: post_proposal_body
@@ -1137,10 +1108,10 @@ paths:
                 $ref: "#/definitions/BaseReq"
               title:
                 type: string
-                x-example: 'Param Change'
+                x-example: "Param Change"
               description:
                 type: string
-                x-example: 'Update max validators'
+                x-example: "Update max validators"
               proposer:
                 $ref: "#/definitions/Address"
               deposit:
@@ -1167,13 +1138,13 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
         200:
           description: OK
@@ -1190,13 +1161,13 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
         200:
           description: OK
@@ -1213,13 +1184,13 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
         200:
           description: OK
@@ -1239,14 +1210,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - description: ""
           name: post_deposit_body
           in: body
@@ -1280,14 +1251,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - type: string
           description: Bech32 depositor address
           name: depositor
@@ -1312,14 +1283,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
         200:
           description: OK
@@ -1339,14 +1310,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
           name: post_vote_body
           in: body
@@ -1379,14 +1350,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - type: string
           description: Bech32 voter address
           name: voter
@@ -1411,14 +1382,14 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       parameters:
         - type: string
           description: proposal id
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
         200:
           description: OK
@@ -1435,7 +1406,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       responses:
         200:
           description: OK
@@ -1462,7 +1433,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       responses:
         200:
           description: OK
@@ -1490,7 +1461,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS22
+        - Governance
       responses:
         200:
           description: OK
@@ -1519,7 +1490,7 @@ paths:
       produces:
         - application/json
       tags:
-        - ICS24
+        - Distribution
       responses:
         200:
           description: OK
@@ -1533,7 +1504,7 @@ paths:
       summary: Withdraw all the delegator's delegation rewards
       description: Withdraw all the delegator's delegation rewards
       tags:
-        - ICS24
+        - Distribution
       consumes:
         - application/json
       produces:
@@ -1574,7 +1545,7 @@ paths:
       summary: Query a delegation reward
       description: Query a single delegation reward by a delegator
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1592,7 +1563,7 @@ paths:
       summary: Withdraw a delegation reward
       description: Withdraw a delegator's delegation reward from a single validator
       tags:
-        - ICS24
+        - Distribution
       consumes:
         - application/json
       produces:
@@ -1627,7 +1598,7 @@ paths:
       summary: Get the rewards withdrawal address
       description: Get the delegations' rewards withdrawal address. This is the address in which the user will receive the reward funds
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1643,7 +1614,7 @@ paths:
       summary: Replace the rewards withdrawal address
       description: Replace the delegations' rewards withdrawal address for a new one.
       tags:
-        - ICS24
+        - Distribution
       consumes:
         - application/json
       produces:
@@ -1680,7 +1651,7 @@ paths:
       summary: Validator distribution information
       description: Query the distribution information of a single validator
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1703,7 +1674,7 @@ paths:
     get:
       summary: Fee distribution outstanding rewards of a single validator
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1727,7 +1698,7 @@ paths:
       summary: Commission and self-delegation rewards of a single validator
       description: Query the commission and self-delegation rewards of validator.
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1745,7 +1716,7 @@ paths:
       summary: Withdraw the validator's rewards
       description: Withdraw the validator's self-delegation and commissions rewards
       tags:
-        - ICS24
+        - Distribution
       consumes:
         - application/json
       produces:
@@ -1772,7 +1743,7 @@ paths:
     get:
       summary: Community pool parameters
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1788,7 +1759,7 @@ paths:
     get:
       summary: Fee distribution parameters
       tags:
-        - ICS24
+        - Distribution
       produces:
         - application/json
       responses:
@@ -1807,6 +1778,8 @@ paths:
   /minting/parameters:
     get:
       summary: Minting module parameters
+      tags:
+        - Mint
       produces:
         - application/json
       responses:
@@ -1831,6 +1804,8 @@ paths:
   /minting/inflation:
     get:
       summary: Current minting inflation value
+      tags:
+        - Mint
       produces:
         - application/json
       responses:
@@ -1843,6 +1818,8 @@ paths:
   /minting/annual-provisions:
     get:
       summary: Current minting annual provisions value
+      tags:
+        - Mint
       produces:
         - application/json
       responses:

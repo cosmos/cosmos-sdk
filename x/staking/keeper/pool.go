@@ -7,15 +7,13 @@ import (
 )
 
 // GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccount) {
-	bondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.BondedTokensName)
-	return bondedPool
+func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccountI) {
+	return k.supplyKeeper.GetModuleAccount(ctx, types.BondedTokensName)
 }
 
 // GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccount) {
-	notBondedPool = k.supplyKeeper.GetModuleAccountByName(ctx, types.NotBondedTokensName)
-	return notBondedPool
+func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccountI) {
+	return k.supplyKeeper.GetModuleAccount(ctx, types.NotBondedTokensName)
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking

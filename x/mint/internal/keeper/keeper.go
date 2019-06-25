@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Keeper of the mint store
@@ -21,8 +20,12 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper,
-) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper) Keeper {
+
+	// ensure mint module account is set
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic("the mint module account has not been set")
+	}
 
 	return Keeper{
 		cdc:          cdc,
@@ -69,13 +72,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 //______________________________________________________________________
 
-// GetMintAccount returns the mint ModuleAccount
-func (k Keeper) GetMintAccount(ctx sdk.Context) supply.ModuleAccount {
-	return k.supplyKeeper.GetModuleAccountByName(ctx, types.ModuleName)
-}
-
-//______________________________________________________________________
-
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
@@ -97,5 +93,5 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) sdk.Error {
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) sdk.Error {
-	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, auth.FeeCollectorAddr, fees)
+	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, auth.FeeCollectorName, fees)
 }

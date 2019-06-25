@@ -28,8 +28,11 @@ type AccountKeeper interface {
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supply.Supply
 
-	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
-	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
+	GetModuleAddress(name string) sdk.AccAddress
+	GetModuleAccount(ctx sdk.Context, moduleName string) supply.ModuleAccountI
+
+	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+	SetModuleAccount(sdk.Context, supply.ModuleAccountI)
 
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderPool, recipientPool string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error

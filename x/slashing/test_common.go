@@ -1,3 +1,4 @@
+// nolint:deadcode unused
 package slashing
 
 import (
@@ -76,7 +77,8 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedTokensName, staking.BondedTokensName})
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
@@ -85,9 +87,9 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	genesis := staking.DefaultGenesisState()
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleHolderAccount(auth.FeeCollectorName)
-	notBondedPool := supply.NewModuleHolderAccount(staking.NotBondedTokensName)
-	bondPool := supply.NewModuleHolderAccount(staking.BondedTokensName)
+	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+	notBondedPool := supply.NewModuleAccount(staking.NotBondedTokensName, supply.Burner)
+	bondPool := supply.NewModuleAccount(staking.BondedTokensName, supply.Burner)
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	supplyKeeper.SetModuleAccount(ctx, bondPool)

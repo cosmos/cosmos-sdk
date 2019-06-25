@@ -7,6 +7,9 @@ linters:
     - unconvert
     - misspell
     - govet
+    - unused
+    - deadcode
+    - goconst
 linters-settings:
   gocyclo:
     min-complexity: 11

@@ -7,8 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // GenesisAccount is a struct for account initialization used exclusively during genesis
@@ -26,7 +25,8 @@ type GenesisAccount struct {
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 
 	// module account fields
-	ModuleName string `json:"module_name"` // name of the module account
+	ModuleName       string `json:"module_name"`       // name of the module account
+	ModulePermission string `json:"module_permission"` // permission of module account
 }
 
 // Validate checks for errors on the vesting and module account parameters
@@ -51,7 +51,7 @@ func (ga GenesisAccount) Validate() error {
 // NewGenesisAccountRaw creates a new GenesisAccount object
 func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 	vestingAmount sdk.Coins, vestingStartTime, vestingEndTime int64,
-	module string) GenesisAccount {
+	module, permission string) GenesisAccount {
 
 	return GenesisAccount{
 		Address:          address,
@@ -64,6 +64,7 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 		StartTime:        vestingStartTime,
 		EndTime:          vestingEndTime,
 		ModuleName:       module,
+		ModulePermission: permission,
 	}
 }
 
@@ -90,18 +91,16 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 		return gacc, err
 	}
 
-	vacc, ok := acc.(auth.VestingAccount)
-	if ok {
-		gacc.OriginalVesting = vacc.GetOriginalVesting()
-		gacc.DelegatedFree = vacc.GetDelegatedFree()
-		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
-		gacc.StartTime = vacc.GetStartTime()
-		gacc.EndTime = vacc.GetEndTime()
-	}
-
-	macc, ok := acc.(supply.ModuleAccount)
-	if ok {
-		gacc.ModuleName = macc.Name()
+	switch acc := acc.(type) {
+	case auth.VestingAccount:
+		gacc.OriginalVesting = acc.GetOriginalVesting()
+		gacc.DelegatedFree = acc.GetDelegatedFree()
+		gacc.DelegatedVesting = acc.GetDelegatedVesting()
+		gacc.StartTime = acc.GetStartTime()
+		gacc.EndTime = acc.GetEndTime()
+	case supply.ModuleAccountI:
+		gacc.ModuleName = acc.GetName()
+		gacc.ModulePermission = acc.GetPermission()
 	}
 
 	return gacc, nil
@@ -130,10 +129,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		if ga.ModuleName == mint.ModuleName {
-			return supply.NewModuleMinterAccount(ga.ModuleName)
-		}
-		return supply.NewModuleHolderAccount(ga.ModuleName)
+		return supplytypes.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
 	}
 
 	return bacc

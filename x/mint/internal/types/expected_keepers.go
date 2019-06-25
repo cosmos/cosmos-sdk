@@ -13,8 +13,10 @@ type StakingKeeper interface {
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	GetModuleAccountByName(ctx sdk.Context, name string) supply.ModuleAccount
-	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccount)
+	GetModuleAddress(name string) sdk.AccAddress
+
+	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+	SetModuleAccount(sdk.Context, supply.ModuleAccountI)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error

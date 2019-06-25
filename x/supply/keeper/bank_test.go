@@ -10,23 +10,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-const (
-	foo    = "foo"
-	bar    = "bar"
-	minter = "minter"
-	base   = "baseAcc"
-
-	initialPower = int64(100)
-)
+const initialPower = int64(100)
 
 var (
-	fooAcc    = types.NewModuleHolderAccount(foo)
-	barAcc    = types.NewModuleHolderAccount(bar)
-	minterAcc = types.NewModuleMinterAccount(minter)
+	holderAcc = types.NewModuleAccount(types.Holder, types.Holder)
+	burnerAcc = types.NewModuleAccount(types.Burner, types.Burner)
+	minterAcc = types.NewModuleAccount(types.Minter, types.Minter)
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
+
+func getCoinsByName(ctx sdk.Context, k Keeper, moduleName string) sdk.Coins {
+	moduleAddress := k.GetModuleAddress(moduleName)
+	macc := k.ak.GetAccount(ctx, moduleAddress)
+	if macc == nil {
+		return sdk.Coins(nil)
+	}
+	return macc.GetCoins()
+}
 
 func TestSendCoins(t *testing.T) {
 	nAccs := int64(4)
@@ -34,46 +36,46 @@ func TestSendCoins(t *testing.T) {
 
 	baseAcc := ak.NewAccountWithAddress(ctx, sdk.AccAddress(crypto.AddressHash([]byte("baseAcc"))))
 
-	err := fooAcc.SetCoins(initCoins)
+	err := holderAcc.SetCoins(initCoins)
 	require.NoError(t, err)
 
-	keeper.SetModuleAccount(ctx, fooAcc)
-	keeper.SetModuleAccount(ctx, barAcc)
+	keeper.SetModuleAccount(ctx, holderAcc)
+	keeper.SetModuleAccount(ctx, burnerAcc)
 	ak.SetAccount(ctx, baseAcc)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, "", bar, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, "", types.Holder, initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, foo, "", initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
 	require.Error(t, err)
 
 	err = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToAccount(ctx, foo, baseAcc.GetAddress(), initCoins.Add(initCoins))
+	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Holder, baseAcc.GetAddress(), initCoins.Add(initCoins))
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, foo, bar, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, types.Holder, types.Burner, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, foo))
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, bar))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Holder))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Burner))
 
-	err = keeper.SendCoinsFromModuleToAccount(ctx, bar, baseAcc.GetAddress(), initCoins)
+	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, bar))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Burner))
 	require.Equal(t, initCoins, keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
 
-	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), foo, initCoins)
+	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), types.Burner, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, foo))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Burner))
 }
 
 func TestMintCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	keeper.SetModuleAccount(ctx, fooAcc)
+	keeper.SetModuleAccount(ctx, burnerAcc)
 	keeper.SetModuleAccount(ctx, minterAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
@@ -81,21 +83,21 @@ func TestMintCoins(t *testing.T) {
 	err := keeper.MintCoins(ctx, "", initCoins)
 	require.Error(t, err)
 
-	err = keeper.MintCoins(ctx, minter, initCoins)
+	err = keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, initCoins, keeper.GetCoinsByName(ctx, minter))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Minter))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, foo, initCoins) })
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) })
 }
 
 func TestBurnCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	err := fooAcc.SetCoins(initCoins)
+	err := burnerAcc.SetCoins(initCoins)
 	require.NoError(t, err)
-	keeper.SetModuleAccount(ctx, fooAcc)
+	keeper.SetModuleAccount(ctx, burnerAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 	initialSupply.Inflate(initCoins)
@@ -104,11 +106,11 @@ func TestBurnCoins(t *testing.T) {
 	err = keeper.BurnCoins(ctx, "", initCoins)
 	require.Error(t, err)
 
-	err = keeper.BurnCoins(ctx, foo, initialSupply.Total)
+	err = keeper.BurnCoins(ctx, types.Burner, initialSupply.Total)
 	require.Error(t, err)
 
-	err = keeper.BurnCoins(ctx, foo, initCoins)
+	err = keeper.BurnCoins(ctx, types.Burner, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.GetCoinsByName(ctx, foo))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Burner))
 	require.Equal(t, initialSupply.Total.Sub(initCoins), keeper.GetSupply(ctx).Total)
 }

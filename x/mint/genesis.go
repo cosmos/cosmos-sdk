@@ -1,10 +1,7 @@
 package mint
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
 // GenesisState - minter state
@@ -31,12 +28,6 @@ func DefaultGenesisState() GenesisState {
 
 // InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
-	// check if the module account exists and create it if not
-	moduleAcc := keeper.GetMintAccount(ctx)
-	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
-
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
 }

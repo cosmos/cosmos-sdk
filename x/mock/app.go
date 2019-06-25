@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 const chainID = ""
@@ -112,8 +111,6 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 // InitChainer performs custom logic for initialization.
 // nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
-	feeCollectorAcc := supplytypes.NewModuleHolderAccount(auth.FeeCollectorName)
-	app.AccountKeeper.SetAccount(ctx, feeCollectorAcc)
 
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {

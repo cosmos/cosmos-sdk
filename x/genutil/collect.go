@@ -22,8 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const flagGenTxDir = "gentx-dir"
-
 // common config options for init
 type InitConfig struct {
 	ChainID   string

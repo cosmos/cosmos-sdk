@@ -94,6 +94,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedTokensName))
 	}
 
+	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
 	if bondedPool.GetCoins().IsZero() {
 		if err := bondedPool.SetCoins(bondedCoins); err != nil {

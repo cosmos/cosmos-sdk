@@ -170,7 +170,7 @@ func TestTenthBlockUpdate(t *testing.T) {
 */
 
 func (node *node) query(t *testing.T, root merkle.Root, k []byte) ([]byte, commitment.Proof) {
-	code, value, proof := root.Query(node.cms, k)
+	code, value, proof := root.QueryMultiStore(node.cms, k)
 	require.Equal(t, uint32(0), code)
 	return value, proof
 }

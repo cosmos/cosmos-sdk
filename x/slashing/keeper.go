@@ -37,7 +37,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, param
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/slashing") }
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // handle a validator signing two blocks at the same height
 // power: power of the double-signing validator at the height of infraction

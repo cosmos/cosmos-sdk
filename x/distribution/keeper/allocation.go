@@ -20,7 +20,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	feesCollectedInt := k.supplyKeeper.GetCoins(ctx, k.supplyKeeper.GetModuleAddress(auth.FeeCollectorName))
+	feesCollectedInt := k.supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName).GetCoins()
 
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
 

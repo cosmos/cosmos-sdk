@@ -78,6 +78,8 @@ func (keeper BaseKeeper) InputOutputCoins(
 // DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
+// The coins are then transferred from the delegator address to a ModuleAccount address.
+// If any of the delegation amounts are negative, an error is returned.
 func (keeper BaseKeeper) DelegateCoins(
 	ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
@@ -126,6 +128,7 @@ func (keeper BaseKeeper) DelegateCoins(
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
 // address addr. For vesting accounts, undelegation amounts are tracked for both
 // vesting and vested coins.
+// The coins are then transferred from a ModuleAccount address to the delegator address.
 // If any of the undelegation amounts are negative, an error is returned.
 func (keeper BaseKeeper) UndelegateCoins(
 	ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins,

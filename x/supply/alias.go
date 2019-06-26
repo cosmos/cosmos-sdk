@@ -3,11 +3,9 @@
 // aliases generated for the following subdirectories:
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/keeper
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/types
-// ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/exported
 package supply
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
@@ -41,11 +39,10 @@ var (
 )
 
 type (
-	Keeper         = keeper.Keeper
-	ModuleAccount  = types.ModuleAccount
-	AccountKeeper  = types.AccountKeeper
-	BankKeeper     = types.BankKeeper
-	GenesisState   = types.GenesisState
-	Supply         = types.Supply
-	ModuleAccountI = exported.ModuleAccountI
+	Keeper        = keeper.Keeper
+	ModuleAccount = types.ModuleAccount
+	AccountKeeper = types.AccountKeeper
+	BankKeeper    = types.BankKeeper
+	GenesisState  = types.GenesisState
+	Supply        = types.Supply
 )

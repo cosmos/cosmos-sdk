@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"fmt"
 	"io"
 
 	dbm "github.com/tendermint/tendermint/libs/db"

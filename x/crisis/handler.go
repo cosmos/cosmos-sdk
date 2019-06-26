@@ -60,7 +60,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 
 		// TODO uncomment the following code block with implementation of the circuit breaker
 		//// refund constant fee
-		//err := k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
+		//err := k.distrKeeper.DistributeFromFeePool(ctx, constantFee, msg.Sender)
 		//if err != nil {
 		//// if there are insufficient coins to refund, log the error,
 		//// but still halt the chain.

@@ -3,16 +3,16 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool supply.ModuleAccountI) {
+// GetBondedPool returns the bonded tokens pool's module account
+func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool exported.ModuleAccountI) {
 	return k.supplyKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
-// GetPools returns the bonded and unbonded tokens pool accounts
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool supply.ModuleAccountI) {
+// GetNotBondedPool returns the not bonded tokens pool's module account
+func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool exported.ModuleAccountI) {
 	return k.supplyKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 

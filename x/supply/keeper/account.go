@@ -49,8 +49,3 @@ func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.Mo
 func (k Keeper) SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI) {
 	k.ak.SetAccount(ctx, macc)
 }
-
-// GetCoins alias for bank keeper
-func (k Keeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return k.bk.GetCoins(ctx, addr)
-}

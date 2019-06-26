@@ -17,24 +17,22 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper  types.DistributionKeeper
 	supplyKeeper types.SupplyKeeper
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper types.DistributionKeeper, supplyKeeper types.SupplyKeeper) Keeper {
+supplyKeeper types.SupplyKeeper) Keeper {
 
 	return Keeper{
 		routes:         []types.InvarRoute{},
 		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod: invCheckPeriod,
-		distrKeeper:    distrKeeper,
 		supplyKeeper:   supplyKeeper,
 	}
 }
 
-// register routes for the
+// RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)

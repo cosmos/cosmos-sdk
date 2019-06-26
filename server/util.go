@@ -99,6 +99,9 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 	if conf == nil {
 		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	appConfigFilePath := filepath.Join(rootDir, "config/app.toml")

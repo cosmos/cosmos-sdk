@@ -214,10 +214,10 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 
 func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	defer outputFile.Close()
 	if err != nil {
 		return err
 	}
+	defer outputFile.Close()
 	json, err := cdc.MarshalJSON(tx)
 	if err != nil {
 		return err

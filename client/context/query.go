@@ -31,25 +31,22 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 // Query performs a query to a Tendermint node with the provided path.
 // It returns the result and height of the query upon success or an error if
 // the query fails.
-func (ctx CLIContext) Query(path string) (val []byte, height int64, err error) {
-	val, height, err = ctx.query(path, nil)
-	return
+func (ctx CLIContext) Query(path string) ([]byte, int64, error) {
+	return ctx.query(path, nil)
 }
 
 // QueryWithData performs a query to a Tendermint node with the provided path
 // and a data payload. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryWithData(path string, data []byte) (val []byte, height int64, err error) {
-	val, height, err = ctx.query(path, data)
-	return
+func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, error) {
+	return ctx.query(path, data)
 }
 
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (val []byte, height int64, err error) {
-	val, height, err = ctx.queryStore(key, storeName, "key")
-	return
+func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
+	return ctx.queryStore(key, storeName, "key")
 }
 
 // QueryABCI performs a query to a Tendermint node with the provide RequestQuery.

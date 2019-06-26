@@ -52,7 +52,3 @@ func (obj CLIObject) Frozen(ctx context.CLIContext) (res bool, proof merkle.Proo
 	proof, err = obj.query(ctx, obj.FrozenKey, &res)
 	return
 }
-
-func (obj CLIObject) ConsensusState(ctx context.CLIContext, root merkle.Root) (res ConsensusState, proof merkle..Proof) {
-	val, proof, _, err := ctx.QueryProof(obj.ConsensusStateKey)
-}

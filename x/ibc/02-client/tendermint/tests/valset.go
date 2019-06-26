@@ -84,6 +84,7 @@ type MockValidators []MockValidator
 
 var _ sort.Interface = MockValidators{}
 
+// TODO: differenciate power between the vals
 func NewMockValidators(num int, power int64) MockValidators {
 	res := make(MockValidators, num)
 	for i := range res {

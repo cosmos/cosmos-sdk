@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 

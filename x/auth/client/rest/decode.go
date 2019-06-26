@@ -3,7 +3,6 @@ package rest
 import (
 	"encoding/base64"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
 	"io/ioutil"

@@ -28,5 +28,11 @@ func (root Root) QueryKey(key []byte) []byte {
 }
 
 func (root Root) QueryPath() []byte {
+	path := ""
+	for _, inter := range root.KeyPath {
+		path = path + "/" + string(inter)
+	}
+	path = path + "/key"
 
+	return []byte(path)
 }

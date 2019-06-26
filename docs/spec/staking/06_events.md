@@ -10,7 +10,7 @@ The staking module emits the following events:
 | complete_unbonding    | delegator             | {delegatorAddress}    |
 | complete_redelegation | source_validator      | {srcValidatorAddress} |
 | complete_redelegation | destination_validator | {dstValidatorAddress} |
-| complete_redelegation | delegator             | {delegatorAddress}    |                        |
+| complete_redelegation | delegator             | {delegatorAddress}    |
 
 ## Handlers
 
@@ -22,17 +22,17 @@ The staking module emits the following events:
 | create_validator | amount        | {delegationAmount} |
 | message          | module        | staking            |
 | message          | action        | create_validator   |
-| message | sender        | {senderAddress}    |
+| message          | sender        | {senderAddress}    |
 
 ### MsgEditValidator
 
-| Type           | Attribute Key | Attribute Value |
-|----------------|---------------|-----------------|
-| edit_validator | commission_rate        | {commissionRate} |
-| edit_validator | min_self_delegation        | {minSelfDelegation} |
-| message        | module        | staking         |
-| message        | action        | edit_validator  |
-| message | sender        | {senderAddress}    |
+| Type           | Attribute Key       | Attribute Value     |
+|----------------|---------------------|---------------------|
+| edit_validator | commission_rate     | {commissionRate}    |
+| edit_validator | min_self_delegation | {minSelfDelegation} |
+| message        | module              | staking             |
+| message        | action              | edit_validator      |
+| message        | sender              | {senderAddress}     |
 
 ### MsgDelegate
 
@@ -42,18 +42,18 @@ The staking module emits the following events:
 | delegate | amount        | {delegationAmount} |
 | message  | module        | staking            |
 | message  | action        | delegate           |
-| message | sender        | {senderAddress}    |
+| message  | sender        | {senderAddress}    |
 
 ### MsgUndelegate
 
-| Type    | Attribute Key   | Attribute Value    |
-|---------|-----------------|--------------------|
-| unbond  | validator       | {validatorAddress} |
-| unbond  | amount          | {unbondAmount}     |
+| Type    | Attribute Key       | Attribute Value    |
+|---------|---------------------|--------------------|
+| unbond  | validator           | {validatorAddress} |
+| unbond  | amount              | {unbondAmount}     |
 | unbond  | completion_time [0] | {completionTime}   |
-| message | module          | staking            |
-| message | action          | begin_unbonding    |
-| message | sender        | {senderAddress}    |
+| message | module              | staking            |
+| message | action              | begin_unbonding    |
+| message | sender              | {senderAddress}    |
 
 * [0] Time is formatted in the RFC3339 standard
 
@@ -67,6 +67,6 @@ The staking module emits the following events:
 | redelegate | completion_time [0]   | {completionTime}      |
 | message    | module                | staking               |
 | message    | action                | begin_redelegate      |
-| message | sender        | {senderAddress}    |
+| message    | sender                | {senderAddress}       |
 
 * [0] Time is formatted in the RFC3339 standard

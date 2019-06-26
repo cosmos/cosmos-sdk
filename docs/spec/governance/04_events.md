@@ -35,7 +35,7 @@ The governance module emits the following events:
 | proposal_vote | proposal_id   | {proposalID}    |
 | message       | module        | governance      |
 | message       | action        | vote            |
-| message       | sender              | {senderAddress} |
+| message       | sender        | {senderAddress} |
 
 ### MsgDeposit
 

@@ -2,7 +2,7 @@ package types
 
 // Staking module event types
 var (
-	EvenTypeCompleteUnbonding     = "complete_unbonding"
+	EventTypeCompleteUnbonding    = "complete_unbonding"
 	EventTypeCompleteRedelegation = "complete_redelegation"
 	EventTypeCreateValidator      = "create_validator"
 	EventTypeEditValidator        = "edit_validator"

@@ -2,14 +2,16 @@ package rest
 
 import (
 	"encoding/base64"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/go-amino"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
 )
 
 type (
@@ -19,7 +21,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp auth.StdTx
+	DecodeResp authtypes.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -47,7 +49,7 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		var stdTx auth.StdTx
+		var stdTx authtypes.StdTx
 		err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -60,7 +62,7 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // txDecodeRespStr implements a simple Stringer wrapper for a decoded tx.
-type txDecodeRespTx auth.StdTx
+type txDecodeRespTx authtypes.StdTx
 
 func (tx txDecodeRespTx) String() string {
 	return tx.String()
@@ -83,7 +85,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 				return err
 			}
 
-			var stdTx auth.StdTx
+			var stdTx authtypes.StdTx
 			err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
 			if err != nil {
 				return err

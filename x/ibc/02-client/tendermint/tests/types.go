@@ -44,9 +44,12 @@ type Node struct {
 	Valset     MockValidators
 
 	Cms   sdk.CommitMultiStore
+	Key   sdk.StoreKey
 	Store sdk.KVStore
 
 	Commits []tmtypes.SignedHeader
+
+	Root merkle.Root
 }
 
 func NewNode(valset MockValidators) *Node {
@@ -54,6 +57,7 @@ func NewNode(valset MockValidators) *Node {
 	return &Node{
 		Valset:  valset,
 		Cms:     cms,
+		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
 	}

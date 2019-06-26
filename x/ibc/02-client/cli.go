@@ -12,45 +12,42 @@ type CLIObject struct {
 	ID                string
 	ConsensusStateKey []byte
 	FrozenKey         []byte
-	Cdc               *codec.Codec
+
+	Root merkle.Root
+	Cdc  *codec.Codec
 }
 
-func (obj Object) CLI() CLIObject {
+func (obj Object) CLI(root merkle.Root) CLIObject {
 	return CLIObject{
 		ID:                obj.id,
 		ConsensusStateKey: obj.consensusState.Key(),
 		FrozenKey:         obj.frozen.Key(),
+
+		Root: root,
+		Cdc:  obj.consensusState.Cdc(),
 	}
 }
 
-func query(ctx context.CLIContext, root merkle.Root, key []byte) ([]byte, merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(root.RequestQuery(key))
+func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
+	resp, err := ctx.QueryABCI(obj.Root.RequestQuery(key))
 	if err != nil {
-		return nil, merkle.Proof{}, err
+		return merkle.Proof{}, err
 	}
 	proof := merkle.Proof{
 		Key:   key,
 		Proof: resp.Proof,
 	}
-	return resp.Value, proof, nil
+	err = obj.Cdc.UnmarshalBinaryBare(resp.Value, ptr)
+	return proof, err
 
 }
 
 func (obj CLIObject) ConsensusState(ctx context.CLIContext, root merkle.Root) (res ConsensusState, proof merkle.Proof, err error) {
-	val, proof, err := query(ctx, root, obj.ConsensusStateKey)
-	obj.Cdc.MustUnmarshalBinaryBare(val, &res)
+	proof, err = obj.query(ctx, obj.ConsensusStateKey, &res)
 	return
 }
 
 func (obj CLIObject) Frozen(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
-	val, tmproof, _, err := ctx.QueryProof(obj.FrozenKey, "ibc") // TODO
-	if err != nil {
-		return
-	}
-	proof = merkle.Proof{
-		Key:   obj.FrozenKey,
-		Proof: tmproof,
-	}
-	obj.Cdc.MustUnmarshalBinaryBare(val, &res)
+	proof, err = obj.query(ctx, obj.FrozenKey, &res)
 	return
 }

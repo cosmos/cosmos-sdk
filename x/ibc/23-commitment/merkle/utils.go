@@ -7,22 +7,29 @@ import (
 )
 
 func (path Path) RequestQuery(key []byte) abci.RequestQuery {
-	pathstr := ""
-	for _, inter := range path.KeyPath {
-		pathstr = pathstr + "/" + string(inter)
-	}
-	pathstr = pathstr + "/key"
-
-	data := append(path.KeyPrefix, key...)
-
-	return abci.RequestQuery{Path: pathstr, Data: data, Prove: true}
+	req := path.RequestQueryMultiStore(key)
+	req.Path = "/store" + req.Path
+	return req
 }
 
-func (path Path) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
-	qres := cms.(types.Queryable).Query(path.RequestQuery(key))
+func (path Path) RequestQueryMultiStore(key []byte) abci.RequestQuery {
+	return abci.RequestQuery{Path: path.Path() + "/key", Data: path.Key(key), Prove: true}
+}
+
+func (path Path) QueryMultiStore(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
+	qres := cms.(types.Queryable).Query(path.RequestQueryMultiStore(key))
 	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
 }
 
 func (path Path) Key(key []byte) []byte {
 	return append(path.KeyPrefix, key...) // XXX: cloneAppend
+}
+
+func (path Path) Path() string {
+	pathstr := ""
+	for _, inter := range path.KeyPath {
+		pathstr = pathstr + "/" + string(inter)
+	}
+
+	return pathstr
 }

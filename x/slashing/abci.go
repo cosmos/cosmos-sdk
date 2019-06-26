@@ -10,8 +10,7 @@ import (
 )
 
 // slashing begin block functionality
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Tags {
-
+func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) {
 	// Iterate over all the validators which *should* have signed this block
 	// store whether or not they have actually signed it and slash/unbond any
 	// which have missed too many blocks in a row (downtime slashing)
@@ -30,6 +29,4 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Ta
 			sk.Logger(ctx).Error(fmt.Sprintf("ignored unknown evidence type: %s", evidence.Type))
 		}
 	}
-
-	return sdk.EmptyTags()
 }

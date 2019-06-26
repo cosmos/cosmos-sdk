@@ -66,7 +66,7 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	return nil
 }
 
-type deliverTxfn func([]byte) abci.ResponseDeliverTx
+type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 
 // deliver a genesis transaction
 func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
@@ -76,7 +76,7 @@ func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
 		var tx auth.StdTx
 		cdc.MustUnmarshalJSON(genTx, &tx)
 		bz := cdc.MustMarshalBinaryLengthPrefixed(tx)
-		res := deliverTx(bz)
+		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {
 			panic(res.Log)
 		}

@@ -8,7 +8,6 @@ package distribution
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -118,12 +117,10 @@ var (
 	ParamStoreKeyBonusProposerReward     = keeper.ParamStoreKeyBonusProposerReward
 	ParamStoreKeyWithdrawAddrEnabled     = keeper.ParamStoreKeyWithdrawAddrEnabled
 	TestAddrs                            = keeper.TestAddrs
-	Rewards                              = tags.Rewards
-	Commission                           = tags.Commission
-	TxCategory                           = tags.TxCategory
-	Validator                            = tags.Validator
-	Category                             = tags.Category
-	Sender                               = tags.Sender
+	EventTypeRewards                     = types.EventTypeRewards
+	EventTypeCommission                  = types.EventTypeCommission
+	AttributeValueCategory               = types.AttributeValueCategory
+	AttributeKeyValidator                = types.AttributeKeyValidator
 	ModuleCdc                            = types.ModuleCdc
 )
 

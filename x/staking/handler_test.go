@@ -1277,7 +1277,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keep.Keeper{}
 	h := NewHandler(k)
 
-	res := h(sdk.Context{}, sdk.NewTestMsg())
+	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized staking message type"))
 }

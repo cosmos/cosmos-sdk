@@ -231,7 +231,6 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-
 	bondPool = sk.GetBondedPool(ctx)
 	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 

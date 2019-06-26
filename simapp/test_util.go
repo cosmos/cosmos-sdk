@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"io"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -25,26 +23,4 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 
 	gapp = NewSimApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
-}
-
-// nolint
-func retrieveSimLog(storeName string, appA, appB *SimApp, kvA, kvB cmn.KVPair) (log string) {
-
-	log = fmt.Sprintf("store A %X => %X\n"+
-		"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
-
-	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
-		return
-	}
-
-	if storeName == auth.StoreKey {
-		var accA auth.Account
-		var accB auth.Account
-		appA.cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)
-		appB.cdc.MustUnmarshalBinaryBare(kvB.Value, &accB)
-
-		return fmt.Sprintf("%v\n%v", accA, accB)
-	}
-
-	return log
 }

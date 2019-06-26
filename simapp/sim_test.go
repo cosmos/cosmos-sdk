@@ -945,8 +945,8 @@ func TestAppImportExport(t *testing.T) {
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal,
-			fmt.Sprintf("unequal %s stores: \n%s",
-				storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
+			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
+			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
 		)
 	}
 
@@ -1091,9 +1091,7 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.crisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if err := cr.Invar(ctx); err != nil {
-
-				fmt.Printf("broken invariant at block %d of %d\n"+
-					"%s", ctx.BlockHeight()-1, numBlocks, err)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, err)
 				b.FailNow()
 			}
 		})

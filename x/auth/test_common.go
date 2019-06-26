@@ -46,9 +46,6 @@ func setupTestInput() testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	//feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
-	//ak.SetAccount(ctx, feeCollector)
-
 	ak.SetParams(ctx, types.DefaultParams())
 
 	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}

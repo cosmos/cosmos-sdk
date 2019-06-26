@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// DistributionKeeper expected coin keeper (noalias)
+// DistributionKeeper expected distribution keeper (noalias)
 type DistributionKeeper interface {
 	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins

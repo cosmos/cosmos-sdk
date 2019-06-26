@@ -206,10 +206,8 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 	}
 
-	if burnedAmount.IsPositive() {
-		if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
-			panic(err)
-		}
+	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount
@@ -282,15 +280,12 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 		}
 	}
 
-	if bondedBurnedAmount.IsPositive() {
-		if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
-			panic(err)
-		}
+	if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
+		panic(err)
 	}
-	if notBondedBurnedAmount.IsPositive() {
-		if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
-			panic(err)
-		}
+
+	if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount

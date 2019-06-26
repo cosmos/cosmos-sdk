@@ -185,18 +185,17 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 	downtimeWarn := k.DowntimeWarning(ctx)
 	// Start emitting events to warn about validator downtime once validator has reached
-	// downtime warning threshold. Continue emitting warnings every missed `downtimeWarning` 
+	// downtime warning threshold. Continue emitting warnings every missed `downtimeWarning`
 	// blocks thereafter
-	if signInfo.MissedBlocksCounter >= downtimeWarn && signInfo.MissedBlocksCounter % downtimeWarn == 0 {
+	if signInfo.MissedBlocksCounter >= downtimeWarn && signInfo.MissedBlocksCounter%downtimeWarn == 0 {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeSlash,
 				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-				sdk.NewAttribute(types.AttributeKeyMissedBlocks, signInfo.MissedBlocksCounter),
+				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
 			),
 		)
 	}
-
 
 	if missed {
 		logger.Info(fmt.Sprintf("Absent validator %s (%v) at height %d, %d missed, threshold %d", addr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))

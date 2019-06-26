@@ -30,6 +30,5 @@ func (root Root) Path() string {
 	for _, inter := range root.KeyPath {
 		path = path + "/" + string(inter)
 	}
-
 	return path
 }

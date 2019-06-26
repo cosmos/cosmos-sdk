@@ -337,7 +337,7 @@ func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc Account, f
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", fees)).Result()
 	}
 
-	// get the resulting coins deducting the fees
+	// verify the account has enough funds to pay for fees
 	_, hasNeg := coins.SafeSub(fees)
 	if hasNeg {
 		return sdk.ErrInsufficientFunds(

@@ -773,7 +773,6 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
-
 	// TODO fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	if period == 1 {
 		return app.crisisKeeper.Invariants()

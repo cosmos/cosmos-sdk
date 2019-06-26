@@ -76,7 +76,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 }
 
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
-// Panics if the name maps to a HolderAccount
+// Panics if the name maps to a non-minter module account.
 func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 	if amt.Empty() {
 		panic("cannot mint empty coins")

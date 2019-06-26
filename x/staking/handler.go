@@ -221,7 +221,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
-	// NOTE source will always be from a wallet which are unbonded
+	// NOTE: source funds are always unbonded
 	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
 	if err != nil {
 		return err.Result()

@@ -101,6 +101,10 @@ func (node *Node) LastStateVerifier(root merkle.Root) *Verifier {
 	return NewVerifier(node.Last(), node.Valset, root)
 }
 
+func (node *Node) Context() sdk.Context {
+	return sdk.NewContext(node.Cms, abci.Header{}, false, log.NewNopLogger())
+}
+
 type Verifier struct {
 	client.ConsensusState
 }
@@ -139,7 +143,7 @@ func (node *Node) Query(t *testing.T, root merkle.Root, k []byte) ([]byte, commi
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(newRoot().Key(k), value)
+	node.Store.Set(node.Root.Key(k), value)
 }
 
 func testProof(t *testing.T) {
@@ -159,7 +163,7 @@ func testProof(t *testing.T) {
 		}
 		header := node.Commit()
 		proofs := []commitment.Proof{}
-		root := newRoot().Update(header.AppHash)
+		root := node.Root.Update(header.AppHash)
 		for _, kvp := range kvps {
 			v, p := node.Query(t, root.(merkle.Root), []byte(kvp.Key))
 			require.Equal(t, kvp.Value, v)

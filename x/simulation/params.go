@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -121,6 +122,9 @@ var (
 		},
 		SlashFractionDowntime: func(r *rand.Rand) interface{} {
 			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
+		},
+		DowntimeWarning: func(r *rand.Rand) interface{} {
+			return int64(RandIntBetween(r, 1, 10))
 		},
 		InflationRateChange: func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)

@@ -100,7 +100,7 @@ This message is expected to fail if:
 - the validator doesn't exist
 - the delegation has less shares than the ones worth of `Amount`
 - existing `UnbondingDelegation` has maximum entries as defined by `params.MaxEntries`
-- the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
+- the `Amount` has a denomination different than one defined by `params.BondDenom`
 
 When this message is processed the following actions occur:
 

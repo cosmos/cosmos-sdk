@@ -16,8 +16,8 @@ When a validator is bonded from any other state the following operations occur:
 
 - set `validator.Status` to `Bonded`
 - send the `validator.Tokens` from the `NotBondedTokens` to the `BondedPool` `ModuleAccount`
-- delete record the existing record from `ValidatorByPowerIndex`
-- add an new updated record to the `ValidatorByPowerIndex`
+- delete the existing record from `ValidatorByPowerIndex`
+- add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - if it exists, delete any `ValidatorQueue` record for this validator
 
@@ -27,8 +27,8 @@ When a validator begins the unbonding process the following operations occur:
 
 - send the `validator.Tokens` from the `BondedPool` to the `NotBondedTokens` `ModuleAccount`
 - set `validator.Status` to `Unbonding`
-- delete record the existing record from `ValidatorByPowerIndex`
-- add an new updated record to the `ValidatorByPowerIndex`
+- delete the existing record from `ValidatorByPowerIndex`
+- add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - insert a new record into the `ValidatorQueue` for this validator
 
@@ -59,8 +59,8 @@ When a delegation occurs both the validator and the delegtion objects are affect
 - remove tokens from the sending account
 - add shares the delegation object or add them to a created validator object
 - add new delegator shares and update the `Validator` object
-- transfer the `delegation.Amount` `Coins` from the delegator `Account` to the `BondedPool` or the `NotBondedTokens` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
-- delete record the existing record from `ValidatorByPowerIndex`
+- transfer the `delegation.Amount` from the delegator's account to the `BondedPool` or the `NotBondedTokens` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
+- delete the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
 
 #### Unbond Delegation
@@ -71,8 +71,8 @@ Delegation may be called.
 - subtract the unbonded shares from delegator
 - update the delegation or remove the delegation if there are no more shares
 - if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
-- update the validator with removed the delegator shares and associated coins
-- if the validator state is `Bondedd`, transfer the `Coins` worth of the unbonded
+- update the validator with the removed delegator shares and associated coins
+- if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
 shares from the `BondedPool` to the `NotBondedTokens` `ModuleAccount`
 - remove the validator if it is unbonded and there are no more delegation shares.
 

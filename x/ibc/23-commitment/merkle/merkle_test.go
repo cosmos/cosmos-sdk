@@ -47,13 +47,13 @@ func TestStore(t *testing.T) {
 
 	root := commit(cms)
 
-	c1, v1, p1 := path.Query(cms, []byte("hello"))
+	c1, v1, p1 := path.QueryMultiStore(cms, []byte("hello"))
 	require.Equal(t, uint32(0), c1)
 	require.Equal(t, []byte("world"), v1)
-	c2, v2, p2 := path.Query(cms, []byte("merkle"))
+	c2, v2, p2 := path.QueryMultiStore(cms, []byte("merkle"))
 	require.Equal(t, uint32(0), c2)
 	require.Equal(t, []byte("tree"), v2)
-	c3, v3, p3 := path.Query(cms, []byte("block"))
+	c3, v3, p3 := path.QueryMultiStore(cms, []byte("block"))
 	require.Equal(t, uint32(0), c3)
 	require.Equal(t, []byte("chain"), v3)
 
@@ -70,13 +70,13 @@ func TestStore(t *testing.T) {
 
 	root = commit(cms)
 
-	c1, v1, p1 = path.Query(cms, []byte("12345"))
+	c1, v1, p1 = path.QueryMultiStore(cms, []byte("12345"))
 	require.Equal(t, uint32(0), c1)
 	require.Equal(t, []byte("67890"), v1)
-	c2, v2, p2 = path.Query(cms, []byte("qwerty"))
+	c2, v2, p2 = path.QueryMultiStore(cms, []byte("qwerty"))
 	require.Equal(t, uint32(0), c2)
 	require.Equal(t, []byte("zxcv"), v2)
-	c3, v3, p3 = path.Query(cms, []byte("hello"))
+	c3, v3, p3 = path.QueryMultiStore(cms, []byte("hello"))
 	require.Equal(t, uint32(0), c3)
 	require.Equal(t, []byte("dlrow"), v3)
 

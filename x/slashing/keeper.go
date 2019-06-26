@@ -111,11 +111,25 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
 	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSlash,
+			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
+		),
+	)
 	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
 	if !validator.IsJailed() {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeSlash,
+				sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
+			),
+		)
 		k.sk.Jail(ctx, consAddr)
 	}
 
@@ -191,8 +205,19 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeSlash,
+					sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
+					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
+				),
+			)
 			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.sk.Jail(ctx, consAddr)
+
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.

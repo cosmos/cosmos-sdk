@@ -1,0 +1,15 @@
+#4387 Refactor the usage of tags (now called events) to reflect the
+new ABCI events semantics:
+
+- Move `x/{module}/tags/tags.go` => `x/{module}/types/events.go`
+- Update `docs/specs`
+- Refactor tags in favor of new `Event(s)` type(s)
+- Update `Context` to use new `EventManager`
+- (Begin|End)Blocker no longer return tags, but rather uses new `EventManager`
+- Message handlers no longer return tags, but rather uses new `EventManager`
+
+Any component (e.g. BeginBlocker, message handler, etc...) wishing to emit an event must do so
+through `ctx.EventManger().EmitEvent(s)`.
+
+To reset or wipe emitted events: `ctx = ctx.WithEventManager(sdk.NewEventManager())`
+To get all emitted events: `events := ctx.EventManager().Events()`

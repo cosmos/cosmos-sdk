@@ -80,10 +80,8 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 // gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags := EndBlocker(ctx, keeper)
-		return abci.ResponseEndBlock{
-			Tags: tags,
-		}
+		EndBlocker(ctx, keeper)
+		return abci.ResponseEndBlock{}
 	}
 }
 

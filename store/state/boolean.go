@@ -1,26 +1,23 @@
 package state
 
 type Boolean struct {
-	Enum
+	Value
 }
 
 func NewBoolean(v Value) Boolean {
-	return Boolean{NewEnum(v)}
+	return Boolean{v}
 }
 
-func (v Boolean) Get(ctx Context) bool {
-	return v.Enum.Get(ctx) != 0x00
+func (v Boolean) Get(ctx Context) (res bool) {
+	v.Value.Get(ctx, &res)
+	return
 }
 
-func (v Boolean) GetSafe(ctx Context) (bool, error) {
-	res, err := v.Enum.GetSafe(ctx)
-	return res != 0x00, err
+func (v Boolean) GetSafe(ctx Context) (res bool, err error) {
+	err = v.Value.GetSafe(ctx, &res)
+	return
 }
 
 func (v Boolean) Set(ctx Context, value bool) {
-	if value {
-		v.Enum.Set(ctx, 0x01)
-	} else {
-		v.Enum.Set(ctx, 0x00)
-	}
+	v.Value.Set(ctx, value)
 }

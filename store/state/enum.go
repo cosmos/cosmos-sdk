@@ -8,24 +8,18 @@ func NewEnum(v Value) Enum {
 	return Enum{v}
 }
 
-func (v Enum) Get(ctx Context) byte {
-	res := v.Value.GetRaw(ctx)
-	if res != nil {
-		return res[0]
-	}
-	return 0x00
+func (v Enum) Get(ctx Context) (res byte) {
+	v.Value.Get(ctx, &res)
+	return
 }
 
-func (v Enum) GetSafe(ctx Context) (byte, error) {
-	res := v.Value.GetRaw(ctx)
-	if res == nil {
-		return 0x00, &GetSafeError{}
-	}
-	return res[0], nil
+func (v Enum) GetSafe(ctx Context) (res byte, err error) {
+	v.Value.GetSafe(ctx, &res)
+	return
 }
 
 func (v Enum) Set(ctx Context, value byte) {
-	v.Value.SetRaw(ctx, []byte{value})
+	v.Value.Set(ctx, value)
 }
 
 func (v Enum) Incr(ctx Context) (res byte) {

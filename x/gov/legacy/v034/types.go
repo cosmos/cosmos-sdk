@@ -1,4 +1,4 @@
-package gov
+package v034
 
 import (
 	"encoding/json"
@@ -520,5 +520,4 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
 	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
-
 }

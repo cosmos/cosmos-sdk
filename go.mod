@@ -1,7 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
@@ -32,8 +31,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.2
-	github.com/tendermint/tendermint v0.32.0-dev2
-	go.etcd.io/bbolt v1.3.3 // indirect
+	github.com/tendermint/tendermint v0.32.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2

@@ -9,14 +9,11 @@ import (
 
 // RegisterInvariants registers all governance invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-
-	ir.RegisterRoute(types.ModuleName, "module-account",
-		ModuleAccountInvariant(keeper))
+	ir.RegisterRoute(types.ModuleName, "module-account", ModuleAccountInvariant(keeper))
 }
 
 // AllInvariants runs all invariants of the governance module
 func AllInvariants(keeper Keeper) sdk.Invariant {
-
 	return func(ctx sdk.Context) error {
 		return ModuleAccountInvariant(keeper)(ctx)
 	}
@@ -26,7 +23,6 @@ func AllInvariants(keeper Keeper) sdk.Invariant {
 // deposit amounts held on store
 func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-
 		var expectedDeposits sdk.Coins
 
 		keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {

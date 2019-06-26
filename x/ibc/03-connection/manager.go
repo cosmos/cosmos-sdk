@@ -21,13 +21,11 @@ type Manager struct {
 	counterparty CounterpartyManager
 }
 
-func NewManager(protocol, free state.Base, clientman client.Manager) Manager {
+func NewManager(protocol state.Base, clientman client.Manager) Manager {
 	return Manager{
 		protocol: state.NewMapping(protocol, []byte("/connection/")),
 
 		client: clientman,
-
-		self: state.NewIndexer(free, []byte("/connection/self/"), state.Dec),
 
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
@@ -71,8 +69,8 @@ func (man CounterpartyManager) object(id string) CounterObject {
 	}
 }
 
-func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (nobj NihiloObject, err error) {
-	obj := man.object(id)
+func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (obj Object, err error) {
+	obj = man.object(id)
 	if obj.exists(ctx) {
 		err = errors.New("connection already exists for the provided id")
 		return
@@ -84,7 +82,7 @@ func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (no
 	}
 	obj.counterparty = man.counterparty.object(connection.Counterparty)
 	obj.counterparty.client = man.counterparty.client.Query(connection.CounterpartyClient)
-	return NihiloObject(obj), nil
+	return obj, nil
 }
 
 func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
@@ -92,7 +90,7 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	if !obj.exists(ctx) {
 		return Object{}, errors.New("connection not exists for the provided id")
 	}
-	conn := obj.Value(ctx)
+	conn := obj.Connection(ctx)
 	obj.client, err = man.client.Query(ctx, conn.Client)
 	if err != nil {
 		return
@@ -101,8 +99,6 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	obj.counterparty.client = man.counterparty.client.Query(conn.CounterpartyClient)
 	return
 }
-
-type NihiloObject Object
 
 type Object struct {
 	id          string
@@ -129,8 +125,17 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) ClientID() string {
-	return obj.client.ID()
+func (obj Object) Connection(ctx sdk.Context) (res Connection) {
+	obj.connection.Get(ctx, &res)
+	return
+}
+
+func (obj Object) State(ctx sdk.Context) byte {
+	return obj.state.Get(ctx)
+}
+
+func (obj Object) Client() client.Object {
+	return obj.client
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
@@ -158,7 +163,7 @@ func (obj Object) remove(ctx sdk.Context) {
 }
 
 func (obj Object) assertSymmetric(ctx sdk.Context) error {
-	if !obj.counterparty.connection.Is(ctx, obj.Value(ctx).Symmetry(obj.id)) {
+	if !obj.counterparty.connection.Is(ctx, obj.Connection(ctx).Symmetry(obj.id)) {
 		return errors.New("unexpected counterparty connection value")
 	}
 
@@ -173,14 +178,7 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 	return nil
 }
 
-func (obj Object) Value(ctx sdk.Context) (res Connection) {
-	obj.connection.Get(ctx, &res)
-	return
-}
-
-func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
-
-	obj := Object(nobj)
+func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 	if obj.exists(ctx) {
 		return errors.New("init on existing connection")
 	}
@@ -199,9 +197,7 @@ func (nobj NihiloObject) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) err
 	return nil
 }
 
-func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
-
-	obj := Object(nobj)
+func (obj Object) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
 	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("invalid state")
 	}
@@ -224,11 +220,15 @@ func (nobj NihiloObject) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeigh
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	var expected client.ConsensusState
-	obj.self.Get(ctx, expheight, &expected)
-	if !obj.counterparty.client.Is(ctx, expected) {
-		return errors.New("unexpected counterparty client value")
-	}
+	// TODO: commented out, need to check whether the stored client is compatible
+	// make a separate module that manages recent n block headers
+	/*
+		var expected client.ConsensusState
+		obj.self.Get(ctx, expheight, &expected)
+		if !obj.counterparty.client.Is(ctx, expected) {
+			return errors.New("unexpected counterparty client value")
+		}
+	*/
 
 	// CONTRACT: OpenTry() should be called after man.Create(), not man.Query(),
 	// which will ensure
@@ -264,11 +264,14 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	var expected client.ConsensusState
-	obj.self.Get(ctx, expheight, &expected)
-	if !obj.counterparty.client.Is(ctx, expected) {
-		return errors.New("unexpected counterparty client value")
-	}
+	// TODO: commented out, implement in v1
+	/*
+		var expected client.ConsensusState
+		obj.self.Get(ctx, expheight, &expected)
+		if !obj.counterparty.client.Is(ctx, expected) {
+			return errors.New("unexpected counterparty client value")
+		}
+	*/
 
 	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
 

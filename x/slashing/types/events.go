@@ -8,6 +8,7 @@ var (
 	AttributeKeyPower   = "power"
 	AttributeKeyReason  = "reason"
 	AttributeKeyJailed  = "jailed"
+	AttributeKeyMissedBlocks = "missed_blocks"
 
 	AttributeValueDoubleSign       = "double_sign"
 	AttributeValueMissingSignature = "missing_signature"

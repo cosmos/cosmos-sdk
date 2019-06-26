@@ -14,6 +14,7 @@ const (
 	DefaultMaxEvidenceAge       time.Duration = 60 * 2 * time.Second
 	DefaultSignedBlocksWindow   int64         = 100
 	DefaultDowntimeJailDuration time.Duration = 60 * 10 * time.Second
+	DefaultDowntimeWarning      int64         = 1
 )
 
 // The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
@@ -32,6 +33,7 @@ var (
 	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
 	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
 	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
+	KeyDowntimeWarning         = []byte("DowntimeWarning")
 )
 
 // ParamKeyTable for slashing module
@@ -47,12 +49,14 @@ type Params struct {
 	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration"`
 	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign"`
 	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime"`
+	DowntimeWarning         int64         `json:"downtime_warning"`
 }
 
 // NewParams creates a new Params object
 func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 	minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign sdk.Dec, slashFractionDowntime sdk.Dec) Params {
+	slashFractionDoubleSign sdk.Dec, slashFractionDowntime sdk.Dec, 
+	downtimeWarning int64) Params {
 
 	return Params{
 		MaxEvidenceAge:          maxEvidenceAge,
@@ -61,6 +65,7 @@ func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 		DowntimeJailDuration:    downtimeJailDuration,
 		SlashFractionDoubleSign: slashFractionDoubleSign,
 		SlashFractionDowntime:   slashFractionDowntime,
+		DowntimeWarning:         downtimeWarning,
 	}
 }
 
@@ -71,10 +76,11 @@ func (p Params) String() string {
   MinSignedPerWindow:      %s
   DowntimeJailDuration:    %s
   SlashFractionDoubleSign: %s
-  SlashFractionDowntime:   %s`, p.MaxEvidenceAge,
+  SlashFractionDowntime:   %s
+  DowntimeWarning:         %d`, p.MaxEvidenceAge,
 		p.SignedBlocksWindow, p.MinSignedPerWindow,
 		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
-		p.SlashFractionDowntime)
+		p.SlashFractionDowntime, p.DowntimeWarning)
 }
 
 // Implements params.ParamSet
@@ -86,6 +92,7 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 		{KeyDowntimeJailDuration, &p.DowntimeJailDuration},
 		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
 		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
+		{KeyDowntimeWarning, &p.DowntimeWarning},
 	}
 }
 
@@ -98,5 +105,6 @@ func DefaultParams() Params {
 		DowntimeJailDuration:    DefaultDowntimeJailDuration,
 		SlashFractionDoubleSign: DefaultSlashFractionDoubleSign,
 		SlashFractionDowntime:   DefaultSlashFractionDowntime,
+		DowntimeWarning:         DefaultDowntimeWarning,
 	}
 }

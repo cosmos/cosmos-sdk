@@ -32,8 +32,8 @@ The supply `Keeper` also introduces new wrapper functions for the `AccountKeeper
 
 Each `ModuleAccount` has a `Permission` that provides different object capabilities to perform certain actions. The avaliable permissions are:
 
-- `Holder`: is allowed to only hold and transfer `Coins` to other accounts.
-- `Minter`: allows for a module to mint a specific amount of `Coins` as well as perform the `Holder` permissioned actions.
-- `Burner`: allows for a module to burn a specific amount of `Coins` as well as perform the `Holder` permissioned actions.
+- `Holder`: is allowed to only transfer its coins to other accounts.
+- `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Holder` permissioned actions.
+- `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Holder` permissioned actions.
 
 Permissions need to be registered upon the creation of the supply `Keeper` so that every time a `ModuleAccount` calls the `Burn` or `Mint` functions, the `Keeper` can lookup the permission to that specific account and perform or not the action.

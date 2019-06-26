@@ -39,7 +39,7 @@ Validator distribution information for the relevant validator is updated each ti
  3. any delegator withdraws from a validator, or
  4. the validator withdraws it's commission.
 
-- ValidatorDistInfo:  `0x01 | ValOperatorAddr -> amino(validatorDistribution)`
+- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> amino(validatorDistribution)`
 
 ```golang
 type ValidatorDistInfo struct {

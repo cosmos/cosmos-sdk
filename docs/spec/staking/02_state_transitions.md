@@ -59,31 +59,25 @@ When a delegation occurs both the validator and the delegtion objects are affect
 - remove tokens from the sending account
 - add shares the delegation object or add them to a created validator object
 - add new delegator shares and update the `Validator` object
-- transfer the `delegation.Amount` `Coins` from the delegator `Account` to the `BondedPool` or the `NotBondedTokens` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
+- transfer the `delegation.Amount` `Coins` from the delegator `Account` to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
 - delete record the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
 
-#### Unbond Delegation
+### Begin Unbonding
 
 As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 - subtract the unbonded shares from delegator
-- update the delegation or remove the delegation if there are no more shares
-- if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
-- update the validator with removed the delegator shares and associated coins
-- if the validator state is `Bondedd`, transfer the `Coins` worth of the unbonded
-shares from the `BondedPool` to the `NotBondedTokens` `ModuleAccount`
-- remove the validator if it is unbonded and there are no more delegation shares.
-
-### Undelegate
-
-When an delegation occurs both the validator and the delegation objects are affected  
-
-- perform an unbond delegation
 - if the validator is `Unbonding` or `Bonded` add the tokens to an `UnbondingDelegation` Entry
 - if the validator is `Unbonded` send the tokens directly to the withdraw
   account
+- update the delegation or remove the delegation if there are no more shares
+- if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
+- update the validator with removed the delegator shares and associated coins
+- if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
+shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
+- remove the validator if it is unbonded and there are no more delegation shares.
 
 ### Complete Unbonding
 
@@ -91,7 +85,7 @@ For undelegations which do not complete immediately, the following operations
 occur when the unbonding delegation queue element matures:
 
 - remove the entry from the `UnbondingDelegation` object
-- transfer the tokens from the `NotBondedTokens` `ModuleAccount` to the delegator `Account`
+- transfer the tokens from the `NotBondedPool` `ModuleAccount` to the delegator `Account`
 
 ### Begin Redelegation
 
@@ -100,8 +94,8 @@ Redelegations affect the delegation, source and destination validators.
 - perform an `unbond` delegation from the source validator to retrieve the tokens
 worth of the unbonded shares
 - using the unbonded tokens, `Delegate` them to the destination validator
-- if the `sourceValidator.Status` is `Bonded`, and the `destinationValidator` is not, transfer the newly delegated tokens to the `NotBondedPool` `ModuleAccount`
-- otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator` is `Bonded`, transfer the newly delegated tokens to the `BondedPool` `ModuleAccount`
+- if the `sourceValidator.Status` is `Bonded`, and the `destinationValidator` is not, transfer the newly delegated tokens from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
+- otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator` is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 - record the token amount in an new entry in the relevant `Redelegation`
 
 ### Complete Redelegation

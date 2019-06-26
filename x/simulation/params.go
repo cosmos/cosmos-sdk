@@ -35,6 +35,7 @@ const (
 	DowntimeJailDuration     = "downtime_jail_duration"
 	SlashFractionDoubleSign  = "slash_fraction_double_sign"
 	SlashFractionDowntime    = "slash_fraction_downtime"
+	DowntimeWarning          = "downtime_warning"
 	InflationRateChange      = "inflation_rate_change"
 	Inflation                = "inflation"
 	InflationMax             = "inflation_max"

@@ -502,6 +502,14 @@ func genSlashingGenesisState(
 					})
 				return v
 			}(r),
+			func(r *rand.Rand) int64 {
+				var v int64
+				ap.GetOrGenerate(cdc, simulation.DowntimeWarning, &v, r,
+					func(r *rand.Rand) {
+						v = simulation.ModuleParamSimulator[simulation.DowntimeWarning](r).(int64)
+					})
+				return v
+			}(r),
 		),
 		nil,
 		nil,

@@ -16,8 +16,8 @@ When a validator is bonded from any other state the following operations occur:
 
 - set `validator.Status` to `Bonded`
 - send the `validator.Tokens` from the `NotBondedTokens` to the `BondedPool` `ModuleAccount`
-- delete record the existing record from `ValidatorByPowerIndex`
-- add an new updated record to the `ValidatorByPowerIndex`
+- delete the existing record from `ValidatorByPowerIndex`
+- add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - if it exists, delete any `ValidatorQueue` record for this validator
 
@@ -27,8 +27,8 @@ When a validator begins the unbonding process the following operations occur:
 
 - send the `validator.Tokens` from the `BondedPool` to the `NotBondedTokens` `ModuleAccount`
 - set `validator.Status` to `Unbonding`
-- delete record the existing record from `ValidatorByPowerIndex`
-- add an new updated record to the `ValidatorByPowerIndex`
+- delete the existing record from `ValidatorByPowerIndex`
+- add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - insert a new record into the `ValidatorQueue` for this validator
 
@@ -59,8 +59,8 @@ When a delegation occurs both the validator and the delegtion objects are affect
 - remove tokens from the sending account
 - add shares the delegation object or add them to a created validator object
 - add new delegator shares and update the `Validator` object
-- transfer the `delegation.Amount` `Coins` from the delegator `Account` to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
-- delete record the existing record from `ValidatorByPowerIndex`
+- transfer the `delegation.Amount`  from the delegator's account to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
+- delete the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
 
 ### Begin Unbonding

@@ -116,6 +116,17 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			return newCtx, res, true
 		}
 
+		// deduct the fees
+		if !stdTx.Fee.Amount.IsZero() {
+			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], stdTx.Fee.Amount)
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
+
+			// reload the account as fees have been deducted
+			signerAccs[0] = ak.GetAccount(newCtx, signerAccs[0].GetAddress())
+		}
+
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
@@ -137,13 +148,6 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			}
 
 			ak.SetAccount(newCtx, signerAccs[i])
-		}
-
-		if !stdTx.Fee.Amount.IsZero() {
-			res = DeductFees(supplyKeeper, ctx, signerAccs[0], stdTx.Fee.Amount)
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
 		}
 
 		// TODO: tx tags (?)

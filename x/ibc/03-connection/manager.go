@@ -11,9 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// XXX: rename remote to something else
-// XXX: all code using external KVStore should be defer-recovered in case of missing proofs
-
 type Manager struct {
 	protocol state.Mapping
 
@@ -103,11 +100,6 @@ func (man Manager) Query(ctx sdk.Context, key string) (obj Object, err error) {
 	obj.counterparty = man.counterparty.object(conn.Counterparty)
 	obj.counterparty.client = man.counterparty.client.Query(conn.CounterpartyClient)
 	return
-}
-
-// XXX: add HasProof() method to commitment.Store, and check it here
-func (man CounterpartyManager) Query(id string) CounterObject {
-	return man.object(id)
 }
 
 type NihiloObject Object
@@ -312,7 +304,7 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -396,7 +388,7 @@ func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
 }
 
 func (obj Object) CloseTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.Value(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

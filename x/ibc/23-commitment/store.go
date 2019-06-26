@@ -7,6 +7,7 @@ import (
 
 type Store interface {
 	Prove(key, value []byte) bool
+	HasProof(key []byte) bool
 }
 
 var _ Store = prefix{}
@@ -21,6 +22,10 @@ func NewPrefix(store Store, pref []byte) prefix {
 		store:  store,
 		prefix: pref,
 	}
+}
+
+func (prefix prefix) HasProof(key []byte) bool {
+	return prefix.store.HasProof(join(prefix.prefix, key))
 }
 
 func (prefix prefix) Prove(key, value []byte) bool {
@@ -75,6 +80,11 @@ func (store store) Prove(key, value []byte) bool {
 	store.verified[string(key)] = value
 
 	return true
+}
+
+func (store store) HasProof(key []byte) bool {
+	_, ok := store.proofs[string(key)]
+	return ok
 }
 
 func (store store) Proven(key []byte) bool {

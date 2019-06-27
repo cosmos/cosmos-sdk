@@ -82,7 +82,7 @@ func TestMintCoins(t *testing.T) {
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) })
 
-	err = keeper.MintCoins(ctx, types.Minter, initCoins)
+	err := keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Minter))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)

@@ -1,9 +1,92 @@
 package main
 
 import (
-	"github.com/nlopes/slack"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/nlopes/slack"
 )
+
+const (
+	logBucketPrefix = "sim-logs-"
+	awsRegion       = "us-east-1"
+)
+
+func awsErrHandler(err error) {
+	if awsErr, ok := err.(awserr.Error); ok {
+		switch awsErr.Code() {
+		default:
+			log.Println(awsErr.Error())
+		}
+	} else {
+		log.Println(err.Error())
+	}
+}
+
+func makeObjKey(folderName string, fileName string) string {
+	return fmt.Sprintf("%s/%s/%s", folderName,time.Now().Format("01-02-2006_15:04:05"), fileName)
+}
+
+func putObj(fileHandle *os.File, svc *s3.S3, folderName string, bucketName string) {
+	_, _ = fileHandle.Seek(0, 0)
+
+	stdOutObjInput := &s3.PutObjectInput{
+		Body:   aws.ReadSeekCloser(fileHandle),
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(makeObjKey(folderName, filepath.Base(fileHandle.Name()))),
+	}
+	if output, err := svc.PutObject(stdOutObjInput); err != nil {
+		awsErrHandler(err)
+	} else {
+		log.Printf("Log file pushed: %s", output.String())
+	}
+}
+
+func pushLogs(stdOut *os.File, stdErr *os.File, folderName string) {
+	var logBucket *string
+
+	sessionS3 := s3.New(session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(awsRegion),
+	})))
+	if listBucketsOutput, err := sessionS3.ListBuckets(&s3.ListBucketsInput{}); err != nil {
+		awsErrHandler(err)
+	} else {
+		for _, bucket := range listBucketsOutput.Buckets {
+			if strings.Contains(*bucket.Name, logBucketPrefix) {
+				logBucket = bucket.Name
+				putObj(stdOut, sessionS3, folderName, *logBucket)
+				putObj(stdErr, sessionS3, folderName, *logBucket)
+				break
+			}
+		}
+	}
+	if logBucket == nil {
+		log.Println("Log bucket not found")
+	}
+}
+
+func slackMessage(token string, channel string, threadTS *string, message string) {
+	client := slack.New(token)
+	if threadTS != nil {
+		_, _, err := client.PostMessage(channel, slack.MsgOptionText(message, false), slack.MsgOptionTS(*threadTS))
+		if err != nil {
+			log.Printf("ERROR: %v", err)
+		}
+	} else {
+		_, _, err := client.PostMessage(channel, slack.MsgOptionText(message, false))
+		if err != nil {
+			log.Printf("ERROR: %v", err)
+		}
+	}
+}
 
 //type GithubPayload struct {
 //	Issue struct {
@@ -31,22 +114,6 @@ import (
 //		Sha string `json:"sha"`
 //	} `json:"head"`
 //}
-
-func slackMessage(token string, channel string, threadTS *string, message string) {
-	client := slack.New(token)
-	if threadTS != nil {
-		_, _, err := client.PostMessage(channel, slack.MsgOptionText(message, false), slack.MsgOptionTS(*threadTS))
-		if err != nil {
-			log.Printf("ERROR: %v", err)
-		}
-	} else {
-		_, _, err := client.PostMessage(channel, slack.MsgOptionText(message, false))
-		if err != nil {
-			log.Printf("ERROR: %v", err)
-		}
-	}
-
-}
 
 //func createCheckRun(client *github.Client, payload GithubPayload, pr PullRequestDetails) error {
 //	var opt github.CreateCheckRunOptions

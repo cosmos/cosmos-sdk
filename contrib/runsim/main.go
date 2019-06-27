@@ -52,6 +52,7 @@ var (
 	genesis      string
 	exitOnFail   bool
 	githubConfig string
+	gitRevision  string
 	slackConfig  string
 
 	// integration with Slack and Github
@@ -81,12 +82,13 @@ func init() {
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 	flag.StringVar(&seedOverrideList, "seeds", "", "run the supplied comma-separated list of seeds instead of defaults")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
+	flag.StringVar(&gitRevision, "rev", "", "git revision")
 	flag.StringVar(&githubConfig, "github", "", "Report results to Github's PR")
 	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-github token,pr-url] [-slack token,channel,thread] [package] [blocks] [period] [testname]
+			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-rev git-commmit-hash] [-g genesis.json] [-e] [-github token,pr-url] [-slack token,channel,thread] [package] [blocks] [period] [testname]
 Run simulations in parallel`, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
@@ -209,11 +211,11 @@ wait:
 	os.Exit(0)
 }
 
-func buildCommand(testname, blocks, period, genesis string, seed int) string {
+func buildCommand(testName, blocks, period, genesis string, seed int) string {
 	return fmt.Sprintf("go test %s -run %s -SimulationEnabled=true "+
 		"-SimulationNumBlocks=%s -SimulationGenesis=%s "+
 		"-SimulationVerbose=true -SimulationCommit=true -SimulationSeed=%d -SimulationPeriod=%s -v -timeout 24h",
-		pkgName, testname, blocks, genesis, seed, period)
+		pkgName, testName, blocks, genesis, seed, period)
 }
 
 func makeCmd(cmdStr string) *exec.Cmd {
@@ -228,7 +230,8 @@ func makeFilename(seed int) string {
 func worker(id int, seeds <-chan int) {
 	log.Printf("[W%d] Worker is up and running", id)
 	for seed := range seeds {
-		if err := spawnProc(id, seed); err != nil {
+		stdOut, stdErr, err := spawnProc(id, seed)
+		if err != nil {
 			results <- false
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
@@ -242,12 +245,13 @@ func worker(id int, seeds <-chan int) {
 		} else {
 			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
+		pushLogs(stdOut, stdErr, gitRevision)
 	}
 
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }
 
-func spawnProc(workerID int, seed int) error {
+func spawnProc(workerID int, seed int) (*os.File, *os.File, error) {
 	stderrFile, _ := os.Create(filepath.Join(tempdir, makeFilename(seed)+".stderr"))
 	stdoutFile, _ := os.Create(filepath.Join(tempdir, makeFilename(seed)+".stdout"))
 	s := buildCommand(testname, blocks, period, genesis, seed)
@@ -261,7 +265,7 @@ func spawnProc(workerID int, seed int) error {
 	} else {
 		stderr, err = cmd.StderrPipe()
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 	sc := bufio.NewScanner(stderr)
@@ -269,7 +273,7 @@ func spawnProc(workerID int, seed int) error {
 	err = cmd.Start()
 	if err != nil {
 		log.Printf("couldn't start %q", s)
-		return err
+		return nil, nil, err
 	}
 	log.Printf("[W%d] Spawned simulation with pid %d [seed=%d stdout=%s stderr=%s]",
 		workerID, cmd.Process.Pid, seed, stdoutFile.Name(), stderrFile.Name())
@@ -285,7 +289,7 @@ func spawnProc(workerID int, seed int) error {
 			fmt.Printf("stderr: %s\n", sc.Text())
 		}
 	}
-	return err
+	return stdoutFile, stderrFile, err
 }
 
 func pushProcess(proc *os.Process) {

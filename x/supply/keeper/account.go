@@ -34,15 +34,16 @@ func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.Mo
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		macc, ok := acc.(exported.ModuleAccountI)
-		if ok {
-			return macc
+		if !ok {
+			panic("account is not a module account")
 		}
+		return macc
 	}
 
 	// create a new module account
 	macc := types.NewModuleAccount(moduleName, perm)
 	maccI := (k.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
-	k.SetModuleAccount(ctx,maccI)
+	k.SetModuleAccount(ctx, maccI)
 	return maccI
 }
 

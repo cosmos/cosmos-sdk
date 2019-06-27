@@ -30,7 +30,7 @@ func NewModuleAccount(name, permission string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-	if err := validatePermission(permission); err != nil {
+	if err := validatePermissions(permission); err != nil {
 		panic(err)
 	}
 

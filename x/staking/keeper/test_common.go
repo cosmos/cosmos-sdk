@@ -137,7 +137,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Basic)
 	notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
 	bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
 

@@ -128,6 +128,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
+	default:
+		panic("invalid validator status")
 	}
 
 	// Log that a slash occurred!

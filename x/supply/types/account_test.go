@@ -13,7 +13,7 @@ import (
 
 func TestModuleAccountMarshalYAML(t *testing.T) {
 	name := "test"
-	moduleAcc := NewModuleAccount(name, Holder)
+	moduleAcc := NewModuleAccount(name, Basic)
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)
@@ -26,7 +26,7 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
   sequence: 0
   name: %s
   permission: %s
-`, moduleAddress, name, Holder)
+`, moduleAddress, name, Basic)
 
 	require.Equal(t, want, string(bs))
 	require.Equal(t, want, moduleAcc.String())

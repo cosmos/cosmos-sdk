@@ -20,7 +20,7 @@ type Keeper struct {
 }
 
 type permAddr struct {
-	permission string // holder/minter/burner
+	permission string // basic/minter/burner
 	address    sdk.AccAddress
 }
 
@@ -34,17 +34,17 @@ func newPermAddr(permission, name string) permAddr {
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	codespace sdk.CodespaceType, holders, minters, burners []string) Keeper {
+	codespace sdk.CodespaceType, basicModuleAccs, minterModuleAccs, burnersModuleAccs []string) Keeper {
 
 	// set the addresses
 	permAddrs := make(map[string]permAddr)
-	for _, name := range holders {
-		permAddrs[name] = newPermAddr(types.Holder, name)
+	for _, name := range basicModuleAccs {
+		permAddrs[name] = newPermAddr(types.Basic, name)
 	}
-	for _, name := range minters {
+	for _, name := range minterModuleAccs {
 		permAddrs[name] = newPermAddr(types.Minter, name)
 	}
-	for _, name := range burners {
+	for _, name := range burnersModuleAccs {
 		permAddrs[name] = newPermAddr(types.Burner, name)
 	}
 

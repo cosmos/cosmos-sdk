@@ -139,10 +139,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create module accounts
-	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
+	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Basic)
 	notBondedPool := supply.NewModuleAccount(staking.NotBondedPoolName, supply.Burner)
 	bondPool := supply.NewModuleAccount(staking.BondedPoolName, supply.Burner)
-	distrAcc := supply.NewModuleAccount(types.ModuleName, supply.Holder)
+	distrAcc := supply.NewModuleAccount(types.ModuleName, supply.Basic)
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)

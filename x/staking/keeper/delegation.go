@@ -493,6 +493,8 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 			sendName = types.BondedPoolName
 		case validator.IsUnbonding(), validator.IsUnbonded():
 			sendName = types.NotBondedPoolName
+		default:
+			panic("invalid validator status")
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))

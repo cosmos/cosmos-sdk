@@ -1,0 +1,2 @@
+Added warning event that gets emitted if validator misses certain number of blocks, and re-emits periodically.
+Added parameter to define both the threshold of missed blocks before warning is emitted and also defines granularity of subsequent warnings if validator continues missing blocks.

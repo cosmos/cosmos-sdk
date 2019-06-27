@@ -64,7 +64,7 @@ func newTestInput(t *testing.T) testInput {
 	stakingKeeper := staking.NewKeeper(
 		types.ModuleCdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
-	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper)
+	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper, auth.FeeCollectorName)
 
 	// set module accounts
 	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Basic)

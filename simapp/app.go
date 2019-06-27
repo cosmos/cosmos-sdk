@@ -155,7 +155,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		app.bankKeeper, supply.DefaultCodespace, basicModuleAccs, minterModuleAccs, burnerModuleAccs)
 	stakingKeeper := staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking,
 		app.bankKeeper, app.supplyKeeper, stakingSubspace, staking.DefaultCodespace)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.supplyKeeper)
+	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.supplyKeeper, auth.FeeCollectorName)
 	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, distrSubspace, &stakingKeeper,
 		app.supplyKeeper, distr.DefaultCodespace, auth.FeeCollectorName)
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,

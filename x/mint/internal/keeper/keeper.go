@@ -3,7 +3,6 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -15,12 +14,13 @@ type Keeper struct {
 	paramSpace   params.Subspace
 	sk           types.StakingKeeper
 	supplyKeeper types.SupplyKeeper
+	feeCollectorName string
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
 
 	// ensure mint module account is set
 	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -33,6 +33,7 @@ func NewKeeper(
 		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
 		sk:           sk,
 		supplyKeeper: supplyKeeper,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
@@ -93,5 +94,5 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) sdk.Error {
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) sdk.Error {
-	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, auth.FeeCollectorName, fees)
+	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }

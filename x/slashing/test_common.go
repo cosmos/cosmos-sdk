@@ -87,9 +87,9 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	genesis := staking.DefaultGenesisState()
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Basic)
-	notBondedPool := supply.NewModuleAccount(staking.NotBondedPoolName, supply.Burner)
-	bondPool := supply.NewModuleAccount(staking.BondedPoolName, supply.Burner)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	supplyKeeper.SetModuleAccount(ctx, bondPool)

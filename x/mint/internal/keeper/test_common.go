@@ -67,10 +67,10 @@ func newTestInput(t *testing.T) testInput {
 	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper, auth.FeeCollectorName)
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Basic)
-	minterAcc := supply.NewModuleAccount(types.ModuleName, supply.Minter)
-	notBondedPool := supply.NewModuleAccount(staking.NotBondedPoolName, supply.Burner)
-	bondPool := supply.NewModuleAccount(staking.BondedPoolName, supply.Burner)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	minterAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Minter)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	supplyKeeper.SetModuleAccount(ctx, minterAcc)

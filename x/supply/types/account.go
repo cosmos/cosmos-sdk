@@ -3,12 +3,13 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
@@ -25,8 +26,7 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
-// NewModuleAccount creates a new ModuleAccount instance
-func NewModuleAccount(name, permission string) *ModuleAccount {
+func NewEmptyModuleAccount(name, permission string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
@@ -36,6 +36,21 @@ func NewModuleAccount(name, permission string) *ModuleAccount {
 
 	return &ModuleAccount{
 		BaseAccount: &baseAcc,
+		Name:        name,
+		Permission:  permission,
+	}
+}
+
+// NewModuleAccount creates a new ModuleAccount instance
+func NewModuleAccount(ba *authtypes.BaseAccount,
+	name, permission string) *ModuleAccount {
+
+	if err := validatePermissions(permission); err != nil {
+		panic(err)
+	}
+
+	return &ModuleAccount{
+		BaseAccount: ba,
 		Name:        name,
 		Permission:  permission,
 	}

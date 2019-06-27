@@ -22,16 +22,18 @@ const (
 
 var (
 	// functions aliases
-	RegisterInvariants  = keeper.RegisterInvariants
-	AllInvariants       = keeper.AllInvariants
-	TotalSupply         = keeper.TotalSupply
-	NewKeeper           = keeper.NewKeeper
-	NewModuleAccount    = types.NewModuleAccount
-	RegisterCodec       = types.RegisterCodec
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	NewSupply           = types.NewSupply
-	DefaultSupply       = types.DefaultSupply
+	RegisterInvariants    = keeper.RegisterInvariants
+	AllInvariants         = keeper.AllInvariants
+	TotalSupply           = keeper.TotalSupply
+	NewKeeper             = keeper.NewKeeper
+	NewModuleAddress      = types.NewModuleAddress
+	NewEmptyModuleAccount = types.NewEmptyModuleAccount
+	NewModuleAccount      = types.NewModuleAccount
+	RegisterCodec         = types.RegisterCodec
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	NewSupply             = types.NewSupply
+	DefaultSupply         = types.DefaultSupply
 
 	// variable aliases
 	DefaultCodespace = keeper.DefaultCodespace
@@ -41,8 +43,6 @@ var (
 type (
 	Keeper        = keeper.Keeper
 	ModuleAccount = types.ModuleAccount
-	AccountKeeper = types.AccountKeeper
-	BankKeeper    = types.BankKeeper
 	GenesisState  = types.GenesisState
 	Supply        = types.Supply
 )

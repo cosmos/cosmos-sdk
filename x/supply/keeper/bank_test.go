@@ -12,9 +12,9 @@ import (
 const initialPower = int64(100)
 
 var (
-	holderAcc = types.NewModuleAccount(types.Basic, types.Basic)
-	burnerAcc = types.NewModuleAccount(types.Burner, types.Burner)
-	minterAcc = types.NewModuleAccount(types.Minter, types.Minter)
+	holderAcc = types.NewEmptyModuleAccount(types.Basic, types.Basic)
+	burnerAcc = types.NewEmptyModuleAccount(types.Burner, types.Burner)
+	minterAcc = types.NewEmptyModuleAccount(types.Minter, types.Minter)
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

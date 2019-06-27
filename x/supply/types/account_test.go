@@ -13,7 +13,7 @@ import (
 
 func TestModuleAccountMarshalYAML(t *testing.T) {
 	name := "test"
-	moduleAcc := NewModuleAccount(name, Basic)
+	moduleAcc := NewEmptyModuleAccount(name, Basic)
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)

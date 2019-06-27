@@ -109,9 +109,9 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 		// set module accounts
-		govAcc := supply.NewModuleAccount(types.ModuleName, supply.Burner)
-		notBondedPool := supply.NewModuleAccount(staking.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewModuleAccount(staking.BondedPoolName, supply.Burner)
+		govAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Burner)
+		notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
 
 		supplyKeeper.SetModuleAccount(ctx, govAcc)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)

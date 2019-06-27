@@ -41,7 +41,7 @@ func (k Keeper) GetModuleAccountAndPermission(ctx sdk.Context, moduleName string
 	}
 
 	// create a new module account
-	macc := types.NewModuleAccount(moduleName, perm)
+	macc := types.NewEmptyModuleAccount(moduleName, perm)
 	maccI := (k.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
 	k.SetModuleAccount(ctx, maccI)
 

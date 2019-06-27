@@ -131,7 +131,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		return supply.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
+		return supply.NewModuleAccount(bacc, ga.ModuleName, ga.ModulePermission)
 	}
 
 	return bacc

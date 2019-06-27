@@ -20,10 +20,6 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
 	feeCollector := k.supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	if feeCollector == nil {
-		panic("fee collector account hasn't been set")
-	}
-
 	feesCollectedInt := feeCollector.GetCoins()
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
 

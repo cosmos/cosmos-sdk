@@ -96,15 +96,16 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	acc := sk.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		macc, ok := acc.(exported.ModuleAccountI)
-		if !ok {
-			return nil
+		if ok {
+			return macc
 		}
-		return macc
 	}
 
 	// create a new module account
 	macc := supplytypes.NewModuleAccount(moduleName, "basic")
-	return (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
+	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)
+	sk.ak.SetAccount(ctx,maccI)
+	return maccI
 }
 
 // GetModuleAddress for dummy supply keeper

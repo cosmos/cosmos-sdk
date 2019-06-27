@@ -85,6 +85,7 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
 		{KeyDowntimeJailDuration, &p.DowntimeJailDuration},
 		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
+		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
 	}
 }
 

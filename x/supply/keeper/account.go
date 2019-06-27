@@ -34,10 +34,9 @@ func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.Mo
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		macc, ok := acc.(exported.ModuleAccountI)
-		if !ok {
-			return nil
+		if ok {
+			return macc
 		}
-		return macc
 	}
 
 	// create a new module account

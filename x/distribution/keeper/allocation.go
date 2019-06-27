@@ -6,12 +6,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
-// allocate fees handles distribution of the collected fees
+// AllocateTokens handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
 
@@ -20,12 +19,16 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	feesCollectedInt := k.supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName).GetCoins()
+	feeCollector := k.supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
+	if feeCollector == nil {
+		panic("fee collector account hasn't been set")
+	}
 
+	feesCollectedInt := feeCollector.GetCoins()
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
 
 	// transfer collected fees to the distribution module account
-	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, auth.FeeCollectorName, types.ModuleName, feesCollectedInt)
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
 	if err != nil {
 		panic(err)
 	}

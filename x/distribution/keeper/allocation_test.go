@@ -7,7 +7,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -74,7 +73,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	feeCollector := supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName)
+	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err := feeCollector.SetCoins(fees)
@@ -157,7 +156,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)))
 
-	feeCollector := supplyKeeper.GetModuleAccount(ctx, auth.FeeCollectorName)
+	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err := feeCollector.SetCoins(fees)

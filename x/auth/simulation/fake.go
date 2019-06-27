@@ -22,9 +22,9 @@ func SimulateDeductFee(ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) s
 		account := simulation.RandomAcc(r, accs)
 		stored := ak.GetAccount(ctx, account.Address)
 		initCoins := stored.GetCoins()
-		opMsg = simulation.NewOperationMsgBasic(auth.ModuleName, "deduct_fee", "", false, nil)
+		opMsg = simulation.NewOperationMsgBasic(types.ModuleName, "deduct_fee", "", false, nil)
 
-		feeCollector := ak.GetAccount(ctx, supplyKeeper.GetModuleAddress(auth.FeeCollectorName))
+		feeCollector := ak.GetAccount(ctx, supplyKeeper.GetModuleAddress(types.FeeCollectorName))
 		if feeCollector == nil {
 			panic(fmt.Errorf("fee collector account hasn't been set"))
 		}

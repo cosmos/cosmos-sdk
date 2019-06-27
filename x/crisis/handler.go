@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
@@ -30,7 +29,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
-	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, auth.FeeCollectorName, constantFee)
+	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, k.feeCollectorName, constantFee)
 	if err != nil {
 		return err.Result()
 	}

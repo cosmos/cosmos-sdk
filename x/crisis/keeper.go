@@ -18,17 +18,20 @@ type Keeper struct {
 	invCheckPeriod uint
 
 	supplyKeeper types.SupplyKeeper
+
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-supplyKeeper types.SupplyKeeper) Keeper {
+	supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
 
 	return Keeper{
-		routes:         []types.InvarRoute{},
-		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
-		invCheckPeriod: invCheckPeriod,
-		supplyKeeper:   supplyKeeper,
+		routes:           []types.InvarRoute{},
+		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		invCheckPeriod:   invCheckPeriod,
+		supplyKeeper:     supplyKeeper,
+		feeCollectorName: feeCollectorName,
 	}
 }
 

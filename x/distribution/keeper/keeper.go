@@ -19,11 +19,14 @@ type Keeper struct {
 
 	// codespace
 	codespace sdk.CodespaceType
+
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
 // create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType,
+	feeCollectorName string) Keeper {
 	keeper := Keeper{
 		storeKey:      key,
 		cdc:           cdc,
@@ -31,6 +34,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 		stakingKeeper: sk,
 		supplyKeeper:  supplyKeeper,
 		codespace:     codespace,
+		feeCollectorName: feeCollectorName,
 	}
 	return keeper
 }

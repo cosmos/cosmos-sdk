@@ -34,7 +34,7 @@ func newPermAddr(permission, name string) permAddr {
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	codespace sdk.CodespaceType, basicModuleAccs, minterModuleAccs, burnersModuleAccs []string) Keeper {
+	codespace sdk.CodespaceType, basicModuleAccs, minterModuleAccs, burnerModuleAccs []string) Keeper {
 
 	// set the addresses
 	permAddrs := make(map[string]permAddr)
@@ -44,7 +44,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk ty
 	for _, name := range minterModuleAccs {
 		permAddrs[name] = newPermAddr(types.Minter, name)
 	}
-	for _, name := range burnersModuleAccs {
+	for _, name := range burnerModuleAccs {
 		permAddrs[name] = newPermAddr(types.Burner, name)
 	}
 

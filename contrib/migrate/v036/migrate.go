@@ -7,7 +7,7 @@ import (
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 )
 
-// Migrate - unmarshal with the previous version and marshal with the new types
+// Migrate migrates exported state from v0.34 to a v0.36 genesis state.
 func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
 	v034Codec := codec.New()
 	codec.RegisterCrypto(v034Codec)

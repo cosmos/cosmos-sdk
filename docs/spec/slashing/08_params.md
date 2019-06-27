@@ -10,4 +10,3 @@ The slashing module contains the following parameters:
 | DowntimeJailDuration    | string (time ns) | "600000000000"         |
 | SlashFractionDoubleSign | string (dec)     | "0.050000000000000000" |
 | SlashFractionDowntime   | string (dec)     | "0.010000000000000000" |
-| DowntimeWarning         | string (int64)   | "5"                    |

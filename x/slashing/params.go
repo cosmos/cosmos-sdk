@@ -36,12 +36,6 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 	return
 }
 
-// Downtime Warning threshold
-func (k Keeper) DowntimeWarning(ctx sdk.Context) (res int64) {
-	k.paramspace.Get(ctx, types.KeyDowntimeWarning, &res)
-	return
-}
-
 // SlashFractionDoubleSign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, types.KeySlashFractionDoubleSign, &res)

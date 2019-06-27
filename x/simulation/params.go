@@ -35,7 +35,6 @@ const (
 	DowntimeJailDuration     = "downtime_jail_duration"
 	SlashFractionDoubleSign  = "slash_fraction_double_sign"
 	SlashFractionDowntime    = "slash_fraction_downtime"
-	DowntimeWarning          = "downtime_warning"
 	InflationRateChange      = "inflation_rate_change"
 	Inflation                = "inflation"
 	InflationMax             = "inflation_max"
@@ -121,9 +120,6 @@ var (
 		},
 		SlashFractionDowntime: func(r *rand.Rand) interface{} {
 			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
-		},
-		DowntimeWarning: func(r *rand.Rand) interface{} {
-			return int64(RandIntBetween(r, 1, 10))
 		},
 		InflationRateChange: func(r *rand.Rand) interface{} {
 			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)

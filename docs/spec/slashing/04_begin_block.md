@@ -86,9 +86,7 @@ single slashing period is capped as described in [overview.md](overview.md) unde
 
 At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod` and an event will be emitted.  Liveness slashes do NOT lead to a tombstombing.
 
-If the Validator has missed `DowntimeWarning` blocks in the last signing block window, then a warning event is emitted. The event is re-emitted for every additional `DowntimeWarning` blocks that validator misses in the same window.
-
-Ex: Let `DowntimeWindow = 5`. If a Validator misses 5 blocks, a warning event is emitted. If within the same signing block, he misses an additional 20 blocks, 4 more warning events are emitted with each event tallying the total amount of blocks Validator has missed. If in the next signing block window, Validator doesn't miss a block, no further events will be emitted.
+If a validator misses a block, a warning event will get emitted.
 
 ```
 height := block.Height
@@ -112,10 +110,8 @@ for val in block.Validators:
     signInfo.MissedBlocksCounter--
   // else previous == val not in block.AbsentValidators, no change
 
-	// Start emitting events to warn about validator downtime once validator has reached
-	// downtime warning threshold. Continue emitting warnings every missed `downtimeWarning`
-	// blocks thereafter
-	if signInfo.MissedBlocksCounter >= DOWNTIMEWARNING && signInfo.MissedBlocksCounter % DOWNTIMEWARNING == 0 {
+	// Emit warning events if Validator misses block
+	if val in block.AbsentValidators {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeSlash,

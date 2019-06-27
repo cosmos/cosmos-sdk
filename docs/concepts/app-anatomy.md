@@ -116,7 +116,7 @@ The SDK offers developers the possibility to implement automatic execution of co
 
 In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the `BeginBlock` and `EndBlock` functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn will call the `BeginBLock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BegingBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlock` and `SetOrderEndBlock` methods respectively. This is done in the [application's constructor](#application-constructor), and the `SetOrderBeginBlock` and `SetOrderEndBlock` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
 
-As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./accounts-fees.md/gas) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
+As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./fees-signature.md/gas) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
 You can see an example of `BeginBlocker` and `EndBlocker` functions [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L224-L232).
 
@@ -154,7 +154,7 @@ To learn more about the application module interface, [click here](./modules.md#
 A message is a custom type defined by each module that implements the [`message`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L8-L29) interface. Each `transaction` contains one or multiple `messages`. When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Then, the application handles the transaction:
 
 1. Upon receiving the transaction, the application first unmarshalls it from `[]bytes`.
-2. Then, it verifies a few things about the transaction like [fee payment and signatures](#accounts-fees.md) before extracting the message(s) contained in the transaction.
+2. Then, it verifies a few things about the transaction like [fee payment and signatures](#fees-signature.md) before extracting the message(s) contained in the transaction.
 3. With the [`Type()`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L16) method, `baseapp` is able to know which modules defines the message. It is then able to route it to the appropriate module's [handler](#handler) in order for the message to be processed.
 4. If the message is successfully processed, the state is updated.
 

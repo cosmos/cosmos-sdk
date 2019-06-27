@@ -45,8 +45,9 @@ func TestSendCoins(t *testing.T) {
 	err = keeper.SendCoinsFromModuleToModule(ctx, "", types.Basic, initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
-	require.Error(t, err)
+	require.Panics(t, func() {
+		keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
+	})
 
 	err = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	require.Error(t, err)
@@ -79,8 +80,7 @@ func TestMintCoins(t *testing.T) {
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	err := keeper.MintCoins(ctx, "", initCoins)
-	require.Error(t, err)
+	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) })
 
 	err = keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)

@@ -6,14 +6,12 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params        Params    `json:"params"`
+	Params Params `json:"params"`
 }
 
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params) GenesisState {
-	return GenesisState{
-		Params:        params,
-	}
+	return GenesisState{params}
 }
 
 // DefaultGenesisState - Return a default genesis state

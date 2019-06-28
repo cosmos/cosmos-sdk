@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName is the module name constant used in many places
-	ModuleName = "distr"
+	ModuleName = "distribution"
 
 	// StoreKey is the store key string for distribution
 	StoreKey = ModuleName

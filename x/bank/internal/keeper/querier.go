@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	// query balance path
 	QueryBalance = "balances"
 )
 

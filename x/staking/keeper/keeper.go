@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"container/list"
+	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -24,7 +25,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
-	bankKeeper         types.BankKeeper
+	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
@@ -34,25 +35,36 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper,
+// NewKeeper creates a new staking Keeper instance
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
-	keeper := Keeper{
+	// ensure bonded and not bonded module accounts are set
+	if addr := supplyKeeper.GetModuleAddress(types.BondedPoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
+	}
+
+	if addr := supplyKeeper.GetModuleAddress(types.NotBondedPoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
+	}
+
+	return Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,
 		cdc:                cdc,
-		bankKeeper:         bk,
+		supplyKeeper:       supplyKeeper,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
 		codespace:          codespace,
 	}
-	return keeper
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/staking") }
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // Set the validator hooks
 func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
@@ -66,24 +78,6 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
-}
-
-// get the pool
-func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.PoolKey)
-	if b == nil {
-		panic("stored pool should not have been nil")
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &pool)
-	return
-}
-
-// set the pool
-func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
-	store.Set(types.PoolKey, b)
 }
 
 // Load the last total validator power.

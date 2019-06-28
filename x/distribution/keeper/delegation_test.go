@@ -266,6 +266,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, balancePower)
 	sh := staking.NewHandler(sk)
 
+	// set module account coins
+	distrAcc := k.GetDistributionAccount(ctx)
+	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens)))
+	k.supplyKeeper.SetModuleAccount(ctx, distrAcc)
+
 	// create validator with 50% commission
 	power := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(power)
@@ -473,8 +478,13 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
-
 	initial := int64(20)
+
+	// set module account coins
+	distrAcc := k.GetDistributionAccount(ctx)
+	distrAcc.SetCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))))
+	k.supplyKeeper.SetModuleAccount(ctx, distrAcc)
+
 	totalRewards := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial*2))}
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
 

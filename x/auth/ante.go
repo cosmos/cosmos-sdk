@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -67,24 +68,17 @@ func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsum
 	signerAccs := make([]Account, len(signerAddrs))
 	isGenesis := ctx.BlockHeight() == 0
 
-	// fetch first signer, who's going to pay the fees
-	signerAccs[0], res = GetSignerAcc(newCtx, ak, signerAddrs[0])
-	if !res.IsOK() {
-		return newCtx, res, true
-	}
-
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	stdSigs := stdTx.GetSignatures()
 
 	for i := 0; i < len(stdSigs); i++ {
 		// skip the fee payer, account is cached and fees were deducted already
-		if i != 0 {
-			signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
+		signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
+		if !res.IsOK() {
+			return newCtx, res, true
 		}
+	
 
 		// check signature, return account with incremented nonce
 		signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)

@@ -10,6 +10,8 @@ linters:
     - unused
     - deadcode
     - goconst
+    - gosec
+    - staticcheck
 linters-settings:
   gocyclo:
     min-complexity: 11

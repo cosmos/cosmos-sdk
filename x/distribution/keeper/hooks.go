@@ -2,7 +2,8 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Wrapper struct
@@ -10,7 +11,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ types.StakingHooks = Hooks{}
+var _ stakingtypes.StakingHooks = Hooks{}
 
 // Create new distribution hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
@@ -46,8 +47,8 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 
 			accAddr := sdk.AccAddress(valAddr)
 			withdrawAddr := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
-
-			if _, err := h.k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+			err := h.k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+			if err != nil {
 				panic(err)
 			}
 		}

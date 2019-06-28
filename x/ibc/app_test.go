@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
+	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -19,6 +20,8 @@ func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
 	RegisterCodec(mapp.Cdc)
+	supplytypes.RegisterCodec(mapp.Cdc)
+
 	keyIBC := sdk.NewKVStoreKey("ibc")
 	ibcMapper := NewMapper(mapp.Cdc, keyIBC, DefaultCodespace)
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper,

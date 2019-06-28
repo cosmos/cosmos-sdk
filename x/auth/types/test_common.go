@@ -2,44 +2,11 @@
 package types
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-//DONTCOVER
-
-type testInput struct {
-	cdc *codec.Codec
-	ctx sdk.Context
-}
-
-func setupTestInput() testInput {
-	db := dbm.NewMemDB()
-
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-
-	authCapKey := sdk.NewKVStoreKey("authCapKey")
-	keyParams := sdk.NewKVStoreKey("subspace")
-	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
-
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.LoadLatestVersion()
-
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
-
-	return testInput{cdc: cdc, ctx: ctx}
-}
 
 func NewTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)

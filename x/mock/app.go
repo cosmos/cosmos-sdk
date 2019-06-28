@@ -66,15 +66,17 @@ func NewApp(m *module.Manager) *App {
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
+	// define keepers
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
 
-	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
+
+	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
@@ -113,6 +115,7 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 // InitChainer performs custom logic for initialization.
 // nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
+
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, genacc.GetAddress())

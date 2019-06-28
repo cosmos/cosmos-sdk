@@ -28,6 +28,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := sdk.ZeroInt()
+	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
@@ -38,6 +39,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+
+		// everything that is iterated in this loop is becoming or already a
+		// part of the bonded validator set
 
 		// fetch the validator
 		valAddr := sdk.ValAddress(iterator.Value())
@@ -54,12 +58,14 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// apply the appropriate state change if necessary
-		switch validator.Status {
-		case sdk.Unbonded:
+		switch {
+		case validator.IsUnbonded():
 			validator = k.unbondedToBonded(ctx, validator)
-		case sdk.Unbonding:
+			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+		case validator.IsUnbonding():
 			validator = k.unbondingToBonded(ctx, validator)
-		case sdk.Bonded:
+			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+		case validator.IsBonded():
 			// no state change
 		default:
 			panic("unexpected validator status")
@@ -100,13 +106,30 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 
 		// bonded to unbonding
-		k.bondedToUnbonding(ctx, validator)
+		validator = k.bondedToUnbonding(ctx, validator)
+		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 
 		// delete from the bonded validator index
-		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))
+		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
+
+	// Update the pools based on the recent updates in the validator set:
+	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+	// to the Bonded pool.
+	// - The tokens from the bonded validators that are being kicked out from the validator set 
+	// need to be transferred to the NotBonded pool.
+	switch {
+		// Compare and subtract the respective amounts to only perform one transfer.
+		// This is done in order to avoid doing multiple updates inside each iterator/loop.
+	case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+		k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+	case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+		k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+	default:
+		// equal amounts of tokens; no update required
 	}
 
 	// set total power on lookup index if there are any updates
@@ -177,9 +200,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// set the status
-	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
-	k.SetPool(ctx, pool)
+	validator = validator.UpdateStatus(sdk.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
@@ -208,9 +229,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 
 	// set the status
-	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
-	k.SetPool(ctx, pool)
+	validator = validator.UpdateStatus(sdk.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
 	validator.UnbondingCompletionTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
@@ -231,9 +250,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-	pool := k.GetPool(ctx)
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
-	k.SetPool(ctx, pool)
+	validator = validator.UpdateStatus(sdk.Unbonded)
 	k.SetValidator(ctx, validator)
 	return validator
 }

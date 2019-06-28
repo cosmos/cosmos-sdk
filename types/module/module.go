@@ -140,9 +140,14 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
+<<<<<<< HEAD
 	AnteHandle(sdk.Context, sdk.Tx, bool) (sdk.Context, sdk.Result, bool)
 	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
 	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
+=======
+	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
+>>>>>>> 352678438c8eadfae57e3314ce5a292ace0490a6
 }
 
 //___________________________
@@ -179,13 +184,11 @@ func (gam GenesisOnlyAppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 } 
 
 // module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // module end-block
-func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
+func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 //____________________________________________________________________________
@@ -296,6 +299,7 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
+<<<<<<< HEAD
 // perform antehandle functionality for modules
 func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 	ctx = sdk.SetGasMeter(simulate, ctx, tx.Gas())
@@ -334,25 +338,32 @@ func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx
 }
 
 // perform begin block functionality for modules
+=======
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
+>>>>>>> 352678438c8eadfae57e3314ce5a292ace0490a6
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := sdk.EmptyTags()
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 	for _, moduleName := range m.OrderBeginBlockers {
-		moduleTags := m.Modules[moduleName].BeginBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		m.Modules[moduleName].BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
+		Events: ctx.EventManager().ABCIEvents(),
 	}
 }
 
-// perform end block functionality for modules
+// EndBlock performs end block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
-	tags := sdk.EmptyTags()
+
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates, moduleTags := m.Modules[moduleName].EndBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -360,13 +371,14 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 			if len(validatorUpdates) > 0 {
 				panic("validator EndBlock updates already set by a previous module")
 			}
+
 			validatorUpdates = moduleValUpdates
 		}
 	}
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
-		Tags:             tags,
+		Events:           ctx.EventManager().ABCIEvents(),
 	}
 }
 

@@ -125,7 +125,7 @@ test_sim_benchmark_invariants:
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
-$(BINDIR)/runsim: contrib/runsim/main.go
+$(BINDIR)/runsim: contrib/runsim/main.go contrib/runsim/notification.go
 	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
@@ -145,8 +145,7 @@ test_sim_app_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-lint: tools ci-lint
-ci-lint:
+lint: golangci-lint
 	golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify

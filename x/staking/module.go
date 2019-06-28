@@ -95,22 +95,22 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 // app module
 type AppModule struct {
 	AppModuleBasic
-	keeper      Keeper
-	fcKeeper    types.FeeCollectionKeeper
-	distrKeeper types.DistributionKeeper
-	accKeeper   types.AccountKeeper
+	keeper       Keeper
+	distrKeeper  types.DistributionKeeper
+	accKeeper    types.AccountKeeper
+	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, fcKeeper types.FeeCollectionKeeper,
-	distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper,
+	supplyKeeper types.SupplyKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-		fcKeeper:       fcKeeper,
 		distrKeeper:    distrKeeper,
 		accKeeper:      accKeeper,
+		supplyKeeper:   supplyKeeper,
 	}
 }
 
@@ -121,7 +121,7 @@ func (AppModule) Name() string {
 
 // register invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	RegisterInvariants(ir, am.keeper, am.fcKeeper, am.distrKeeper, am.accKeeper)
+	RegisterInvariants(ir, am.keeper)
 }
 
 // module message route name
@@ -148,7 +148,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.keeper, am.accKeeper, genesisState)
+	return InitGenesis(ctx, am.keeper, am.accKeeper, am.supplyKeeper, genesisState)
 }
 
 // module export genesis
@@ -163,11 +163,9 @@ func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCt
 }
 
 // module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // module end-block
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
 }

@@ -140,14 +140,9 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
-<<<<<<< HEAD
 	AnteHandle(sdk.Context, sdk.Tx, bool) (sdk.Context, sdk.Result, bool)
-	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
-	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
-=======
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
->>>>>>> 352678438c8eadfae57e3314ce5a292ace0490a6
 }
 
 //___________________________
@@ -299,7 +294,6 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
-<<<<<<< HEAD
 // perform antehandle functionality for modules
 func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 	ctx = sdk.SetGasMeter(simulate, ctx, tx.Gas())
@@ -337,12 +331,9 @@ func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx
 	return ctx, res, abort
 }
 
-// perform begin block functionality for modules
-=======
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
->>>>>>> 352678438c8eadfae57e3314ce5a292ace0490a6
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 

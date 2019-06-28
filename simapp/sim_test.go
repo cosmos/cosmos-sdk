@@ -773,7 +773,8 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
-	// TODO fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
+	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
 	if period == 1 {
 		return app.crisisKeeper.Invariants()
 	}

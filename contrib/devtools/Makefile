@@ -17,8 +17,8 @@ endif
 
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
-GOLANGCI_LINT_VERSION := v1.16.0
-GOLANGCI_LINT_HASHSUM := ac897cadc180bf0c1a4bf27776c410debad27205b22856b861d41d39d06509cf
+GOLANGCI_LINT_VERSION := v1.17.1
+GOLANGCI_LINT_HASHSUM := f5fa647a12f658924d9f7d6b9628d505ab118e8e049e43272de6526053ebe08d
 
 ###
 # Functions
@@ -62,7 +62,7 @@ $(STATIK):
 	$(call go_install,rakyll,statik,v0.1.5)
 
 $(GOIMPORTS):
-	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
+	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
 
 $(CLOG):
 	$(call go_install,alessio,clog,1)

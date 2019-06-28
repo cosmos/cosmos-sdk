@@ -30,7 +30,7 @@ The supply `Keeper` also introduces new wrapper functions for the auth `Keeper` 
 
 ### Permissions
 
-Each `ModuleAccount` has a `Permission` that provides different object capabilities to perform certain actions. The avaliable permissions are:
+Each `ModuleAccount` has a `Permission` that provides different object capabilities to perform certain actions. The available permissions are:
 
 - `Holder`: is allowed to only transfer its coins to other accounts.
 - `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Holder` permissioned actions.

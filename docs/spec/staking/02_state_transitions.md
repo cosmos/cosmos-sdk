@@ -53,7 +53,7 @@ this process may be also be reversed. the following operations occur:
 
 ### Delegate
 
-When a delegation occurs both the validator and the delegtion objects are affected  
+When a delegation occurs both the validator and the delegation objects are affected  
 
 - determine the delegators shares based on tokens delegated and the validator's exchange rate
 - remove tokens from the sending account

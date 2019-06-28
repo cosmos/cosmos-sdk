@@ -197,7 +197,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
-				sdk.ValAddress(pubkey.Address()), minHeight, k.MinSignedPerWindow(ctx)))
+				sdk.ConsAddress(pubkey.Address()), minHeight, k.MinSignedPerWindow(ctx)))
 
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.

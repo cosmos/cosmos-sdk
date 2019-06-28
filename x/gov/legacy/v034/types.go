@@ -444,16 +444,6 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 	}
 }
 
-// is defined ProposalType?
-func validProposalType(pt ProposalKind) bool {
-	if pt == ProposalTypeText ||
-		pt == ProposalTypeParameterChange ||
-		pt == ProposalTypeSoftwareUpgrade {
-		return true
-	}
-	return false
-}
-
 // Marshal needed for protobuf compatibility
 func (pt ProposalKind) Marshal() ([]byte, error) {
 	return []byte{byte(pt)}, nil

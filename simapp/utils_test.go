@@ -13,12 +13,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +34,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	authtypes.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
 	distr.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
@@ -49,8 +48,8 @@ func TestGetSimulationLog(t *testing.T) {
 		store  string
 		kvPair cmn.KVPair
 	}{
-		{authtypes.StoreKey, cmn.KVPair{Value: cdc.MustMarshalBinaryBare(authtypes.BaseAccount{})}},
-		{mint.StoreKey, cmn.KVPair{Value: cdc.MustMarshalBinaryLengthPrefixed(minttypes.Minter{})}},
+		{auth.StoreKey, cmn.KVPair{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})}},
+		{mint.StoreKey, cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})}},
 		{staking.StoreKey, cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
 		{gov.StoreKey, cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
 		{distribution.StoreKey, cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
@@ -67,17 +66,61 @@ func TestGetSimulationLog(t *testing.T) {
 
 func TestDecodeAccountStore(t *testing.T) {
 	cdc := makeTestCodec()
-	acc := authtypes.NewBaseAccountWithAddress(delAddr1)
-	bz := cdc.MustMarshalBinaryBare(acc)
+	acc := auth.NewBaseAccountWithAddress(delAddr1)
+	globalAccNumber := uint64(10)
 
-	require.Equal(t, fmt.Sprintf("%v\n%v", acc, acc), decodeAccountStore(cdc, cdc, bz, bz))
+	kvPairs := cmn.KVPairs{
+		cmn.KVPair{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(acc)},
+		cmn.KVPair{Key: auth.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(globalAccNumber)},
+		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	}
+	tests := []struct {
+		name        string
+		expectedLog string
+	}{
+		{"Minter", fmt.Sprintf("%v\n%v", acc, acc)},
+		{"GlobalAccNumber", fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumber, globalAccNumber)},
+		{"other", ""},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch i {
+			case len(tests) - 1:
+				require.Panics(t, func() { decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+			default:
+				require.Equal(t, tt.expectedLog, decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+			}
+		})
+	}
 }
 
 func TestDecodeMintStore(t *testing.T) {
 	cdc := makeTestCodec()
-	minter := minttypes.NewMinter(sdk.OneDec(), sdk.NewDec(15))
-	bz := cdc.MustMarshalBinaryLengthPrefixed(minter)
-	require.Equal(t, fmt.Sprintf("%v\n%v", minter, minter), decodeMintStore(cdc, cdc, bz, bz))
+	minter := mint.NewMinter(sdk.OneDec(), sdk.NewDec(15))
+
+	kvPairs := cmn.KVPairs{
+		cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
+		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	}
+	tests := []struct {
+		name        string
+		expectedLog string
+	}{
+		{"Minter", fmt.Sprintf("%v\n%v", minter, minter)},
+		{"other", ""},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch i {
+			case len(tests) - 1:
+				require.Panics(t, func() { decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+			default:
+				require.Equal(t, tt.expectedLog, decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+			}
+		})
+	}
 }
 
 func TestDecodeDistributionStore(t *testing.T) {

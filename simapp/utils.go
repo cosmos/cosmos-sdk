@@ -49,7 +49,7 @@ func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KV
 	case auth.StoreKey:
 		return decodeAccountStore(cdcA, cdcB, kvA, kvB)
 	case mint.StoreKey:
-		return decodeMintStore(cdcA, cdcB, kvA.Value, kvB.Value)
+		return decodeMintStore(cdcA, cdcB, kvA, kvB)
 	case staking.StoreKey:
 		return decodeStakingStore(cdcA, cdcB, kvA, kvB)
 	case slashing.StoreKey:
@@ -209,7 +209,7 @@ func decodeSlashingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 		var missedA, missedB bool
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
-		return fmt.Sprintf("%missedA: %v\nmissedB%v", missedA, missedB)
+		return fmt.Sprintf("missedA: %v\nmissedB%v", missedA, missedB)
 
 	case bytes.Equal(kvA.Key[:1], slashing.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey

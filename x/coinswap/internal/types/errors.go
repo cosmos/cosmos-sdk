@@ -11,6 +11,7 @@ const (
 	CodeEqualDenom               sdk.CodeType = 102
 	CodeInvalidDeadline          sdk.CodeType = 103
 	CodeNotPositive              sdk.CodeType = 104
+	CodeConstraintNotMet         sdk.CodeType = 105
 )
 
 func ErrReservePoolAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Error {
@@ -36,4 +37,11 @@ func ErrNotPositive(codespace sdk.CodespaceType, msg string) sdk.Error {
 		return sdk.NewError(codespace, CodeNotPositive, msg)
 	}
 	return sdk.NewError(codespace, CodeNotPositive, "amount is not positive")
+}
+
+func ErrConstraintNotMet(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		return sdk.NewError(codespace, CodeConstraintNotMet, msg)
+	}
+	return sdk.NewError(codespace, CodeConstraintNotMet, "constraint not met")
 }

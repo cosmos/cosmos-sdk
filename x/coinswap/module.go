@@ -1,4 +1,4 @@
-package uniswap
+package coinswap
 
 import (
 	"encoding/json"
@@ -57,7 +57,7 @@ func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 // GetQueryCmd returns the root query command of this module
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-// AppModule uniswap app module
+// AppModule coinswap app module
 type AppModule struct {
 	AppModuleBasic
 	keeper Keeper
@@ -71,7 +71,7 @@ func NewAppModule(keeper Keeper) module.AppModule {
 	})
 }
 
-// RegisterInvariants registers the uniswap module invariants
+// RegisterInvariants registers the coinswap module invariants
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
 	RegisterInvariants(ir, am.keeper)
 }
@@ -96,7 +96,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-// InitGenesis uniswap module init-genesis
+// InitGenesis coinswap module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
@@ -111,11 +111,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 }
 
 // BeginBlock module begin-block
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock module end-block
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

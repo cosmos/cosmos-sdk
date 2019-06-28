@@ -6,10 +6,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 )
 
-// NewQuerier creates a querier for uniswap REST endpoints
+// NewQuerier creates a querier for coinswap REST endpoints
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
@@ -43,7 +43,7 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 	return bz, nil
 }
 
-// queryLiquidity returns the total liquidity avaliable for the provided denomination
+// queryLiquidity returns the total liquidity available for the provided denomination
 // upon success or an error if the query fails.
 func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var denom string
@@ -61,7 +61,7 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 	return bz, nil
 }
 
-// queryParameters returns uniswap module parameter queried for upon success
+// queryParameters returns coinswap module parameter queried for upon success
 // or an error if the query fails
 func queryParameters(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	switch path[0] {

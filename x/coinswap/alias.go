@@ -1,8 +1,8 @@
-package uniswap
+package coinswap
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 )
 
 type (
@@ -13,8 +13,9 @@ type (
 )
 
 var (
-	ErrInvalidDeadline = types.ErrInvalidDeadline
-	ErrNotPositive     = types.ErrNotPositive
+	ErrInvalidDeadline  = types.ErrInvalidDeadline
+	ErrNotPositive      = types.ErrNotPositive
+	ErrConstraintNotMet = types.ErrConstraintNotMet
 )
 
 const (

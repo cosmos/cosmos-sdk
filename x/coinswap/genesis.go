@@ -1,13 +1,13 @@
-package uniswap
+package coinswap
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 )
 
 // TODO: ...
 
-// GenesisState - uniswap genesis state
+// GenesisState - coinswap genesis state
 type GenesisState struct {
 	Params types.Params `json:"params"`
 }
@@ -24,7 +24,7 @@ func DefaultGenesisState() GenesisState {
 	return NewGenesisState(types.DefaultParams())
 }
 
-// InitGenesis new uniswap genesis
+// InitGenesis new coinswap genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 
 }

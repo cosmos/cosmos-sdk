@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/uniswap/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 	//supply "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
@@ -42,7 +42,7 @@ func createTestInput(t *testing.T, amt sdk.Int, nAccs int64) (sdk.Context, Keepe
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyUniswap := sdk.NewKVStoreKey(types.StoreKey)
+	keyCoinswap := sdk.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -50,12 +50,12 @@ func createTestInput(t *testing.T, amt sdk.Int, nAccs int64) (sdk.Context, Keepe
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyUniswap, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyCoinswap, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
 	cdc := makeTestCodec()
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "uniswap-chain"}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "coinswap-chain"}, false, log.NewNopLogger())
 
 	pk := params.NewKeeper(types.ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
@@ -65,7 +65,7 @@ func createTestInput(t *testing.T, amt sdk.Int, nAccs int64) (sdk.Context, Keepe
 	accs := createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
 	sk := supply.NewKeeper(cdc, keySupply, ak, bk, suppy.DefaultCodespace)
-	keeper := NewKeeper(cdc, keyUniswap, bk, sk, pk.Subspace(types.DefaultParamspace))
+	keeper := NewKeeper(cdc, keyCoinswap, bk, sk, pk.Subspace(types.DefaultParamspace))
 	params := types.DefaultParams()
 	keeper.SetFeeParam(ctx, params.Fee)
 

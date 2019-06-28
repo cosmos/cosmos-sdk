@@ -18,7 +18,7 @@ var (
 	KeyFee         = []byte("fee")
 )
 
-// Params defines the fee and native denomination for uniswap
+// Params defines the fee and native denomination for coinswap
 type Params struct {
 	NativeDenom string  `json:"native_denom"`
 	Fee         sdk.Dec `json:"fee"`
@@ -31,7 +31,7 @@ func NewParams(nativeDenom string, fee sdk.Dec) Params {
 	}
 }
 
-// ParamKeyTable returns the KeyTable for uniswap module
+// ParamKeyTable returns the KeyTable for coinswap module
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -52,7 +52,7 @@ Fee:			%s`, p.NativeDenom, p.Fee,
 	)
 }
 
-// DefaultParams returns the default uniswap module parameters
+// DefaultParams returns the default coinswap module parameters
 func DefaultParams() Params {
 	fee, err := sdk.NewDecFromStr("0.03")
 	if err != nil {

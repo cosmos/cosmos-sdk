@@ -127,9 +127,6 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
-		return ErrBadValidatorAddr(DefaultCodespace)
-	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}

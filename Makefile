@@ -27,13 +27,6 @@ ci: tools build test_cover lint test
 build: go.sum
 	@go build -mod=readonly ./...
 
-build-genesis-migrate:
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate.exe ./contrib/migrate
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/migrate ./contrib/migrate
-endif
-
 update-swagger-docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
 
@@ -204,4 +197,4 @@ benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \
 test_sim_app_multi_seed test_sim_app_import_export test_sim_benchmark_invariants \
-go-mod-cache build-genesis-migrate
+go-mod-cache

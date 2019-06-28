@@ -22,5 +22,5 @@ Light-clients enable users to interact with your application without having to d
 If you need to upgrade your node you could export the genesis and migrate it to the new version through this script:
 
 ```bash
-./build/migrate genesis v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
+<appbinary> migrate v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
 ```

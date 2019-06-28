@@ -2,6 +2,7 @@ package connection
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -53,7 +54,7 @@ func (man Manager) object(id string) Object {
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
 		state:       state.NewEnum(man.protocol.Value([]byte(id + "/state"))),
-		nexttimeout: state.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
+		nextTimeout: state.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
 
 		self: man.self,
 	}
@@ -65,11 +66,12 @@ func (man CounterpartyManager) object(id string) CounterObject {
 		id:          id,
 		connection:  man.protocol.Value([]byte(id)),
 		state:       commitment.NewEnum(man.protocol.Value([]byte(id + "/state"))),
-		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
+		nextTimeout: commitment.NewInteger(man.protocol.Value([]byte(id+"/timeout")), state.Dec),
 	}
 }
 
 func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (obj Object, err error) {
+	fmt.Println("create", id, connection)
 	obj = man.object(id)
 	if obj.exists(ctx) {
 		err = errors.New("connection already exists for the provided id")
@@ -104,7 +106,7 @@ type Object struct {
 	id          string
 	connection  state.Value
 	state       state.Enum
-	nexttimeout state.Integer
+	nextTimeout state.Integer
 
 	client client.Object
 
@@ -116,7 +118,7 @@ type CounterObject struct {
 	id          string
 	connection  commitment.Value
 	state       commitment.Enum
-	nexttimeout commitment.Integer
+	nextTimeout commitment.Integer
 
 	client client.CounterObject
 }
@@ -159,7 +161,7 @@ func (obj CounterObject) exists(ctx sdk.Context) bool {
 func (obj Object) remove(ctx sdk.Context) {
 	obj.connection.Delete(ctx)
 	obj.state.Delete(ctx)
-	obj.nexttimeout.Delete(ctx)
+	obj.nextTimeout.Delete(ctx)
 }
 
 func (obj Object) assertSymmetric(ctx sdk.Context) error {
@@ -178,11 +180,8 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 	return nil
 }
 
+// Using proofs: none
 func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
-	if obj.exists(ctx) {
-		return errors.New("init on existing connection")
-	}
-
 	if !obj.state.Transit(ctx, Idle, Init) {
 		return errors.New("init on non-idle connection")
 	}
@@ -192,31 +191,36 @@ func (obj Object) OpenInit(ctx sdk.Context, nextTimeoutHeight uint64) error {
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
+	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
 
+// Using proofs: counterparty.{connection,state,nextTimeout,client}
 func (obj Object) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
 	if !obj.state.Transit(ctx, Idle, OpenTry) {
 		return errors.New("invalid state")
 	}
 
+	fmt.Println(12345)
 	err := assertTimeout(ctx, timeoutHeight)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println(67890)
 	if !obj.counterparty.state.Is(ctx, Init) {
 		return errors.New("counterparty state not init")
 	}
+	fmt.Println(97)
 
 	err = obj.assertSymmetric(ctx)
 	if err != nil {
 		return err
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	fmt.Println(65)
+	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -235,11 +239,12 @@ func (obj Object) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, next
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
+	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
 
+// Using proofs: counterparty.{connection,state, nextTimeout}
 func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
 
 	if !obj.state.Transit(ctx, Init, Open) {
@@ -260,7 +265,7 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return err
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
@@ -273,11 +278,12 @@ func (obj Object) OpenAck(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		}
 	*/
 
-	obj.nexttimeout.Set(ctx, uint64(nextTimeoutHeight))
+	obj.nextTimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return nil
 }
 
+// Using proofs: counterparty.{connection,state, nextTimeout}
 func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 	if !obj.state.Transit(ctx, OpenTry, Open) {
 		return errors.New("confirm on non-try connection")
@@ -297,17 +303,17 @@ func (obj Object) OpenConfirm(ctx sdk.Context, timeoutHeight uint64) error {
 		return err
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	obj.nexttimeout.Set(ctx, 0)
+	obj.nextTimeout.Set(ctx, 0)
 
 	return nil
 }
 
 func (obj Object) OpenTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -339,7 +345,7 @@ func (obj Object) CloseInit(ctx sdk.Context, nextTimeout uint64) error {
 		return errors.New("closeinit on non-open connection")
 	}
 
-	obj.nexttimeout.Set(ctx, nextTimeout)
+	obj.nextTimeout.Set(ctx, nextTimeout)
 
 	return nil
 }
@@ -358,11 +364,11 @@ func (obj Object) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uin
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	obj.nexttimeout.Set(ctx, nextTimeoutHeight)
+	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
@@ -381,17 +387,17 @@ func (obj Object) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.counterparty.nexttimeout.Is(ctx, timeoutHeight) {
+	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	obj.nexttimeout.Set(ctx, 0)
+	obj.nextTimeout.Set(ctx, 0)
 
 	return nil
 }
 
 func (obj Object) CloseTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nexttimeout.Get(ctx)) {
+	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -408,7 +414,7 @@ func (obj Object) CloseTimeout(ctx sdk.Context) error {
 	}
 
 	obj.state.Set(ctx, Open)
-	obj.nexttimeout.Set(ctx, 0)
+	obj.nextTimeout.Set(ctx, 0)
 
 	return nil
 

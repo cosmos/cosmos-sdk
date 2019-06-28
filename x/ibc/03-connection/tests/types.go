@@ -12,145 +12,137 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type Node struct {
 	Name string
 	*tendermint.Node
-	Counterparty *CounterpartyNode
+	Counterparty *Node
 
-	State connection.State
+	Connection connection.Connection
+	State      connection.State
 
 	Cdc *codec.Codec
 }
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Name: "self", // hard coded, doesnt matter
-		Node: tendermint.NewNode(self),
+		Name: "self",                                                           // hard coded, doesnt matter
+		Node: tendermint.NewNode(self, tendermint.NewRoot([]byte("protocol"))), // TODO: test with key prefix
 
 		State: connection.Idle,
 		Cdc:   cdc,
 	}
 
-	res.Counterparty = &CounterpartyNode{
-		Name: "counterparty",
-		Node: tendermint.NewNode(counter),
-		Cdc:  cdc,
+	res.Counterparty = &Node{
+		Name:         "counterparty",
+		Node:         tendermint.NewNode(counter, tendermint.NewRoot([]byte("protocol"))),
+		Counterparty: res,
 
-		SelfName: &res.Name,
-		State:    &res.State,
+		State: connection.Idle,
+		Cdc:   cdc,
+	}
+
+	res.Connection = connection.Connection{
+		Counterparty: res.Counterparty.Name,
+	}
+
+	res.Counterparty.Connection = connection.Connection{
+		Counterparty: res.Name,
 	}
 
 	return res
 }
 
-func (node *Node) Object(t *testing.T) (sdk.Context, connection.Object) {
-	ctx, man, conn := node.Context(), node.Manager(), node.Connection()
+func (node *Node) CreateClient(t *testing.T) {
+	ctx := node.Context()
+	climan, _ := node.Manager()
+	obj, err := climan.Create(ctx, node.Counterparty.LastStateVerifier().ConsensusState)
+	require.NoError(t, err)
+	node.Connection.Client = obj.ID()
+	node.Counterparty.Connection.CounterpartyClient = obj.ID()
+}
+
+func (node *Node) UpdateClient(t *testing.T, header client.Header) {
+	ctx := node.Context()
+	climan, _ := node.Manager()
+	obj, err := climan.Query(ctx, node.Connection.Client)
+	require.NoError(t, err)
+	err = obj.Update(ctx, header)
+	require.NoError(t, err)
+}
+
+func (node *Node) Object(t *testing.T, proofs []commitment.Proof) (sdk.Context, connection.Object) {
+	ctx := node.Context()
+	store, err := commitment.NewStore(node.Counterparty.Root, proofs)
+	require.NoError(t, err)
+	ctx = commitment.WithStore(ctx, store)
+	_, man := node.Manager()
 	switch node.State {
 	case connection.Idle:
-		obj, err := man.Create(ctx, node.Name, conn)
+		obj, err := man.Create(ctx, node.Name, node.Connection)
 		require.NoError(t, err)
 		return ctx, obj
 	default:
 		obj, err := man.Query(ctx, node.Name)
 		require.NoError(t, err)
-		require.Equal(t, conn, obj.Connection(ctx))
+		require.Equal(t, node.Connection, obj.Connection(ctx))
 		return ctx, obj
 	}
 }
 
-func (node *Node) Manager() connection.Manager {
-	base := state.NewBase(node.Cdc, node.Key)
-	protocol := base.Prefix([]byte("protocol/"))
-	free := base.Prefix([]byte("free/"))
+func (node *Node) CLIObject() connection.CLIObject {
+	_, man := node.Manager()
+	return man.CLIObject(node.Root, node.Name)
+}
+
+func base(cdc *codec.Codec, key sdk.StoreKey) (state.Base, state.Base) {
+	base := state.NewBase(cdc, key)
+	protocol := base.Prefix([]byte("protocol"))
+	free := base.Prefix([]byte("free"))
+	return protocol, free
+}
+
+func (node *Node) Manager() (client.Manager, connection.Manager) {
+	protocol, free := base(node.Cdc, node.Key)
 	clientman := client.NewManager(protocol, free, client.IntegerIDGenerator)
-	return connection.NewManager(base, clientman)
+	return clientman, connection.NewManager(protocol, clientman)
 }
 
-func (node *Node) Connection() connection.Connection {
-	return connection.Connection{
-		Counterparty:       node.Counterparty.Name,
-		Client:             node.Name + "client",
-		CounterpartyClient: node.Counterparty.Name + "client",
-	}
-}
-
-type CounterpartyNode struct {
-	Name string
-	*tendermint.Node
-
-	Cdc *codec.Codec
-
-	// pointer to self
-	// TODO: improve
-	State    *connection.State
-	SelfName *string
-}
-
-func (node *CounterpartyNode) Object(t *testing.T) (sdk.Context, connection.Object) {
-	ctx, man, conn := node.Context(), node.Manager(), node.Connection()
-	switch *node.State {
-	case connection.Idle:
-		obj, err := man.Create(ctx, node.Name, conn)
-		require.NoError(t, err)
-		return ctx, obj
-	default:
-		obj, err := man.Query(ctx, node.Name)
-		require.NoError(t, err)
-		require.Equal(t, conn, obj.Connection(ctx))
-		return ctx, obj
-	}
-}
-func (node *CounterpartyNode) Connection() connection.Connection {
-	return connection.Connection{
-		Counterparty:       *node.SelfName,
-		Client:             node.Name + "client",
-		CounterpartyClient: *node.SelfName + "client",
-	}
-}
-
-func (node *CounterpartyNode) Manager() connection.Manager {
-	base := state.NewBase(node.Cdc, node.Key)
-	protocol := base.Prefix([]byte("protocol/"))
-	free := base.Prefix([]byte("free/"))
-	clientman := client.NewManager(protocol, free, client.IntegerIDGenerator)
-	return connection.NewManager(base, clientman)
-}
-
-func (node *Node) Advance(t *testing.T) {
+func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 	switch node.State {
 	case connection.Idle: // self: Idle -> Init
-		ctx, obj := node.Object(t)
+		ctx, obj := node.Object(t, proofs)
 		require.Equal(t, connection.Idle, obj.State(ctx))
 		err := obj.OpenInit(ctx, 100) // TODO: test timeout
 		require.NoError(t, err)
 		require.Equal(t, connection.Init, obj.State(ctx))
-		require.Equal(t, node.Connection(), obj.Connection(ctx))
+		require.Equal(t, node.Connection, obj.Connection(ctx))
 		node.State = connection.Init
 	case connection.Init: // counter: Idle -> OpenTry
-		ctx, obj := node.Counterparty.Object(t)
+		ctx, obj := node.Counterparty.Object(t, proofs)
 		require.Equal(t, connection.Idle, obj.State(ctx))
 		err := obj.OpenTry(ctx, 0 /*TODO*/, 100 /*TODO*/, 100 /*TODO*/)
 		require.NoError(t, err)
 		require.Equal(t, connection.OpenTry, obj.State(ctx))
-		require.Equal(t, node.Counterparty.Connection(), obj.Connection(ctx))
+		require.Equal(t, node.Counterparty.Connection, obj.Connection(ctx))
 		node.State = connection.OpenTry
 	case connection.OpenTry: // self: Init -> Open
-		ctx, obj := node.Object(t)
+		ctx, obj := node.Object(t, proofs)
 		require.Equal(t, connection.Init, obj.State(ctx))
 		err := obj.OpenAck(ctx, 0 /*TODO*/, 100 /*TODO*/, 100 /*TODO*/)
 		require.NoError(t, err)
 		require.Equal(t, connection.Open, obj.State(ctx))
-		require.Equal(t, node.Connection(), obj.Connection(ctx))
+		require.Equal(t, node.Connection, obj.Connection(ctx))
 		node.State = connection.Open
 	case connection.Open: // counter: OpenTry -> Open
-		ctx, obj := node.Counterparty.Object(t)
+		ctx, obj := node.Counterparty.Object(t, proofs)
 		require.Equal(t, connection.OpenTry, obj.State(ctx))
 		err := obj.OpenConfirm(ctx, 100 /*TODO*/)
 		require.NoError(t, err)
 		require.Equal(t, connection.Open, obj.State(ctx))
-		require.Equal(t, node.Counterparty.Connection(), obj.Connection(ctx))
+		require.Equal(t, node.Counterparty.Connection, obj.Connection(ctx))
 		node.State = connection.CloseTry
 	// case connection.CloseTry // self: Open -> CloseTry
 	default:

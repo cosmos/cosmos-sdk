@@ -30,6 +30,9 @@ func newRoot() merkle.Root {
 
 const chainid = "testchain"
 
+func NewRoot(keyPrefix []byte) merkle.Root {
+	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, keyPrefix)
+}
 func defaultComponents() (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
 	key := sdk.NewKVStoreKey("test")
 	db := dbm.NewMemDB()
@@ -76,7 +79,7 @@ func (node *Node) Last() tmtypes.SignedHeader {
 	return node.Commits[len(node.Commits)-1]
 }
 
-func (node *Node) Commit() tmtypes.SignedHeader {
+func (node *Node) Commit() tendermint.Header {
 	valsethash := node.Valset.ValidatorSet().Hash()
 	nextvalset := node.Valset.Mutate()
 	nextvalsethash := nextvalset.ValidatorSet().Hash()
@@ -99,12 +102,17 @@ func (node *Node) Commit() tmtypes.SignedHeader {
 	node.PrevValset = node.Valset
 	node.Valset = nextvalset
 	node.Commits = append(node.Commits, commit)
+	node.Root = node.Root.Update(header.AppHash).(merkle.Root)
 
-	return commit
+	return tendermint.Header{
+		SignedHeader:     commit,
+		ValidatorSet:     node.PrevValset.ValidatorSet(),
+		NextValidatorSet: node.Valset.ValidatorSet(),
+	}
 }
 
-func (node *Node) LastStateVerifier(root merkle.Root) *Verifier {
-	return NewVerifier(node.Last(), node.Valset, root)
+func (node *Node) LastStateVerifier() *Verifier {
+	return NewVerifier(node.Last(), node.Valset, node.Root)
 }
 
 func (node *Node) Context() sdk.Context {
@@ -126,14 +134,8 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root me
 	}
 }
 
-func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset MockValidators) error {
-	newcs, err := v.ConsensusState.Validate(
-		tendermint.Header{
-			SignedHeader:     header,
-			ValidatorSet:     valset.ValidatorSet(),
-			NextValidatorSet: nextvalset.ValidatorSet(),
-		},
-	)
+func (v *Verifier) Validate(header tendermint.Header) error {
+	newcs, err := v.ConsensusState.Validate(header)
 	if err != nil {
 		return err
 	}
@@ -142,8 +144,8 @@ func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset Mock
 	return nil
 }
 
-func (node *Node) Query(t *testing.T, root merkle.Root, k []byte) ([]byte, commitment.Proof) {
-	code, value, proof := root.QueryMultiStore(node.Cms, k)
+func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
+	code, value, proof := node.Root.QueryMultiStore(node.Cms, k)
 	require.Equal(t, uint32(0), code)
 	return value, proof
 }
@@ -154,7 +156,7 @@ func (node *Node) Set(k, value []byte) {
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), newRoot())
+	node := NewNode(NewMockValidators(100, 10), NewRoot([]byte{0x34, 0x90, 0xDA}))
 
 	node.Commit()
 
@@ -170,15 +172,14 @@ func testProof(t *testing.T) {
 			kvps = append(kvps, cmn.KVPair{Key: k, Value: v})
 			node.Set(k, v)
 		}
-		header := node.Commit()
+		_ = node.Commit()
 		proofs := []commitment.Proof{}
-		root := node.Root.Update(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, root.(merkle.Root), kvp.Key)
+			v, p := node.Query(t, kvp.Key)
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(root, proofs)
+		cstore, err := commitment.NewStore(node.Root, proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

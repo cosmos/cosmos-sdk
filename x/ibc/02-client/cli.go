@@ -51,35 +51,3 @@ func (obj CLIObject) Frozen(ctx context.CLIContext, root merkle.Root) (res bool,
 	proof, err = obj.query(ctx, obj.FrozenKey, &res)
 	return
 }
-
-func query(ctx context.CLIContext, root merkle.Root, key []byte) ([]byte, merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(root.RequestQuery(key))
-	if err != nil {
-		return nil, merkle.Proof{}, err
-	}
-	proof := merkle.Proof{
-		Key:   key,
-		Proof: resp.Proof,
-	}
-	return resp.Value, proof, nil
-
-}
-
-func (obj CLIObject) ConsensusState(ctx context.CLIContext, root merkle.Root) (res ConsensusState, proof merkle.Proof, err error) {
-	val, proof, err := query(ctx, root, obj.ConsensusStateKey)
-	obj.Cdc.MustUnmarshalBinaryBare(val, &res)
-	return
-}
-
-func (obj CLIObject) Frozen(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
-	val, tmproof, _, err := ctx.QueryProof(obj.FrozenKey, "ibc") // TODO
-	if err != nil {
-		return
-	}
-	proof = merkle.Proof{
-		Key:   obj.FrozenKey,
-		Proof: tmproof,
-	}
-	obj.Cdc.MustUnmarshalBinaryBare(val, &res)
-	return
-}

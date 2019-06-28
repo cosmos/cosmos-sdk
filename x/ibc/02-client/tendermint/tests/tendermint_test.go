@@ -7,17 +7,17 @@ import (
 )
 
 func testUpdate(t *testing.T, interval int, ok bool) {
-	node := NewNode(NewMockValidators(100, 10), newRoot())
+	node := NewNode(NewMockValidators(100, 10), NewRoot([]byte("qwertyuiop")))
 
 	node.Commit()
 
-	verifier := node.LastStateVerifier(newRoot())
+	verifier := node.LastStateVerifier()
 
 	for i := 0; i < 100; i++ {
 		header := node.Commit()
 
 		if i%interval == 0 {
-			err := verifier.Validate(header, node.PrevValset, node.Valset)
+			err := verifier.Validate(header)
 			if ok {
 				require.NoError(t, err)
 			} else {

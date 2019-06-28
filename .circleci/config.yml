@@ -160,25 +160,6 @@ jobs:
             export GO111MODULE=on
             /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullAppSimulation
 
-  test_sim_migration:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test migrated genesis in a simulation
-          command: |
-            export GO111MODULE=on
-            cd $GOPATH/src/github.com/cosmos/cosmos-sdk/
-            make build-genesis-migrate
-            ./build/migrate v0.36 contrib/migrate/v034/genesis.json > ~/genesis.testnet.036.json
-            go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp -run TestFullAppSimulation -SimulationEnabled=true -SimulationNumBlocks=5 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=5 -SimulationPeriod=5 -v -timeout 24h --SimulationGenesis ~/genesis.testnet.036.json
-
   test_cover:
     <<: *linux_defaults
     parallelism: 4
@@ -319,9 +300,6 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_app_multi_seed:
-          requires:
-            - setup_dependencies
-      - test_sim_migration:
           requires:
             - setup_dependencies
       - test_sim_app_multi_seed_long:

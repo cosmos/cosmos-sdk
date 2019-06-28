@@ -88,7 +88,7 @@ func TestToAccount(t *testing.T) {
 	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
 
 	// module account
-	macc := supplytypes.NewModuleAccount("mint", supplytypes.Minter)
+	macc := supplytypes.NewEmptyModuleAccount("mint", supplytypes.Minter)
 	genAcc, err = NewGenesisAccountI(macc)
 	require.NoError(t, err)
 	acc = genAcc.ToAccount()

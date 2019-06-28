@@ -39,11 +39,6 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
-
-		feeCollector := supplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
-		if feeCollector == nil {
-			panic("fee collector account hasn't been set")
-		}
 		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
 		if !ok {
@@ -116,6 +111,17 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			return newCtx, res, true
 		}
 
+		// deduct the fees
+		if !stdTx.Fee.Amount.IsZero() {
+			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], stdTx.Fee.Amount)
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
+
+			// reload the account as fees have been deducted
+			signerAccs[0] = ak.GetAccount(newCtx, signerAccs[0].GetAddress())
+		}
+
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
@@ -137,13 +143,6 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			}
 
 			ak.SetAccount(newCtx, signerAccs[i])
-		}
-
-		if !stdTx.Fee.Amount.IsZero() {
-			res = DeductFees(supplyKeeper, ctx, signerAccs[0], feeCollector, stdTx.Fee)
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
 		}
 
 		// TODO: tx tags (?)
@@ -329,33 +328,32 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc Account, feeCollector Account, fee StdFee) sdk.Result {
+func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc Account, fees sdk.Coins) sdk.Result {
 	blockTime := ctx.BlockHeader().Time
 	coins := acc.GetCoins()
-	feeAmount := fee.Amount
 
-	if !feeAmount.IsValid() {
-		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
+	if !fees.IsValid() {
+		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", fees)).Result()
 	}
 
-	// get the resulting coins deducting the fees
-	_, hasNeg := coins.SafeSub(feeAmount)
+	// verify the account has enough funds to pay for fees
+	_, hasNeg := coins.SafeSub(fees)
 	if hasNeg {
 		return sdk.ErrInsufficientFunds(
-			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, feeAmount),
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, fees),
 		).Result()
 	}
 
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
 	spendableCoins := acc.SpendableCoins(blockTime)
-	if _, hasNeg := spendableCoins.SafeSub(feeAmount); hasNeg {
+	if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
 		return sdk.ErrInsufficientFunds(
-			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, feeAmount),
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, fees),
 		).Result()
 	}
 
-	err := supplyKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, feeAmount)
+	err := supplyKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 	if err != nil {
 		return err.Result()
 	}

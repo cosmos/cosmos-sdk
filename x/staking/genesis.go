@@ -54,6 +54,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
 		case sdk.Unbonding, sdk.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
+		default:
+			panic("invalid validator status")
 		}
 	}
 

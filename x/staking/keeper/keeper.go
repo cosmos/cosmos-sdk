@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"container/list"
+	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -24,7 +25,6 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
-	bankKeeper         types.BankKeeper
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
 	paramstore         params.Subspace
@@ -36,15 +36,14 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new staking Keeper instance
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper,
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
 	return Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,
 		cdc:                cdc,
-		bankKeeper:         bk,
-		supplyKeeper:       sk,
+		supplyKeeper:       supplyKeeper,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
@@ -54,7 +53,9 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper, sk
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/staking") }
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // Set the validator hooks
 func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {

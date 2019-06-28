@@ -3,11 +3,9 @@
 // aliases generated for the following subdirectories:
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/keeper
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/types
-// ALIASGEN: github.com/cosmos/cosmos-sdk/x/supply/exported
 package supply
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
@@ -17,23 +15,25 @@ const (
 	StoreKey     = types.StoreKey
 	RouterKey    = types.RouterKey
 	QuerierRoute = types.QuerierRoute
-	Holder       = types.Holder
+	Basic        = types.Basic
 	Minter       = types.Minter
 	Burner       = types.Burner
 )
 
 var (
 	// functions aliases
-	RegisterInvariants  = keeper.RegisterInvariants
-	AllInvariants       = keeper.AllInvariants
-	TotalSupply         = keeper.TotalSupply
-	NewKeeper           = keeper.NewKeeper
-	NewModuleAccount    = types.NewModuleAccount
-	RegisterCodec       = types.RegisterCodec
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	NewSupply           = types.NewSupply
-	DefaultSupply       = types.DefaultSupply
+	RegisterInvariants    = keeper.RegisterInvariants
+	AllInvariants         = keeper.AllInvariants
+	TotalSupply           = keeper.TotalSupply
+	NewKeeper             = keeper.NewKeeper
+	NewModuleAddress      = types.NewModuleAddress
+	NewEmptyModuleAccount = types.NewEmptyModuleAccount
+	NewModuleAccount      = types.NewModuleAccount
+	RegisterCodec         = types.RegisterCodec
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	NewSupply             = types.NewSupply
+	DefaultSupply         = types.DefaultSupply
 
 	// variable aliases
 	DefaultCodespace = keeper.DefaultCodespace
@@ -41,11 +41,8 @@ var (
 )
 
 type (
-	Keeper         = keeper.Keeper
-	ModuleAccount  = types.ModuleAccount
-	AccountKeeper  = types.AccountKeeper
-	BankKeeper     = types.BankKeeper
-	GenesisState   = types.GenesisState
-	Supply         = types.Supply
-	ModuleAccountI = exported.ModuleAccountI
+	Keeper        = keeper.Keeper
+	ModuleAccount = types.ModuleAccount
+	GenesisState  = types.GenesisState
+	Supply        = types.Supply
 )

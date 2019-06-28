@@ -231,7 +231,6 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-
 	bondPool = sk.GetBondedPool(ctx)
 	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 
@@ -396,7 +395,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newAmt := sdk.TokensFromConsensusPower(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ := staking.EndBlocker(ctx, sk)
+	validatorUpdates := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
@@ -409,7 +408,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(50)
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ = staking.EndBlocker(ctx, sk)
+	validatorUpdates = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)

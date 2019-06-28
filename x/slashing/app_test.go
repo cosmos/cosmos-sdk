@@ -38,7 +38,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
 		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
-	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -54,10 +54,9 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 // staking endblocker
 func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates, tags := staking.EndBlocker(ctx, keeper)
+		validatorUpdates := staking.EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: validatorUpdates,
-			Tags:             tags,
 		}
 	}
 }
@@ -66,9 +65,9 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
-		feeCollector := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
-		notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
 
 		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)

@@ -398,19 +398,21 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 // Returns all the validator queue timeslices from time 0 until endTime
 func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.ValidatorQueueKey,
-		sdk.InclusiveEndBytes(types.GetValidatorQueueTimeKey(endTime)))
+	return store.Iterator(types.ValidatorQueueKey, sdk.InclusiveEndBytes(types.GetValidatorQueueTimeKey(endTime)))
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
 func (k Keeper) GetAllMatureValidatorQueue(ctx sdk.Context, currTime time.Time) (matureValsAddrs []sdk.ValAddress) {
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer validatorTimesliceIterator.Close()
+
 	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
 		timeslice := []sdk.ValAddress{}
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(validatorTimesliceIterator.Value(), &timeslice)
 		matureValsAddrs = append(matureValsAddrs, timeslice...)
 	}
+
 	return matureValsAddrs
 }
 
@@ -418,22 +420,27 @@ func (k Keeper) GetAllMatureValidatorQueue(ctx sdk.Context, currTime time.Time) 
 func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer validatorTimesliceIterator.Close()
+
 	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
 		timeslice := []sdk.ValAddress{}
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(validatorTimesliceIterator.Value(), &timeslice)
+
 		for _, valAddr := range timeslice {
 			val, found := k.GetValidator(ctx, valAddr)
 			if !found {
 				panic("validator in the unbonding queue was not found")
 			}
+
 			if !val.IsUnbonding() {
-				panic("unexpected validator in unbonding queue, status was not unbonding")
+				panic("unexpected validator in unbonding queue; status was not unbonding")
 			}
 			val = k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {
 				k.RemoveValidator(ctx, val.OperatorAddress)
 			}
 		}
+
 		store.Delete(validatorTimesliceIterator.Key())
 	}
 }

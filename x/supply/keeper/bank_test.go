@@ -12,9 +12,9 @@ import (
 const initialPower = int64(100)
 
 var (
-	holderAcc = types.NewModuleAccount(types.Holder, types.Holder)
-	burnerAcc = types.NewModuleAccount(types.Burner, types.Burner)
-	minterAcc = types.NewModuleAccount(types.Minter, types.Minter)
+	holderAcc = types.NewEmptyModuleAccount(types.Basic, types.Basic)
+	burnerAcc = types.NewEmptyModuleAccount(types.Burner, types.Burner)
+	minterAcc = types.NewEmptyModuleAccount(types.Minter, types.Minter)
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -42,21 +42,22 @@ func TestSendCoins(t *testing.T) {
 	keeper.SetModuleAccount(ctx, burnerAcc)
 	ak.SetAccount(ctx, baseAcc)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, "", types.Holder, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, "", types.Basic, initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
-	require.Error(t, err)
+	require.Panics(t, func() {
+		keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
+	})
 
 	err = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Holder, baseAcc.GetAddress(), initCoins.Add(initCoins))
+	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Basic, baseAcc.GetAddress(), initCoins.Add(initCoins))
 	require.Error(t, err)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, types.Holder, types.Burner, initCoins)
+	err = keeper.SendCoinsFromModuleToModule(ctx, types.Basic, types.Burner, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Holder))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Basic))
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Burner))
 
 	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins)
@@ -79,10 +80,9 @@ func TestMintCoins(t *testing.T) {
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	err := keeper.MintCoins(ctx, "", initCoins)
-	require.Error(t, err)
+	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) })
 
-	err = keeper.MintCoins(ctx, types.Minter, initCoins)
+	err := keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Minter))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)

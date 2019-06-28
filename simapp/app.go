@@ -144,24 +144,23 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 
 	// account permissions
-	holderAccs := []string{auth.FeeCollectorName, distr.ModuleName}
-	minterAccs := []string{mint.ModuleName}
-	burnerAccs := []string{staking.BondedPoolName, staking.NotBondedPoolName, gov.ModuleName}
+	basicModuleAccs := []string{auth.FeeCollectorName, distr.ModuleName}
+	minterModuleAccs := []string{mint.ModuleName}
+	burnerModuleAccs := []string{staking.BondedPoolName, staking.NotBondedPoolName, gov.ModuleName}
 
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, app.keyAccount, authSubspace, auth.ProtoBaseAccount)
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper, bankSubspace, bank.DefaultCodespace)
 	app.supplyKeeper = supply.NewKeeper(app.cdc, app.keySupply, app.accountKeeper,
-		app.bankKeeper, supply.DefaultCodespace, holderAccs, minterAccs, burnerAccs)
+		app.bankKeeper, supply.DefaultCodespace, basicModuleAccs, minterModuleAccs, burnerModuleAccs)
 	stakingKeeper := staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking,
-		app.bankKeeper, app.supplyKeeper, stakingSubspace, staking.DefaultCodespace)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.supplyKeeper)
+		app.supplyKeeper, stakingSubspace, staking.DefaultCodespace)
+	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint, mintSubspace, &stakingKeeper, app.supplyKeeper, auth.FeeCollectorName)
 	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, distrSubspace, &stakingKeeper,
-		app.supplyKeeper, distr.DefaultCodespace)
+		app.supplyKeeper, distr.DefaultCodespace, auth.FeeCollectorName)
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
-	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.distrKeeper,
-		app.supplyKeeper)
+	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -181,9 +180,9 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		crisis.NewAppModule(app.crisisKeeper, app.Logger()),
+		crisis.NewAppModule(app.crisisKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
 		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),

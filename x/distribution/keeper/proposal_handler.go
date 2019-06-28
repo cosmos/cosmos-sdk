@@ -7,14 +7,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// Handler for executing a passed community spend proposal
+// HandleCommunityPoolSpendProposal is a handler for executing a passed community spend proposal
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p types.CommunityPoolSpendProposal) sdk.Error {
-	err := k.DistributeFeePool(ctx, p.Amount, p.Recipient)
+	err := k.DistributeFromFeePool(ctx, p.Amount, p.Recipient)
 	if err != nil {
 		return err
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("Spent %s coins from the community pool to recipient %s", p.Amount, p.Recipient))
+	logger.Info(fmt.Sprintf("transferred %s from the community pool to recipient %s", p.Amount, p.Recipient))
 	return nil
 }

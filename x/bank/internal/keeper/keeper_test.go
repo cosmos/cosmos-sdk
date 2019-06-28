@@ -298,7 +298,7 @@ func TestDelegateCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
+	err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
 	acc = input.ak.GetAccount(ctx, addr2)
 	macc = input.ak.GetAccount(ctx, addrModule)
 	require.NoError(t, err)
@@ -306,7 +306,7 @@ func TestDelegateCoins(t *testing.T) {
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a vesting account to delegate
-	_, err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
+	err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, vacc.GetCoins())
@@ -338,7 +338,7 @@ func TestUndelegateCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
+	err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
 	require.NoError(t, err)
 
 	acc = input.ak.GetAccount(ctx, addr2)
@@ -347,7 +347,7 @@ func TestUndelegateCoins(t *testing.T) {
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a non-vesting account to undelegate
-	_, err = input.k.UndelegateCoins(ctx, addrModule, addr2, delCoins)
+	err = input.k.UndelegateCoins(ctx, addrModule, addr2, delCoins)
 	require.NoError(t, err)
 
 	acc = input.ak.GetAccount(ctx, addr2)
@@ -356,7 +356,7 @@ func TestUndelegateCoins(t *testing.T) {
 	require.True(t, macc.GetCoins().Empty())
 
 	// require the ability for a vesting account to delegate
-	_, err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
+	err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	require.NoError(t, err)
 
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
@@ -365,7 +365,7 @@ func TestUndelegateCoins(t *testing.T) {
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a vesting account to undelegate
-	_, err = input.k.UndelegateCoins(ctx, addrModule, addr1, delCoins)
+	err = input.k.UndelegateCoins(ctx, addrModule, addr1, delCoins)
 	require.NoError(t, err)
 
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)

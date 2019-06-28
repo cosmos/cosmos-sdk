@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -15,12 +18,13 @@ type Keeper struct {
 	paramSpace   params.Subspace
 	sk           types.StakingKeeper
 	supplyKeeper types.SupplyKeeper
+	feeCollectorName string
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper) Keeper {
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
 
 	// ensure mint module account is set
 	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -33,10 +37,16 @@ func NewKeeper(
 		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
 		sk:           sk,
 		supplyKeeper: supplyKeeper,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
 //______________________________________________________________________
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
@@ -93,5 +103,5 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) sdk.Error {
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) sdk.Error {
-	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, auth.FeeCollectorName, fees)
+	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,7 +20,7 @@ type Keeper struct {
 }
 
 type permAddr struct {
-	permission string // holder/minter/burner
+	permission string // basic/minter/burner
 	address    sdk.AccAddress
 }
 
@@ -32,17 +34,17 @@ func newPermAddr(permission, name string) permAddr {
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	codespace sdk.CodespaceType, holders, minters, burners []string) Keeper {
+	codespace sdk.CodespaceType, basicModuleAccs, minterModuleAccs, burnerModuleAccs []string) Keeper {
 
 	// set the addresses
 	permAddrs := make(map[string]permAddr)
-	for _, name := range holders {
-		permAddrs[name] = newPermAddr(types.Holder, name)
+	for _, name := range basicModuleAccs {
+		permAddrs[name] = newPermAddr(types.Basic, name)
 	}
-	for _, name := range minters {
+	for _, name := range minterModuleAccs {
 		permAddrs[name] = newPermAddr(types.Minter, name)
 	}
-	for _, name := range burners {
+	for _, name := range burnerModuleAccs {
 		permAddrs[name] = newPermAddr(types.Burner, name)
 	}
 
@@ -57,7 +59,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk ty
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/supply")
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetSupply retrieves the Supply from store

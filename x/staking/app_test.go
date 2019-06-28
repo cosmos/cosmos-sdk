@@ -28,7 +28,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
 		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
-	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
@@ -41,11 +41,10 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 // getEndBlocker returns a staking endblocker.
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates, tags := EndBlocker(ctx, keeper)
+		validatorUpdates := EndBlocker(ctx, keeper)
 
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: validatorUpdates,
-			Tags:             tags,
 		}
 	}
 }
@@ -57,9 +56,9 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
-		feeCollector := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
-		notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
 
 		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)

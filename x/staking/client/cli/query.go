@@ -549,8 +549,12 @@ $ %s query staking pool
 			if err != nil {
 				return err
 			}
+
 			var pool types.Pool
-			cdc.MustUnmarshalJSON(bz, &pool)
+			if err := cdc.UnmarshalJSON(bz, &pool); err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(pool)
 		},
 	}

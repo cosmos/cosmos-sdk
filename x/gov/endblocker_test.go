@@ -9,7 +9,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -282,13 +281,11 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	resTags := EndBlocker(ctx, input.keeper)
-	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalPassed), resTags[1])
+	EndBlocker(ctx, input.keeper)
 
 	macc = input.keeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
 	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
-
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
@@ -333,6 +330,5 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithValue(contextKeyBadProposal, false)
 
 	// validate that the proposal fails/has been rejected
-	resTags := EndBlocker(ctx, input.keeper)
-	require.Equal(t, sdk.MakeTag(tags.ProposalResult, tags.ActionProposalFailed), resTags[1])
+	EndBlocker(ctx, input.keeper)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,11 @@ func NewAccountKeeper(
 		cdc:           cdc,
 		paramSubspace: paramstore.WithKeyTable(types.ParamKeyTable()),
 	}
+}
+
+// Logger returns a module-specific logger.
+func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // NewAccountWithAddress implements sdk.AccountKeeper.

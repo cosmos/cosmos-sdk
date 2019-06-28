@@ -10,7 +10,6 @@ import (
 // set the proposer for determining distribution during endblock
 // and distribute rewards for the previous block
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
-
 	// determine the total power signing the block
 	var previousTotalPower, sumPreviousPrecommitPower int64
 	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
@@ -30,5 +29,4 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	// record the proposer for when we payout on the next block
 	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	k.SetPreviousProposerConsAddr(ctx, consAddr)
-
 }

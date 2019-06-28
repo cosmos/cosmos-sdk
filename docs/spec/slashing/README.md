@@ -29,8 +29,9 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
     - [Uptime tracking](04_begin_block.md#uptime-tracking)
 5. **[05_hooks.md](05_hooks.md)**
     - [Hooks](05_hooks.md#hooks)
-6. **[Tags](06_tags.md)**
-    - [Handlers](06_tags.md#handlers)
+6. **[Events](06_events.md)**
+    - [BeginBlocker](06_events.md#beginblocker)
+    - [Handlers](06_events.md#handlers)
 7. **[Staking Tombstone](07_tombstone.md)**
     - [Abstract](07_tombstone.md#abstract)
 8. **[Parameters](08_params.md)**

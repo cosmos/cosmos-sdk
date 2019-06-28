@@ -39,7 +39,7 @@ network.
     - [Validator Set Changes](04_end_block.md#validator-set-changes)
     - [Queues ](04_end_block.md#queues-)
 5. **[Hooks](05_hooks.md)**
-6. **[Tags](06_tags.md)**
-    - [EndBlocker](06_tags.md#endblocker)
-    - [Handlers](06_tags.md#handlers)
+6. **[Events](06_events.md)**
+    - [EndBlocker](06_events.md#endblocker)
+    - [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**

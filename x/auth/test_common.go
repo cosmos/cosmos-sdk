@@ -46,9 +46,6 @@ func setupTestInput() testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	//feeCollector := ak.NewAccountWithAddress(ctx, types.FeeCollectorAddr)
-	//ak.SetAccount(ctx, feeCollector)
-
 	ak.SetParams(ctx, types.DefaultParams())
 
 	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}
@@ -99,15 +96,16 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	acc := sk.ak.GetAccount(ctx, addr)
 	if acc != nil {
 		macc, ok := acc.(exported.ModuleAccountI)
-		if !ok {
-			return nil
+		if ok {
+			return macc
 		}
-		return macc
 	}
 
 	// create a new module account
-	macc := supplytypes.NewModuleAccount(moduleName, "holder")
-	return (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
+	macc := supplytypes.NewEmptyModuleAccount(moduleName, "basic")
+	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)
+	sk.ak.SetAccount(ctx,maccI)
+	return maccI
 }
 
 // GetModuleAddress for dummy supply keeper

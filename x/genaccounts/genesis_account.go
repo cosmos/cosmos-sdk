@@ -7,7 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // GenesisAccount is a struct for account initialization used exclusively during genesis
@@ -79,7 +81,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 }
 
 // NewGenesisAccountI creates a GenesisAccount instance from an Account interface.
-func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
+func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
 		Coins:         acc.GetCoins(),
@@ -92,13 +94,13 @@ func NewGenesisAccountI(acc auth.Account) (GenesisAccount, error) {
 	}
 
 	switch acc := acc.(type) {
-	case auth.VestingAccount:
+	case authexported.VestingAccount:
 		gacc.OriginalVesting = acc.GetOriginalVesting()
 		gacc.DelegatedFree = acc.GetDelegatedFree()
 		gacc.DelegatedVesting = acc.GetDelegatedVesting()
 		gacc.StartTime = acc.GetStartTime()
 		gacc.EndTime = acc.GetEndTime()
-	case supply.ModuleAccountI:
+	case supplyexported.ModuleAccountI:
 		gacc.ModuleName = acc.GetName()
 		gacc.ModulePermission = acc.GetPermission()
 	}
@@ -129,7 +131,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		return supply.NewModuleAccount(ga.ModuleName, ga.ModulePermission)
+		return supply.NewModuleAccount(bacc, ga.ModuleName, ga.ModulePermission)
 	}
 
 	return bacc

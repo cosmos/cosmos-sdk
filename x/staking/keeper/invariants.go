@@ -61,6 +61,8 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 				bonded = bonded.Add(validator.GetTokens())
 			case sdk.Unbonding, sdk.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
+			default:
+				panic("invalid validator status")
 			}
 			return false
 		})

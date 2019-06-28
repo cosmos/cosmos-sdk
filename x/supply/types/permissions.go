@@ -1,20 +1,20 @@
 package types
 
-import "errors"
+import "fmt"
 
 // permissions
 const (
-	Holder = "holder"
+	Basic  = "basic"
 	Minter = "minter"
 	Burner = "burner"
 )
 
-// validate the input permission
-func validatePermission(permission string) error {
+// validate the input permissions
+func validatePermissions(permission string) error {
 	switch permission {
-	case Holder, Minter, Burner:
+	case Basic, Minter, Burner:
 		return nil
 	default:
-		return errors.New("invalid module permission string")
+		return fmt.Errorf("invalid module permission %s", permission)
 	}
 }

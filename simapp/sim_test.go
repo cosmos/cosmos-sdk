@@ -773,7 +773,6 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
-
 	// TODO fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	if period == 1 {
 		return app.crisisKeeper.Invariants()
@@ -910,6 +909,7 @@ func TestAppImportExport(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("debug genesisState: %s\n", genesisState)
 
 	ctxB := newApp.NewContext(true, abci.Header{})
 	newApp.mm.InitGenesis(ctxB, genesisState)
@@ -944,10 +944,7 @@ func TestAppImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
-		require.True(t, equal,
-			fmt.Sprintf("unequal %s stores: \n%s",
-				storeKeyA.Name(), retrieveSimLog(storeKeyA.Name(), app, newApp, kvA, kvB)),
-		)
+		require.True(t, equal, getSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, kvA, kvB))
 	}
 
 }
@@ -1091,9 +1088,7 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.crisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if err := cr.Invar(ctx); err != nil {
-
-				fmt.Printf("broken invariant at block %d of %d\n"+
-					"%s", ctx.BlockHeight()-1, numBlocks, err)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, err)
 				b.FailNow()
 			}
 		})

@@ -5,8 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// DistributeFeePool distributes funds from the the community pool to a receiver address
-func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error {
+// DistributeFromFeePool distributes funds from the distribution module account to
+// a receiver address while updating the community pool
+func (k Keeper) DistributeFromFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) sdk.Error {
 	feePool := k.GetFeePool(ctx)
 
 	// NOTE the community pool isn't a module account, however its coins
@@ -17,7 +18,6 @@ func (k Keeper) DistributeFeePool(ctx sdk.Context, amount sdk.Coins, receiveAddr
 		return types.ErrBadDistribution(k.codespace)
 	}
 	feePool.CommunityPool = newPool
-	k.SetFeePool(ctx, feePool)
 
 	err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 	if err != nil {

@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // dummy addresses used for testing
@@ -69,7 +70,7 @@ func MakeTestCodec() *codec.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
-	cdc.RegisterInterface((*supply.ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 	cdc.RegisterConcrete(&supply.ModuleAccount{}, "test/staking/ModuleAccount", nil)
 	codec.RegisterCrypto(cdc)
 
@@ -117,13 +118,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(
+	bk := bank.NewBaseKeeper(
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,
 	)
 
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, ck, supply.DefaultCodespace,
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace,
 		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
@@ -132,13 +133,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	feeCollectorAcc := supply.NewModuleAccount(auth.FeeCollectorName, supply.Holder)
-	notBondedPool := supply.NewModuleAccount(types.NotBondedPoolName, supply.Burner)
-	bondPool := supply.NewModuleAccount(types.BondedPoolName, supply.Burner)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
 
 	err = notBondedPool.SetCoins(totalSupply)
 	require.NoError(t, err)
@@ -149,7 +150,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
-		_, err := ck.AddCoins(ctx, addr, initCoins)
+		_, err := bk.AddCoins(ctx, addr, initCoins)
 		if err != nil {
 			panic(err)
 		}

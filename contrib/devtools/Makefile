@@ -52,7 +52,7 @@ CLOG            = $(TOOLS_DESTDIR)/clog
 all: tools
 
 tools: tools-stamp
-tools-stamp: $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT)
+tools-stamp: $(STATIK) $(GOIMPORTS) $(CLOG)
 	touch $@
 
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
@@ -66,6 +66,8 @@ $(GOIMPORTS):
 
 $(CLOG):
 	$(call go_install,alessio,clog,1)
+
+golangci-lint: $(GOLANGCI_LINT)
 
 tools-clean:
 	rm -f $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT)

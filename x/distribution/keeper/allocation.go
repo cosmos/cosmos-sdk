@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
-// allocate fees handles distribution of the collected fees
+// AllocateTokens handles distribution of the collected fees
 func (k Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo,
@@ -21,9 +21,15 @@ func (k Keeper) AllocateTokens(
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
+	feeCollector := k.supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
+	feesCollectedInt := feeCollector.GetCoins()
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
-	k.feeCollectionKeeper.ClearCollectedFees(ctx)
+
+	// transfer collected fees to the distribution module account
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
+	if err != nil {
+		panic(err)
+	}
 
 	// temporary workaround to keep CanWithdrawInvariant happy
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634

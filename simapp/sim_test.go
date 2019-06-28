@@ -23,11 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -37,6 +37,7 @@ import (
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var (
@@ -145,6 +146,7 @@ func appStateRandomizedFn(
 	genGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
 	genAuthGenesisState(cdc, r, appParams, genesisState)
 	genBankGenesisState(cdc, r, appParams, genesisState)
+	genSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
 	genGovGenesisState(cdc, r, appParams, genesisState)
 	genMintGenesisState(cdc, r, appParams, genesisState)
 	genDistrGenesisState(cdc, r, appParams, genesisState)
@@ -192,7 +194,6 @@ func appStateFn(
 
 func genAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	authGenesis := auth.NewGenesisState(
-		nil,
 		auth.NewParams(
 			func(r *rand.Rand) uint64 {
 				var v uint64
@@ -255,6 +256,16 @@ func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, bankGenesis))
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
+}
+
+func genSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
+	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
+	supplyGenesis := supply.NewGenesisState(
+		supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))),
+	)
+
+	fmt.Printf("Generated supply parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, supplyGenesis))
+	genesisState[supply.ModuleName] = cdc.MustMarshalJSON(supplyGenesis)
 }
 
 func genGenesisAccounts(
@@ -517,7 +528,6 @@ func genStakingGenesisState(
 ) staking.GenesisState {
 
 	stakingGenesis := staking.NewGenesisState(
-		staking.InitialPool(),
 		staking.NewParams(
 			func(r *rand.Rand) time.Duration {
 				var v time.Duration
@@ -560,7 +570,6 @@ func genStakingGenesisState(
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Delegations = delegations
 
@@ -593,7 +602,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper),
+			authsim.SimulateDeductFee(app.accountKeeper, app.supplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -764,6 +773,11 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
+	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
+	if period == 1 {
+		return app.crisisKeeper.Invariants()
+	}
 	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
 }
 
@@ -896,6 +910,7 @@ func TestAppImportExport(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("debug genesisState: %s\n", genesisState)
 
 	ctxB := newApp.NewContext(true, abci.Header{})
 	newApp.mm.InitGenesis(ctxB, genesisState)
@@ -917,7 +932,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keySlashing, newApp.keySlashing, [][]byte{}},
 		{app.keyMint, newApp.keyMint, [][]byte{}},
 		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keyFeeCollection, newApp.keyFeeCollection, [][]byte{}},
+		{app.keySupply, newApp.keySupply, [][]byte{}},
 		{app.keyParams, newApp.keyParams, [][]byte{}},
 		{app.keyGov, newApp.keyGov, [][]byte{}},
 	}
@@ -1074,7 +1089,7 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.crisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if err := cr.Invar(ctx); err != nil {
-				fmt.Println(err)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, err)
 				b.FailNow()
 			}
 		})

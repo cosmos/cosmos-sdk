@@ -26,7 +26,7 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// new mint genesis
+// InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)

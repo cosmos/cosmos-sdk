@@ -19,7 +19,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -69,7 +68,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -138,7 +136,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -188,7 +185,6 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	govHandler := NewHandler(input.keeper)
 
 	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -256,9 +252,12 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	valAddr := sdk.ValAddress(input.addrs[0])
 
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
+
+	macc := input.keeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	initialModuleAccCoins := macc.GetCoins()
 
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
@@ -268,6 +267,13 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	res := handler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
+	macc = input.keeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	moduleAccCoins := macc.GetCoins()
+
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
+	require.True(t, moduleAccCoins.IsEqual(deposits))
+
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
 	require.NoError(t, err)
 
@@ -276,6 +282,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	EndBlocker(ctx, input.keeper)
+
+	macc = input.keeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
@@ -294,7 +304,6 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	valAddr := sdk.ValAddress(input.addrs[0])
 
-	input.keeper.ck.SetSendEnabled(ctx, true)
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, input.sk)
 

@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -55,6 +56,7 @@ func TestGetSimulationLog(t *testing.T) {
 		{gov.StoreKey, cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
 		{distribution.StoreKey, cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
 		{slashing.StoreKey, cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)}},
+		{supply.StoreKey, cmn.KVPair{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))}},
 		{"Empty", cmn.KVPair{}},
 		{"OtherStore", cmn.KVPair{Key: []byte("key"), Value: []byte("value")}},
 	}
@@ -183,14 +185,12 @@ func TestDecodeStakingStore(t *testing.T) {
 
 	bondTime := time.Now().UTC()
 
-	pool := staking.InitialPool()
 	val := staking.NewValidator(valAddr1, delPk1, staking.NewDescription("test", "test", "test", "test"))
 	del := staking.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := staking.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := staking.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: staking.PoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(pool)},
 		cmn.KVPair{Key: staking.LastTotalPowerKey, Value: cdc.MustMarshalBinaryLengthPrefixed(sdk.OneInt())},
 		cmn.KVPair{Key: staking.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(val)},
 		cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
@@ -204,7 +204,6 @@ func TestDecodeStakingStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"Pool", fmt.Sprintf("%v\n%v", pool, pool)},
 		{"LastTotalPower", fmt.Sprintf("%v\n%v", sdk.OneInt(), sdk.OneInt())},
 		{"Validator", fmt.Sprintf("%v\n%v", val, val)},
 		{"LastValidatorPower/ValidatorsByConsAddr/ValidatorsByPowerIndex", fmt.Sprintf("%v\n%v", valAddr1, valAddr1)},
@@ -298,6 +297,36 @@ func TestDecodeGovStore(t *testing.T) {
 				require.Panics(t, func() { decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
 				require.Equal(t, tt.expectedLog, decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+			}
+		})
+	}
+}
+
+func TestDecodeSupplyStore(t *testing.T) {
+	cdc := makeTestCodec()
+
+	totalSupply := supply.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
+
+	kvPairs := cmn.KVPairs{
+		cmn.KVPair{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(totalSupply)},
+		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	}
+
+	tests := []struct {
+		name        string
+		expectedLog string
+	}{
+		{"Supply", fmt.Sprintf("%v\n%v", totalSupply, totalSupply)},
+		{"other", ""},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch i {
+			case len(tests) - 1:
+				require.Panics(t, func() { decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+			default:
+				require.Equal(t, tt.expectedLog, decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

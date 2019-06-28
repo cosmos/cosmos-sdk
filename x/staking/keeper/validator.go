@@ -125,10 +125,8 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool, addedShares = validator.AddTokensFromDel(pool, tokensToAdd)
+	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator, addedShares
 }
@@ -138,10 +136,8 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool, removedTokens = validator.RemoveDelShares(pool, sharesToRemove)
+	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator, removedTokens
 }
@@ -151,10 +147,8 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-	pool := k.GetPool(ctx)
-	validator, pool = validator.RemoveTokens(pool, tokensToRemove)
+	validator = validator.RemoveTokens(tokensToRemove)
 	k.SetValidator(ctx, validator)
-	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)
 	return validator
 }
@@ -441,9 +435,7 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 			if !val.IsUnbonding() {
 				panic("unexpected validator in unbonding queue; status was not unbonding")
 			}
-
-			k.unbondingToUnbonded(ctx, val)
-
+			val = k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {
 				k.RemoveValidator(ctx, val.OperatorAddress)
 			}

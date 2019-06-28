@@ -8,16 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
-)
-
-// special governance addresses
-var (
-	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
-	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
-	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
 // Governance Keeper
@@ -28,8 +21,8 @@ type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
 	paramSpace params.Subspace
 
-	// The reference to the CoinKeeper to modify balances
-	ck BankKeeper
+	// The SupplyKeeper to reduce the supply of the network
+	supplyKeeper SupplyKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk StakingKeeper
@@ -54,8 +47,13 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	ck BankKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
+	supplyKeeper SupplyKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
+
+	// ensure governance module account is set
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
 
 	// It is vital to seal the governance proposal router here as to not allow
 	// further handlers to be registered after the keeper is created since this
@@ -66,7 +64,7 @@ func NewKeeper(
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
-		ck:           ck,
+		supplyKeeper: supplyKeeper,
 		sk:           sk,
 		cdc:          cdc,
 		codespace:    codespace,
@@ -77,6 +75,11 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetGovernanceAccount returns the governance ModuleAccount
+func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccountI {
+	return keeper.supplyKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // Params

@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.
@@ -57,6 +58,8 @@ func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KV
 		return decodeGovStore(cdcA, cdcB, kvA, kvB)
 	case distribution.StoreKey:
 		return decodeDistributionStore(cdcA, cdcB, kvA, kvB)
+	case supply.StoreKey:
+		return decodeSupplyStore(cdcA, cdcB, kvA, kvB)
 	default:
 		return
 	}
@@ -252,5 +255,17 @@ func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 
 	default:
 		panic(fmt.Sprintf("invalid governance key prefix %X", kvA.Key[:1]))
+	}
+}
+
+func decodeSupplyStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+	switch {
+	case bytes.Equal(kvA.Key[:1], supply.SupplyKey):
+		var supplyA, supplyB supply.Supply
+		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
+		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
+		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
+	default:
+		panic(fmt.Sprintf("invalid supply key %X", kvA.Key))
 	}
 }

@@ -34,7 +34,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	initPower := int64(1000000)
 	initBond := sdk.TokensFromConsensusPower(initPower)
-	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
@@ -114,7 +114,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 }
 
 func TestDuplicatesMsgCreateValidator(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 
 	addr1, addr2 := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1])
 	pk1, pk2 := keep.PKs[0], keep.PKs[1]
@@ -166,7 +166,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 }
 
 func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 
 	addr := sdk.ValAddress(keep.Addrs[0])
 	invalidPk := secp256k1.GenPrivKey().PubKey()
@@ -185,7 +185,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, int64(1000))
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, int64(1000))
 	setInstantUnbondPeriod(keeper, ctx)
 
 	bondAmount := sdk.TokensFromConsensusPower(10)
@@ -279,7 +279,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 func TestIncrementsMsgDelegate(t *testing.T) {
 	initPower := int64(1000)
 	initBond := sdk.TokensFromConsensusPower(initPower)
-	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, accMapper, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	params := keeper.GetParams(ctx)
 
 	bondAmount := sdk.TokensFromConsensusPower(10)
@@ -306,8 +306,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 
-	pool := keeper.GetPool(ctx)
-	require.Equal(t, bondAmount, pool.BondedTokens)
+	bondedTokens := keeper.TotalBondedTokens(ctx)
+	require.Equal(t, bondAmount.Int64(), bondedTokens.Int64())
 
 	// just send the same msgbond multiple times
 	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
@@ -349,7 +349,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 
 	initPower := int64(100)
 	initBond := sdk.TokensFromConsensusPower(100)
-	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
@@ -381,7 +381,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 
 	initPower := int64(100)
 	initBond := sdk.TokensFromConsensusPower(100)
-	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
@@ -411,7 +411,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 func TestIncrementsMsgUnbond(t *testing.T) {
 	initPower := int64(1000)
 	initBond := sdk.TokensFromConsensusPower(initPower)
-	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, accMapper, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	params := setInstantUnbondPeriod(keeper, ctx)
 	denom := params.BondDenom
 
@@ -469,13 +469,13 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		gotDelegatorShares := validator.DelegatorShares.RoundInt()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
-		require.Equal(t, expBond, gotBond,
+		require.Equal(t, expBond.Int64(), gotBond.Int64(),
 			"i: %v\nexpBond: %v\ngotBond: %v\nvalidator: %v\nbond: %v\n",
 			i, expBond, gotBond, validator, bond)
-		require.Equal(t, expDelegatorShares, gotDelegatorShares,
+		require.Equal(t, expDelegatorShares.Int64(), gotDelegatorShares.Int64(),
 			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorShares, gotDelegatorShares, validator, bond)
-		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
+		require.Equal(t, expDelegatorAcc.Int64(), gotDelegatorAcc.Int64(),
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
 	}
@@ -509,7 +509,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 func TestMultipleMsgCreateValidator(t *testing.T) {
 	initPower := int64(1000)
 	initTokens := sdk.TokensFromConsensusPower(initPower)
-	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initPower)
+	ctx, accMapper, keeper, _ := keep.CreateTestInput(t, false, initPower)
 	params := setInstantUnbondPeriod(keeper, ctx)
 
 	validatorAddrs := []sdk.ValAddress{
@@ -576,7 +576,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 }
 
 func TestMultipleMsgDelegate(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddrs := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1:]
 	_ = setInstantUnbondPeriod(keeper, ctx)
 
@@ -618,7 +618,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 }
 
 func TestJailValidator(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1]
 	_ = setInstantUnbondPeriod(keeper, ctx)
 
@@ -664,7 +664,7 @@ func TestJailValidator(t *testing.T) {
 }
 
 func TestValidatorQueue(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1]
 
 	// set the unbonding time
@@ -722,7 +722,7 @@ func TestValidatorQueue(t *testing.T) {
 }
 
 func TestUnbondingPeriod(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 
 	// set the unbonding time
@@ -768,7 +768,7 @@ func TestUnbondingPeriod(t *testing.T) {
 }
 
 func TestUnbondingFromUnbondingValidator(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1]
 
 	// create the validator
@@ -809,7 +809,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 }
 
 func TestRedelegationPeriod(t *testing.T) {
-	ctx, AccMapper, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, AccMapper, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, validatorAddr2 := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1])
 	denom := keeper.GetParams(ctx).BondDenom
 
@@ -868,7 +868,7 @@ func TestRedelegationPeriod(t *testing.T) {
 }
 
 func TestTransitiveRedelegation(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
 	validatorAddr3 := sdk.ValAddress(keep.Addrs[2])
@@ -911,7 +911,7 @@ func TestTransitiveRedelegation(t *testing.T) {
 }
 
 func TestMultipleRedelegationAtSameTime(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valAddr := sdk.ValAddress(keep.Addrs[0])
 	valAddr2 := sdk.ValAddress(keep.Addrs[1])
 
@@ -963,7 +963,7 @@ func TestMultipleRedelegationAtSameTime(t *testing.T) {
 }
 
 func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valAddr := sdk.ValAddress(keep.Addrs[0])
 	valAddr2 := sdk.ValAddress(keep.Addrs[1])
 
@@ -1017,7 +1017,7 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 }
 
 func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valAddr := sdk.ValAddress(keep.Addrs[0])
 
 	// set the unbonding time
@@ -1064,7 +1064,7 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 }
 
 func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valAddr := sdk.ValAddress(keep.Addrs[0])
 
 	// set the unbonding time
@@ -1118,7 +1118,7 @@ func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
 }
 
 func TestUnbondingWhenExcessValidators(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr1 := sdk.ValAddress(keep.Addrs[0])
 	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
 	validatorAddr3 := sdk.ValAddress(keep.Addrs[2])
@@ -1174,7 +1174,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 }
 
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valA, valB, del := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1]), keep.Addrs[2]
 	consAddr0 := sdk.ConsAddress(keep.PKs[0].Address())
 
@@ -1283,7 +1283,7 @@ func TestInvalidMsg(t *testing.T) {
 }
 
 func TestInvalidCoinDenom(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	valA, valB, delAddr := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1]), keep.Addrs[2]
 
 	valTokens := sdk.TokensFromConsensusPower(100)

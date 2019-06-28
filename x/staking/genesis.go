@@ -7,7 +7,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -17,7 +16,11 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
+	supplyKeeper types.SupplyKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+
+	bondedTokens := sdk.ZeroInt()
+	notBondedTokens := sdk.ZeroInt()
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -26,18 +29,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	// manually set the total supply for staking based on accounts if not provided
-	if data.Pool.NotBondedTokens.IsZero() {
-		accountKeeper.IterateAccounts(ctx,
-			func(acc auth.Account) (stop bool) {
-				data.Pool.NotBondedTokens = data.Pool.NotBondedTokens.
-					Add(acc.GetCoins().AmountOf(data.Params.BondDenom))
-				return false
-			},
-		)
-	}
-
-	keeper.SetPool(ctx, data.Pool) // TODO remove pool from genesis data and always calculate?
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
@@ -53,9 +44,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
 		}
 
-		// Set timeslice if necessary
+		// update timeslice if necessary
 		if validator.IsUnbonding() {
 			keeper.InsertValidatorQueue(ctx, validator)
+		}
+
+		switch validator.GetStatus() {
+		case sdk.Bonded:
+			bondedTokens = bondedTokens.Add(validator.GetTokens())
+		case sdk.Unbonding, sdk.Unbonded:
+			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
+		default:
+			panic("invalid validator status")
 		}
 	}
 
@@ -65,6 +65,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 		}
 		keeper.SetDelegation(ctx, delegation)
+
 		// Call the after-modification hook if not exported
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
@@ -75,6 +76,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		keeper.SetUnbondingDelegation(ctx, ubd)
 		for _, entry := range ubd.Entries {
 			keeper.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+			notBondedTokens = notBondedTokens.Add(entry.Balance)
 		}
 	}
 
@@ -85,13 +87,43 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		}
 	}
 
+	bondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, bondedTokens))
+	notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
+
+	// check if the unbonded and bonded pools accounts exists
+	bondedPool := keeper.GetBondedPool(ctx)
+	if bondedPool == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
+	}
+
+	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+	// add coins if not provided on genesis
+	if bondedPool.GetCoins().IsZero() {
+		if err := bondedPool.SetCoins(bondedCoins); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, bondedPool)
+	}
+
+	notBondedPool := keeper.GetNotBondedPool(ctx)
+	if notBondedPool == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
+	}
+
+	if notBondedPool.GetCoins().IsZero() {
+		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	}
+
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
 			validator, found := keeper.GetValidator(ctx, lv.Address)
 			if !found {
-				panic("expected validator, not found")
+				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 			update := validator.ABCIValidatorUpdate()
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
@@ -108,7 +140,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
-	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
 	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
@@ -130,7 +161,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	})
 
 	return types.GenesisState{
-		Pool:                 pool,
 		Params:               params,
 		LastTotalPower:       lastTotalPower,
 		LastValidatorPowers:  lastValidatorPowers,

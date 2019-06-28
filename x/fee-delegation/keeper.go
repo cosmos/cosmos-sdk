@@ -75,6 +75,7 @@ func (k Keeper) AllowDelegatedFees(ctx sdk.Context, grantee sdk.AccAddress, gran
 	if delete {
 		k.RevokeFeeAllowance(ctx, grantee, granter)
 	} else if updated != nil {
+		// update the fee allowance by calling delegate again
 		k.DelegateFeeAllowance(ctx, grantee, granter, updated)
 	}
 	return true

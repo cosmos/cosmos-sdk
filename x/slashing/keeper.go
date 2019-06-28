@@ -184,7 +184,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	if missed {
-		logger.Info(fmt.Sprintf("Absent validator %s (%s) at height %d, %d missed, threshold %d", sdk.ValAddress(addr), pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Info(fmt.Sprintf("Absent validator %s (%s) at height %d, %d missed, threshold %d", sdk.ConsAddress(addr), pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)

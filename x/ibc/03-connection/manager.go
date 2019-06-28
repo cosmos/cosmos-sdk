@@ -164,6 +164,7 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 	obj.Connection.Set(ctx, connection)
 	obj.Kind.Set(ctx, kind)
 	return
+
 }
 
 // query() is used internally by the connection creators
@@ -190,6 +191,7 @@ func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
 	if !obj.exists(ctx) {
 		err = errors.New("Object not exists")
 		return
+
 	}
 	if !obj.Available.Get(ctx) {
 		err = errors.New("Object not available")

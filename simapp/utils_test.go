@@ -18,6 +18,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,6 +54,7 @@ func TestGetSimulationLog(t *testing.T) {
 		{staking.StoreKey, cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
 		{gov.StoreKey, cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
 		{distribution.StoreKey, cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
+		{slashing.StoreKey, cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)}},
 		{"Empty", cmn.KVPair{}},
 		{"OtherStore", cmn.KVPair{Key: []byte("key"), Value: []byte("value")}},
 	}
@@ -218,6 +220,41 @@ func TestDecodeStakingStore(t *testing.T) {
 				require.Panics(t, func() { decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
 				require.Equal(t, tt.expectedLog, decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+			}
+		})
+	}
+}
+
+func TestDecodeSlashingStore(t *testing.T) {
+	cdc := makeTestCodec()
+
+	info := slashing.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
+	bechPK := sdk.MustBech32ifyAccPub(delPk1)
+	missed := true
+
+	kvPairs := cmn.KVPairs{
+		cmn.KVPair{Key: slashing.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
+		cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
+		cmn.KVPair{Key: slashing.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
+		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	}
+
+	tests := []struct {
+		name        string
+		expectedLog string
+	}{
+		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
+		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed, missed)},
+		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
+		{"other", ""},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch i {
+			case len(tests) - 1:
+				require.Panics(t, func() { decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+			default:
+				require.Equal(t, tt.expectedLog, decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

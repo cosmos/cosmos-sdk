@@ -39,7 +39,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 // each's module store key and the prefix bytes of the KVPair's key.
 func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 	log = fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
-	
+
 	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
 		return
 	}
@@ -208,7 +208,7 @@ func decodeSlashingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 		var missedA, missedB bool
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
-		return fmt.Sprintf("missedA: %v\nmissedB%v", missedA, missedB)
+		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA, missedB)
 
 	case bytes.Equal(kvA.Key[:1], slashing.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey

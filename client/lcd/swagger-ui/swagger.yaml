@@ -225,20 +225,20 @@ paths:
       tags:
         - Transactions
       summary: Search transactions
-      description: Search transactions by tag(s).
+      description: Search transactions by events.
       produces:
         - application/json
       parameters:
         - in: query
-          name: action
+          name: message.action
           type: string
-          description: "transaction tags such as 'action=send' which results in the following endpoint: 'GET /txs?action=send'"
+          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'"
           required: true
           x-example: "send"
         - in: query
-          name: sender
+          name: message.sender
           type: string
-          description: "transaction tags with sender: 'GET /txs?action=send&sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
+          description: "transaction tags with sender: 'GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
           required: true
           x-example: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv"
         - in: query
@@ -253,11 +253,11 @@ paths:
           x-example: 1
       responses:
         200:
-          description: All txs matching the provided tags
+          description: All txs matching the provided events
           schema:
             $ref: "#/definitions/PaginatedQueryTxs"
         400:
-          description: Invalid search tags
+          description: Invalid search events
         500:
           description: Internal Server Error
     post:

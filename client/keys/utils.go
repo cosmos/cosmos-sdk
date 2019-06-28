@@ -1,7 +1,9 @@
 package keys
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -62,7 +64,7 @@ func GetPassphrase(name string) (string, error) {
 // ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
 // error upon failure.
 func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := input.BufferStdin()
+	buf := bufio.NewReader(os.Stdin)
 	prompt := fmt.Sprintf("Password to sign with '%s':", name)
 
 	passphrase, err := input.GetPassword(prompt, buf)

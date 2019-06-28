@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -45,6 +45,7 @@ func setupTestInput() testInput {
 	ms.LoadLatestVersion()
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+
 	ak := auth.NewAccountKeeper(
 		cdc, authCapKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount,
 	)
@@ -294,13 +295,13 @@ func TestDelegateCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := input.k.DelegateCoins(ctx, addr2, delCoins)
+	err := input.k.DelegateCoins(ctx, addr2, delCoins)
 	acc = input.ak.GetAccount(ctx, addr2)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, acc.GetCoins())
 
 	// require the ability for a vesting account to delegate
-	_, err = input.k.DelegateCoins(ctx, addr1, delCoins)
+	err = input.k.DelegateCoins(ctx, addr1, delCoins)
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, vacc.GetCoins())
@@ -329,22 +330,22 @@ func TestUndelegateCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	_, err := input.k.DelegateCoins(ctx, addr2, delCoins)
+	err := input.k.DelegateCoins(ctx, addr2, delCoins)
 	require.NoError(t, err)
 
 	// require the ability for a non-vesting account to undelegate
-	_, err = input.k.UndelegateCoins(ctx, addr2, delCoins)
+	err = input.k.UndelegateCoins(ctx, addr2, delCoins)
 	require.NoError(t, err)
 
 	acc = input.ak.GetAccount(ctx, addr2)
 	require.Equal(t, origCoins, acc.GetCoins())
 
 	// require the ability for a vesting account to delegate
-	_, err = input.k.DelegateCoins(ctx, addr1, delCoins)
+	err = input.k.DelegateCoins(ctx, addr1, delCoins)
 	require.NoError(t, err)
 
 	// require the ability for a vesting account to undelegate
-	_, err = input.k.UndelegateCoins(ctx, addr1, delCoins)
+	err = input.k.UndelegateCoins(ctx, addr1, delCoins)
 	require.NoError(t, err)
 
 	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)

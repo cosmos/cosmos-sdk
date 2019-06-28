@@ -43,7 +43,6 @@ var (
 	FsMinSelfDelegation = flag.NewFlagSet("", flag.ContinueOnError)
 	fsDescriptionEdit   = flag.NewFlagSet("", flag.ContinueOnError)
 	fsValidator         = flag.NewFlagSet("", flag.ContinueOnError)
-	fsDelegator         = flag.NewFlagSet("", flag.ContinueOnError)
 	fsRedelegation      = flag.NewFlagSet("", flag.ContinueOnError)
 )
 

@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -65,8 +66,8 @@ var (
 )
 
 type (
-	Account                  = types.Account
-	VestingAccount           = types.VestingAccount
+	Account                  = exported.Account
+	VestingAccount           = exported.VestingAccount
 	BaseAccount              = types.BaseAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount

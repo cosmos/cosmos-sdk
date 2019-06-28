@@ -19,8 +19,8 @@ type FeeCollectionKeeper interface {
 
 // expected bank keeper (noalias)
 type BankKeeper interface {
-	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 }
 
 // AccountKeeper expected Account keeper

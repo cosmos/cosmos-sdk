@@ -233,7 +233,6 @@ paths:
           name: message.action
           type: string
           description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'"
-          required: true
           x-example: "send"
         - in: query
           name: message.sender

@@ -227,7 +227,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
 			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
-				sdk.ValAddress(pubkey.Address())))
+				sdk.ConsAddress(pubkey.Address())))
 		}
 	}
 

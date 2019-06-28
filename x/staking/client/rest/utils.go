@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/staking/tags"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -25,15 +24,15 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(cliCtx context.CLIContext, tag string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
+func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
 	page := 1
 	limit := 100
-	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tag),
-		fmt.Sprintf("%s='%s'", tags.Sender, delegatorAddr),
+	events := []string{
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, action),
+		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, delegatorAddr),
 	}
 
-	return utils.QueryTxsByTags(cliCtx, tags, page, limit)
+	return utils.QueryTxsByEvents(cliCtx, events, page, limit)
 }
 
 func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
@@ -43,6 +42,11 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 		bech32validator := vars["validatorAddr"]
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

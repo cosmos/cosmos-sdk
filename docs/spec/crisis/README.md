@@ -12,6 +12,6 @@ application initialization process.
     - [ConstantFee](01_state.md#constantfee)
 2. **[Messages](02_messages.md)**
     - [MsgVerifyInvariant](02_messages.md#msgverifyinvariant)
-3. **[Tags](03_tags.md)**
-    - [Handlers](03_tags.md#handlers)
+3. **[Events](03_events.md)**
+    - [Handlers](03_events.md#handlers)
 4. **[Parameters](04_params.md)**

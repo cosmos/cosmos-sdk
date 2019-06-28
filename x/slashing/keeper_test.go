@@ -39,7 +39,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -100,7 +100,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -138,7 +138,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -174,8 +174,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// validator should be bonded still
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	pool := sk.GetPool(ctx)
-	require.True(sdk.IntEq(t, amt, pool.BondedTokens))
+	bondPool := sk.GetBondedPool(ctx)
+	require.True(sdk.IntEq(t, amt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx))))
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -231,8 +231,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-	pool = sk.GetPool(ctx)
-	require.Equal(t, amt.Int64()-slashAmt, pool.BondedTokens.Int64())
+	bondPool = sk.GetBondedPool(ctx)
+	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 
 	// Validator start height should not have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
@@ -292,7 +292,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -311,9 +311,9 @@ func TestHandleNewValidator(t *testing.T) {
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	pool := sk.GetPool(ctx)
+	bondPool := sk.GetBondedPool(ctx)
 	expTokens := sdk.TokensFromConsensusPower(100)
-	require.Equal(t, expTokens, pool.BondedTokens)
+	require.Equal(t, expTokens.Int64(), bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
 }
 
 // Test a jailed validator being "down" twice
@@ -395,7 +395,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newAmt := sdk.TokensFromConsensusPower(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ := staking.EndBlocker(ctx, sk)
+	validatorUpdates := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
@@ -408,7 +408,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(50)
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ = staking.EndBlocker(ctx, sk)
+	validatorUpdates = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)

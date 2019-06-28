@@ -1,10 +1,8 @@
-//+build ledger,test_ledger_mock
+//+build ledger test_ledger_mock
 
 package keys
 
 import (
-	"bufio"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -13,7 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,10 +30,9 @@ func Test_runAddCmdLedger(t *testing.T) {
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	cleanUp1 := input.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
-	defer cleanUp1()
-	err := runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn.Reset("test1234\ntest1234\n")
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
 	kb, err := NewKeyBaseFromHomeFlag()

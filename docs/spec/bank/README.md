@@ -22,6 +22,6 @@ This module will be used in the Cosmos Hub.
     - [ViewKeeper](02_keepers.md#viewkeeper)
 3. **[Messages](03_messages.md)**
     - [MsgSend](03_messages.md#msgsend)
-4. **[Tags](04_tags.md)**
-    - [Handlers](04_tags.md#handlers)
+4. **[Events](04_events.md)**
+    - [Handlers](04_events.md#handlers)
 5. **[Parameters](05_params.md)**

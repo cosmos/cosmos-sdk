@@ -569,12 +569,6 @@ func removeZeroCoins(coins Coins) Coins {
 	return coins[:i]
 }
 
-func copyCoins(coins Coins) Coins {
-	copyCoins := make(Coins, len(coins))
-	copy(copyCoins, coins)
-	return copyCoins
-}
-
 //-----------------------------------------------------------------------------
 // Sort interface
 

@@ -239,7 +239,6 @@ paths:
           name: message.sender
           type: string
           description: "transaction tags with sender: 'GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
-          required: true
           x-example: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv"
         - in: query
           name: page

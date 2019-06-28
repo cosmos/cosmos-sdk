@@ -69,7 +69,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Reject evidence if the double-sign is too old
 	if age > k.MaxEvidenceAge(ctx) {
 		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d",
-			sdk.ValAddress(pubkey.Address()), infractionHeight, age, k.MaxEvidenceAge(ctx)))
+			sdk.ConsAddress(pubkey.Address()), infractionHeight, age, k.MaxEvidenceAge(ctx)))
 		return
 	}
 

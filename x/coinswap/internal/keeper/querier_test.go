@@ -30,13 +30,6 @@ func TestNewQuerier(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, res)
 
-	// query for non existent address should return an error
-	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
-	req.Data = keeper.cdc.MustMarshalJSON(accs[0].GetAddress())
-	res, err = querier(ctx, []string{"balance"}, req)
-	require.NotNil(t, err)
-	require.Nil(t, res)
-
 	// query for non existent reserve pool should return an error
 	req.Path = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryLiquidity)
 	req.Data = keeper.cdc.MustMarshalJSON("btc")

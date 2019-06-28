@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	// TODO: uncomment when supply module is merged to master
+	//supply "github.com/cosmos/cosmos-sdk/x/supply/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -34,17 +36,15 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, bk types.BankKeeper, sk types
 	}
 }
 
-// TODO: rewrite
-// CreateReservePool initializes a new reserve pool for the new denomination.
-func (keeper Keeper) CreateReservePool(ctx sdk.Context, denom string) {
-	store := ctx.KVStore(keeper.storeKey)
-	key := GetReservePoolKey(denom)
-	bz := store.Get(key)
-	if bz != nil {
-		panic(fmt.Sprintf("reserve pool for %s already exists", denom))
+// CreateReservePool initializes a new reserve pool by creating a
+// ModuleAccount with minting and burning permissions.
+func (keeper Keeper) CreateReservePool(ctx sdk.Context, moduleName string) {
+	moduleAcc := keeper.sk.GetModuleAccount(moduleName)
+	if moduleAcc != nil {
+		panic(fmt.Sprintf("reserve pool for %s already exists", moduleName))
 	}
-
-	store.Set(key, keeper.cdc.MustMarshalBinaryBare(sdk.ZeroInt()))
+	// moduleAcc = supply.NewEmptyModuleAccount(moduleName, "minter/burner")
+	keeper.sk.SetModuleAccount(ctx, moduleAcc)
 }
 
 // HasCoins returns whether or not an account has at least coins.
@@ -52,17 +52,19 @@ func (keeper Keeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, coins ...sdk
 	return keeper.bk.HasCoins(ctx, addr, coins)
 }
 
-// BurnCoins burns liquidity coins from the ModuleAccount at moduleName.
+// BurnCoins burns liquidity coins from the ModuleAccount at moduleName. The
+// moduleName and denomination of the liquidity coins are the same.
 func (keeper Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Int) {
-	err := keeper.sk.BurnCoins(ctx, moduleName, sdk.NewCoin(moduleName, amt))
+	err := keeper.sk.BurnCoins(ctx, moduleName, sdk.NewCoins(sdk.NewCoin(moduleName, amt)))
 	if err != nil {
 		panic(err)
 	}
 }
 
-// MintCoins mints liquidity coins to the ModuleAccount at moduleName.
-func (keeper Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) {
-	err := keeper.sk.MintCoins(ctx, moduleName, amt)
+// MintCoins mints liquidity coins to the ModuleAccount at moduleName. The
+// moduleName and denomination of the liquidity coins are the same.
+func (keeper Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Int) {
+	err := keeper.sk.MintCoins(ctx, moduleName, sdk.NewCoins(sdk.NewCoin(moduleName, amt)))
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +72,7 @@ func (keeper Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins
 
 // SendCoin sends coins from the address to the ModuleAccount at moduleName.
 func (keeper Keeper) SendCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, coins ...sdk.Coin) {
-	err := keeper.sk.SendCoinsFromAccountToModule(ctx, msg.Sender, moduleName, coins)
+	err := keeper.sk.SendCoinsFromAccountToModule(ctx, addr, moduleName, coins)
 	if err != nil {
 		panic(err)
 	}
@@ -78,24 +80,21 @@ func (keeper Keeper) SendCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName 
 
 // RecieveCoin sends coins from the ModuleAccount at moduleName to the
 // address provided.
-func (keeper Keeper) RecieveCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, coin ...sdk.Coin) {
-	err := keeper.sk.SendCoinsFromModuleToAccount(ctx, moduleName, msg.Sender, coins)
+func (keeper Keeper) RecieveCoins(ctx sdk.Context, addr sdk.AccAddress, moduleName string, coins ...sdk.Coin) {
+	err := keeper.sk.SendCoinsFromModuleToAccount(ctx, moduleName, addr, coins)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// TODO: rewrite
-// GetReservePool returns the total balance of an reserve pool at the provided denomination.
-func (keeper Keeper) GetReservePool(ctx sdk.Context, denom string) (coins sdk.Coins, found bool) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(GetReservePoolKey(denom))
-	if bz == nil {
-		return
+// GetReservePool returns the total balance of an reserve pool at the
+// provided denomination.
+func (keeper Keeper) GetReservePool(ctx sdk.Context, moduleName string) (coins sdk.Coins, found bool) {
+	acc := keeper.sk.GetModuleAccount(moduleName)
+	if acc != nil {
+		return acc.GetCoins(), true
 	}
-
-	keeper.cdc.MustUnmarshalBinaryBare(bz, &balance)
-	return balance, true
+	return coins, false
 }
 
 // GetNativeDenom returns the native denomination for this module from the
@@ -111,6 +110,7 @@ func (keeper Keeper) GetFeeParam(ctx sdk.Context) (feeParams sdk.Dec) {
 	return
 }
 
+// SetFeeParam sets the fee parameter.
 func (keeper Keeper) SetFeeParam(ctx sdk.Context, feeParams sdk.Dec) {
 	keeper.paramSpace.Set(ctx, types.KeyFee, &feeParams)
 }

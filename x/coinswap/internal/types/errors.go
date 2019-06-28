@@ -21,7 +21,10 @@ func ErrReservePoolAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Er
 	return sdk.NewError(codespace, CodeReservePoolAlreadyExists, "reserve pool already exists")
 }
 
-func ErrEqualDenom(codespace sdk.CodespaceType) sdk.Error {
+func ErrEqualDenom(codespace sdk.CodespaceType, msg string) sdk.Error {
+	if msg != "" {
+		sdk.NewError(codespace, CodeEqualDenom, msg)
+	}
 	return sdk.NewError(codespace, CodeEqualDenom, "input and output denomination are equal")
 }
 

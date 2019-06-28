@@ -13,34 +13,16 @@ import (
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case types.QueryBalance:
-			return queryBalance(ctx, req, k)
 		case types.QueryLiquidity:
 			return queryLiquidity(ctx, req, k)
+
 		case types.QueryParameters:
 			return queryParameters(ctx, path[1:], req, k)
+
 		default:
 			return nil, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 		}
 	}
-}
-
-// queryBalance returns the provided addresses UNI balance upon success
-// or an error if the query fails.
-func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var address sdk.AccAddress
-	err := k.cdc.UnmarshalJSON(req.Data, &address)
-	if err != nil {
-		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
-	}
-
-	balance := k.GetUNIForAddress(ctx, address)
-
-	bz, err := k.cdc.MarshalJSONIndent(balance, "", " ")
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
-	return bz, nil
 }
 
 // queryLiquidity returns the total liquidity available for the provided denomination
@@ -52,9 +34,14 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	liquidity := k.GetReservePool(ctx, denom)
+	nativeDenom := k.GetNativeDenom(ctx)
+	moduleName, err := k.GetModuleName(nativeDenom, denom)
+	reservePool, found := k.GetReservePool(ctx, moduleName)
+	if !found {
+		return nil, sdk.ErrInternal("reserve pool does not exist")
+	}
 
-	bz, err := k.cdc.MarshalJSONIndent(liquidity, "", " ")
+	bz, err := k.cdc.MarshalJSONIndent(reservePool.AmountOf(denom), "", " ")
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

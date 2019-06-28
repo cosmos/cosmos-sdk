@@ -67,7 +67,7 @@ func (msg MsgSwapOrder) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidCoins("output coin is zero: " + msg.Output.String())
 	}
 	if msg.Input.Denom == msg.Output.Denom {
-		return ErrEqualDenom(DefaultCodespace)
+		return ErrEqualDenom(DefaultCodespace, "")
 	}
 	if msg.Deadline.IsZero() {
 		return ErrInvalidDeadline(DefaultCodespace, "deadline for MsgSwapOrder not initialized")

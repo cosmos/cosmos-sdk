@@ -26,6 +26,7 @@ var (
 	AllInvariants         = keeper.AllInvariants
 	TotalSupply           = keeper.TotalSupply
 	NewKeeper             = keeper.NewKeeper
+	SupplyKey             = keeper.SupplyKey
 	NewModuleAddress      = types.NewModuleAddress
 	NewEmptyModuleAccount = types.NewEmptyModuleAccount
 	NewModuleAccount      = types.NewModuleAccount

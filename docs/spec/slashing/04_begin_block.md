@@ -84,7 +84,9 @@ single slashing period is capped as described in [overview.md](overview.md) unde
 
 ## Uptime tracking
 
-At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod`.  Liveness slashes do NOT lead to a tombstombing.
+At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod`. Liveness slashes do NOT lead to a tombstombing.
+
+If a validator misses a block, a warning event will get emitted.
 
 ```
 height := block.Height
@@ -107,6 +109,18 @@ for val in block.Validators:
     MissedBlockBitArray.Set(val.Address, index, false)
     signInfo.MissedBlocksCounter--
   // else previous == val not in block.AbsentValidators, no change
+
+	// Emit warning events if Validator misses block
+	if val in block.AbsentValidators {
+		ctx.EventManager().EmitEvent(
+			NewEvent(
+				EventTypeLiveness,
+				NewAttribute(AttributeKeyAddress, consAddr),
+				NewAttribute(AttributeKeyMissedBlocks, signInfo.MissedBlocksCounter),
+        NewAttribute(AttributeKeyHeight, ctx.BlockHeight())
+			),
+		)
+	}
 
   // validator must be active for at least SIGNED_BLOCKS_WINDOW
   // before they can be automatically unbonded for failing to be

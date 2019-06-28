@@ -57,9 +57,9 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 	}
 }
 
-// QueryTxsByTagsRequestHandlerFn implements a REST handler that searches for
-// transactions by tags.
-func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+// QueryTxsByEventsRequestHandlerFn implements a REST handler that searches for
+// transactions by events.
+func QueryTxsByEventsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			tags        []string
@@ -90,7 +90,7 @@ func QueryTxsByTagsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		searchResult, err := utils.QueryTxsByTags(cliCtx, tags, page, limit)
+		searchResult, err := utils.QueryTxsByEvents(cliCtx, tags, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

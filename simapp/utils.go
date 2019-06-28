@@ -38,9 +38,8 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 // getSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
 func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
-	log = fmt.Sprintf("store A %X => %X\n"+
-		"store B %X => %X", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
-
+	log = fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+	
 	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
 		return
 	}

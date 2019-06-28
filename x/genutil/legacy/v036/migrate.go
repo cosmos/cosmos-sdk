@@ -2,13 +2,13 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	extypes "github.com/cosmos/cosmos-sdk/contrib/migrate/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
-func Migrate(appState extypes.AppMap, cdc *codec.Codec) extypes.AppMap {
+func Migrate(appState genutil.AppMap, cdc *codec.Codec) genutil.AppMap {
 	v034Codec := codec.New()
 	codec.RegisterCrypto(v034Codec)
 	v036Codec := codec.New()

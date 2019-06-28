@@ -1,8 +1,7 @@
-package main
+package cli
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -10,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	extypes "github.com/cosmos/cosmos-sdk/contrib/migrate/types"
-	"github.com/cosmos/cosmos-sdk/contrib/migrate/v036"
+	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
 )
 
 var migrationMap = extypes.MigrationMap{
@@ -23,14 +22,14 @@ const (
 	flagChainId     = "chain-id"
 )
 
-func migrateGenesisCmd() *cobra.Command {
+func MigrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
 		Long: strings.TrimSpace(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-$ migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
+[binary] migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
 `),
 		Args: cobra.ExactArgs(2),
 		RunE: runMigrateCmd,
@@ -88,12 +87,4 @@ func runMigrateCmd(cmd *cobra.Command, args []string) (err error) {
 
 	fmt.Println(string(out))
 	return nil
-}
-
-func main() {
-	var rootCmd = migrateGenesisCmd()
-
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
-	}
 }

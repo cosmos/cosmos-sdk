@@ -68,7 +68,9 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/gov") }
+func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // GetGovernanceAccount returns the governance ModuleAccount
 func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccountI {

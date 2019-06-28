@@ -14,12 +14,6 @@ type DistributionKeeper interface {
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
-// BankKeeper defines the expected bank keeper (noalias)
-type BankKeeper interface {
-	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-}
-
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
@@ -58,8 +52,8 @@ type ValidatorSet interface {
 
 	Validator(sdk.Context, sdk.ValAddress) stakingexported.ValidatorI            // get a particular validator by operator address
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingexported.ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                                // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) sdk.Int                               // total staking token supply
+	TotalBondedTokens(sdk.Context) sdk.Int                                       // total bonded tokens within the validator set
+	StakingTokenSupply(sdk.Context) sdk.Int                                      // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec)

@@ -11,8 +11,10 @@ import (
 )
 
 // AllocateTokens handles distribution of the collected fees
-func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
-	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo) {
+func (k Keeper) AllocateTokens(
+	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
+	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo,
+) {
 
 	logger := k.Logger(ctx)
 
@@ -52,6 +54,14 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
 
 	if proposerValidator != nil {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeProposerReward,
+				sdk.NewAttribute(types.AttributeKeyAmount, proposerReward.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
+			),
+		)
+
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = remaining.Sub(proposerReward)
 	} else {
@@ -87,17 +97,22 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPreviousPrecommitPower, total
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
 	k.SetFeePool(ctx, feePool)
-
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.ValidatorI, tokens sdk.DecCoins) {
-
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 
 	// update current commission
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCommission,
+			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+		),
+	)
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
 	currentCommission = currentCommission.Add(commission)
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
@@ -108,6 +123,13 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewards,
+			sdk.NewAttribute(types.AttributeKeyAmount, tokens.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+		),
+	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding = outstanding.Add(tokens)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)

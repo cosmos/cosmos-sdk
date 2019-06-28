@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
@@ -20,10 +22,10 @@ type Keeper interface {
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error)
+	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error
 
-	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
@@ -69,9 +71,7 @@ func (keeper BaseKeeper) AddCoins(
 }
 
 // InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseKeeper) InputOutputCoins(
-	ctx sdk.Context, inputs []types.Input, outputs []types.Output,
-) (sdk.Tags, sdk.Error) {
+func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error {
 	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
@@ -82,47 +82,44 @@ func (keeper BaseKeeper) InputOutputCoins(
 // If any of the delegation amounts are negative, an error is returned.
 func (keeper BaseKeeper) DelegateCoins(
 	ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Tags, sdk.Error) {
+) sdk.Error {
 
 	delegatorAcc := getAccount(ctx, keeper.ak, delegatorAddr)
 	if delegatorAcc == nil {
-		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
+		return sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
 	}
 
 	moduleAcc := getAccount(ctx, keeper.ak, moduleAccAddr)
 	if moduleAcc == nil {
-		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
+		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
 	}
 
 	if !amt.IsValid() {
-		return nil, sdk.ErrInvalidCoins(amt.String())
+		return sdk.ErrInvalidCoins(amt.String())
 	}
 
 	oldCoins := delegatorAcc.GetCoins()
 
 	_, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {
-		return nil, sdk.ErrInsufficientCoins(
+		return sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
 		)
 	}
 
 	// TODO: return error on account.TrackDelegation
 	if err := trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt); err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
+		return sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
 	}
 
 	setAccount(ctx, keeper.ak, delegatorAcc)
 
 	_, err := addCoins(ctx, keeper.ak, moduleAccAddr, amt)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return sdk.NewTags(
-		sdk.TagAction, types.ActionDelegateCoins,
-		sdk.TagDelegator, delegatorAddr.String(),
-	), nil
+	return nil
 }
 
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
@@ -132,47 +129,44 @@ func (keeper BaseKeeper) DelegateCoins(
 // If any of the undelegation amounts are negative, an error is returned.
 func (keeper BaseKeeper) UndelegateCoins(
 	ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Tags, sdk.Error) {
+) sdk.Error {
 
 	delegatorAcc := getAccount(ctx, keeper.ak, delegatorAddr)
 	if delegatorAcc == nil {
-		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
+		return sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
 	}
 
 	moduleAcc := getAccount(ctx, keeper.ak, moduleAccAddr)
 	if moduleAcc == nil {
-		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
+		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
 	}
 
 	if !amt.IsValid() {
-		return nil, sdk.ErrInvalidCoins(amt.String())
+		return sdk.ErrInvalidCoins(amt.String())
 	}
 
 	oldCoins := moduleAcc.GetCoins()
 
 	newCoins, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {
-		return nil, sdk.ErrInsufficientCoins(
+		return sdk.ErrInsufficientCoins(
 			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
 		)
 	}
 
 	err := setCoins(ctx, keeper.ak, moduleAccAddr, newCoins)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// TODO: return error on account.TrackUndelegation
 	if err := trackUndelegation(delegatorAcc, amt); err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
+		return sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
 	}
 
 	setAccount(ctx, keeper.ak, delegatorAcc)
 
-	return sdk.NewTags(
-		sdk.TagAction, types.ActionUndelegateCoins,
-		sdk.TagDelegator, delegatorAddr.String(),
-	), nil
+	return nil
 }
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
@@ -213,6 +207,22 @@ func NewBaseSendKeeper(ak types.AccountKeeper,
 func (keeper BaseSendKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) sdk.Error {
+
+	if !amt.IsValid() {
+		return sdk.ErrInvalidCoins(amt.String())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+		),
+	})
+
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
 }
 
@@ -251,6 +261,11 @@ func NewBaseViewKeeper(ak types.AccountKeeper, codespace sdk.CodespaceType) Base
 	return BaseViewKeeper{ak: ak, codespace: codespace}
 }
 
+// Logger returns a module-specific logger.
+func (keeper BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
 // GetCoins returns the coins at the addr.
 func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	return getCoins(ctx, keeper.ak, addr)
@@ -275,27 +290,29 @@ func getCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress) sdk.
 	return acc.GetCoins()
 }
 
-// setCoins replaces the account coins for a new amount
-func setCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func setCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())
 	}
-	acc := am.GetAccount(ctx, addr)
+
+	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		acc = am.NewAccountWithAddress(ctx, addr)
+		acc = ak.NewAccountWithAddress(ctx, addr)
 	}
+
 	err := acc.SetCoins(amt)
 	if err != nil {
 		// Handle w/ #870
 		panic(err)
 	}
-	am.SetAccount(ctx, acc)
+
+	ak.SetAccount(ctx, acc)
 	return nil
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func hasCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return getCoins(ctx, am, addr).IsAllGTE(amt)
+func hasCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
+	return getCoins(ctx, ak, addr).IsAllGTE(amt)
 }
 
 // getAccount implements AccountKeeper
@@ -312,7 +329,6 @@ func setAccount(ctx sdk.Context, ak types.AccountKeeper, acc exported.Account) {
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
-
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
@@ -341,13 +357,12 @@ func subtractCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress,
 }
 
 // AddCoins adds amt to the coins at the addr.
-func addCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
-
+func addCoins(ctx sdk.Context, ak types.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
 	}
 
-	oldCoins := getCoins(ctx, am, addr)
+	oldCoins := getCoins(ctx, ak, addr)
 	newCoins := oldCoins.Add(amt)
 
 	if newCoins.IsAnyNegative() {
@@ -356,21 +371,21 @@ func addCoins(ctx sdk.Context, am types.AccountKeeper, addr sdk.AccAddress, amt 
 		)
 	}
 
-	err := setCoins(ctx, am, addr, newCoins)
+	err := setCoins(ctx, ak, addr, newCoins)
 
 	return newCoins, err
 }
 
 // SendCoins moves coins from one account to another
 // Returns ErrInvalidCoins if amt is invalid.
-func sendCoins(ctx sdk.Context, am types.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func sendCoins(ctx sdk.Context, ak types.AccountKeeper, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
-	_, err := subtractCoins(ctx, am, fromAddr, amt)
+	_, err := subtractCoins(ctx, ak, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	_, err = addCoins(ctx, am, toAddr, amt)
+	_, err = addCoins(ctx, ak, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -380,37 +395,42 @@ func sendCoins(ctx sdk.Context, am types.AccountKeeper, fromAddr, toAddr sdk.Acc
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am types.AccountKeeper, inputs []types.Input, outputs []types.Output) (sdk.Tags, sdk.Error) {
+func inputOutputCoins(ctx sdk.Context, ak types.AccountKeeper, inputs []types.Input, outputs []types.Output) sdk.Error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
 	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
-		return nil, err
+		return err
 	}
 
-	allTags := sdk.EmptyTags()
-
 	for _, in := range inputs {
-		_, err := subtractCoins(ctx, am, in.Address, in.Coins)
+		_, err := subtractCoins(ctx, ak, in.Address, in.Coins)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		allTags = allTags.AppendTag(
-			types.Sender, in.Address.String(),
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
+			),
 		)
 	}
 
 	for _, out := range outputs {
-		_, err := addCoins(ctx, am, out.Address, out.Coins)
+		_, err := addCoins(ctx, ak, out.Address, out.Coins)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		allTags = allTags.AppendTag(
-			types.Recipient, out.Address.String(),
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
+			),
 		)
 	}
 
-	return allTags, nil
+	return nil
 }
 
 // CONTRACT: assumes that amt is valid.

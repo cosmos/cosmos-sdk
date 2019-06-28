@@ -57,11 +57,11 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	rtr := NewRouter().
 		AddRoute(RouterKey, ProposalHandler)
 
-	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, ck, supply.DefaultCodespace,
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace,
 		[]string{}, []string{}, []string{types.ModuleName, staking.NotBondedPoolName, staking.BondedPoolName})
-	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
 	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), supplyKeeper, sk, DefaultCodespace, rtr)
 
@@ -91,10 +91,8 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 // gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags := EndBlocker(ctx, keeper)
-		return abci.ResponseEndBlock{
-			Tags: tags,
-		}
+		EndBlocker(ctx, keeper)
+		return abci.ResponseEndBlock{}
 	}
 }
 

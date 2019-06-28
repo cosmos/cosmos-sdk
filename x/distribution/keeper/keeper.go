@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -28,19 +30,21 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType,
 	feeCollectorName string) Keeper {
 	keeper := Keeper{
-		storeKey:      key,
-		cdc:           cdc,
-		paramSpace:    paramSpace.WithKeyTable(ParamKeyTable()),
-		stakingKeeper: sk,
-		supplyKeeper:  supplyKeeper,
-		codespace:     codespace,
+		storeKey:         key,
+		cdc:              cdc,
+		paramSpace:       paramSpace.WithKeyTable(ParamKeyTable()),
+		stakingKeeper:    sk,
+		supplyKeeper:     supplyKeeper,
+		codespace:        codespace,
 		feeCollectorName: feeCollectorName,
 	}
 	return keeper
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger { return ctx.Logger().With("module", "x/distr") }
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 // set withdraw address
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) sdk.Error {
@@ -48,8 +52,14 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 		return types.ErrSetWithdrawAddrDisabled(k.codespace)
 	}
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSetWithdrawAddress,
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
+		),
+	)
 
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	return nil
 }
 
@@ -71,37 +81,51 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawRewards,
+			sdk.NewAttribute(types.AttributeKeyAmount, rewards.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
+		),
+	)
+
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
-
 	return rewards, nil
 }
 
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 	// fetch validator accumulated commission
-	commission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if commission.IsZero() {
+	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	if accumCommission.IsZero() {
 		return nil, types.ErrNoValidatorCommission(k.codespace)
 	}
 
-	coins, remainder := commission.TruncateDecimal()
+	commission, remainder := accumCommission.TruncateDecimal()
 	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder) // leave remainder to withdraw later
 
 	// update outstanding
 	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)
-	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(coins)))
+	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(commission)))
 
-	if !coins.IsZero() {
+	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-		err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return coins, nil
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawCommission,
+			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
+		),
+	)
+
+	return commission, nil
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store

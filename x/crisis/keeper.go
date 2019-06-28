@@ -35,6 +35,11 @@ func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
 	}
 }
 
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
 // RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 	invarRoute := types.NewInvarRoute(moduleName, route, invar)
@@ -56,7 +61,8 @@ func (k Keeper) Invariants() []sdk.Invariant {
 }
 
 // assert all invariants
-func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
+func (k Keeper) AssertInvariants(ctx sdk.Context) {
+	logger := k.Logger(ctx)
 
 	start := time.Now()
 	invarRoutes := k.Routes()
@@ -74,7 +80,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 	end := time.Now()
 	diff := end.Sub(start)
 
-	logger.With("module", "x/crisis").Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 
 // DONTCOVER

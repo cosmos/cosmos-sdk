@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -105,7 +106,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := Keeper{}
 	h := NewHandler(k)
 
-	res := h(sdk.Context{}, sdk.NewTestMsg())
+	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized crisis message type"))
 }

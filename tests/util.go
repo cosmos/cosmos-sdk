@@ -97,7 +97,8 @@ func waitForHeight(height int64, url string) {
 	var res *http.Response
 	var err error
 	for {
-		res, err = http.Get(url)
+		// Since this is in a testing file we are accepting nolint to be passed
+		res, err = http.Get(url) //nolint:gosec
 		if err != nil {
 			panic(err)
 		}
@@ -150,7 +151,7 @@ func WaitForStart(url string) {
 		time.Sleep(time.Millisecond * 100)
 
 		var res *http.Response
-		res, err = http.Get(url)
+		res, err = http.Get(url) //nolint:gosec Error is arising in testing files, accepting nolint
 		if err != nil || res == nil {
 			continue
 		}
@@ -214,3 +215,5 @@ var cdc = codec.New()
 func init() {
 	ctypes.RegisterAmino(cdc)
 }
+
+//DONTCOVER

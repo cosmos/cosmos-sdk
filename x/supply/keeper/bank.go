@@ -60,8 +60,7 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 		panic(fmt.Sprintf("module account %s isn't able to be created", recipientModule))
 	}
 
-	_, err := k.bk.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
-	return err
+	return k.bk.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // UndelegateCoinsFromModuleToAccount undelegates the unbonding coins and transfers
@@ -74,8 +73,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
 	}
 
-	_, err := k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
-	return err
+	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.

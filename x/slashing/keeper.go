@@ -245,7 +245,7 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 	var pubkey crypto.PubKey
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
-		return nil, fmt.Errorf("address %s not found", sdk.AccAddress(address))
+		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
 	return pubkey, nil
 }

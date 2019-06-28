@@ -7,8 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	// TODO: uncomment when supply module is merged to master
-	//supply "github.com/cosmos/cosmos-sdk/x/supply/types"
+	supply "github.com/cosmos/cosmos-sdk/x/supply/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -39,11 +38,11 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, bk types.BankKeeper, sk types
 // CreateReservePool initializes a new reserve pool by creating a
 // ModuleAccount with minting and burning permissions.
 func (keeper Keeper) CreateReservePool(ctx sdk.Context, moduleName string) {
-	moduleAcc := keeper.sk.GetModuleAccount(moduleName)
+	moduleAcc := keeper.sk.GetModuleAccount(ctx, moduleName)
 	if moduleAcc != nil {
 		panic(fmt.Sprintf("reserve pool for %s already exists", moduleName))
 	}
-	// moduleAcc = supply.NewEmptyModuleAccount(moduleName, "minter/burner")
+	moduleAcc = supply.NewEmptyModuleAccount(moduleName, "minter/burner")
 	keeper.sk.SetModuleAccount(ctx, moduleAcc)
 }
 
@@ -90,7 +89,7 @@ func (keeper Keeper) RecieveCoins(ctx sdk.Context, addr sdk.AccAddress, moduleNa
 // GetReservePool returns the total balance of an reserve pool at the
 // provided denomination.
 func (keeper Keeper) GetReservePool(ctx sdk.Context, moduleName string) (coins sdk.Coins, found bool) {
-	acc := keeper.sk.GetModuleAccount(moduleName)
+	acc := keeper.sk.GetModuleAccount(ctx, moduleName)
 	if acc != nil {
 		return acc.GetCoins(), true
 	}
@@ -105,14 +104,14 @@ func (keeper Keeper) GetNativeDenom(ctx sdk.Context) (nativeDenom string) {
 }
 
 // GetFeeParam returns the current FeeParam from the global param store
-func (keeper Keeper) GetFeeParam(ctx sdk.Context) (feeParams sdk.Dec) {
-	keeper.paramSpace.Get(ctx, types.KeyFee, &feeParams)
+func (keeper Keeper) GetFeeParam(ctx sdk.Context) (feeParam types.FeeParam) {
+	keeper.paramSpace.Get(ctx, types.KeyFee, &feeParam)
 	return
 }
 
 // SetFeeParam sets the fee parameter.
-func (keeper Keeper) SetFeeParam(ctx sdk.Context, feeParams sdk.Dec) {
-	keeper.paramSpace.Set(ctx, types.KeyFee, &feeParams)
+func (keeper Keeper) SetFeeParam(ctx sdk.Context, feeParam types.FeeParam) {
+	keeper.paramSpace.Set(ctx, types.KeyFee, &feeParam)
 }
 
 // Logger returns a module-specific logger.

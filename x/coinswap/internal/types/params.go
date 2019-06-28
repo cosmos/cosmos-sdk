@@ -20,14 +20,30 @@ var (
 
 // Params defines the fee and native denomination for coinswap
 type Params struct {
-	NativeDenom string  `json:"native_denom"`
-	Fee         sdk.Dec `json:"fee"`
+	NativeDenom string   `json:"native_denom"`
+	Fee         FeeParam `json:"fee"`
 }
 
-func NewParams(nativeDenom string, fee sdk.Dec) Params {
+func NewParams(nativeDenom string, fee FeeParam) Params {
 	return Params{
 		NativeDenom: nativeDenom,
 		Fee:         fee,
+	}
+}
+
+// FeeParam defines the numerator and denominator used in calculating the
+// amount to be reserved as a liquidity fee.
+// TODO: come up with a more descriptive name than Numerator/Denominator
+// Fee = 1 - (Numerator / Denominator) TODO: move this to spec
+type FeeParam struct {
+	Numerator   sdk.Int `json:"fee_numerator"`
+	Denominator sdk.Int `json:"fee_denominator"`
+}
+
+func NewFeeParam(numerator, denominator sdk.Int) FeeParam {
+	return FeeParam{
+		Numerator:   numerator,
+		Denominator: denominator,
 	}
 }
 
@@ -54,14 +70,11 @@ Fee:			%s`, p.NativeDenom, p.Fee,
 
 // DefaultParams returns the default coinswap module parameters
 func DefaultParams() Params {
-	fee, err := sdk.NewDecFromStr("0.03")
-	if err != nil {
-		panic(err)
-	}
+	feeParam := NewFeeParam(sdk.NewInt(997), sdk.NewInt(1000))
 
 	return Params{
 		NativeDenom: sdk.DefaultBondDenom,
-		Fee:         fee,
+		Fee:         feeParam,
 	}
 }
 
@@ -71,11 +84,14 @@ func ValidateParams(p Params) error {
 	if strings.TrimSpace(p.NativeDenom) != "" {
 		return fmt.Errorf("native denomination must not be empty")
 	}
-	if !p.Fee.IsPositive() {
-		return fmt.Errorf("fee is not positive: %v", p.Fee)
+	if !p.Fee.Numerator.IsPositive() {
+		return fmt.Errorf("fee numerator is not positive: %v", p.Fee.Numerator)
 	}
-	if !p.Fee.LT(sdk.OneDec()) {
-		return fmt.Errorf("fee must be less than one: %v", p.Fee)
+	if !p.Fee.Denominator.IsPositive() {
+		return fmt.Errorf("fee denominator is not positive: %v", p.Fee.Denominator)
+	}
+	if p.Fee.Numerator.GTE(p.Fee.Denominator) {
+		return fmt.Errorf("fee numerator is greater than or equal to fee numerator")
 	}
 	return nil
 }

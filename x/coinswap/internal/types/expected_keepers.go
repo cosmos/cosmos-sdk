@@ -2,8 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	// TODO: uncomment when supply module is merged to master
-	//supply "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	supply "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // BankKeeper defines the expected bank keeper
@@ -14,7 +13,8 @@ type BankKeeper interface {
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	//	GetModuleAccount(ctx sdk.Context, moduleName string) supply.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, moduleName string) supply.ModuleAccountI
+	SetModuleAccount(ctx sdk.Context, macc supply.ModuleAccountI)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error

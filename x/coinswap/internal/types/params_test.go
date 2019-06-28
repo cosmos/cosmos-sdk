@@ -23,9 +23,10 @@ func TestValidateParams(t *testing.T) {
 		{"native denom with caps", NewParams("aTom", defaultParams.Fee)},
 		{"native denom too short", NewParams("a", defaultParams.Fee)},
 		{"native denom too long", NewParams("a very long coin denomination", defaultParams.Fee)},
-		{"fee is one", NewParams(defaultParams.NativeDenom, sdk.NewDec(1))},
-		{"fee above one", NewParams(defaultParams.NativeDenom, sdk.NewDec(2))},
-		{"fee is negative", NewParams(defaultParams.NativeDenom, sdk.NewDec(-1))},
+		{"fee numerator == denominator", NewParams(defaultParams.NativeDenom, NewFeeParam(sdk.NewInt(1000), sdk.NewInt(1000)))},
+		{"fee numerator > denominator", NewParams(defaultParams.NativeDenom, NewFeeParam(sdk.NewInt(10000), sdk.NewInt(10)))},
+		{"fee numerator negative", NewParams(defaultParams.NativeDenom, NewFeeParam(sdk.NewInt(-1), sdk.NewInt(10)))},
+		{"fee denominator negative", NewParams(defaultParams.NativeDenom, NewFeeParam(sdk.NewInt(10), sdk.NewInt(-1)))},
 	}
 
 	for _, tc := range invalidTests {

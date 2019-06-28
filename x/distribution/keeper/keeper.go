@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// keeper of the staking store
+// Keeper of the distribution store
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           *codec.Codec
@@ -25,11 +25,17 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
-// create a new keeper
+// NewKeeper creates a new distribution Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType,
 	feeCollectorName string) Keeper {
-	keeper := Keeper{
+
+	// ensure distribution module account is set
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace.WithKeyTable(ParamKeyTable()),
@@ -38,7 +44,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 		codespace:        codespace,
 		feeCollectorName: feeCollectorName,
 	}
-	return keeper
 }
 
 // Logger returns a module-specific logger.

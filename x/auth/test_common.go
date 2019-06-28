@@ -104,7 +104,7 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	// create a new module account
 	macc := supplytypes.NewEmptyModuleAccount(moduleName, "basic")
 	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)
-	sk.ak.SetAccount(ctx,maccI)
+	sk.ak.SetAccount(ctx, maccI)
 	return maccI
 }
 

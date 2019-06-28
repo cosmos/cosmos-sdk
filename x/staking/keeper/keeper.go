@@ -39,6 +39,15 @@ type Keeper struct {
 func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
+	// ensure bonded and not bonded module accounts are set
+	if addr := supplyKeeper.GetModuleAddress(types.BondedPoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
+	}
+
+	if addr := supplyKeeper.GetModuleAddress(types.NotBondedPoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
+	}
+
 	return Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,

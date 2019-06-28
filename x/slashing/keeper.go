@@ -183,13 +183,13 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 		// Array value at this index has not changed, no need to update counter
 	}
 
-	// Emit warning event if Validator misses block
 	if missed {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeSlash,
+				types.EventTypeLiveness,
 				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
 				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
+				sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", ctx.BlockHeight()))
 			),
 		)
 

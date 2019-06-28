@@ -1,3 +1,4 @@
+// nolint:deadcode unused
 package gov
 
 import (
@@ -58,7 +59,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
 
-	valTokens := sdk.TokensFromTendermintPower(42)
+	valTokens := sdk.TokensFromConsensusPower(42)
 
 	var (
 		addrs    []sdk.AccAddress
@@ -79,10 +80,8 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 // gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags := EndBlocker(ctx, keeper)
-		return abci.ResponseEndBlock{
-			Tags: tags,
-		}
+		EndBlocker(ctx, keeper)
+		return abci.ResponseEndBlock{}
 	}
 }
 
@@ -94,7 +93,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
+		tokens := sdk.TokensFromConsensusPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		validators := staking.InitGenesis(ctx, stakingKeeper, accountKeeper, stakingGenesis)
@@ -200,7 +199,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			testDescription, testCommissionRates, sdk.OneInt(),

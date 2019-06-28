@@ -49,10 +49,9 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 // staking endblocker
 func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates, tags := staking.EndBlocker(ctx, keeper)
+		validatorUpdates := staking.EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: validatorUpdates,
-			Tags:             tags,
 		}
 	}
 }
@@ -62,7 +61,7 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.A
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
+		tokens := sdk.TokensFromConsensusPower(100000)
 		stakingGenesis.Pool.NotBondedTokens = tokens
 		validators := staking.InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
@@ -90,8 +89,8 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakingKeeper, keeper := getMockApp(t)
 
-	genTokens := sdk.TokensFromTendermintPower(42)
-	bondTokens := sdk.TokensFromTendermintPower(10)
+	genTokens := sdk.TokensFromConsensusPower(42)
+	bondTokens := sdk.TokensFromConsensusPower(10)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 

@@ -1,4 +1,4 @@
-package keeper
+package keeper // noalias
 
 import (
 	"bytes"
@@ -26,11 +26,10 @@ import (
 )
 
 // dummy addresses used for testing
+// nolint: unused deadcode
 var (
-	Addrs       = createTestAddrs(500)
-	PKs         = createTestPubKeys(500)
-	emptyAddr   sdk.AccAddress
-	emptyPubkey crypto.PubKey
+	Addrs = createTestAddrs(500)
+	PKs   = createTestPubKeys(500)
 
 	addrDels = []sdk.AccAddress{
 		Addrs[0],
@@ -79,7 +78,7 @@ func MakeTestCodec() *codec.Codec {
 // If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromConsensusPower(initPower)
 
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
@@ -258,6 +257,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	return validator
 }
 
+// nolint: deadcode unused
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)

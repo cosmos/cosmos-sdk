@@ -131,7 +131,7 @@ type AppModule interface {
 	AppModuleGenesis
 
 	// registers
-	RegisterInvariants(sdk.InvariantRouter)
+	RegisterInvariants(sdk.InvariantRegistry)
 
 	// routes
 	Route() string
@@ -139,8 +139,8 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
-	BeginBlock(sdk.Context, abci.RequestBeginBlock) sdk.Tags
-	EndBlock(sdk.Context, abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags)
+	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
 //___________________________
@@ -157,7 +157,7 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 }
 
 // register invariants
-func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRouter) {}
+func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module message route ngame
 func (GenesisOnlyAppModule) Route() string { return "" }
@@ -172,13 +172,11 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // module begin-block
-func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
-	return sdk.EmptyTags()
-}
+func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // module end-block
-func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
+func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 //____________________________________________________________________________
@@ -232,9 +230,9 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 }
 
 // register all module routes and module querier routes
-func (m *Manager) RegisterInvariants(invarRouter sdk.InvariantRouter) {
+func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
-		module.RegisterInvariants(invarRouter)
+		module.RegisterInvariants(ir)
 	}
 }
 
@@ -282,26 +280,30 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
-// perform begin block functionality for modules
+// BeginBlock performs begin block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
 func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := sdk.EmptyTags()
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 	for _, moduleName := range m.OrderBeginBlockers {
-		moduleTags := m.Modules[moduleName].BeginBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		m.Modules[moduleName].BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
+		Events: ctx.EventManager().ABCIEvents(),
 	}
 }
 
-// perform end block functionality for modules
+// EndBlock performs end block functionality for all modules. It creates a
+// child context with an event manager to aggregate events emitted from all
+// modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
-	tags := sdk.EmptyTags()
+
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates, moduleTags := m.Modules[moduleName].EndBlock(ctx, req)
-		tags = tags.AppendTags(moduleTags)
+		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -309,13 +311,14 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 			if len(validatorUpdates) > 0 {
 				panic("validator EndBlock updates already set by a previous module")
 			}
+
 			validatorUpdates = moduleValUpdates
 		}
 	}
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
-		Tags:             tags,
+		Events:           ctx.EventManager().ABCIEvents(),
 	}
 }
 

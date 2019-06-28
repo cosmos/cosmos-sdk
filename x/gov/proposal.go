@@ -36,6 +36,13 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.setProposalID(ctx, proposalID+1)
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitProposal,
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		),
+	)
+
 	return proposal, nil
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -23,7 +22,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short:                      "Querying commands for the slashing module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       utils.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	slashingQueryCmd.AddCommand(
@@ -58,7 +57,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			consAddr := sdk.ConsAddress(pk.Address())
 			key := types.GetValidatorSigningInfoKey(consAddr)
 
-			res, err := cliCtx.QueryStore(key, storeName)
+			res, _, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -88,7 +87,7 @@ $ <appcli> query slashing params
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
-			res, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}

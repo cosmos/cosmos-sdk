@@ -90,6 +90,7 @@ to set up a script to periodically withdraw and rebond rewards.
     - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
     - [Commission rate change](05_hooks.md#commission-rate-change)
     - [Change in Validator State](05_hooks.md#change-in-validator-state)
-6. **[Tags](06_tags.md)**
-    - [Handlers](06_tags.md#handlers)
+6. **[Events](06_events.md)**
+    - [BeginBlocker](06_events.md#beginblocker)
+    - [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**

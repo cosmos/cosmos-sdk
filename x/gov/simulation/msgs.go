@@ -163,7 +163,7 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 			acc = simulation.RandomAcc(r, accs)
 		}
 
-		if proposalID < 0 {
+		if proposalID < uint64(0) {
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {

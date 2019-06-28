@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -42,23 +43,16 @@ var (
 	NewParams                      = types.NewParams
 	ParamKeyTable                  = types.ParamKeyTable
 	DefaultParams                  = types.DefaultParams
-	NewQueryAccountParams          = types.NewQueryAccountParams
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
 	StdSignBytes                   = types.StdSignBytes
 	DefaultTxDecoder               = types.DefaultTxDecoder
 	DefaultTxEncoder               = types.DefaultTxEncoder
-	NewTestMsg                     = types.NewTestMsg
-	NewTestStdFee                  = types.NewTestStdFee
-	NewTestCoins                   = types.NewTestCoins
-	KeyTestPubAddr                 = types.KeyTestPubAddr
-	NewTestTx                      = types.NewTestTx
-	NewTestTxWithMemo              = types.NewTestTxWithMemo
-	NewTestTxWithSignBytes         = types.NewTestTxWithSignBytes
 	NewTxBuilder                   = types.NewTxBuilder
 	NewTxBuilderFromCLI            = types.NewTxBuilderFromCLI
 	MakeSignature                  = types.MakeSignature
+	NewAccountRetriever            = types.NewAccountRetriever
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -72,9 +66,8 @@ var (
 )
 
 type (
-	Account                  = types.Account
-	VestingAccount           = types.VestingAccount
-	AccountDecoder           = types.AccountDecoder
+	Account                  = exported.Account
+	VestingAccount           = exported.VestingAccount
 	BaseAccount              = types.BaseAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
@@ -82,7 +75,6 @@ type (
 	FeeCollectionKeeper      = types.FeeCollectionKeeper
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
-	QueryAccountParams       = types.QueryAccountParams
 	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee

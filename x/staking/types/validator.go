@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,6 +47,40 @@ type Validator struct {
 	UnbondingCompletionTime time.Time      `json:"unbonding_time"`      // if unbonding, min time for the validator to complete unbonding
 	Commission              Commission     `json:"commission"`          // commission parameters
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // validator's self declared minimum self delegation
+}
+
+// custom marshal yaml function due to consensus pubkey
+func (v Validator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		OperatorAddress         sdk.ValAddress
+		ConsPubKey              string
+		Jailed                  bool
+		Status                  sdk.BondStatus
+		Tokens                  sdk.Int
+		DelegatorShares         sdk.Dec
+		Description             Description
+		UnbondingHeight         int64
+		UnbondingCompletionTime time.Time
+		Commission              Commission
+		MinSelfDelegation       sdk.Int
+	}{
+		OperatorAddress:         v.OperatorAddress,
+		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		Jailed:                  v.Jailed,
+		Status:                  v.Status,
+		Tokens:                  v.Tokens,
+		DelegatorShares:         v.DelegatorShares,
+		Description:             v.Description,
+		UnbondingHeight:         v.UnbondingHeight,
+		UnbondingCompletionTime: v.UnbondingCompletionTime,
+		Commission:              v.Commission,
+		MinSelfDelegation:       v.MinSelfDelegation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
 }
 
 // Validators is a collection of Validator
@@ -288,7 +323,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.TendermintPower(),
+		Power:  v.ConsensusPower(),
 	}
 }
 
@@ -474,18 +509,18 @@ func (v Validator) BondedTokens() sdk.Int {
 	return sdk.ZeroInt()
 }
 
-// get the Tendermint Power
+// get the consensus-engine power
 // a reduction of 10^6 from validator tokens is applied
-func (v Validator) TendermintPower() int64 {
+func (v Validator) ConsensusPower() int64 {
 	if v.IsBonded() {
-		return v.PotentialTendermintPower()
+		return v.PotentialConsensusPower()
 	}
 	return 0
 }
 
-// potential Tendermint power
-func (v Validator) PotentialTendermintPower() int64 {
-	return sdk.TokensToTendermintPower(v.Tokens)
+// potential consensus-engine power
+func (v Validator) PotentialConsensusPower() int64 {
+	return sdk.TokensToConsensusPower(v.Tokens)
 }
 
 // nolint - for ValidatorI
@@ -497,7 +532,7 @@ func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
-func (v Validator) GetTendermintPower() int64     { return v.TendermintPower() }
+func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }

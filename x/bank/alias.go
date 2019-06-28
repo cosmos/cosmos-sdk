@@ -5,7 +5,8 @@
 package bank
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 const (
@@ -14,8 +15,8 @@ const (
 	CodeInvalidInputsOutputs = types.CodeInvalidInputsOutputs
 	ModuleName               = types.ModuleName
 	RouterKey                = types.RouterKey
+	QuerierRoute             = types.QuerierRoute
 	DefaultParamspace        = types.DefaultParamspace
-	DefaultSendEnabled       = types.DefaultSendEnabled
 )
 
 var (
@@ -25,11 +26,9 @@ var (
 	ErrNoOutputs           = types.ErrNoOutputs
 	ErrInputOutputMismatch = types.ErrInputOutputMismatch
 	ErrSendDisabled        = types.ErrSendDisabled
-	NewMsgSend             = types.NewMsgSend
-	NewMsgMultiSend        = types.NewMsgMultiSend
+	NewBaseKeeper          = keeper.NewBaseKeeper
 	NewInput               = types.NewInput
 	NewOutput              = types.NewOutput
-	ValidateInputsOutputs  = types.ValidateInputsOutputs
 	ParamKeyTable          = types.ParamKeyTable
 
 	// variable aliases
@@ -38,6 +37,8 @@ var (
 )
 
 type (
+	BaseKeeper   = keeper.BaseKeeper // ibc module depends on this
+	Keeper       = keeper.Keeper
 	MsgSend      = types.MsgSend
 	MsgMultiSend = types.MsgMultiSend
 	Input        = types.Input

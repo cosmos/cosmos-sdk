@@ -123,6 +123,11 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		typesQuery := r.URL.Query().Get("type")
 		trimmedQuery := strings.TrimSpace(typesQuery)
 		if len(trimmedQuery) != 0 {
@@ -133,20 +138,27 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs []*sdk.SearchTxsResult
-		var actions []string
+
+		var (
+			txs     []*sdk.SearchTxsResult
+			actions []string
+		)
 
 		switch {
 		case isBondTx:
 			actions = append(actions, types.MsgDelegate{}.Type())
+
 		case isUnbondTx:
 			actions = append(actions, types.MsgUndelegate{}.Type())
+
 		case isRedTx:
 			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+
 		case noQuery:
 			actions = append(actions, types.MsgDelegate{}.Type())
 			actions = append(actions, types.MsgUndelegate{}.Type())
 			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+
 		default:
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -179,6 +191,11 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var params types.QueryRedelegationParams
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
 
 		bechDelegatorAddr := r.URL.Query().Get("delegator")
 		bechSrcValidatorAddr := r.URL.Query().Get("validator_from")
@@ -217,7 +234,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/staking/redelegations", bz)
+		res, _, err := cliCtx.QueryWithData("custom/staking/redelegations", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -251,6 +268,11 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		status := r.FormValue("status")
 		if status == "" {
 			status = sdk.BondStatusBonded
@@ -264,7 +286,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidators)
-		res, err := cliCtx.QueryWithData(route, bz)
+		res, _, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -291,7 +313,12 @@ func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.Hand
 // HTTP request handler to query the pool information
 func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.QueryWithData("custom/staking/pool", nil)
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData("custom/staking/pool", nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -304,7 +331,12 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // HTTP request handler to query the staking params values
 func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

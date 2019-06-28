@@ -12,10 +12,16 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+)
+
+const (
+	GithubConfigSep = ","
+	SlackConfigSep  = ","
 )
 
 var (
@@ -26,7 +32,9 @@ var (
 		989182, 89182391, 11, 22, 44, 77, 99, 2020,
 		3232, 123123, 124124, 582582, 18931893,
 		29892989, 30123012, 47284728, 7601778, 8090485,
+		977367484, 491163361, 424254581, 673398983,
 	}
+	seedOverrideList = ""
 
 	// goroutine-safe process map
 	procs map[int]*os.Process
@@ -36,13 +44,20 @@ var (
 	results chan bool
 
 	// command line arguments and options
-	jobs       = runtime.GOMAXPROCS(0)
-	pkgName    string
-	blocks     string
-	period     string
-	testname   string
-	genesis    string
-	exitOnFail bool
+	jobs         = runtime.GOMAXPROCS(0)
+	pkgName      string
+	blocks       string
+	period       string
+	testname     string
+	genesis      string
+	exitOnFail   bool
+	githubConfig string
+	slackConfig  string
+
+	// integration with Slack and Github
+	slackToken   string
+	slackChannel string
+	slackThread  string
 
 	// logs temporary directory
 	tempdir string
@@ -52,19 +67,27 @@ func init() {
 	log.SetPrefix("")
 	log.SetFlags(0)
 
+	runsimLogfile, err := os.OpenFile("sim_log_file", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		log.Printf("ERROR: opening log file: %v", err.Error())
+	} else {
+		log.SetOutput(io.MultiWriter(os.Stdout, runsimLogfile))
+	}
+
 	procs = map[int]*os.Process{}
 	mutex = &sync.Mutex{}
 
 	flag.IntVar(&jobs, "j", jobs, "Number of parallel processes")
 	flag.StringVar(&genesis, "g", "", "Genesis file")
+	flag.StringVar(&seedOverrideList, "seeds", "", "run the supplied comma-separated list of seeds instead of defaults")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
+	flag.StringVar(&githubConfig, "github", "", "Report results to Github's PR")
+	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(),
-			`Usage: %s [-j maxprocs] [-g genesis.json] [-e] [package] [blocks] [period] [testname]
-Run simulations in parallel
-
-`, filepath.Base(os.Args[0]))
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(),
+			`Usage: %s [-j maxprocs] [-seeds comma-separated-seed-list] [-g genesis.json] [-e] [-github token,pr-url] [-slack token,channel,thread] [package] [blocks] [period] [testname]
+Run simulations in parallel`, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
 }
@@ -77,7 +100,29 @@ func main() {
 		log.Fatal("wrong number of arguments")
 	}
 
-	// prepare input channel
+	if githubConfig != "" {
+		opts := strings.Split(githubConfig, GithubConfigSep)
+		if len(opts) != 2 {
+			log.Fatal("incorrect github config string format")
+		}
+	}
+
+	if slackConfig != "" {
+		opts := strings.Split(slackConfig, SlackConfigSep)
+		if len(opts) != 3 {
+			log.Fatal("incorrect slack config string format")
+		}
+		slackToken, slackChannel, slackThread = opts[0], opts[1], opts[2]
+	}
+
+	seedOverrideList = strings.TrimSpace(seedOverrideList)
+	if seedOverrideList != "" {
+		seeds, err = makeSeedList(seedOverrideList)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	queue := make(chan int, len(seeds))
 	for _, seed := range seeds {
 		queue <- seed
@@ -154,7 +199,13 @@ wait:
 			os.Exit(1)
 		}
 	}
-
+	if slackConfigSupplied() {
+		seedStrings := make([]string, len(seeds))
+		for i, seed := range seeds {
+			seedStrings[i] = fmt.Sprintf("%d", seed)
+		}
+		slackMessage(slackToken, slackChannel, &slackThread, fmt.Sprintf("Finished running simulation for seeds: %s", strings.Join(seedStrings, " ")))
+	}
 	os.Exit(0)
 }
 
@@ -181,6 +232,9 @@ func worker(id int, seeds <-chan int) {
 			results <- false
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
+			if slackConfigSupplied() {
+				slackMessage(slackToken, slackChannel, nil, "Seed "+strconv.Itoa(seed)+" failed. To reproduce, run: "+buildCommand(testname, blocks, period, genesis, seed))
+			}
 			if exitOnFail {
 				log.Printf("\bERROR OUTPUT \n\n%s", err)
 				panic("halting simulations")
@@ -189,6 +243,7 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
 	}
+
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }
 
@@ -261,3 +316,21 @@ func checkSignal(proc *os.Process, signal syscall.Signal) {
 		log.Printf("Failed to send %s to PID %d", signal, proc.Pid)
 	}
 }
+
+func makeSeedList(seeds string) ([]int, error) {
+	strSeedsLst := strings.Split(seeds, ",")
+	if len(strSeedsLst) == 0 {
+		return nil, fmt.Errorf("seeds was empty")
+	}
+	intSeeds := make([]int, len(strSeedsLst))
+	for i, seedstr := range strSeedsLst {
+		intSeed, err := strconv.Atoi(strings.TrimSpace(seedstr))
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert seed to integer: %v", err)
+		}
+		intSeeds[i] = intSeed
+	}
+	return intSeeds, nil
+}
+
+func slackConfigSupplied() bool { return slackConfig != "" }

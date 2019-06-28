@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+//nolint: deadcode unused
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
 	delPk2   = ed25519.GenPrivKey().PubKey()
@@ -47,6 +48,7 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
+	// TODO move to common testing package for all modules
 	// test addresses
 	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,
@@ -86,7 +88,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
 	Keeper, staking.Keeper, DummyFeeCollectionKeeper, params.Keeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initCoins := sdk.TokensFromConsensusPower(initPower)
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)

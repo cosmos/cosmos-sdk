@@ -28,7 +28,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := sdk.ZeroInt()
-	amtToNotBonded, amtToBonded := sdk.ZeroInt(), sdk.ZeroInt()
+	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
@@ -61,10 +61,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		switch {
 		case validator.IsUnbonded():
 			validator = k.unbondedToBonded(ctx, validator)
-			amtToBonded = amtToBonded.Add(validator.GetTokens())
+			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
 		case validator.IsUnbonding():
 			validator = k.unbondingToBonded(ctx, validator)
-			amtToBonded = amtToBonded.Add(validator.GetTokens())
+			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
 		case validator.IsBonded():
 			// no state change
 		default:
@@ -107,7 +107,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// bonded to unbonding
 		validator = k.bondedToUnbonding(ctx, validator)
-		amtToNotBonded = amtToNotBonded.Add(validator.GetTokens())
+		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
@@ -116,14 +116,20 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
-	// update the pools based on the recent updates in the validator set
+	// Update the pools based on the recent updates in the validator set:
+	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+	// to the Bonded pool.
+	// - The tokens from the bonded validators that are being kicked out from the validator set 
+	// need to be transferred to the NotBonded pool.
 	switch {
-	case amtToBonded.GT(amtToNotBonded):
-		k.notBondedTokensToBonded(ctx, amtToBonded.Sub(amtToNotBonded))
-	case amtToBonded.LT(amtToNotBonded):
-		k.bondedTokensToNotBonded(ctx, amtToNotBonded.Sub(amtToBonded))
+		// Compare and subtract the respective amounts to only perform one transfer.
+		// This is done in order to avoid doing multiple updates inside each iterator/loop.
+	case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+		k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+	case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+		k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
 	default:
-		// equal amounts
+		// equal amounts of tokens; no update required
 	}
 
 	// set total power on lookup index if there are any updates

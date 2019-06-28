@@ -13,11 +13,11 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc          *codec.Codec
-	storeKey     sdk.StoreKey
-	paramSpace   params.Subspace
-	sk           types.StakingKeeper
-	supplyKeeper types.SupplyKeeper
+	cdc              *codec.Codec
+	storeKey         sdk.StoreKey
+	paramSpace       params.Subspace
+	sk               types.StakingKeeper
+	supplyKeeper     types.SupplyKeeper
 	feeCollectorName string
 }
 
@@ -32,11 +32,11 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:          cdc,
-		storeKey:     key,
-		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
-		sk:           sk,
-		supplyKeeper: supplyKeeper,
+		cdc:              cdc,
+		storeKey:         key,
+		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		sk:               sk,
+		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
 	}
 }

@@ -91,8 +91,7 @@ occur when the unbonding delegation queue element matures:
 
 Redelegations affect the delegation, source and destination validators.
 
-- perform an `unbond` delegation from the source validator to retrieve the tokens
-worth of the unbonded shares
+- perform an `unbond` delegation from the source validator to retrieve the tokens worth of the unbonded shares
 - using the unbonded tokens, `Delegate` them to the destination validator
 - if the `sourceValidator.Status` is `Bonded`, and the `destinationValidator` is not, transfer the newly delegated tokens from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 - otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator` is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`

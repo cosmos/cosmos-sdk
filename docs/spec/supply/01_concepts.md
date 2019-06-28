@@ -6,7 +6,7 @@ The `supply` module introduces a passive tracker for the supply of coins in the 
 
 ### Total Supply
 
-The total `Supply` of the network is equal to the sum of all coins from the `Account`s. The total supply is updated every time a `Coin` is minted (as part of the inflation mechanism) or burned (due to slashing or if a governance proposal is vetoed).
+The total `Supply` of the network is equal to the sum of all coins from the account. The total supply is updated every time a `Coin` is minted (eg: as part of the inflation mechanism) or burned (eg: due to slashing or if a governance proposal is vetoed).
 
 ## Module Accounts
 
@@ -30,10 +30,10 @@ The supply `Keeper` also introduces new wrapper functions for the auth `Keeper` 
 
 ### Permissions
 
-Each `ModuleAccount` has a `Permission` that provides different object capabilities to perform certain actions. The available permissions are:
+Each `ModuleAccount` has a different set of permissions that provide different object capabilities to perform certain actions. Permissions need to be registered upon the creation of the supply `Keeper` so that every time a `ModuleAccount` calls the allowed functions, the `Keeper` can lookup the permission to that specific account and perform or not the action.
 
-- `Holder`: is allowed to only transfer its coins to other accounts.
+The available permissions are:
+
+- `Basic`: is allowed to only transfer its coins to other accounts.
 - `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Holder` permissioned actions.
 - `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Holder` permissioned actions.
-
-Permissions need to be registered upon the creation of the supply `Keeper` so that every time a `ModuleAccount` calls the `Burn` or `Mint` functions, the `Keeper` can lookup the permission to that specific account and perform or not the action.

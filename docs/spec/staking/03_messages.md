@@ -22,8 +22,7 @@ This message is expected to fail if:
 
 - another validator with this operator address is already registered
 - another validator with this pubkey is already registered
-- the initial self-delegation tokens are of a denom not specified as the
-  bonding denom
+- the initial self-delegation tokens are of a denom not specified as the bonding denom
 - the commission parameters are faulty, namely:
   - `MaxRate` is either > 1 or < 0
   - the initial `Rate` is either negative or > `MaxRate`
@@ -104,10 +103,8 @@ This message is expected to fail if:
 
 When this message is processed the following actions occur:
 
-- validator's `DelegatorShares` and the delegation's `Shares` are both reduced
-  by the message `SharesAmount`
-- calculate the token worth of the shares remove that amount tokens held
-  within the validator
+- validator's `DelegatorShares` and the delegation's `Shares` are both reduced by the message `SharesAmount`
+- calculate the token worth of the shares remove that amount tokens held within the validator
 - with those removed tokens, if the validator is:
   - `Bonded` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares.
   - `Unbonding` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
@@ -149,5 +146,4 @@ When this message is processed the following actions occur:
   - `Unbonded` - no action required in this step
 - Delegate the token worth to the destination validator, possibly moving  tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
-  - under this situation if the delegation is the validator's self-delegation
-    then also jail the validator.
+  - under this situation if the delegation is the validator's self-delegation then also jail the validator.

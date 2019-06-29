@@ -36,6 +36,14 @@ func commit(cms types.CommitMultiStore, root Root) Root {
 	return root.Update(cid.Hash).(Root)
 }
 
+func queryMultiStore(t *testing.T, root Root, cms types.CommitMultiStore, key, value []byte) Proof {
+	q, p, err := root.QueryMultiStore(cms, key)
+	require.Equal(t, uint32(0), q.Code)
+	require.NoError(t, err)
+	require.Equal(t, value, q.Value)
+	return p
+}
+
 func TestStore(t *testing.T) {
 	k, ctx, cms, _ := defaultComponents()
 	kvstore := ctx.KVStore(k)
@@ -47,15 +55,9 @@ func TestStore(t *testing.T) {
 
 	root = commit(cms, root)
 
-	c1, v1, p1 := root.QueryMultiStore(cms, []byte("hello"))
-	require.Equal(t, uint32(0), c1)
-	require.Equal(t, []byte("world"), v1)
-	c2, v2, p2 := root.QueryMultiStore(cms, []byte("merkle"))
-	require.Equal(t, uint32(0), c2)
-	require.Equal(t, []byte("tree"), v2)
-	c3, v3, p3 := root.QueryMultiStore(cms, []byte("block"))
-	require.Equal(t, uint32(0), c3)
-	require.Equal(t, []byte("chain"), v3)
+	p1 := queryMultiStore(t, root, cms, []byte("hello"), []byte("world"))
+	p2 := queryMultiStore(t, root, cms, []byte("merkle"), []byte("tree"))
+	p3 := queryMultiStore(t, root, cms, []byte("block"), []byte("chain"))
 
 	cstore, err := commitment.NewStore(root, []commitment.Proof{p1, p2, p3})
 	require.NoError(t, err)
@@ -70,20 +72,16 @@ func TestStore(t *testing.T) {
 
 	root = commit(cms, root)
 
-	c1, v1, p1 = root.QueryMultiStore(cms, []byte("12345"))
-	require.Equal(t, uint32(0), c1)
-	require.Equal(t, []byte("67890"), v1)
-	c2, v2, p2 = root.QueryMultiStore(cms, []byte("qwerty"))
-	require.Equal(t, uint32(0), c2)
-	require.Equal(t, []byte("zxcv"), v2)
-	c3, v3, p3 = root.QueryMultiStore(cms, []byte("hello"))
-	require.Equal(t, uint32(0), c3)
-	require.Equal(t, []byte("dlrow"), v3)
+	p1 = queryMultiStore(t, root, cms, []byte("12345"), []byte("67890"))
+	p2 = queryMultiStore(t, root, cms, []byte("qwerty"), []byte("zxcv"))
+	p3 = queryMultiStore(t, root, cms, []byte("hello"), []byte("dlrow"))
+	p4 := queryMultiStore(t, root, cms, []byte("merkle"), []byte("tree"))
 
-	cstore, err = commitment.NewStore(root, []commitment.Proof{p1, p2, p3})
+	cstore, err = commitment.NewStore(root, []commitment.Proof{p1, p2, p3, p4})
 	require.NoError(t, err)
 
 	require.True(t, cstore.Prove([]byte("12345"), []byte("67890")))
 	require.True(t, cstore.Prove([]byte("qwerty"), []byte("zxcv")))
 	require.True(t, cstore.Prove([]byte("hello"), []byte("dlrow")))
+	require.True(t, cstore.Prove([]byte("merkle"), []byte("tree")))
 }

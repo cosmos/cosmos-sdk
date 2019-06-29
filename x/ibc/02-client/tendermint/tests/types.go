@@ -145,9 +145,10 @@ func (v *Verifier) Validate(header tendermint.Header) error {
 }
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	code, value, proof := node.Root.QueryMultiStore(node.Cms, k)
-	require.Equal(t, uint32(0), code)
-	return value, proof
+	qres, proof, err := node.Root.QueryMultiStore(node.Cms, k)
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+	return qres.Value, proof
 }
 
 func (node *Node) Set(k, value []byte) {

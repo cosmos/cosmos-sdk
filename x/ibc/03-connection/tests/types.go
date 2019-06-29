@@ -73,6 +73,11 @@ func (node *Node) UpdateClient(t *testing.T, header client.Header) {
 	require.NoError(t, err)
 }
 
+func (node *Node) SetState(state connection.State) {
+	node.State = state
+	node.Counterparty.State = state
+}
+
 func (node *Node) Object(t *testing.T, proofs []commitment.Proof) (sdk.Context, connection.Object) {
 	ctx := node.Context()
 	store, err := commitment.NewStore(node.Counterparty.Root, proofs)
@@ -80,7 +85,7 @@ func (node *Node) Object(t *testing.T, proofs []commitment.Proof) (sdk.Context, 
 	ctx = commitment.WithStore(ctx, store)
 	_, man := node.Manager()
 	switch node.State {
-	case connection.Idle:
+	case connection.Idle, connection.Init:
 		obj, err := man.Create(ctx, node.Name, node.Connection)
 		require.NoError(t, err)
 		return ctx, obj
@@ -98,9 +103,8 @@ func (node *Node) CLIObject() connection.CLIObject {
 }
 
 func base(cdc *codec.Codec, key sdk.StoreKey) (state.Base, state.Base) {
-	base := state.NewBase(cdc, key)
-	protocol := base.Prefix([]byte("protocol"))
-	free := base.Prefix([]byte("free"))
+	protocol := state.NewBase(cdc, key, []byte("protocol"))
+	free := state.NewBase(cdc, key, []byte("free"))
 	return protocol, free
 }
 
@@ -112,6 +116,7 @@ func (node *Node) Manager() (client.Manager, connection.Manager) {
 
 func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 	switch node.State {
+	// TODO: use different enum type for node.State
 	case connection.Idle: // self: Idle -> Init
 		ctx, obj := node.Object(t, proofs)
 		require.Equal(t, connection.Idle, obj.State(ctx))
@@ -119,7 +124,7 @@ func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 		require.NoError(t, err)
 		require.Equal(t, connection.Init, obj.State(ctx))
 		require.Equal(t, node.Connection, obj.Connection(ctx))
-		node.State = connection.Init
+		node.SetState(connection.Init)
 	case connection.Init: // counter: Idle -> OpenTry
 		ctx, obj := node.Counterparty.Object(t, proofs)
 		require.Equal(t, connection.Idle, obj.State(ctx))
@@ -127,7 +132,7 @@ func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 		require.NoError(t, err)
 		require.Equal(t, connection.OpenTry, obj.State(ctx))
 		require.Equal(t, node.Counterparty.Connection, obj.Connection(ctx))
-		node.State = connection.OpenTry
+		node.SetState(connection.OpenTry)
 	case connection.OpenTry: // self: Init -> Open
 		ctx, obj := node.Object(t, proofs)
 		require.Equal(t, connection.Init, obj.State(ctx))
@@ -135,7 +140,7 @@ func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 		require.NoError(t, err)
 		require.Equal(t, connection.Open, obj.State(ctx))
 		require.Equal(t, node.Connection, obj.Connection(ctx))
-		node.State = connection.Open
+		node.SetState(connection.Open)
 	case connection.Open: // counter: OpenTry -> Open
 		ctx, obj := node.Counterparty.Object(t, proofs)
 		require.Equal(t, connection.OpenTry, obj.State(ctx))
@@ -143,8 +148,8 @@ func (node *Node) Advance(t *testing.T, proofs ...commitment.Proof) {
 		require.NoError(t, err)
 		require.Equal(t, connection.Open, obj.State(ctx))
 		require.Equal(t, node.Counterparty.Connection, obj.Connection(ctx))
-		node.State = connection.CloseTry
-	// case connection.CloseTry // self: Open -> CloseTry
+		node.SetState(connection.CloseTry)
+		// case connection.CloseTry // self: Open -> CloseTry
 	default:
 		return
 	}

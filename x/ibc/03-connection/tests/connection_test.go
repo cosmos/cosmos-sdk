@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -36,22 +35,31 @@ func TestHandshake(t *testing.T) {
 	node.Advance(t)
 	header := node.Commit()
 
-	fmt.Printf("ddd\n\n\n\n%+v\n", node.Root)
-
 	// counterparty.OpenTry
 	node.Counterparty.UpdateClient(t, header)
 	cliobj := node.CLIObject()
 	_, pconn := node.Query(t, cliobj.ConnectionKey)
-	fmt.Printf("\n\n\n\n%s: %+v, %s\n", cliobj.ConnectionKey, pconn.(merkle.Proof).Proof, string(pconn.(merkle.Proof).Key))
 	_, pstate := node.Query(t, cliobj.StateKey)
 	_, ptimeout := node.Query(t, cliobj.NextTimeoutKey)
 	// TODO: implement consensus state checking
 	// _, pclient := node.Query(t, cliobj.Client.ConsensusStateKey)
-	node.Advance(t, pconn, pstate, ptimeout)
+	node.Advance(t, pconn, pstate, ptimeout /*, pclient*/)
+	header = node.Counterparty.Commit()
 
 	// self.OpenAck
-	node.Advance(t)
+	node.UpdateClient(t, header)
+	cliobj = node.Counterparty.CLIObject()
+	_, pconn = node.Counterparty.Query(t, cliobj.ConnectionKey)
+	_, pstate = node.Counterparty.Query(t, cliobj.StateKey)
+	_, ptimeout = node.Counterparty.Query(t, cliobj.NextTimeoutKey)
+	node.Advance(t, pconn, pstate, ptimeout)
+	header = node.Commit()
 
 	// counterparty.OpenConfirm
-	node.Advance(t)
+	node.Counterparty.UpdateClient(t, header)
+	cliobj = node.CLIObject()
+	_, pconn = node.Query(t, cliobj.ConnectionKey) // TODO: check if it is needed
+	_, pstate = node.Query(t, cliobj.StateKey)
+	_, ptimeout = node.Query(t, cliobj.NextTimeoutKey)
+	node.Advance(t, pconn, pstate, ptimeout)
 }

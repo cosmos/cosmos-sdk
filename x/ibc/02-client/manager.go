@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -28,7 +27,6 @@ type Manager struct {
 }
 
 func NewManager(protocol, free state.Base, idgen IDGenerator) Manager {
-	fmt.Println(1234567890, protocol, free)
 	return Manager{
 		protocol: state.NewMapping(protocol, []byte("/client")),
 		idval:    state.NewValue(free, []byte("/client/id")),

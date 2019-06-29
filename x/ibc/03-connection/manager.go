@@ -2,7 +2,6 @@ package connection
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -71,7 +70,6 @@ func (man CounterpartyManager) object(id string) CounterObject {
 }
 
 func (man Manager) Create(ctx sdk.Context, id string, connection Connection) (obj Object, err error) {
-	fmt.Println("create", id, connection)
 	obj = man.object(id)
 	if obj.exists(ctx) {
 		err = errors.New("connection already exists for the provided id")
@@ -202,24 +200,20 @@ func (obj Object) OpenTry(ctx sdk.Context, expheight uint64, timeoutHeight, next
 		return errors.New("invalid state")
 	}
 
-	fmt.Println(12345)
 	err := assertTimeout(ctx, timeoutHeight)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(67890)
 	if !obj.counterparty.state.Is(ctx, Init) {
 		return errors.New("counterparty state not init")
 	}
-	fmt.Println(97)
 
 	err = obj.assertSymmetric(ctx)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(65)
 	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
 		return errors.New("unexpected counterparty timeout value")
 	}

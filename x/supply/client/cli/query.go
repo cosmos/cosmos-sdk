@@ -34,7 +34,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryTotalSupply implements the query total supply command.
 func GetCmdQueryTotalSupply(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "total [denom (optional)]",
+		Use:   "total [denom]",
 		Args:  cobra.MaximumNArgs(1),
 		Short: "Query the total supply of coins of the chain",
 		Long: strings.TrimSpace(

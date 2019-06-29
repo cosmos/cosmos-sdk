@@ -63,5 +63,4 @@ func TestHandshake(t *testing.T) {
 	_, pstate = node.QueryValue(t, cliobj.State)
 	_, ptimeout = node.QueryValue(t, cliobj.NextTimeout)
 	node.Counterparty.OpenConfirm(t, pstate, ptimeout)
-
 }

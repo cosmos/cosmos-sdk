@@ -1,11 +1,11 @@
 package keys
 
 import (
-	"bufio"
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/tests"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,8 +26,8 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	// Try again
-	cleanUp := input.OverrideStdin(bufio.NewReader(strings.NewReader("Hi!\n")))
-	defer cleanUp()
+	mockIn, _, _ := tests.ApplyMockIO(cmdUser)
+	mockIn.Reset("Hi!\n")
 	err = runMnemonicCmd(cmdUser, []string{})
 	require.Error(t, err)
 	require.Equal(t,
@@ -36,22 +36,19 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 
 	// Now provide "good" entropy :)
 	fakeEntropy := strings.Repeat(":)", 40) + "\ny\n" // entropy + accept count
-	cleanUp2 := input.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
-	defer cleanUp2()
+	mockIn.Reset(fakeEntropy)
 	err = runMnemonicCmd(cmdUser, []string{})
 	require.NoError(t, err)
 
 	// Now provide "good" entropy but no answer
 	fakeEntropy = strings.Repeat(":)", 40) + "\n" // entropy + accept count
-	cleanUp3 := input.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
-	defer cleanUp3()
+	mockIn.Reset(fakeEntropy)
 	err = runMnemonicCmd(cmdUser, []string{})
 	require.Error(t, err)
 
 	// Now provide "good" entropy but say no
 	fakeEntropy = strings.Repeat(":)", 40) + "\nn\n" // entropy + accept count
-	cleanUp4 := input.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
-	defer cleanUp4()
+	mockIn.Reset(fakeEntropy)
 	err = runMnemonicCmd(cmdUser, []string{})
 	require.NoError(t, err)
 }

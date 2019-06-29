@@ -27,6 +27,7 @@ mytestnet
 # Testing
 coverage.txt
 profile.out
+sim_log_file
 
 # Vagrant
 .vagrant/

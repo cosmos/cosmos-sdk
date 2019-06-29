@@ -545,17 +545,22 @@ $ %s query staking pool
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, _, err := cliCtx.QueryStore(types.PoolKey, storeName)
+			bz, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(types.MustUnmarshalPool(cdc, res))
+			var pool types.Pool
+			if err := cdc.UnmarshalJSON(bz, &pool); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(pool)
 		},
 	}
 }
 
-// GetCmdQueryPool implements the params query command.
+// GetCmdQueryParams implements the params query command.
 func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "params",

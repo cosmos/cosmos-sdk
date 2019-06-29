@@ -28,17 +28,15 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc              *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain          *sdk.KVStoreKey
-	KeyAccount       *sdk.KVStoreKey
-	KeyFeeCollection *sdk.KVStoreKey
-	KeyParams        *sdk.KVStoreKey
-	TKeyParams       *sdk.TransientStoreKey
+	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
+	KeyMain    *sdk.KVStoreKey
+	KeyAccount *sdk.KVStoreKey
+	KeyParams  *sdk.KVStoreKey
+	TKeyParams *sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
-	AccountKeeper       auth.AccountKeeper
-	FeeCollectionKeeper auth.FeeCollectionKeeper
-	ParamsKeeper        params.Keeper
+	AccountKeeper auth.AccountKeeper
+	ParamsKeeper  params.Keeper
 
 	GenesisAccounts  []auth.Account
 	TotalCoinsSupply sdk.Coins
@@ -59,30 +57,27 @@ func NewApp() *App {
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
+	// define keepers
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
 
-	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
-	app.FeeCollectionKeeper = auth.NewFeeCollectionKeeper(
-		app.Cdc,
-		app.KeyFeeCollection,
-	)
+
+	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
 
 	// Not sealing for custom extension
 
@@ -94,7 +89,7 @@ func NewApp() *App {
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 	newKeys = append(
 		newKeys,
-		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams, app.KeyFeeCollection,
+		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams,
 	)
 
 	for _, key := range newKeys {
@@ -116,6 +111,7 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 // InitChainer performs custom logic for initialization.
 // nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
+
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, genacc.GetAddress())
@@ -123,7 +119,7 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
-	auth.InitGenesis(ctx, app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultGenesisState())
+	auth.InitGenesis(ctx, app.AccountKeeper, auth.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}
 }

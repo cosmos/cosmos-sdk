@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint
 const (
 	// Minimum time per block
 	minTimePerBlock int64 = 10000 / 2
@@ -148,6 +149,7 @@ var (
 	}
 )
 
+// TODO add description
 type (
 	AppParams      map[string]json.RawMessage
 	ParamSimulator func(r *rand.Rand)

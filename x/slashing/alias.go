@@ -46,8 +46,6 @@ var (
 	GetValidatorSigningInfoAddress           = types.GetValidatorSigningInfoAddress
 	GetValidatorMissedBlockBitArrayPrefixKey = types.GetValidatorMissedBlockBitArrayPrefixKey
 	GetValidatorMissedBlockBitArrayKey       = types.GetValidatorMissedBlockBitArrayKey
-	GetValidatorSlashingPeriodPrefix         = types.GetValidatorSlashingPeriodPrefix
-	GetValidatorSlashingPeriodKey            = types.GetValidatorSlashingPeriodKey
 	GetAddrPubkeyRelationKey                 = types.GetAddrPubkeyRelationKey
 	NewMsgUnjail                             = types.NewMsgUnjail
 	ParamKeyTable                            = types.ParamKeyTable
@@ -61,7 +59,6 @@ var (
 	ModuleCdc                       = types.ModuleCdc
 	ValidatorSigningInfoKey         = types.ValidatorSigningInfoKey
 	ValidatorMissedBlockBitArrayKey = types.ValidatorMissedBlockBitArrayKey
-	ValidatorSlashingPeriodKey      = types.ValidatorSlashingPeriodKey
 	AddrPubkeyRelationKey           = types.AddrPubkeyRelationKey
 	DoubleSignJailEndTime           = types.DoubleSignJailEndTime
 	DefaultMinSignedPerWindow       = types.DefaultMinSignedPerWindow

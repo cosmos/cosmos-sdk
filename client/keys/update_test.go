@@ -1,15 +1,12 @@
 package keys
 
 import (
-	"bufio"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -26,15 +23,12 @@ func Test_runUpdateCmd(t *testing.T) {
 	cmd := updateKeyCommand()
 
 	// fails because it requests a password
-	err := runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "EOF")
-
-	cleanUp := input.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))
-	defer cleanUp()
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
 
 	// try again
-	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "Key runUpdateCmd_Key1 not found")
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn.Reset("pass1234\n")
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -50,13 +44,10 @@ func Test_runUpdateCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try again now that we have keys
-	cleanUp2 := input.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\nNew1234\nNew1234")))
-	defer cleanUp2()
-
 	// Incorrect key type
+	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
 	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
 
 	// TODO: Check for other type types?
-
 }

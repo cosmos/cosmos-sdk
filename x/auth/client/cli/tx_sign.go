@@ -99,7 +99,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		}
 
 		offline := viper.GetBool(flagOffline)
-		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
@@ -222,7 +222,7 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := cliCtx.GetAccount(sigAddr)
+			acc, err := types.NewAccountRetriever(cliCtx).GetAccount(sigAddr)
 			if err != nil {
 				fmt.Printf("failed to get account: %s\n", sigAddr)
 				return false

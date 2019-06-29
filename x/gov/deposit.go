@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -37,9 +39,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Send coins from depositor's account to DepositedCoinsAccAddr account
-	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
-	err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	// update the governance module's account coins pool
+	err := keeper.supplyKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -63,8 +64,15 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		deposit = NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
 
-	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeProposalDeposit,
+			sdk.NewAttribute(types.AttributeKeyAmount, depositAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		),
+	)
 
+	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
 	return nil, activatedVotingPeriod
 }
 
@@ -96,11 +104,12 @@ func (keeper Keeper) GetDepositsIterator(ctx sdk.Context, proposalID uint64) sdk
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
+		err := keeper.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
+
 		store.Delete(DepositKey(proposalID, deposit.Depositor))
 		return false
 	})
@@ -110,8 +119,8 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	keeper.IterateDeposits(ctx, proposalID, func(deposit Deposit) bool {
-		err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
+		err := keeper.supplyKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

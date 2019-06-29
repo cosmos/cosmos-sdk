@@ -17,27 +17,30 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper         DistrKeeper
-	bankKeeper          BankKeeper
-	feeCollectionKeeper FeeCollectionKeeper
+	supplyKeeper types.SupplyKeeper
+
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper DistrKeeper, bankKeeper BankKeeper,
-	feeCollectionKeeper FeeCollectionKeeper) Keeper {
+	supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
 
 	return Keeper{
-		routes:              []types.InvarRoute{},
-		paramSpace:          paramSpace.WithKeyTable(types.ParamKeyTable()),
-		invCheckPeriod:      invCheckPeriod,
-		distrKeeper:         distrKeeper,
-		bankKeeper:          bankKeeper,
-		feeCollectionKeeper: feeCollectionKeeper,
+		routes:           []types.InvarRoute{},
+		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		invCheckPeriod:   invCheckPeriod,
+		supplyKeeper:     supplyKeeper,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
-// register routes for the
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
@@ -58,7 +61,8 @@ func (k Keeper) Invariants() []sdk.Invariant {
 }
 
 // assert all invariants
-func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
+func (k Keeper) AssertInvariants(ctx sdk.Context) {
+	logger := k.Logger(ctx)
 
 	start := time.Now()
 	invarRoutes := k.Routes()
@@ -76,7 +80,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context, logger log.Logger) {
 	end := time.Now()
 	diff := end.Sub(start)
 
-	logger.With("module", "x/crisis").Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 
 // DONTCOVER

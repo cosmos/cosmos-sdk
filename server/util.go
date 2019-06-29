@@ -58,10 +58,6 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
-		err = validateConfig(config)
-		if err != nil {
-			return err
-		}
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
@@ -103,6 +99,9 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 	if conf == nil {
 		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	appConfigFilePath := filepath.Join(rootDir, "config/app.toml")
@@ -115,14 +114,6 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	err = viper.MergeInConfig()
 
 	return
-}
-
-// validate the config with the sdk's requirements.
-func validateConfig(conf *cfg.Config) error {
-	if !conf.Consensus.CreateEmptyBlocks {
-		return errors.New("config option CreateEmptyBlocks = false is currently unsupported")
-	}
-	return nil
 }
 
 // add server commands
@@ -256,3 +247,5 @@ func addrToIP(addr net.Addr) net.IP {
 	}
 	return ip
 }
+
+// DONTCOVER

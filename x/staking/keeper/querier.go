@@ -298,7 +298,7 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 
 		redels = []types.Redelegation{redel}
 	} else if params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && params.DstValidatorAddr.Empty() {
-		redels = k.GetRedelegationsFromValidator(ctx, params.SrcValidatorAddr)
+		redels = k.GetRedelegationsFromSrcValidator(ctx, params.SrcValidatorAddr)
 	} else {
 		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 	}
@@ -317,7 +317,17 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 }
 
 func queryPool(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
-	pool := k.GetPool(ctx)
+	bondDenom := k.BondDenom(ctx)
+	bondedPool := k.GetBondedPool(ctx)
+	notBondedPool := k.GetNotBondedPool(ctx)
+	if bondedPool == nil || notBondedPool == nil {
+		return nil, sdk.ErrInternal("pool accounts haven't been set")
+	}
+
+	pool := types.NewPool(
+		notBondedPool.GetCoins().AmountOf(bondDenom),
+		bondedPool.GetCoins().AmountOf(bondDenom),
+	)
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, pool)
 	if err != nil {

@@ -7,6 +7,7 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = github.com/cosmos/cosmos-sdk/simapp
+MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
@@ -32,6 +33,12 @@ update-swagger-docs:
 dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh
+
+mocks: $(MOCKS_DIR)
+	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+
+$(MOCKS_DIR):
+	mkdir -p $(MOCKS_DIR)
 
 ########################################
 ### Tools & dependencies
@@ -118,7 +125,7 @@ test_sim_benchmark_invariants:
 
 # Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
-$(BINDIR)/runsim: contrib/runsim/main.go
+$(BINDIR)/runsim: contrib/runsim/main.go contrib/runsim/notification.go
 	go install github.com/cosmos/cosmos-sdk/contrib/runsim
 
 SIM_NUM_BLOCKS ?= 500
@@ -138,8 +145,7 @@ test_sim_app_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-lint: tools ci-lint
-ci-lint:
+lint: golangci-lint
 	golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
@@ -186,7 +192,7 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist clean test test_unit test_cover lint \
+.PHONY: build dist clean test test_unit test_cover lint mocks \
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \

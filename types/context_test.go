@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -183,4 +186,28 @@ func TestContextWithCustom(t *testing.T) {
 	require.Equal(t, voteinfos, ctx.VoteInfos())
 	require.Equal(t, meter, ctx.GasMeter())
 	require.Equal(t, minGasPrices, ctx.MinGasPrices())
+}
+
+// Testing saving/loading of header fields to/from the context
+func TestContextHeader(t *testing.T) {
+	var ctx types.Context
+
+	require.Panics(t, func() { ctx.BlockHeader() })
+	require.Panics(t, func() { ctx.BlockHeight() })
+
+	height := int64(5)
+	time := time.Now()
+	addr := secp256k1.GenPrivKey().PubKey().Address()
+	proposer := types.ConsAddress(addr)
+
+	ctx = types.NewContext(nil, abci.Header{}, false, nil)
+
+	ctx = ctx.
+		WithBlockHeight(height).
+		WithBlockTime(time).
+		WithProposer(proposer)
+	require.Equal(t, height, ctx.BlockHeight())
+	require.Equal(t, height, ctx.BlockHeader().Height)
+	require.Equal(t, time, ctx.BlockHeader().Time)
+	require.Equal(t, proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }

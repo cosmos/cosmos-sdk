@@ -36,6 +36,9 @@ func queryLiquidity(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 
 	nativeDenom := k.GetNativeDenom(ctx)
 	moduleName, err := k.GetModuleName(nativeDenom, denom)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not retrieve module name", err.Error()))
+	}
 	reservePool, found := k.GetReservePool(ctx, moduleName)
 	if !found {
 		return nil, sdk.ErrInternal("reserve pool does not exist")

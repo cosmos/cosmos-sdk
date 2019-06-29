@@ -1,6 +1,5 @@
 package keeper
 
-/*
 import (
 	"testing"
 
@@ -16,12 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
-	//supply "github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	supplyKeeper "github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	supply "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
-
-// TODO: uncomment when supply is merged into master
 
 // create a codec used only for testing
 func makeTestCodec() *codec.Codec {
@@ -57,17 +55,16 @@ func createTestInput(t *testing.T, amt sdk.Int, nAccs int64) (sdk.Context, Keepe
 	cdc := makeTestCodec()
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "coinswap-chain"}, false, log.NewNopLogger())
 
-	pk := params.NewKeeper(types.ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
-	ak := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
 	initialCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 	accs := createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
-	sk := supply.NewKeeper(cdc, keySupply, ak, bk, suppy.DefaultCodespace)
+	sk := supplyKeeper.NewKeeper(cdc, keySupply, ak, bk, supplyKeeper.DefaultCodespace, []string{supply.Basic}, []string{supply.Minter}, []string{supply.Burner})
 	keeper := NewKeeper(cdc, keyCoinswap, bk, sk, pk.Subspace(types.DefaultParamspace))
-	params := types.DefaultParams()
-	keeper.SetFeeParam(ctx, params.Fee)
+	keeper.SetParams(ctx, types.DefaultParams())
 
 	return ctx, keeper, accs
 }
@@ -85,4 +82,3 @@ func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *au
 	}
 	return
 }
-*/

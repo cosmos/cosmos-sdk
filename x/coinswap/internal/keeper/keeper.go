@@ -42,7 +42,8 @@ func (keeper Keeper) CreateReservePool(ctx sdk.Context, moduleName string) {
 	if moduleAcc != nil {
 		panic(fmt.Sprintf("reserve pool for %s already exists", moduleName))
 	}
-	moduleAcc = supply.NewEmptyModuleAccount(moduleName, "minter/burner")
+	// TODO: add burning permissions
+	moduleAcc = supply.NewEmptyModuleAccount(moduleName, "minter")
 	keeper.sk.SetModuleAccount(ctx, moduleAcc)
 }
 
@@ -109,9 +110,9 @@ func (keeper Keeper) GetFeeParam(ctx sdk.Context) (feeParam types.FeeParam) {
 	return
 }
 
-// SetFeeParam sets the fee parameter.
-func (keeper Keeper) SetFeeParam(ctx sdk.Context, feeParam types.FeeParam) {
-	keeper.paramSpace.Set(ctx, types.KeyFee, &feeParam)
+// SetParams sets the parameters for the coinswap module.
+func (keeper Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	keeper.paramSpace.SetParamSet(ctx, &params)
 }
 
 // Logger returns a module-specific logger.

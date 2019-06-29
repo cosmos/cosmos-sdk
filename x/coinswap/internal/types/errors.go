@@ -1,3 +1,4 @@
+// nolint
 package types
 
 import (
@@ -23,7 +24,7 @@ func ErrReservePoolAlreadyExists(codespace sdk.CodespaceType, msg string) sdk.Er
 
 func ErrEqualDenom(codespace sdk.CodespaceType, msg string) sdk.Error {
 	if msg != "" {
-		sdk.NewError(codespace, CodeEqualDenom, msg)
+		return sdk.NewError(codespace, CodeEqualDenom, msg)
 	}
 	return sdk.NewError(codespace, CodeEqualDenom, "input and output denomination are equal")
 }

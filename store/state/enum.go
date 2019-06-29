@@ -14,7 +14,7 @@ func (v Enum) Get(ctx Context) (res byte) {
 }
 
 func (v Enum) GetSafe(ctx Context) (res byte, err error) {
-	v.Value.GetSafe(ctx, &res)
+	err = v.Value.GetSafe(ctx, &res)
 	return
 }
 

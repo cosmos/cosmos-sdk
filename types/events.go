@@ -164,10 +164,26 @@ func (se StringEvents) String() string {
 	return strings.TrimRight(sb.String(), "\n")
 }
 
+// Flatten returns a flattened version of StringEvents by grouping all attributes
+// per unique event type.
+func (se StringEvents) Flatten() StringEvents {
+	flatEvents := make(map[string][]Attribute)
+
+	for _, e := range se {
+		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
+	}
+
+	var res StringEvents
+	for ty, attrs := range flatEvents {
+		res = append(res, StringEvent{Type: ty, Attributes: attrs})
+	}
+
+	return res
+}
+
 // StringifyEvent converts an Event object to a StringEvent object.
 func StringifyEvent(e abci.Event) StringEvent {
-	res := StringEvent{}
-	res.Type = e.Type
+	res := StringEvent{Type: e.Type}
 
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
@@ -188,5 +204,5 @@ func StringifyEvents(events []abci.Event) StringEvents {
 		res = append(res, StringifyEvent(e))
 	}
 
-	return res
+	return res.Flatten()
 }

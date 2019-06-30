@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,20 +38,20 @@ func TestNewQuerier(t *testing.T) {
 	bz, errRes := keeper.cdc.MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
-	query.Path = "/custom/supply/totalSupply"
+	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
 	query.Data = bz
 
-	_, err = querier(ctx, []string{"totalSupply"}, query)
+	_, err = querier(ctx, []string{types.QueryTotalSupply}, query)
 	require.Nil(t, err)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
 	bz, errRes = keeper.cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
-	query.Path = "/custom/supply/supplyOf"
+	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)
 	query.Data = bz
 
-	_, err = querier(ctx, []string{"supplyOf"}, query)
+	_, err = querier(ctx, []string{types.QuerySupplyOf}, query)
 	require.Nil(t, err)
 }
 
@@ -75,7 +76,7 @@ func TestQuerySupply(t *testing.T) {
 		Data: []byte{},
 	}
 
-	query.Path = "/custom/supply/totalSupply"
+	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
 	query.Data = bz
 
 	res, err := queryTotalSupply(ctx, query, keeper)
@@ -90,7 +91,7 @@ func TestQuerySupply(t *testing.T) {
 	bz, errRes = keeper.cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
-	query.Path = "/custom/supply/supplyOf"
+	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)
 	query.Data = bz
 
 	res, err = querySupplyOf(ctx, query, keeper)

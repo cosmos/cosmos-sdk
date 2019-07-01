@@ -1,0 +1,2 @@
+#4619 Close iterators in `GetAllMatureValidatorQueue` and `UnbondAllMatureValidatorQueue`
+methods.

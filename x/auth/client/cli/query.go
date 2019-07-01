@@ -72,8 +72,8 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 	return flags.GetCommands(cmd)[0]
 }
 
-// QueryTxsByTagsCmd returns a command to search through tagged transactions.
-func QueryTxsByTagsCmd(cdc *codec.Codec) *cobra.Command {
+// QueryTxsByEventsCmd returns a command to search through transactions by events.
+func QueryTxsByEventsCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Query for paginated transactions that match a set of tags",
@@ -116,7 +116,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 			limit := viper.GetInt(flagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := utils.QueryTxsByTags(cliCtx, tmTags, page, limit)
+			txs, err := utils.QueryTxsByEvents(cliCtx, tmTags, page, limit)
 			if err != nil {
 				return err
 			}

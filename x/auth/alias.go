@@ -12,7 +12,7 @@ import (
 const (
 	ModuleName                    = types.ModuleName
 	StoreKey                      = types.StoreKey
-	FeeStoreKey                   = types.FeeStoreKey
+	FeeCollectorName              = types.FeeCollectorName
 	QuerierRoute                  = types.QuerierRoute
 	DefaultParamspace             = types.DefaultParamspace
 	DefaultMaxMemoCharacters      = types.DefaultMaxMemoCharacters
@@ -34,8 +34,6 @@ var (
 	NewDelayedVestingAccountRaw    = types.NewDelayedVestingAccountRaw
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
 	RegisterCodec                  = types.RegisterCodec
-	RegisterBaseAccount            = types.RegisterBaseAccount
-	NewFeeCollectionKeeper         = types.NewFeeCollectionKeeper
 	NewGenesisState                = types.NewGenesisState
 	DefaultGenesisState            = types.DefaultGenesisState
 	ValidateGenesis                = types.ValidateGenesis
@@ -43,6 +41,7 @@ var (
 	NewParams                      = types.NewParams
 	ParamKeyTable                  = types.ParamKeyTable
 	DefaultParams                  = types.DefaultParams
+	NewQueryAccountParams          = types.NewQueryAccountParams
 	NewStdTx                       = types.NewStdTx
 	CountSubKeys                   = types.CountSubKeys
 	NewStdFee                      = types.NewStdFee
@@ -72,9 +71,9 @@ type (
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
 	DelayedVestingAccount    = types.DelayedVestingAccount
-	FeeCollectionKeeper      = types.FeeCollectionKeeper
 	GenesisState             = types.GenesisState
 	Params                   = types.Params
+	QueryAccountParams       = types.QueryAccountParams
 	StdSignMsg               = types.StdSignMsg
 	StdTx                    = types.StdTx
 	StdFee                   = types.StdFee

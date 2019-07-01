@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -23,11 +24,11 @@ var (
 func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper, distr.Keeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
-	ctx, accKeeper, bankKeeper, distrKeeper, _, feeCollectionKeeper, paramsKeeper :=
+	ctx, accKeeper, _, distrKeeper, _, paramsKeeper, supplyKeeper :=
 		distr.CreateTestInputAdvanced(t, false, 10, communityTax)
 
 	paramSpace := paramsKeeper.Subspace(DefaultParamspace)
-	crisisKeeper := NewKeeper(paramSpace, 1, distrKeeper, bankKeeper, feeCollectionKeeper)
+	crisisKeeper := NewKeeper(paramSpace, 1, supplyKeeper, auth.FeeCollectorName)
 	constantFee := sdk.NewInt64Coin("stake", 10000000)
 	crisisKeeper.SetConstantFee(ctx, constantFee)
 
@@ -105,7 +106,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := Keeper{}
 	h := NewHandler(k)
 
-	res := h(sdk.Context{}, sdk.NewTestMsg())
+	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized crisis message type"))
 }

@@ -88,31 +88,6 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) expor
 	return val
 }
 
-// total staking tokens supply which is bonded
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
-	pool := k.GetPool(ctx)
-	return pool.BondedTokens
-}
-
-// total staking tokens supply bonded and unbonded
-func (k Keeper) TotalTokens(ctx sdk.Context) sdk.Int {
-	pool := k.GetPool(ctx)
-	return pool.TokenSupply()
-}
-
-// the fraction of the staking tokens which are currently bonded
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	pool := k.GetPool(ctx)
-	return pool.BondedRatio()
-}
-
-// when minting new tokens
-func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
-	pool := k.GetPool(ctx)
-	pool.NotBondedTokens = pool.NotBondedTokens.Add(newTokens)
-	k.SetPool(ctx, pool)
-}
-
 //_______________________________________________________________________
 // Delegation Set
 

@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"crypto/sha1"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 // NFTs are stored as follow:
@@ -19,7 +20,7 @@ var (
 // GetCollectionKey gets the key of a collection
 func GetCollectionKey(denom string) []byte {
 
-	h := sha1.New()
+	h := tmhash.New()
 	_, err := h.Write([]byte(denom))
 	if err != nil {
 		panic(err)
@@ -31,8 +32,8 @@ func GetCollectionKey(denom string) []byte {
 
 // SplitOwnerKey gets an address and denom from an owner key
 func SplitOwnerKey(key []byte) (sdk.AccAddress, []byte) {
-	if len(key) != 41 {
-		panic("unexpected key length")
+	if len(key) != 53 {
+		panic(fmt.Sprintf("unexpected key length %d", len(key)))
 	}
 	address := key[1 : sdk.AddrLen+1]
 	denomHashBz := key[sdk.AddrLen+1:]
@@ -47,7 +48,7 @@ func GetOwnersKey(address sdk.AccAddress) []byte {
 // GetOwnerKey gets the key of a collection owned by an account address
 func GetOwnerKey(address sdk.AccAddress, denom string) []byte {
 
-	h := sha1.New()
+	h := tmhash.New()
 	_, err := h.Write([]byte(denom))
 	if err != nil {
 		panic(err)

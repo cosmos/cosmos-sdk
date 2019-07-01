@@ -552,7 +552,7 @@ func TestCheckTx(t *testing.T) {
 		tx := newTxCounter(i, 0)
 		txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
-		r := app.CheckTx(txBytes)
+		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
 		assert.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
@@ -607,7 +607,7 @@ func TestDeliverTx(t *testing.T) {
 			txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
 			require.NoError(t, err)
 
-			res := app.DeliverTx(txBytes)
+			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 		}
 
@@ -650,7 +650,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	tx := newTxCounter(0, 0, 1, 2)
 	txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
-	res := app.DeliverTx(txBytes)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	store := app.deliverState.ctx.KVStore(capKey1)
@@ -670,7 +670,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	tx.Msgs = append(tx.Msgs, msgCounter2{1})
 	txBytes, err = codec.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
-	res = app.DeliverTx(txBytes)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	store = app.deliverState.ctx.KVStore(capKey1)
@@ -836,7 +836,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		txBytes, err := newCdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
-		res := app.DeliverTx(txBytes)
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 		require.EqualValues(t, sdk.CodeTxDecode, res.Code)
 		require.EqualValues(t, sdk.CodespaceRoot, res.Codespace)
 	}
@@ -1055,7 +1055,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
-	res := app.DeliverTx(txBytes)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx := app.getState(runTxModeDeliver).ctx
@@ -1070,7 +1070,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 
-	res = app.DeliverTx(txBytes)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx
@@ -1085,7 +1085,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 
-	res = app.DeliverTx(txBytes)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx
@@ -1161,7 +1161,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 
-	res := app.DeliverTx(txBytes)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	// require next tx to fail due to black gas limit
@@ -1169,7 +1169,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 
-	res = app.DeliverTx(txBytes)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 

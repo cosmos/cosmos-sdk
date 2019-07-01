@@ -138,20 +138,27 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs []*sdk.SearchTxsResult
-		var actions []string
+
+		var (
+			txs     []*sdk.SearchTxsResult
+			actions []string
+		)
 
 		switch {
 		case isBondTx:
 			actions = append(actions, types.MsgDelegate{}.Type())
+
 		case isUnbondTx:
 			actions = append(actions, types.MsgUndelegate{}.Type())
+
 		case isRedTx:
 			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+
 		case noQuery:
 			actions = append(actions, types.MsgDelegate{}.Type())
 			actions = append(actions, types.MsgUndelegate{}.Type())
 			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+
 		default:
 			w.WriteHeader(http.StatusNoContent)
 			return

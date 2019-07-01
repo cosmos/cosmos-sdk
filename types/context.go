@@ -41,6 +41,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 		pst:     newThePast(),
 		gen:     0,
 	}
+
 	c = c.WithMultiStore(ms)
 	c = c.WithBlockHeader(header)
 	c = c.WithChainID(header.ChainID)
@@ -51,6 +52,8 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithGasMeter(stypes.NewInfiniteGasMeter())
 	c = c.WithMinGasPrices(DecCoins{})
 	c = c.WithConsensusParams(nil)
+	c = c.WithEventManager(NewEventManager())
+
 	return c
 }
 
@@ -59,8 +62,26 @@ func (c Context) IsZero() bool {
 	return c.Context == nil
 }
 
-//----------------------------------------
-// Getting a value
+// ----------------------------------------------------------------------------
+// Getters
+// ----------------------------------------------------------------------------
+
+type contextKey int // local to the context module
+
+const (
+	contextKeyMultiStore contextKey = iota
+	contextKeyBlockHeader
+	contextKeyChainID
+	contextKeyIsCheckTx
+	contextKeyTxBytes
+	contextKeyLogger
+	contextKeyVoteInfos
+	contextKeyGasMeter
+	contextKeyBlockGasMeter
+	contextKeyMinGasPrices
+	contextKeyConsensusParams
+	contextKeyEventManager
+)
 
 // context value for the provided key
 func (c Context) Value(key interface{}) interface{} {
@@ -74,20 +95,42 @@ func (c Context) Value(key interface{}) interface{} {
 	return value
 }
 
-// KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
+func (c Context) MultiStore() MultiStore {
+	return c.Value(contextKeyMultiStore).(MultiStore)
 }
 
-// TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
+func (c Context) BlockHeader() abci.Header { return c.Value(contextKeyBlockHeader).(abci.Header) }
+
+func (c Context) BlockHeight() int64 { return c.BlockHeader().Height }
+
+func (c Context) ChainID() string { return c.Value(contextKeyChainID).(string) }
+
+func (c Context) TxBytes() []byte { return c.Value(contextKeyTxBytes).([]byte) }
+
+func (c Context) Logger() log.Logger { return c.Value(contextKeyLogger).(log.Logger) }
+
+func (c Context) VoteInfos() []abci.VoteInfo {
+	return c.Value(contextKeyVoteInfos).([]abci.VoteInfo)
 }
 
-//----------------------------------------
-// With* (setting a value)
+func (c Context) GasMeter() GasMeter { return c.Value(contextKeyGasMeter).(GasMeter) }
 
-// nolint
+func (c Context) BlockGasMeter() GasMeter { return c.Value(contextKeyBlockGasMeter).(GasMeter) }
+
+func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
+
+func (c Context) MinGasPrices() DecCoins { return c.Value(contextKeyMinGasPrices).(DecCoins) }
+
+func (c Context) ConsensusParams() *abci.ConsensusParams {
+	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
+}
+
+func (c Context) EventManager() *EventManager { return c.Value(contextKeyEventManager).(*EventManager) }
+
+// ----------------------------------------------------------------------------
+// Setters
+// ----------------------------------------------------------------------------
+
 func (c Context) WithValue(key interface{}, value interface{}) Context {
 	return c.withValue(key, value)
 }
@@ -125,55 +168,6 @@ func (c Context) withValue(key interface{}, value interface{}) Context {
 		pst:     c.pst,
 		gen:     c.gen + 1,
 	}
-}
-
-//----------------------------------------
-// Values that require no key.
-
-type contextKey int // local to the context module
-
-const (
-	contextKeyMultiStore contextKey = iota
-	contextKeyBlockHeader
-	contextKeyChainID
-	contextKeyIsCheckTx
-	contextKeyTxBytes
-	contextKeyLogger
-	contextKeyVoteInfos
-	contextKeyGasMeter
-	contextKeyBlockGasMeter
-	contextKeyMinGasPrices
-	contextKeyConsensusParams
-)
-
-func (c Context) MultiStore() MultiStore {
-	return c.Value(contextKeyMultiStore).(MultiStore)
-}
-
-func (c Context) BlockHeader() abci.Header { return c.Value(contextKeyBlockHeader).(abci.Header) }
-
-func (c Context) BlockHeight() int64 { return c.BlockHeader().Height }
-
-func (c Context) ChainID() string { return c.Value(contextKeyChainID).(string) }
-
-func (c Context) TxBytes() []byte { return c.Value(contextKeyTxBytes).([]byte) }
-
-func (c Context) Logger() log.Logger { return c.Value(contextKeyLogger).(log.Logger) }
-
-func (c Context) VoteInfos() []abci.VoteInfo {
-	return c.Value(contextKeyVoteInfos).([]abci.VoteInfo)
-}
-
-func (c Context) GasMeter() GasMeter { return c.Value(contextKeyGasMeter).(GasMeter) }
-
-func (c Context) BlockGasMeter() GasMeter { return c.Value(contextKeyBlockGasMeter).(GasMeter) }
-
-func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
-
-func (c Context) MinGasPrices() DecCoins { return c.Value(contextKeyMinGasPrices).(DecCoins) }
-
-func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
 }
 
 func (c Context) WithMultiStore(ms MultiStore) Context {
@@ -229,6 +223,24 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	return c.withValue(contextKeyConsensusParams, params)
+}
+
+func (c Context) WithEventManager(em *EventManager) Context {
+	return c.WithValue(contextKeyEventManager, em)
+}
+
+// ----------------------------------------------------------------------------
+// Store / Caching
+// ----------------------------------------------------------------------------
+
+// KVStore fetches a KVStore from the MultiStore.
+func (c Context) KVStore(key StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
+}
+
+// TransientStore fetches a TransientStore from the MultiStore.
+func (c Context) TransientStore(key StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
 }
 
 // Cache the multistore and return a new cached context. The cached context is

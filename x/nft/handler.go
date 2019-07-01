@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/tags"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -50,15 +49,16 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 		return err.Result()
 	}
 
-	return sdk.Result{
-		Tags: sdk.NewTags(
-			tags.Category, tags.TxCategory,
-			tags.Sender, msg.Sender.String(),
-			tags.Recipient, msg.Recipient.String(),
-			tags.Denom, msg.Denom,
-			tags.NFTID, msg.ID,
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, msg.Recipient.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
+			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
 		),
-	}
+	)
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 // HandleMsgEditNFTMetadata handler for MsgEditNFTMetadata
@@ -82,14 +82,19 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 		return err.Result()
 	}
 
-	return sdk.Result{
-		Tags: sdk.NewTags(
-			tags.Category, tags.TxCategory,
-			tags.Sender, msg.Owner.String(),
-			tags.Denom, msg.Denom,
-			tags.NFTID, msg.ID,
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeEditNFTMetadata,
+			sdk.NewAttribute(types.AttributeKeySender, msg.Owner.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
+			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
+			sdk.NewAttribute(types.AttributeKeyNFTName, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyNFTDescription, msg.Description),
+			sdk.NewAttribute(types.AttributeKeyNFTImage, msg.Image),
+			sdk.NewAttribute(types.AttributeKeyNFTTokenURI, msg.TokenURI),
 		),
-	}
+	)
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 // HandleMsgMintNFT handles MsgMintNFT
@@ -102,16 +107,21 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 		return err.Result()
 	}
 
-	resTags := sdk.NewTags(
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.Sender.String(),
-		tags.Recipient, msg.Recipient.String(),
-		tags.Denom, msg.Denom,
-		tags.NFTID, msg.ID,
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeMintNFT,
+			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, msg.Recipient.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
+			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
+			sdk.NewAttribute(types.AttributeKeyNFTName, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyNFTDescription, msg.Description),
+			sdk.NewAttribute(types.AttributeKeyNFTImage, msg.Image),
+			sdk.NewAttribute(types.AttributeKeyNFTTokenURI, msg.TokenURI),
+		),
 	)
-	return sdk.Result{
-		Tags: resTags,
-	}
+	return sdk.Result{Events: ctx.EventManager().Events()}
+
 }
 
 // HandleMsgBurnNFT handles MsgBurnNFT
@@ -134,18 +144,18 @@ func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 		return err.Result()
 	}
 
-	resTags := sdk.NewTags(
-		tags.Category, tags.TxCategory,
-		tags.Sender, msg.Sender.String(),
-		tags.Denom, msg.Denom,
-		tags.NFTID, msg.ID,
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeBurnNFT,
+			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
+			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
+		),
 	)
-	return sdk.Result{
-		Tags: resTags,
-	}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 // EndBlocker is run at the end of the block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return nil, nil
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+	return nil
 }

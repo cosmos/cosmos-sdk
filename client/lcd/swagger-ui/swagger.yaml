@@ -21,6 +21,9 @@ tags:
     description: Slashing module APIs
   - name: Distribution
     description: Fee distribution module APIs
+  - name: Supply
+    description: Supply module APIs
+  - name: version
   - name: Mint
     description: Minting module APIs
   - name: Misc
@@ -225,21 +228,19 @@ paths:
       tags:
         - Transactions
       summary: Search transactions
-      description: Search transactions by tag(s).
+      description: Search transactions by events.
       produces:
         - application/json
       parameters:
         - in: query
-          name: action
+          name: message.action
           type: string
-          description: "transaction tags such as 'action=send' which results in the following endpoint: 'GET /txs?action=send'"
-          required: true
+          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'"
           x-example: "send"
         - in: query
-          name: sender
+          name: message.sender
           type: string
-          description: "transaction tags with sender: 'GET /txs?action=send&sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
-          required: true
+          description: "transaction tags with sender: 'GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
           x-example: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv"
         - in: query
           name: page
@@ -253,11 +254,11 @@ paths:
           x-example: 1
       responses:
         200:
-          description: All txs matching the provided tags
+          description: All txs matching the provided events
           schema:
             $ref: "#/definitions/PaginatedQueryTxs"
         400:
-          description: Invalid search tags
+          description: Invalid search events
         500:
           description: Internal Server Error
     post:
@@ -1829,6 +1830,43 @@ paths:
             type: string
         500:
           description: Internal Server Error
+  /supply/total:
+    get:
+      summary: Total supply of coins in the chain
+      tags:
+        - Supply
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Supply"
+        500:
+          description: Internal Server Error
+  /supply/total/{denomination}:
+    parameters:
+      - in: path
+        name: denomination
+        description: Coin denomination
+        required: true
+        type: string
+        x-example: uatom
+    get:
+      summary: Total supply of a single coin denomination
+      tags:
+        - Supply
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+             type: integer
+        400:
+          description: Invalid coin denomination
+        500:
+          description: Internal Server Error
 definitions:
   CheckTxResult:
     type: object
@@ -2437,3 +2475,10 @@ definitions:
         example: ""
       value:
         type: object
+  Supply:
+    type: object
+    properties:
+      total:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"

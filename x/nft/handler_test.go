@@ -307,4 +307,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	// the NFT should not exist after burn
 	exists = k.IsNFT(ctx, denom, id)
 	require.False(t, exists)
+
+	ownerReturned := k.GetOwner(ctx, owner)
+	require.Equal(t, 0, ownerReturned.Supply())
 }

@@ -12,12 +12,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type mockResponseWriter struct{}
@@ -145,6 +145,17 @@ func TestParseQueryHeight(t *testing.T) {
 }
 
 func TestProcessPostResponse(t *testing.T) {
+	// mock account
+	// PubKey field ensures amino encoding is used first since standard
+	// JSON encoding will panic on crypto.PubKey
+	type mockAccount struct {
+		Address       types.AccAddress `json:"address"`
+		Coins         types.Coins      `json:"coins"`
+		PubKey        crypto.PubKey    `json:"public_key"`
+		AccountNumber uint64           `json:"account_number"`
+		Sequence      uint64           `json:"sequence"`
+	}
+
 	// setup
 	ctx := context.NewCLIContext()
 	height := int64(194423)
@@ -156,9 +167,10 @@ func TestProcessPostResponse(t *testing.T) {
 	accNumber := uint64(104)
 	sequence := uint64(32)
 
-	acc := authtypes.NewBaseAccount(addr, coins, pubKey, accNumber, sequence)
+	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
 	cdc := codec.New()
-	authtypes.RegisterBaseAccount(cdc)
+	codec.RegisterCrypto(cdc)
+	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 
 	// setup expected json responses with zero height

@@ -31,7 +31,7 @@ type BaseNFT struct {
 	Name        string         `json:"name"`         // name of the token
 	Description string         `json:"description"`  // unique description of the NFT
 	Image       string         `json:"image"`        // image path
-	TokenURI    string         `json:"token_uri"`    // optional extra properties available fo querying
+	TokenURI    string         `json:"token_uri"`    // optional extra properties available for querying
 }
 
 // NewBaseNFT creates a new NFT instance

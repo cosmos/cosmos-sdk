@@ -108,12 +108,11 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
+	// TODO: use the custom collection MarshalJSON
+
 	// collections := types.NewCollections(collection)
-	// fmt.Println("collections", collections)
 
 	bz := types.ModuleCdc.MustMarshalJSON(collection)
-	// fmt.Println("bytes collection", bz)
-	// fmt.Println("bytes collection string", string(bz))
 	// bz, err := collections.MarshalJSON()
 	// if err != nil {
 	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
@@ -139,13 +138,6 @@ func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (
 		return nil, types.ErrUnknownNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%s from collection %s", params.TokenID, params.Denom))
 	}
 
-	nfts := types.NewNFTs(nft)
-	bz := types.ModuleCdc.MustMarshalJSON(nfts)
-
-	// bz, err := nfts.MarshalJSON()
-	// if err != nil {
-	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	// }
-
+	bz := types.ModuleCdc.MustMarshalJSON(nft)
 	return bz, nil
 }

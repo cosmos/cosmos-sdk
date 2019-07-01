@@ -307,9 +307,9 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 }
 
 // get slash event for height
-func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height uint64) (event types.ValidatorSlashEvent, found bool) {
+func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(GetValidatorSlashEventKey(val, height))
+	b := store.Get(GetValidatorSlashEventKey(val, height, period))
 	if b == nil {
 		return types.ValidatorSlashEvent{}, false
 	}
@@ -318,10 +318,10 @@ func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 }
 
 // set slash event for height
-func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) {
+func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(event)
-	store.Set(GetValidatorSlashEventKey(val, height), b)
+	store.Set(GetValidatorSlashEventKey(val, height, period), b)
 }
 
 // iterate over slash events between heights, inclusive
@@ -329,8 +329,8 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValA
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(
-		GetValidatorSlashEventKey(val, startingHeight),
-		GetValidatorSlashEventKey(val, endingHeight+1),
+		GetValidatorSlashEventKeyPrefix(val, startingHeight),
+		GetValidatorSlashEventKeyPrefix(val, endingHeight+1),
 	)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {

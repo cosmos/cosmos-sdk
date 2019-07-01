@@ -2,9 +2,10 @@
 
 ## Supply
 
-The `supply` module introduces a passive tracker for the supply of coins in the
-chain, which allows to check for invariants of `Coins` with respect to the sum
-of `Coins` hold the stored `Accounts`.
+The `supply` module: 
+ - passively tracks the total supply of coins within a chain, 
+ - provides a pattern for modules to hold/interact with `Coins`, and 
+ - introduces the invariant check to verify a chain's total supply.
 
 ### Total Supply
 
@@ -15,13 +16,15 @@ proposal is vetoed).
 
 ## Module Accounts
 
-To keep track of the `Supply`, this module introduces a new type of `Account`
-used by other modules to control the flow of coins that come into and out of
-each of their modules. This design replaces the pools of coins that were stored
-on each of the modules, such as the `FeeCollectorKeeper` and the staking
-`Pool`. The reasoning of having this new `Account` type is to calculate the
-total supply without having to access each of the modules' pools of coins
-(previously stored in the `Store`), thus reducing the dependencies.
+The supply module introduces a new type of `auth.Account` which can be used by
+modules to allocate tokens and in special cases mint or burn tokens.  At a base
+level these module accounts are capable of sending/receiving tokens to and from
+`auth.Account`s and other module accounts.  This design replaces previous
+alternative designs where, to hold tokens, modules would burn the incoming
+tokens from the sender account, and then track those tokens internally. Later,
+in order to send tokens, the module would need to effectively mint tokens
+within a destination account. The new design removes duplicate logic between
+modules to perform this accounting.
 
 The `ModuleAccount` interface is defined as follows:
 
@@ -53,5 +56,5 @@ permission to that specific account and perform or not the action.
 The available permissions are:
 
 - `Basic`: is allowed to only transfer its coins to other accounts.
-- `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Holder` permissioned actions.
-- `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Holder` permissioned actions.
+- `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Basic` permissioned actions.
+- `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Basic` permissioned actions.

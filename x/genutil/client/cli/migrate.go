@@ -34,6 +34,10 @@ Example:
 `),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return fmt.Errorf("2 arguments needed")
+			}
+
 			target := args[0]
 			importGenesis := args[1]
 

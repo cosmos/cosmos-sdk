@@ -120,7 +120,7 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, feeDelega
 		if len(feeAddr) != 0 {
 			// check if fees can be delegated
 			if feeDelegationHandler == nil {
-                return newCtx, sdk.ErrUnknownRequest("delegated fees aren't supported").Result(), true
+				return newCtx, sdk.ErrUnknownRequest("delegated fees aren't supported").Result(), true
 			}
 			if !feeDelegationHandler.AllowDelegatedFees(ctx, signerAddrs[0], feeAddr, stdTx.Fee.Amount) {
 				return newCtx, res, true
@@ -142,9 +142,6 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, feeDelega
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
-
-			// reload the account as fees have been deducted
-			signerAccs[0] = ak.GetAccount(newCtx, signerAccs[0].GetAddress())
 		}
 
 		// stdSigs contains the sequence number, account number, and signatures.
@@ -152,14 +149,9 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, feeDelega
 		stdSigs := stdTx.GetSignatures()
 
 		for i := 0; i < len(stdSigs); i++ {
-			// use cached fee account if not using a delegated fee account
-			if i == 0 && len(stdTx.FeeAccount) == 0 {
-				signerAccs[0] = feeAccount
-			} else {
-				signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
-				if !res.IsOK() {
-					return newCtx, res, true
-				}
+			signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
+			if !res.IsOK() {
+				return newCtx, res, true
 			}
 
 			// check signature, return account with incremented nonce

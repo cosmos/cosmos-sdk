@@ -45,7 +45,6 @@ func TestMigrateGenesis(t *testing.T) {
 	defer cleanup()
 
 	// Reject if we dont' have the right parameters or genesis does not exists
-	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target}))
 	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target, genesisPath}))
 
 	// Noop migration with minimal genesis

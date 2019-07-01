@@ -21,6 +21,9 @@ tags:
     description: Slashing module APIs
   - name: Distribution
     description: Fee distribution module APIs
+  - name: Supply
+    description: Supply module APIs
+  - name: version
   - name: Mint
     description: Minting module APIs
   - name: Misc
@@ -1827,6 +1830,43 @@ paths:
             type: string
         500:
           description: Internal Server Error
+  /supply/total:
+    get:
+      summary: Total supply of coins in the chain
+      tags:
+        - Supply
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Supply"
+        500:
+          description: Internal Server Error
+  /supply/total/{denomination}:
+    parameters:
+      - in: path
+        name: denomination
+        description: Coin denomination
+        required: true
+        type: string
+        x-example: uatom
+    get:
+      summary: Total supply of a single coin denomination
+      tags:
+        - Supply
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+             type: integer
+        400:
+          description: Invalid coin denomination
+        500:
+          description: Internal Server Error
 definitions:
   CheckTxResult:
     type: object
@@ -2435,3 +2475,10 @@ definitions:
         example: ""
       value:
         type: object
+  Supply:
+    type: object
+    properties:
+      total:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"

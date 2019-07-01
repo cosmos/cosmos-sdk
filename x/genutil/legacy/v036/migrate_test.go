@@ -92,7 +92,7 @@ func TestDummyGenesis(t *testing.T) {
 	cdc := amino.NewCodec()
 	migratedDummy := Migrate(genesisDummy, cdc)
 
-	// We shuold not touch custom modules in the map
+	// We should not touch custom modules in the map
 	require.Equal(t, genesisDummy["foo"], migratedDummy["foo"])
 	require.Equal(t, genesisDummy["bar"], migratedDummy["bar"])
 }

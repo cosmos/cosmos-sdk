@@ -1,14 +1,14 @@
-package crisis
+package keeper
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 // RouterKey
-const RouterKey = ModuleName
+const RouterKey = types.ModuleName
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
@@ -16,7 +16,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
-			return handleMsgVerifyInvariant(ctx, msg, k)
+			return HandleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized crisis message type: %T", msg)
@@ -25,7 +25,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
+func HandleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 

@@ -1,4 +1,4 @@
-package crisis
+package keeper
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -82,5 +82,8 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 
 	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
+
+// InvCheckPeriod returns the invariant checks period.
+func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // DONTCOVER

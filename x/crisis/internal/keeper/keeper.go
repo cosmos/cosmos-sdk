@@ -1,4 +1,4 @@
-package crisis
+package keeper
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -81,6 +81,14 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	diff := end.Sub(start)
 
 	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
+}
+
+// InvCheckPeriod returns the invariant checks period.
+func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
+
+// SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
+func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }
 
 // DONTCOVER

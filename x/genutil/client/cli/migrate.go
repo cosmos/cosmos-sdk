@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/server"
-	"strings"
+	"github.com/cosmos/cosmos-sdk/version"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -27,11 +27,11 @@ func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
-		Long: strings.TrimSpace(`Migrate the source genesis into the target version and print to STDOUT.
+		Long: fmt.Sprintf(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-[binary] migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`),
+$ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
+`, version.ServerName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			target := args[0]

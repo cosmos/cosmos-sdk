@@ -13,6 +13,12 @@ The slashing module emits the following events/tags:
 
 - [0] Only included if the validator is jailed. 
 
+| Type     | Attribute Key | Attribute Value             |
+|----------|---------------|-----------------------------|
+| liveness | address       | {validatorConsensusAddress} |
+| liveness | missed_blocks | {missedBlocksCounter}       |
+| liveness | height        | {blockHeight}               |
+
 ## Handlers
 
 ### MsgUnjail

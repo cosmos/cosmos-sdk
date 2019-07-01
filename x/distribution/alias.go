@@ -46,6 +46,7 @@ var (
 	NonNegativeOutstandingInvariant            = keeper.NonNegativeOutstandingInvariant
 	CanWithdrawInvariant                       = keeper.CanWithdrawInvariant
 	ReferenceCountInvariant                    = keeper.ReferenceCountInvariant
+	ModuleAccountInvariant                     = keeper.ModuleAccountInvariant
 	NewKeeper                                  = keeper.NewKeeper
 	GetValidatorOutstandingRewardsAddress      = keeper.GetValidatorOutstandingRewardsAddress
 	GetDelegatorWithdrawInfoAddress            = keeper.GetDelegatorWithdrawInfoAddress
@@ -127,13 +128,8 @@ var (
 type (
 	Hooks                                  = keeper.Hooks
 	Keeper                                 = keeper.Keeper
-	DummyFeeCollectionKeeper               = keeper.DummyFeeCollectionKeeper
 	DelegatorStartingInfo                  = types.DelegatorStartingInfo
 	CodeType                               = types.CodeType
-	StakingKeeper                          = types.StakingKeeper
-	StakingHooks                           = types.StakingHooks
-	BankKeeper                             = types.BankKeeper
-	FeeCollectionKeeper                    = types.FeeCollectionKeeper
 	FeePool                                = types.FeePool
 	DelegatorWithdrawInfo                  = types.DelegatorWithdrawInfo
 	ValidatorOutstandingRewardsRecord      = types.ValidatorOutstandingRewardsRecord

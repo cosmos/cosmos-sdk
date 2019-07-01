@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 var (
@@ -37,13 +38,16 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // default genesis state
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+	return types.ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	// TODO
-	return nil
+	var data types.GenesisState
+	if err := types.ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
+		return err
+	}
+	return types.ValidateGenesis(data)
 }
 
 // register rest routes
@@ -99,7 +103,7 @@ func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
+	types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.keeper, genesisState)
 
 	am.keeper.AssertInvariants(ctx)
@@ -109,7 +113,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // module export genesis
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
-	return ModuleCdc.MustMarshalJSON(gs)
+	return types.ModuleCdc.MustMarshalJSON(gs)
 }
 
 // module begin-block

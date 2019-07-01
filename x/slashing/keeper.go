@@ -69,7 +69,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Reject evidence if the double-sign is too old
 	if age > k.MaxEvidenceAge(ctx) {
 		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d",
-			pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
+			sdk.ConsAddress(pubkey.Address()), infractionHeight, age, k.MaxEvidenceAge(ctx)))
 		return
 	}
 
@@ -90,12 +90,12 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// validator is already tombstoned
 	if signInfo.Tombstoned {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", pubkey.Address(), infractionHeight))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", sdk.ConsAddress(pubkey.Address()), infractionHeight))
 		return
 	}
 
 	// double sign confirmed
-	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", pubkey.Address(), infractionHeight, age))
+	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", sdk.ConsAddress(pubkey.Address()), infractionHeight, age))
 
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
@@ -151,7 +151,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
+		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr.String()))
 	}
 
 	// fetch signing info
@@ -184,7 +184,16 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	if missed {
-		logger.Info(fmt.Sprintf("Absent validator %s (%v) at height %d, %d missed, threshold %d", addr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeLiveness,
+				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
+				sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
+			),
+		)
+
+		logger.Info(fmt.Sprintf("Absent validator %s (%s) at height %d, %d missed, threshold %d", addr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
@@ -197,7 +206,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
-				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+				sdk.ConsAddress(pubkey.Address()), minHeight, k.MinSignedPerWindow(ctx)))
 
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
@@ -227,7 +236,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
 			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
-				pubkey.Address()))
+				sdk.ConsAddress(pubkey.Address())))
 		}
 	}
 
@@ -245,7 +254,7 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 	var pubkey crypto.PubKey
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
-		return nil, fmt.Errorf("address %v not found", address)
+		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
 	return pubkey, nil
 }

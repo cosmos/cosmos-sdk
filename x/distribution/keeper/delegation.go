@@ -173,7 +173,8 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 	// add coins to user account
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		if err != nil {
 			return nil, err
 		}
 	}

@@ -17,23 +17,21 @@ type Keeper struct {
 	paramSpace     params.Subspace
 	invCheckPeriod uint
 
-	distrKeeper         DistrKeeper
-	bankKeeper          BankKeeper
-	feeCollectionKeeper FeeCollectionKeeper
+	supplyKeeper types.SupplyKeeper
+
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	distrKeeper DistrKeeper, bankKeeper BankKeeper,
-	feeCollectionKeeper FeeCollectionKeeper) Keeper {
+	supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
 
 	return Keeper{
-		routes:              []types.InvarRoute{},
-		paramSpace:          paramSpace.WithKeyTable(types.ParamKeyTable()),
-		invCheckPeriod:      invCheckPeriod,
-		distrKeeper:         distrKeeper,
-		bankKeeper:          bankKeeper,
-		feeCollectionKeeper: feeCollectionKeeper,
+		routes:           []types.InvarRoute{},
+		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		invCheckPeriod:   invCheckPeriod,
+		supplyKeeper:     supplyKeeper,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
@@ -42,7 +40,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// register routes for the
+// RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)

@@ -2,12 +2,15 @@ package types
 
 // Slashing module event types
 var (
-	EventTypeSlash = "slash"
+	EventTypeSlash    = "slash"
+	EventTypeLiveness = "liveness"
 
-	AttributeKeyAddress = "address"
-	AttributeKeyPower   = "power"
-	AttributeKeyReason  = "reason"
-	AttributeKeyJailed  = "jailed"
+	AttributeKeyAddress      = "address"
+	AttributeKeyHeight       = "height"
+	AttributeKeyPower        = "power"
+	AttributeKeyReason       = "reason"
+	AttributeKeyJailed       = "jailed"
+	AttributeKeyMissedBlocks = "missed_blocks"
 
 	AttributeValueDoubleSign       = "double_sign"
 	AttributeValueMissingSignature = "missing_signature"

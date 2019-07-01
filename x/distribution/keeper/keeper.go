@@ -11,32 +11,39 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// keeper of the staking store
+// Keeper of the distribution store
 type Keeper struct {
-	storeKey            sdk.StoreKey
-	cdc                 *codec.Codec
-	paramSpace          params.Subspace
-	bankKeeper          types.BankKeeper
-	stakingKeeper       types.StakingKeeper
-	feeCollectionKeeper types.FeeCollectionKeeper
+	storeKey      sdk.StoreKey
+	cdc           *codec.Codec
+	paramSpace    params.Subspace
+	stakingKeeper types.StakingKeeper
+	supplyKeeper  types.SupplyKeeper
 
 	// codespace
 	codespace sdk.CodespaceType
+
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
-// create a new keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
-	keeper := Keeper{
-		storeKey:            key,
-		cdc:                 cdc,
-		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
-		bankKeeper:          ck,
-		stakingKeeper:       sk,
-		feeCollectionKeeper: fck,
-		codespace:           codespace,
+// NewKeeper creates a new distribution Keeper instance
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType,
+	feeCollectorName string) Keeper {
+
+	// ensure distribution module account is set
+	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
-	return keeper
+
+	return Keeper{
+		storeKey:         key,
+		cdc:              cdc,
+		paramSpace:       paramSpace.WithKeyTable(ParamKeyTable()),
+		stakingKeeper:    sk,
+		supplyKeeper:     supplyKeeper,
+		codespace:        codespace,
+		feeCollectorName: feeCollectorName,
+	}
 }
 
 // Logger returns a module-specific logger.
@@ -110,8 +117,8 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-
-		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, commission); err != nil {
+		err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -124,4 +131,15 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	)
 
 	return commission, nil
+}
+
+// GetTotalRewards returns the total amount of fee distribution rewards held in the store
+func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
+	k.IterateValidatorOutstandingRewards(ctx,
+		func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			totalRewards = totalRewards.Add(rewards)
+			return false
+		},
+	)
+	return totalRewards
 }

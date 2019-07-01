@@ -31,6 +31,8 @@ const (
 	DefaultUnbondingTime               = types.DefaultUnbondingTime
 	DefaultMaxValidators               = types.DefaultMaxValidators
 	DefaultMaxEntries                  = types.DefaultMaxEntries
+	NotBondedPoolName                  = types.NotBondedPoolName
+	BondedPoolName                     = types.BondedPoolName
 	QueryValidators                    = types.QueryValidators
 	QueryValidator                     = types.QueryValidator
 	QueryDelegatorDelegations          = types.QueryDelegatorDelegations
@@ -56,7 +58,7 @@ var (
 	// functions aliases
 	RegisterInvariants                 = keeper.RegisterInvariants
 	AllInvariants                      = keeper.AllInvariants
-	SupplyInvariants                   = keeper.SupplyInvariants
+	ModuleAccountInvariants            = keeper.ModuleAccountInvariants
 	NonNegativePowerInvariant          = keeper.NonNegativePowerInvariant
 	PositiveDelegationInvariant        = keeper.PositiveDelegationInvariant
 	DelegatorSharesInvariant           = keeper.DelegatorSharesInvariant
@@ -166,9 +168,7 @@ var (
 	DefaultParams                      = types.DefaultParams
 	MustUnmarshalParams                = types.MustUnmarshalParams
 	UnmarshalParams                    = types.UnmarshalParams
-	InitialPool                        = types.InitialPool
-	MustUnmarshalPool                  = types.MustUnmarshalPool
-	UnmarshalPool                      = types.UnmarshalPool
+	NewPool                            = types.NewPool
 	NewQueryDelegatorParams            = types.NewQueryDelegatorParams
 	NewQueryValidatorParams            = types.NewQueryValidatorParams
 	NewQueryBondsParams                = types.NewQueryBondsParams
@@ -223,7 +223,6 @@ type (
 	RedelegationEntryResponse = types.RedelegationEntryResponse
 	RedelegationResponses     = types.RedelegationResponses
 	CodeType                  = types.CodeType
-	AccountKeeper             = types.AccountKeeper
 	GenesisState              = types.GenesisState
 	LastValidatorPower        = types.LastValidatorPower
 	MultiStakingHooks         = types.MultiStakingHooks

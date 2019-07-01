@@ -87,12 +87,12 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // module querier route name
 func (AppModule) Route() string {
-	return keeper.RouterKey
+	return RouterKey
 }
 
 // module handler
 func (am AppModule) NewHandler() sdk.Handler {
-	return keeper.NewHandler(am.keeper)
+	return NewHandler(am.keeper)
 }
 
 // module querier route name

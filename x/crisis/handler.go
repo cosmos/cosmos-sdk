@@ -1,22 +1,23 @@
-package keeper
+package crisis
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 // RouterKey
 const RouterKey = types.ModuleName
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		case types.MsgVerifyInvariant:
-			return HandleMsgVerifyInvariant(ctx, msg, k)
+			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized crisis message type: %T", msg)
@@ -25,11 +26,11 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func HandleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) sdk.Result {
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
-	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, k.feeCollectorName, constantFee)
+	err := k.SendCoinsFromAccountToModule(ctx, msg.Sender, k.FeeCollectorName(), constantFee)
 	if err != nil {
 		return err.Result()
 	}
@@ -41,7 +42,7 @@ func HandleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 	msgFullRoute := msg.FullInvariantRoute()
 
 	var invarianceErr error
-	for _, invarRoute := range k.routes {
+	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
 			invarianceErr = invarRoute.Invar(cacheCtx)
 			found = true

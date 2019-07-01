@@ -1,4 +1,4 @@
-package keeper_test
+package crisis_test
 
 import (
 	"errors"
@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
@@ -54,17 +53,18 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	crisisKeeper.SetConstantFee(ctx, excessCoins)
 
+	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	res := keeper.HandleMsgVerifyInvariant(ctx, msg, crisisKeeper)
-	require.False(t, res.IsOK())
+	require.False(t, h(ctx, msg).IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
+	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist")
-	res := keeper.HandleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+	res := h(ctx, msg)
 	require.False(t, res.IsOK())
 }
 
@@ -72,10 +72,11 @@ func TestHandleMsgVerifyInvariantWithInvariantBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
+	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = keeper.HandleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+		res = h(ctx, msg)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -88,10 +89,11 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	feePool.CommunityPool = sdk.DecCoins{}
 	distrKeeper.SetFeePool(ctx, feePool)
 
+	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = keeper.HandleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+		res = h(ctx, msg)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -99,14 +101,14 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
+	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	res := keeper.HandleMsgVerifyInvariant(ctx, msg, crisisKeeper)
-	require.True(t, res.IsOK())
+	require.True(t, h(ctx, msg).IsOK())
 }
 
 func TestInvalidMsg(t *testing.T) {
 	k := crisis.Keeper{}
-	h := keeper.NewHandler(k)
+	h := crisis.NewHandler(k)
 
 	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.False(t, res.IsOK())

@@ -49,7 +49,7 @@ func TestMigrateGenesis(t *testing.T) {
 	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target, genesisPath}))
 
 	// Noop migration with minimal genesis
-	emptyGenesis := []byte("{\"chain_id\":\"test\",\"app_state\":{}}")
+	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
 	err = ioutil.WriteFile(genesisPath, emptyGenesis, 0644)
 	require.Nil(t, err)
 	cmd := setupCmd("", "test2")

@@ -86,11 +86,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 // InvCheckPeriod returns the invariant checks period.
 func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
-// FeeCollectorName returns the name of the FeeCollector module.
-func (k Keeper) FeeCollectorName() string { return k.feeCollectorName }
-
-func (k Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
-	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, recipientModule, amt)
+// SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
+func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }
 
 // DONTCOVER

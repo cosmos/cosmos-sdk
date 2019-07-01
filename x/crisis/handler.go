@@ -30,8 +30,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
-	err := k.SendCoinsFromAccountToModule(ctx, msg.Sender, k.FeeCollectorName(), constantFee)
-	if err != nil {
+	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
 		return err.Result()
 	}
 

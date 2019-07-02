@@ -44,6 +44,11 @@ func TestPaginate(t *testing.T) {
 			75, 4, 25, 100,
 			-1, -1,
 		},
+		{
+			"invalid zero start page",
+			75, 0, 25, 100,
+			-1, -1,
+		},
 	}
 
 	for i, tc := range testCases {

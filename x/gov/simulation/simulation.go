@@ -9,11 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
-type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) Content
+type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
@@ -96,7 +97,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k Keeper, contentSim Content
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
+func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
 	ctx, write := ctx.CacheContext()
 	ok = handler(ctx, msg).IsOK()
 	if ok {
@@ -113,7 +114,7 @@ func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context
 	)
 }
 
-func simulationCreateMsgSubmitProposal(r *rand.Rand, c Content, s simulation.Account) (msg MsgSubmitProposal, err error) {
+func simulationCreateMsgSubmitProposal(r *rand.Rand, c Content, s simulation.Account) (msg gov.MsgSubmitProposal, err error) {
 	msg = NewMsgSubmitProposal(c, randomDeposit(r), s.Address)
 	if msg.ValidateBasic() != nil {
 		err = fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -207,16 +208,16 @@ func randomProposalID(r *rand.Rand, k Keeper, ctx sdk.Context) (proposalID uint6
 }
 
 // Pick a random voting option
-func randomVotingOption(r *rand.Rand) VoteOption {
+func randomVotingOption(r *rand.Rand) gov.VoteOption {
 	switch r.Intn(4) {
 	case 0:
-		return OptionYes
+		return gov.OptionYes
 	case 1:
-		return OptionAbstain
+		return gov.OptionAbstain
 	case 2:
-		return OptionNo
+		return gov.OptionNo
 	case 3:
-		return OptionNoWithVeto
+		return gov.OptionNoWithVeto
 	}
 	panic("should not happen")
 }

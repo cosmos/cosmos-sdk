@@ -7,19 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// Governance Keeper
+// Keeper defines the governance module Keeper
 type Keeper struct {
-	// The reference to the Param Keeper to get and set Global Params
-	paramsKeeper params.Keeper
-
 	// The reference to the Paramstore to get and set gov specific params
-	paramSpace params.Subspace
+	paramSpace subspace.Subspace
 
 	// The SupplyKeeper to reduce the supply of the network
 	supplyKeeper types.SupplyKeeper
@@ -46,7 +43,7 @@ type Keeper struct {
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
+	cdc *codec.Codec, key sdk.StoreKey, paramSpace subspace.Subspace,
 	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
@@ -62,7 +59,6 @@ func NewKeeper(
 
 	return Keeper{
 		storeKey:     key,
-		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		supplyKeeper: supplyKeeper,
 		sk:           sk,

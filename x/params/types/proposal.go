@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 const (
@@ -17,8 +17,8 @@ const (
 var _ govtypes.Content = ParameterChangeProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeChange)
-	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
+	gov.RegisterProposalType(ProposalTypeChange)
+	gov.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter
@@ -39,7 +39,7 @@ func (pcp ParameterChangeProposal) GetTitle() string { return pcp.Title }
 // GetDescription returns the description of a parameter change proposal.
 func (pcp ParameterChangeProposal) GetDescription() string { return pcp.Description }
 
-// GetDescription returns the routing key of a parameter change proposal.
+// ProposalRoute returns the routing key of a parameter change proposal.
 func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a parameter change proposal.
@@ -103,7 +103,7 @@ func (pc ParamChange) String() string {
 `, pc.Subspace, pc.Key, pc.Subkey, pc.Value)
 }
 
-// ValidateChange performs basic validation checks over a set of ParamChange. It
+// ValidateChanges performs basic validation checks over a set of ParamChange. It
 // returns an error if any ParamChange is invalid.
 func ValidateChanges(changes []ParamChange) sdk.Error {
 	if len(changes) == 0 {

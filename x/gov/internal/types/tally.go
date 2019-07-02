@@ -1,4 +1,8 @@
+package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // ValidatorGovInfo used for tallying
 type ValidatorGovInfo struct {
@@ -9,6 +13,7 @@ type ValidatorGovInfo struct {
 	Vote                VoteOption     // Vote of the validator
 }
 
+// NewValidatorGovInfo creates a ValidatorGovInfo instance
 func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
 	delegatorDeductions sdk.Dec, vote VoteOption) ValidatorGovInfo {
 

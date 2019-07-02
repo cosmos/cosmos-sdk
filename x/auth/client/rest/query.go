@@ -11,16 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// AccountWithHeight wraps the embedded Account with the height it was queried
-// at.
-type AccountWithHeight struct {
-	exported.Account `json:"account"`
-	Height           int64 `json:"height"`
-}
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
@@ -47,13 +39,14 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 			return
 		}
 
-		account, err := accGetter.GetAccount(addr)
+		account, height, err := accGetter.GetAccountWithHeight(addr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, AccountWithHeight{account, cliCtx.Height})
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, account)
 	}
 }
 

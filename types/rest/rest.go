@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -222,8 +223,16 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 }
 
 // PostProcessResponse performs post processing for a REST response.
+// If the height is greater than zero it will be injected into the body
+// of the response. An internal server error is written to the response
+// if the height is negative or an encoding/decoding error occurs.
 func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
 	var output []byte
+
+	if cliCtx.Height < 0 {
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
+		return
+	}
 
 	switch response.(type) {
 	case []byte:
@@ -235,6 +244,32 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
 		} else {
 			output, err = cliCtx.Codec.MarshalJSON(response)
+		}
+
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	// inject the height into the response by:
+	// - decoding into a map
+	// - adding the height to the map
+	// - encoding using standard JSON library
+	if cliCtx.Height > 0 {
+		m := make(map[string]interface{})
+		err := json.Unmarshal(output, &m)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		m["height"] = cliCtx.Height
+
+		if cliCtx.Indent {
+			output, err = json.MarshalIndent(m, "", "  ")
+		} else {
+			output, err = json.Marshal(m)
 		}
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

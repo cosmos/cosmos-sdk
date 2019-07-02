@@ -92,8 +92,3 @@ func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *au
 	}
 	return
 }
-
-// TODO: create dummy bank keeper to avoid cycle with x/mock
-type DummyBankKeeper struct {
-	ak  types.AccountKeeper
-}

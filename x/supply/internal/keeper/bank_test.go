@@ -63,11 +63,12 @@ func TestSendCoins(t *testing.T) {
 	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Burner))
-	require.Equal(t, initCoins, keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
+
+	require.Equal(t, initCoins, keeper.ak.GetAccount(ctx, baseAcc.GetAddress()).GetCoins())
 
 	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), types.Burner, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), keeper.bk.GetCoins(ctx, baseAcc.GetAddress()))
+	require.Equal(t, sdk.Coins(nil), keeper.ak.GetAccount(ctx, baseAcc.GetAddress()).GetCoins())
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Burner))
 }
 

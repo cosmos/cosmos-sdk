@@ -19,8 +19,6 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error
-
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 }
@@ -46,53 +44,12 @@ func NewBaseKeeper(ak types.AccountKeeper,
 	}
 }
 
-// InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error {
-	// Safety check ensuring that when sending coins the keeper must maintain the
-	// Check supply invariant and validity of Coins.
-	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
-		return err
-	}
-
-	for _, in := range inputs {
-		_, err :=  keeper.SubtractCoins(ctx, in.Address, in.Coins)
-		if err != nil {
-			return err
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
-			),
-		)
-	}
-
-	for _, out := range outputs {
-		_, err := keeper.AddCoins(ctx, out.Address, out.Coins)
-		if err != nil {
-			return err
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
-			),
-		)
-	}
-
-	return nil
-}
-
 // DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
 // The coins are then transferred from the delegator address to a ModuleAccount address.
 // If any of the delegation amounts are negative, an error is returned.
-func (keeper BaseKeeper) DelegateCoins(
-	ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins,
-) sdk.Error {
+func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	delegatorAcc := keeper.ak.GetAccount(ctx, delegatorAddr)
 	if delegatorAcc == nil {
@@ -136,9 +93,7 @@ func (keeper BaseKeeper) DelegateCoins(
 // vesting and vested coins.
 // The coins are then transferred from a ModuleAccount address to the delegator address.
 // If any of the undelegation amounts are negative, an error is returned.
-func (keeper BaseKeeper) UndelegateCoins(
-	ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins,
-) sdk.Error {
+func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	delegatorAcc := keeper.ak.GetAccount(ctx, delegatorAddr)
 	if delegatorAcc == nil {
@@ -181,7 +136,9 @@ func (keeper BaseKeeper) UndelegateCoins(
 type SendKeeper interface {
 	ViewKeeper
 
+	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
@@ -212,10 +169,47 @@ func NewBaseSendKeeper(ak types.AccountKeeper,
 	}
 }
 
+// InputOutputCoins handles a list of inputs and outputs
+func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) sdk.Error {
+	// Safety check ensuring that when sending coins the keeper must maintain the
+	// Check supply invariant and validity of Coins.
+	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
+		return err
+	}
+
+	for _, in := range inputs {
+		_, err :=  keeper.SubtractCoins(ctx, in.Address, in.Coins)
+		if err != nil {
+			return err
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
+			),
+		)
+	}
+
+	for _, out := range outputs {
+		_, err := keeper.AddCoins(ctx, out.Address, out.Coins)
+		if err != nil {
+			return err
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
+			),
+		)
+	}
+
+	return nil
+}
+
 // SendCoins moves coins from one account to another
-func (keeper BaseSendKeeper) SendCoins(
-	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
-) sdk.Error {
+func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	_, err := keeper.SubtractCoins(ctx, fromAddr, amt)
 	if err != nil {
@@ -244,9 +238,7 @@ func (keeper BaseSendKeeper) SendCoins(
 // SubtractCoins subtracts amt from the coins at the addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
-func (keeper BaseSendKeeper) SubtractCoins(
-	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Coins, sdk.Error) {
+func (keeper BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
@@ -276,9 +268,7 @@ func (keeper BaseSendKeeper) SubtractCoins(
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (keeper BaseSendKeeper) AddCoins(
-	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Coins, sdk.Error) {
+func (keeper BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 
 	if !amt.IsValid() {
 		return nil, sdk.ErrInvalidCoins(amt.String())
@@ -298,9 +288,7 @@ func (keeper BaseSendKeeper) AddCoins(
 }
 
 // SetCoins sets the coins at the addr.
-func (keeper BaseSendKeeper) SetCoins(
-	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
-) sdk.Error {
+func (keeper BaseSendKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	if !amt.IsValid() {
 		return sdk.ErrInvalidCoins(amt.String())

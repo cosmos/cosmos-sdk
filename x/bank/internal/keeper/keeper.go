@@ -145,7 +145,7 @@ func (keeper BaseKeeper) UndelegateCoins(
 		return sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", delegatorAddr))
 	}
 
-	moduleAcc := keeper.ak.GetAccount(ctx, delegatorAddr)
+	moduleAcc := keeper.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleAccAddr))
 	}

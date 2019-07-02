@@ -22,7 +22,6 @@ block.
 - [Crisis](./crisis) - Halting the blockchain under certain circumstances.
 - [Mint](./mint) - Staking token provision creation.
 - [Params](./params) - Globally available parameter store.
-- [IBC](./ibc) - Inter-Blockchain Communication (IBC) protocol.
 - [Supply](./supply) - Total supply of the chain.
 
 ## Interchain standards

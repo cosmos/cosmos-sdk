@@ -64,6 +64,7 @@ var (
 	GetValidatorAccumulatedCommissionKey       = keeper.GetValidatorAccumulatedCommissionKey
 	GetValidatorSlashEventPrefix               = keeper.GetValidatorSlashEventPrefix
 	GetValidatorSlashEventKey                  = keeper.GetValidatorSlashEventKey
+	GetValidatorSlashEventKeyPrefix            = keeper.GetValidatorSlashEventKeyPrefix
 	ParamKeyTable                              = keeper.ParamKeyTable
 	HandleCommunityPoolSpendProposal           = keeper.HandleCommunityPoolSpendProposal
 	NewQuerier                                 = keeper.NewQuerier

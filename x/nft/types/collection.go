@@ -90,9 +90,10 @@ func (collection Collection) Supply() int {
 
 // String follows stringer interface
 func (collection Collection) String() string {
-	return fmt.Sprintf(`
-	Denom: 				%s
-	NFTs:        	%s`,
+	return fmt.Sprintf(`Denom: 				%s
+NFTs:
+
+%s`,
 		collection.Denom,
 		collection.NFTs.String(),
 	)
@@ -132,7 +133,8 @@ func (collections Collections) Remove(denom string) (Collections, bool) {
 	if index == -1 {
 		return collections, false
 	}
-	return append(collections[:index], collections[:index+1]...), true
+	collections[len(collections)-1], collections[index] = collections[index], collections[len(collections)-1]
+	return collections[:len(collections)-1], true
 }
 
 // String follows stringer interface
@@ -157,10 +159,11 @@ func (collections Collections) find(denom string) (idx int) {
 	if len(collections) == 0 {
 		return -1
 	}
+	// TODO: ensure this is already sorted
+	// collections.Sort()
 
 	midIdx := len(collections) / 2
 	midCollection := collections[midIdx]
-
 	if strings.Compare(denom, midCollection.Denom) == -1 {
 		return collections[:midIdx].find(denom)
 	} else if midCollection.Denom == denom {

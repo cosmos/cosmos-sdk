@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
@@ -32,20 +33,9 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	}
 
 	totalSupply := k.GetSupply(ctx).Total
-	totalSupplyLen := len(totalSupply)
 
-	if params.Limit == 0 {
-		params.Limit = totalSupplyLen
-	}
-
-	start := (params.Page - 1) * params.Limit
-	end := params.Limit + start
-	if end >= totalSupplyLen {
-		end = totalSupplyLen
-	}
-
-	if start >= totalSupplyLen {
-		// page is out of bounds
+	start, end := client.Paginate(len(totalSupply), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
 		totalSupply = sdk.Coins{}
 	} else {
 		totalSupply = totalSupply[start:end]

@@ -3,6 +3,7 @@ package v036
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
+	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
@@ -36,7 +37,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &slashingGenState)
 
 		delete(appState, v034distr.ModuleName) // delete old key in case the name changed
-		// appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.MigrateGovernance(govState))
+		appState[v036distr.ModuleName] = v036Codec.MustMarshalJSON(v036distr.Migrate(slashingGenState))
 	}
 
 	return appState

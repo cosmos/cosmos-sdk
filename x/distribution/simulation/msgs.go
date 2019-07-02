@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -87,7 +88,7 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) gov.ContentSimulator {
+func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsim.ContentSimulator {
 	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
 		recipientAcc := simulation.RandomAcc(r, accs)
 		coins := sdk.Coins{}

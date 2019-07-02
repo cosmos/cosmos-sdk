@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -91,4 +91,9 @@ func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *au
 		ak.SetAccount(ctx, &acc)
 	}
 	return
+}
+
+// TODO: create dummy bank keeper to avoid cycle with x/mock
+type DummyBankKeeper struct {
+	ak  types.AccountKeeper
 }

@@ -8,32 +8,32 @@ import (
 )
 
 var (
-	denom        = "test-denom"
-	denom2       = "test-denom2"
-	denom3       = "test-denom3"
-	id           = "1"
-	id2          = "2"
-	id3          = "3"
-	owner        = userAddr1
-	owner2       = userAddr2
-	name         = "cool token"
-	name2        = "cooler token"
-	description  = "a very cool token"
-	description2 = "a super cool token"
-	image        = "https://google.com/token-1.png"
-	image2       = "https://google.com/token-2.png"
-	tokenURI     = "https://google.com/token-1.json"
-	tokenURI2    = "https://google.com/token-2.json"
+	denom         = "test-denom"
+	denom2        = "test-denom2"
+	denom3        = "test-denom3"
+	id            = "1"
+	id2           = "2"
+	id3           = "3"
+	ownerAddress  = userAddr1
+	ownerAddress2 = userAddr2
+	name          = "cool token"
+	name2         = "cooler token"
+	description   = "a very cool token"
+	description2  = "a super cool token"
+	image         = "https://google.com/token-1.png"
+	image2        = "https://google.com/token-2.png"
+	tokenURI      = "https://google.com/token-1.json"
+	tokenURI2     = "https://google.com/token-2.json"
 )
 
 // ---------------------------------------- BaseNFT ---------------------------------------------------
 
 func TestBaseNFTGetMethods(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 
 	require.Equal(t, id, testNFT.GetID())
-	require.Equal(t, owner, testNFT.GetOwner())
+	require.Equal(t, ownerAddress, testNFT.GetOwner())
 	require.Equal(t, name, testNFT.GetName())
 	require.Equal(t, description, testNFT.GetDescription())
 	require.Equal(t, image, testNFT.GetImage())
@@ -42,10 +42,10 @@ func TestBaseNFTGetMethods(t *testing.T) {
 
 func TestBaseNFTSetMethods(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 
-	testNFT = testNFT.SetOwner(owner2)
-	require.Equal(t, owner2, testNFT.GetOwner())
+	testNFT = testNFT.SetOwner(ownerAddress2)
+	require.Equal(t, ownerAddress2, testNFT.GetOwner())
 
 	testNFT = testNFT.EditMetadata(name2, description2, image2, tokenURI2)
 	require.Equal(t, name2, testNFT.GetName())
@@ -55,14 +55,14 @@ func TestBaseNFTSetMethods(t *testing.T) {
 }
 
 func TestBaseNFTStringFormat(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	expected := fmt.Sprintf(`ID:				%s
 Owner:			%s
 Name:			%s
 Description: 	%s
 Image:			%s
 TokenURI:		%s`,
-		id, owner, name, description, image, tokenURI)
+		id, ownerAddress, name, description, image, tokenURI)
 	require.Equal(t, expected, testNFT.String())
 }
 
@@ -73,22 +73,22 @@ func TestNewNFTs(t *testing.T) {
 	emptyNFTs := NewNFTs()
 	require.Equal(t, len(emptyNFTs), 0)
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	oneNFTs := NewNFTs(testNFT)
 	require.Equal(t, len(oneNFTs), 1)
 
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	twoNFTs := NewNFTs(testNFT, testNFT2)
 	require.Equal(t, len(twoNFTs), 2)
 
 }
 
 func TestNFTsAddMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	require.Equal(t, len(nfts), 1)
 
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts2 := NewNFTs(testNFT2)
 
 	nfts = nfts.Add(nfts2)
@@ -96,8 +96,8 @@ func TestNFTsAddMethod(t *testing.T) {
 }
 
 func TestNFTsFindMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT, testNFT2)
 
 	nft, found := nfts.Find(id)
@@ -110,8 +110,8 @@ func TestNFTsFindMethod(t *testing.T) {
 }
 
 func TestNFTsUpdateMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	var success bool
 	nfts, success = nfts.Update(id, testNFT2)
@@ -134,8 +134,8 @@ func TestNFTsUpdateMethod(t *testing.T) {
 
 func TestNFTsRemoveMethod(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT, testNFT2)
 
 	var success bool
@@ -154,32 +154,32 @@ func TestNFTsRemoveMethod(t *testing.T) {
 }
 
 func TestNFTsStringMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	require.Equal(t, nfts.String(), fmt.Sprintf(`ID:				%s
 Owner:			%s
 Name:			%s
 Description: 	%s
 Image:			%s
-TokenURI:		%s`, id, owner, name, description, image, tokenURI))
+TokenURI:		%s`, id, ownerAddress, name, description, image, tokenURI))
 }
 
 func TestNFTsEmptyMethod(t *testing.T) {
 	nfts := NewNFTs()
 	require.True(t, nfts.Empty())
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts = NewNFTs(testNFT)
 	require.False(t, nfts.Empty())
 }
 
 func TestNFTsMarshalUnmarshalJSON(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	bz, err := nfts.MarshalJSON()
 	require.Nil(t, err)
 	require.Equal(t, string(bz),
 		fmt.Sprintf(`{"%s":{"id":"%s","owner":"%s","name":"%s","description":"%s","image":"%s","token_uri":"%s"}}`,
-			id, id, owner.String(), name, description, image, tokenURI))
+			id, id, ownerAddress.String(), name, description, image, tokenURI))
 
 	var unmarshaledNFTs NFTs
 	err = unmarshaledNFTs.UnmarshalJSON(bz)
@@ -192,8 +192,8 @@ func TestNFTsMarshalUnmarshalJSON(t *testing.T) {
 }
 
 func TestNFTsSortInterface(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 
 	nfts := NewNFTs(testNFT)
 	require.Equal(t, nfts.Len(), 1)
@@ -216,8 +216,8 @@ func TestNFTsSortInterface(t *testing.T) {
 // ---------------------------------------- Collection ---------------------------------------------------
 
 func TestNewCollection(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT, testNFT2)
 	collection := NewCollection(fmt.Sprintf("      %s      ", denom), nfts)
 	require.Equal(t, collection.Denom, denom)
@@ -231,7 +231,7 @@ func TestEmptyCollection(t *testing.T) {
 }
 
 func TestCollectionGetNFTMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -245,7 +245,7 @@ func TestCollectionGetNFTMethod(t *testing.T) {
 }
 
 func TestCollectionContainsNFTMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -257,8 +257,8 @@ func TestCollectionContainsNFTMethod(t *testing.T) {
 }
 
 func TestCollectionAddNFTMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -274,9 +274,9 @@ func TestCollectionAddNFTMethod(t *testing.T) {
 }
 
 func TestCollectionUpdateNFTMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
-	testNFT3 := NewBaseNFT(id, owner2, name2, description2, image2, tokenURI2)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
+	testNFT3 := NewBaseNFT(id, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -291,7 +291,7 @@ func TestCollectionUpdateNFTMethod(t *testing.T) {
 	returnedNFT, err = collection.GetNFT(id)
 	require.Nil(t, err)
 
-	require.Equal(t, returnedNFT.GetOwner(), owner2)
+	require.Equal(t, returnedNFT.GetOwner(), ownerAddress2)
 	require.Equal(t, returnedNFT.GetName(), name2)
 	require.Equal(t, returnedNFT.GetDescription(), description2)
 	require.Equal(t, returnedNFT.GetImage(), image2)
@@ -300,9 +300,9 @@ func TestCollectionUpdateNFTMethod(t *testing.T) {
 }
 
 func TestCollectionDeleteNFTMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
-	testNFT3 := NewBaseNFT(id3, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
+	testNFT3 := NewBaseNFT(id3, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT, testNFT2)
 	collection := NewCollection(denom, nfts)
 
@@ -325,8 +325,8 @@ func TestCollectionSupplyMethod(t *testing.T) {
 	empty := EmptyCollection()
 	require.Equal(t, empty.Supply(), 0)
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts := NewNFTs(testNFT, testNFT2)
 	collection := NewCollection(denom, nfts)
 
@@ -334,8 +334,8 @@ func TestCollectionSupplyMethod(t *testing.T) {
 }
 
 func TestCollectionStringMethod(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts := NewNFTs(testNFT, testNFT2)
 	collection := NewCollection(denom, nfts)
 	require.Equal(t, collection.String(),
@@ -353,8 +353,8 @@ Owner:			%s
 Name:			%s
 Description: 	%s
 Image:			%s
-TokenURI:		%s`, denom, id, owner.String(), name, description, image, tokenURI,
-			id2, owner2.String(), name2, description2, image2, tokenURI2))
+TokenURI:		%s`, denom, id, ownerAddress.String(), name, description, image, tokenURI,
+			id2, ownerAddress2.String(), name2, description2, image2, tokenURI2))
 }
 
 // ---------------------------------------- Collections ---------------------------------------------------
@@ -364,11 +364,11 @@ func TestNewCollections(t *testing.T) {
 	emptyCollections := NewCollections()
 	require.Empty(t, emptyCollections)
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -379,13 +379,13 @@ func TestNewCollections(t *testing.T) {
 
 func TestCollectionsAddMethod(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
 	collections := NewCollections(collection)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 	collections2 := NewCollections(collection2)
@@ -396,11 +396,11 @@ func TestCollectionsAddMethod(t *testing.T) {
 }
 func TestCollectionsFindMethod(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -431,7 +431,7 @@ func TestCollectionsFindMethod(t *testing.T) {
 
 func TestCollectionsRemoveMethod(t *testing.T) {
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -441,7 +441,7 @@ func TestCollectionsRemoveMethod(t *testing.T) {
 	require.False(t, removed)
 	require.Equal(t, returnedCollections.String(), collections.String())
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -461,11 +461,11 @@ func TestCollectionsStringMethod(t *testing.T) {
 	collections := NewCollections()
 	require.Equal(t, collections.String(), "")
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -487,8 +487,8 @@ Owner:			%s
 Name:			%s
 Description: 	%s
 Image:			%s
-TokenURI:		%s`, denom, id, owner.String(), name, description, image, tokenURI,
-		denom2, id2, owner2.String(), name2, description2, image2, tokenURI2), collections.String())
+TokenURI:		%s`, denom, id, ownerAddress.String(), name, description, image, tokenURI,
+		denom2, id2, ownerAddress2.String(), name2, description2, image2, tokenURI2), collections.String())
 
 }
 
@@ -497,7 +497,7 @@ func TestCollectionsEmptyMethod(t *testing.T) {
 	collections := NewCollections()
 	require.True(t, collections.Empty())
 
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
@@ -507,11 +507,11 @@ func TestCollectionsEmptyMethod(t *testing.T) {
 }
 
 func TestCollectionsSortInterface(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -531,11 +531,11 @@ func TestCollectionsSortInterface(t *testing.T) {
 }
 
 func TestCollectionMarshalAndUnmarshalJSON(t *testing.T) {
-	testNFT := NewBaseNFT(id, owner, name, description, image, tokenURI)
+	testNFT := NewBaseNFT(id, ownerAddress, name, description, image, tokenURI)
 	nfts := NewNFTs(testNFT)
 	collection := NewCollection(denom, nfts)
 
-	testNFT2 := NewBaseNFT(id2, owner2, name2, description2, image2, tokenURI2)
+	testNFT2 := NewBaseNFT(id2, ownerAddress2, name2, description2, image2, tokenURI2)
 	nfts2 := NewNFTs(testNFT2)
 	collection2 := NewCollection(denom2, nfts2)
 
@@ -544,8 +544,8 @@ func TestCollectionMarshalAndUnmarshalJSON(t *testing.T) {
 	bz, err := collections.MarshalJSON()
 	require.Nil(t, err)
 	require.Equal(t, string(bz), fmt.Sprintf(`{"%s":{"nfts":{"%s":{"id":"%s","owner":"%s","name":"%s","description":"%s","image":"%s","token_uri":"%s"}}},"%s":{"nfts":{"%s":{"id":"%s","owner":"%s","name":"%s","description":"%s","image":"%s","token_uri":"%s"}}}}`,
-		denom, id, id, owner.String(), name, description, image, tokenURI,
-		denom2, id2, id2, owner2.String(), name2, description2, image2, tokenURI2,
+		denom, id, id, ownerAddress.String(), name, description, image, tokenURI,
+		denom2, id2, id2, ownerAddress2.String(), name2, description2, image2, tokenURI2,
 	))
 
 	var newCollections Collections
@@ -554,4 +554,175 @@ func TestCollectionMarshalAndUnmarshalJSON(t *testing.T) {
 
 	err = newCollections.UnmarshalJSON([]byte{})
 	require.NotNil(t, err)
+}
+
+// ---------------------------------------- IDCollection ---------------------------------------------------
+
+func TestNewIDCollection(t *testing.T) {
+	ids := []string{id, id2, id3}
+	idCollection := NewIDCollection(denom, ids)
+	require.Equal(t, idCollection.Denom, denom)
+	require.Equal(t, len(idCollection.IDs), 3)
+}
+
+func TestEmptyIDCollection(t *testing.T) {
+	idCollection := EmptyIDCollection()
+	require.Empty(t, idCollection.Denom)
+	require.Empty(t, idCollection.IDs)
+}
+
+func TestIDCollectionExistsMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	require.True(t, idCollection.Exists(id))
+	require.True(t, idCollection.Exists(id2))
+	require.False(t, idCollection.Exists(id3))
+}
+
+func TestIDCollectionAddIDMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	idCollection = idCollection.AddID(id3)
+	require.Equal(t, len(idCollection.IDs), 3)
+}
+
+func TestIDCollectionDeleteIDMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	newIDCollection, err := idCollection.DeleteID(id3)
+	require.NotNil(t, err)
+	require.Equal(t, idCollection.String(), newIDCollection.String())
+
+	idCollection, err = idCollection.DeleteID(id2)
+	require.Equal(t, len(idCollection.IDs), 1)
+}
+
+func TestIDCollectionSupplyMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	require.Equal(t, 2, idCollection.Supply())
+
+	idCollection = EmptyIDCollection()
+	require.Equal(t, 0, idCollection.Supply())
+}
+
+func TestIDCollectionStringMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	require.Equal(t, idCollection.String(), fmt.Sprintf(`Denom: 			%s
+IDs:        	%s,%s`, denom, id, id2))
+}
+
+// ---------------------------------------- IDCollections ---------------------------------------------------
+
+func TestIDCollectionsString(t *testing.T) {
+
+	emptyCollections := IDCollections([]IDCollection{})
+	require.Equal(t, emptyCollections.String(), "")
+
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	idCollection2 := NewIDCollection(denom2, ids)
+
+	idCollections := IDCollections([]IDCollection{idCollection, idCollection2})
+	require.Equal(t, idCollections.String(), fmt.Sprintf(`Denom: 			%s
+IDs:        	%s,%s
+Denom: 			%s
+IDs:        	%s,%s`, denom, id, id2, denom2, id, id2))
+}
+
+// ---------------------------------------- Owner ---------------------------------------------------
+
+func TestNewOwner(t *testing.T) {
+
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	idCollection2 := NewIDCollection(denom2, ids)
+
+	owner := NewOwner(ownerAddress, idCollection, idCollection2)
+	require.Equal(t, owner.Address.String(), ownerAddress.String())
+	require.Equal(t, len(owner.IDCollections), 2)
+}
+
+func TestOwnerSupplyMethod(t *testing.T) {
+
+	owner := NewOwner(ownerAddress)
+	require.Equal(t, owner.Supply(), 0)
+
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	owner = NewOwner(ownerAddress, idCollection)
+	require.Equal(t, owner.Supply(), 2)
+
+	idCollection2 := NewIDCollection(denom2, ids)
+	owner = NewOwner(ownerAddress, idCollection, idCollection2)
+	require.Equal(t, owner.Supply(), 4)
+}
+
+func TestOwnerGetIDCollectionMethod(t *testing.T) {
+
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	owner := NewOwner(ownerAddress, idCollection)
+
+	gotCollection, found := owner.GetIDCollection(denom2)
+	require.False(t, found)
+	require.Equal(t, gotCollection.Denom, "")
+	require.Equal(t, len(gotCollection.IDs), 0)
+	require.Equal(t, gotCollection.String(), EmptyIDCollection().String())
+
+	gotCollection, found = owner.GetIDCollection(denom)
+	require.True(t, found)
+	require.Equal(t, gotCollection.String(), idCollection.String())
+
+	idCollection2 := NewIDCollection(denom2, ids)
+	owner = NewOwner(ownerAddress, idCollection, idCollection2)
+
+	gotCollection, found = owner.GetIDCollection(denom)
+	require.True(t, found)
+	require.Equal(t, gotCollection.String(), idCollection.String())
+
+	gotCollection, found = owner.GetIDCollection(denom2)
+	require.True(t, found)
+	require.Equal(t, gotCollection.String(), idCollection2.String())
+}
+
+func TestOwnerUpdateIDCollectionMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	owner := NewOwner(ownerAddress, idCollection)
+
+	ids2 := []string{id, id2, id3}
+	idCollection2 := NewIDCollection(denom2, ids2)
+
+	returnedOwner, err := owner.UpdateIDCollection(idCollection2)
+	require.NotNil(t, err)
+	require.Equal(t, owner.String(), returnedOwner.String())
+
+	idCollection2 = NewIDCollection(denom, ids2)
+	returnedOwner, err = owner.UpdateIDCollection(idCollection2)
+	require.Nil(t, err)
+
+	returnedCollection, _ := owner.GetIDCollection(denom)
+	require.Equal(t, len(returnedCollection.IDs), 3)
+}
+
+func TestOwnerDeleteIDMethod(t *testing.T) {
+	ids := []string{id, id2}
+	idCollection := NewIDCollection(denom, ids)
+	owner := NewOwner(ownerAddress, idCollection)
+
+	returnedOwner, err := owner.DeleteID(denom2, id)
+	require.NotNil(t, err)
+	require.Equal(t, owner.String(), returnedOwner.String())
+
+	returnedOwner, err = owner.DeleteID(denom, id3)
+	require.NotNil(t, err)
+	require.Equal(t, owner.String(), returnedOwner.String())
+
+	owner, err = owner.DeleteID(denom, id)
+	require.Nil(t, err)
+
+	returnedCollection, _ := owner.GetIDCollection(denom)
+	require.Equal(t, len(returnedCollection.IDs), 1)
 }

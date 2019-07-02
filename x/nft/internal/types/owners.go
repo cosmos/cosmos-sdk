@@ -74,15 +74,6 @@ func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
 	return idCollection, nil
 }
 
-// Supply gets the total supply of an Owner
-func (owner Owner) Supply() int {
-	total := 0
-	for _, idCollection := range owner.IDCollections {
-		total += idCollection.Supply()
-	}
-	return total
-}
-
 // Supply gets the total supply of NFTIDs of a balance
 func (idCollection IDCollection) Supply() int {
 	return len(idCollection.IDs)
@@ -99,22 +90,6 @@ IDs:        	%s`,
 
 // ----------------------------------------------------------------------------
 // Owners
-
-// Owner of non fungible tokens
-type Owner struct {
-	Address       sdk.AccAddress `json:"address"`
-	IDCollections IDCollections  `json:"IDCollections"`
-}
-
-// String follows stringer interface
-func (owner Owner) String() string {
-	return fmt.Sprintf(`
-	Address: 				%s
-	IDCollections:        	%s`,
-		owner.Address,
-		owner.IDCollections.String(),
-	)
-}
 
 // IDCollections is an array of ID Collections whose sole purpose is for find
 type IDCollections []IDCollection
@@ -149,6 +124,12 @@ func (idCollections IDCollections) find(el string) int {
 	}
 }
 
+// Owner of non fungible tokens
+type Owner struct {
+	Address       sdk.AccAddress `json:"address"`
+	IDCollections IDCollections  `json:"IDCollections"`
+}
+
 // NewOwner creates a new Owner
 func NewOwner(owner sdk.AccAddress, idCollections ...IDCollection) Owner {
 	return Owner{
@@ -157,17 +138,27 @@ func NewOwner(owner sdk.AccAddress, idCollections ...IDCollection) Owner {
 	}
 }
 
+// Supply gets the total supply of an Owner
+func (owner Owner) Supply() int {
+	total := 0
+	for _, idCollection := range owner.IDCollections {
+		total += idCollection.Supply()
+	}
+	return total
+}
+
 // GetIDCollection gets the IDCollection from the owner
 func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
 	index := owner.IDCollections.find(denom)
 	if index == -1 {
-		return NewIDCollection("", []string{}), false
+		return EmptyIDCollection(), false
 	}
 	return owner.IDCollections[index], true
 }
 
 // UpdateIDCollection updates the ID Collection of an owner
-func (owner Owner) UpdateIDCollection(denom string, idCollection IDCollection) (Owner, sdk.Error) {
+func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, sdk.Error) {
+	denom := idCollection.Denom
 	index := owner.IDCollections.find(denom)
 	if index == -1 {
 		return owner, ErrUnknownCollection(DefaultCodespace,
@@ -190,11 +181,21 @@ func (owner Owner) DeleteID(denom string, id string) (Owner, sdk.Error) {
 	if err != nil {
 		return owner, err
 	}
-	owner, err = owner.UpdateIDCollection(denom, idCollection)
+	owner, err = owner.UpdateIDCollection(idCollection)
 	if err != nil {
 		return owner, err
 	}
 	return owner, nil
+}
+
+// String follows stringer interface
+func (owner Owner) String() string {
+	return fmt.Sprintf(`
+	Address: 				%s
+	IDCollections:        	%s`,
+		owner.Address,
+		owner.IDCollections.String(),
+	)
 }
 
 // // String follows stringer interface

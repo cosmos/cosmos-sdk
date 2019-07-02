@@ -17,42 +17,40 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func NewAnteHandler(fck auth.FeeCollectionKeeper, ctx sdk.Context, tx sdk.Tx, simulate bool)
+func NewAnteHandler(supplyKeeper types.SupplyKeeper, ctx sdk.Context, tx sdk.Tx, simulate bool)
  (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		// all transactions must be of type auth.StdTx
-		stdTx, ok := tx.(auth.StdTx)
-		if !ok {
-			// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
-			// during runTx.
-			newCtx = sdk.SetGasMeter(simulate, ctx, 0)
-			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
-		}
-
-		// Ensure that the provided fees meet a minimum threshold for the validator,
-		// if this is a CheckTx. This is only for local mempool purposes, and thus
-		// is only ran on check tx.
-		if ctx.IsCheckTx() && !simulate {
-			res := EnsureSufficientMempoolFees(ctx, stdTx.Fee)
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
-		}
-
-		// NOTE: This should only get run by the first module
-		// By placing this line here, we force users to place 
-		// distribution module first in manager's AnteHandler list.
-		newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
-
-		if !stdTx.Fee.Amount.IsZero() {
-			signerAccs[0], res = DeductFees(ctx.BlockHeader().Time, signerAccs[0], stdTx.Fee)
-			if !res.IsOK() {
-				return newCtx, res, true
-			}
-
-			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
-		}	
+	if addr := supplyKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
 	}
+
+	// all transactions must be of type auth.StdTx
+	stdTx, ok := tx.(auth.StdTx)
+	if !ok {
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
+		// during runTx.
+		newCtx = sdk.SetGasMeter(simulate, ctx, 0)
+		return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
+	}
+
+	// Ensure that the provided fees meet a minimum threshold for the validator,
+	// if this is a CheckTx. This is only for local mempool purposes, and thus
+	// is only ran on check tx.
+	if ctx.IsCheckTx() && !simulate {
+		res := EnsureSufficientMempoolFees(ctx, stdTx.Fee)
+		if !res.IsOK() {
+			return newCtx, res, true
+		}
+	}
+
+	if !stdTx.Fee.Amount.IsZero() {
+		signerAccs[0], res = DeductFees(supplyKeeper, ctx, signerAccs[0], stdTx.Fee.Amount)
+		if !res.IsOK() {
+			return newCtx, res, true
+		}
+
+		fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
+	}	
 }
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
@@ -90,34 +88,35 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Result) {
+func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc Account, fees sdk.Coins) sdk.Result {
+	blockTime := ctx.BlockHeader().Time
 	coins := acc.GetCoins()
-	feeAmount := fee.Amount
 
-	if !feeAmount.IsValid() {
-		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
+	if !fees.IsValid() {
+		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", fees)).Result()
 	}
 
-	// get the resulting coins deducting the fees
-	newCoins, ok := coins.SafeSub(feeAmount)
-	if ok {
-		return nil, sdk.ErrInsufficientFunds(
-			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, feeAmount),
+	// verify the account has enough funds to pay for fees
+	_, hasNeg := coins.SafeSub(fees)
+	if hasNeg {
+		return sdk.ErrInsufficientFunds(
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", coins, fees),
 		).Result()
 	}
 
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
 	spendableCoins := acc.SpendableCoins(blockTime)
-	if _, hasNeg := spendableCoins.SafeSub(feeAmount); hasNeg {
-		return nil, sdk.ErrInsufficientFunds(
-			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, feeAmount),
+	if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
+		return sdk.ErrInsufficientFunds(
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, fees),
 		).Result()
 	}
 
-	if err := acc.SetCoins(newCoins); err != nil {
-		return nil, sdk.ErrInternal(err.Error()).Result()
+	err := supplyKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	if err != nil {
+		return err.Result()
 	}
 
-	return acc, sdk.Result{}
+	return sdk.Result{}
 }

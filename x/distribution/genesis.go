@@ -59,8 +59,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper Keeper, fck types.FeeCollectionKeeper) types.GenesisState {
-	collectedFees := fck.GetCollectedFees(ctx)
+func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
@@ -138,6 +137,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper, fck types.FeeCollectionKeeper
 			return false
 		},
 	)
-	return types.NewGenesisState(feePool, collectedFees, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
+	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
 		dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

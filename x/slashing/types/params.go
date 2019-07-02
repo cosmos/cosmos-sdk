@@ -10,10 +10,10 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamspace                         = ModuleName
-	DefaultMaxEvidenceAge       time.Duration = 60 * 2 * time.Second
-	DefaultSignedBlocksWindow   int64         = 100
-	DefaultDowntimeJailDuration time.Duration = 60 * 10 * time.Second
+	DefaultParamspace           = ModuleName
+	DefaultMaxEvidenceAge       = 60 * 2 * time.Second
+	DefaultSignedBlocksWindow   = int64(100)
+	DefaultDowntimeJailDuration = 60 * 10 * time.Second
 )
 
 // The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)

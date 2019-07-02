@@ -98,7 +98,6 @@ TokenURI:		%s`,
 
 // ----------------------------------------------------------------------------
 // NFT
-// TODO: create interface and types for mintable NFT
 
 // NFTs define a list of NFT
 type NFTs []NFT

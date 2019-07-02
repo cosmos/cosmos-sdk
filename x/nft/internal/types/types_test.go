@@ -470,7 +470,6 @@ func TestCollectionsStringMethod(t *testing.T) {
 	collection2 := NewCollection(denom2, nfts2)
 
 	collections = NewCollections(collection, collection2)
-	fmt.Println(collections.String())
 	require.Equal(t, fmt.Sprintf(`Denom: 				%s
 NFTs:
 

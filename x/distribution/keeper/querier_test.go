@@ -177,8 +177,8 @@ func TestQueries(t *testing.T) {
 	// test validator slashes query with height range
 	slashOne := types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1))
 	slashTwo := types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(6, 1))
-	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, slashOne)
-	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, slashTwo)
+	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, 0, slashOne)
+	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, 0, slashTwo)
 	slashes := getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 2)
 	require.Equal(t, 0, len(slashes))
 	slashes = getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 5)

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -173,9 +174,18 @@ func (se StringEvents) Flatten() StringEvents {
 		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
 	}
 
-	var res StringEvents
-	for ty, attrs := range flatEvents {
-		res = append(res, StringEvent{Type: ty, Attributes: attrs})
+	var (
+		res  StringEvents
+		keys []string
+	)
+
+	for ty := range flatEvents {
+		keys = append(keys, ty)
+	}
+
+	sort.Strings(keys)
+	for _, ty := range keys {
+		res = append(res, StringEvent{Type: ty, Attributes: flatEvents[ty]})
 	}
 
 	return res

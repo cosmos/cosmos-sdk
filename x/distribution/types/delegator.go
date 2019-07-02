@@ -14,7 +14,7 @@ import (
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64  `json:"previous_period"` // period at which the delegation should withdraw starting from
 	Stake          sdk.Dec `json:"stake"`           // amount of staking token delegated
-	Height         uint64  `json:"height"`          // height at which delegation was created
+	Height         uint64  `json:"creation_height"` // height at which delegation was created
 }
 
 // create a new DelegatorStartingInfo

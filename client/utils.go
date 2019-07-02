@@ -4,6 +4,8 @@ package client
 // given that client provides a desired page and limit of objects and the handler
 // provides the total number of objects. If the start page is invalid, non-positive
 // values are returned signaling the request is invalid.
+//
+// NOTE: The start page is assumed to be 1-indexed.
 func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 	if limit == 0 {
 		limit = defLimit

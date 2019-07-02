@@ -20,6 +20,10 @@ const (
 	awsRegion       = "us-east-1"
 )
 
+var (
+	simTimeStamp = time.Now().Format("01-02-2006_15:05:05")
+)
+
 func awsErrHandler(err error) {
 	if awsErr, ok := err.(awserr.Error); ok {
 		switch awsErr.Code() {
@@ -32,7 +36,7 @@ func awsErrHandler(err error) {
 }
 
 func makeObjKey(folderName string, fileName string) string {
-	return fmt.Sprintf("%s/%s/%s", folderName,time.Now().Format("01-02-2006_15:04:05"), fileName)
+	return fmt.Sprintf("%s/%s/%s", folderName, simTimeStamp, fileName)
 }
 
 func putObj(fileHandle *os.File, svc *s3.S3, folderName string, bucketName string) {

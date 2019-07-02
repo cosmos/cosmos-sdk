@@ -1,4 +1,4 @@
-package simulation
+package nft
 
 import (
 	"fmt"
@@ -6,13 +6,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateMsgTransferNFT Simulates the transfer of an NFT
-func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+// DONTCOVER
+
+// SimulateMsgTransferNFT simulates the transfer of an NFT
+func SimulateMsgTransferNFT(k Keeper) simulation.Operation {
+	handler := GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -21,7 +22,7 @@ func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, nil
 		}
 
-		msg := nft.NewMsgTransferNFT(
+		msg := NewMsgTransferNFT(
 			ownerAddr,                             // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
 			denom,
@@ -43,9 +44,9 @@ func SimulateMsgTransferNFT(k nft.Keeper) simulation.Operation {
 	}
 }
 
-// SimulateMsgEditNFTMetadata
-func SimulateMsgEditNFTMetadata(k nft.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+// SimulateMsgEditNFTMetadata simulates an edit metadata transaction
+func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
+	handler := GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -54,7 +55,7 @@ func SimulateMsgEditNFTMetadata(k nft.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, nil
 		}
 
-		msg := nft.NewMsgEditNFTMetadata(
+		msg := NewMsgEditNFTMetadata(
 			ownerAddr,
 			denom,
 			nftID,
@@ -79,7 +80,7 @@ func SimulateMsgEditNFTMetadata(k nft.Keeper) simulation.Operation {
 	}
 }
 
-func getRandomNFTFromOwner(ctx sdk.Context, k nft.Keeper, r *rand.Rand) (address sdk.AccAddress, denom, nftID string) {
+func getRandomNFTFromOwner(ctx sdk.Context, k Keeper, r *rand.Rand) (address sdk.AccAddress, denom, nftID string) {
 	owners := k.GetOwners(ctx)
 	if len(owners) == 0 {
 		return nil, "", ""

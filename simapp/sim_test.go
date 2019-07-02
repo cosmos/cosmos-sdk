@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 
 	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftsim "github.com/cosmos/cosmos-sdk/x/nft/simulation"
 	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -821,7 +820,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			nftsim.SimulateMsgEditNFTMetadata(app.nftKeeper),
+			nft.SimulateMsgEditNFTMetadata(app.nftKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -832,7 +831,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			nftsim.SimulateMsgTransferNFT(app.nftKeeper),
+			nft.SimulateMsgTransferNFT(app.nftKeeper),
 		},
 	}
 }

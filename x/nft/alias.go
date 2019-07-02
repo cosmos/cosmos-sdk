@@ -3,8 +3,8 @@ package nft
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
 type (

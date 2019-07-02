@@ -8,21 +8,20 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
-type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content
+type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) Content
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim ContentSimulator) simulation.Operation {
-	handler := gov.NewHandler(k)
+func SimulateSubmittingVotingAndSlashingForProposal(k Keeper, contentSim ContentSimulator) simulation.Operation {
+	handler := NewHandler(k)
 
 	// The states are:
 	// column 1: All validators vote
@@ -97,7 +96,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
+func simulateHandleMsgSubmitProposal(msg MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
 	ctx, write := ctx.CacheContext()
 	ok = handler(ctx, msg).IsOK()
 	if ok {
@@ -107,15 +106,15 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 }
 
 // SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
-	return gov.NewTextProposal(
+func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) Content {
+	return NewTextProposal(
 		simulation.RandStringOfLength(r, 140),
 		simulation.RandStringOfLength(r, 5000),
 	)
 }
 
-func simulationCreateMsgSubmitProposal(r *rand.Rand, c gov.Content, s simulation.Account) (msg gov.MsgSubmitProposal, err error) {
-	msg = gov.NewMsgSubmitProposal(c, randomDeposit(r), s.Address)
+func simulationCreateMsgSubmitProposal(r *rand.Rand, c Content, s simulation.Account) (msg MsgSubmitProposal, err error) {
+	msg = NewMsgSubmitProposal(c, randomDeposit(r), s.Address)
 	if msg.ValidateBasic() != nil {
 		err = fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 	}
@@ -123,7 +122,7 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, c gov.Content, s simulation
 }
 
 // SimulateMsgDeposit
-func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
+func SimulateMsgDeposit(k Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -133,12 +132,12 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(), nil, nil
 		}
 		deposit := randomDeposit(r)
-		msg := gov.NewMsgDeposit(acc.Address, proposalID, deposit)
+		msg := NewMsgDeposit(acc.Address, proposalID, deposit)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		ok = gov.NewHandler(k)(ctx, msg).IsOK()
+		ok = NewHandler(k)(ctx, msg).IsOK()
 		if ok {
 			write()
 		}
@@ -150,12 +149,12 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 
 // SimulateMsgVote
 // nolint: unparam
-func SimulateMsgVote(k gov.Keeper) simulation.Operation {
+func SimulateMsgVote(k Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, simulation.Account{}, 0)
 }
 
 // nolint: unparam
-func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID uint64) simulation.Operation {
+func operationSimulateMsgVote(k Keeper, acc simulation.Account, proposalID uint64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -172,13 +171,13 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 		}
 		option := randomVotingOption(r)
 
-		msg := gov.NewMsgVote(acc.Address, proposalID, option)
+		msg := NewMsgVote(acc.Address, proposalID, option)
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := gov.NewHandler(k)(ctx, msg).IsOK()
+		ok := NewHandler(k)(ctx, msg).IsOK()
 		if ok {
 			write()
 		}
@@ -196,7 +195,7 @@ func randomDeposit(r *rand.Rand) sdk.Coins {
 }
 
 // Pick a random proposal ID
-func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
+func randomProposalID(r *rand.Rand, k Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
 	lastProposalID, _ := k.GetProposalID(ctx)
 	lastProposalID = uint64(math.Max(float64(lastProposalID)-1, 0))
 
@@ -208,16 +207,16 @@ func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID u
 }
 
 // Pick a random voting option
-func randomVotingOption(r *rand.Rand) gov.VoteOption {
+func randomVotingOption(r *rand.Rand) VoteOption {
 	switch r.Intn(4) {
 	case 0:
-		return gov.OptionYes
+		return OptionYes
 	case 1:
-		return gov.OptionAbstain
+		return OptionAbstain
 	case 2:
-		return gov.OptionNo
+		return OptionNo
 	case 3:
-		return gov.OptionNoWithVeto
+		return OptionNoWithVeto
 	}
 	panic("should not happen")
 }

@@ -1,4 +1,4 @@
-package gov
+package keeper
 
 import (
 	"strings"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
 )
 
 const custom = "custom"

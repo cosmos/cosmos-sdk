@@ -1,34 +1,17 @@
-package gov
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
-// validatorGovInfo used for tallying
-type validatorGovInfo struct {
-	Address             sdk.ValAddress // address of the validator operator
-	BondedTokens        sdk.Int        // Power of a Validator
-	DelegatorShares     sdk.Dec        // Total outstanding delegator shares
-	DelegatorDeductions sdk.Dec        // Delegator deductions from validator's delegators voting independently
-	Vote                VoteOption     // Vote of the validator
-}
-
-func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
-	delegatorDeductions sdk.Dec, vote VoteOption) validatorGovInfo {
-
-	return validatorGovInfo{
-		Address:             address,
-		BondedTokens:        bondedTokens,
-		DelegatorShares:     delegatorShares,
-		DelegatorDeductions: delegatorDeductions,
-		Vote:                vote,
-	}
-}
 
 // TODO: Break into several smaller functions for clarity
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, burnDeposits bool, tallyResults TallyResult) {
+
+// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the 
+// voters
+func (keeper Keeper) Tally(ctx sdk.Context, proposal Proposal) (passes bool, burnDeposits bool, tallyResults TallyResult) {
 	results := make(map[VoteOption]sdk.Dec)
 	results[OptionYes] = sdk.ZeroDec()
 	results[OptionAbstain] = sdk.ZeroDec()

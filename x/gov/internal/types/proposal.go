@@ -195,57 +195,6 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	}
 }
 
-// Tally Results
-type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
-}
-
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
-	return TallyResult{
-		Yes:        yes,
-		Abstain:    abstain,
-		No:         no,
-		NoWithVeto: noWithVeto,
-	}
-}
-
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
-	return TallyResult{
-		Yes:        results[OptionYes].TruncateInt(),
-		Abstain:    results[OptionAbstain].TruncateInt(),
-		No:         results[OptionNo].TruncateInt(),
-		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
-	}
-}
-
-// EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() TallyResult {
-	return TallyResult{
-		Yes:        sdk.ZeroInt(),
-		Abstain:    sdk.ZeroInt(),
-		No:         sdk.ZeroInt(),
-		NoWithVeto: sdk.ZeroInt(),
-	}
-}
-
-// Equals returns if two proposals are equal.
-func (tr TallyResult) Equals(comp TallyResult) bool {
-	return tr.Yes.Equal(comp.Yes) &&
-		tr.Abstain.Equal(comp.Abstain) &&
-		tr.No.Equal(comp.No) &&
-		tr.NoWithVeto.Equal(comp.NoWithVeto)
-}
-
-func (tr TallyResult) String() string {
-	return fmt.Sprintf(`Tally Result:
-  Yes:        %s
-  Abstain:    %s
-  No:         %s
-  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
-}
 
 // Proposal types
 const (

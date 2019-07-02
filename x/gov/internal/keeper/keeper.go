@@ -1,4 +1,4 @@
-package gov
+package keeper
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 
@@ -22,10 +22,10 @@ type Keeper struct {
 	paramSpace params.Subspace
 
 	// The SupplyKeeper to reduce the supply of the network
-	supplyKeeper SupplyKeeper
+	supplyKeeper types.SupplyKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
-	sk StakingKeeper
+	sk types.StakingKeeper
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -47,7 +47,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace,
-	supplyKeeper SupplyKeeper, sk StakingKeeper, codespace sdk.CodespaceType, rtr Router,
+	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, codespace sdk.CodespaceType, rtr Router,
 ) Keeper {
 
 	// ensure governance module account is set

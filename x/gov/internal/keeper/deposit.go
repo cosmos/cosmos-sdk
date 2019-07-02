@@ -1,10 +1,10 @@
-package gov
+package keeper
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
 )
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal

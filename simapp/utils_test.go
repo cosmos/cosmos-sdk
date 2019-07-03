@@ -40,6 +40,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	distr.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
+	supply.RegisterCodec(cdc)
 	return
 }
 

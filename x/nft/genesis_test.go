@@ -10,7 +10,9 @@ import (
 
 func TestInitGenesis(t *testing.T) {
 	ctx, k, _ := keeper.Initialize()
-	var genesisState GenesisState
+	genesisState := DefaultGenesisState()
+	require.Equal(t, 0, len(genesisState.Owners))
+	require.Equal(t, 0, len(genesisState.Collections))
 
 	ids := []string{id, id2, id3}
 	idCollection := NewIDCollection(denom, ids)
@@ -35,10 +37,7 @@ func TestInitGenesis(t *testing.T) {
 
 	collections := types.NewCollections(collection, collection2)
 
-	genesisState = GenesisState{
-		Owners:      owners,
-		Collections: collections,
-	}
+	genesisState = NewGenesisState(owners, collections)
 
 	InitGenesis(ctx, k, genesisState)
 

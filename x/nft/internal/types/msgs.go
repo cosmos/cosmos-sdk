@@ -45,6 +45,9 @@ func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
 	if msg.Recipient.Empty() {
 		return sdk.ErrInvalidAddress("invalid recipient address")
 	}
+	if msg.ID == "" {
+		return ErrInvalidNFT(DefaultCodespace)
+	}
 
 	return nil
 }
@@ -101,6 +104,12 @@ func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
 	if msg.Owner.Empty() {
 		return sdk.ErrInvalidAddress("invalid owner address")
 	}
+	if msg.ID == "" {
+		return ErrInvalidNFT(DefaultCodespace)
+	}
+	if msg.Denom == "" {
+		return ErrInvalidNFT(DefaultCodespace)
+	}
 	return nil
 }
 
@@ -136,7 +145,7 @@ func NewMsgMintNFT(sender, recipient sdk.AccAddress, id, denom, name, descriptio
 	return MsgMintNFT{
 		Sender:      sender,
 		Recipient:   recipient,
-		ID:          id,
+		ID:          strings.TrimSpace(id),
 		Denom:       strings.TrimSpace(denom),
 		Name:        strings.TrimSpace(name),
 		Description: strings.TrimSpace(description),
@@ -154,10 +163,16 @@ func (msg MsgMintNFT) Type() string { return "mint_nft" }
 // ValidateBasic Implements Msg.
 func (msg MsgMintNFT) ValidateBasic() sdk.Error {
 	if msg.Denom == "" {
-		return ErrInvalidCollection(DefaultCodespace)
+		return ErrInvalidNFT(DefaultCodespace)
+	}
+	if msg.ID == "" {
+		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
+	}
+	if msg.Recipient.Empty() {
+		return sdk.ErrInvalidAddress("invalid recipient address")
 	}
 	return nil
 }
@@ -201,8 +216,11 @@ func (msg MsgBurnNFT) Type() string { return "burn_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
+	if msg.ID == "" {
+		return ErrInvalidNFT(DefaultCodespace)
+	}
 	if msg.Denom == "" {
-		return ErrInvalidCollection(DefaultCodespace)
+		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")

@@ -19,6 +19,8 @@ type (
 	GenesisState       = types.GenesisState
 	MsgTransferNFT     = types.MsgTransferNFT
 	MsgEditNFTMetadata = types.MsgEditNFTMetadata
+	MsgMintNFT         = types.MsgMintNFT
+	MsgBurnNFT         = types.MsgBurnNFT
 )
 
 var (

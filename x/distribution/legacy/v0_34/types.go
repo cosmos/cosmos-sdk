@@ -98,31 +98,6 @@ type (
 	}
 )
 
-func NewGenesisState(
-	feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress,
-	r []ValidatorOutstandingRewardsRecord, acc []ValidatorAccumulatedCommissionRecord,
-	historical []ValidatorHistoricalRewardsRecord, cur []ValidatorCurrentRewardsRecord,
-	dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
-) GenesisState {
-
-	return GenesisState{
-		FeePool:                         feePool,
-		CommunityTax:                    communityTax,
-		BaseProposerReward:              baseProposerReward,
-		BonusProposerReward:             bonusProposerReward,
-		WithdrawAddrEnabled:             withdrawAddrEnabled,
-		DelegatorWithdrawInfos:          dwis,
-		PreviousProposer:                pp,
-		OutstandingRewards:              r,
-		ValidatorAccumulatedCommissions: acc,
-		ValidatorHistoricalRewards:      historical,
-		ValidatorCurrentRewards:         cur,
-		DelegatorStartingInfos:          dels,
-		ValidatorSlashEvents:            slashes,
-	}
-}
-
 // ----------------------------------------------------------------------------
 // Codec
 // ----------------------------------------------------------------------------

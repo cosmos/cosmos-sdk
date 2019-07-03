@@ -29,7 +29,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.MigrateGovernance(govState))
 	}
 
-	// migrate slashing state
+	// migrate distribution state
 	if appState[v034distr.ModuleName] != nil {
 		v034distr.RegisterCodec(v034Codec)
 

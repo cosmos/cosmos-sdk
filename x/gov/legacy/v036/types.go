@@ -30,35 +30,35 @@ const (
 
 // GenesisState represents v0.34.x genesis state for the governance module.
 type GenesisState struct {
-	StartingProposalID uint64        `json:"starting_proposal_id"`
-	Deposits           Deposits      `json:"deposits"`
-	Votes              Votes         `json:"votes"`
-	Proposals          []Proposal    `json:"proposals"`
-	DepositParams      DepositParams `json:"deposit_params"`
-	VotingParams       VotingParams  `json:"voting_params"`
-	TallyParams        TallyParams   `json:"tally_params"`
+	StartingProposalID uint64        `json:"starting_proposal_id" yaml:"starting_proposal_id"`
+	Deposits           Deposits      `json:"deposits" yaml:"deposits"`
+	Votes              Votes         `json:"votes" yaml:"votes"`
+	Proposals          []Proposal    `json:"proposals" yaml:"proposals"`
+	DepositParams      DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	VotingParams       VotingParams  `json:"voting_params" yaml:"voting_params"`
+	TallyParams        TallyParams   `json:"tally_params" yaml:"tally_params"`
 }
 
 type Deposit struct {
-	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
-	Depositor  sdk.AccAddress `json:"depositor"`   //  Address of the depositor
-	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
+	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
+	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     //  Address of the depositor
+	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           //  Deposit amount
 }
 
 type Deposits []Deposit
 
 type Vote struct {
-	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
-	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
-	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
+	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
+	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
+	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
 }
 
 type Votes []Vote
 
 // Param around deposits for governance
 type DepositParams struct {
-	MinDeposit       sdk.Coins     `json:"min_deposit,omitempty"`        //  Minimum deposit for a proposal to enter voting period.
-	MaxDepositPeriod time.Duration `json:"max_deposit_period,omitempty"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+	MinDeposit       sdk.Coins     `json:"min_deposit,omitempty" yaml:"min_deposit,omitempty"`               //  Minimum deposit for a proposal to enter voting period.
+	MaxDepositPeriod time.Duration `json:"max_deposit_period,omitempty" yaml:"max_deposit_period,omitempty"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 
 type Content interface {
@@ -71,27 +71,27 @@ type Content interface {
 }
 
 type Proposal struct {
-	Content `json:"content"` // Proposal content interface
+	Content `json:"content" yaml:"content"` // Proposal content interface
 
-	ProposalID       uint64         `json:"id"`                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
+	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
+	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
 
-	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit"`    // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
 type Proposals []Proposal
 type ProposalQueue []uint64
 
 type TallyParams struct {
-	Quorum    sdk.Dec `json:"quorum,omitempty"`    //  Minimum percentage of total stake needed to vote for a result to be considered valid
-	Threshold sdk.Dec `json:"threshold,omitempty"` //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
-	Veto      sdk.Dec `json:"veto,omitempty"`      //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+	Quorum    sdk.Dec `json:"quorum,omitempty" yaml:"quorum,omitempty"`       //  Minimum percentage of total stake needed to vote for a result to be considered valid
+	Threshold sdk.Dec `json:"threshold,omitempty" yaml:"threshold,omitempty"` //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
+	Veto      sdk.Dec `json:"veto,omitempty" yaml:"veto,omitempty"`           //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
 }
 
 // ----------------------------------------------------------------------------
@@ -210,10 +210,10 @@ type VotingParams struct {
 }
 
 type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
+	Yes        sdk.Int `json:"yes" yaml:"yes"`
+	Abstain    sdk.Int `json:"abstain" yaml:"abstain"`
+	No         sdk.Int `json:"no" yaml:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto" yaml:"no_with_veto"`
 }
 
 // ----------------------------------------------------------------------------
@@ -344,8 +344,8 @@ const (
 
 // Text Proposal
 type TextProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
 func NewTextProposal(title, description string) Content {
@@ -416,8 +416,8 @@ func (tp TextProposal) String() string {
 // TODO: We have to add fields for SUP specific arguments e.g. commit hash,
 // upgrade date, etc.
 type SoftwareUpgradeProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
 func NewSoftwareUpgradeProposal(title, description string) Content {

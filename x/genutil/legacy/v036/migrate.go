@@ -31,8 +31,6 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 	// migrate distribution state
 	if appState[v034distr.ModuleName] != nil {
-		v034distr.RegisterCodec(v034Codec)
-
 		var slashingGenState v034distr.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &slashingGenState)
 

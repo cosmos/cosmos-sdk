@@ -38,8 +38,8 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     []string{supply.Basic},
-		staking.NotBondedPoolName: []string{supply.Burner},
-		staking.BondedPoolName:    []string{supply.Burner},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
@@ -70,8 +70,8 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.A
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
 		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
-		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 
 		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)

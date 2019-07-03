@@ -123,8 +123,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     []string{supply.Basic},
 		types.ModuleName:          []string{supply.Basic},
-		staking.NotBondedPoolName: []string{supply.Burner},
-		staking.BondedPoolName:    []string{supply.Burner},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 
@@ -145,8 +145,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	// create module accounts
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
-	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
-	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
 	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Basic)
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)

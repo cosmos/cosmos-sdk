@@ -8,9 +8,10 @@ import (
 
 // permissions
 const (
-	Basic  = "basic"
-	Minter = "minter"
-	Burner = "burner"
+	Basic   = "basic"
+	Minter  = "minter"
+	Burner  = "burner"
+	Staking = "staking"
 )
 
 // PermAddr defines the permissions for an address
@@ -58,7 +59,7 @@ func (pa PermAddr) GetPermissions() []string {
 func validatePermissions(permissions []string) error {
 	for _, perm := range permissions {
 		switch perm {
-		case Basic, Minter, Burner:
+		case Basic, Minter, Burner, Staking:
 			continue
 		default:
 			return fmt.Errorf("invalid module permission %s", perm)

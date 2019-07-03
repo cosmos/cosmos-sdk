@@ -55,9 +55,14 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 	recipientModule string, amt sdk.Coins) sdk.Error {
 
 	// create the account if it doesn't yet exist
-	recipientAddr := k.GetModuleAccount(ctx, recipientModule).GetAddress()
+	acc, _ := k.GetModuleAccountAndPermissions(ctx, recipientModule)
+	recipientAddr := acc.GetAddress()
 	if recipientAddr == nil {
 		panic(fmt.Sprintf("module account %s isn't able to be created", recipientModule))
+	}
+
+	if !acc.HasPermission(types.Staking) {
+		panic(fmt.Sprintf("Account %s does not have permissions to delegate coins", recipientModule))
 	}
 
 	return k.bk.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
@@ -68,9 +73,14 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string,
 	recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
-	senderAddr := k.GetModuleAddress(senderModule)
+	acc, _ := k.GetModuleAccountAndPermissions(ctx, senderModule)
+	senderAddr := acc.GetAddress()
 	if senderAddr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
+	}
+
+	if !acc.HasPermission(types.Staking) {
+		panic(fmt.Sprintf("Account %s does not have permissions to undelegate coins", senderModule))
 	}
 
 	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)

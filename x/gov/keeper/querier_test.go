@@ -9,77 +9,77 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const custom = "custom"
 
-func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (DepositParams, VotingParams, TallyParams) {
+func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (types.DepositParams, types.VotingParams, types.TallyParams) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamDeposit}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamDeposit}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err := querier(ctx, []string{QueryParams, ParamDeposit}, query)
+	bz, err := querier(ctx, []string{types.QueryParams, types.ParamDeposit}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var depositParams DepositParams
+	var depositParams types.DepositParams
 	err2 := cdc.UnmarshalJSON(bz, &depositParams)
 	require.Nil(t, err2)
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamVoting}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamVoting}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamVoting}, query)
+	bz, err = querier(ctx, []string{types.QueryParams, types.ParamVoting}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var votingParams VotingParams
+	var votingParams types.VotingParams
 	err2 = cdc.UnmarshalJSON(bz, &votingParams)
 	require.Nil(t, err2)
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamTallying}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamTallying}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamTallying}, query)
+	bz, err = querier(ctx, []string{types.QueryParams, types.ParamTallying}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var tallyParams TallyParams
+	var tallyParams types.TallyParams
 	err2 = cdc.UnmarshalJSON(bz, &tallyParams)
 	require.Nil(t, err2)
 
 	return depositParams, votingParams, tallyParams
 }
 
-func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) Proposal {
+func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) types.Proposal {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryProposal}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposal}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
-	bz, err := querier(ctx, []string{QueryProposal}, query)
+	bz, err := querier(ctx, []string{types.QueryProposal}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var proposal Proposal
+	var proposal types.Proposal
 	err2 := cdc.UnmarshalJSON(bz, proposal)
 	require.Nil(t, err2)
 	return proposal
 }
 
-func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status ProposalStatus, limit uint64) []Proposal {
+func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status types.ProposalStatus, limit uint64) []types.Proposal {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryProposals}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalsParams(status, limit, voter, depositor)),
 	}
 
-	bz, err := querier(ctx, []string{QueryProposals}, query)
+	bz, err := querier(ctx, []string{types.QueryProposals}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
@@ -89,57 +89,57 @@ func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querie
 	return proposals
 }
 
-func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) Deposit {
+func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) types.Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryDeposit}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDeposit}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryDepositParams(proposalID, depositor)),
 	}
 
-	bz, err := querier(ctx, []string{QueryDeposit}, query)
+	bz, err := querier(ctx, []string{types.QueryDeposit}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var deposit Deposit
+	var deposit types.Deposit
 	err2 := cdc.UnmarshalJSON(bz, &deposit)
 	require.Nil(t, err2)
 	return deposit
 }
 
-func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []Deposit {
+func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []types.Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryDeposits}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.types.QueryDeposits}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
-	bz, err := querier(ctx, []string{QueryDeposits}, query)
+	bz, err := querier(ctx, []string{types.types.QueryDeposits}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var deposits []Deposit
+	var deposits []types.Deposit
 	err2 := cdc.UnmarshalJSON(bz, &deposits)
 	require.Nil(t, err2)
 	return deposits
 }
 
-func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, voter sdk.AccAddress) Vote {
+func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, voter sdk.AccAddress) types.Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryVote}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryVoteParams(proposalID, voter)),
 	}
 
-	bz, err := querier(ctx, []string{QueryVote}, query)
+	bz, err := querier(ctx, []string{types.QueryVote}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var vote Vote
+	var vote types.Vote
 	err2 := cdc.UnmarshalJSON(bz, &vote)
 	require.Nil(t, err2)
 	return vote
 }
 
-func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []Vote {
+func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []types.Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryVote}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
@@ -147,7 +147,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var votes []Vote
+	var votes []types.Vote
 	err2 := cdc.UnmarshalJSON(bz, &votes)
 	require.Nil(t, err2)
 	return votes
@@ -155,11 +155,11 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 
 func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) TallyResult {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, QuerierRoute, QueryTally}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryTally}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
-	bz, err := querier(ctx, []string{QueryTally}, query)
+	bz, err := querier(ctx, []string{types.QueryTally}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
@@ -171,7 +171,7 @@ func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 
 func TestQueryParams(t *testing.T) {
 	cdc := codec.New()
-	input := getMockApp(t, 1000, GenesisState{}, nil)
+	input := getMockApp(t, 1000, types.GenesisState{}, nil)
 	querier := NewQuerier(input.keeper)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -184,7 +184,7 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
-	input := getMockApp(t, 1000, GenesisState{}, nil)
+	input := getMockApp(t, 1000, types.GenesisState{}, nil)
 	querier := NewQuerier(input.keeper)
 	handler := NewHandler(input.keeper)
 
@@ -238,7 +238,7 @@ func TestQueries(t *testing.T) {
 	deposit = getQueriedDeposit(t, ctx, cdc, querier, proposalID3, input.addrs[1])
 	require.Equal(t, deposit, deposits[0])
 
-	// Only proposal #1 should be in Deposit Period
+	// Only proposal #1 should be in types.Deposit Period
 	proposals := getQueriedProposals(t, ctx, cdc, querier, nil, nil, StatusDepositPeriod, 0)
 	require.Len(t, proposals, 1)
 	require.Equal(t, proposalID1, proposals[0].ProposalID)
@@ -261,7 +261,7 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
 	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
-	// Test query votes on Proposal 2
+	// Test query votes on types.Proposal 2
 	votes := getQueriedVotes(t, ctx, cdc, querier, proposalID2)
 	require.Len(t, votes, 1)
 	require.Equal(t, input.addrs[0], votes[0].Voter)
@@ -269,7 +269,7 @@ func TestQueries(t *testing.T) {
 	vote := getQueriedVote(t, ctx, cdc, querier, proposalID2, input.addrs[0])
 	require.Equal(t, vote, votes[0])
 
-	// Test query votes on Proposal 3
+	// Test query votes on types.Proposal 3
 	votes = getQueriedVotes(t, ctx, cdc, querier, proposalID3)
 	require.Len(t, votes, 2)
 	require.True(t, input.addrs[0].String() == votes[0].Voter.String())

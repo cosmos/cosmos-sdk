@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // SubmitProposal create new proposal given a content
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal, sdk.Error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, sdk.Error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return Proposal{}, ErrNoProposalHandlerExists(keeper.codespace, content)
+		return types.Proposal{}, types.ErrNoProposalHandlerExists(keeper.codespace, content)
 	}
 
 	// Execute the proposal content in a cache-wrapped context to validate the
@@ -19,18 +19,18 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
 	if err := handler(cacheCtx, content); err != nil {
-		return Proposal{}, ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
+		return types.Proposal{}, types.ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
-		return Proposal{}, err
+		return types.Proposal{}, err
 	}
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal := NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
@@ -46,10 +46,10 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	return proposal, nil
 }
 
-// GetProposal get Proposal from store by ProposalID
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal Proposal, ok bool) {
+// GetProposal get types.Proposal from store by ProposalID
+func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal types.Proposal, ok bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(ProposalKey(proposalID))
+	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
 		return
 	}
@@ -58,10 +58,10 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal P
 }
 
 // SetProposal set a proposal to store
-func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
+func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
-	store.Set(ProposalKey(proposal.ProposalID), bz)
+	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
 
 // DeleteProposal deletes a proposal from store
@@ -73,11 +73,11 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
-	store.Delete(ProposalKey(proposalID))
+	store.Delete(types.ProposalKey(proposalID))
 }
 
 // GetProposals returns all the proposals from store
-func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals Proposals) {
+func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {
 		proposals = append(proposals, proposal)
 		return false
@@ -90,14 +90,14 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals Proposals) {
 // depositorAddr will filter proposals by whether or not that address has deposited to them
 // status will filter proposals by status
 // numLatest will fetch a specified number of the most recent proposals, or 0 for all proposals
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status ProposalStatus, numLatest uint64) []Proposal {
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status types.ProposalStatus, numLatest uint64) []types.Proposal {
 
 	maxProposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
-		return []Proposal{}
+		return []types.Proposal{}
 	}
 
-	matchingProposals := []Proposal{}
+	matchingProposals := []types.Proposal{}
 
 	if numLatest == 0 {
 		numLatest = maxProposalID
@@ -123,7 +123,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 			continue
 		}
 
-		if ValidProposalStatus(status) && proposal.Status != status {
+		if types.ValidProposalStatus(status) && proposal.Status != status {
 			continue
 		}
 
@@ -135,9 +135,9 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 // GetProposalID gets the highest proposal ID
 func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(ProposalIDKey)
+	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
-		return 0, ErrInvalidGenesis(keeper.codespace, "initial proposal ID hasn't been set")
+		return 0, types.ErrInvalidGenesis(keeper.codespace, "initial proposal ID hasn't been set")
 	}
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	return proposalID, nil
@@ -147,14 +147,14 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.
 func (keeper Keeper) setProposalID(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(ProposalIDKey, bz)
+	store.Set(types.ProposalIDKey, bz)
 }
 
-func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
+func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
 	proposal.VotingStartTime = ctx.BlockHeader().Time
 	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
 	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)

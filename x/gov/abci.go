@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // EndBlocker called every block, process inflation, update validator set.

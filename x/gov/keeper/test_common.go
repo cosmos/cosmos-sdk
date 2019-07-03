@@ -1,5 +1,5 @@
 // nolint:deadcode unused
-package gov
+package keeper
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -33,14 +33,14 @@ var (
 type testInput struct {
 	mApp     *mock.App
 	keeper   Keeper
-	router   Router
+	router   types.Router
 	sk       staking.Keeper
 	addrs    []sdk.AccAddress
 	pubKeys  []crypto.PubKey
 	privKeys []crypto.PrivKey
 }
 
-func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) testInput {
+func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []auth.Account) testInput {
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
@@ -49,13 +49,13 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
-	keyGov := sdk.NewKVStoreKey(StoreKey)
+	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	pk := mApp.ParamsKeeper
 
-	rtr := NewRouter().
-		AddRoute(RouterKey, ProposalHandler)
+	rtr := types.NewRouter().
+		AddRoute(types.RouterKey, types.ProposalHandler)
 
 	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
@@ -63,10 +63,10 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 		[]string{}, []string{}, []string{types.ModuleName, staking.NotBondedPoolName, staking.BondedPoolName})
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
-	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), supplyKeeper, sk, DefaultCodespace, rtr)
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk.Subspace("testgov"), supplyKeeper, sk, types.DefaultCodespace, rtr)
 
-	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
-	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
+	mApp.Router().AddRoute(types.RouterKey, types.NewHandler(keeper))
+	mApp.QueryRouter().AddRoute(types.QuerierRoute, NewQuerier(keeper))
 
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genAccs, genState))
@@ -97,7 +97,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []auth.Account, genState GenesisState) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []auth.Account, genState types.GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
@@ -117,7 +117,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 
 		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, supplyKeeper, stakingGenesis)
 		if genState.IsEmpty() {
-			InitGenesis(ctx, keeper, supplyKeeper, DefaultGenesisState())
+			InitGenesis(ctx, keeper, supplyKeeper, types.DefaultGenesisState())
 		} else {
 			InitGenesis(ctx, keeper, supplyKeeper, genState)
 		}
@@ -170,8 +170,8 @@ func SortByteArrays(src [][]byte) [][]byte {
 	return sorted
 }
 
-func testProposal() Content {
-	return NewTextProposal("Test", "description")
+func testProposal() types.Content {
+	return types.NewTextProposal("Test", "description")
 }
 
 const contextKeyBadProposal = "contextKeyBadProposal"
@@ -179,9 +179,9 @@ const contextKeyBadProposal = "contextKeyBadProposal"
 // badProposalHandler implements a governance proposal handler that is identical
 // to the actual handler except this fails if the context doesn't contain a value
 // for the key contextKeyBadProposal or if the value is false.
-func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
+func badProposalHandler(ctx sdk.Context, c types.Content) sdk.Error {
 	switch c.ProposalType() {
-	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
+	case types.ProposalTypeText, types.ProposalTypeSoftwareUpgrade:
 		v := ctx.Value(contextKeyBadProposal)
 
 		if v == nil || !v.(bool) {
@@ -196,8 +196,8 @@ func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	}
 }
 
-// checks if two proposals are equal (note: slow, for tests only)
-func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
+// ProposalEqual checks if two proposals are equal (note: slow, for tests only)
+func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
 	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
 		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }

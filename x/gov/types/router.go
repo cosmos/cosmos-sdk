@@ -1,4 +1,4 @@
-package gov
+package types
 
 import (
 	"fmt"

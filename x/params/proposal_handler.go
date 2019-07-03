@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
-func NewParamChangeProposalHandler(k Keeper) gov.Handler {
-	return func(ctx sdk.Context, content gov.Content) sdk.Error {
+func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
+	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
 		switch c := content.(type) {
 		case ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)

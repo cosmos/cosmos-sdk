@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -17,8 +17,8 @@ const (
 var _ govtypes.Content = ParameterChangeProposal{}
 
 func init() {
-	gov.RegisterProposalType(ProposalTypeChange)
-	gov.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
+	govtypes.RegisterProposalType(ProposalTypeChange)
+	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter

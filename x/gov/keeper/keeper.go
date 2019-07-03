@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 
@@ -34,7 +34,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 
 	// Proposal router
-	router Router
+	router types.Router
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -44,7 +44,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace subspace.Subspace,
-	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, codespace sdk.CodespaceType, rtr Router,
+	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, codespace sdk.CodespaceType, rtr types.Router,
 ) Keeper {
 
 	// ensure governance module account is set
@@ -59,7 +59,7 @@ func NewKeeper(
 
 	return Keeper{
 		storeKey:     key,
-		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
+		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
 		supplyKeeper: supplyKeeper,
 		sk:           sk,
 		cdc:          cdc,
@@ -81,36 +81,36 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccoun
 // Params
 
 // Returns the current DepositParams from the global param store
-func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
-	var depositParams DepositParams
-	keeper.paramSpace.Get(ctx, ParamStoreKeyDepositParams, &depositParams)
+func (keeper Keeper) GetDepositParams(ctx sdk.Context) types.DepositParams {
+	var depositParams types.DepositParams
+	keeper.paramSpace.Get(ctx, types.ParamStoreKeyDepositParams, &depositParams)
 	return depositParams
 }
 
 // Returns the current VotingParams from the global param store
-func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
-	var votingParams VotingParams
-	keeper.paramSpace.Get(ctx, ParamStoreKeyVotingParams, &votingParams)
+func (keeper Keeper) GetVotingParams(ctx sdk.Context) types.VotingParams {
+	var votingParams types.VotingParams
+	keeper.paramSpace.Get(ctx, types.ParamStoreKeyVotingParams, &votingParams)
 	return votingParams
 }
 
 // Returns the current TallyParam from the global param store
-func (keeper Keeper) GetTallyParams(ctx sdk.Context) TallyParams {
-	var tallyParams TallyParams
-	keeper.paramSpace.Get(ctx, ParamStoreKeyTallyParams, &tallyParams)
+func (keeper Keeper) GetTallyParams(ctx sdk.Context) types.TallyParams {
+	var tallyParams types.TallyParams
+	keeper.paramSpace.Get(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
 	return tallyParams
 }
 
-func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams DepositParams) {
-	keeper.paramSpace.Set(ctx, ParamStoreKeyDepositParams, &depositParams)
+func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams types.DepositParams) {
+	keeper.paramSpace.Set(ctx, types.ParamStoreKeyDepositParams, &depositParams)
 }
 
-func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams VotingParams) {
-	keeper.paramSpace.Set(ctx, ParamStoreKeyVotingParams, &votingParams)
+func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams types.VotingParams) {
+	keeper.paramSpace.Set(ctx, types.ParamStoreKeyVotingParams, &votingParams)
 }
 
-func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
-	keeper.paramSpace.Set(ctx, ParamStoreKeyTallyParams, &tallyParams)
+func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams types.TallyParams) {
+	keeper.paramSpace.Set(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
 }
 
 // ProposalQueues
@@ -262,11 +262,11 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 // ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
 func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
+	return store.Iterator(types.ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
 }
 
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
+	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }

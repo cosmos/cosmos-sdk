@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestGetSetProposal(t *testing.T) {
@@ -201,28 +202,28 @@ func TestVotes(t *testing.T) {
 	input.keeper.SetProposal(ctx, proposal)
 
 	// Test first vote
-	input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionAbstain)
+	input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionAbstain)
 	vote, found := input.keeper.GetVote(ctx, proposalID, input.addrs[0])
 	require.True(t, found)
 	require.Equal(t, input.addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, OptionAbstain, vote.Option)
+	require.Equal(t, types.OptionAbstain, vote.Option)
 
 	// Test change of vote
-	input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	vote, found = input.keeper.GetVote(ctx, proposalID, input.addrs[0])
 	require.True(t, found)
 	require.Equal(t, input.addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, OptionYes, vote.Option)
+	require.Equal(t, types.OptionYes, vote.Option)
 
 	// Test second vote
-	input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNoWithVeto)
+	input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNoWithVeto)
 	vote, found = input.keeper.GetVote(ctx, proposalID, input.addrs[1])
 	require.True(t, found)
 	require.Equal(t, input.addrs[1], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, OptionNoWithVeto, vote.Option)
+	require.Equal(t, types.OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
 	votesIterator := input.keeper.GetVotesIterator(ctx, proposalID)
@@ -231,14 +232,14 @@ func TestVotes(t *testing.T) {
 	require.True(t, votesIterator.Valid())
 	require.Equal(t, input.addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, OptionYes, vote.Option)
+	require.Equal(t, types.OptionYes, vote.Option)
 	votesIterator.Next()
 	require.True(t, votesIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())
 	require.Equal(t, input.addrs[1], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, OptionNoWithVeto, vote.Option)
+	require.Equal(t, types.OptionNoWithVeto, vote.Option)
 	votesIterator.Next()
 	require.False(t, votesIterator.Valid())
 	votesIterator.Close()

@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -33,16 +34,16 @@ func TestTallyNoOneVotes(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
-	require.True(t, tallyResults.Equals(EmptyTallyResult()))
+	require.True(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyNoQuorum(t *testing.T) {
@@ -66,15 +67,15 @@ func TestTallyNoQuorum(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, _ :=  input.keeper.Tally(ctx, proposal)
 	require.False(t, passes)
 	require.True(t, burnDeposits)
 }
@@ -100,21 +101,21 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
@@ -138,17 +139,17 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, _ :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -175,23 +176,23 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
@@ -215,23 +216,23 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNoWithVeto)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNoWithVeto)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 
 }
 
@@ -256,23 +257,23 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionAbstain)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionAbstain)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
@@ -296,23 +297,23 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionAbstain)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionAbstain)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
@@ -336,21 +337,21 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
@@ -378,25 +379,25 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[3], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[3], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
@@ -424,23 +425,23 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionNo)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
@@ -470,25 +471,25 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[3], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[3], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
@@ -531,23 +532,23 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
 
 func TestTallyJailedValidator(t *testing.T) {
@@ -584,21 +585,21 @@ func TestTallyJailedValidator(t *testing.T) {
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal.Status = types.StatusVotingPeriod
 	input.keeper.SetProposal(ctx, proposal)
 
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], OptionYes)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], OptionNo)
+	err = input.keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := tally(ctx, input.keeper, proposal)
+	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(EmptyTallyResult()))
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }

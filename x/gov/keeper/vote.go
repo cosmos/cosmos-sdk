@@ -4,24 +4,24 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // AddVote Adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option VoteOption) sdk.Error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) sdk.Error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return ErrUnknownProposal(keeper.codespace, proposalID)
+		return types.ErrUnknownProposal(keeper.codespace, proposalID)
 	}
-	if proposal.Status != StatusVotingPeriod {
-		return ErrInactiveProposal(keeper.codespace, proposalID)
-	}
-
-	if !ValidVoteOption(option) {
-		return ErrInvalidVote(keeper.codespace, option)
+	if proposal.Status != types.StatusVotingPeriod {
+		return types.ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
-	vote := NewVote(proposalID, voterAddr, option)
+	if !types.ValidVoteOption(option) {
+		return types.ErrInvalidVote(keeper.codespace, option)
+	}
+
+	vote := types.NewVote(proposalID, voterAddr, option)
 	keeper.setVote(ctx, proposalID, voterAddr, vote)
 
 	ctx.EventManager().EmitEvent(
@@ -36,8 +36,8 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 }
 
 // GetAllVotes returns all the votes from the store
-func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes Votes) {
-	keeper.IterateAllVotes(ctx, func(vote Vote) bool {
+func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes types.Votes) {
+	keeper.IterateAllVotes(ctx, func(vote types.Vote) bool {
 		votes = append(votes, vote)
 		return false
 	})
@@ -45,8 +45,8 @@ func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes Votes) {
 }
 
 // GetVotes returns all the votes from a proposal
-func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes Votes) {
-	keeper.IterateVotes(ctx, proposalID, func(vote Vote) bool {
+func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes types.Votes) {
+	keeper.IterateVotes(ctx, proposalID, func(vote types.Vote) bool {
 		votes = append(votes, vote)
 		return false
 	})
@@ -54,7 +54,7 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes Votes) 
 }
 
 // GetVote gets the vote from an address on a specific proposal
-func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote Vote, found bool) {
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote types.Vote, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.VoteKey(proposalID, voterAddr))
 	if bz == nil {
@@ -65,7 +65,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	return vote, true
 }
 
-func (keeper Keeper) setVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, vote Vote) {
+func (keeper Keeper) setVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, vote types.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(vote)
 	store.Set(types.VoteKey(proposalID, voterAddr), bz)

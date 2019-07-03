@@ -5,8 +5,9 @@ import lib
 
 def process_raw_genesis(genesis, parsed_args):
     # update genesis with breaking changes
-    genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
-    del genesis['consensus_params']['block_size']
+    if 'block_size' in genesis['consensus_params']:
+        genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
+        del genesis['consensus_params']['block_size']
 
     genesis['app_state']['crisis'] = {
         'constant_fee': {

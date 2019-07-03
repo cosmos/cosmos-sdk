@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
 )
 
+// DONTCOVER
+
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
@@ -51,17 +53,17 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// register rest routes
+// RegisterRESTRoutes registers rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	rest.RegisterRoutes(ctx, rtr, ModuleCdc, RouterKey)
 }
 
-// get the root tx command of this module
+// GetTxCmd gets the root tx command of this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetTxCmd(StoreKey, cdc)
 }
 
-// get the root query command of this module
+// GetQueryCmd gets the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 

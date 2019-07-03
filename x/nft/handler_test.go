@@ -4,24 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 	"github.com/stretchr/testify/require"
 )
 
-func createInput() (k Keeper, addrs []sdk.AccAddress) {
-	cdc := codec.New()
-	types.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-
-	addrs = keeper.CreateTestAddrs(2)
-	keyNFT := sdk.NewKVStoreKey(StoreKey)
-
-	k = keeper.NewKeeper(cdc, keyNFT)
-	return
-}
 func TestInvalidMsg(t *testing.T) {
 	ctx, k, _ := keeper.Initialize()
 	h := GenericHandler(k)
@@ -31,19 +19,14 @@ func TestInvalidMsg(t *testing.T) {
 }
 
 func TestTransferNFTMsg(t *testing.T) {
-	denom := "some-denom"
-	id := "somd-id"
 
 	ctx, k, _ := keeper.Initialize()
-	addresses := keeper.CreateTestAddrs(2)
-	originalOwner := addresses[0]
-	nextOwner := addresses[1]
 	h := GenericHandler(k)
 
 	// An NFT to be transferred
 	nft := types.NewBaseNFT(
 		id,
-		originalOwner,
+		address,
 		"Name",
 		"Description",
 		"ImageURI",
@@ -52,8 +35,8 @@ func TestTransferNFTMsg(t *testing.T) {
 
 	// Define MsgTransferNft
 	transferNftMsg := types.NewMsgTransferNFT(
-		originalOwner,
-		nextOwner,
+		address,
+		address2,
 		denom,
 		id,
 	)
@@ -79,9 +62,9 @@ func TestTransferNFTMsg(t *testing.T) {
 			case "nft-id":
 				require.Equal(t, value, id)
 			case "sender":
-				require.Equal(t, value, originalOwner.String())
+				require.Equal(t, value, address.String())
 			case "recipient":
-				require.Equal(t, value, nextOwner.String())
+				require.Equal(t, value, address2.String())
 			default:
 				require.Fail(t, "unrecognized event %s", key)
 			}
@@ -91,7 +74,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	// nft should have been transferred as a result of the message
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
-	require.True(t, nftAfterwards.GetOwner().Equals(addresses[1]))
+	require.True(t, nftAfterwards.GetOwner().Equals(address2))
 
 	// handle should fail when nft exists and is transferred by not owner
 	res = h(ctx, transferNftMsg)
@@ -100,49 +83,64 @@ func TestTransferNFTMsg(t *testing.T) {
 }
 
 func TestEditNFTMetadataMsg(t *testing.T) {
-	denom := "some-denom"
-	id := "somd-id"
-	name := "Name"
-	tokenURI := "TokenURI"
-	description := "Description"
-	image := "ImageURI"
-
-	_name := "Name2"
-	_tokenURI := "TokenURI2"
-	_description := "Description2"
-	_image := "ImageURI2"
 
 	ctx, k, _ := keeper.Initialize()
-	addresses := keeper.CreateTestAddrs(2)
-	owner := addresses[0]
 
 	h := GenericHandler(k)
 
 	// An NFT to be edited
 	nft := types.NewBaseNFT(
 		id,
-		owner,
+		address,
 		name,
 		description,
 		image,
 		tokenURI,
 	)
 
-	// Create token (collection and owner)
+	// Create token (collection and address)
 	k.MintNFT(ctx, denom, nft)
 
 	// Define MsgTransferNft
-	editNFTMetadata := types.NewMsgEditNFTMetadata(
-		owner,
+	failingEditNFTMetadata := types.NewMsgEditNFTMetadata(
+		address,
 		id,
-		denom,
-		_name,
-		_description,
-		_image,
-		_tokenURI,
+		denom2,
+		name2,
+		description2,
+		image2,
+		tokenURI2,
 	)
 
-	res := h(ctx, editNFTMetadata)
+	res := h(ctx, failingEditNFTMetadata)
+	require.False(t, res.IsOK(), "%v", res)
+
+	// Define MsgTransferNft
+	failingEditNFTMetadata = types.NewMsgEditNFTMetadata(
+		address2,
+		id,
+		denom,
+		name2,
+		description2,
+		image2,
+		tokenURI2,
+	)
+
+	res = h(ctx, failingEditNFTMetadata)
+	require.False(t, res.IsOK(), "%v", res)
+
+	// Define MsgTransferNft
+	editNFTMetadata := types.NewMsgEditNFTMetadata(
+		address,
+		id,
+		denom,
+		name2,
+		description2,
+		image2,
+		tokenURI2,
+	)
+
+	res = h(ctx, editNFTMetadata)
 	require.True(t, res.IsOK(), "%v", res)
 
 	// event events should be emmitted correctly
@@ -155,15 +153,15 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 			case "nft-id":
 				require.Equal(t, value, id)
 			case "nft-name":
-				require.Equal(t, value, _name)
+				require.Equal(t, value, name2)
 			case "nft-description":
-				require.Equal(t, value, _description)
+				require.Equal(t, value, description2)
 			case "nft-image":
-				require.Equal(t, value, _image)
+				require.Equal(t, value, image2)
 			case "nft-tokenURI":
-				require.Equal(t, value, _tokenURI)
+				require.Equal(t, value, tokenURI2)
 			case "sender":
-				require.Equal(t, value, owner.String())
+				require.Equal(t, value, address.String())
 			default:
 				require.Fail(t, "unrecognized event %s", key)
 			}
@@ -172,31 +170,22 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.Nil(t, err)
-	require.Equal(t, _name, nftAfterwards.GetName())
-	require.Equal(t, _description, nftAfterwards.GetDescription())
-	require.Equal(t, _image, nftAfterwards.GetImage())
-	require.Equal(t, _tokenURI, nftAfterwards.GetTokenURI())
+	require.Equal(t, name2, nftAfterwards.GetName())
+	require.Equal(t, description2, nftAfterwards.GetDescription())
+	require.Equal(t, image2, nftAfterwards.GetImage())
+	require.Equal(t, tokenURI2, nftAfterwards.GetTokenURI())
 
 }
 
 func TestMintNFTMsg(t *testing.T) {
-	denom := "some-denom"
-	id := "somd-id"
-	name := "Name"
-	tokenURI := "TokenURI"
-	description := "Description"
-	image := "ImageURI"
-
 	ctx, k, _ := keeper.Initialize()
-	addresses := keeper.CreateTestAddrs(2)
-	owner := addresses[0]
 
 	h := GenericHandler(k)
 
 	// Define MsgMintNFT
 	mintNFT := types.NewMsgMintNFT(
-		owner,
-		owner,
+		address,
+		address,
 		id,
 		denom,
 		name,
@@ -227,9 +216,9 @@ func TestMintNFTMsg(t *testing.T) {
 			case "nft-tokenURI":
 				require.Equal(t, value, tokenURI)
 			case "sender":
-				require.Equal(t, value, owner.String())
+				require.Equal(t, value, address.String())
 			case "recipient":
-				require.Equal(t, value, owner.String())
+				require.Equal(t, value, address.String())
 			default:
 				require.Fail(t, "unrecognized event %s", key)
 			}
@@ -251,43 +240,42 @@ func TestMintNFTMsg(t *testing.T) {
 }
 
 func TestBurnNFTMsg(t *testing.T) {
-	denom := "some-denom"
-	id := "somd-id"
-	name := "Name"
-	tokenURI := "TokenURI"
-	description := "Description"
-	image := "ImageURI"
 
 	ctx, k, _ := keeper.Initialize()
-	addresses := keeper.CreateTestAddrs(2)
-	owner := addresses[0]
-	notOwner := addresses[1]
-
 	h := GenericHandler(k)
 
 	// An NFT to be burned
 	nft := types.NewBaseNFT(
 		id,
-		owner,
+		address,
 		name,
 		description,
 		image,
 		tokenURI,
 	)
 
-	// Create token (collection and owner)
+	// Create token (collection and address)
 	k.MintNFT(ctx, denom, nft)
 
 	exists := k.IsNFT(ctx, denom, id)
 	require.True(t, exists)
 
-	// burning an NFT without being the owner should fail
+	// burning an NFT without being the address should fail
 	failBurnNFT := types.NewMsgBurnNFT(
-		notOwner,
+		address2,
 		id,
 		denom,
 	)
 	res := h(ctx, failBurnNFT)
+	require.False(t, res.IsOK(), "%s", res.Log)
+
+	// burning a non-existant NFT should fail
+	failBurnNFT = types.NewMsgBurnNFT(
+		address,
+		id2,
+		denom,
+	)
+	res = h(ctx, failBurnNFT)
 	require.False(t, res.IsOK(), "%s", res.Log)
 
 	// NFT should still exist
@@ -296,7 +284,7 @@ func TestBurnNFTMsg(t *testing.T) {
 
 	// burning the NFt should succeed
 	burnNFT := types.NewMsgBurnNFT(
-		owner,
+		address,
 		id,
 		denom,
 	)
@@ -314,7 +302,7 @@ func TestBurnNFTMsg(t *testing.T) {
 			case "nft-id":
 				require.Equal(t, value, id)
 			case "sender":
-				require.Equal(t, value, owner.String())
+				require.Equal(t, value, address.String())
 			default:
 				require.Fail(t, "unrecognized event %s", key)
 			}
@@ -325,6 +313,6 @@ func TestBurnNFTMsg(t *testing.T) {
 	exists = k.IsNFT(ctx, denom, id)
 	require.False(t, exists)
 
-	ownerReturned := k.GetOwner(ctx, owner)
+	ownerReturned := k.GetOwner(ctx, address)
 	require.Equal(t, 0, ownerReturned.Supply())
 }

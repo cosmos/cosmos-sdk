@@ -12,6 +12,7 @@ require (
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/golang/protobuf v1.3.0
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/pprof v0.0.0-20190515194954-54271f7e092f // indirect
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/lusis/go-slackbot v0.0.0-20180109053408-401027ccfef5 // indirect
@@ -35,6 +36,7 @@ require (
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.2
 	github.com/tendermint/tendermint v0.32.0
+	golang.org/x/arch v0.0.0-20190312162104-788fe5ffcd8c // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2

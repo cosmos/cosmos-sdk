@@ -124,7 +124,6 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, denom, id string) (err sdk.Error) {
 
 // SwapOwners swaps the owners of a NFT ID
 func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress sdk.AccAddress, newAddress sdk.AccAddress) (err sdk.Error) {
-
 	oldOwnerIDCollection, found := k.GetOwnerByDenom(ctx, oldAddress, denom)
 	if !found {
 		return types.ErrUnknownCollection(types.DefaultCodespace,
@@ -201,9 +200,13 @@ func (k Keeper) GetDenoms(ctx sdk.Context) (denoms []string) {
 
 // GetOwners returns all the Owners ID Collections
 func (k Keeper) GetOwners(ctx sdk.Context) (owners []types.Owner) {
+	var foundOwners = make(map[string]bool)
 	k.IterateOwners(ctx,
 		func(owner types.Owner) (stop bool) {
-			owners = append(owners, owner)
+			if _, ok := foundOwners[owner.Address.String()]; !ok {
+				foundOwners[owner.Address.String()] = true
+				owners = append(owners, owner)
+			}
 			return false
 		},
 	)

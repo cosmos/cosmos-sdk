@@ -1,22 +1,14 @@
-package keeper
+package nft
 
 import (
 	"bytes"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
-	denom        = "test-denom"
+	denom        = "denom"
 	denom2       = "test-denom2"
 	denom3       = "test-denom3"
 	id           = "1"
@@ -75,31 +67,4 @@ func testAddr(addr string, bech string) sdk.AccAddress {
 	}
 
 	return res
-}
-
-// Initialize initializes a basic nft app for tests
-func Initialize() (ctx sdk.Context, keeperInstance Keeper, cdc *codec.Codec) {
-	cdc = codec.New()
-	types.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-
-	keyNFT := sdk.NewKVStoreKey(types.StoreKey)
-	keeperInstance = NewKeeper(cdc, keyNFT)
-
-	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(keyNFT, sdk.StoreTypeIAVL, db)
-	err := ms.LoadLatestVersion()
-	if err != nil {
-		panic(err)
-	}
-	ctx = sdk.NewContext(ms, abci.Header{ChainID: "test-chain"}, true, log.NewNopLogger())
-	ctx = ctx.WithConsensusParams(
-		&abci.ConsensusParams{
-			Validator: &abci.ValidatorParams{
-				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
-			},
-		},
-	)
-	return
 }

@@ -231,10 +231,9 @@ func makeFailSlackMsg(seed int, stdoutKey, stderrKey, bucket string, logsPushed 
 	if logsPushed {
 		return fmt.Sprintf("*Seed %s: FAILED*. *<https://%s.s3.amazonaws.com/%s|stdout>* *<https://%s.s3.amazonaws.com/%s|stderr>*\nTo reproduce run: ```\n%s\n```",
 			strconv.Itoa(seed), bucket, stdoutKey, bucket, stderrKey, buildCommand(testname, blocks, period, genesis, seed))
-	} else {
-		return fmt.Sprintf("*Seed %s: FAILED*. \nTo reproduce run: ```\n%s\n```\n*Could not upload logs:* ```\n%s\n```",
-			strconv.Itoa(seed), buildCommand(testname, blocks, period, genesis, seed), bucket)
 	}
+	return fmt.Sprintf("*Seed %s: FAILED*. \nTo reproduce run: ```\n%s\n```\n*Could not upload logs:* ```\n%s\n```",
+		strconv.Itoa(seed), buildCommand(testname, blocks, period, genesis, seed), bucket)
 }
 
 func worker(id int, seeds <-chan int) {
@@ -249,18 +248,16 @@ func worker(id int, seeds <-chan int) {
 				objKeys, bucket, err := pushLogs(stdOut, stdErr, logObjKey)
 				if err != nil {
 					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, "", "", err.Error(), false))
-				} else {
-					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, objKeys[0], objKeys[1], *bucket, true))
 				}
+				slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, objKeys[0], objKeys[1], *bucket, true))
 			}
 			if exitOnFail {
 				log.Printf("\bERROR OUTPUT \n\n%s", err)
 				panic("halting simulations")
 			}
-		} else {
-			log.Printf("[W%d] Seed %d: OK", id, seed)
-			_, _, _ = pushLogs(stdOut, stdErr, logObjKey)
 		}
+		log.Printf("[W%d] Seed %d: OK", id, seed)
+		_, _, _ = pushLogs(stdOut, stdErr, logObjKey)
 	}
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }

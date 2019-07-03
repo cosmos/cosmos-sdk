@@ -25,15 +25,19 @@ func awsErrHandler(err error) error {
 		default:
 			return awsErr
 		}
-	} else {
-		return err
 	}
+	return err
 }
 
 func makeObjKey(objKeyPrefix string, fileName string) string {
 	return fmt.Sprintf("%s/%s", objKeyPrefix, fileName)
 }
 
+// putObjects attempts to upload to an S3 bucket the content of each file from fileHandles.
+// File descriptors have their read offset set to 0 to ensure all the content is uploaded.
+// Each file will become an S3 bucket object that can be accessed via its object key.
+//
+// Function returns the list of object keys and an error, if any.
 func putObjects(svc *s3.S3, objKeyPrefix string, bucketName string, fileHandles ...*os.File) ([]string, error) {
 	objKeys := make([]string, len(fileHandles))
 	for index, fileHandle := range fileHandles {
@@ -61,10 +65,9 @@ func pushLogs(stdOut *os.File, stdErr *os.File, folderName string) ([]string, *s
 	})))
 	if listBucketsOutput, err := sessionS3.ListBuckets(&s3.ListBucketsInput{}); err != nil {
 		err := awsErrHandler(err)
-		if awsErr != nil {
+		if err != nil {
 			return nil, nil, err
 		}
-	} else {
 		for _, bucket := range listBucketsOutput.Buckets {
 			if strings.Contains(*bucket.Name, logBucketPrefix) {
 				logBucket = bucket.Name

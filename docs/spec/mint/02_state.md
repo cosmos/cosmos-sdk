@@ -6,7 +6,7 @@ The minter is a space for holding current inflation information.
 
  - Minter: `0x00 -> amino(minter)`
 
-```golang
+```go
 type Minter struct {
 	Inflation        sdk.Dec   // current annual inflation rate
 	AnnualProvisions sdk.Dec   // current annual exptected provisions
@@ -19,7 +19,7 @@ Minting params are held in the global params store.
 
  - Params: `mint/params -> amino(params)`
 
-```golang
+```go
 type Params struct {
 	MintDenom           string  // type of coin to mint
 	InflationRateChange sdk.Dec // maximum annual change in inflation rate

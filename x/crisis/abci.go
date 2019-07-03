@@ -6,7 +6,7 @@ import (
 
 // check all registered invariants
 func EndBlocker(ctx sdk.Context, k Keeper) {
-	if k.invCheckPeriod == 0 || ctx.BlockHeight()%int64(k.invCheckPeriod) != 0 {
+	if k.InvCheckPeriod() == 0 || ctx.BlockHeight()%int64(k.InvCheckPeriod()) != 0 {
 		// skip running the invariant check
 		return
 	}

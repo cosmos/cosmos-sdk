@@ -23,27 +23,6 @@ Any Atom holder, whether bonded or unbonded, can submit proposals by sending a
 `TxGovProposal` transaction. Once a proposal is submitted, it is identified by 
 its unique `proposalID`.
 
-### Proposal filter (minimum deposit)
-
-To prevent spam, proposals must be submitted with a deposit in Atoms. Voting 
-period will not start as long as the proposal's deposit is smaller than the 
-minimum deposit `MinDeposit`.
-
-When a proposal is submitted, it has to be accompanied by a deposit that must 
-be strictly positive but can be inferior to `MinDeposit`. Indeed, the submitter
-need not pay for the entire deposit on its own. If a proposal's deposit is 
-strictly inferior to `MinDeposit`, other Atom holders can increase the 
-proposal's deposit by sending a `TxGovDeposit` transaction. Once the proposal's deposit reaches `MinDeposit`, it enters voting period. 
-
-If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
-
-### Deposit refund
-
-There is one instance where Atom holders that deposits can be refunded:
-* If the proposal is accepted.
-
-Then, deposits will automatically be refunded to their respective depositor.
-
 ### Proposal types
 
 In the initial version of the governance module, there are two types of 
@@ -63,6 +42,21 @@ proposal types and handlers. These types are registered and processed through th
 governance module (eg. `ParamChangeProposal`), which then execute the respective
 module's proposal handler when a proposal passes. This custom handler may perform
 arbitrary state changes.
+
+## Deposit
+
+To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param. The voting period will not start until the proposal's deposit equals `MinDeposit`.
+
+When a proposal is submitted, it has to be accompanied by a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own. If a proposal's deposit is inferior to `MinDeposit`, other token holders can increase the proposal's deposit by sending a `Deposit` transaction. The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+
+Once the proposal's deposit reaches `MinDeposit`, it enters voting period. If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
+
+### Deposit refund and burn
+
+When a the a proposal finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
+
+* If the proposal is approved or if it's rejected but _not_ vetoed, deposits will automatically be refunded to their respective depositor (transferred from the governance `ModuleAccount`).
+* When the proposal is vetoed with a supermajority, deposits be burned from the governance `ModuleAccount`.
 
 ## Vote
 

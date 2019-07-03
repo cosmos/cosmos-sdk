@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: deadcode unused
 var (
 	denom        = "denom"
 	denom2       = "test-denom2"

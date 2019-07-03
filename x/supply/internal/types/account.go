@@ -18,7 +18,7 @@ var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 type ModuleAccount struct {
 	*authtypes.BaseAccount
 	Name        string   `json:"name"`        // name of the module
-	Permissions []string `json:"permissions"` // permissions of module account (minter/burner/holder)
+	Permissions []string `json:"permissions"` // permissions of module account
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name
@@ -71,7 +71,7 @@ func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
 
-// GetPermission returns permission granted to the module account (holder/minter/burner)
+// GetPermissions returns permissions granted to the module account
 func (ma ModuleAccount) GetPermissions() []string {
 	return ma.Permissions
 }

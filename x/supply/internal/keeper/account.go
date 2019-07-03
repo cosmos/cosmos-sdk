@@ -12,7 +12,7 @@ func (k Keeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	if !ok {
 		return nil
 	}
-	return permAddr.address
+	return permAddr.GetAddress()
 }
 
 // GetModuleAddressAndPermissions returns an address and permissions based on the name
@@ -21,10 +21,10 @@ func (k Keeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccA
 	if !ok {
 		return addr, permissions
 	}
-	return permAddr.address, permAddr.permissions
+	return permAddr.GetAddress(), permAddr.GetPermissions()
 }
 
-// GetModuleAccountiAndPermissions gets the module account to the auth account store
+// GetModuleAccountAndPermissions gets the module account to the auth account store
 func (k Keeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string) {
 	addr, perms := k.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {

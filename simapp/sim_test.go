@@ -73,11 +73,11 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool) {
 
-	return tb, w, app.BaseApp, appStateFn, seed,
+	return tb, w, app.BaseApp, AppStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation
 }
 
-func appStateFromGenesisFileFn(
+func AppStateFromGenesisFileFn(
 	r *rand.Rand, _ []simulation.Account, _ time.Time,
 ) (json.RawMessage, []simulation.Account, string) {
 
@@ -161,7 +161,7 @@ func appStateRandomizedFn(
 	return appState, accs, "simulation"
 }
 
-func appStateFn(
+func AppStateFn(
 	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
 ) (appState json.RawMessage, simAccs []simulation.Account, chainID string) {
 
@@ -172,7 +172,7 @@ func appStateFn(
 		panic("cannot provide both a genesis file and a params file")
 
 	case genesisFile != "":
-		appState, simAccs, chainID = appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
 
 	case paramsFile != "":
 		appParams := make(simulation.AppParams)
@@ -1039,7 +1039,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
+				t, os.Stdout, app.BaseApp, AppStateFn, seed,
 				testAndRunTxs(app),
 				[]sdk.Invariant{},
 				50,
@@ -1071,7 +1071,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+		b, ioutil.Discard, app.BaseApp, AppStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation,
 	)
 	if err != nil {

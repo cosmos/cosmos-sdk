@@ -4,7 +4,9 @@ import (
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 )
 
-// TODO: ...
+// Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
+// genesis state. All entries are identical except for validator slashing events
+// which now include the period.
 func Migrate(oldGenState v034distr.GenesisState) GenesisState {
 	feePool := FeePool{CommunityPool: oldGenState.FeePool.CommunityPool}
 

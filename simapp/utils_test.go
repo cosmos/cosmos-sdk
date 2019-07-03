@@ -63,7 +63,7 @@ func TestGetSimulationLog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.store, func(t *testing.T) {
-			require.NotPanics(t, func() { getSimulationLog(tt.store, cdc, cdc, tt.kvPair, tt.kvPair) }, tt.store)
+			require.NotPanics(t, func() { GetSimulationLog(tt.store, cdc, cdc, tt.kvPair, tt.kvPair) }, tt.store)
 		})
 	}
 }
@@ -91,9 +91,9 @@ func TestDecodeAccountStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -119,9 +119,9 @@ func TestDecodeMintStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -172,9 +172,9 @@ func TestDecodeDistributionStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -216,9 +216,9 @@ func TestDecodeStakingStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -251,9 +251,9 @@ func TestDecodeSlashingStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -294,9 +294,9 @@ func TestDecodeGovStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -324,9 +324,9 @@ func TestDecodeSupplyStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

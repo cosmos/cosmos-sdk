@@ -98,7 +98,6 @@ var (
 	ErrNoProposalHandlerExists    = types.ErrNoProposalHandlerExists
 	NewGenesisState               = types.NewGenesisState
 	DefaultGenesisState           = types.DefaultGenesisState
-	ValidateGenesis               = types.ValidateGenesis
 	ProposalKey                   = types.ProposalKey
 	ActiveProposalByTimeKey       = types.ActiveProposalByTimeKey
 	ActiveProposalQueueKey        = types.ActiveProposalQueueKey

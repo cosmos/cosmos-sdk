@@ -31,6 +31,42 @@ func Migrate(oldGenState v034distr.GenesisState) GenesisState {
 		}
 	}
 
+	histRewards := make([]ValidatorHistoricalRewardsRecord, len(oldGenState.ValidatorHistoricalRewards))
+	for i, rew := range oldGenState.ValidatorHistoricalRewards {
+		histRewards[i] = ValidatorHistoricalRewardsRecord{
+			ValidatorAddress: rew.ValidatorAddress,
+			Period:           rew.Period,
+			Rewards: ValidatorHistoricalRewards{
+				CumulativeRewardRatio: rew.Rewards.CumulativeRewardRatio,
+				ReferenceCount:        rew.Rewards.ReferenceCount,
+			},
+		}
+	}
+
+	currRewards := make([]ValidatorCurrentRewardsRecord, len(oldGenState.ValidatorCurrentRewards))
+	for i, rew := range oldGenState.ValidatorCurrentRewards {
+		currRewards[i] = ValidatorCurrentRewardsRecord{
+			ValidatorAddress: rew.ValidatorAddress,
+			Rewards: ValidatorCurrentRewards{
+				Rewards: rew.Rewards.Rewards,
+				Period:  rew.Rewards.Period,
+			},
+		}
+	}
+
+	delStartingInfos := make([]DelegatorStartingInfoRecord, len(oldGenState.DelegatorStartingInfos))
+	for i, delInfo := range oldGenState.DelegatorStartingInfos {
+		delStartingInfos[i] = DelegatorStartingInfoRecord{
+			DelegatorAddress: delInfo.DelegatorAddress,
+			ValidatorAddress: delInfo.ValidatorAddress,
+			StartingInfo: DelegatorStartingInfo{
+				PreviousPeriod: delInfo.StartingInfo.PreviousPeriod,
+				Stake:          delInfo.StartingInfo.Stake,
+				Height:         delInfo.StartingInfo.Height,
+			},
+		}
+	}
+
 	// migrate slash events which now have the period included
 	slashEvents := make([]ValidatorSlashEventRecord, len(oldGenState.ValidatorSlashEvents))
 	for i, se := range oldGenState.ValidatorSlashEvents {
@@ -46,9 +82,9 @@ func Migrate(oldGenState v034distr.GenesisState) GenesisState {
 	}
 
 	return NewGenesisState(
-		feePool, oldGenState.CommunityTax, oldGenState.BaseProposerReward, oldGenState.BonusProposerReward,
-		oldGenState.WithdrawAddrEnabled, dwifos, oldGenState.PreviousProposer, outRewards, accumComm,
-		oldGenState.ValidatorHistoricalRewards, oldGenState.ValidatorCurrentRewards,
-		oldGenState.DelegatorStartingInfos, slashEvents,
+		feePool, oldGenState.CommunityTax, oldGenState.BaseProposerReward,
+		oldGenState.BonusProposerReward, oldGenState.WithdrawAddrEnabled,
+		dwifos, oldGenState.PreviousProposer, outRewards, accumComm,
+		histRewards, currRewards, delStartingInfos, slashEvents,
 	)
 }

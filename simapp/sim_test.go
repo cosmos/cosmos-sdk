@@ -910,7 +910,6 @@ func TestAppImportExport(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("debug genesisState: %s\n", genesisState)
 
 	ctxB := newApp.NewContext(true, abci.Header{})
 	newApp.mm.InitGenesis(ctxB, genesisState)

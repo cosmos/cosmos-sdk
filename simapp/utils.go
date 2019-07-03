@@ -36,9 +36,9 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
 }
 
-// getSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
+// GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
+func GetSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
 	log = fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 
 	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
@@ -47,25 +47,26 @@ func getSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KV
 
 	switch storeName {
 	case auth.StoreKey:
-		return decodeAccountStore(cdcA, cdcB, kvA, kvB)
+		return DecodeAccountStore(cdcA, cdcB, kvA, kvB)
 	case mint.StoreKey:
-		return decodeMintStore(cdcA, cdcB, kvA, kvB)
+		return DecodeMintStore(cdcA, cdcB, kvA, kvB)
 	case staking.StoreKey:
-		return decodeStakingStore(cdcA, cdcB, kvA, kvB)
+		return DecodeStakingStore(cdcA, cdcB, kvA, kvB)
 	case slashing.StoreKey:
-		return decodeSlashingStore(cdcA, cdcB, kvA, kvB)
+		return DecodeSlashingStore(cdcA, cdcB, kvA, kvB)
 	case gov.StoreKey:
-		return decodeGovStore(cdcA, cdcB, kvA, kvB)
+		return DecodeGovStore(cdcA, cdcB, kvA, kvB)
 	case distribution.StoreKey:
-		return decodeDistributionStore(cdcA, cdcB, kvA, kvB)
+		return DecodeDistributionStore(cdcA, cdcB, kvA, kvB)
 	case supply.StoreKey:
-		return decodeSupplyStore(cdcA, cdcB, kvA, kvB)
+		return DecodeSupplyStore(cdcA, cdcB, kvA, kvB)
 	default:
 		return
 	}
 }
 
-func decodeAccountStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeAccountStore unmarshals the KVPair's Value to the corresponding auth type
+func DecodeAccountStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], auth.AddressStoreKeyPrefix):
 		var accA, accB auth.Account
@@ -82,7 +83,8 @@ func decodeAccountStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	}
 }
 
-func decodeMintStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeMintStore unmarshals the KVPair's Value to the corresponding mint type
+func DecodeMintStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key, mint.MinterKey):
 		var minterA, minterB mint.Minter
@@ -94,7 +96,8 @@ func decodeMintStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	}
 }
 
-func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeDistributionStore unmarshals the KVPair's Value to the corresponding distribution type
+func DecodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], distribution.FeePoolKey):
 		var feePoolA, feePoolB distribution.FeePool
@@ -149,7 +152,8 @@ func decodeDistributionStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) strin
 	}
 }
 
-func decodeStakingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeStakingStore unmarshals the KVPair's Value to the corresponding staking type
+func DecodeStakingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], staking.PoolKey):
 		var poolA, poolB staking.Pool
@@ -199,7 +203,8 @@ func decodeStakingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	}
 }
 
-func decodeSlashingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeSlashingStore unmarshals the KVPair's Value to the corresponding slashing type
+func DecodeSlashingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], slashing.ValidatorSigningInfoKey):
 		var infoA, infoB slashing.ValidatorSigningInfo
@@ -226,7 +231,8 @@ func decodeSlashingStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	}
 }
 
-func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeGovStore unmarshals the KVPair's Value to the corresponding gov type
+func DecodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], gov.ProposalsKeyPrefix):
 		var proposalA, proposalB gov.Proposal
@@ -258,7 +264,8 @@ func decodeGovStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	}
 }
 
-func decodeSupplyStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+// DecodeSupplyStore unmarshals the KVPair's Value to the corresponding supply type
+func DecodeSupplyStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], supply.SupplyKey):
 		var supplyA, supplyB supply.Supply

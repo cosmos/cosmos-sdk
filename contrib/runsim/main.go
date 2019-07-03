@@ -246,9 +246,9 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
 			if slackConfigSupplied() {
-				objKeys, bucket, awsErr := pushLogs(stdOut, stdErr, logObjKey)
-				if awsErr != nil {
-					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, "", "", awsErr.Error(), false))
+				objKeys, bucket, err := pushLogs(stdOut, stdErr, logObjKey)
+				if err != nil {
+					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, "", "", err.Error(), false))
 				} else {
 					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, objKeys[0], objKeys[1], *bucket, true))
 				}

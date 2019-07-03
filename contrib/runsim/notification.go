@@ -60,17 +60,17 @@ func pushLogs(stdOut *os.File, stdErr *os.File, folderName string) ([]string, *s
 		Region: aws.String(awsRegion),
 	})))
 	if listBucketsOutput, err := sessionS3.ListBuckets(&s3.ListBucketsInput{}); err != nil {
-		awsErr := awsErrHandler(err)
+		err := awsErrHandler(err)
 		if awsErr != nil {
-			return nil, nil, awsErr
+			return nil, nil, err
 		}
 	} else {
 		for _, bucket := range listBucketsOutput.Buckets {
 			if strings.Contains(*bucket.Name, logBucketPrefix) {
 				logBucket = bucket.Name
-				objKeys, putObjErr := putObjects(sessionS3, folderName, *logBucket, stdOut, stdErr)
-				if putObjErr != nil {
-					return nil, nil, putObjErr
+				objKeys, err := putObjects(sessionS3, folderName, *logBucket, stdOut, stdErr)
+				if err != nil {
+					return nil, nil, err
 				}
 				return objKeys, bucket.Name, nil
 			}

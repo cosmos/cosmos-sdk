@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DONTCOVER
+
 // nolint: deadcode unused
 var (
 	denom        = "denom"

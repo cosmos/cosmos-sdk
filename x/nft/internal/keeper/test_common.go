@@ -15,6 +15,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+// DONTCOVER
+
 // nolint: deadcode unused
 var (
 	denom        = "test-denom"

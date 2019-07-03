@@ -17,8 +17,10 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ### Transaction Creation
 
-The transaction `Tx` is created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`.
-```[modulename] tx [command] [args] [flags]``` 
+The transaction `Tx` is created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
+```
+[modulename] tx [command] [args] [flags]
+``` 
  This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node. 
 
 There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees.md#accounts) the transaction is orginating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.

@@ -232,8 +232,8 @@ func makeFailSlackMsg(seed int, stdoutKey, stderrKey, bucket string, logsPushed 
 		return fmt.Sprintf("*Seed %s: FAILED*. *<https://%s.s3.amazonaws.com/%s|stdout>* *<https://%s.s3.amazonaws.com/%s|stderr>*\nTo reproduce run: ```\n%s\n```",
 			strconv.Itoa(seed), bucket, stdoutKey, bucket, stderrKey, buildCommand(testname, blocks, period, genesis, seed))
 	} else {
-		return fmt.Sprintf("*Seed %s: FAILED*. Could not upload logs: %s\nTo reproduce run: ```\n%s\n```",
-			strconv.Itoa(seed), bucket, buildCommand(testname, blocks, period, genesis, seed))
+		return fmt.Sprintf("*Seed %s: FAILED*. \nTo reproduce run: ```\n%s\n```\n*Could not upload logs:* ```\n%s\n```",
+			strconv.Itoa(seed), buildCommand(testname, blocks, period, genesis, seed), bucket)
 	}
 }
 

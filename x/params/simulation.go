@@ -1,4 +1,4 @@
-package simulation
+package params
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -160,7 +159,7 @@ var paramChangePool = []simParamChange{
 // 3 parameter changes all of which have random, but valid values.
 func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
 	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool)/2)
-	paramChanges := make([]params.ParamChange, numChanges, numChanges)
+	paramChanges := make([]ParamChange, numChanges, numChanges)
 	paramChangesKeys := make(map[string]struct{})
 
 	for i := 0; i < numChanges; i++ {
@@ -174,10 +173,10 @@ func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.
 		}
 
 		paramChangesKeys[spc.compKey()] = struct{}{}
-		paramChanges[i] = params.NewParamChangeWithSubkey(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
+		paramChanges[i] = NewParamChangeWithSubkey(spc.subspace, spc.key, spc.subkey, spc.simValue(r))
 	}
 
-	return params.NewParameterChangeProposal(
+	return NewParameterChangeProposal(
 		simulation.RandStringOfLength(r, 140),
 		simulation.RandStringOfLength(r, 5000),
 		paramChanges,

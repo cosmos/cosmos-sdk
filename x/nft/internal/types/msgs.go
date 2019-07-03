@@ -203,7 +203,7 @@ type MsgBurnNFT struct {
 func NewMsgBurnNFT(sender sdk.AccAddress, id string, denom string) MsgBurnNFT {
 	return MsgBurnNFT{
 		Sender: sender,
-		ID:     id,
+		ID:     strings.TrimSpace(id),
 		Denom:  strings.TrimSpace(denom),
 	}
 }

@@ -75,11 +75,11 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool) {
 
-	return tb, w, app.BaseApp, appStateFn, seed,
+	return tb, w, app.BaseApp, AppStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation
 }
 
-func appStateFromGenesisFileFn(
+func AppStateFromGenesisFileFn(
 	r *rand.Rand, _ []simulation.Account, _ time.Time,
 ) (json.RawMessage, []simulation.Account, string) {
 
@@ -145,16 +145,16 @@ func appStateRandomizedFn(
 `, amount, numInitiallyBonded,
 	)
 
-	genGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
-	genAuthGenesisState(cdc, r, appParams, genesisState)
-	genBankGenesisState(cdc, r, appParams, genesisState)
-	genSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
-	genGovGenesisState(cdc, r, appParams, genesisState)
-	genMintGenesisState(cdc, r, appParams, genesisState)
-	genDistrGenesisState(cdc, r, appParams, genesisState)
-	stakingGen := genStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
-	genSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
-	genNFTGenesisState(cdc, r, accs, appParams, genesisState)
+	GenGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
+	GenAuthGenesisState(cdc, r, appParams, genesisState)
+	GenBankGenesisState(cdc, r, appParams, genesisState)
+	GenSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
+	GenGovGenesisState(cdc, r, appParams, genesisState)
+	GenMintGenesisState(cdc, r, appParams, genesisState)
+	GenDistrGenesisState(cdc, r, appParams, genesisState)
+	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
+	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
+	GenNFTGenesisState(cdc, r, accs, appParams, genesisState)
 
 	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
@@ -164,7 +164,7 @@ func appStateRandomizedFn(
 	return appState, accs, "simulation"
 }
 
-func appStateFn(
+func AppStateFn(
 	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
 ) (appState json.RawMessage, simAccs []simulation.Account, chainID string) {
 
@@ -175,7 +175,7 @@ func appStateFn(
 		panic("cannot provide both a genesis file and a params file")
 
 	case genesisFile != "":
-		appState, simAccs, chainID = appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
 
 	case paramsFile != "":
 		appParams := make(simulation.AppParams)
@@ -195,7 +195,7 @@ func appStateFn(
 	return appState, simAccs, chainID
 }
 
-func genAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	authGenesis := auth.NewGenesisState(
 		auth.NewParams(
 			func(r *rand.Rand) uint64 {
@@ -245,7 +245,7 @@ func genAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 }
 
-func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	bankGenesis := bank.NewGenesisState(
 		func(r *rand.Rand) bool {
 			var v bool
@@ -261,7 +261,7 @@ func genBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 }
 
-func genSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
+func GenSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
 	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
 	supplyGenesis := supply.NewGenesisState(
 		supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))),
@@ -271,7 +271,7 @@ func genSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs
 	genesisState[supply.ModuleName] = cdc.MustMarshalJSON(supplyGenesis)
 }
 
-func genGenesisAccounts(
+func GenGenesisAccounts(
 	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account,
 	genesisTimestamp time.Time, amount, numInitiallyBonded int64,
 	genesisState map[string]json.RawMessage,
@@ -329,7 +329,7 @@ func genGenesisAccounts(
 	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
 }
 
-func genNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	const (
 		Kitties = "crypto-kitties"
 		Doggos  = "crypto-doggos"
@@ -368,7 +368,7 @@ func genNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Accoun
 	genesisState[nft.ModuleName] = cdc.MustMarshalJSON(nftGenesis)
 }
 
-func genGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	var vp time.Duration
 	ap.GetOrGenerate(cdc, simulation.VotingParamsVotingPeriod, &vp, r,
 		func(r *rand.Rand) {
@@ -421,7 +421,7 @@ func genGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams,
 	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 }
 
-func genMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	mintGenesis := mint.NewGenesisState(
 		mint.InitialMinter(
 			func(r *rand.Rand) sdk.Dec {
@@ -475,7 +475,7 @@ func genMintGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 }
 
-func genDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	distrGenesis := distr.GenesisState{
 		FeePool: distr.InitialFeePool(),
 		CommunityTax: func(r *rand.Rand) sdk.Dec {
@@ -508,7 +508,7 @@ func genDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParam
 	genesisState[distr.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 }
 
-func genSlashingGenesisState(
+func GenSlashingGenesisState(
 	cdc *codec.Codec, r *rand.Rand, stakingGen staking.GenesisState,
 	ap simulation.AppParams, genesisState map[string]json.RawMessage,
 ) {
@@ -564,7 +564,7 @@ func genSlashingGenesisState(
 	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 }
 
-func genStakingGenesisState(
+func GenStakingGenesisState(
 	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
 	ap simulation.AppParams, genesisState map[string]json.RawMessage,
 ) staking.GenesisState {
@@ -1008,7 +1008,7 @@ func TestAppImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
-		require.True(t, equal, getSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, kvA, kvB))
+		require.True(t, equal, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, kvA, kvB))
 	}
 
 }
@@ -1103,7 +1103,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
+				t, os.Stdout, app.BaseApp, AppStateFn, seed,
 				testAndRunTxs(app),
 				[]sdk.Invariant{},
 				50,
@@ -1135,7 +1135,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+		b, ioutil.Discard, app.BaseApp, AppStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation,
 	)
 	if err != nil {

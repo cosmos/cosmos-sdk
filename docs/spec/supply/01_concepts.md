@@ -32,7 +32,8 @@ The `ModuleAccount` interface is defined as follows:
 type ModuleAccount interface {
   auth.Account            // same methods as the Account interface
   GetName() string        // name of the module; used to obtain the address
-  GetPermission() string  // permission of module account (minter/burner/holder)
+  GetPermissions() string  // permissions of module account (minter/burner/holder)
+  HasPermission(string) bool 
 }
 ```
 
@@ -51,7 +52,7 @@ Each `ModuleAccount` has a different set of permissions that provide different
 object capabilities to perform certain actions. Permissions need to be
 registered upon the creation of the supply `Keeper` so that every time a
 `ModuleAccount` calls the allowed functions, the `Keeper` can lookup the
-permission to that specific account and perform or not the action.
+permissions to that specific account and perform or not the action.
 
 The available permissions are:
 

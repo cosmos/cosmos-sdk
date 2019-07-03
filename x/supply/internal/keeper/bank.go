@@ -84,13 +84,13 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	}
 
 	// create the account if it doesn't yet exist
-	acc, perm := k.GetModuleAccountAndPermission(ctx, moduleName)
+	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
 	addr := acc.GetAddress()
 	if addr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
-	if perm != types.Minter {
+	if !acc.HasPermission(types.Minter) {
 		panic(fmt.Sprintf("Account %s does not have permissions to mint tokens", moduleName))
 	}
 
@@ -116,12 +116,13 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 		panic("cannot burn empty coins")
 	}
 
-	addr, perm := k.GetModuleAddressAndPermission(moduleName)
+	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
+	addr := acc.GetAddress()
 	if addr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
-	if perm != types.Burner {
+	if !acc.HasPermission(types.Burner) {
 		panic(fmt.Sprintf("Account %s does not have permissions to burn tokens", moduleName))
 	}
 

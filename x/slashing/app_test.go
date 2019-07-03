@@ -36,8 +36,12 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     []string{supply.Basic},
+		staking.NotBondedPoolName: []string{supply.Burner},
+		staking.BondedPoolName:    []string{supply.Burner},
+	}
+	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))

@@ -59,8 +59,12 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 
 	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace,
-		[]string{}, []string{}, []string{types.ModuleName, staking.NotBondedPoolName, staking.BondedPoolName})
+	maccPerms := map[string][]string{
+		types.ModuleName:          []string{supply.Burner},
+		staking.NotBondedPoolName: []string{supply.Burner},
+		staking.BondedPoolName:    []string{supply.Burner},
+	}
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace, maccPerms)
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
 	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), supplyKeeper, sk, DefaultCodespace, rtr)

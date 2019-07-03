@@ -124,8 +124,12 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		bank.DefaultCodespace,
 	)
 
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:   []string{supply.Basic},
+		types.NotBondedPoolName: []string{supply.Burner},
+		types.BondedPoolName:    []string{supply.Burner},
+	}
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace, maccPerms)
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

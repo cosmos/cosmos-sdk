@@ -12,9 +12,10 @@ import (
 const initialPower = int64(100)
 
 var (
-	holderAcc = types.NewEmptyModuleAccount(types.Basic, types.Basic)
-	burnerAcc = types.NewEmptyModuleAccount(types.Burner, types.Burner)
-	minterAcc = types.NewEmptyModuleAccount(types.Minter, types.Minter)
+	holderAcc    = types.NewEmptyModuleAccount(types.Basic, types.Basic)
+	burnerAcc    = types.NewEmptyModuleAccount(types.Burner, types.Burner)
+	minterAcc    = types.NewEmptyModuleAccount(types.Minter, types.Minter)
+	multiPermAcc = types.NewEmptyModuleAccount(multiPerm, types.Basic, types.Burner, types.Minter)
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -78,6 +79,7 @@ func TestMintCoins(t *testing.T) {
 
 	keeper.SetModuleAccount(ctx, burnerAcc)
 	keeper.SetModuleAccount(ctx, minterAcc)
+	keeper.SetModuleAccount(ctx, multiPermAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 
@@ -86,6 +88,14 @@ func TestMintCoins(t *testing.T) {
 	err := keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, types.Minter))
+	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)
+
+	// test same functionality on module account with multiple permissions
+	initialSupply = keeper.GetSupply(ctx)
+
+	err = keeper.MintCoins(ctx, multiPermAcc.GetName(), initCoins)
+	require.NoError(t, err)
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.Total.Add(initCoins), keeper.GetSupply(ctx).Total)
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) })
@@ -103,8 +113,7 @@ func TestBurnCoins(t *testing.T) {
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	err = keeper.BurnCoins(ctx, "", initCoins)
-	require.Error(t, err)
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) })
 
 	err = keeper.BurnCoins(ctx, types.Burner, initialSupply.Total)
 	require.Error(t, err)
@@ -112,5 +121,19 @@ func TestBurnCoins(t *testing.T) {
 	err = keeper.BurnCoins(ctx, types.Burner, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Burner))
+	require.Equal(t, initialSupply.Total.Sub(initCoins), keeper.GetSupply(ctx).Total)
+
+	// test same functionality on module account with multiple permissions
+	initialSupply = keeper.GetSupply(ctx)
+	initialSupply.Inflate(initCoins)
+	keeper.SetSupply(ctx, initialSupply)
+
+	err = multiPermAcc.SetCoins(initCoins)
+	require.NoError(t, err)
+	keeper.SetModuleAccount(ctx, multiPermAcc)
+
+	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
+	require.NoError(t, err)
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.Total.Sub(initCoins), keeper.GetSupply(ctx).Total)
 }

@@ -22,6 +22,9 @@ import (
 )
 
 // nolint: deadcode unused
+var multiPerm = "multiple permissions account"
+
+// nolint: deadcode unused
 // create a codec used only for testing
 func makeTestCodec() *codec.Codec {
 	var cdc = codec.New()
@@ -71,7 +74,13 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	initialCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
 	createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
-	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, []string{types.Basic}, []string{types.Minter}, []string{types.Burner})
+	maccPerms := map[string][]string{
+		types.Basic:  []string{types.Basic},
+		types.Minter: []string{types.Minter},
+		types.Burner: []string{types.Burner},
+		multiPerm:    []string{types.Basic, types.Minter, types.Burner},
+	}
+	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, maccPerms)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 

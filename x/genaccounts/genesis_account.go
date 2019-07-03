@@ -27,8 +27,8 @@ type GenesisAccount struct {
 	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 
 	// module account fields
-	ModuleName       string `json:"module_name"`       // name of the module account
-	ModulePermission string `json:"module_permission"` // permission of module account
+	ModuleName        string   `json:"module_name"`        // name of the module account
+	ModulePermissions []string `json:"module_permissions"` // permissions of module account
 }
 
 // Validate checks for errors on the vesting and module account parameters
@@ -53,20 +53,20 @@ func (ga GenesisAccount) Validate() error {
 // NewGenesisAccountRaw creates a new GenesisAccount object
 func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 	vestingAmount sdk.Coins, vestingStartTime, vestingEndTime int64,
-	module, permission string) GenesisAccount {
+	module string, permissions ...string) GenesisAccount {
 
 	return GenesisAccount{
-		Address:          address,
-		Coins:            coins,
-		Sequence:         0,
-		AccountNumber:    0, // ignored set by the account keeper during InitGenesis
-		OriginalVesting:  vestingAmount,
-		DelegatedFree:    sdk.Coins{}, // ignored
-		DelegatedVesting: sdk.Coins{}, // ignored
-		StartTime:        vestingStartTime,
-		EndTime:          vestingEndTime,
-		ModuleName:       module,
-		ModulePermission: permission,
+		Address:           address,
+		Coins:             coins,
+		Sequence:          0,
+		AccountNumber:     0, // ignored set by the account keeper during InitGenesis
+		OriginalVesting:   vestingAmount,
+		DelegatedFree:     sdk.Coins{}, // ignored
+		DelegatedVesting:  sdk.Coins{}, // ignored
+		StartTime:         vestingStartTime,
+		EndTime:           vestingEndTime,
+		ModuleName:        module,
+		ModulePermissions: permissions,
 	}
 }
 
@@ -102,7 +102,7 @@ func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 		gacc.EndTime = acc.GetEndTime()
 	case supplyexported.ModuleAccountI:
 		gacc.ModuleName = acc.GetName()
-		gacc.ModulePermission = acc.GetPermission()
+		gacc.ModulePermissions = acc.GetPermissions()
 	}
 
 	return gacc, nil
@@ -131,7 +131,7 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 
 	// module accounts
 	if ga.ModuleName != "" {
-		return supply.NewModuleAccount(bacc, ga.ModuleName, ga.ModulePermission)
+		return supply.NewModuleAccount(bacc, ga.ModuleName, ga.ModulePermissions...)
 	}
 
 	return bacc

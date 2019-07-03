@@ -10,11 +10,14 @@ const (
 )
 
 // validate the input permissions
-func validatePermissions(permission string) error {
-	switch permission {
-	case Basic, Minter, Burner:
-		return nil
-	default:
-		return fmt.Errorf("invalid module permission %s", permission)
+func validatePermissions(permissions []string) error {
+	for _, perm := range permissions {
+		switch perm {
+		case Basic, Minter, Burner:
+			continue
+		default:
+			return fmt.Errorf("invalid module permission %s", perm)
+		}
 	}
+	return nil
 }

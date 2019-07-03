@@ -13,7 +13,7 @@ import (
 
 func TestModuleAccountMarshalYAML(t *testing.T) {
 	name := "test"
-	moduleAcc := NewEmptyModuleAccount(name, Basic)
+	moduleAcc := NewEmptyModuleAccount(name, Basic, Minter, Burner)
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)
@@ -25,9 +25,35 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
   accountnumber: 0
   sequence: 0
   name: %s
-  permission: %s
-`, moduleAddress, name, Basic)
+  permissions:
+  - %s
+  - %s
+  - %s
+`, moduleAddress, name, Basic, Minter, Burner)
 
 	require.Equal(t, want, string(bs))
 	require.Equal(t, want, moduleAcc.String())
+}
+
+func TestHasPermissions(t *testing.T) {
+	name := "test"
+	macc := NewEmptyModuleAccount(name, Basic, Minter, Burner)
+	cases := []struct {
+		permission string
+		expectHas  bool
+	}{
+		{Basic, true},
+		{Minter, true},
+		{Burner, true},
+		{"other", false},
+	}
+
+	for i, tc := range cases {
+		hasPerm := macc.HasPermission(tc.permission)
+		if tc.expectHas {
+			require.True(t, hasPerm, "test case #%d", i)
+		} else {
+			require.False(t, hasPerm, "test case #%d", i)
+		}
+	}
 }

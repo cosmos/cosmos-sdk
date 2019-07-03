@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,61 +19,64 @@ const (
 	awsRegion       = "us-east-1"
 )
 
-var (
-	simTimeStamp = time.Now().Format("01-02-2006_15:05:05")
-)
-
-func awsErrHandler(err error) {
+func awsErrHandler(err error) error {
 	if awsErr, ok := err.(awserr.Error); ok {
 		switch awsErr.Code() {
 		default:
-			log.Println(awsErr.Error())
+			return awsErr
 		}
 	} else {
-		log.Println(err.Error())
+		return err
 	}
 }
 
-func makeObjKey(folderName string, fileName string) string {
-	return fmt.Sprintf("%s/%s/%s", folderName, simTimeStamp, fileName)
+func makeObjKey(objKeyPrefix string, fileName string) string {
+	return fmt.Sprintf("%s/%s", objKeyPrefix, fileName)
 }
 
-func putObj(fileHandle *os.File, svc *s3.S3, folderName string, bucketName string) {
-	_, _ = fileHandle.Seek(0, 0)
-
-	stdOutObjInput := &s3.PutObjectInput{
-		Body:   aws.ReadSeekCloser(fileHandle),
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(makeObjKey(folderName, filepath.Base(fileHandle.Name()))),
+func putObjects(svc *s3.S3, objKeyPrefix string, bucketName string, fileHandles ...*os.File) ([]string, error) {
+	objKeys := make([]string, len(fileHandles))
+	for index, fileHandle := range fileHandles {
+		_, _ = fileHandle.Seek(0, 0)
+		objKey := makeObjKey(objKeyPrefix, filepath.Base(fileHandle.Name()))
+		stdOutObjInput := &s3.PutObjectInput{
+			Body:   aws.ReadSeekCloser(fileHandle),
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(objKey),
+		}
+		_, err := svc.PutObject(stdOutObjInput)
+		if err != nil {
+			return nil, awsErrHandler(err)
+		}
+		objKeys[index] = objKey
 	}
-	if output, err := svc.PutObject(stdOutObjInput); err != nil {
-		awsErrHandler(err)
-	} else {
-		log.Printf("Log file pushed: %s", output.String())
-	}
+	return objKeys, nil
 }
 
-func pushLogs(stdOut *os.File, stdErr *os.File, folderName string) {
+func pushLogs(stdOut *os.File, stdErr *os.File, folderName string) ([]string, *string, error) {
 	var logBucket *string
 
 	sessionS3 := s3.New(session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(awsRegion),
 	})))
 	if listBucketsOutput, err := sessionS3.ListBuckets(&s3.ListBucketsInput{}); err != nil {
-		awsErrHandler(err)
+		awsErr := awsErrHandler(err)
+		if awsErr != nil {
+			return nil, nil, awsErr
+		}
 	} else {
 		for _, bucket := range listBucketsOutput.Buckets {
 			if strings.Contains(*bucket.Name, logBucketPrefix) {
 				logBucket = bucket.Name
-				putObj(stdOut, sessionS3, folderName, *logBucket)
-				putObj(stdErr, sessionS3, folderName, *logBucket)
-				break
+				objKeys, putObjErr := putObjects(sessionS3, folderName, *logBucket, stdOut, stdErr)
+				if putObjErr != nil {
+					return nil, nil, putObjErr
+				}
+				return objKeys, bucket.Name, nil
 			}
 		}
 	}
-	if logBucket == nil {
-		log.Println("Log bucket not found")
-	}
+	return nil, nil, nil
 }
 
 func slackMessage(token string, channel string, threadTS *string, message string) {

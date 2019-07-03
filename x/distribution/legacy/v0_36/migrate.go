@@ -4,6 +4,7 @@ import (
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 )
 
+// TODO: ...
 func Migrate(oldGenState v034distr.GenesisState) GenesisState {
 	feePool := FeePool{CommunityPool: oldGenState.FeePool.CommunityPool}
 

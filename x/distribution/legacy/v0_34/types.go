@@ -3,7 +3,6 @@
 package v0_34
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -97,13 +96,3 @@ type (
 		ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 	}
 )
-
-// ----------------------------------------------------------------------------
-// Codec
-// ----------------------------------------------------------------------------
-
-func RegisterCodec(cdc *codec.Codec) {
-	// cdc.RegisterInterface((*ProposalContent)(nil), nil)
-	// cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
-	// cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
-}

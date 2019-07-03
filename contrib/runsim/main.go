@@ -257,9 +257,11 @@ func worker(id int, seeds <-chan int) {
 			}
 		}
 		log.Printf("[W%d] Seed %d: OK", id, seed)
-		_, _, err = pushLogs(stdOut, stdErr, logObjKey)
-		if err != nil {
-			log.Printf("%v", err)
+		if slackConfigSupplied() {
+			_, _, err = pushLogs(stdOut, stdErr, logObjKey)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 		}
 	}
 	log.Printf("[W%d] no seeds left, shutting down", id)

@@ -2,11 +2,15 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
+	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
@@ -17,7 +21,26 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v036Codec := codec.New()
 	codec.RegisterCrypto(v036Codec)
 
-	// migrate genesis state
+	// migrate genaccounts state
+	// TODO: create and delete accounts
+	if appState[v034genAcounts.ModuleName] != nil {
+		var genAccs v034genAcounts.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034genAcounts.ModuleName], &genAccs)
+
+		delete(appState, v034genAcounts.ModuleName) // delete old key in case the name changed
+		appState[v036genAcounts.ModuleName] = v036Codec.MustMarshalJSON(v036genAcounts.Migrate(genAccs))
+	}
+
+	// migrate auth state
+	if appState[v034auth.ModuleName] != nil {
+		var authGenState v034auth.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)
+
+		delete(appState, v034auth.ModuleName) // delete old key in case the name changed
+		appState[v036auth.ModuleName] = v036Codec.MustMarshalJSON(v036auth.Migrate(authGenState))
+	}
+
+	// migrate gov state
 	if appState[v034gov.ModuleName] != nil {
 		v034gov.RegisterCodec(v034Codec)
 		v036gov.RegisterCodec(v036Codec)
@@ -36,6 +59,15 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 		delete(appState, v034distr.ModuleName) // delete old key in case the name changed
 		appState[v036distr.ModuleName] = v036Codec.MustMarshalJSON(v036distr.Migrate(slashingGenState))
+	}
+
+	// migrate staking state
+	if appState[v034staking.ModuleName] != nil {
+		var stakingGenState v034staking.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)
+
+		delete(appState, v034staking.ModuleName) // delete old key in case the name changed
+		appState[v036staking.ModuleName] = v036Codec.MustMarshalJSON(v036staking.Migrate(stakingGenState))
 	}
 
 	return appState

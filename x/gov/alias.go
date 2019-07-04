@@ -121,6 +121,7 @@ var (
 	NewVotingParams               = types.NewVotingParams
 	NewParams                     = types.NewParams
 	NewProposal                   = types.NewProposal
+	NewRouter                   	= types.NewRouter
 	ProposalStatusFromString      = types.ProposalStatusFromString
 	ValidProposalStatus           = types.ValidProposalStatus
 	NewTextProposal               = types.NewTextProposal

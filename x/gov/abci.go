@@ -48,7 +48,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 		}
 
 		if passes {
-			handler := keeper.router.GetRoute(proposal.ProposalRoute())
+			handler := keeper.Router().GetRoute(proposal.ProposalRoute())
 			cacheCtx, writeCache := ctx.CacheContext()
 
 			// The proposal handler may execute state mutating logic depending

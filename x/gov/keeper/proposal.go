@@ -34,7 +34,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
-	keeper.setProposalID(ctx, proposalID+1)
+	keeper.SetProposalID(ctx, proposalID+1)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -143,8 +143,8 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.
 	return proposalID, nil
 }
 
-// Set the proposal ID
-func (keeper Keeper) setProposalID(ctx sdk.Context, proposalID uint64) {
+// SetProposalID sets the new proposal ID to the store
+func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
 	store.Set(types.ProposalIDKey, bz)

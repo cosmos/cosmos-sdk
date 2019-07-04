@@ -73,6 +73,11 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+// Router returns the gov Keeper Router
+func (keeper Keeper) Router() types.Router {
+	return keeper.router
+}
+
 // GetGovernanceAccount returns the governance ModuleAccount
 func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccountI {
 	return keeper.supplyKeeper.GetModuleAccount(ctx, types.ModuleName)
@@ -80,36 +85,39 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccoun
 
 // Params
 
-// Returns the current DepositParams from the global param store
+// GetDepositParams returns the current DepositParams from the global param store
 func (keeper Keeper) GetDepositParams(ctx sdk.Context) types.DepositParams {
 	var depositParams types.DepositParams
 	keeper.paramSpace.Get(ctx, types.ParamStoreKeyDepositParams, &depositParams)
 	return depositParams
 }
 
-// Returns the current VotingParams from the global param store
+// GetVotingParams returns the current VotingParams from the global param store
 func (keeper Keeper) GetVotingParams(ctx sdk.Context) types.VotingParams {
 	var votingParams types.VotingParams
 	keeper.paramSpace.Get(ctx, types.ParamStoreKeyVotingParams, &votingParams)
 	return votingParams
 }
 
-// Returns the current TallyParam from the global param store
+// GetTallyParams returns the current TallyParam from the global param store
 func (keeper Keeper) GetTallyParams(ctx sdk.Context) types.TallyParams {
 	var tallyParams types.TallyParams
 	keeper.paramSpace.Get(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
 	return tallyParams
 }
 
-func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams types.DepositParams) {
+// SetDepositParams sets DepositParams to the global param store
+func (keeper Keeper) SetDepositParams(ctx sdk.Context, depositParams types.DepositParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyDepositParams, &depositParams)
 }
 
-func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams types.VotingParams) {
+// SetVotingParams sets VotingParams to the global param store
+func (keeper Keeper) SetVotingParams(ctx sdk.Context, votingParams types.VotingParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyVotingParams, &votingParams)
 }
 
-func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams types.TallyParams) {
+// SetTallyParams sets TallyParams to the global param store
+func (keeper Keeper) SetTallyParams(ctx sdk.Context, tallyParams types.TallyParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
 }
 

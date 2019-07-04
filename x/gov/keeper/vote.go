@@ -22,7 +22,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	}
 
 	vote := types.NewVote(proposalID, voterAddr, option)
-	keeper.setVote(ctx, proposalID, voterAddr, vote)
+	keeper.SetVote(ctx, vote)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -65,10 +65,11 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	return vote, true
 }
 
-func (keeper Keeper) setVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, vote types.Vote) {
+// SetVote sets a Vote to the gov store
+func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(vote)
-	store.Set(types.VoteKey(proposalID, voterAddr), bz)
+	store.Set(types.VoteKey(vote.ProposalID, vote.Voter), bz)
 }
 
 // GetVotesIterator gets all the votes on a specific proposal as an sdk.Iterator

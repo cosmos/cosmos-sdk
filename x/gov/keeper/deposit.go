@@ -19,10 +19,11 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return deposit, true
 }
 
-func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, deposit types.Deposit) {
+// SetDeposit sets a Deposit to the gov store
+func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
-	store.Set(types.DepositKey(proposalID, depositorAddr), bz)
+	store.Set(types.DepositKey(deposit.ProposalID, deposit.Depositor), bz)
 }
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
@@ -72,7 +73,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		),
 	)
 
-	keeper.setDeposit(ctx, proposalID, depositorAddr, deposit)
+	keeper.SetDeposit(ctx, deposit)
 	return nil, activatedVotingPeriod
 }
 

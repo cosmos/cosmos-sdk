@@ -54,3 +54,7 @@ func (m Mapping) IsEmpty(ctx Context) bool {
 func (m Mapping) Prefix(prefix []byte) Mapping {
 	return NewMapping(m.base, prefix)
 }
+
+func (m Mapping) Cdc() *Codec {
+	return m.base.Cdc()
+}

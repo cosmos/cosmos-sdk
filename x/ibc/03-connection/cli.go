@@ -1,8 +1,6 @@
 package connection
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -12,10 +10,11 @@ import (
 
 // CLIObject stores the key for each object fields
 type CLIObject struct {
-	ID             string
-	ConnectionKey  []byte
-	StateKey       []byte
-	NextTimeoutKey []byte
+	ID            string
+	ConnectionKey []byte
+	//	StateKey       []byte
+	//	NextTimeoutKey []byte
+	PermissionKey []byte
 
 	Client client.CLIObject
 
@@ -26,10 +25,11 @@ type CLIObject struct {
 func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
-		ID:             obj.id,
-		ConnectionKey:  obj.connection.Key(),
-		StateKey:       obj.state.Key(),
-		NextTimeoutKey: obj.nextTimeout.Key(),
+		ID:            obj.id,
+		ConnectionKey: obj.connection.Key(),
+		//		StateKey:       obj.state.Key(),
+		//		NextTimeoutKey: obj.nextTimeout.Key(),
+		PermissionKey: obj.permission.Key(),
 
 		// TODO: unify man.CLIObject() <=> obj.CLI()
 		Client: obj.client.CLI(root),
@@ -58,6 +58,7 @@ func (obj CLIObject) Connection(ctx context.CLIContext, root merkle.Root) (res C
 	return
 }
 
+/*
 func (obj CLIObject) State(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.StateKey, &res)
 	return
@@ -65,5 +66,11 @@ func (obj CLIObject) State(ctx context.CLIContext, root merkle.Root) (res bool, 
 
 func (obj CLIObject) NextTimeout(ctx context.CLIContext, root merkle.Root) (res time.Time, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.NextTimeoutKey, &res)
+	return
+}
+*/
+
+func (obj CLIObject) Permission(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.PermissionKey, &res)
 	return
 }

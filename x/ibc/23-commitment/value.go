@@ -45,6 +45,12 @@ func NewMapping(base Base, prefix []byte) Mapping {
 	}
 }
 
+func (m Mapping) Prefix(prefix []byte) Mapping {
+	return Mapping{
+		base: m.base.Prefix(prefix),
+	}
+}
+
 func (m Mapping) Value(key []byte) Value {
 	return Value{
 		base: m.base,
@@ -79,6 +85,18 @@ func NewEnum(v Value) Enum {
 
 func (v Enum) Is(ctx sdk.Context, value byte) bool {
 	return v.Value.IsRaw(ctx, []byte{value})
+}
+
+type String struct {
+	Value
+}
+
+func NewString(v Value) String {
+	return String{v}
+}
+
+func (v String) Is(ctx sdk.Context, value string) bool {
+	return v.Value.Is(ctx, value)
 }
 
 type Integer struct {

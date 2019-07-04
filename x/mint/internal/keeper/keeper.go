@@ -98,6 +98,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 // MintCoins to be used in BeginBlocker.
 func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) sdk.Error {
 	if newCoins.Empty() {
+		// skip as no coins need to be minted
 		return nil
 	}
 	return k.supplyKeeper.MintCoins(ctx, types.ModuleName, newCoins)

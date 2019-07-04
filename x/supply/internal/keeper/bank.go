@@ -79,8 +79,8 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 // MintCoins creates new coins from thin air and adds it to the MinterAccount.
 // Panics if the name maps to a non-minter module account.
 func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
-	if amt.Empty() {
-		panic("cannot mint empty coins")
+	if !amt.IsValid() {
+		panic(fmt.Sprintf("invalid coins %s", amt.String()))
 	}
 
 	// create the account if it doesn't yet exist
@@ -112,8 +112,8 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 
 // BurnCoins burns coins deletes coins from the balance of the module account
 func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
-	if amt.Empty() {
-		panic("cannot burn empty coins")
+	if !amt.IsValid() {
+		panic(fmt.Sprintf("invalid coins %s", amt.String()))
 	}
 
 	addr, perm := k.GetModuleAddressAndPermission(moduleName)

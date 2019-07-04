@@ -52,7 +52,7 @@ var (
 	genesis      string
 	exitOnFail   bool
 	githubConfig string
-	gitRevision  string
+	logObjKey    string
 	slackConfig  string
 
 	// integration with Slack and Github
@@ -82,7 +82,7 @@ func init() {
 	flag.StringVar(&genesis, "g", "", "Genesis file")
 	flag.StringVar(&seedOverrideList, "seeds", "", "run the supplied comma-separated list of seeds instead of defaults")
 	flag.BoolVar(&exitOnFail, "e", false, "Exit on fail during multi-sim, print error")
-	flag.StringVar(&gitRevision, "rev", "", "git revision")
+	flag.StringVar(&logObjKey, "log", "", "S3 object key for log files")
 	flag.StringVar(&githubConfig, "github", "", "Report results to Github's PR")
 	flag.StringVar(&slackConfig, "slack", "", "Report results to slack channel")
 
@@ -224,7 +224,16 @@ func makeCmd(cmdStr string) *exec.Cmd {
 }
 
 func makeFilename(seed int) string {
-	return fmt.Sprintf("app-simulation-seed-%d-date-%s", seed, time.Now().Format("01-02-2006_15:04:05.000000000"))
+	return fmt.Sprintf("app-simulation-seed-%d-date-%s", seed, time.Now().Format("01-02-2006_150405"))
+}
+
+func makeFailSlackMsg(seed int, stdoutKey, stderrKey, bucket string, logsPushed bool) string {
+	if logsPushed {
+		return fmt.Sprintf("*Seed %s: FAILED*. *<https://%s.s3.amazonaws.com/%s|stdout>* *<https://%s.s3.amazonaws.com/%s|stderr>*\nTo reproduce run: ```\n%s\n```",
+			strconv.Itoa(seed), bucket, stdoutKey, bucket, stderrKey, buildCommand(testname, blocks, period, genesis, seed))
+	}
+	return fmt.Sprintf("*Seed %s: FAILED*. \nTo reproduce run: ```\n%s\n```\n*Could not upload logs:* ```\n%s\n```",
+		strconv.Itoa(seed), buildCommand(testname, blocks, period, genesis, seed), bucket)
 }
 
 func worker(id int, seeds <-chan int) {
@@ -236,18 +245,25 @@ func worker(id int, seeds <-chan int) {
 			log.Printf("[W%d] Seed %d: FAILED", id, seed)
 			log.Printf("To reproduce run: %s", buildCommand(testname, blocks, period, genesis, seed))
 			if slackConfigSupplied() {
-				slackMessage(slackToken, slackChannel, nil, "Seed "+strconv.Itoa(seed)+" failed. To reproduce, run: "+buildCommand(testname, blocks, period, genesis, seed))
+				objKeys, bucket, err := pushLogs(stdOut, stdErr, logObjKey)
+				if err != nil {
+					slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, "", "", err.Error(), false))
+				}
+				slackMessage(slackToken, slackChannel, nil, makeFailSlackMsg(seed, objKeys[0], objKeys[1], *bucket, true))
 			}
 			if exitOnFail {
 				log.Printf("\bERROR OUTPUT \n\n%s", err)
 				panic("halting simulations")
 			}
-		} else {
-			log.Printf("[W%d] Seed %d: OK", id, seed)
 		}
-		pushLogs(stdOut, stdErr, gitRevision)
+		log.Printf("[W%d] Seed %d: OK", id, seed)
+		if slackConfigSupplied() {
+			_, _, err = pushLogs(stdOut, stdErr, logObjKey)
+			if err != nil {
+				log.Printf("%v", err)
+			}
+		}
 	}
-
 	log.Printf("[W%d] no seeds left, shutting down", id)
 }
 

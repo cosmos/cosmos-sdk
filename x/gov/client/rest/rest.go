@@ -201,12 +201,13 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -240,12 +241,13 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -607,12 +609,13 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -647,12 +650,13 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/tally", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

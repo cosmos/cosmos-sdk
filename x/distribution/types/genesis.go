@@ -49,6 +49,7 @@ type DelegatorStartingInfoRecord struct {
 type ValidatorSlashEventRecord struct {
 	ValidatorAddress sdk.ValAddress      `json:"validator_address"`
 	Height           uint64              `json:"height"`
+	Period           uint64              `json:"period"`
 	Event            ValidatorSlashEvent `json:"validator_slash_event"`
 }
 

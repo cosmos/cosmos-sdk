@@ -7,7 +7,7 @@ When a delegator wishes to withdraw their rewards it must send
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
-```golang
+```go
 type MsgWithdrawDelegationRewardsAll struct {
     DelegatorAddr sdk.AccAddress
 }
@@ -15,7 +15,7 @@ type MsgWithdrawDelegationRewardsAll struct {
 func WithdrawDelegationRewardsAll(delegatorAddr, withdrawAddr sdk.AccAddress) 
     height = GetHeight()
     withdraw = GetDelegatorRewardsAll(delegatorAddr, height)
-    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
 
 func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
     
@@ -45,7 +45,7 @@ func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
 under special circumstances a delegator may wish to withdraw rewards from only
 a single validator. 
 
-```golang
+```go
 type MsgWithdrawDelegationReward struct {
     DelegatorAddr sdk.AccAddress
     ValidatorAddr sdk.ValAddress
@@ -66,7 +66,7 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
                validator.Tokens, validator.DelegatorShares, validator.Commission)
 
     SetFeePool(feePool) 
-    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
 ```
 
 
@@ -77,9 +77,9 @@ When a validator wishes to withdraw their rewards it must send
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission fee, as well as any rewards
-earning on their self-delegation. 
+earning on their self-delegation.
 
-```
+```go
 type MsgWithdrawValidatorRewardsAll struct {
     OperatorAddr sdk.ValAddress // validator address to withdraw from 
 }
@@ -101,9 +101,9 @@ func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
     withdraw += commission
     SetFeePool(feePool) 
 
-    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
 ```
-    
+
 ## Common calculations 
 
 ### Update total validator accum
@@ -113,7 +113,7 @@ the amount of pool tokens which a validator is entitled to at a particular
 block. The accum is always additive to the existing accum. This term is to be
 updated each time rewards are withdrawn from the system. 
 
-``` 
+```go
 func (g FeePool) UpdateTotalValAccum(height int64, totalBondedTokens Dec) FeePool
     blocks = height - g.TotalValAccumUpdateHeight
     g.TotalValAccum += totalDelShares * blocks
@@ -129,7 +129,7 @@ other delegators for that validator. The accum is always additive to
 the existing accum. This term is to be updated each time a
 withdrawal is made from a validator. 
 
-``` 
+``` go
 func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) ValidatorDistInfo
     blocks = height - vi.TotalDelAccumUpdateHeight
     vi.TotalDelAccum += totalDelShares * blocks
@@ -144,7 +144,7 @@ the proposer and receives new tokens, the relevant validator must move tokens
 from the passive global pool to their own pool. It is at this point that the
 commission is withdrawn
 
-``` 
+```go
 func (vi ValidatorDistInfo) TakeFeePoolRewards(g FeePool, height int64, totalBonded, vdTokens, commissionRate Dec) (
                                 vi ValidatorDistInfo, g FeePool)
 
@@ -171,7 +171,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(g FeePool, height int64, totalBon
 For delegations (including validator's self-delegation) all rewards from reward
 pool have already had the validator's commission taken away.
 
-```
+```go
 func (di DelegationDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
     height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (
     di DelegationDistInfo, g FeePool, withdrawn DecCoins)
@@ -196,7 +196,7 @@ func (di DelegationDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
 
 Commission is calculated each time rewards enter into the validator.
 
-```
+```go
 func (vi ValidatorDistInfo) WithdrawCommission(g FeePool, height int64, 
           totalBonded, vdTokens, commissionRate Dec) (
           vi ValidatorDistInfo, g FeePool, withdrawn DecCoins)

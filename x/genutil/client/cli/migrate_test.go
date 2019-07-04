@@ -1,19 +1,20 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"io/ioutil"
+	"path"
+	"testing"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
-	"io/ioutil"
-	"path"
-	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func setupCmd(genesisTime string, chainId string) *cobra.Command {
@@ -45,11 +46,10 @@ func TestMigrateGenesis(t *testing.T) {
 	defer cleanup()
 
 	// Reject if we dont' have the right parameters or genesis does not exists
-	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target}))
 	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target, genesisPath}))
 
 	// Noop migration with minimal genesis
-	emptyGenesis := []byte("{\"chain_id\":\"test\",\"app_state\":{}}")
+	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
 	err = ioutil.WriteFile(genesisPath, emptyGenesis, 0644)
 	require.Nil(t, err)
 	cmd := setupCmd("", "test2")

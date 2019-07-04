@@ -1,10 +1,12 @@
 package v036
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 var basic034Gov = []byte(`

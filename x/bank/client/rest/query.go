@@ -37,11 +37,13 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/bank/balances", bz)
+		res, height, err := cliCtx.QueryWithData("custom/bank/balances", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		cliCtx = cliCtx.WithHeight(height)
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {

@@ -2,21 +2,16 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
-var migrationMap = extypes.MigrationMap{
-	"v0.36": v036.Migrate,
-}
 
 const (
 	flagGenesisTime = "genesis-time"
@@ -27,17 +22,13 @@ func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
-		Long: strings.TrimSpace(`Migrate the source genesis into the target version and print to STDOUT.
+		Long: fmt.Sprintf(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-[binary] migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`),
+$ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
+`, version.ServerName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 2 {
-				return fmt.Errorf("2 arguments needed")
-			}
-
 			target := args[0]
 			importGenesis := args[1]
 

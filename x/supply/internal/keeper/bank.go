@@ -101,7 +101,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	}
 
 	if !acc.HasPermission(types.Minter) {
-		panic(fmt.Sprintf("Account %s does not have permissions to mint tokens", moduleName))
+		panic(fmt.Sprintf("module account %s does not have permissions to mint tokens", moduleName))
 	}
 
 	_, err := k.bk.AddCoins(ctx, addr, amt)

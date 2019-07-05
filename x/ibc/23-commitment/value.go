@@ -99,6 +99,18 @@ func (v String) Is(ctx sdk.Context, value string) bool {
 	return v.Value.Is(ctx, value)
 }
 
+type Boolean struct {
+	Value
+}
+
+func NewBoolean(v Value) Boolean {
+	return Boolean{v}
+}
+
+func (v Boolean) Is(ctx sdk.Context, value bool) bool {
+	return v.Value.Is(ctx, value)
+}
+
 type Integer struct {
 	Value
 

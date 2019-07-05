@@ -14,11 +14,17 @@ import (
 type Manager struct {
 	protocol state.Mapping
 
-	table map[string]struct{}
-
 	client client.Manager
 
 	counterparty CounterpartyManager
+}
+
+func NewManager(protocol state.Base, client client.Manager) Manager {
+	return Manager{
+		protocol:     state.NewMapping(protocol, ([]byte("/connection/"))),
+		client:       client,
+		counterparty: NewCounterpartyManager(protocol.Cdc()),
+	}
 }
 
 type CounterpartyManager struct {
@@ -27,44 +33,119 @@ type CounterpartyManager struct {
 	client client.CounterpartyManager
 }
 
-// CONTRACT: should be called on initialization time only
-func (man Manager) Register(name string) PermissionedManager {
-	if _, ok := man.table[name]; ok {
-		panic("SubManager registered for existing name")
-	}
-	man.table[name] = struct{}{}
+func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
+	protocol := commitment.NewBase(cdc)
 
-	return PermissionedManager{man, name}
+	return CounterpartyManager{
+		protocol: commitment.NewMapping(protocol, []byte("/connection/")),
+
+		client: client.NewCounterpartyManager(protocol),
+	}
 }
 
-func (man Manager) mapping(id string) state.Mapping {
-	return man.protocol.Prefix([]byte(id))
+type Object struct {
+	id string
+
+	protocol  state.Mapping
+	clientid  state.String
+	available state.Boolean
+
+	kind state.String
+
+	client client.Object
 }
 
 func (man Manager) object(id string) Object {
 	return Object{
-		id:         id,
-		connection: man.protocol.Value([]byte(id)),
-		permission: state.NewString(man.protocol.Value([]byte(id + "/permission"))),
+		id: id,
 
-		mapping: man.protocol.Prefix([]byte(id)),
+		protocol:  man.protocol.Prefix([]byte(id + "/")),
+		clientid:  state.NewString(man.protocol.Value([]byte(id + "/client"))),
+		available: state.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
 
-		// CONTRACT: client should be filled by the caller
+		kind: state.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
-		counterparty: man.counterparty.object(id),
+		// CONTRACT: client must be filled by the caller
 	}
+}
+
+type CounterObject struct {
+	id string
+
+	protocol  commitment.Mapping
+	clientid  commitment.String
+	available commitment.Boolean
+
+	kind commitment.String
+
+	client client.CounterObject
 }
 
 func (man CounterpartyManager) object(id string) CounterObject {
 	return CounterObject{
-		ID:         id,
-		Connection: man.protocol.Value([]byte(id)),
-		Permission: commitment.NewString(man.protocol.Value([]byte(id + "/permission"))),
+		id:        id,
+		protocol:  man.protocol.Prefix([]byte(id + "/")),
+		clientid:  commitment.NewString(man.protocol.Value([]byte(id + "/client"))),
+		available: commitment.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
+
+		kind: commitment.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
 		// CONTRACT: client should be filled by the caller
-
-		Mapping: man.protocol.Prefix([]byte(id)),
 	}
+}
+func (obj Object) ID() string {
+	return obj.id
+}
+
+func (obj Object) ClientID(ctx sdk.Context) string {
+	return obj.clientid.Get(ctx)
+}
+
+func (obj Object) Available(ctx sdk.Context) bool {
+	return obj.available.Get(ctx)
+}
+
+func (obj Object) Client() client.Object {
+	return obj.client
+}
+
+func (obj Object) remove(ctx sdk.Context) {
+	obj.clientid.Delete(ctx)
+	obj.available.Delete(ctx)
+	obj.kind.Delete(ctx)
+}
+
+func (obj Object) exists(ctx sdk.Context) bool {
+	return obj.clientid.Exists(ctx)
+}
+
+func (man Manager) Cdc() *codec.Codec {
+	return man.protocol.Cdc()
+}
+
+func (man Manager) create(ctx sdk.Context, id, clientid string, kind string) (obj Object, err error) {
+	obj = man.object(id)
+	if obj.exists(ctx) {
+		err = errors.New("Object already exists")
+		return
+	}
+	obj.clientid.Set(ctx, clientid)
+	obj.kind.Set(ctx, kind)
+	return
+}
+
+// query() is used internally by the connection creators
+// checing the connection kind
+func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, err error) {
+	obj, err = man.Query(ctx, id)
+	if err != nil {
+		return
+	}
+	if obj.kind.Get(ctx) != kind {
+		err = errors.New("kind mismatch")
+		return
+	}
+	return
 }
 
 func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
@@ -73,106 +154,10 @@ func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
 		err = errors.New("Object not exists")
 		return
 	}
-	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).GetClient())
-	return
-}
-
-type PermissionedManager struct {
-	man  Manager
-	name string
-}
-
-func (man PermissionedManager) Cdc() *codec.Codec {
-	return man.man.protocol.Cdc()
-}
-
-func (man PermissionedManager) object(id string) Object {
-	return man.man.object(id)
-}
-
-func (man PermissionedManager) Create(ctx sdk.Context, id string, connection Connection) (obj Object, err error) {
-	obj = man.object(id)
-	if obj.exists(ctx) {
-		err = errors.New("Object already exists")
+	if !obj.Available(ctx) {
+		err = errors.New("object not available")
 		return
 	}
-	obj.connection.Set(ctx, connection)
-	obj.permission.Set(ctx, man.name)
-	obj.client, err = man.man.client.Query(ctx, connection.GetClient())
+	obj.client, err = man.client.Query(ctx, obj.ClientID(ctx))
 	return
 }
-
-func (man PermissionedManager) Query(ctx sdk.Context, id string) (obj Object, err error) {
-	obj = man.object(id)
-	if !obj.exists(ctx) {
-		err = errors.New("Object not exists")
-		return
-	}
-	if obj.Permission(ctx) != man.name {
-		err = errors.New("Object created with different permission")
-		return
-	}
-	obj.client, err = man.man.client.Query(ctx, obj.Connection(ctx).GetClient())
-	return
-}
-
-type Object struct {
-	id         string
-	connection state.Value // Connection
-	permission state.String
-
-	mapping state.Mapping
-
-	client client.Object
-
-	counterparty CounterObject
-}
-
-func (obj Object) ID() string {
-	return obj.id
-}
-
-func (obj Object) Connection(ctx sdk.Context) (res Connection) {
-	obj.connection.Get(ctx, &res)
-	return
-}
-
-// TODO: it should not be exposed
-func (obj Object) Permission(ctx sdk.Context) string {
-	return obj.permission.Get(ctx)
-}
-
-func (obj Object) Mapping() state.Mapping {
-	return obj.mapping
-}
-
-func (obj Object) Counterparty() CounterObject {
-	return obj.counterparty
-}
-
-func (obj Object) exists(ctx sdk.Context) bool {
-	return obj.connection.Exists(ctx)
-}
-
-func (obj Object) Delete(ctx sdk.Context) {
-	obj.connection.Delete(ctx)
-	obj.permission.Delete(ctx)
-}
-
-type CounterObject struct {
-	ID         string
-	Connection commitment.Value
-	Permission commitment.String
-
-	Mapping commitment.Mapping
-
-	Client client.CounterObject
-}
-
-// Flow(DEPRECATED):
-// 1. a module calls SubManager.{Create, Query}()
-// 2. SubManager calls StateManager.RequestBase(id string)
-// 3-1. If id is not reserved, StateManager marks id as reserved and returns base
-// 3-2. If id is reserved, StateManager checks if the SubManager is one who reserved
-// 4. if okay, Manager return the base, which only Manager has access
-// 5. SubManager returns the result of method call

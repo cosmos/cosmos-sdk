@@ -1,5 +1,6 @@
 package connection
 
+/*
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -8,13 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
+
 // CLIObject stores the key for each object fields
 type CLIObject struct {
-	ID            string
-	ConnectionKey []byte
-	//	StateKey       []byte
-	//	NextTimeoutKey []byte
-	PermissionKey []byte
+	ID          string
+	ClientIDKey []byte
+	AvailableKey  []byte
 
 	Client client.CLIObject
 
@@ -26,6 +26,8 @@ func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
 		ID:            obj.id,
+		ClientIDKey: obj.clientid.Key(),
+		Available
 		ConnectionKey: obj.connection.Key(),
 		//		StateKey:       obj.state.Key(),
 		//		NextTimeoutKey: obj.nextTimeout.Key(),
@@ -68,9 +70,12 @@ func (obj CLIObject) NextTimeout(ctx context.CLIContext, root merkle.Root) (res 
 	proof, err = obj.query(ctx, obj.NextTimeoutKey, &res)
 	return
 }
-*/
+:w
+:w
+
 
 func (obj CLIObject) Permission(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.PermissionKey, &res)
 	return
 }
+*/

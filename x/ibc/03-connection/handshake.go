@@ -113,6 +113,10 @@ func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, er
 	return
 }
 
+func (obj HandshakeObject) State(ctx sdk.Context) byte {
+	return obj.state.Get(ctx)
+}
+
 func (obj HandshakeObject) Handshake(ctx sdk.Context) (res Handshake) {
 	obj.handshake.Get(ctx, &res)
 	return
@@ -144,44 +148,56 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 // Using proofs: none
 func (man Handshaker) OpenInit(ctx sdk.Context,
 	id, clientid string, handshake Handshake, nextTimeoutHeight uint64,
-) error {
+) (HandshakeObject, error) {
 	// man.Create() will ensure
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
 	obj, err := man.create(ctx, id, clientid, handshake)
 	if err != nil {
-		return err
+		return HandshakeObject{}, err
 	}
 
 	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 	obj.state.Set(ctx, Init)
 
-	return nil
+	return obj, nil
 }
 
-// Using proofs: counterparty.{connection,state,nextTimeout,client}
+// Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
 	id, clientid string, handshake Handshake, timeoutHeight, nextTimeoutHeight uint64,
-) error {
-	obj, err := man.create(ctx, id, clientid, handshake)
+) (obj HandshakeObject, err error) {
+	obj, err = man.create(ctx, id, clientid, handshake)
 	if err != nil {
-		return err
+		return
 	}
 
 	err = assertTimeout(ctx, timeoutHeight)
 	if err != nil {
-		return err
+		return
+	}
+
+	if !obj.counterparty.state.Is(ctx, Init) {
+		err = errors.New("counterparty state not init")
+		return
 	}
 
 	if !obj.counterparty.handshake.Is(ctx, Handshake{
 		Counterparty:       id,
 		CounterpartyClient: clientid,
 	}) {
-		return errors.New("wrong counterparty")
+		err = errors.New("wrong counterparty")
+		return
+	}
+
+	if !obj.counterparty.clientid.Is(ctx, handshake.CounterpartyClient) {
+		err = errors.New("counterparty client not match")
+		return
 	}
 
 	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
-		return errors.New("unexpected counterparty timeout value")
+		err = errors.New("unexpected counterparty timeout value")
+		return
 	}
 
 	// TODO: commented out, need to check whether the stored client is compatible
@@ -203,34 +219,49 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	obj.state.Set(ctx, OpenTry)
 	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
-	return nil
+	return
 }
 
-// Using proofs: counterparty.{handshake,nextTimeout}
-func (man Handshaker) OpenAck(ctx sdk.Context, id string, expheight uint64, timeoutHeight, nextTimeoutHeight uint64) error {
-	obj, err := man.query(ctx, id)
+// Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
+func (man Handshaker) OpenAck(ctx sdk.Context,
+	id string /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64,
+) (obj HandshakeObject, err error) {
+	obj, err = man.query(ctx, id)
 	if err != nil {
-		return err
+		return
 	}
 
 	if !obj.state.Transit(ctx, Init, Open) {
-		return errors.New("ack on non-init connection")
+		err = errors.New("ack on non-init connection")
+		return
 	}
 
 	err = assertTimeout(ctx, timeoutHeight)
 	if err != nil {
-		return err
+		return
 	}
 
 	if !obj.counterparty.handshake.Is(ctx, Handshake{
 		Counterparty:       obj.ID(),
 		CounterpartyClient: obj.Client().ID(),
 	}) {
-		return errors.New("wrong counterparty")
+		err = errors.New("wrong counterparty")
+		return
+	}
+
+	if !obj.counterparty.state.Is(ctx, OpenTry) {
+		err = errors.New("counterparty state not opentry")
+		return
+	}
+
+	if !obj.counterparty.clientid.Is(ctx, obj.Handshake(ctx).CounterpartyClient) {
+		err = errors.New("counterparty client not match")
+		return
 	}
 
 	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
-		return errors.New("unexpected counterparty timeout value")
+		err = errors.New("unexpected counterparty timeout value")
+		return
 	}
 
 	// TODO: commented out, implement in v1
@@ -242,41 +273,43 @@ func (man Handshaker) OpenAck(ctx sdk.Context, id string, expheight uint64, time
 		}
 	*/
 
+	obj.available.Set(ctx, true)
 	obj.nextTimeout.Set(ctx, uint64(nextTimeoutHeight))
 
-	return nil
+	return
 }
 
 // Using proofs: counterparty.{connection,state, nextTimeout}
-func (man Handshaker) OpenConfirm(ctx sdk.Context, id string, timeoutHeight uint64) error {
-	obj, err := man.query(ctx, id)
+func (man Handshaker) OpenConfirm(ctx sdk.Context, id string, timeoutHeight uint64) (obj HandshakeObject, err error) {
+	obj, err = man.query(ctx, id)
 	if err != nil {
-		return err
+		return
 	}
 
 	if !obj.state.Transit(ctx, OpenTry, Open) {
-		return errors.New("confirm on non-try connection")
+		err = errors.New("confirm on non-try connection")
+		return
 	}
 
 	err = assertTimeout(ctx, timeoutHeight)
 	if err != nil {
-		return err
+		return
 	}
 
-	if !obj.counterparty.handshake.Is(ctx, Handshake{
-		Counterparty:       obj.ID(),
-		CounterpartyClient: obj.Client().ID(),
-	}) {
-		return errors.New("counterparty state not open or wrong counterparty")
+	if !obj.counterparty.state.Is(ctx, Open) {
+		err = errors.New("counterparty state not open")
+		return
 	}
 
 	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
-		return errors.New("unexpected counterparty timeout value")
+		err = errors.New("unexpected counterparty timeout value")
+		return
 	}
 
+	obj.available.Set(ctx, true)
 	obj.nextTimeout.Set(ctx, 0)
 
-	return nil
+	return
 }
 
 func (obj HandshakeObject) OpenTimeout(ctx sdk.Context) error {

@@ -135,9 +135,14 @@ func (man Manager) create(ctx sdk.Context, id, clientid string, kind string) (ob
 }
 
 // query() is used internally by the connection creators
-// checing the connection kind
+// checks connection kind, doesn't check avilability
 func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, err error) {
-	obj, err = man.Query(ctx, id)
+	obj = man.object(id)
+	if !obj.exists(ctx) {
+		err = errors.New("Object not exists")
+		return
+	}
+	obj.client, err = man.client.Query(ctx, obj.ClientID(ctx))
 	if err != nil {
 		return
 	}

@@ -1,6 +1,5 @@
 package connection
 
-/*
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-
 // CLIObject stores the key for each object fields
 type CLIObject struct {
-	ID          string
-	ClientIDKey []byte
-	AvailableKey  []byte
+	ID           string
+	ClientIDKey  []byte
+	AvailableKey []byte
+	KindKey      []byte
 
 	Client client.CLIObject
 
@@ -25,19 +24,16 @@ type CLIObject struct {
 func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
-		ID:            obj.id,
-		ClientIDKey: obj.clientid.Key(),
-		Available
-		ConnectionKey: obj.connection.Key(),
-		//		StateKey:       obj.state.Key(),
-		//		NextTimeoutKey: obj.nextTimeout.Key(),
-		PermissionKey: obj.permission.Key(),
+		ID:           obj.id,
+		ClientIDKey:  obj.clientid.Key(),
+		AvailableKey: obj.available.Key(),
+		KindKey:      obj.kind.Key(),
 
 		// TODO: unify man.CLIObject() <=> obj.CLI()
 		Client: obj.client.CLI(root),
 
 		Root: root,
-		Cdc:  obj.connection.Cdc(),
+		Cdc:  obj.clientid.Cdc(),
 	}
 }
 
@@ -55,8 +51,52 @@ func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) 
 
 }
 
-func (obj CLIObject) Connection(ctx context.CLIContext, root merkle.Root) (res Connection, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.ConnectionKey, &res)
+func (obj CLIObject) ClientID(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.ClientIDKey, &res)
+	return
+}
+
+func (obj CLIObject) Available(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.AvailableKey, &res)
+	return
+}
+
+func (obj CLIObject) Kind(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.KindKey, &res)
+	return
+}
+
+type CLIHandshakeObject struct {
+	CLIObject
+
+	StateKey     []byte
+	HandshakeKey []byte
+	TimeoutKey   []byte
+}
+
+func (man Handshaker) CLIObject(root merkle.Root, id string) CLIHandshakeObject {
+	obj := man.object(man.man.object(id))
+	return CLIHandshakeObject{
+		CLIObject: man.man.CLIObject(root, id),
+
+		StateKey:     obj.state.Key(),
+		HandshakeKey: obj.handshake.Key(),
+		TimeoutKey:   obj.nextTimeout.Key(),
+	}
+}
+
+func (obj CLIHandshakeObject) ClientID(ctx context.CLIContext, root merkle.Root) (res byte, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.ClientIDKey, &res)
+	return
+}
+
+func (obj CLIHandshakeObject) Handshake(ctx context.CLIContext, root merkle.Root) (res Handshake, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.HandshakeKey, &res)
+	return
+}
+
+func (obj CLIHandshakeObject) Timeout(ctx context.CLIContext, root merkle.Root) (res uint64, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
 	return
 }
 
@@ -70,9 +110,6 @@ func (obj CLIObject) NextTimeout(ctx context.CLIContext, root merkle.Root) (res 
 	proof, err = obj.query(ctx, obj.NextTimeoutKey, &res)
 	return
 }
-:w
-:w
-
 
 func (obj CLIObject) Permission(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.PermissionKey, &res)

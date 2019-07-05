@@ -133,7 +133,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	}
 
 	if !acc.HasPermission(types.Burner) {
-		panic(fmt.Sprintf("Account %s does not have permissions to burn tokens", moduleName))
+		panic(fmt.Sprintf("module account %s does not have permissions to burn tokens", moduleName))
 	}
 
 	_, err := k.bk.SubtractCoins(ctx, addr, amt)

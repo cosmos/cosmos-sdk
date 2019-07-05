@@ -4,14 +4,16 @@ import (
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
 )
 
+// Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
+// genesis state.
 func Migrate(oldGenState v034gov.GenesisState) GenesisState {
 
-	deposits := make(Deposits, len(oldGenState.Deposits))
+	deposits := make(v034gov.Deposits, len(oldGenState.Deposits))
 	for i, deposit := range oldGenState.Deposits {
 		deposits[i] = deposit.Deposit
 	}
 
-	votes := make(Votes, len(oldGenState.Votes))
+	votes := make(v034gov.Votes, len(oldGenState.Votes))
 	for i, vote := range oldGenState.Votes {
 		votes[i] = vote.Vote
 	}

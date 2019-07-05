@@ -10,22 +10,14 @@ import (
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
 )
 
-// Keys
 const (
-	// ModuleName is the name of the module
 	ModuleName = "gov"
+	RouterKey  = ModuleName
+)
 
-	// StoreKey is the store key string for gov
-	StoreKey = ModuleName
-
-	// RouterKey is the message route for gov
-	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
-
-	// DefaultParamspace default name for parameter store
-	DefaultParamspace = ModuleName
+const (
+	ProposalTypeText            string = "Text"
+	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
 )
 
 type (
@@ -40,6 +32,16 @@ type (
 	DepositParams struct {
 		MinDeposit       sdk.Coins     `json:"min_deposit,omitempty"`
 		MaxDepositPeriod time.Duration `json:"max_deposit_period,omitempty"`
+	}
+
+	TextProposal struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+
+	SoftwareUpgradeProposal struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
 	}
 
 	Content interface {
@@ -68,8 +70,8 @@ type (
 
 	GenesisState struct {
 		StartingProposalID uint64                `json:"starting_proposal_id"`
-		Deposits           Deposits              `json:"deposits"`
-		Votes              Votes                 `json:"votes"`
+		Deposits           v034gov.Deposits      `json:"deposits"`
+		Votes              v034gov.Votes         `json:"votes"`
 		Proposals          []Proposal            `json:"proposals"`
 		DepositParams      v034gov.DepositParams `json:"deposit_params"`
 		VotingParams       v034gov.VotingParams  `json:"voting_params"`
@@ -77,7 +79,7 @@ type (
 	}
 )
 
-func NewGenesisState(startingProposalID uint64, deposits Deposits, votes Votes,
+func NewGenesisState(startingProposalID uint64, deposits v034gov.Deposits, votes v034gov.Votes,
 	proposals []Proposal, depositParams v034gov.DepositParams, votingParams v034gov.VotingParams,
 	tallyParams v034gov.TallyParams) GenesisState {
 
@@ -90,22 +92,6 @@ func NewGenesisState(startingProposalID uint64, deposits Deposits, votes Votes,
 		VotingParams:       votingParams,
 		TallyParams:        tallyParams,
 	}
-}
-
-// ----------------------------------------------------------------------------
-// Proposal
-// ----------------------------------------------------------------------------
-
-// Proposal types
-const (
-	ProposalTypeText            string = "Text"
-	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
-)
-
-// Text Proposal
-type TextProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
 }
 
 func NewTextProposal(title, description string) Content {
@@ -172,14 +158,6 @@ func (tp TextProposal) String() string {
 `, tp.Title, tp.Description)
 }
 
-// Software Upgrade Proposals
-// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
-// upgrade date, etc.
-type SoftwareUpgradeProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
 func NewSoftwareUpgradeProposal(title, description string) Content {
 	return SoftwareUpgradeProposal{title, description}
 }
@@ -203,12 +181,8 @@ func (sup SoftwareUpgradeProposal) String() string {
 `, sup.Title, sup.Description)
 }
 
-// ----------------------------------------------------------------------------
-// Codec
-// ----------------------------------------------------------------------------
-
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
+	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
+	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

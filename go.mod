@@ -1,7 +1,6 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/aws/aws-sdk-go v1.20.11
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
@@ -15,10 +14,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/lusis/go-slackbot v0.0.0-20180109053408-401027ccfef5 // indirect
-	github.com/lusis/slack-test v0.0.0-20190426140909-c40012f20018 // indirect
 	github.com/mattn/go-isatty v0.0.6
-	github.com/nlopes/slack v0.5.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect

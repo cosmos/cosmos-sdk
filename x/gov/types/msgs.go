@@ -17,9 +17,9 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Content        Content        `json:"content"`
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
+	Content        Content        `json:"content" yaml:"content"`
+	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
+	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
 }
 
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
@@ -77,9 +77,9 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 
 // MsgDeposit
 type MsgDeposit struct {
-	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
-	Depositor  sdk.AccAddress `json:"depositor"`   // Address of the depositor
-	Amount     sdk.Coins      `json:"amount"`      // Coins to add to the proposal's deposit
+	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
+	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     // Address of the depositor
+	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
 }
 
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
@@ -127,9 +127,9 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 // MsgVote
 type MsgVote struct {
-	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
-	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
-	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
+	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
+	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
+	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
 }
 
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgVote {

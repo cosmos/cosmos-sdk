@@ -6,7 +6,7 @@ import (
 
 // GenesisState is the bank state that must be provided at genesis.
 type GenesisState struct {
-	SendEnabled bool `json:"send_enabled"`
+	SendEnabled bool `json:"send_enabled" yaml:"send_enabled"`
 }
 
 // NewGenesisState creates a new genesis state.

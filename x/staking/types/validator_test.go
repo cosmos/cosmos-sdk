@@ -295,9 +295,9 @@ func TestValidatorMarshalYAML(t *testing.T) {
   commission:
     commissionrates:
       rate: "0.000000000000000000"
-      maxrate: "0.000000000000000000"
-      maxchangerate: "0.000000000000000000"
-    updatetime: 1970-01-01T00:00:00Z
+      max_rate: "0.000000000000000000"
+      max_change_rate: "0.000000000000000000"
+    update_time: 1970-01-01T00:00:00Z
   minselfdelegation: "1"
 `, validator.OperatorAddress.String(), bechifiedPub)
 	require.Equal(t, want, string(bs))

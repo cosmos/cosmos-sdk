@@ -32,13 +32,13 @@ var (
 )
 
 type testParamsSlashingRate struct {
-	DoubleSign uint16 `json:"double_sign,omitempty"`
-	Downtime   uint16 `json:"downtime,omitempty"`
+	DoubleSign uint16 `json:"double_sign,omitempty" yaml:"double_sign,omitempty"`
+	Downtime   uint16 `json:"downtime,omitempty" yaml:"downtime,omitempty"`
 }
 
 type testParams struct {
-	MaxValidators uint16                 `json:"max_validators"` // maximum number of validators (max uint16 = 65535)
-	SlashingRate  testParamsSlashingRate `json:"slashing_rate"`
+	MaxValidators uint16                 `json:"max_validators" yaml:"max_validators"` // maximum number of validators (max uint16 = 65535)
+	SlashingRate  testParamsSlashingRate `json:"slashing_rate" yaml:"slashing_rate"`
 }
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {

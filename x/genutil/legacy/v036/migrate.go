@@ -13,6 +13,7 @@ import (
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_36"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
+	v036supply "github.com/cosmos/cosmos-sdk/x/supply/legacy/v0_36"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
@@ -85,6 +86,8 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		delete(appState, v034staking.ModuleName) // delete old key in case the name changed
 		appState[v036staking.ModuleName] = v036Codec.MustMarshalJSON(v036staking.Migrate(stakingGenState))
 	}
+
+	appState[v036supply.ModuleName] = v036Codec.MustMarshalJSON(v036supply.EmptyGenesisState())
 
 	return appState
 }

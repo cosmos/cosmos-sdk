@@ -1,4 +1,4 @@
-# Accounts, Fees and Signatures
+# Accounts, Fees and Gas
 
 ## Accounts
 

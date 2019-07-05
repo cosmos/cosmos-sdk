@@ -7,7 +7,6 @@ import (
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
 // genesis state.
 func Migrate(oldGenState v034gov.GenesisState) GenesisState {
-
 	deposits := make(v034gov.Deposits, len(oldGenState.Deposits))
 	for i, deposit := range oldGenState.Deposits {
 		deposits[i] = deposit.Deposit
@@ -33,8 +32,10 @@ func Migrate(oldGenState v034gov.GenesisState) GenesisState {
 		}
 	}
 
-	return NewGenesisState(oldGenState.StartingProposalID, deposits, votes, proposals,
-		oldGenState.DepositParams, oldGenState.VotingParams, oldGenState.TallyParams)
+	return NewGenesisState(
+		oldGenState.StartingProposalID, deposits, votes, proposals,
+		oldGenState.DepositParams, oldGenState.VotingParams, oldGenState.TallyParams,
+	)
 }
 
 func migrateContent(proposalContent v034gov.ProposalContent) (content Content) {

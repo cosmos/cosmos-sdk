@@ -1,4 +1,3 @@
-
 // DONTCOVER
 // nolint
 package v0_36
@@ -16,26 +15,26 @@ import (
 const (
 	ModuleName = "gov"
 	RouterKey  = ModuleName
-)
 
-const (
+	DefaultCodespace sdk.CodespaceType = "gov"
+
 	ProposalTypeText            string = "Text"
 	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
+
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
+
+	CodeInvalidContent sdk.CodeType = 6
+)
+
+var (
+	_ Content = TextProposal{}
+	_ Content = SoftwareUpgradeProposal{}
 )
 
 type (
-	Deposits []v034gov.Deposit
-
-	Votes []v034gov.Vote
-
-	VotingParams struct {
-		VotingPeriod time.Duration `json:"voting_period,omitempty"`
-	}
-
-	DepositParams struct {
-		MinDeposit       sdk.Coins     `json:"min_deposit,omitempty"`
-		MaxDepositPeriod time.Duration `json:"max_deposit_period,omitempty"`
-	}
+	Proposals     []Proposal
+	ProposalQueue []uint64
 
 	TextProposal struct {
 		Title       string `json:"title"`
@@ -82,9 +81,10 @@ type (
 	}
 )
 
-func NewGenesisState(startingProposalID uint64, deposits v034gov.Deposits, votes v034gov.Votes,
-	proposals []Proposal, depositParams v034gov.DepositParams, votingParams v034gov.VotingParams,
-	tallyParams v034gov.TallyParams) GenesisState {
+func NewGenesisState(
+	startingProposalID uint64, deposits v034gov.Deposits, votes v034gov.Votes, proposals []Proposal,
+	depositParams v034gov.DepositParams, votingParams v034gov.VotingParams, tallyParams v034gov.TallyParams,
+) GenesisState {
 
 	return GenesisState{
 		StartingProposalID: startingProposalID,
@@ -101,33 +101,42 @@ func NewTextProposal(title, description string) Content {
 	return TextProposal{title, description}
 }
 
-// Implements Proposal Interface
-var _ Content = TextProposal{}
-
-// nolint
 func (tp TextProposal) GetTitle() string         { return tp.Title }
 func (tp TextProposal) GetDescription() string   { return tp.Description }
 func (tp TextProposal) ProposalRoute() string    { return RouterKey }
 func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
 func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
 
-const (
-	DefaultCodespace sdk.CodespaceType = "gov"
+func (tp TextProposal) String() string {
+	return fmt.Sprintf(`Text Proposal:
+  Title:       %s
+  Description: %s
+`, tp.Title, tp.Description)
+}
 
-	CodeInvalidContent      sdk.CodeType = 6
-	CodeInvalidProposalType sdk.CodeType = 7
-)
+func NewSoftwareUpgradeProposal(title, description string) Content {
+	return SoftwareUpgradeProposal{title, description}
+}
+
+func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
+func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
+	return ValidateAbstract(DefaultCodespace, sup)
+}
+
+func (sup SoftwareUpgradeProposal) String() string {
+	return fmt.Sprintf(`Software Upgrade Proposal:
+  Title:       %s
+  Description: %s
+`, sup.Title, sup.Description)
+}
 
 func ErrInvalidProposalContent(cs sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(cs, CodeInvalidContent, fmt.Sprintf("invalid proposal content: %s", msg))
 }
 
-func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("proposal type '%s' is not valid", proposalType))
-}
-
-// ValidateAbstract validates a proposal's abstract contents returning an error
-// if invalid.
 func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
@@ -148,44 +157,8 @@ func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
 	return nil
 }
 
-// Constants pertaining to a Content object
-const (
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
-)
-
-func (tp TextProposal) String() string {
-	return fmt.Sprintf(`Text Proposal:
-  Title:       %s
-  Description: %s
-`, tp.Title, tp.Description)
-}
-
-func NewSoftwareUpgradeProposal(title, description string) Content {
-	return SoftwareUpgradeProposal{title, description}
-}
-
-// Implements Proposal Interface
-var _ Content = SoftwareUpgradeProposal{}
-
-// nolint
-func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
-func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
-func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
-func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
-	return ValidateAbstract(DefaultCodespace, sup)
-}
-
-func (sup SoftwareUpgradeProposal) String() string {
-	return fmt.Sprintf(`Software Upgrade Proposal:
-  Title:       %s
-  Description: %s
-`, sup.Title, sup.Description)
-}
-
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
+	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
+	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
 }

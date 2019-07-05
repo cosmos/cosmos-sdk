@@ -9,8 +9,8 @@ import (
 	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
 	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
-	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
+	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
+	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_36"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
@@ -64,7 +64,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govState)
 
 		delete(appState, v034gov.ModuleName) // delete old key in case the name changed
-		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.MigrateGovernance(govState))
+		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.Migrate(govState))
 	}
 
 	// migrate distribution state

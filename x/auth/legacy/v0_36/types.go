@@ -2,24 +2,18 @@
 // nolint
 package v0_36
 
+import v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+
 const (
 	ModuleName = "auth"
 )
 
 type (
-	Params struct {
-		MaxMemoCharacters      uint64 `json:"max_memo_characters"`
-		TxSigLimit             uint64 `json:"tx_sig_limit"`
-		TxSizeCostPerByte      uint64 `json:"tx_size_cost_per_byte"`
-		SigVerifyCostED25519   uint64 `json:"sig_verify_cost_ed25519"`
-		SigVerifyCostSecp256k1 uint64 `json:"sig_verify_cost_secp256k1"`
-	}
-
 	GenesisState struct {
-		Params Params `json:"params"`
+		Params v034auth.Params `json:"params"`
 	}
 )
 
-func NewGenesisState(params Params) GenesisState {
+func NewGenesisState(params v034auth.Params) GenesisState {
 	return GenesisState{params}
 }

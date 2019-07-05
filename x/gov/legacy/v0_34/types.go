@@ -1,4 +1,4 @@
-package v036
+package v0_34
 
 import (
 	"encoding/json"
@@ -28,15 +28,24 @@ const (
 	DefaultParamspace = ModuleName
 )
 
-// GenesisState represents v0.34.x genesis state for the governance module.
 type GenesisState struct {
-	StartingProposalID uint64        `json:"starting_proposal_id"`
-	Deposits           Deposits      `json:"deposits"`
-	Votes              Votes         `json:"votes"`
-	Proposals          []Proposal    `json:"proposals"`
-	DepositParams      DepositParams `json:"deposit_params"`
-	VotingParams       VotingParams  `json:"voting_params"`
-	TallyParams        TallyParams   `json:"tally_params"`
+	StartingProposalID uint64                `json:"starting_proposal_id"`
+	Deposits           []DepositWithMetadata `json:"deposits"`
+	Votes              []VoteWithMetadata    `json:"votes"`
+	Proposals          []Proposal            `json:"proposals"`
+	DepositParams      DepositParams         `json:"deposit_params"`
+	VotingParams       VotingParams          `json:"voting_params"`
+	TallyParams        TallyParams           `json:"tally_params"`
+}
+
+type DepositWithMetadata struct {
+	ProposalID uint64  `json:"proposal_id"`
+	Deposit    Deposit `json:"deposit"`
+}
+
+type VoteWithMetadata struct {
+	ProposalID uint64 `json:"proposal_id"`
+	Vote       Vote   `json:"vote"`
 }
 
 type Deposit struct {
@@ -61,37 +70,21 @@ type DepositParams struct {
 	MaxDepositPeriod time.Duration `json:"max_deposit_period,omitempty"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 
-type Content interface {
-	GetTitle() string
-	GetDescription() string
-	ProposalRoute() string
-	ProposalType() string
-	ValidateBasic() sdk.Error
-	String() string
-}
-
-type Proposal struct {
-	Content `json:"content"` // Proposal content interface
-
-	ProposalID       uint64         `json:"id"`                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
-
-	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit"`    // Current deposit on this proposal. Initial value is set at InitialDeposit
-
-	VotingStartTime time.Time `json:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
-}
-
-type Proposals []Proposal
-type ProposalQueue []uint64
-
 type TallyParams struct {
 	Quorum    sdk.Dec `json:"quorum,omitempty"`    //  Minimum percentage of total stake needed to vote for a result to be considered valid
 	Threshold sdk.Dec `json:"threshold,omitempty"` //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
 	Veto      sdk.Dec `json:"veto,omitempty"`      //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+}
+
+type VotingParams struct {
+	VotingPeriod time.Duration `json:"voting_period,omitempty"` //  Length of the voting period.
+}
+
+type TallyResult struct {
+	Yes        sdk.Int `json:"yes"`
+	Abstain    sdk.Int `json:"abstain"`
+	No         sdk.Int `json:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto"`
 }
 
 // ----------------------------------------------------------------------------
@@ -203,17 +196,6 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 		// TODO: Do this conversion more directly
 		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
-}
-
-type VotingParams struct {
-	VotingPeriod time.Duration `json:"voting_period,omitempty"` //  Length of the voting period.
-}
-
-type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
 }
 
 // ----------------------------------------------------------------------------
@@ -336,111 +318,188 @@ func (tr TallyResult) String() string {
 // Proposal
 // ----------------------------------------------------------------------------
 
-// Proposal types
-const (
-	ProposalTypeText            string = "Text"
-	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
-)
+type Proposal struct {
+	ProposalContent `json:"proposal_content"` // Proposal content interface
 
-// Text Proposal
-type TextProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ProposalID uint64 `json:"proposal_id"` //  ID of the proposal
+
+	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys
+
+	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit"`    //  Current deposit on this proposal. Initial value is set at InitialDeposit
+
+	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
-func NewTextProposal(title, description string) Content {
-	return TextProposal{title, description}
+// nolint
+func (p Proposal) String() string {
+	return fmt.Sprintf(`Proposal %d:
+  Title:              %s
+  Type:               %s
+  Status:             %s
+  Submit Time:        %s
+  Deposit End Time:   %s
+  Total Deposit:      %s
+  Voting Start Time:  %s
+  Voting End Time:    %s
+  Description:        %s`,
+		p.ProposalID, p.GetTitle(), p.ProposalType(),
+		p.Status, p.SubmitTime, p.DepositEndTime,
+		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
+	)
+}
+
+// ProposalContent is an interface that has title, description, and proposaltype
+// that the governance module can use to identify them and generate human readable messages
+// ProposalContent can have additional fields, which will handled by ProposalHandlers
+// via type assertion, e.g. parameter change amount in ParameterChangeProposal
+type ProposalContent interface {
+	GetTitle() string
+	GetDescription() string
+	ProposalType() ProposalKind
+}
+
+// Proposals is an array of proposal
+type Proposals []Proposal
+
+// nolint
+func (p Proposals) String() string {
+	out := "ID - (Status) [Type] Title\n"
+	for _, prop := range p {
+		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
+			prop.ProposalID, prop.Status,
+			prop.ProposalType(), prop.GetTitle())
+	}
+	return strings.TrimSpace(out)
+}
+
+// Text Proposals
+type TextProposal struct {
+	Title       string `json:"title"`       //  Title of the proposal
+	Description string `json:"description"` //  Description of the proposal
+}
+
+func NewTextProposal(title, description string) TextProposal {
+	return TextProposal{
+		Title:       title,
+		Description: description,
+	}
 }
 
 // Implements Proposal Interface
-var _ Content = TextProposal{}
+var _ ProposalContent = TextProposal{}
 
 // nolint
-func (tp TextProposal) GetTitle() string         { return tp.Title }
-func (tp TextProposal) GetDescription() string   { return tp.Description }
-func (tp TextProposal) ProposalRoute() string    { return RouterKey }
-func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
-func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
+func (tp TextProposal) GetTitle() string           { return tp.Title }
+func (tp TextProposal) GetDescription() string     { return tp.Description }
+func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
 
+// Software Upgrade Proposals
+type SoftwareUpgradeProposal struct {
+	TextProposal
+}
+
+func NewSoftwareUpgradeProposal(title, description string) SoftwareUpgradeProposal {
+	return SoftwareUpgradeProposal{
+		TextProposal: NewTextProposal(title, description),
+	}
+}
+
+// Implements Proposal Interface
+var _ ProposalContent = SoftwareUpgradeProposal{}
+
+// nolint
+func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeSoftwareUpgrade }
+
+// ProposalQueue
+type ProposalQueue []uint64
+
+// ProposalKind
+
+// Type that represents Proposal Type as a byte
+type ProposalKind byte
+
+//nolint
 const (
-	DefaultCodespace sdk.CodespaceType = "gov"
-
-	CodeInvalidContent      sdk.CodeType = 6
-	CodeInvalidProposalType sdk.CodeType = 7
+	ProposalTypeNil             ProposalKind = 0x00
+	ProposalTypeText            ProposalKind = 0x01
+	ProposalTypeParameterChange ProposalKind = 0x02
+	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
-func ErrInvalidProposalContent(cs sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(cs, CodeInvalidContent, fmt.Sprintf("invalid proposal content: %s", msg))
+// String to proposalType byte. Returns 0xff if invalid.
+func ProposalTypeFromString(str string) (ProposalKind, error) {
+	switch str {
+	case "Text":
+		return ProposalTypeText, nil
+	case "ParameterChange":
+		return ProposalTypeParameterChange, nil
+	case "SoftwareUpgrade":
+		return ProposalTypeSoftwareUpgrade, nil
+	default:
+		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
+	}
 }
 
-func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("proposal type '%s' is not valid", proposalType))
+// Marshal needed for protobuf compatibility
+func (pt ProposalKind) Marshal() ([]byte, error) {
+	return []byte{byte(pt)}, nil
 }
 
-// ValidateAbstract validates a proposal's abstract contents returning an error
-// if invalid.
-func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
-	title := c.GetTitle()
-	if len(strings.TrimSpace(title)) == 0 {
-		return ErrInvalidProposalContent(codespace, "proposal title cannot be blank")
-	}
-	if len(title) > MaxTitleLength {
-		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
-	}
-
-	description := c.GetDescription()
-	if len(description) == 0 {
-		return ErrInvalidProposalContent(codespace, "proposal description cannot be blank")
-	}
-	if len(description) > MaxDescriptionLength {
-		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
-	}
-
+// Unmarshal needed for protobuf compatibility
+func (pt *ProposalKind) Unmarshal(data []byte) error {
+	*pt = ProposalKind(data[0])
 	return nil
 }
 
-// Constants pertaining to a Content object
-const (
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
-)
-
-func (tp TextProposal) String() string {
-	return fmt.Sprintf(`Text Proposal:
-  Title:       %s
-  Description: %s
-`, tp.Title, tp.Description)
+// Marshals to JSON using string
+func (pt ProposalKind) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pt.String())
 }
 
-// Software Upgrade Proposals
-// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
-// upgrade date, etc.
-type SoftwareUpgradeProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+// Unmarshals from JSON assuming Bech32 encoding
+func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	bz2, err := ProposalTypeFromString(s)
+	if err != nil {
+		return err
+	}
+	*pt = bz2
+	return nil
 }
 
-func NewSoftwareUpgradeProposal(title, description string) Content {
-	return SoftwareUpgradeProposal{title, description}
+// Turns VoteOption byte to String
+func (pt ProposalKind) String() string {
+	switch pt {
+	case ProposalTypeText:
+		return "Text"
+	case ProposalTypeParameterChange:
+		return "ParameterChange"
+	case ProposalTypeSoftwareUpgrade:
+		return "SoftwareUpgrade"
+	default:
+		return ""
+	}
 }
 
-// Implements Proposal Interface
-var _ Content = SoftwareUpgradeProposal{}
-
-// nolint
-func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
-func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
-func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
-func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
-	return ValidateAbstract(DefaultCodespace, sup)
-}
-
-func (sup SoftwareUpgradeProposal) String() string {
-	return fmt.Sprintf(`Software Upgrade Proposal:
-  Title:       %s
-  Description: %s
-`, sup.Title, sup.Description)
+// For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
+func (pt ProposalKind) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(pt.String()))
+	default:
+		// TODO: Do this conversion more directly
+		s.Write([]byte(fmt.Sprintf("%v", byte(pt))))
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -448,7 +507,7 @@ func (sup SoftwareUpgradeProposal) String() string {
 // ----------------------------------------------------------------------------
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
+	cdc.RegisterInterface((*ProposalContent)(nil), nil)
+	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
+	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

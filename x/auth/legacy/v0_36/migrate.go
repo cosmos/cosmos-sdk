@@ -10,12 +10,5 @@ import (
 // genesis state. All entries are identical except for validator slashing events
 // which now include the period.
 func Migrate(oldGenState v034auth.GenesisState) GenesisState {
-	params := Params{
-		MaxMemoCharacters: oldGenState.Params.MaxMemoCharacters,
-		TxSizeCostPerByte: oldGenState.Params.TxSizeCostPerByte,
-		SigVerifyCostED25519: oldGenState.Params.SigVerifyCostED25519,
-		SigVerifyCostSecp256k1: oldGenState.Params.SigVerifyCostSecp256k1,
-	}
-	
-	return NewGenesisState(params)
+	return NewGenesisState(oldGenState.Params)
 }

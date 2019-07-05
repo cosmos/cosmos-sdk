@@ -3,9 +3,7 @@
 package v0_36
 
 import (
-	"time"
-	
-	"github.com/tendermint/tendermint/crypto"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,110 +13,29 @@ const (
 )
 
 type (
-	Params struct {
-		UnbondingTime time.Duration `json:"unbonding_time"`
-		MaxValidators uint16        `json:"max_validators"`
-		MaxEntries    uint16        `json:"max_entries"`
-		BondDenom     string        `json:"bond_denom"`
-	}
-
-	LastValidatorPower struct {
-		Address sdk.ValAddress `json:"address"`
-		Power   int64 `json:"power"`
-	}
-
-	Description struct {
-		Moniker  string `json:"moniker"`
-		Identity string `json:"identity"`
-		Website  string `json:"website"`
-		Details  string `json:"details"`
-	}
-
-	Commission struct {
-		CommissionRates CommissionRates `json:"commission_rates"`
-		UpdateTime time.Time `json:"update_time"`
-	}
-
-	CommissionRates struct {
-		Rate          sdk.Dec `json:"rate"`
-		MaxRate       sdk.Dec `json:"max_rate"`
-		MaxChangeRate sdk.Dec `json:"max_change_rate"`
-	}
-
-	Validator struct {
-		OperatorAddress         sdk.ValAddress `json:"operator_address"`
-		ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`
-		Jailed                  bool           `json:"jailed"`
-		Status                  sdk.BondStatus `json:"status"`
-		Tokens                  sdk.Int        `json:"tokens"`
-		DelegatorShares         sdk.Dec        `json:"delegator_shares"`
-		Description             Description    `json:"description"`
-		UnbondingHeight         int64          `json:"unbonding_height"`
-		UnbondingCompletionTime time.Time      `json:"unbonding_time"`
-		Commission              Commission     `json:"commission"`
-		MinSelfDelegation       sdk.Int        `json:"min_self_delegation"`
-	}
-
-	Validators []Validator
-
-	Delegation struct {
-		DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-		ValidatorAddress sdk.ValAddress `json:"validator_address"`
-		Shares           sdk.Dec        `json:"shares"`
-	}
-
-	Delegations []Delegation
-
-	UnbondingDelegationEntry struct {
-		CreationHeight int64     `json:"creation_height"`
-		CompletionTime time.Time `json:"completion_time"`
-		InitialBalance sdk.Int   `json:"initial_balance"`
-		Balance        sdk.Int   `json:"balance"`
-	}
-
-	UnbondingDelegation struct {
-		DelegatorAddress sdk.AccAddress             `json:"delegator_address"`
-		ValidatorAddress sdk.ValAddress             `json:"validator_address"`
-		Entries          []UnbondingDelegationEntry `json:"entries"`
-	}
-
-	RedelegationEntry struct {
-		CreationHeight int64     `json:"creation_height"`
-		CompletionTime time.Time `json:"completion_time"`
-		InitialBalance sdk.Int   `json:"initial_balance"`
-		SharesDst      sdk.Dec   `json:"shares_dst"`
-	}
-
-	Redelegation struct {
-		DelegatorAddress    sdk.AccAddress      `json:"delegator_address"`
-		ValidatorSrcAddress sdk.ValAddress      `json:"validator_src_address"`
-		ValidatorDstAddress sdk.ValAddress      `json:"validator_dst_address"`
-		Entries             []RedelegationEntry `json:"entries"`
-	}
-
-	 GenesisState struct {
-		Params               Params						     `json:"params"`
-		LastTotalPower       sdk.Int               `json:"last_total_power"`
-		LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers"`
-		Validators           Validators            `json:"validators"`
-		Delegations          Delegations           `json:"delegations"`
-		UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
-		Redelegations        []Redelegation        `json:"redelegations"`
-		Exported             bool                  `json:"exported"`
+	GenesisState struct {
+		Params               v034staking.Params                `json:"params"`
+		LastTotalPower       sdk.Int                           `json:"last_total_power"`
+		LastValidatorPowers  []v034staking.LastValidatorPower  `json:"last_validator_powers"`
+		Validators           v034staking.Validators            `json:"validators"`
+		Delegations          v034staking.Delegations           `json:"delegations"`
+		UnbondingDelegations []v034staking.UnbondingDelegation `json:"unbonding_delegations"`
+		Redelegations        []v034staking.Redelegation        `json:"redelegations"`
+		Exported             bool                              `json:"exported"`
 	}
 )
 
-func NewGenesisState(params Params, lastTotalPower sdk.Int, lasValPowers []LastValidatorPower,
-	validators Validators, delegations Delegations, ubds []UnbondingDelegation,
-	reds []Redelegation, exported bool) GenesisState {
+func NewGenesisState(params v034staking.Params, lastTotalPower sdk.Int, lasValPowers []v034staking.LastValidatorPower,
+	validators v034staking.Validators, delegations v034staking.Delegations, ubds []v034staking.UnbondingDelegation,
+	reds []v034staking.Redelegation, exported bool) GenesisState {
 	return GenesisState{
-		Params:      params,
+		Params:               params,
 		LastTotalPower:       lastTotalPower,
 		LastValidatorPowers:  lasValPowers,
-		Validators:  validators,
-		Delegations: delegations,
+		Validators:           validators,
+		Delegations:          delegations,
 		UnbondingDelegations: ubds,
-		Redelegations: reds,
-		Exported: exported,
+		Redelegations:        reds,
+		Exported:             exported,
 	}
 }

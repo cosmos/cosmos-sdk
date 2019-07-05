@@ -3,10 +3,13 @@
 package v0_36
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v034accounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
+
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -36,11 +39,13 @@ func Migrate(
 	bondedAmt := sdk.ZeroInt()
 	notBondedAmt := sdk.ZeroInt()
 
-	var govCoins sdk.Coins
-
-	// remove the two previous governance base accounts for deposits and burned coins from rejected proposals
-	// add six new module accounts: distribution, gov, mint, fee collector, bonded and not bonded pool
-	newGenState := make(GenesisState, len(oldGenState)+4)
+	// remove the two previous governance base accounts for deposits and burned
+	// coins from rejected proposals add six new module accounts:
+	// distribution, gov, mint, fee collector, bonded and not bonded pool
+	var (
+		newGenState GenesisState
+		govCoins    sdk.Coins
+	)
 
 	for _, acc := range oldGenState {
 		switch {
@@ -140,6 +145,15 @@ func Migrate(
 			bondedModuleAcc, notBondedModuleAcc, mintModuleAcc,
 		}...,
 	)
+
+	// verify the total number of accounts is correct
+	if len(newGenState) != len(oldGenState)+4 {
+		panic(
+			fmt.Sprintf(
+				"invalid total number of genesis accounts; got: %d, expected: %d",
+				len(newGenState), len(oldGenState)+4),
+		)
+	}
 
 	return newGenState
 }

@@ -16,11 +16,10 @@ const (
 
 type (
 	Params struct {
-		MaxMemoCharacters      uint64 `json:"max_memo_characters"`
-		TxSigLimit             uint64 `json:"tx_sig_limit"`
-		TxSizeCostPerByte      uint64 `json:"tx_size_cost_per_byte"`
-		SigVerifyCostED25519   uint64 `json:"sig_verify_cost_ed25519"`
-		SigVerifyCostSecp256k1 uint64 `json:"sig_verify_cost_secp256k1"`
+		UnbondingTime time.Duration `json:"unbonding_time"`
+		MaxValidators uint16        `json:"max_validators"`
+		MaxEntries    uint16        `json:"max_entries"`
+		BondDenom     string        `json:"bond_denom"`
 	}
 
 	LastValidatorPower struct {
@@ -98,7 +97,7 @@ type (
 	}
 
 	 GenesisState struct {
-		Params               Params                `json:"params"`
+		Params               Params						     `json:"params"`
 		LastTotalPower       sdk.Int               `json:"last_total_power"`
 		LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers"`
 		Validators           Validators            `json:"validators"`
@@ -109,13 +108,13 @@ type (
 	}
 )
 
-func NewGenesisState(params Params, lastTotalPower sdk.Int,
+func NewGenesisState(params Params, lastTotalPower sdk.Int, lasValPowers []LastValidatorPower,
 	validators Validators, delegations Delegations, ubds []UnbondingDelegation,
 	reds []Redelegation, exported bool) GenesisState {
 	return GenesisState{
 		Params:      params,
-		LastTotalPower:       sdk.Int,
-		LastValidatorPowers:  []LastValidatorPower,
+		LastTotalPower:       lastTotalPower,
+		LastValidatorPowers:  lasValPowers,
 		Validators:  validators,
 		Delegations: delegations,
 		UnbondingDelegations: ubds,

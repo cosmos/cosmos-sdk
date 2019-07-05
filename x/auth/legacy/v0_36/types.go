@@ -21,5 +21,5 @@ type (
 )
 
 func NewGenesisState(params Params) GenesisState {
-	return GenesisState{ params}
+	return GenesisState{params}
 }

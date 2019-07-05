@@ -2,6 +2,8 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
+	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
@@ -12,6 +14,8 @@ import (
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
+
+
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
 func Migrate(appState genutil.AppMap) genutil.AppMap {
@@ -27,8 +31,21 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		var genAccs v034genAcounts.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034genAcounts.ModuleName], &genAccs)
 
+		var authGenState v034auth.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)
+		
+		var govState v034gov.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govState)
+
+		var stakingGenState v034staking.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)
+
 		delete(appState, v034genAcounts.ModuleName) // delete old key in case the name changed
-		appState[v036genAcounts.ModuleName] = v036Codec.MustMarshalJSON(v036genAcounts.Migrate(genAccs))
+		appState[v036genAcounts.ModuleName] = 
+			v036Codec.MustMarshalJSON(
+				v036genAcounts.Migrate(
+					genAccs, authGenState.CollectedFees, govState.Deposits, 
+					stakingGenState.Validators, stakingGenState.UnbondingDelegations))
 	}
 
 	// migrate auth state

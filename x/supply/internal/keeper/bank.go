@@ -62,7 +62,7 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 	}
 
 	if !acc.HasPermission(types.Staking) {
-		panic(fmt.Sprintf("Account %s does not have permissions to delegate coins", recipientModule))
+		panic(fmt.Sprintf("module account %s does not have permissions to delegate coins", recipientModule))
 	}
 
 	return k.bk.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
@@ -80,7 +80,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 	}
 
 	if !acc.HasPermission(types.Staking) {
-		panic(fmt.Sprintf("Account %s does not have permissions to undelegate coins", senderModule))
+		panic(fmt.Sprintf("module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
 	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
@@ -101,7 +101,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	}
 
 	if !acc.HasPermission(types.Minter) {
-		panic(fmt.Sprintf("Account %s does not have permissions to mint tokens", moduleName))
+		panic(fmt.Sprintf("module account %s does not have permissions to mint tokens", moduleName))
 	}
 
 	_, err := k.bk.AddCoins(ctx, addr, amt)
@@ -133,7 +133,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 	}
 
 	if !acc.HasPermission(types.Burner) {
-		panic(fmt.Sprintf("Account %s does not have permissions to burn tokens", moduleName))
+		panic(fmt.Sprintf("module account %s does not have permissions to burn tokens", moduleName))
 	}
 
 	_, err := k.bk.SubtractCoins(ctx, addr, amt)

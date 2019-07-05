@@ -6,24 +6,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRemovePermissions(t *testing.T) {
-	name := "test"
-	permAddr := NewPermAddr(name, []string{})
-	require.Empty(t, permAddr.GetPermissions())
+func TestHasPermission(t *testing.T) {
+	emptyPermAddr := NewPermAddr("empty", []string{})
+	has := emptyPermAddr.HasPermission(Basic)
+	require.False(t, has)
 
-	permAddr.AddPermissions(Basic, Minter, Burner)
-	require.Equal(t, []string{Basic, Minter, Burner}, permAddr.GetPermissions(), "did not add permissions")
+	cases := []struct {
+		permission string
+		expectHas  bool
+	}{
+		{Basic, true},
+		{Minter, true},
+		{Burner, true},
+		{Staking, true},
+		{"random", false},
+		{"", false},
+	}
+	permAddr := NewPermAddr("test", []string{Basic, Minter, Burner, Staking})
+	for i, tc := range cases {
+		has = permAddr.HasPermission(tc.permission)
+		require.Equal(t, tc.expectHas, has, "test case #%d", i)
+	}
 
-	err := permAddr.RemovePermission("random")
-	require.Error(t, err, "did not error on removing nonexistent permission")
-
-	err = permAddr.RemovePermission(Burner)
-	require.NoError(t, err, "failed to remove permission")
-	require.Equal(t, []string{Basic, Minter}, permAddr.GetPermissions(), "does not have correct permissions")
-
-	err = permAddr.RemovePermission(Basic)
-	require.NoError(t, err, "failed to remove permission")
-	require.Equal(t, []string{Minter}, permAddr.GetPermissions(), "does not have correct permissions")
 }
 
 func TestValidatePermissions(t *testing.T) {
@@ -33,15 +37,14 @@ func TestValidatePermissions(t *testing.T) {
 		expectPass  bool
 	}{
 		{"no permissions", []string{}, true},
-		{"one permission", []string{Basic}, true},
-		{"multiple permissions", []string{Basic, Minter, Burner}, true},
-		{"invalid permission", []string{"other"}, false},
-		{"multiple invalid permissions", []string{Burner, "other", "invalid"}, false},
+		{"valid permission", []string{Basic}, true},
+		{"invalid permission", []string{""}, false},
+		{"invalid and valid permission", []string{Basic, ""}, false},
 	}
 
 	for i, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := validatePermissions(tc.permissions)
+			err := validatePermissions(tc.permissions...)
 			if tc.expectPass {
 				require.NoError(t, err, "test case #%d", i)
 			} else {

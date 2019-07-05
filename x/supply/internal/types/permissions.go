@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -28,21 +29,14 @@ func NewPermAddr(name string, permissions []string) PermAddr {
 	}
 }
 
-// AddPermissions adds the permission to the list of granted permissions.
-func (pa *PermAddr) AddPermissions(permissions ...string) {
-	pa.permissions = append(pa.permissions, permissions...)
-}
-
-// RemovePermission removes the permission from the list of granted permissions
-// or returns an error if the permission is has not been granted.
-func (pa *PermAddr) RemovePermission(permission string) error {
-	for i, perm := range pa.permissions {
+// HasPermission returns whether the PermAddr contains permission.
+func (pa PermAddr) HasPermission(permission string) bool {
+	for _, perm := range pa.permissions {
 		if perm == permission {
-			pa.permissions = append(pa.permissions[:i], pa.permissions[i+1:]...)
-			return nil
+			return true
 		}
 	}
-	return fmt.Errorf("cannot remove non granted permission %s", permission)
+	return false
 }
 
 // GetAddress returns the address of the PermAddr object
@@ -55,14 +49,11 @@ func (pa PermAddr) GetPermissions() []string {
 	return pa.permissions
 }
 
-// validate the input permissions
-func validatePermissions(permissions []string) error {
+// performs basic permission validation
+func validatePermissions(permissions ...string) error {
 	for _, perm := range permissions {
-		switch perm {
-		case Basic, Minter, Burner, Staking:
-			continue
-		default:
-			return fmt.Errorf("invalid module permission %s", perm)
+		if strings.TrimSpace(perm) == "" {
+			return fmt.Errorf("module permission is empty")
 		}
 	}
 	return nil

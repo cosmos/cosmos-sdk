@@ -12,10 +12,11 @@ import (
 const initialPower = int64(100)
 
 var (
-	holderAcc    = types.NewEmptyModuleAccount(types.Basic, types.Basic)
-	burnerAcc    = types.NewEmptyModuleAccount(types.Burner, types.Burner)
-	minterAcc    = types.NewEmptyModuleAccount(types.Minter, types.Minter)
-	multiPermAcc = types.NewEmptyModuleAccount(multiPerm, types.Basic, types.Burner, types.Minter)
+	holderAcc     = types.NewEmptyModuleAccount(types.Basic, types.Basic)
+	burnerAcc     = types.NewEmptyModuleAccount(types.Burner, types.Burner)
+	minterAcc     = types.NewEmptyModuleAccount(types.Minter, types.Minter)
+	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Basic, types.Burner, types.Minter)
+	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -80,10 +81,13 @@ func TestMintCoins(t *testing.T) {
 	keeper.SetModuleAccount(ctx, burnerAcc)
 	keeper.SetModuleAccount(ctx, minterAcc)
 	keeper.SetModuleAccount(ctx, multiPermAcc)
+	keeper.SetModuleAccount(ctx, randomPermAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) })
+
+	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) })
 
 	err := keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
@@ -114,6 +118,8 @@ func TestBurnCoins(t *testing.T) {
 	keeper.SetSupply(ctx, initialSupply)
 
 	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) })
+
+	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.Total) })
 
 	err = keeper.BurnCoins(ctx, types.Burner, initialSupply.Total)
 	require.Error(t, err)

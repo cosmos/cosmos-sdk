@@ -30,7 +30,7 @@ func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-	if err := validatePermissions(permissions); err != nil {
+	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
 	}
 
@@ -45,7 +45,7 @@ func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 func NewModuleAccount(ba *authtypes.BaseAccount,
 	name string, permissions ...string) *ModuleAccount {
 
-	if err := validatePermissions(permissions); err != nil {
+	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
 	}
 
@@ -54,6 +54,24 @@ func NewModuleAccount(ba *authtypes.BaseAccount,
 		Name:        name,
 		Permissions: permissions,
 	}
+}
+
+// AddPermissions adds the permissions to the module account's list of granted
+// permissions.
+func (ma *ModuleAccount) AddPermissions(permissions ...string) {
+	ma.Permissions = append(ma.Permissions, permissions...)
+}
+
+// RemovePermission removes the permission from the list of granted permissions
+// or returns an error if the permission is has not been granted.
+func (ma *ModuleAccount) RemovePermission(permission string) error {
+	for i, perm := range ma.Permissions {
+		if perm == permission {
+			ma.Permissions = append(ma.Permissions[:i], ma.Permissions[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot remove non granted permission %s", permission)
 }
 
 // HasPermission returns whether or not the module account has permission.

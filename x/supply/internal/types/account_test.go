@@ -35,6 +35,26 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
 	require.Equal(t, want, moduleAcc.String())
 }
 
+func TestRemovePermissions(t *testing.T) {
+	name := "test"
+	macc := NewEmptyModuleAccount(name)
+	require.Empty(t, macc.GetPermissions())
+
+	macc.AddPermissions(Basic, Minter, Burner)
+	require.Equal(t, []string{Basic, Minter, Burner}, macc.GetPermissions(), "did not add permissions")
+
+	err := macc.RemovePermission("random")
+	require.Error(t, err, "did not error on removing nonexistent permission")
+
+	err = macc.RemovePermission(Burner)
+	require.NoError(t, err, "failed to remove permission")
+	require.Equal(t, []string{Basic, Minter}, macc.GetPermissions(), "does not have correct permissions")
+
+	err = macc.RemovePermission(Basic)
+	require.NoError(t, err, "failed to remove permission")
+	require.Equal(t, []string{Minter}, macc.GetPermissions(), "does not have correct permissions")
+}
+
 func TestHasPermissions(t *testing.T) {
 	name := "test"
 	macc := NewEmptyModuleAccount(name, Basic, Minter, Burner)

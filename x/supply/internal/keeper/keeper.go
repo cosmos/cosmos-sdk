@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -59,4 +60,16 @@ func (k Keeper) SetSupply(ctx sdk.Context, supply types.Supply) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(supply)
 	store.Set(SupplyKey, b)
+}
+
+// ValidatePermissions validates that the module account has been granted
+// permissions within its set of allowed permissions.
+func (k Keeper) ValidatePermissions(macc exported.ModuleAccountI) error {
+	permAddr := k.permAddrs[macc.GetName()]
+	for _, perm := range macc.GetPermissions() {
+		if !permAddr.HasPermission(perm) {
+			return fmt.Errorf("invalid module permission %s", perm)
+		}
+	}
+	return nil
 }

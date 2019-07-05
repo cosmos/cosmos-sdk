@@ -30,12 +30,12 @@ type (
 	GenesisState []GenesisAccount
 )
 
-
 // NewGenesisAccount creates a new GenesisAccount object
-func NewGenesisAccount(address sdk.AccAddress, coins sdk.Coins, sequence uint64,
-vestingAmount, delFree, delVesting sdk.Coins,
-vestingStartTime, vestingEndTime int64,
-module, permission string) GenesisAccount {
+func NewGenesisAccount(
+	address sdk.AccAddress, coins sdk.Coins, sequence uint64,
+	vestingAmount, delFree, delVesting sdk.Coins, vestingStartTime, vestingEndTime int64,
+	module, permission string,
+) GenesisAccount {
 
 	return GenesisAccount{
 		Address:          address,
@@ -43,7 +43,7 @@ module, permission string) GenesisAccount {
 		Sequence:         sequence,
 		AccountNumber:    0, // ignored set by the account keeper during InitGenesis
 		OriginalVesting:  vestingAmount,
-		DelegatedFree:   	delFree,
+		DelegatedFree:    delFree,
 		DelegatedVesting: delVesting,
 		StartTime:        vestingStartTime,
 		EndTime:          vestingEndTime,

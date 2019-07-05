@@ -62,7 +62,7 @@ func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 // for delegations which withdraw after a slash has occurred
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64  `json:"validator_period" yaml:"validator_period"` // period when the slash occurred
-	Fraction        sdk.Dec `json:"fraction" yaml:fraction"`                  // slash fraction
+	Fraction        sdk.Dec `json:"fraction" yaml:"fraction"`                 // slash fraction
 }
 
 // create a new ValidatorSlashEvent

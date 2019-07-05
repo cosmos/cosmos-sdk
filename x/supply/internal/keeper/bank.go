@@ -80,7 +80,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 	}
 
 	if !acc.HasPermission(types.Staking) {
-		panic(fmt.Sprintf("Account %s does not have permissions to undelegate coins", senderModule))
+		panic(fmt.Sprintf("module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
 	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)

@@ -2,20 +2,18 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
-	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
+	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
+	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
-
-
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
 func Migrate(appState genutil.AppMap) genutil.AppMap {
@@ -26,26 +24,26 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 	codec.RegisterCrypto(v036Codec)
 
 	// migrate genaccounts state
-	// TODO: create and delete accounts
-	if appState[v034genAcounts.ModuleName] != nil {
-		var genAccs v034genAcounts.GenesisState
-		v034Codec.MustUnmarshalJSON(appState[v034genAcounts.ModuleName], &genAccs)
+	if appState[v034genAccounts.ModuleName] != nil {
+		var genAccs v034genAccounts.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034genAccounts.ModuleName], &genAccs)
 
 		var authGenState v034auth.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)
-		
-		var govState v034gov.GenesisState
-		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govState)
+
+		var distrGenState v034distr.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &distrGenState)
 
 		var stakingGenState v034staking.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)
 
-		delete(appState, v034genAcounts.ModuleName) // delete old key in case the name changed
-		appState[v036genAcounts.ModuleName] = 
+		delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed
+		appState[v036genAccounts.ModuleName] =
 			v036Codec.MustMarshalJSON(
-				v036genAcounts.Migrate(
-					genAccs, authGenState.CollectedFees, govState.Deposits, 
-					stakingGenState.Validators, stakingGenState.UnbondingDelegations))
+				v036genAccounts.Migrate(
+					genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool,
+					stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
+					stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName))
 	}
 
 	// migrate auth state

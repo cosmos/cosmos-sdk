@@ -6,14 +6,23 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034accounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
+	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
+)
+
+const (
+	notBondedPoolName = "NotBondedTokensPool"
+	bondedPoolName    = "BondedTokensPool"
+	feeCollectorName 	= "FeeCollector"
+	mintModuleName 		= "mint"
 )
 
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
 // genesis state. All entries are identical except for validator slashing events
 // which now include the period.
 func Migrate(oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPool sdk.DecCoins,
-	vals Validators, ubds[]UnbondingDelegation, valOutRewards []ValidatorOutstandingRewards,
-	bondDenom, feeCollectorName, govModuleName, distrModuleName, mintModuleName string) GenesisState {
+	vals v034staking.Validators, ubds[]v034staking.UnbondingDelegation, valOutRewards []v034distr.ValidatorOutstandingRewardsRecord,
+	bondDenom, distrModuleName, govModuleName string) GenesisState {
 	depositedCoinsAccAddr     := sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))	
 	burnedDepositCoinsAccAddr := sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 
@@ -61,7 +70,7 @@ func Migrate(oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPoo
 
 	// get distr module account coins
 	var distrDecCoins sdk.DecCoins
-	for i, reward := range valOutRewards {
+	for _, reward := range valOutRewards {
 		distrDecCoins = distrDecCoins.Add(reward.OutstandingRewards)
 	}
 
@@ -70,6 +79,8 @@ func Migrate(oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPoo
 	// get module account addresses
 	feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(feeCollectorName)))
 	govAddr := sdk.AccAddress(crypto.AddressHash([]byte(govModuleName)))
+	bondedAddr := sdk.AccAddress(crypto.AddressHash([]byte(bondedPoolName)))
+	notBondedAddr := sdk.AccAddress(crypto.AddressHash([]byte(notBondedPoolName)))
 	distrAddr := sdk.AccAddress(crypto.AddressHash([]byte(distrModuleName)))
 	mintAddr := sdk.AccAddress(crypto.AddressHash([]byte(mintModuleName)))
 
@@ -81,9 +92,9 @@ func Migrate(oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPoo
 	distrModuleAcc := NewGenesisAccount(distrAddr, distrCoins,0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, distrModuleName, "basic")
 	bondedModuleAcc := NewGenesisAccount(bondedAddr, bondedCoins,0,
-		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, bondedName, "burner")
+		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, bondedPoolName, "burner")
 	notBondedModuleAcc := NewGenesisAccount(notBondedAddr, notBondedCoins, 0,
-		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, notBondedName, "burner")
+		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, notBondedPoolName, "burner")
 	mintModuleAcc := NewGenesisAccount(mintAddr, sdk.Coins{}, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, 0, 0, mintModuleName, "minter")
 

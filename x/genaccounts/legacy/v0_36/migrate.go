@@ -11,15 +11,19 @@ import (
 )
 
 const (
-	notBondedPoolName = "NotBondedTokensPool"
-	bondedPoolName    = "BondedTokensPool"
-	feeCollectorName  = "FeeCollector"
+	notBondedPoolName = "not_bonded_tokens_pool"
+	bondedPoolName    = "bonded_tokens_pool"
+	feeCollectorName  = "fee_collector"
 	mintModuleName    = "mint"
+
+	basic  = "basic"
+	minter = "minter"
+	burner = "burner"
 )
 
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
-// genesis state. All entries are identical except for validator slashing events
-// which now include the period.
+// genesis state. It deletes the governance base accounts and creates the new module accounts.
+// The remaining accounts are updated to the new GenesisAccount type from 0.36
 func Migrate(
 	oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPool sdk.DecCoins,
 	vals v034staking.Validators, ubds []v034staking.UnbondingDelegation,
@@ -33,7 +37,10 @@ func Migrate(
 	notBondedAmt := sdk.ZeroInt()
 
 	var govCoins sdk.Coins
-	newGenState := make(GenesisState, len(oldGenState)+4) // - 2 gov baseAccs + 6 moduleAccs
+
+	// remove the two previous governance base accounts for deposits and burned coins from rejected proposals
+	// add six new module accounts: distribution, gov, mint, fee collector, bonded and not bonded pool
+	newGenState := make(GenesisState, len(oldGenState)+4)
 
 	for _, acc := range oldGenState {
 		switch {
@@ -98,32 +105,32 @@ func Migrate(
 	feeCollectorModuleAcc := NewGenesisAccount(
 		feeCollectorAddr, fees, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, feeCollectorName, "basic",
+		0, 0, feeCollectorName, basic,
 	)
 	govModuleAcc := NewGenesisAccount(
 		govAddr, govCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, govModuleName, "burner",
+		0, 0, govModuleName, burner,
 	)
 	distrModuleAcc := NewGenesisAccount(
 		distrAddr, distrCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, distrModuleName, "basic",
+		0, 0, distrModuleName, basic,
 	)
 	bondedModuleAcc := NewGenesisAccount(
 		bondedAddr, bondedCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, bondedPoolName, "burner",
+		0, 0, bondedPoolName, burner,
 	)
 	notBondedModuleAcc := NewGenesisAccount(
 		notBondedAddr, notBondedCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, notBondedPoolName, "burner",
+		0, 0, notBondedPoolName, burner,
 	)
 	mintModuleAcc := NewGenesisAccount(
 		mintAddr, sdk.Coins{}, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, mintModuleName, "minter",
+		0, 0, mintModuleName, minter,
 	)
 
 	newGenState = append(

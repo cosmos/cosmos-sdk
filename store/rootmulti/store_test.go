@@ -12,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-const useDebugDB = false
-
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db)
@@ -39,9 +37,6 @@ func TestStoreMount(t *testing.T) {
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	if useDebugDB {
-		db = dbm.NewDebugDB("CMS", db)
-	}
 	ms := newMultiStoreWithMounts(db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
@@ -77,11 +72,32 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	})
 }
 
+func TestHashStableWithEmptyCommit(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db)
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	commitID := types.CommitID{}
+	checkStore(t, ms, commitID, commitID)
+
+	k, v := []byte("wind"), []byte("blows")
+
+	store1 := ms.getStoreByName("store1").(types.KVStore)
+	store1.Set(k, v)
+
+	cID := ms.Commit()
+	require.Equal(t, int64(1), cID.Version)
+	hash := cID.Hash
+
+	// make an empty commit, it should update version, but not affect hash
+	cID = ms.Commit()
+	require.Equal(t, int64(2), cID.Version)
+	require.Equal(t, hash, cID.Hash)
+}
+
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	if useDebugDB {
-		db = dbm.NewDebugDB("CMS", db)
-	}
 	store := newMultiStoreWithMounts(db)
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)

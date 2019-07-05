@@ -1,4 +1,4 @@
-package keeper
+package keeper // noalias
 
 import (
 	"bytes"
@@ -23,14 +23,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // dummy addresses used for testing
+// nolint: unused deadcode
 var (
-	Addrs       = createTestAddrs(500)
-	PKs         = createTestPubKeys(500)
-	emptyAddr   sdk.AccAddress
-	emptyPubkey crypto.PubKey
+	Addrs = createTestAddrs(500)
+	PKs   = createTestPubKeys(500)
 
 	addrDels = []sdk.AccAddress{
 		Addrs[0],
@@ -68,7 +69,9 @@ func MakeTestCodec() *codec.Codec {
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/Account", nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
+	cdc.RegisterConcrete(&supply.ModuleAccount{}, "test/staking/ModuleAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
@@ -77,15 +80,13 @@ func MakeTestCodec() *codec.Codec {
 // Hogpodge of all sorts of input required for testing.
 // `initPower` is converted to an amount of tokens.
 // If `initPower` is 0, no addrs get created.
-func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper) {
-
-	initCoins := sdk.TokensFromTendermintPower(initPower)
-
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -94,6 +95,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -116,31 +118,45 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(
+	bk := bank.NewBaseKeeper(
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
 		bank.DefaultCodespace,
 	)
 
-	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
-	keeper.SetPool(ctx, types.InitialPool())
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
+
+	initTokens := sdk.TokensFromConsensusPower(initPower)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(Addrs)))))
+
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
+	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
+
+	// set module accounts
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
+
+	err = notBondedPool.SetCoins(totalSupply)
+	require.NoError(t, err)
+
+	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
-		pool := keeper.GetPool(ctx)
-		err := error(nil)
-		if !initCoins.IsZero() {
-			_, err = ck.AddCoins(ctx, addr, sdk.Coins{
-				{keeper.BondDenom(ctx), initCoins},
-			})
+		_, err := bk.AddCoins(ctx, addr, initCoins)
+		if err != nil {
+			panic(err)
 		}
-		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
-		keeper.SetPool(ctx, pool)
 	}
 
-	return ctx, accountKeeper, keeper
+	return ctx, accountKeeper, keeper, supplyKeeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {
@@ -223,23 +239,24 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 // update validator for testing
 func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	keeper.SetValidator(ctx, validator)
-	{ // Remove any existing power key for validator.
-		store := ctx.KVStore(keeper.storeKey)
-		iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
-		defer iterator.Close()
-		deleted := false
-		for ; iterator.Valid(); iterator.Next() {
-			valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
-			if bytes.Equal(valAddr, validator.OperatorAddress) {
-				if deleted {
-					panic("found duplicate power index key")
-				} else {
-					deleted = true
-				}
-				store.Delete(iterator.Key())
+
+	// Remove any existing power key for validator.
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	defer iterator.Close()
+	deleted := false
+	for ; iterator.Valid(); iterator.Next() {
+		valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
+		if bytes.Equal(valAddr, validator.OperatorAddress) {
+			if deleted {
+				panic("found duplicate power index key")
+			} else {
+				deleted = true
 			}
+			store.Delete(iterator.Key())
 		}
 	}
+
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 	if apply {
 		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -258,6 +275,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	return validator
 }
 
+// nolint: deadcode unused
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)

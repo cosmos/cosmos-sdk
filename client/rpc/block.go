@@ -117,13 +117,16 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,
-				"ERROR: Couldn't parse block height. Assumed format is '/block/{height}'.")
+				"couldn't parse block height. Assumed format is '/block/{height}'.")
 			return
 		}
 		chainHeight, err := GetChainHeight(cliCtx)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
+			return
+		}
 		if height > chainHeight {
-			rest.WriteErrorResponse(w, http.StatusNotFound,
-				"ERROR: Requested block height is bigger then the chain length.")
+			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length")
 			return
 		}
 		output, err := getBlock(cliCtx, &height)
@@ -131,7 +134,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, codec.Cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }
 
@@ -144,6 +147,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, codec.Cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, output)
 	}
 }

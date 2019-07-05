@@ -5,6 +5,7 @@
 There is a need for a scalable structure of the SDK documentation. Current documentation includes a lot of non-related SDK material, is difficult to maintain and hard to follow as a user.
 
 Ideally, we would have:
+
 - All docs related to dev frameworks or tools live in their respective github repos (sdk repo would contain sdk docs, hub repo would contain hub docs, lotion repo would contain lotion docs, etc.)
 - All other docs (faqs, whitepaper, high-level material about Cosmos) would live on the website.
 
@@ -16,13 +17,6 @@ Re-structure the `/docs` folder of the SDK github repo as follows:
 docs/
 ├── README
 ├── intro/
-├── gaia/
-│   ├── overview.md
-│   ├── install.md
-│   ├── join-testnet.md
-│   ├── validator-node.md
-│   ├── validator-faq.md
-│   └── delegator-faq.md    
 ├── concepts/
 │   ├── baseapp
 │   ├── types
@@ -37,7 +31,9 @@ docs/
 ├── clients/
 │   ├── lite/
 │   ├── service-providers
+├── modules/
 ├── spec/
+├── translations/
 └── architecture/
 ```
 
@@ -45,21 +41,21 @@ The files in each sub-folders do not matter and will likely change. What matters
 
 - `README`: Landing page of the docs.
 - `into`: Introductory material. Goal is to have a short explainer of the SDK and then channel people to the resource they need. The [sdk-tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
-- `gaia`: Contains all docs related to the `gaia` application. Will later be renamed to `cosmos-hub` or `chub` and probably moved to its own repository.
 - `concepts`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
 - `clients`: Contains specs and info about the various SDK clients.
 - `spec`: Contains specs of modules, and others.
+- `modules`: Contains links to `godocs` and the spec of the modules.
 - `architecture`: Contains architecture-related docs like the present one.
+- `translations`: Contains different translations of the documentation.
 
 Website docs sidebar will only include the following sections:
 
 - `README`
 - `intro`
-- `gaia`
 - `concepts`
 - `clients`
 
-`architecture` and `examples` need not be displayed on the website. As for `modules`, we might need to think about creating a modules manager, but this is out of scope for this document.
+`architecture` need not be displayed on the website.
 
 ## Status
 

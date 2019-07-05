@@ -83,6 +83,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 func TestDeposits(t *testing.T) {
 	input := getMockApp(t, 2, GenesisState{}, nil)
+
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -95,13 +96,13 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(4)))
-	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromTendermintPower(5)))
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))
 
-	addr0Initial := input.keeper.ck.GetCoins(ctx, input.addrs[0])
-	addr1Initial := input.keeper.ck.GetCoins(ctx, input.addrs[1])
+	addr0Initial := input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[0]).GetCoins()
+	addr1Initial := input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[1]).GetCoins()
 
-	expTokens := sdk.TokensFromTendermintPower(42)
+	expTokens := sdk.TokensFromConsensusPower(42)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
 	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
@@ -123,7 +124,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake, proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(fourStake), input.keeper.ck.GetCoins(ctx, input.addrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourStake), input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[0]).GetCoins())
 
 	// Check a second deposit from same address
 	err, votingStarted = input.keeper.AddDeposit(ctx, proposalID, input.addrs[0], fiveStake)
@@ -136,7 +137,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake), proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), input.keeper.ck.GetCoins(ctx, input.addrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[0]).GetCoins())
 
 	// Check third deposit from a new address
 	err, votingStarted = input.keeper.AddDeposit(ctx, proposalID, input.addrs[1], fourStake)
@@ -149,7 +150,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), proposal.TotalDeposit)
-	require.Equal(t, addr1Initial.Sub(fourStake), input.keeper.ck.GetCoins(ctx, input.addrs[1]))
+	require.Equal(t, addr1Initial.Sub(fourStake), input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[1]).GetCoins())
 
 	// Check that proposal moved to voting period
 	proposal, ok = input.keeper.GetProposal(ctx, proposalID)
@@ -157,7 +158,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
-	depositsIterator := input.keeper.GetDeposits(ctx, proposalID)
+	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, input.addrs[0], deposit.Depositor)
@@ -177,8 +178,8 @@ func TestDeposits(t *testing.T) {
 	input.keeper.RefundDeposits(ctx, proposalID)
 	deposit, found = input.keeper.GetDeposit(ctx, proposalID, input.addrs[1])
 	require.False(t, found)
-	require.Equal(t, addr0Initial, input.keeper.ck.GetCoins(ctx, input.addrs[0]))
-	require.Equal(t, addr1Initial, input.keeper.ck.GetCoins(ctx, input.addrs[1]))
+	require.Equal(t, addr0Initial, input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[0]).GetCoins())
+	require.Equal(t, addr1Initial, input.mApp.AccountKeeper.GetAccount(ctx, input.addrs[1]).GetCoins())
 
 }
 
@@ -224,7 +225,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
-	votesIterator := input.keeper.GetVotes(ctx, proposalID)
+	votesIterator := input.keeper.GetVotesIterator(ctx, proposalID)
 	require.True(t, votesIterator.Valid())
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())

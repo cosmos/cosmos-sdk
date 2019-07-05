@@ -16,27 +16,16 @@ const (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	StartingProposalID uint64                `json:"starting_proposal_id"`
-	Deposits           []DepositWithMetadata `json:"deposits"`
-	Votes              []VoteWithMetadata    `json:"votes"`
-	Proposals          []Proposal            `json:"proposals"`
-	DepositParams      DepositParams         `json:"deposit_params"`
-	VotingParams       VotingParams          `json:"voting_params"`
-	TallyParams        TallyParams           `json:"tally_params"`
+	StartingProposalID uint64        `json:"starting_proposal_id"`
+	Deposits           Deposits      `json:"deposits"`
+	Votes              Votes         `json:"votes"`
+	Proposals          []Proposal    `json:"proposals"`
+	DepositParams      DepositParams `json:"deposit_params"`
+	VotingParams       VotingParams  `json:"voting_params"`
+	TallyParams        TallyParams   `json:"tally_params"`
 }
 
-// DepositWithMetadata (just for genesis)
-type DepositWithMetadata struct {
-	ProposalID uint64  `json:"proposal_id"`
-	Deposit    Deposit `json:"deposit"`
-}
-
-// VoteWithMetadata (just for genesis)
-type VoteWithMetadata struct {
-	ProposalID uint64 `json:"proposal_id"`
-	Vote       Vote   `json:"vote"`
-}
-
+// NewGenesisState creates a new genesis state for the governance module
 func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
 	return GenesisState{
 		StartingProposalID: startingProposalID,
@@ -48,7 +37,7 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
-	minDepositTokens := sdk.TokensFromTendermintPower(10)
+	minDepositTokens := sdk.TokensFromConsensusPower(10)
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
@@ -79,7 +68,7 @@ func (data GenesisState) IsEmpty() bool {
 	return data.Equal(emptyGenState)
 }
 
-// ValidateGenesis
+// ValidateGenesis checks if parameters are within valid ranges
 func ValidateGenesis(data GenesisState) error {
 	threshold := data.TallyParams.Threshold
 	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
@@ -102,63 +91,71 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	err := k.setInitialProposalID(ctx, data.StartingProposalID)
-	if err != nil {
-		// TODO: Handle this with #870
-		panic(err)
-	}
+func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper SupplyKeeper, data GenesisState) {
+
+	k.setProposalID(ctx, data.StartingProposalID)
 	k.setDepositParams(ctx, data.DepositParams)
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)
+
+	// check if the deposits pool account exists
+	moduleAcc := k.GetGovernanceAccount(ctx)
+	if moduleAcc == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
-		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositor, deposit.Deposit)
+		k.setDeposit(ctx, deposit.ProposalID, deposit.Depositor, deposit)
+		totalDeposits = totalDeposits.Add(deposit.Amount)
 	}
+
 	for _, vote := range data.Votes {
-		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
+		k.setVote(ctx, vote.ProposalID, vote.Voter, vote)
 	}
+
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.DepositEndTime, proposal.ProposalID)
+			k.InsertInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
 		case StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.VotingEndTime, proposal.ProposalID)
+			k.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, proposal)
+	}
+
+	// add coins if not provided on genesis
+	if moduleAcc.GetCoins().IsZero() {
+		if err := moduleAcc.SetCoins(totalDeposits); err != nil {
+			panic(err)
+		}
+		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	startingProposalID, _ := k.peekCurrentProposalID(ctx)
+	startingProposalID, _ := k.GetProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
-	var deposits []DepositWithMetadata
-	var votes []VoteWithMetadata
+
 	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
+
+	var proposalsDeposits Deposits
+	var proposalsVotes Votes
 	for _, proposal := range proposals {
-		proposalID := proposal.ProposalID
-		depositsIterator := k.GetDeposits(ctx, proposalID)
-		defer depositsIterator.Close()
-		for ; depositsIterator.Valid(); depositsIterator.Next() {
-			var deposit Deposit
-			k.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-			deposits = append(deposits, DepositWithMetadata{proposalID, deposit})
-		}
-		votesIterator := k.GetVotes(ctx, proposalID)
-		defer votesIterator.Close()
-		for ; votesIterator.Valid(); votesIterator.Next() {
-			var vote Vote
-			k.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
-			votes = append(votes, VoteWithMetadata{proposalID, vote})
-		}
+		deposits := k.GetDeposits(ctx, proposal.ProposalID)
+		proposalsDeposits = append(proposalsDeposits, deposits...)
+
+		votes := k.GetVotes(ctx, proposal.ProposalID)
+		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
 	return GenesisState{
 		StartingProposalID: startingProposalID,
-		Deposits:           deposits,
-		Votes:              votes,
+		Deposits:           proposalsDeposits,
+		Votes:              proposalsVotes,
 		Proposals:          proposals,
 		DepositParams:      depositParams,
 		VotingParams:       votingParams,

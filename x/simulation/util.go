@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -60,25 +61,9 @@ func getBlockSize(r *rand.Rand, params Params,
 	return state, blocksize
 }
 
-// PeriodicInvariant returns an Invariant function closure that asserts a given
-// invariant if the mock application's last block modulo the given period is
-// congruent to the given offset.
-//
-// NOTE this function is intended to be used manually used while running
-// computationally heavy simulations.
-// TODO reference this function in the codebase probably through use of a switch
-func PeriodicInvariant(invariant sdk.Invariant, period int, offset int) sdk.Invariant {
-	return func(ctx sdk.Context) error {
-		if int(ctx.BlockHeight())%period == offset {
-			return invariant(ctx)
-		}
-		return nil
-	}
-}
-
 // PeriodicInvariants  returns an array of wrapped Invariants. Where each
 // invariant function is only executed periodically defined by period and offset.
-func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sdk.Invariant {
+func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {
 		outInvariant := func(ctx sdk.Context) error {
@@ -90,4 +75,13 @@ func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sd
 		outInvariants = append(outInvariants, outInvariant)
 	}
 	return outInvariants
+}
+
+func mustMarshalJSONIndent(o interface{}) []byte {
+	bz, err := json.MarshalIndent(o, "", "  ")
+	if err != nil {
+		panic(fmt.Sprintf("failed to JSON encode: %s", err))
+	}
+
+	return bz
 }

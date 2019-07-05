@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 const custom = "custom"
@@ -19,38 +20,38 @@ const custom = "custom"
 func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (communityTax sdk.Dec, baseProposerReward sdk.Dec, bonusProposerReward sdk.Dec, withdrawAddrEnabled bool) {
 
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamCommunityTax}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamCommunityTax}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err := querier(ctx, []string{QueryParams, ParamCommunityTax}, query)
+	bz, err := querier(ctx, []string{types.QueryParams, types.ParamCommunityTax}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &communityTax))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamBaseProposerReward}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamBaseProposerReward}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamBaseProposerReward}, query)
+	bz, err = querier(ctx, []string{types.QueryParams, types.ParamBaseProposerReward}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &baseProposerReward))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamBonusProposerReward}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamBonusProposerReward}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamBonusProposerReward}, query)
+	bz, err = querier(ctx, []string{types.QueryParams, types.ParamBonusProposerReward}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &bonusProposerReward))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamWithdrawAddrEnabled}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamWithdrawAddrEnabled}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamWithdrawAddrEnabled}, query)
+	bz, err = querier(ctx, []string{types.QueryParams, types.ParamWithdrawAddrEnabled}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &withdrawAddrEnabled))
 
@@ -59,11 +60,11 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 
 func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (outstandingRewards sdk.DecCoins) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryValidatorOutstandingRewards}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryValidatorOutstandingRewardsParams(validatorAddr)),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorOutstandingRewards}, "/"),
+		Data: cdc.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr)),
 	}
 
-	bz, err := querier(ctx, []string{QueryValidatorOutstandingRewards}, query)
+	bz, err := querier(ctx, []string{types.QueryValidatorOutstandingRewards}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &outstandingRewards))
 
@@ -72,11 +73,11 @@ func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *c
 
 func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (validatorCommission sdk.DecCoins) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryValidatorCommission}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryValidatorCommissionParams(validatorAddr)),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorCommission}, "/"),
+		Data: cdc.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
 	}
 
-	bz, err := querier(ctx, []string{QueryValidatorCommission}, query)
+	bz, err := querier(ctx, []string{types.QueryValidatorCommission}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &validatorCommission))
 
@@ -85,11 +86,11 @@ func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Cod
 
 func getQueriedValidatorSlashes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress, startHeight uint64, endHeight uint64) (slashes []types.ValidatorSlashEvent) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryValidatorSlashes}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorSlashes}, "/"),
+		Data: cdc.MustMarshalJSON(types.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)),
 	}
 
-	bz, err := querier(ctx, []string{QueryValidatorSlashes}, query)
+	bz, err := querier(ctx, []string{types.QueryValidatorSlashes}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &slashes))
 
@@ -98,11 +99,11 @@ func getQueriedValidatorSlashes(t *testing.T, ctx sdk.Context, cdc *codec.Codec,
 
 func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (rewards sdk.DecCoins) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryDelegationRewards}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDelegationRewards}, "/"),
+		Data: cdc.MustMarshalJSON(types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
 	}
 
-	bz, err := querier(ctx, []string{QueryDelegationRewards}, query)
+	bz, err := querier(ctx, []string{types.QueryDelegationRewards}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &rewards))
 
@@ -111,11 +112,11 @@ func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec
 
 func getQueriedDelegatorTotalRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, delegatorAddr sdk.AccAddress) (response types.QueryDelegatorTotalRewardsResponse) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryDelegatorTotalRewards}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryDelegatorParams(delegatorAddr)),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDelegatorTotalRewards}, "/"),
+		Data: cdc.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	}
 
-	bz, err := querier(ctx, []string{QueryDelegatorTotalRewards}, query)
+	bz, err := querier(ctx, []string{types.QueryDelegatorTotalRewards}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &response))
 
@@ -124,11 +125,11 @@ func getQueriedDelegatorTotalRewards(t *testing.T, ctx sdk.Context, cdc *codec.C
 
 func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (ptr []byte) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryCommunityPool}, ""),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryCommunityPool}, ""),
 		Data: []byte{},
 	}
 
-	cp, err := querier(ctx, []string{QueryCommunityPool}, query)
+	cp, err := querier(ctx, []string{types.QueryCommunityPool}, query)
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(cp, &ptr))
 
@@ -138,6 +139,7 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, qu
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
+	supply.RegisterCodec(cdc)
 	ctx, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
 	querier := NewQuerier(keeper)
 
@@ -175,8 +177,8 @@ func TestQueries(t *testing.T) {
 	// test validator slashes query with height range
 	slashOne := types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1))
 	slashTwo := types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(6, 1))
-	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, slashOne)
-	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, slashTwo)
+	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, 0, slashOne)
+	keeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, 0, slashTwo)
 	slashes := getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 2)
 	require.Equal(t, 0, len(slashes))
 	slashes = getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 5)
@@ -186,7 +188,7 @@ func TestQueries(t *testing.T) {
 
 	// test delegation rewards query
 	sh := staking.NewHandler(sk)
-	comm := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	comm := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())

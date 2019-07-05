@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter
@@ -64,10 +64,8 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			proposal, err := paramscutils.ParseParamChangeProposalJSON(cdc, args[0])
 			if err != nil {
@@ -75,7 +73,7 @@ Where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
+			content := types.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
 			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

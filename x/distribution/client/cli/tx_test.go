@@ -1,19 +1,21 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 )
 
-func createFakeTxBuilder() authtxb.TxBuilder {
+func createFakeTxBuilder() auth.TxBuilder {
 	cdc := codec.New()
-	return authtxb.NewTxBuilder(
+	return auth.NewTxBuilder(
 		utils.GetTxEncoder(cdc),
 		123,
 		9876,
@@ -55,8 +57,8 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg) error {
-			callCount += 1
+		func(ctx context.CLIContext, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
+			callCount++
 
 			assert.NotNil(t, ctx)
 			assert.NotNil(t, txBldr)

@@ -151,3 +151,5 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	// run forever (the node will not be returned)
 	select {}
 }
+
+// DONTCOVER

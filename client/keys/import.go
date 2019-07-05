@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bufio"
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -18,7 +19,7 @@ func importKeyCommand() *cobra.Command {
 	return cmd
 }
 
-func runImportCmd(_ *cobra.Command, args []string) error {
+func runImportCmd(cmd *cobra.Command, args []string) error {
 	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
@@ -29,7 +30,7 @@ func runImportCmd(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := input.BufferStdin()
+	buf := bufio.NewReader(cmd.InOrStdin())
 	passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

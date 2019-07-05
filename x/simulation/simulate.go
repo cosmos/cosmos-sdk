@@ -54,12 +54,14 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 
 	r := rand.New(rand.NewSource(seed))
-	params := RandomParams(r) // := DefaultParams()
-	fmt.Fprintf(w, "Randomized simulation params: %+v\n", params)
+	params := RandomParams(r)
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	genesisTimestamp := RandTimestamp(r)
-	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix())
+	fmt.Printf(
+		"Starting the simulation from time %v, unixtime %v\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)

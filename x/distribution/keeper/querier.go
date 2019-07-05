@@ -9,54 +9,37 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-)
-
-// nolint
-const (
-	QueryParams                      = "params"
-	QueryValidatorOutstandingRewards = "validator_outstanding_rewards"
-	QueryValidatorCommission         = "validator_commission"
-	QueryValidatorSlashes            = "validator_slashes"
-	QueryDelegationRewards           = "delegation_rewards"
-	QueryDelegatorTotalRewards       = "delegator_total_rewards"
-	QueryDelegatorValidators         = "delegator_validators"
-	QueryWithdrawAddr                = "withdraw_addr"
-	QueryCommunityPool               = "community_pool"
-
-	ParamCommunityTax        = "community_tax"
-	ParamBaseProposerReward  = "base_proposer_reward"
-	ParamBonusProposerReward = "bonus_proposer_reward"
-	ParamWithdrawAddrEnabled = "withdraw_addr_enabled"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {
-		case QueryParams:
+		case types.QueryParams:
 			return queryParams(ctx, path[1:], req, k)
 
-		case QueryValidatorOutstandingRewards:
+		case types.QueryValidatorOutstandingRewards:
 			return queryValidatorOutstandingRewards(ctx, path[1:], req, k)
 
-		case QueryValidatorCommission:
+		case types.QueryValidatorCommission:
 			return queryValidatorCommission(ctx, path[1:], req, k)
 
-		case QueryValidatorSlashes:
+		case types.QueryValidatorSlashes:
 			return queryValidatorSlashes(ctx, path[1:], req, k)
 
-		case QueryDelegationRewards:
+		case types.QueryDelegationRewards:
 			return queryDelegationRewards(ctx, path[1:], req, k)
 
-		case QueryDelegatorTotalRewards:
+		case types.QueryDelegatorTotalRewards:
 			return queryDelegatorTotalRewards(ctx, path[1:], req, k)
 
-		case QueryDelegatorValidators:
+		case types.QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, path[1:], req, k)
 
-		case QueryWithdrawAddr:
+		case types.QueryWithdrawAddr:
 			return queryDelegatorWithdrawAddress(ctx, path[1:], req, k)
 
-		case QueryCommunityPool:
+		case types.QueryCommunityPool:
 			return queryCommunityPool(ctx, path[1:], req, k)
 
 		default:
@@ -67,25 +50,25 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	switch path[0] {
-	case ParamCommunityTax:
+	case types.ParamCommunityTax:
 		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetCommunityTax(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamBaseProposerReward:
+	case types.ParamBaseProposerReward:
 		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBaseProposerReward(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamBonusProposerReward:
+	case types.ParamBonusProposerReward:
 		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBonusProposerReward(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamWithdrawAddrEnabled:
+	case types.ParamWithdrawAddrEnabled:
 		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetWithdrawAddrEnabled(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
@@ -96,20 +79,8 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 	}
 }
 
-// params for query 'custom/distr/validator_outstanding_rewards'
-type QueryValidatorOutstandingRewardsParams struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-}
-
-// creates a new instance of QueryValidatorOutstandingRewardsParams
-func NewQueryValidatorOutstandingRewardsParams(validatorAddr sdk.ValAddress) QueryValidatorOutstandingRewardsParams {
-	return QueryValidatorOutstandingRewardsParams{
-		ValidatorAddress: validatorAddr,
-	}
-}
-
 func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryValidatorOutstandingRewardsParams
+	var params types.QueryValidatorOutstandingRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -121,20 +92,8 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 	return bz, nil
 }
 
-// params for query 'custom/distr/validator_commission'
-type QueryValidatorCommissionParams struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-}
-
-// creates a new instance of QueryValidatorCommissionParams
-func NewQueryValidatorCommissionParams(validatorAddr sdk.ValAddress) QueryValidatorCommissionParams {
-	return QueryValidatorCommissionParams{
-		ValidatorAddress: validatorAddr,
-	}
-}
-
 func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryValidatorCommissionParams
+	var params types.QueryValidatorCommissionParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -147,24 +106,8 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 	return bz, nil
 }
 
-// params for query 'custom/distr/validator_slashes'
-type QueryValidatorSlashesParams struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	StartingHeight   uint64         `json:"starting_height"`
-	EndingHeight     uint64         `json:"ending_height"`
-}
-
-// creates a new instance of QueryValidatorSlashesParams
-func NewQueryValidatorSlashesParams(validatorAddr sdk.ValAddress, startingHeight uint64, endingHeight uint64) QueryValidatorSlashesParams {
-	return QueryValidatorSlashesParams{
-		ValidatorAddress: validatorAddr,
-		StartingHeight:   startingHeight,
-		EndingHeight:     endingHeight,
-	}
-}
-
 func queryValidatorSlashes(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryValidatorSlashesParams
+	var params types.QueryValidatorSlashesParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -183,22 +126,8 @@ func queryValidatorSlashes(ctx sdk.Context, path []string, req abci.RequestQuery
 	return bz, nil
 }
 
-// params for query 'custom/distr/delegation_rewards'
-type QueryDelegationRewardsParams struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-}
-
-// creates a new instance of QueryDelegationRewardsParams
-func NewQueryDelegationRewardsParams(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) QueryDelegationRewardsParams {
-	return QueryDelegationRewardsParams{
-		DelegatorAddress: delegatorAddr,
-		ValidatorAddress: validatorAddr,
-	}
-}
-
 func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryDelegationRewardsParams
+	var params types.QueryDelegationRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -230,20 +159,8 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	return bz, nil
 }
 
-// params for query 'custom/distr/delegator_total_rewards' and 'custom/distr/delegator_validators'
-type QueryDelegatorParams struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-}
-
-// creates a new instance of QueryDelegationRewardsParams
-func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
-	return QueryDelegatorParams{
-		DelegatorAddress: delegatorAddr,
-	}
-}
-
 func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryDelegatorParams
+	var params types.QueryDelegatorParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -257,7 +174,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del sdk.Delegation) (stop bool) {
+		func(_ int64, del exported.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.incrementValidatorPeriod(ctx, val)
@@ -279,7 +196,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 }
 
 func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryDelegatorParams
+	var params types.QueryDelegatorParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -292,7 +209,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del sdk.Delegation) (stop bool) {
+		func(_ int64, del exported.DelegationI) (stop bool) {
 			validators = append(validators[:], del.GetValidatorAddr())
 			return false
 		},
@@ -305,18 +222,8 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 	return bz, nil
 }
 
-// params for query 'custom/distr/withdraw_addr'
-type QueryDelegatorWithdrawAddrParams struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-}
-
-// NewQueryDelegatorWithdrawAddrParams creates a new instance of QueryDelegatorWithdrawAddrParams.
-func NewQueryDelegatorWithdrawAddrParams(delegatorAddr sdk.AccAddress) QueryDelegatorWithdrawAddrParams {
-	return QueryDelegatorWithdrawAddrParams{DelegatorAddress: delegatorAddr}
-}
-
 func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryDelegatorWithdrawAddrParams
+	var params types.QueryDelegatorWithdrawAddrParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))

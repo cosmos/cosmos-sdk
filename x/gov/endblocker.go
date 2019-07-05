@@ -4,103 +4,94 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
+// EndBlocker called every block, process inflation, update validator set.
+func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	logger := keeper.Logger(ctx)
-	resTags := sdk.NewTags()
 
-	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	defer inactiveIterator.Close()
-	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
-		var proposalID uint64
+	// delete inactive proposal from store and its deposits
+	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
+		keeper.DeleteProposal(ctx, proposal.ProposalID)
+		keeper.DeleteDeposits(ctx, proposal.ProposalID)
 
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
-		inactiveProposal, ok := keeper.GetProposal(ctx, proposalID)
-		if !ok {
-			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
-		}
-
-		keeper.DeleteProposal(ctx, proposalID)
-		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
-
-		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposalID))
-		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeInactiveProposal,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
+			),
+		)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
-				inactiveProposal.ProposalID,
-				inactiveProposal.GetTitle(),
+				proposal.ProposalID,
+				proposal.GetTitle(),
 				keeper.GetDepositParams(ctx).MinDeposit,
-				inactiveProposal.TotalDeposit,
+				proposal.TotalDeposit,
 			),
 		)
-	}
+		return false
+	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	defer activeIterator.Close()
-	for ; activeIterator.Valid(); activeIterator.Next() {
-		var proposalID uint64
-
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-		activeProposal, ok := keeper.GetProposal(ctx, proposalID)
-		if !ok {
-			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
-		}
-		passes, burnDeposits, tallyResults := tally(ctx, keeper, activeProposal)
-
+	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
 		var tagValue, logMsg string
 
+		passes, burnDeposits, tallyResults := tally(ctx, keeper, proposal)
+
 		if burnDeposits {
-			keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+			keeper.DeleteDeposits(ctx, proposal.ProposalID)
 		} else {
-			keeper.RefundDeposits(ctx, activeProposal.ProposalID)
+			keeper.RefundDeposits(ctx, proposal.ProposalID)
 		}
 
 		if passes {
-			handler := keeper.router.GetRoute(activeProposal.ProposalRoute())
+			handler := keeper.router.GetRoute(proposal.ProposalRoute())
 			cacheCtx, writeCache := ctx.CacheContext()
 
 			// The proposal handler may execute state mutating logic depending
 			// on the proposal content. If the handler fails, no state mutation
 			// is written and the error message is logged.
-			err := handler(cacheCtx, activeProposal.Content)
+			err := handler(cacheCtx, proposal.Content)
 			if err == nil {
-				activeProposal.Status = StatusPassed
-				tagValue = tags.ActionProposalPassed
+				proposal.Status = StatusPassed
+				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
-				activeProposal.Status = StatusFailed
-				tagValue = tags.ActionProposalFailed
+				proposal.Status = StatusFailed
+				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
 			}
 		} else {
-			activeProposal.Status = StatusRejected
-			tagValue = tags.ActionProposalRejected
+			proposal.Status = StatusRejected
+			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}
 
-		activeProposal.FinalTallyResult = tallyResults
+		proposal.FinalTallyResult = tallyResults
 
-		keeper.SetProposal(ctx, activeProposal)
-		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.VotingEndTime, activeProposal.ProposalID)
+		keeper.SetProposal(ctx, proposal)
+		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 
 		logger.Info(
 			fmt.Sprintf(
 				"proposal %d (%s) tallied; result: %s",
-				activeProposal.ProposalID, activeProposal.GetTitle(), logMsg,
+				proposal.ProposalID, proposal.GetTitle(), logMsg,
 			),
 		)
 
-		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposalID))
-		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
-	}
-
-	return resTags
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeActiveProposal,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
+			),
+		)
+		return false
+	})
 }

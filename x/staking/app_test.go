@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -18,44 +19,53 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
 	RegisterCodec(mApp.Cdc)
+	supply.RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(TStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{types.NotBondedPoolName, types.BondedPoolName})
+	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper, supplyKeeper))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking, keySupply))
 	return mApp, keeper
 }
 
 // getEndBlocker returns a staking endblocker.
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates, tags := EndBlocker(ctx, keeper)
+		validatorUpdates := EndBlocker(ctx, keeper)
 
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: validatorUpdates,
-			Tags:             tags,
 		}
 	}
 }
 
 // getInitChainer initializes the chainer of the mock app and sets the genesis
 // state. It returns an empty ResponseInitChain.
-func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
-		stakingGenesis := DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
-		stakingGenesis.Pool.NotBondedTokens = tokens
+		// set module accounts
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
 
-		validators := InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
+		supplyKeeper.SetModuleAccount(ctx, feeCollector)
+		supplyKeeper.SetModuleAccount(ctx, bondPool)
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+		stakingGenesis := DefaultGenesisState()
+		validators := InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
@@ -94,8 +104,8 @@ func checkDelegation(
 func TestStakingMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genTokens := sdk.TokensFromTendermintPower(42)
-	bondTokens := sdk.TokensFromTendermintPower(10)
+	genTokens := sdk.TokensFromConsensusPower(42)
+	bondTokens := sdk.TokensFromConsensusPower(10)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
@@ -116,7 +126,7 @@ func TestStakingMsgs(t *testing.T) {
 	// create validator
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
 	)
 
 	header := abci.Header{Height: mApp.LastBlockHeight() + 1}

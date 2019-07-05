@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var (
@@ -27,21 +28,25 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 
 	RegisterCodec(mapp.Cdc)
 	staking.RegisterCodec(mapp.Cdc)
+	supply.RegisterCodec(mapp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySlashing := sdk.NewKVStoreKey(StoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bankKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(stakingKeeper))
-	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper))
+	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper, supplyKeeper))
 
-	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keySlashing))
+	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keySupply, keySlashing))
 
 	return mapp, stakingKeeper, keeper
 }
@@ -49,22 +54,28 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 // staking endblocker
 func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates, tags := staking.EndBlocker(ctx, keeper)
+		validatorUpdates := staking.EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: validatorUpdates,
-			Tags:             tags,
 		}
 	}
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		// set module accounts
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
+
+		supplyKeeper.SetModuleAccount(ctx, feeCollector)
+		supplyKeeper.SetModuleAccount(ctx, bondPool)
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
-		stakingGenesis.Pool.NotBondedTokens = tokens
-		validators := staking.InitGenesis(ctx, keeper, accountKeeper, stakingGenesis)
+		validators := staking.InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
@@ -90,8 +101,8 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakingKeeper, keeper := getMockApp(t)
 
-	genTokens := sdk.TokensFromTendermintPower(42)
-	bondTokens := sdk.TokensFromTendermintPower(10)
+	genTokens := sdk.TokensFromConsensusPower(42)
+	bondTokens := sdk.TokensFromConsensusPower(10)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
@@ -103,7 +114,7 @@ func TestSlashingMsgs(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	description := staking.NewDescription("foo_moniker", "", "", "")
-	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	createValidatorMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),

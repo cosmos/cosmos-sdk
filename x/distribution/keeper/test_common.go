@@ -18,10 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+//nolint: deadcode unused
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
 	delPk2   = ed25519.GenPrivKey().PubKey()
@@ -47,6 +49,7 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
+	// TODO move to common testing package for all modules
 	// test addresses
 	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,
@@ -64,6 +67,7 @@ func MakeTestCodec() *codec.Codec {
 	bank.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
+	supply.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
@@ -73,26 +77,26 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, fck, _ := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
-	return ctx, ak, dk, sk, fck
+	ctx, ak, _, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	return ctx, ak, dk, sk, supplyKeeper
 }
 
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
-	Keeper, staking.Keeper, DummyFeeCollectionKeeper, params.Keeper) {
+	Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper) {
 
-	initCoins := sdk.TokensFromTendermintPower(initPower)
+	initTokens := sdk.TokensFromConsensusPower(initPower)
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
-	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
@@ -102,8 +106,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
@@ -116,23 +120,34 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, bankKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	sk.SetPool(ctx, staking.InitialPool())
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace,
+		[]string{auth.FeeCollectorName, types.ModuleName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
+
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace, auth.FeeCollectorName)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range TestAddrs {
-		pool := sk.GetPool(ctx)
-		_, err := bankKeeper.AddCoins(ctx, addr, sdk.Coins{
-			sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins),
-		})
+		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
 		require.Nil(t, err)
-		pool.NotBondedTokens = pool.NotBondedTokens.Add(initCoins)
-		sk.SetPool(ctx, pool)
 	}
 
-	fck := DummyFeeCollectionKeeper{}
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), bankKeeper, sk, fck, types.DefaultCodespace)
+	// create module accounts
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
+	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Basic)
+
+	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// set the distribution hooks on staking
 	sk.SetHooks(keeper.Hooks())
@@ -143,27 +158,5 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountKeeper, bankKeeper, keeper, sk, fck, pk
-}
-
-//__________________________________________________________________________________
-// fee collection keeper used only for testing
-type DummyFeeCollectionKeeper struct{}
-
-var heldFees sdk.Coins
-var _ types.FeeCollectionKeeper = DummyFeeCollectionKeeper{}
-
-// nolint
-func (fck DummyFeeCollectionKeeper) AddCollectedFees(_ sdk.Context, in sdk.Coins) sdk.Coins {
-	fck.SetCollectedFees(heldFees.Add(in))
-	return heldFees
-}
-func (fck DummyFeeCollectionKeeper) GetCollectedFees(_ sdk.Context) sdk.Coins {
-	return heldFees
-}
-func (fck DummyFeeCollectionKeeper) SetCollectedFees(in sdk.Coins) {
-	heldFees = in
-}
-func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
-	heldFees = sdk.NewCoins()
+	return ctx, accountKeeper, bankKeeper, keeper, sk, pk, supplyKeeper
 }

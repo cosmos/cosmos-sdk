@@ -1,3 +1,4 @@
+// nolint:deadcode unused
 package gov
 
 import (
@@ -19,6 +20,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+)
+
+var (
+	valTokens  = sdk.TokensFromConsensusPower(42)
+	initTokens = sdk.TokensFromConsensusPower(100000)
+	valCoins   = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
+	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
 type testInput struct {
@@ -35,30 +44,34 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
-	RegisterCodec(mApp.Cdc)
+	types.RegisterCodec(mApp.Cdc)
+	supply.RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	pk := mApp.ParamsKeeper
 
 	rtr := NewRouter().
 		AddRoute(RouterKey, ProposalHandler)
 
-	ck := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
-	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace, rtr)
+	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace,
+		[]string{}, []string{}, []string{types.ModuleName, staking.NotBondedPoolName, staking.BondedPoolName})
+	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+
+	keeper := NewKeeper(mApp.Cdc, keyGov, pk, pk.Subspace("testgov"), supplyKeeper, sk, DefaultCodespace, rtr)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, mApp.AccountKeeper, genState))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genAccs, genState))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov))
-
-	valTokens := sdk.TokensFromTendermintPower(42)
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov, keySupply))
 
 	var (
 		addrs    []sdk.AccAddress
@@ -67,8 +80,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	)
 
 	if genAccs == nil || len(genAccs) == 0 {
-		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs,
-			sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, valTokens)})
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, valCoins)
 	}
 
 	mock.SetGenesis(mApp, genAccs)
@@ -79,29 +91,35 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 // gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags := EndBlocker(ctx, keeper)
-		return abci.ResponseEndBlock{
-			Tags: tags,
-		}
+		EndBlocker(ctx, keeper)
+		return abci.ResponseEndBlock{}
 	}
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
-	accountKeeper staking.AccountKeeper, genState GenesisState) sdk.InitChainer {
-
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []auth.Account, genState GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		tokens := sdk.TokensFromTendermintPower(100000)
-		stakingGenesis.Pool.NotBondedTokens = tokens
 
-		validators := staking.InitGenesis(ctx, stakingKeeper, accountKeeper, stakingGenesis)
+		totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(mapp.GenesisAccounts)))))
+		supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
+		// set module accounts
+		govAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Burner)
+		notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
+		bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
+
+		supplyKeeper.SetModuleAccount(ctx, govAcc)
+		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+		supplyKeeper.SetModuleAccount(ctx, bondPool)
+
+		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, supplyKeeper, stakingGenesis)
 		if genState.IsEmpty() {
-			InitGenesis(ctx, keeper, DefaultGenesisState())
+			InitGenesis(ctx, keeper, supplyKeeper, DefaultGenesisState())
 		} else {
-			InitGenesis(ctx, keeper, genState)
+			InitGenesis(ctx, keeper, supplyKeeper, genState)
 		}
 		return abci.ResponseInitChain{
 			Validators: validators,
@@ -191,8 +209,8 @@ var (
 		ed25519.GenPrivKey().PubKey(),
 	}
 
-	testDescription   = staking.NewDescription("T", "E", "S", "T")
-	testCommissionMsg = staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	testDescription     = staking.NewDescription("T", "E", "S", "T")
+	testCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
@@ -200,10 +218,10 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 
 	for i := 0; i < len(addrs); i++ {
 
-		valTokens := sdk.TokensFromTendermintPower(powerAmt[i])
+		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			testDescription, testCommissionMsg, sdk.OneInt(),
+			testDescription, testCommissionRates, sdk.OneInt(),
 		)
 
 		res := stakingHandler(ctx, valCreateMsg)

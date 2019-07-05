@@ -85,7 +85,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 	proposalID2 := proposal2.ProposalID
 
-	_, votingStarted := input.keeper.AddDeposit(ctx, proposalID2, input.addrs[0], input.keeper.GetDepositParams(ctx).MinDeposit)
+	err, votingStarted := input.keeper.AddDeposit(ctx, proposalID2, input.addrs[0], input.keeper.GetDepositParams(ctx).MinDeposit)
+	require.NoError(t, err)
 	require.True(t, votingStarted)
 
 	proposal1, ok := input.keeper.GetProposal(ctx, proposalID1)
@@ -117,7 +118,9 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal1.Status == StatusDepositPeriod)
 	require.True(t, proposal2.Status == StatusVotingPeriod)
 
-	// Run the endblocker.  Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
+	require.Equal(t, input2.keeper.GetDepositParams(ctx2).MinDeposit, input2.keeper.GetGovernanceAccount(ctx2).GetCoins())
+
+	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	EndBlocker(ctx2, input2.keeper)
 
 	proposal1, ok = input2.keeper.GetProposal(ctx2, proposalID1)

@@ -3,14 +3,23 @@ package distribution
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 var (
-	_ sdk.AppModule      = AppModule{}
-	_ sdk.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // app module basics object
@@ -41,17 +50,34 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
+// register rest routes
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterRoutes(ctx, rtr, StoreKey)
+}
+
+// get the root tx command of this module
+func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetTxCmd(StoreKey, cdc)
+}
+
+// get the root query command of this module
+func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
 // app module
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper       Keeper
+	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		supplyKeeper:   supplyKeeper,
 	}
 }
 
@@ -61,7 +87,7 @@ func (AppModule) Name() string {
 }
 
 // register invariants
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRouter) {
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
 }
 
@@ -89,7 +115,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	InitGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -100,12 +126,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 }
 
 // module begin-block
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) sdk.Tags {
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
-	return sdk.EmptyTags()
 }
 
 // module end-block
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) ([]abci.ValidatorUpdate, sdk.Tags) {
-	return []abci.ValidatorUpdate{}, sdk.EmptyTags()
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

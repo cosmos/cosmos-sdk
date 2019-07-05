@@ -64,7 +64,12 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 			return opMsg, nil, nil
 		}
 
-		proposalID := k.GetLastProposalID(ctx)
+		proposalID, err := k.GetProposalID(ctx)
+		if err != nil {
+			return simulation.NoOpMsg(), nil, err
+		}
+
+		proposalID = uint64(math.Max(float64(proposalID)-1, 0))
 
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -158,7 +163,7 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 			acc = simulation.RandomAcc(r, accs)
 		}
 
-		if proposalID < 0 {
+		if proposalID < uint64(0) {
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {
@@ -192,7 +197,9 @@ func randomDeposit(r *rand.Rand) sdk.Coins {
 
 // Pick a random proposal ID
 func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
-	lastProposalID := k.GetLastProposalID(ctx)
+	lastProposalID, _ := k.GetProposalID(ctx)
+	lastProposalID = uint64(math.Max(float64(lastProposalID)-1, 0))
+
 	if lastProposalID < 1 || lastProposalID == (2<<63-1) {
 		return 0, false
 	}

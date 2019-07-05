@@ -9,9 +9,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // nolint
@@ -22,6 +24,9 @@ const (
 	MaxWebsiteLength  = 140
 	MaxDetailsLength  = 280
 )
+
+// Implements Validator interface
+var _ exported.ValidatorI = Validator{}
 
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
@@ -44,6 +49,40 @@ type Validator struct {
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // validator's self declared minimum self delegation
 }
 
+// custom marshal yaml function due to consensus pubkey
+func (v Validator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		OperatorAddress         sdk.ValAddress
+		ConsPubKey              string
+		Jailed                  bool
+		Status                  sdk.BondStatus
+		Tokens                  sdk.Int
+		DelegatorShares         sdk.Dec
+		Description             Description
+		UnbondingHeight         int64
+		UnbondingCompletionTime time.Time
+		Commission              Commission
+		MinSelfDelegation       sdk.Int
+	}{
+		OperatorAddress:         v.OperatorAddress,
+		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		Jailed:                  v.Jailed,
+		Status:                  v.Status,
+		Tokens:                  v.Tokens,
+		DelegatorShares:         v.DelegatorShares,
+		Description:             v.Description,
+		UnbondingHeight:         v.UnbondingHeight,
+		UnbondingCompletionTime: v.UnbondingCompletionTime,
+		Commission:              v.Commission,
+		MinSelfDelegation:       v.MinSelfDelegation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
+}
+
 // Validators is a collection of Validator
 type Validators []Validator
 
@@ -55,7 +94,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []sdk.Validator) {
+func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -201,6 +240,21 @@ func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
+// IsBonded checks if the validator status equals Bonded
+func (v Validator) IsBonded() bool {
+	return v.GetStatus().Equal(sdk.Bonded)
+}
+
+// IsUnbonded checks if the validator status equals Unbonded
+func (v Validator) IsUnbonded() bool {
+	return v.GetStatus().Equal(sdk.Unbonded)
+}
+
+// IsUnbonding checks if the validator status equals Unbonding
+func (v Validator) IsUnbonding() bool {
+	return v.GetStatus().Equal(sdk.Unbonding)
+}
+
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
@@ -269,7 +323,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.TendermintPower(),
+		Power:  v.ConsensusPower(),
 	}
 }
 
@@ -282,57 +336,6 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	}
 }
 
-// UpdateStatus updates the location of the shares within a validator
-// to reflect the new status
-func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
-
-	switch v.Status {
-	case sdk.Unbonded:
-
-		switch NewStatus {
-		case sdk.Unbonded:
-			return v, pool
-		case sdk.Bonded:
-			pool = pool.notBondedTokensToBonded(v.Tokens)
-		}
-	case sdk.Unbonding:
-
-		switch NewStatus {
-		case sdk.Unbonding:
-			return v, pool
-		case sdk.Bonded:
-			pool = pool.notBondedTokensToBonded(v.Tokens)
-		}
-	case sdk.Bonded:
-
-		switch NewStatus {
-		case sdk.Bonded:
-			return v, pool
-		default:
-			pool = pool.bondedTokensToNotBonded(v.Tokens)
-		}
-	}
-
-	v.Status = NewStatus
-	return v, pool
-}
-
-// removes tokens from a validator
-func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
-	if tokens.IsNegative() {
-		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
-	}
-	if v.Tokens.LT(tokens) {
-		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
-	}
-	v.Tokens = v.Tokens.Sub(tokens)
-	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
-	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToNotBonded(tokens)
-	}
-	return v, pool
-}
-
 // SetInitialCommission attempts to set a validator's initial commission. An
 // error is returned if the commission is invalid.
 func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.Error) {
@@ -342,66 +345,6 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 
 	v.Commission = commission
 	return v, nil
-}
-
-// AddTokensFromDel adds tokens to a validator
-// CONTRACT: Tokens are assumed to have come from not-bonded pool.
-func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
-
-	// calculate the shares to issue
-	var issuedShares sdk.Dec
-	if v.DelegatorShares.IsZero() {
-		// the first delegation to a validator sets the exchange rate to one
-		issuedShares = amount.ToDec()
-	} else {
-		shares, err := v.SharesFromTokens(amount)
-		if err != nil {
-			panic(err)
-		}
-
-		issuedShares = shares
-	}
-
-	if v.Status == sdk.Bonded {
-		pool = pool.notBondedTokensToBonded(amount)
-	}
-
-	v.Tokens = v.Tokens.Add(amount)
-	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
-
-	return v, pool, issuedShares
-}
-
-// RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
-//       the exchange rate of future shares of this validator can increase.
-// CONTRACT: Tokens are assumed to move to the not-bonded pool.
-func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
-
-	remainingShares := v.DelegatorShares.Sub(delShares)
-	var issuedTokens sdk.Int
-	if remainingShares.IsZero() {
-
-		// last delegation share gets any trimmings
-		issuedTokens = v.Tokens
-		v.Tokens = sdk.ZeroInt()
-	} else {
-
-		// leave excess tokens in the validator
-		// however fully use all the delegator shares
-		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
-		v.Tokens = v.Tokens.Sub(issuedTokens)
-		if v.Tokens.IsNegative() {
-			panic("attempting to remove more tokens than available in validator")
-		}
-	}
-
-	v.DelegatorShares = remainingShares
-	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToNotBonded(issuedTokens)
-	}
-
-	return v, pool, issuedTokens
 }
 
 // In some situations, the exchange rate becomes invalid, e.g. if
@@ -449,30 +392,96 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
 
 // get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
-	if v.Status == sdk.Bonded {
+	if v.IsBonded() {
 		return v.Tokens
 	}
 	return sdk.ZeroInt()
 }
 
-// get the Tendermint Power
+// get the consensus-engine power
 // a reduction of 10^6 from validator tokens is applied
-func (v Validator) TendermintPower() int64 {
-	if v.Status == sdk.Bonded {
-		return v.PotentialTendermintPower()
+func (v Validator) ConsensusPower() int64 {
+	if v.IsBonded() {
+		return v.PotentialConsensusPower()
 	}
 	return 0
 }
 
-// potential Tendermint power
-func (v Validator) PotentialTendermintPower() int64 {
-	return sdk.TokensToTendermintPower(v.Tokens)
+// potential consensus-engine power
+func (v Validator) PotentialConsensusPower() int64 {
+	return sdk.TokensToConsensusPower(v.Tokens)
 }
 
-// ensure fulfills the sdk validator types
-var _ sdk.Validator = Validator{}
+// UpdateStatus updates the location of the shares within a validator
+// to reflect the new status
+func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
+	v.Status = newStatus
+	return v
+}
 
-// nolint - for sdk.Validator
+// AddTokensFromDel adds tokens to a validator
+func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
+
+	// calculate the shares to issue
+	var issuedShares sdk.Dec
+	if v.DelegatorShares.IsZero() {
+		// the first delegation to a validator sets the exchange rate to one
+		issuedShares = amount.ToDec()
+	} else {
+		shares, err := v.SharesFromTokens(amount)
+		if err != nil {
+			panic(err)
+		}
+
+		issuedShares = shares
+	}
+
+	v.Tokens = v.Tokens.Add(amount)
+	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
+
+	return v, issuedShares
+}
+
+// RemoveTokens removes tokens from a validator
+func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
+	if tokens.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
+	}
+	if v.Tokens.LT(tokens) {
+		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
+	}
+	v.Tokens = v.Tokens.Sub(tokens)
+	return v
+}
+
+// RemoveDelShares removes delegator shares from a validator.
+// NOTE: because token fractions are left in the valiadator,
+//       the exchange rate of future shares of this validator can increase.
+func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
+
+	remainingShares := v.DelegatorShares.Sub(delShares)
+	var issuedTokens sdk.Int
+	if remainingShares.IsZero() {
+
+		// last delegation share gets any trimmings
+		issuedTokens = v.Tokens
+		v.Tokens = sdk.ZeroInt()
+	} else {
+
+		// leave excess tokens in the validator
+		// however fully use all the delegator shares
+		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
+		v.Tokens = v.Tokens.Sub(issuedTokens)
+		if v.Tokens.IsNegative() {
+			panic("attempting to remove more tokens than available in validator")
+		}
+	}
+
+	v.DelegatorShares = remainingShares
+	return v, issuedTokens
+}
+
+// nolint - for ValidatorI
 func (v Validator) IsJailed() bool                { return v.Jailed }
 func (v Validator) GetMoniker() string            { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
@@ -481,7 +490,7 @@ func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
-func (v Validator) GetTendermintPower() int64     { return v.TendermintPower() }
+func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }

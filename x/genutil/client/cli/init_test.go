@@ -20,10 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-var testMbm = sdk.NewModuleBasicManager(genutil.AppModuleBasic{})
+var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
 	defer server.SetupViper(t)()

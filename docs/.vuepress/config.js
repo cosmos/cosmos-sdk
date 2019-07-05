@@ -12,11 +12,11 @@ module.exports = {
     editLinks: true,
     docsDir: "docs",
     docsBranch: "develop",
-    editLinkText: 'Edit this page on Github',
+    editLinkText: "Edit this page on Github",
     lastUpdated: true,
     algolia: {
-      apiKey: 'a6e2f64347bb826b732e118c1366819a',
-      indexName: 'cosmos_network',
+      apiKey: "a6e2f64347bb826b732e118c1366819a",
+      indexName: "cosmos_network",
       debug: false
     },
     nav: [
@@ -42,17 +42,22 @@ module.exports = {
           "/tutorial/",
           "/tutorial/app-design",
           "/tutorial/app-init",
+          "/tutorial/types",
+          "/tutorial/key",
           "/tutorial/keeper",
           "/tutorial/msgs-handlers",
           "/tutorial/set-name",
           "/tutorial/buy-name",
           "/tutorial/queriers",
+          "/tutorial/alias",
           "/tutorial/codec",
           "/tutorial/cli",
           "/tutorial/rest",
+          "/tutorial/module",
+          "/tutorial/genesis",
           "/tutorial/app-complete",
           "/tutorial/entrypoint",
-          "/tutorial/dep",
+          "/tutorial/gomod",
           "/tutorial/build-run",
           "/tutorial/run-rest"
         ]
@@ -61,14 +66,14 @@ module.exports = {
         title: "Clients",
         collapsable: true,
         children: [
-      	  "/clients/",
+          "/clients/",
           "/clients/cli",
           "/clients/service-providers",
-      	  "/clients/lite/", // this renders the readme
-      	  "/clients/lite/getting_started",
-      	  "/clients/lite/specification"
-      	]
+          "/clients/lite/", // this renders the readme
+          "/clients/lite/getting_started",
+          "/clients/lite/specification"
+        ]
       }
     ]
   }
-}
+};

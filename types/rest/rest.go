@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -196,9 +198,41 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	return n, true
 }
 
+// ParseQueryHeightOrReturnBadRequest sets the height to execute a query if set by the http request.
+// It returns false if there was an error parsing the height.
+func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (context.CLIContext, bool) {
+	heightStr := r.FormValue("height")
+	if heightStr != "" {
+		height, err := strconv.ParseInt(heightStr, 10, 64)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return cliCtx, false
+		}
+
+		if height < 0 {
+			WriteErrorResponse(w, http.StatusBadRequest, "height must be equal or greater than zero")
+			return cliCtx, false
+		}
+
+		if height > 0 {
+			cliCtx = cliCtx.WithHeight(height)
+		}
+	}
+
+	return cliCtx, true
+}
+
 // PostProcessResponse performs post processing for a REST response.
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+// If the height is greater than zero it will be injected into the body
+// of the response. An internal server error is written to the response
+// if the height is negative or an encoding/decoding error occurs.
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
 	var output []byte
+
+	if cliCtx.Height < 0 {
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
+		return
+	}
 
 	switch response.(type) {
 	case []byte:
@@ -206,10 +240,36 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 
 	default:
 		var err error
-		if indent {
-			output, err = cdc.MarshalJSONIndent(response, "", "  ")
+		if cliCtx.Indent {
+			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
 		} else {
-			output, err = cdc.MarshalJSON(response)
+			output, err = cliCtx.Codec.MarshalJSON(response)
+		}
+
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	// inject the height into the response by:
+	// - decoding into a map
+	// - adding the height to the map
+	// - encoding using standard JSON library
+	if cliCtx.Height > 0 {
+		m := make(map[string]interface{})
+		err := json.Unmarshal(output, &m)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		m["height"] = cliCtx.Height
+
+		if cliCtx.Indent {
+			output, err = json.MarshalIndent(m, "", "  ")
+		} else {
+			output, err = json.Marshal(m)
 		}
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

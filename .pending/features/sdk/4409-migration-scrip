@@ -1,0 +1,3 @@
+#4409 Implement a command that migrates exported state from one version to the next.
+The `migrate` command currently supports migrating from v0.34 to v0.36 by implementing
+necessary types for both versions.

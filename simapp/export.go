@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -58,12 +59,12 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 	}
 
 	/* Just to be safe, assert the invariants on current state. */
-	app.crisisKeeper.AssertInvariants(ctx, app.Logger())
+	app.crisisKeeper.AssertInvariants(ctx)
 
 	/* Handle fee distribution state. */
 
 	// withdraw all validator commission
-	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val exported.ValidatorI) (stop bool) {
 		_, _ = app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
@@ -85,7 +86,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 	ctx = ctx.WithBlockHeight(0)
 
 	// reinitialize all validators
-	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val exported.ValidatorI) (stop bool) {
 
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
 		scraps := app.distrKeeper.GetValidatorOutstandingRewards(ctx, val.GetOperator())
@@ -132,7 +133,6 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 	iter := sdk.KVStoreReversePrefixIterator(store, staking.ValidatorsKey)
 	counter := int16(0)
 
-	var valConsAddrs []sdk.ConsAddress
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[1:])
 		validator, found := app.stakingKeeper.GetValidator(ctx, addr)
@@ -141,7 +141,6 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 		}
 
 		validator.UnbondingHeight = 0
-		valConsAddrs = append(valConsAddrs, validator.ConsAddress())
 		if applyWhiteList && !whiteListMap[addr.String()] {
 			validator.Jailed = true
 		}

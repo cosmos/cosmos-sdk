@@ -1,0 +1,11 @@
+#4255 Add supply module that passively tracks the supplies of a chain
+- Renamed `x/distribution` `ModuleName`
+  - Genesis JSON and CLI now use `distribution` instead of `distr`
+- Introduce `ModuleAccount` type, which tracks the flow of coins held within a module
+- Replaced `FeeCollectorKeeper` for a `ModuleAccount`
+- Replaced the staking `Pool`, which coins are now held by the `BondedPool` and `NotBonded` module accounts
+  - The `NotBonded` module account now only keeps track of the not bonded tokens within staking, instead of the whole chain 
+- #3628 Replaced governance's burn and deposit accounts for a `ModuleAccount`
+- Added a `ModuleAccount` for the distribution module
+- Added a `ModuleAccount` for the mint module
+#4472 validation for crisis genesis

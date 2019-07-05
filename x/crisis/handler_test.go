@@ -1,4 +1,4 @@
-package crisis
+package crisis_test
 
 import (
 	"errors"
@@ -7,27 +7,29 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 var (
 	testModuleName        = "dummy"
-	dummyRouteWhichPasses = NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) error { return nil })
-	dummyRouteWhichFails  = NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) error { return errors.New("whoops") })
+	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) error { return nil })
+	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) error { return errors.New("whoops") })
 	addrs                 = distr.TestAddrs
 )
 
-func CreateTestInput(t *testing.T) (sdk.Context, Keeper, auth.AccountKeeper, distr.Keeper) {
+func CreateTestInput(t *testing.T) (sdk.Context, crisis.Keeper, auth.AccountKeeper, distr.Keeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
-	ctx, accKeeper, bankKeeper, distrKeeper, _, feeCollectionKeeper, paramsKeeper :=
+	ctx, accKeeper, _, distrKeeper, _, paramsKeeper, supplyKeeper :=
 		distr.CreateTestInputAdvanced(t, false, 10, communityTax)
 
-	paramSpace := paramsKeeper.Subspace(DefaultParamspace)
-	crisisKeeper := NewKeeper(paramSpace, 1, distrKeeper, bankKeeper, feeCollectionKeeper)
+	paramSpace := paramsKeeper.Subspace(crisis.DefaultParamspace)
+	crisisKeeper := crisis.NewKeeper(paramSpace, 1, supplyKeeper, auth.FeeCollectorName)
 	constantFee := sdk.NewInt64Coin("stake", 10000000)
 	crisisKeeper.SetConstantFee(ctx, constantFee)
 
@@ -51,17 +53,18 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	crisisKeeper.SetConstantFee(ctx, excessCoins)
 
-	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
-	require.False(t, res.IsOK())
+	h := crisis.NewHandler(crisisKeeper)
+	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
+	require.False(t, h(ctx, msg).IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist")
-	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+	h := crisis.NewHandler(crisisKeeper)
+	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist")
+	res := h(ctx, msg)
 	require.False(t, res.IsOK())
 }
 
@@ -69,10 +72,11 @@ func TestHandleMsgVerifyInvariantWithInvariantBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
+	h := crisis.NewHandler(crisisKeeper)
+	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+		res = h(ctx, msg)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -85,10 +89,11 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	feePool.CommunityPool = sdk.DecCoins{}
 	distrKeeper.SetFeePool(ctx, feePool)
 
-	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
+	h := crisis.NewHandler(crisisKeeper)
+	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
+		res = h(ctx, msg)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -96,16 +101,16 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 	ctx, crisisKeeper, _, _ := CreateTestInput(t)
 	sender := addrs[0]
 
-	msg := NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	res := handleMsgVerifyInvariant(ctx, msg, crisisKeeper)
-	require.True(t, res.IsOK())
+	h := crisis.NewHandler(crisisKeeper)
+	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
+	require.True(t, h(ctx, msg).IsOK())
 }
 
 func TestInvalidMsg(t *testing.T) {
-	k := Keeper{}
-	h := NewHandler(k)
+	k := crisis.Keeper{}
+	h := crisis.NewHandler(k)
 
-	res := h(sdk.Context{}, sdk.NewTestMsg())
+	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized crisis message type"))
 }

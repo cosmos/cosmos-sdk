@@ -12,7 +12,26 @@ const (
 	DefaultParamspace = types.ModuleName
 )
 
-// keys
+// Keys for distribution store
+// Items are stored with the following key: values
+//
+// - 0x00<proposalID_Bytes>: FeePol
+//
+// - 0x01: sdk.ConsAddress
+//
+// - 0x02<valAddr_Bytes>: ValidatorOutstandingRewards
+//
+// - 0x03<accAddr_Bytes>: sdk.AccAddress
+//
+// - 0x04<valAddr_Bytes><accAddr_Bytes>: DelegatorStartingInfo
+//
+// - 0x05<valAddr_Bytes><period_Bytes>: ValidatorHistoricalRewards
+//
+// - 0x06<valAddr_Bytes>: ValidatorCurrentRewards
+//
+// - 0x07<valAddr_Bytes>: ValidatorCurrentRewards
+//
+// - 0x08<valAddr_Bytes><height>: ValidatorSlashEvent
 var (
 	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
@@ -104,10 +123,8 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 		panic("unexpected key length")
 	}
 	valAddr = sdk.ValAddress(addr)
-	b := key[1+sdk.AddrLen:]
-	if len(b) != 8 {
-		panic("unexpected key length")
-	}
+	startB := 1 + sdk.AddrLen
+	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
 }
@@ -154,9 +171,23 @@ func GetValidatorSlashEventPrefix(v sdk.ValAddress) []byte {
 	return append(ValidatorSlashEventPrefix, v.Bytes()...)
 }
 
+// gets the prefix key for a validator's slash fraction (ValidatorSlashEventPrefix + height)
+func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
+	heightBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(heightBz, height)
+	return append(
+		ValidatorSlashEventPrefix,
+		append(
+			v.Bytes(),
+			heightBz...,
+		)...,
+	)
+}
+
 // gets the key for a validator's slash fraction
-func GetValidatorSlashEventKey(v sdk.ValAddress, height uint64) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, height)
-	return append(append(ValidatorSlashEventPrefix, v.Bytes()...), b...)
+func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
+	periodBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(periodBz, period)
+	prefix := GetValidatorSlashEventKeyPrefix(v, height)
+	return append(prefix, periodBz...)
 }

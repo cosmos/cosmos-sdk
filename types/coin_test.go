@@ -48,6 +48,26 @@ func TestIsEqualCoin(t *testing.T) {
 	}
 }
 
+func TestCoinIsValid(t *testing.T) {
+	cases := []struct {
+		coin       Coin
+		expectPass bool
+	}{
+		{Coin{testDenom1, NewInt(-1)}, false},
+		{Coin{testDenom1, NewInt(0)}, true},
+		{Coin{testDenom1, NewInt(1)}, true},
+		{Coin{"Atom", NewInt(1)}, false},
+		{Coin{"a", NewInt(1)}, false},
+		{Coin{"a very long coin denom", NewInt(1)}, false},
+		{Coin{"atOm", NewInt(1)}, false},
+		{Coin{"     ", NewInt(1)}, false},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+	}
+}
+
 func TestAddCoin(t *testing.T) {
 	cases := []struct {
 		inputOne    Coin
@@ -201,7 +221,7 @@ func TestEqualCoins(t *testing.T) {
 			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+			require.Equal(t, tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 		}
 	}
 }

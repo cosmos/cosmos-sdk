@@ -7,15 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
@@ -34,26 +33,30 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   "dist",
-		Short: "Distribution transactions subcommands",
+		Use:                        types.ModuleName,
+		Short:                      "Distribution transactions subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
+		GetCmdWithdrawAllRewards(cdc, storeKey),
 	)...)
 
 	return distTxCmd
 }
 
-type generateOrBroadcastFunc func(context.CLIContext, authtxb.TxBuilder, []sdk.Msg) error
+type generateOrBroadcastFunc func(context.CLIContext, auth.TxBuilder, []sdk.Msg) error
 
 func splitAndApply(
 	generateOrBroadcast generateOrBroadcastFunc,
 	cliCtx context.CLIContext,
-	txBldr authtxb.TxBuilder,
+	txBldr auth.TxBuilder,
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {
@@ -98,10 +101,8 @@ $ %s tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqh
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -138,13 +139,11 @@ $ %s tx distr withdraw-all-rewards --from mykey
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
-			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, cdc, queryRoute, delAddr)
+			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
 			if err != nil {
 				return err
 			}
@@ -174,10 +173,8 @@ $ %s tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from m
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -228,10 +225,8 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, args[0])
 			if err != nil {

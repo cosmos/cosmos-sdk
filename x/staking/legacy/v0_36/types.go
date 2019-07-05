@@ -25,13 +25,16 @@ type (
 	}
 )
 
-func NewGenesisState(params v034staking.Params, lastTotalPower sdk.Int, lasValPowers []v034staking.LastValidatorPower,
-	validators v034staking.Validators, delegations v034staking.Delegations, ubds []v034staking.UnbondingDelegation,
-	reds []v034staking.Redelegation, exported bool) GenesisState {
+func NewGenesisState(
+	params v034staking.Params, lastTotalPower sdk.Int, lastValPowers []v034staking.LastValidatorPower,
+	validators v034staking.Validators, delegations v034staking.Delegations,
+	ubds []v034staking.UnbondingDelegation, reds []v034staking.Redelegation, exported bool,
+) GenesisState {
+
 	return GenesisState{
 		Params:               params,
 		LastTotalPower:       lastTotalPower,
-		LastValidatorPowers:  lasValPowers,
+		LastValidatorPowers:  lastValPowers,
 		Validators:           validators,
 		Delegations:          delegations,
 		UnbondingDelegations: ubds,

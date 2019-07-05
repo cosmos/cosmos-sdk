@@ -38,14 +38,13 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)
 
 		delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed
-		appState[v036genAccounts.ModuleName] =
-			v036Codec.MustMarshalJSON(
-				v036genAccounts.Migrate(
-					genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool,
-					stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
-					stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
-				),
-			)
+		appState[v036genAccounts.ModuleName] = v036Codec.MustMarshalJSON(
+			v036genAccounts.Migrate(
+				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool,
+				stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
+				stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
+			),
+		)
 	}
 
 	// migrate auth state

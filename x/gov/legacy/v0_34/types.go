@@ -109,8 +109,7 @@ type (
 	}
 
 	SoftwareUpgradeProposal struct {
-		Title       string `json:"title"`
-		Description string `json:"description"`
+		TextProposal
 	}
 
 	ProposalContent interface {
@@ -141,13 +140,58 @@ type (
 var _ ProposalContent = TextProposal{}
 var _ ProposalContent = SoftwareUpgradeProposal{}
 
-func (tp SoftwareUpgradeProposal) GetTitle() string       { return tp.Title }
-func (tp SoftwareUpgradeProposal) GetDescription() string { return tp.Description }
-func (tp TextProposal) ProposalType() ProposalKind        { return ProposalTypeSoftwareUpgrade }
+func (tp TextProposal) GetTitle() string       { return tp.Title }
+func (tp TextProposal) GetDescription() string { return tp.Description }
+func (tp TextProposal) ProposalType() ProposalKind        { return ProposalTypeText }
 
-func (tp TextProposal) GetTitle() string                      { return tp.Title }
-func (tp TextProposal) GetDescription() string                { return tp.Description }
-func (tp SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeText }
+func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return  ProposalTypeSoftwareUpgrade }
+
+
+func (pt ProposalKind) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pt.String())
+}
+
+// Unmarshals from JSON assuming Bech32 encoding
+func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	bz2, err := ProposalTypeFromString(s)
+	if err != nil {
+		return err
+	}
+	*pt = bz2
+	return nil
+}
+
+func ProposalTypeFromString(str string) (ProposalKind, error) {
+	switch str {
+	case "Text":
+		return ProposalTypeText, nil
+	case "ParameterChange":
+		return ProposalTypeParameterChange, nil
+	case "SoftwareUpgrade":
+		return ProposalTypeSoftwareUpgrade, nil
+	default:
+		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
+	}
+}
+
+func (pt ProposalKind) String() string {
+	switch pt {
+	case ProposalTypeText:
+		return "Text"
+	case ProposalTypeParameterChange:
+		return "ParameterChange"
+	case ProposalTypeSoftwareUpgrade:
+		return "SoftwareUpgrade"
+	default:
+		return ""
+	}
+}
 
 func (status *ProposalStatus) UnmarshalJSON(data []byte) error {
 	var s string
@@ -228,5 +272,4 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

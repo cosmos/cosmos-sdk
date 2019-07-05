@@ -6,6 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -216,4 +217,33 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryLengthPrefixed(tx)
 	}
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	var (
+		bz     []byte
+		pubkey string
+		err    error
+	)
+
+	if ss.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(ss.PubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bz, err = yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		PubKey:    pubkey,
+		Signature: fmt.Sprintf("%s", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
 }

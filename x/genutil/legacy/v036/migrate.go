@@ -23,7 +23,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v036Codec := codec.New()
 	codec.RegisterCrypto(v036Codec)
 
-	// migrate genaccounts state
+	// migrate genesis accounts state
 	if appState[v034genAccounts.ModuleName] != nil {
 		var genAccs v034genAccounts.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034genAccounts.ModuleName], &genAccs)
@@ -43,7 +43,9 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 				v036genAccounts.Migrate(
 					genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool,
 					stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
-					stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName))
+					stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
+				),
+			)
 	}
 
 	// migrate auth state

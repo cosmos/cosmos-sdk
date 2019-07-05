@@ -27,8 +27,6 @@ const (
 //nolint
 var (
 	// Keys for store prefixes
-	PoolKey = []byte{0x00} // key for the staking pools
-
 	// Last* values are constant during a block.
 	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = []byte{0x12} // prefix for the total power

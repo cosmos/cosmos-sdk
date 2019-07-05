@@ -15,8 +15,9 @@ type GenesisState struct {
 }
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params, signingInfos map[string]ValidatorSigningInfo,
-	missedBlocks map[string][]MissedBlock) GenesisState {
+func NewGenesisState(
+	params Params, signingInfos map[string]ValidatorSigningInfo, missedBlocks map[string][]MissedBlock,
+) GenesisState {
 
 	return GenesisState{
 		Params:       params,

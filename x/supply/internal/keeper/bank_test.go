@@ -85,7 +85,9 @@ func TestMintCoins(t *testing.T) {
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) })
+	require.Error(t, keeper.MintCoins(ctx, "", initCoins), "no module account")
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission")
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{"denom", sdk.NewInt(-10)}}) }, "insufficient coins") //nolint
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) })
 
@@ -109,22 +111,19 @@ func TestBurnCoins(t *testing.T) {
 	nAccs := int64(4)
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	err := burnerAcc.SetCoins(initCoins)
-	require.NoError(t, err)
+	require.NoError(t, burnerAcc.SetCoins(initCoins))
 	keeper.SetModuleAccount(ctx, burnerAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) })
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
+	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Minter, initCoins) }, "invalid permission")
+	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.Total) }, "random permission")
+	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Burner, initialSupply.Total) }, "insufficient coins")
 
-	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.Total) })
-
-	err = keeper.BurnCoins(ctx, types.Burner, initialSupply.Total)
-	require.Error(t, err)
-
-	err = keeper.BurnCoins(ctx, types.Burner, initCoins)
+	err := keeper.BurnCoins(ctx, types.Burner, initCoins)
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, types.Burner))
 	require.Equal(t, initialSupply.Total.Sub(initCoins), keeper.GetSupply(ctx).Total)
@@ -134,8 +133,7 @@ func TestBurnCoins(t *testing.T) {
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	err = multiPermAcc.SetCoins(initCoins)
-	require.NoError(t, err)
+	require.NoError(t, multiPermAcc.SetCoins(initCoins))
 	keeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)

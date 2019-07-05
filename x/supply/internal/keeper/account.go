@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
-// GetModuleAddress returns a an address based on the name
+// GetModuleAddress returns an address based on the module name
 func (k Keeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	permAddr, ok := k.permAddrs[moduleName]
 	if !ok {
@@ -15,7 +15,7 @@ func (k Keeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return permAddr.GetAddress()
 }
 
-// GetModuleAddressAndPermissions returns an address and permissions based on the name
+// GetModuleAddressAndPermissions returns an address and permissions based on the module name
 func (k Keeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
 	permAddr, ok := k.permAddrs[moduleName]
 	if !ok {
@@ -24,7 +24,8 @@ func (k Keeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccA
 	return permAddr.GetAddress(), permAddr.GetPermissions()
 }
 
-// GetModuleAccountAndPermissions gets the module account to the auth account store
+// GetModuleAccountAndPermissions gets the module account from the auth account store and its
+// registered permissions
 func (k Keeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string) {
 	addr, perms := k.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {
@@ -48,7 +49,7 @@ func (k Keeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName strin
 	return maccI, perms
 }
 
-// GetModuleAccount gets the module account to the auth account store
+// GetModuleAccount gets the module account from the auth account store
 func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
 	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc

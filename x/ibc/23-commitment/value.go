@@ -58,12 +58,6 @@ func (m Mapping) Value(key []byte) Value {
 	}
 }
 
-func (m Mapping) Prefix(prefix []byte) Mapping {
-	return Mapping{
-		base: m.base.Prefix(prefix),
-	}
-}
-
 type Indexer struct {
 	Mapping
 	enc state.IntEncoding

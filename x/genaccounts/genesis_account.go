@@ -14,21 +14,21 @@ import (
 
 // GenesisAccount is a struct for account initialization used exclusively during genesis
 type GenesisAccount struct {
-	Address       sdk.AccAddress `json:"address"`
-	Coins         sdk.Coins      `json:"coins"`
-	Sequence      uint64         `json:"sequence_number"`
-	AccountNumber uint64         `json:"account_number"`
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+	Sequence      uint64         `json:"sequence_number" yaml:"sequence_number"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 
 	// vesting account fields
-	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
-	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
-	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
-	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
-	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
+	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // total vesting coins upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // delegated vested coins at time of delegation
+	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // delegated vesting coins at time of delegation
+	StartTime        int64     `json:"start_time" yaml:"start_time"`               // vesting start time (UNIX Epoch time)
+	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // vesting end time (UNIX Epoch time)
 
 	// module account fields
-	ModuleName       string `json:"module_name"`       // name of the module account
-	ModulePermission string `json:"module_permission"` // permission of module account
+	ModuleName       string `json:"module_name" yaml:"module_name"`             // name of the module account
+	ModulePermission string `json:"module_permission" yaml:"module_permission"` // permission of module account
 }
 
 // Validate checks for errors on the vesting and module account parameters

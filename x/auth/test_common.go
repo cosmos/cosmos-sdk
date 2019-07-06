@@ -25,10 +25,9 @@ type testInput struct {
 // moduleAccount defines an account for modules that holds coins on a pool
 type moduleAccount struct {
 	*types.BaseAccount
-	Name       string `json:"name"`       // name of the module
-	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
+	Name       string `json:"name" yaml:"name"`            // name of the module
+	Permission string `json:"permission" yaml"permission"` // permission of module account (minter/burner/holder)
 }
-
 
 // GetName returns the the name of the holder's module
 func (ma moduleAccount) GetName() string {
@@ -39,7 +38,6 @@ func (ma moduleAccount) GetName() string {
 func (ma moduleAccount) GetPermission() string {
 	return ma.Permission
 }
-
 
 func setupTestInput() testInput {
 	db := dbm.NewMemDB()

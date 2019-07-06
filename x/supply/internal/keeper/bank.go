@@ -61,7 +61,7 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 	}
 
 	if !recipientAcc.HasPermission(types.Staking) {
-		panic(fmt.Sprintf("module account %s does not have permissions to delegate coins", recipientModule))
+		panic(fmt.Sprintf("module account %s does not have permissions to receive delegated coins", recipientModule))
 	}
 
 	return k.bk.DelegateCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)

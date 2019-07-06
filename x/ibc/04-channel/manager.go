@@ -115,34 +115,34 @@ func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, er
 	return
 }
 
-func (man Manager) Module(module string, chanid func(string) bool) ModuleManager {
-	return ModuleManager{
+func (man Manager) Port(port string, chanid func(string) bool) PortManager {
+	return PortManager{
 		man:    man,
-		module: module,
+		port:   module,
 		chanid: chanid,
 	}
 }
 
-// ModuleManage is module specific
-type ModuleManager struct {
+// PortManage is port specific
+type PortManager struct {
 	man    Manager
-	module string
+	port   string
 	chanid func(string) bool
 }
 
-func (man ModuleManager) Create(ctx sdk.Context, connid, chanid string, channel Channel) (Object, error) {
+func (man PortManager) Create(ctx sdk.Context, connid, chanid string, channel Channel) (Object, error) {
 	if !man.chanid(chanid) {
 		return Object{}, errors.New("invalid channel id")
 	}
 
-	if channel.Module != man.module {
-		return Object{}, errors.New("invalid module")
+	if channel.Port != man.port {
+		return Object{}, errors.New("invalid port")
 	}
 
 	return man.man.Create(ctx, connid, chanid, channel)
 }
 
-func (man ModuleManager) Query(ctx sdk.Context, connid, chanid string) (Object, error) {
+func (man PortManager) Query(ctx sdk.Context, connid, chanid string) (Object, error) {
 	if !man.chanid(chanid) {
 		return Object{}, errors.New("invalid channel id")
 	}
@@ -152,8 +152,8 @@ func (man ModuleManager) Query(ctx sdk.Context, connid, chanid string) (Object, 
 		return Object{}, err
 	}
 
-	if obj.Value(ctx).Module != man.module {
-		return Object{}, errors.New("invalid module")
+	if obj.Value(ctx).Port != man.port {
+		return Object{}, errors.New("invalid port")
 	}
 
 	return obj, nil
@@ -207,7 +207,7 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 	return nil
 }
 
-// TODO: ocapify callingModule
+// TODO: ocapify callingPort
 func (obj Object) OpenInit(ctx sdk.Context) error {
 	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
 	// which will ensure
@@ -215,7 +215,7 @@ func (obj Object) OpenInit(ctx sdk.Context) error {
 	// set() and
 	// connection.state == open
 
-	// getCallingModule() === channel.moduleIdentifier is ensured by ModuleManager
+	// getCallingPort() === channel.portIdentifier is ensured by PortManager
 
 	if !obj.state.Transit(ctx, Idle, Init) {
 		return errors.New("init on non-idle channel")

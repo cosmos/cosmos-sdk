@@ -31,7 +31,7 @@ type Packet interface {
 }
 
 type Channel struct {
-	Module             string
-	Counterparty       string
-	CounterpartyModule string
+	Port             string
+	Counterparty     string
+	CounterpartyPort string
 }

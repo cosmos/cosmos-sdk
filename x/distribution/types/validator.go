@@ -19,8 +19,8 @@ import (
 //  + number of slashes which ended the associated period (and might need to read that record)
 //  + one per validator for the zeroeth period, set on initialization
 type ValidatorHistoricalRewards struct {
-	CumulativeRewardRatio sdk.DecCoins `json:"cumulative_reward_ratio"`
-	ReferenceCount        uint16       `json:"reference_count"`
+	CumulativeRewardRatio sdk.DecCoins `json:"cumulative_reward_ratio" yaml:"cumulative_reward_ratio"`
+	ReferenceCount        uint16       `json:"reference_count" yaml:"reference_count"`
 }
 
 // create a new ValidatorHistoricalRewards
@@ -35,8 +35,8 @@ func NewValidatorHistoricalRewards(cumulativeRewardRatio sdk.DecCoins, reference
 // kept as a running counter and incremented each block
 // as long as the validator's tokens remain constant
 type ValidatorCurrentRewards struct {
-	Rewards sdk.DecCoins `json:"rewards"` // current rewards
-	Period  uint64       `json:"period"`  // current period
+	Rewards sdk.DecCoins `json:"rewards" yaml:"rewards"` // current rewards
+	Period  uint64       `json:"period" yaml:"period"`   // current period
 }
 
 // create a new ValidatorCurrentRewards
@@ -61,8 +61,8 @@ func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 // needed to calculate appropriate amounts of staking token
 // for delegations which withdraw after a slash has occurred
 type ValidatorSlashEvent struct {
-	ValidatorPeriod uint64  `json:"validator_period"` // period when the slash occurred
-	Fraction        sdk.Dec `json:"fraction"`         // slash fraction
+	ValidatorPeriod uint64  `json:"validator_period" yaml:"validator_period"` // period when the slash occurred
+	Fraction        sdk.Dec `json:"fraction" yaml:"fraction"`                 // slash fraction
 }
 
 // create a new ValidatorSlashEvent

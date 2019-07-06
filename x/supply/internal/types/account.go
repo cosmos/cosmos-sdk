@@ -17,8 +17,8 @@ var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount
-	Name        string   `json:"name"`        // name of the module
-	Permissions []string `json:"permissions"` // permissions of module account
+	Name        string   `json:"name" yaml:"name"`               // name of the module
+	Permissions []string `json:"permissions" yaml:"permissions"` // permissions of module account
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name

@@ -25,8 +25,8 @@ type testInput struct {
 // moduleAccount defines an account for modules that holds coins on a pool
 type moduleAccount struct {
 	*types.BaseAccount
-	name        string   `json:"name"`        // name of the module
-	permissions []string `json:"permissions"` // permissions of module account (minter/burner/holder)
+	name        string   `json:"name" yaml:"name"`              // name of the module
+	permissions []string `json:"permissions" yaml"permissions"` // permissions of module account
 }
 
 // HasPermission returns whether or not the module account has permission.

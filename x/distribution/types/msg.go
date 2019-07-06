@@ -10,8 +10,8 @@ var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 type MsgSetWithdrawAddress struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	WithdrawAddress  sdk.AccAddress `json:"withdraw_address"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	WithdrawAddress  sdk.AccAddress `json:"withdraw_address" yaml:"withdraw_address"`
 }
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {
@@ -48,8 +48,8 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
 
 // msg struct for delegation withdraw from a single validator
 type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
 }
 
 func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
@@ -86,7 +86,7 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
 
 // msg struct for validator withdraw
 type MsgWithdrawValidatorCommission struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
 }
 
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValidatorCommission {

@@ -60,6 +60,10 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 		panic(fmt.Sprintf("module account %s isn't able to be created", recipientModule))
 	}
 
+	if !recipientAcc.HasPermission(types.Staking) {
+		panic(fmt.Sprintf("module account %s does not have permissions to receive delegated coins", recipientModule))
+	}
+
 	return k.bk.DelegateCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
@@ -68,9 +72,14 @@ func (k Keeper) DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk
 func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string,
 	recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
-	senderAddr := k.GetModuleAddress(senderModule)
+	acc := k.GetModuleAccount(ctx, senderModule)
+	senderAddr := acc.GetAddress()
 	if senderAddr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
+	}
+
+	if !acc.HasPermission(types.Staking) {
+		panic(fmt.Sprintf("module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
 	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
@@ -81,14 +90,14 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 
 	// create the account if it doesn't yet exist
-	acc, perm := k.GetModuleAccountAndPermission(ctx, moduleName)
+	acc := k.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
 	addr := acc.GetAddress()
 
-	if perm != types.Minter {
+	if !acc.HasPermission(types.Minter) {
 		panic(fmt.Sprintf("module account %s does not have permissions to mint tokens", moduleName))
 	}
 
@@ -112,12 +121,13 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 // Panics if the name maps to a non-burner module account or if the amount is invalid.
 func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 
-	addr, perm := k.GetModuleAddressAndPermission(moduleName)
+	acc := k.GetModuleAccount(ctx, moduleName)
+	addr := acc.GetAddress()
 	if addr == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
-	if perm != types.Burner {
+	if !acc.HasPermission(types.Burner) {
 		panic(fmt.Sprintf("module account %s does not have permissions to burn tokens", moduleName))
 	}
 

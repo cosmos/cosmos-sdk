@@ -7,7 +7,7 @@ import (
 )
 
 func TestHasPermission(t *testing.T) {
-	emptyPermAddr := NewPermAddr("empty", []string{})
+	emptyPermAddr := NewPermissionsForAddress("empty", []string{})
 	has := emptyPermAddr.HasPermission(Basic)
 	require.False(t, has)
 
@@ -22,7 +22,7 @@ func TestHasPermission(t *testing.T) {
 		{"random", false},
 		{"", false},
 	}
-	permAddr := NewPermAddr("test", []string{Basic, Minter, Burner, Staking})
+	permAddr := NewPermissionsForAddress("test", []string{Basic, Minter, Burner, Staking})
 	for i, tc := range cases {
 		has = permAddr.HasPermission(tc.permission)
 		require.Equal(t, tc.expectHas, has, "test case #%d", i)

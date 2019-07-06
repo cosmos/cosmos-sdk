@@ -17,7 +17,7 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	ak        types.AccountKeeper
 	bk        types.BankKeeper
-	permAddrs map[string]types.PermAddr
+	permAddrs map[string]types.PermissionsForAddress
 }
 
 // NewKeeper creates a new Keeper instance
@@ -25,9 +25,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk ty
 	codespace sdk.CodespaceType, maccPerms map[string][]string) Keeper {
 
 	// set the addresses
-	permAddrs := make(map[string]types.PermAddr)
+	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermAddr(name, perms)
+		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
 	return Keeper{

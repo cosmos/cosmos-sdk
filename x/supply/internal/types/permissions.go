@@ -15,22 +15,22 @@ const (
 	Staking = "staking"
 )
 
-// PermAddr defines the permissions for an address
-type PermAddr struct {
+// PermissionsForAddress defines all the registered permissions for an address
+type PermissionsForAddress struct {
 	permissions []string
 	address     sdk.AccAddress
 }
 
-// NewPermAddr creates a new PermAddr object
-func NewPermAddr(name string, permissions []string) PermAddr {
-	return PermAddr{
+// NewPermissionsForAddress creates a new PermissionsForAddresess object
+func NewPermissionsForAddress(name string, permissions []string) PermissionsForAddress {
+	return PermissionsForAddress{
 		permissions: permissions,
 		address:     NewModuleAddress(name),
 	}
 }
 
-// HasPermission returns whether the PermAddr contains permission.
-func (pa PermAddr) HasPermission(permission string) bool {
+// HasPermission returns whether the PermissionsForAddress contains permission.
+func (pa PermissionsForAddress) HasPermission(permission string) bool {
 	for _, perm := range pa.permissions {
 		if perm == permission {
 			return true
@@ -39,13 +39,13 @@ func (pa PermAddr) HasPermission(permission string) bool {
 	return false
 }
 
-// GetAddress returns the address of the PermAddr object
-func (pa PermAddr) GetAddress() sdk.AccAddress {
+// GetAddress returns the address of the PermissionsForAddress object
+func (pa PermissionsForAddress) GetAddress() sdk.AccAddress {
 	return pa.address
 }
 
 // GetPermissions returns the permissions granted to the address
-func (pa PermAddr) GetPermissions() []string {
+func (pa PermissionsForAddress) GetPermissions() []string {
 	return pa.permissions
 }
 

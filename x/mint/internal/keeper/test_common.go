@@ -60,8 +60,8 @@ func newTestInput(t *testing.T) testInput {
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     []string{supply.Basic},
 		types.ModuleName:          []string{supply.Minter},
-		staking.NotBondedPoolName: []string{supply.Burner},
-		staking.BondedPoolName:    []string{supply.Burner},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(types.ModuleCdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))

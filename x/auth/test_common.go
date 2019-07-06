@@ -44,7 +44,7 @@ func (ma moduleAccount) GetName() string {
 	return ma.name
 }
 
-// GetPermissions returns permissions granted to the module account (holder/minter/burner)
+// GetPermissions returns permissions granted to the module account
 func (ma moduleAccount) GetPermissions() []string {
 	return ma.permissions
 }

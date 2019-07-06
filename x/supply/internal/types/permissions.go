@@ -21,7 +21,7 @@ type PermissionsForAddress struct {
 	address     sdk.AccAddress
 }
 
-// NewPermissionsForAddress creates a new PermissionsForAddresess object
+// NewPermissionsForAddress creates a new PermissionsForAddress object
 func NewPermissionsForAddress(name string, permissions []string) PermissionsForAddress {
 	return PermissionsForAddress{
 		permissions: permissions,

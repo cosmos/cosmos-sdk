@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v034accounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
+	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -29,7 +30,7 @@ const (
 // The remaining accounts are updated to the new GenesisAccount type from 0.36
 func Migrate(
 	oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPool sdk.DecCoins,
-	vals v034staking.Validators, ubds []v034staking.UnbondingDelegation,
+	deposits []v034gov.DepositWithMetadata, vals v034staking.Validators, ubds []v034staking.UnbondingDelegation,
 	valOutRewards []v034distr.ValidatorOutstandingRewardsRecord, bondDenom, distrModuleName, govModuleName string,
 ) GenesisState {
 
@@ -65,6 +66,20 @@ func Migrate(
 				),
 			)
 		}
+	}
+
+	var expDeposits sdk.Coins
+	for _, deposit := range deposits {
+		expDeposits = expDeposits.Add(deposit.Deposit.Amount)
+	}
+
+	if !expDeposits.IsEqual(govCoins) {
+		panic(
+			fmt.Sprintf(
+				"pre migration deposit base account coins ≠ stored deposits coins (%s ≠ %s)",
+				expDeposits.String(), govCoins.String(),
+			),
+		)
 	}
 
 	// get staking module accounts coins

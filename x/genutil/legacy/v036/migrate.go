@@ -23,6 +23,8 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 	v036Codec := codec.New()
 	codec.RegisterCrypto(v036Codec)
+	v034gov.RegisterCodec(v034Codec)
+	v036gov.RegisterCodec(v036Codec)
 
 	// migrate genesis accounts state
 	if appState[v034genAccounts.ModuleName] != nil {
@@ -31,6 +33,9 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 		var authGenState v034auth.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)
+
+		var govGenState v034gov.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govGenState)
 
 		var distrGenState v034distr.GenesisState
 		v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &distrGenState)
@@ -41,7 +46,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed
 		appState[v036genAccounts.ModuleName] = v036Codec.MustMarshalJSON(
 			v036genAccounts.Migrate(
-				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool,
+				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool, govGenState.Deposits,
 				stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
 				stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
 			),
@@ -59,14 +64,11 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 	// migrate gov state
 	if appState[v034gov.ModuleName] != nil {
-		v034gov.RegisterCodec(v034Codec)
-		v036gov.RegisterCodec(v036Codec)
-
-		var govState v034gov.GenesisState
-		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govState)
+		var govGenState v034gov.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govGenState)
 
 		delete(appState, v034gov.ModuleName) // delete old key in case the name changed
-		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.Migrate(govState))
+		appState[v036gov.ModuleName] = v036Codec.MustMarshalJSON(v036gov.Migrate(govGenState))
 	}
 
 	// migrate distribution state

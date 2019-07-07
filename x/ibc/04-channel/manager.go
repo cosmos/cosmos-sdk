@@ -173,8 +173,7 @@ type Object struct {
 	chanid string
 	connid string
 
-	protocol state.Mapping
-	channel  state.Value
+	channel state.Value
 
 	seqsend state.Integer
 	seqrecv state.Integer
@@ -249,7 +248,7 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("cannot send packets on this channel")
 	}
 
-	if uint64(obj.connection.Client().ConsensusState(ctx).GetHeight()) >= packet.Timeout() {
+	if obj.connection.Client().ConsensusState(ctx).GetHeight() >= packet.Timeout() {
 		return errors.New("timeout height higher than the latest known")
 	}
 

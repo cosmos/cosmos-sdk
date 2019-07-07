@@ -110,6 +110,14 @@ func (obj Object) Client() client.Object {
 	return obj.client
 }
 
+func (obj Object) Sendable(ctx sdk.Context) bool {
+	return kinds[obj.kind.Get(ctx)].Sendable
+}
+
+func (obj Object) Receivble(ctx sdk.Context) bool {
+	return kinds[obj.kind.Get(ctx)].Receivable
+}
+
 func (obj Object) remove(ctx sdk.Context) {
 	obj.connection.Delete(ctx)
 	obj.available.Delete(ctx)

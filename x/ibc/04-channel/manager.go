@@ -77,7 +77,7 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 	}
 }
 
-func (man Manager) Create(ctx sdk.Context, connid, chanid string, channel Channel) (obj Object, err error) {
+func (man Manager) create(ctx sdk.Context, connid, chanid string, channel Channel) (obj Object, err error) {
 	obj = man.object(connid, chanid)
 	if obj.exists(ctx) {
 		err = errors.New("channel already exists for the provided id")
@@ -104,10 +104,6 @@ func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, er
 	}
 	obj.connection, err = man.connection.Query(ctx, connid)
 	if err != nil {
-		return
-	}
-	if obj.connection.State(ctx) != connection.Open {
-		err = errors.New("connection exists but not opened")
 		return
 	}
 
@@ -200,6 +196,11 @@ func (obj Object) ChanID() string {
 	return obj.chanid
 }
 
+func (obj Object) Channel(ctx sdk.Context) (res Channel) {
+	obj.channel.Get(ctx, &res)
+	return
+}
+
 func (obj Object) Value(ctx sdk.Context) (res Channel) {
 	obj.channel.Get(ctx, &res)
 	return
@@ -207,13 +208,6 @@ func (obj Object) Value(ctx sdk.Context) (res Channel) {
 
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.channel.Exists(ctx)
-}
-
-func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
-	if uint64(ctx.BlockHeight()) > timeoutHeight {
-		return errors.New("timeout")
-	}
-	return nil
 }
 
 // TODO: ocapify callingPort

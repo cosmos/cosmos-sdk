@@ -1,16 +1,5 @@
 package channel
 
-type State = byte
-
-const (
-	Idle State = iota
-	Init
-	OpenTry
-	Open
-	CloseTry
-	Closed
-)
-
 /*
 type Packet struct {
 	Sequence      uint64

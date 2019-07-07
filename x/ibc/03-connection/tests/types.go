@@ -112,8 +112,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	require.Equal(t, connection.Init, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
 	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient(ctx))
-	require.False(t, obj.Sendable(ctx))
-	require.False(t, obj.Receivable(ctx))
+	require.False(t, obj.Available(ctx))
 	node.SetState(connection.Init)
 }
 
@@ -124,8 +123,7 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	require.Equal(t, connection.OpenTry, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
 	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient(ctx))
-	require.False(t, obj.Sendable(ctx))
-	require.False(t, obj.Receivable(ctx))
+	require.False(t, obj.Available(ctx))
 	node.SetState(connection.OpenTry)
 }
 
@@ -135,8 +133,7 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
-	require.True(t, obj.Sendable(ctx))
-	require.True(t, obj.Receivable(ctx))
+	require.True(t, obj.Available(ctx))
 	node.SetState(connection.Open)
 }
 
@@ -146,7 +143,6 @@ func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
-	require.True(t, obj.Sendable(ctx))
-	require.True(t, obj.Receivable(ctx))
+	require.True(t, obj.Available(ctx))
 	node.SetState(connection.CloseTry)
 }

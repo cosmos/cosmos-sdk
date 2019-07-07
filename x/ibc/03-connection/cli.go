@@ -12,8 +12,7 @@ import (
 type CLIObject struct {
 	ID            string
 	ConnectionKey []byte
-	SendableKey   []byte
-	ReceivableKey []byte
+	AvailableKey  []byte
 	KindKey       []byte
 
 	Client client.CLIObject
@@ -27,8 +26,7 @@ func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 	return CLIObject{
 		ID:            obj.id,
 		ConnectionKey: obj.connection.Key(),
-		SendableKey:   obj.sendable.Key(),
-		ReceivableKey: obj.receivable.Key(),
+		AvailableKey:  obj.available.Key(),
 		KindKey:       obj.kind.Key(),
 
 		// TODO: unify man.CLIObject() <=> obj.CLI()
@@ -58,13 +56,8 @@ func (obj CLIObject) Connection(ctx context.CLIContext) (res Connection, proof m
 	return
 }
 
-func (obj CLIObject) Sendable(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.SendableKey, &res)
-	return
-}
-
-func (obj CLIObject) Receivable(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.ReceivableKey, &res)
+func (obj CLIObject) Available(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.AvailableKey, &res)
 	return
 }
 

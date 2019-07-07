@@ -20,14 +20,12 @@ const (
 	Closed
 )
 
+const HandshakeKind = "handshake"
+
 type Handshaker struct {
 	man Manager
 
 	counterparty CounterpartyHandshaker
-}
-
-func (man Handshaker) Kind() string {
-	return "handshake"
 }
 
 // TODO: ocapify Manager; an actor who holds Manager
@@ -87,7 +85,7 @@ func (man CounterpartyHandshaker) object(id string) CounterHandshakeObject {
 }
 
 func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, counterpartyClient string) (obj HandshakeObject, err error) {
-	cobj, err := man.man.create(ctx, id, connection, man.Kind())
+	cobj, err := man.man.create(ctx, id, connection, HandshakeKind)
 	if err != nil {
 		return
 	}
@@ -98,7 +96,7 @@ func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, 
 }
 
 func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, err error) {
-	cobj, err := man.man.query(ctx, id, man.Kind())
+	cobj, err := man.man.query(ctx, id, HandshakeKind)
 	if err != nil {
 		return
 	}
@@ -266,8 +264,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		}
 	*/
 
-	obj.sendable.Set(ctx, true)
-	obj.receivable.Set(ctx, true)
+	obj.available.Set(ctx, true)
 	obj.nextTimeout.Set(ctx, uint64(nextTimeoutHeight))
 
 	return
@@ -300,8 +297,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context, id string, timeoutHeight uint
 		return
 	}
 
-	obj.sendable.Set(ctx, true)
-	obj.receivable.Set(ctx, true)
+	obj.available.Set(ctx, true)
 	obj.nextTimeout.Set(ctx, 0)
 
 	return

@@ -23,3 +23,12 @@ func (conn *Connection) UnmarshalAmino(text string) (err error) {
 	conn.Counterparty = fields[1]
 	return nil
 }
+
+var kinds = map[string]Kind{
+	"handshake": Kind{true, true},
+}
+
+type Kind struct {
+	Sendable   bool
+	Receivable bool
+}

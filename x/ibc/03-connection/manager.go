@@ -48,8 +48,7 @@ type Object struct {
 
 	protocol   state.Mapping
 	connection state.Value
-	sendable   state.Boolean
-	receivable state.Boolean
+	available  state.Boolean
 
 	kind state.String
 
@@ -62,8 +61,7 @@ func (man Manager) object(id string) Object {
 
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
 		connection: man.protocol.Value([]byte(id)),
-		sendable:   state.NewBoolean(man.protocol.Value([]byte(id + "/sendable"))),
-		receivable: state.NewBoolean(man.protocol.Value([]byte(id + "/receivable"))),
+		available:  state.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
 
 		kind: state.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
@@ -76,8 +74,7 @@ type CounterObject struct {
 
 	protocol   commitment.Mapping
 	connection commitment.Value
-	sendable   commitment.Boolean
-	receivable commitment.Boolean
+	available  commitment.Boolean
 
 	kind commitment.String
 
@@ -89,8 +86,7 @@ func (man CounterpartyManager) object(id string) CounterObject {
 		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
 		connection: man.protocol.Value([]byte(id)),
-		sendable:   commitment.NewBoolean(man.protocol.Value([]byte(id + "/sendable"))),
-		receivable: commitment.NewBoolean(man.protocol.Value([]byte(id + "/receivable"))),
+		available:  commitment.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
 
 		kind: commitment.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
@@ -106,12 +102,8 @@ func (obj Object) Connection(ctx sdk.Context) (res Connection) {
 	return
 }
 
-func (obj Object) Sendable(ctx sdk.Context) bool {
-	return obj.sendable.Get(ctx)
-}
-
-func (obj Object) Receivable(ctx sdk.Context) bool {
-	return obj.receivable.Get(ctx)
+func (obj Object) Available(ctx sdk.Context) bool {
+	return obj.available.Get(ctx)
 }
 
 func (obj Object) Client() client.Object {
@@ -120,8 +112,7 @@ func (obj Object) Client() client.Object {
 
 func (obj Object) remove(ctx sdk.Context) {
 	obj.connection.Delete(ctx)
-	obj.sendable.Delete(ctx)
-	obj.receivable.Delete(ctx)
+	obj.available.Delete(ctx)
 	obj.kind.Delete(ctx)
 }
 

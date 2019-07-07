@@ -133,7 +133,7 @@ func (obj Object) Sendable(ctx sdk.Context) bool {
 	return kinds[obj.Kind.Get(ctx)].Sendable
 }
 
-func (obj Object) Receivble(ctx sdk.Context) bool {
+func (obj Object) Receivable(ctx sdk.Context) bool {
 	return kinds[obj.Kind.Get(ctx)].Receivable
 }
 

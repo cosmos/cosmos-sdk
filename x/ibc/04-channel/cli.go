@@ -12,12 +12,11 @@ import (
 type CLIObject struct {
 	ChanID     string
 	ChannelKey []byte
-	StateKey   []byte
-	TimeoutKey []byte
 
-	SeqSendKey []byte
-	SeqRecvKey []byte
-	PacketKey  func(index uint64) []byte
+	AvailableKey []byte
+	SeqSendKey   []byte
+	SeqRecvKey   []byte
+	PacketKey    func(index uint64) []byte
 
 	Connection connection.CLIObject
 
@@ -30,11 +29,10 @@ func (man Manager) CLIObject(root merkle.Root, connid, chanid string) CLIObject 
 	return CLIObject{
 		ChanID:     chanid,
 		ChannelKey: obj.channel.Key(),
-		StateKey:   obj.state.Key(),
-		TimeoutKey: obj.nexttimeout.Key(),
 
-		SeqSendKey: obj.seqsend.Key(),
-		SeqRecvKey: obj.seqrecv.Key(),
+		AvailableKey: obj.available.Key(),
+		SeqSendKey:   obj.seqsend.Key(),
+		SeqRecvKey:   obj.seqrecv.Key(),
 		PacketKey: func(index uint64) []byte {
 			return obj.packets.Value(index).Key()
 		},
@@ -65,16 +63,6 @@ func (obj CLIObject) Channel(ctx context.CLIContext) (res Channel, proof merkle.
 	return
 }
 
-func (obj CLIObject) State(ctx context.CLIContext) (res State, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.StateKey, &res)
-	return
-}
-
-func (obj CLIObject) Timeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
-	return
-}
-
 func (obj CLIObject) SeqSend(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.SeqSendKey, &res)
 	return
@@ -87,5 +75,32 @@ func (obj CLIObject) SeqRecv(ctx context.CLIContext) (res uint64, proof merkle.P
 
 func (obj CLIObject) Packet(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.PacketKey(index), &res)
+	return
+}
+
+type CLIHandshakeObject struct {
+	CLIObject
+
+	StateKey   []byte
+	TimeoutKey []byte
+}
+
+func (man Handshaker) CLIObject(root merkle.Root, connid, chanid string) CLIHandshakeObject {
+	obj := man.object(man.man.object(connid, chanid))
+	return CLIHandshakeObject{
+		CLIObject: man.man.CLIObject(root, connid, chanid),
+
+		StateKey:   obj.state.Key(),
+		TimeoutKey: obj.nextTimeout.Key(),
+	}
+}
+
+func (obj CLIHandshakeObject) State(ctx context.CLIContext) (res State, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.StateKey, &res)
+	return
+}
+
+func (obj CLIHandshakeObject) Timeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
 	return
 }

@@ -48,13 +48,11 @@ func (man Manager) object(connid, chanid string) Object {
 	key := connid + "/channels/" + chanid
 	return Object{
 		chanid:  chanid,
+		connid:  connid,
 		channel: man.protocol.Value([]byte(key)),
-		/*
-			state:       state.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-			nexttimeout: state.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
-		*/
 
-		// TODO: remove length functionality from state.Indeer(will be handled manually)
+		available: state.NewBoolean(man.protocol.Value([]byte(key + "/available"))),
+
 		seqsend: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
 		seqrecv: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
 		packets: state.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), state.Dec),
@@ -65,11 +63,10 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 	key := connid + "/channels/" + chanid
 	return CounterObject{
 		chanid:  chanid,
+		connid:  connid,
 		channel: man.protocol.Value([]byte(key)),
-		/*
-			state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-			nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
-		*/
+
+		available: commitment.NewBoolean(man.protocol.Value([]byte(key + "/available"))),
 
 		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
 		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
@@ -87,16 +84,17 @@ func (man Manager) create(ctx sdk.Context, connid, chanid string, channel Channe
 	if err != nil {
 		return
 	}
-	counterconnid := obj.connection.Value(ctx).Counterparty
-	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
-	obj.counterparty.connection = man.counterparty.connection.Query(counterconnid)
-
 	obj.channel.Set(ctx, channel)
+
+	counterconnid := obj.connection.Connection(ctx).Counterparty
+	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
+	obj.counterparty.connection = man.counterparty.connection.Object(counterconnid)
 
 	return
 }
 
-func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, err error) {
+// Does not check availability
+func (man Manager) query(ctx sdk.Context, connid, chanid string) (obj Object, err error) {
 	obj = man.object(connid, chanid)
 	if !obj.exists(ctx) {
 		err = errors.New("channel not exists for the provided id")
@@ -107,18 +105,29 @@ func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, er
 		return
 	}
 
-	channel := obj.Value(ctx)
-	counterconnid := obj.connection.Value(ctx).Counterparty
-	obj.counterparty = man.counterparty.object(counterconnid, channel.Counterparty)
-	obj.counterparty.connection = man.counterparty.connection.Query(counterconnid)
+	counterconnid := obj.connection.Connection(ctx).Counterparty
+	obj.counterparty = man.counterparty.object(counterconnid, obj.Channel(ctx).Counterparty)
+	obj.counterparty.connection = man.counterparty.connection.Object(counterconnid)
 
+	return
+
+}
+
+func (man Manager) Query(ctx sdk.Context, connid, chanid string) (obj Object, err error) {
+	obj, err = man.query(ctx, connid, chanid)
+	if !obj.Available(ctx) {
+		err = errors.New("channel not available")
+		return
+	}
 	return
 }
 
+// TODO
+/*
 func (man Manager) Port(port string, chanid func(string) bool) PortManager {
 	return PortManager{
 		man:    man,
-		port:   module,
+		port:   le,
 		chanid: chanid,
 	}
 }
@@ -158,36 +167,36 @@ func (man PortManager) Query(ctx sdk.Context, connid, chanid string) (Object, er
 
 	return obj, nil
 }
+*/
 
 type Object struct {
 	chanid string
+	connid string
 
 	protocol state.Mapping
 	channel  state.Value
-	/*
-		state       state.Enum
-		nexttimeout state.Integer
-	*/
 
 	seqsend state.Integer
 	seqrecv state.Integer
 	packets state.Indexer
 
+	available state.Boolean
+
 	connection connection.Object
+
+	counterparty CounterObject
 }
 
 type CounterObject struct {
 	chanid  string
+	connid  string
 	channel commitment.Value
-
-	/*
-		state       commitment.Enum
-		nexttimeout commitment.Integer
-	*/
 
 	seqsend commitment.Integer
 	seqrecv commitment.Integer
 	packets commitment.Indexer
+
+	available commitment.Boolean
 
 	connection connection.CounterObject
 }
@@ -206,54 +215,42 @@ func (obj Object) Value(ctx sdk.Context) (res Channel) {
 	return
 }
 
+func (obj Object) Available(ctx sdk.Context) bool {
+	return obj.available.Get(ctx)
+}
+
+func (obj Object) Sendable(ctx sdk.Context) bool {
+	// TODO: sendable/receivable should be also defined for channels
+	return obj.connection.Sendable(ctx)
+}
+
+func (obj Object) Receivable(ctx sdk.Context) bool {
+	return obj.connection.Receivable(ctx)
+}
+
+func (obj Object) SeqSend(ctx sdk.Context) uint64 {
+	return obj.seqsend.Get(ctx)
+}
+
+func (obj Object) SeqRecv(ctx sdk.Context) uint64 {
+	return obj.seqrecv.Get(ctx)
+}
+
+func (obj Object) Packet(ctx sdk.Context, index uint64) (res Packet) {
+	obj.packets.Value(index).Get(ctx, &res)
+	return
+}
+
 func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.channel.Exists(ctx)
 }
 
-// TODO: ocapify callingPort
-func (obj Object) OpenInit(ctx sdk.Context) error {
-	// CONTRACT: OpenInit() should be called after man.Create(), not man.Query(),
-	// which will ensure
-	// assert(get() === null) and
-	// set() and
-	// connection.state == open
-
-	// getCallingPort() === channel.portIdentifier is ensured by PortManager
-
-	if !obj.state.Transit(ctx, Idle, Init) {
-		return errors.New("init on non-idle channel")
-	}
-
-	obj.seqsend.Set(ctx, 0)
-	obj.seqrecv.Set(ctx, 0)
-
-	return nil
-}
-
-/*
-func (obj Object) OpenTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, Idle, OpenTry) {
-		return errors.New("opentry on non-idle channel")
-	}
-
-	err := assertTimeout(ctx, timeoutHeight)
-	if err != nil {
-		return err
-	}
-
-	// XXX
-}
-*/
 func (obj Object) Send(ctx sdk.Context, packet Packet) error {
-	if obj.state.Get(ctx) != Open {
-		return errors.New("send on non-open channel")
+	if !obj.Sendable(ctx) {
+		return errors.New("cannot send packets on this channel")
 	}
 
-	if obj.connection.State(ctx) != Open {
-		return errors.New("send on non-open connection")
-	}
-
-	if uint64(obj.connection.Client(ctx).GetHeight()) >= packet.Timeout() {
+	if uint64(obj.connection.Client().ConsensusState(ctx).GetHeight()) >= packet.Timeout() {
 		return errors.New("timeout height higher than the latest known")
 	}
 
@@ -263,12 +260,8 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 }
 
 func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
-	if obj.state.Get(ctx) != Open {
-		return errors.New("send on non-open channel")
-	}
-
-	if obj.connection.State(ctx) != Open {
-		return errors.New("send on non-open connection")
+	if !obj.Receivable(ctx) {
+		return errors.New("cannot receive packets on this channel")
 	}
 
 	err := assertTimeout(ctx, packet.Timeout())

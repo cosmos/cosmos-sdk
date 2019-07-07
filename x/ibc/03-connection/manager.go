@@ -89,7 +89,7 @@ type CounterObject struct {
 	client client.CounterObject // nolint: unused
 }
 
-func (man CounterpartyManager) object(id string) CounterObject {
+func (man CounterpartyManager) Object(id string) CounterObject {
 	return CounterObject{
 		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
@@ -141,7 +141,7 @@ func (obj Object) Sendable(ctx sdk.Context) bool {
 	return kinds[obj.kind.Get(ctx)].Sendable
 }
 
-func (obj Object) Receivble(ctx sdk.Context) bool {
+func (obj Object) Receivable(ctx sdk.Context) bool {
 	return kinds[obj.kind.Get(ctx)].Receivable
 }
 

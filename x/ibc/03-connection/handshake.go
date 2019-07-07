@@ -76,7 +76,7 @@ func (man Handshaker) object(parent Object) HandshakeObject {
 
 func (man CounterpartyHandshaker) object(id string) CounterHandshakeObject {
 	return CounterHandshakeObject{
-		CounterObject: man.man.object(id),
+		CounterObject: man.man.Object(id),
 
 		state:              commitment.NewEnum(man.man.protocol.Value([]byte(id + "/state"))),
 		counterpartyClient: commitment.NewString(man.man.protocol.Value([]byte(id + "/counterpartyClient"))),

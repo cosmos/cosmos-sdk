@@ -13,7 +13,7 @@ func newRoot() merkle.Root {
 }
 
 func testUpdate(t *testing.T, interval int, ok bool) {
-	node := NewNode(NewMockValidators(100, 10))
+	node := NewNode(NewMockValidators(100, 10), newRoot())
 
 	node.Commit()
 

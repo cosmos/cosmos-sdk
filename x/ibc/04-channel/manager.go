@@ -160,25 +160,30 @@ func (man PortManager) Query(ctx sdk.Context, connid, chanid string) (Object, er
 }
 
 type Object struct {
-	chanid      string
-	channel     state.Value
-	state       state.Enum
-	nexttimeout state.Integer
+	chanid string
+
+	protocol state.Mapping
+	channel  state.Value
+	/*
+		state       state.Enum
+		nexttimeout state.Integer
+	*/
 
 	seqsend state.Integer
 	seqrecv state.Integer
 	packets state.Indexer
 
 	connection connection.Object
-
-	counterparty CounterObject
 }
 
 type CounterObject struct {
-	chanid      string
-	channel     commitment.Value
-	state       commitment.Enum
-	nexttimeout commitment.Integer
+	chanid  string
+	channel commitment.Value
+
+	/*
+		state       commitment.Enum
+		nexttimeout commitment.Integer
+	*/
 
 	seqsend commitment.Integer
 	seqrecv commitment.Integer

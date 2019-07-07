@@ -326,7 +326,7 @@ paths:
   /txs/decode:
     post:
       tags:
-        - ICS0
+        - Transactions
       summary: Decode a transaction from the Amino wire format
       description: Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
       consumes:

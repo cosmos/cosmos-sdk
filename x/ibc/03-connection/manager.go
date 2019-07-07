@@ -78,7 +78,8 @@ type CounterObject struct {
 
 	kind commitment.String
 
-	client client.CounterObject
+	// TODO: prove counterparty client in v1
+	client client.CounterObject // nolint: unused
 }
 
 func (man CounterpartyManager) object(id string) CounterObject {

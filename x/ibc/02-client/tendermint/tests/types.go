@@ -23,11 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-// nolint: unused
-func newRoot() merkle.Root {
-	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, []byte{0x12, 0x34})
-}
-
 const chainid = "testchain"
 
 func NewRoot(keyPrefix []byte) merkle.Root {

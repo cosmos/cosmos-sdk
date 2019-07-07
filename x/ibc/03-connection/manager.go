@@ -168,6 +168,10 @@ func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
 		err = errors.New("Object not exists")
 		return
 	}
+	if !obj.Available(ctx) {
+		err = errors.New("Object not available")
+		return
+	}
 	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).Client)
 	return
 }

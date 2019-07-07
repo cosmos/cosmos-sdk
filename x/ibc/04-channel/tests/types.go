@@ -26,3 +26,8 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 	return res
 }
+
+func OpenInit(t *testing.T) {
+	ctx, man := node.Handshaker(t)
+
+}

@@ -47,10 +47,12 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 func (man Manager) object(connid, chanid string) Object {
 	key := connid + "/channels/" + chanid
 	return Object{
-		chanid:      chanid,
-		channel:     man.protocol.Value([]byte(key)),
-		state:       state.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-		nexttimeout: state.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
+		chanid:  chanid,
+		channel: man.protocol.Value([]byte(key)),
+		/*
+			state:       state.NewEnum(man.protocol.Value([]byte(key + "/state"))),
+			nexttimeout: state.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
+		*/
 
 		// TODO: remove length functionality from state.Indeer(will be handled manually)
 		seqsend: state.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
@@ -62,10 +64,12 @@ func (man Manager) object(connid, chanid string) Object {
 func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 	key := connid + "/channels/" + chanid
 	return CounterObject{
-		chanid:      chanid,
-		channel:     man.protocol.Value([]byte(key)),
-		state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
-		nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
+		chanid:  chanid,
+		channel: man.protocol.Value([]byte(key)),
+		/*
+			state:       commitment.NewEnum(man.protocol.Value([]byte(key + "/state"))),
+			nexttimeout: commitment.NewInteger(man.protocol.Value([]byte(key+"/timeout")), state.Dec),
+		*/
 
 		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
 		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),

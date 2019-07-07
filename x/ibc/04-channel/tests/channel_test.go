@@ -53,5 +53,10 @@ func TestPacket(t *testing.T) {
 	node.Handshake(t)
 
 	node.Send(t, MyPacket{"ping"})
-	node.Counterparty.Receive(t, MyPacket{"ping"})
+	header := node.Commit()
+
+	node.Counterparty.UpdateClient(t, header)
+	cliobj := node.CLIObject()
+	_, ppacket := node.Query(t, cliobj.PacketCommitKey(1))
+	node.Counterparty.Receive(t, MyPacket{"ping"}, ppacket)
 }

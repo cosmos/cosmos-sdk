@@ -37,6 +37,10 @@ func (m Mapping) Set(ctx Context, key []byte, o interface{}) {
 	m.Value(key).Set(ctx, o)
 }
 
+func (m Mapping) SetRaw(ctx Context, key []byte, value []byte) {
+	m.Value(key).SetRaw(ctx, value)
+}
+
 func (m Mapping) Has(ctx Context, key []byte) bool {
 	return m.Value(key).Exists(ctx)
 }

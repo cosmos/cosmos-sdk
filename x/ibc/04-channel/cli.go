@@ -13,10 +13,10 @@ type CLIObject struct {
 	ChanID     string
 	ChannelKey []byte
 
-	AvailableKey []byte
-	SeqSendKey   []byte
-	SeqRecvKey   []byte
-	PacketKey    func(index uint64) []byte
+	AvailableKey    []byte
+	SeqSendKey      []byte
+	SeqRecvKey      []byte
+	PacketCommitKey func(index uint64) []byte
 
 	Connection connection.CLIObject
 
@@ -33,7 +33,7 @@ func (man Manager) CLIObject(root merkle.Root, connid, chanid string) CLIObject 
 		AvailableKey: obj.available.Key(),
 		SeqSendKey:   obj.seqsend.Key(),
 		SeqRecvKey:   obj.seqrecv.Key(),
-		PacketKey: func(index uint64) []byte {
+		PacketCommitKey: func(index uint64) []byte {
 			return obj.packets.Value(index).Key()
 		},
 
@@ -73,8 +73,8 @@ func (obj CLIObject) SeqRecv(ctx context.CLIContext) (res uint64, proof merkle.P
 	return
 }
 
-func (obj CLIObject) Packet(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.PacketKey(index), &res)
+func (obj CLIObject) PacketCommit(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.PacketCommitKey(index), &res)
 	return
 }
 

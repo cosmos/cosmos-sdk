@@ -172,13 +172,12 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.channel.Is(ctx) {
+	if !obj.counterparty.channel.Is(ctx, Channel{
+		Port:             channel.CounterpartyPort,
+		Counterparty:     chanid,
+		CounterpartyPort: "", // TODO
+	}) {
 		err = errors.New("wrong counterparty connection")
-		return
-	}
-
-	if !obj.counterparty.counterpartyClient.Is(ctx, connection.Client) {
-		err = errors.New("counterparty client not match")
 		return
 	}
 

@@ -20,9 +20,9 @@ type Node struct {
 	*tendermint.Node
 	Counterparty *Node
 
-	Client    string
-	Handshake connection.Handshake
-	State     connection.State
+	CounterpartyClient string
+	Connection         connection.Connection
+	State              connection.State
 
 	Cdc *codec.Codec
 }
@@ -45,11 +45,11 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 		Cdc:   cdc,
 	}
 
-	res.Handshake = connection.Handshake{
+	res.Connection = connection.Connection{
 		Counterparty: res.Counterparty.Name,
 	}
 
-	res.Counterparty.Handshake = connection.Handshake{
+	res.Counterparty.Connection = connection.Connection{
 		Counterparty: res.Name,
 	}
 
@@ -61,14 +61,14 @@ func (node *Node) CreateClient(t *testing.T) {
 	climan, _ := node.Manager()
 	obj, err := climan.Create(ctx, node.Counterparty.LastStateVerifier().ConsensusState)
 	require.NoError(t, err)
-	node.Client = obj.ID()
-	node.Counterparty.Handshake.CounterpartyClient = obj.ID()
+	node.Connection.Client = obj.ID()
+	node.Counterparty.CounterpartyClient = obj.ID()
 }
 
 func (node *Node) UpdateClient(t *testing.T, header client.Header) {
 	ctx := node.Context()
 	climan, _ := node.Manager()
-	obj, err := climan.Query(ctx, node.Client)
+	obj, err := climan.Query(ctx, node.Connection.Client)
 	require.NoError(t, err)
 	err = obj.Update(ctx, header)
 	require.NoError(t, err)
@@ -107,21 +107,25 @@ func (node *Node) Manager() (client.Manager, connection.Manager) {
 
 func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenInit(ctx, node.Name, node.Client, node.Handshake, 100) // TODO: test timeout
+	obj, err := man.OpenInit(ctx, node.Name, node.Connection, node.CounterpartyClient, 100) // TODO: test timeout
 	require.NoError(t, err)
 	require.Equal(t, connection.Init, obj.State(ctx))
-	require.Equal(t, node.Handshake, obj.Handshake(ctx))
-	require.False(t, obj.Available(ctx))
+	require.Equal(t, node.Connection, obj.Connection(ctx))
+	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient(ctx))
+	require.False(t, obj.Sendable(ctx))
+	require.False(t, obj.Receivable(ctx))
 	node.SetState(connection.Init)
 }
 
 func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, node.Name, node.Client, node.Handshake, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.OpenTry, obj.State(ctx))
-	require.Equal(t, node.Handshake, obj.Handshake(ctx))
-	require.False(t, obj.Available(ctx))
+	require.Equal(t, node.Connection, obj.Connection(ctx))
+	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient(ctx))
+	require.False(t, obj.Sendable(ctx))
+	require.False(t, obj.Receivable(ctx))
 	node.SetState(connection.OpenTry)
 }
 
@@ -130,8 +134,9 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	obj, err := man.OpenAck(ctx, node.Name, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
-	require.Equal(t, node.Handshake, obj.Handshake(ctx))
-	require.True(t, obj.Available(ctx))
+	require.Equal(t, node.Connection, obj.Connection(ctx))
+	require.True(t, obj.Sendable(ctx))
+	require.True(t, obj.Receivable(ctx))
 	node.SetState(connection.Open)
 }
 
@@ -140,7 +145,8 @@ func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	obj, err := man.OpenConfirm(ctx, node.Name, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
-	require.Equal(t, node.Handshake, obj.Handshake(ctx))
-	require.True(t, obj.Available(ctx))
+	require.Equal(t, node.Connection, obj.Connection(ctx))
+	require.True(t, obj.Sendable(ctx))
+	require.True(t, obj.Receivable(ctx))
 	node.SetState(connection.CloseTry)
 }

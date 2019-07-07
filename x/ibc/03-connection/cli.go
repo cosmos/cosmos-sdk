@@ -10,10 +10,11 @@ import (
 
 // CLIObject stores the key for each object fields
 type CLIObject struct {
-	ID           string
-	ClientIDKey  []byte
-	AvailableKey []byte
-	KindKey      []byte
+	ID            string
+	ConnectionKey []byte
+	SendableKey   []byte
+	ReceivableKey []byte
+	KindKey       []byte
 
 	Client client.CLIObject
 
@@ -24,16 +25,17 @@ type CLIObject struct {
 func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
-		ID:           obj.id,
-		ClientIDKey:  obj.clientid.Key(),
-		AvailableKey: obj.available.Key(),
-		KindKey:      obj.kind.Key(),
+		ID:            obj.id,
+		ConnectionKey: obj.connection.Key(),
+		SendableKey:   obj.sendable.Key(),
+		ReceivableKey: obj.receivable.Key(),
+		KindKey:       obj.kind.Key(),
 
 		// TODO: unify man.CLIObject() <=> obj.CLI()
 		Client: obj.client.CLI(root),
 
 		Root: root,
-		Cdc:  obj.clientid.Cdc(),
+		Cdc:  obj.connection.Cdc(),
 	}
 }
 
@@ -51,17 +53,22 @@ func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) 
 
 }
 
-func (obj CLIObject) ClientID(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.ClientIDKey, &res)
+func (obj CLIObject) Connection(ctx context.CLIContext) (res Connection, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.ConnectionKey, &res)
 	return
 }
 
-func (obj CLIObject) Available(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.AvailableKey, &res)
+func (obj CLIObject) Sendable(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.SendableKey, &res)
 	return
 }
 
-func (obj CLIObject) Kind(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+func (obj CLIObject) Receivable(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.ReceivableKey, &res)
+	return
+}
+
+func (obj CLIObject) Kind(ctx context.CLIContext) (res string, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.KindKey, &res)
 	return
 }
@@ -69,9 +76,9 @@ func (obj CLIObject) Kind(ctx context.CLIContext, root merkle.Root) (res string,
 type CLIHandshakeObject struct {
 	CLIObject
 
-	StateKey     []byte
-	HandshakeKey []byte
-	TimeoutKey   []byte
+	StateKey              []byte
+	CounterpartyClientKey []byte
+	TimeoutKey            []byte
 }
 
 func (man Handshaker) CLIObject(root merkle.Root, id string) CLIHandshakeObject {
@@ -79,19 +86,19 @@ func (man Handshaker) CLIObject(root merkle.Root, id string) CLIHandshakeObject 
 	return CLIHandshakeObject{
 		CLIObject: man.man.CLIObject(root, id),
 
-		StateKey:     obj.state.Key(),
-		HandshakeKey: obj.handshake.Key(),
-		TimeoutKey:   obj.nextTimeout.Key(),
+		StateKey:              obj.state.Key(),
+		CounterpartyClientKey: obj.counterpartyClient.Key(),
+		TimeoutKey:            obj.nextTimeout.Key(),
 	}
 }
 
-func (obj CLIHandshakeObject) ClientID(ctx context.CLIContext, root merkle.Root) (res byte, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.ClientIDKey, &res)
+func (obj CLIHandshakeObject) State(ctx context.CLIContext, root merkle.Root) (res byte, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.StateKey, &res)
 	return
 }
 
-func (obj CLIHandshakeObject) Handshake(ctx context.CLIContext, root merkle.Root) (res Handshake, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.HandshakeKey, &res)
+func (obj CLIHandshakeObject) CounterpartyClient(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.CounterpartyClientKey, &res)
 	return
 }
 

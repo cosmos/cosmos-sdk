@@ -46,9 +46,10 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 type Object struct {
 	id string
 
-	protocol  state.Mapping
-	clientid  state.String
-	available state.Boolean
+	protocol   state.Mapping
+	connection state.Value
+	sendable   state.Boolean
+	receivable state.Boolean
 
 	kind state.String
 
@@ -59,9 +60,10 @@ func (man Manager) object(id string) Object {
 	return Object{
 		id: id,
 
-		protocol:  man.protocol.Prefix([]byte(id + "/")),
-		clientid:  state.NewString(man.protocol.Value([]byte(id + "/client"))),
-		available: state.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
+		protocol:   man.protocol.Prefix([]byte(id + "/")),
+		connection: man.protocol.Value([]byte(id)),
+		sendable:   state.NewBoolean(man.protocol.Value([]byte(id + "/sendable"))),
+		receivable: state.NewBoolean(man.protocol.Value([]byte(id + "/receivable"))),
 
 		kind: state.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
@@ -72,9 +74,10 @@ func (man Manager) object(id string) Object {
 type CounterObject struct {
 	id string
 
-	protocol  commitment.Mapping
-	clientid  commitment.String
-	available commitment.Boolean
+	protocol   commitment.Mapping
+	connection commitment.Value
+	sendable   commitment.Boolean
+	receivable commitment.Boolean
 
 	kind commitment.String
 
@@ -83,10 +86,11 @@ type CounterObject struct {
 
 func (man CounterpartyManager) object(id string) CounterObject {
 	return CounterObject{
-		id:        id,
-		protocol:  man.protocol.Prefix([]byte(id + "/")),
-		clientid:  commitment.NewString(man.protocol.Value([]byte(id + "/client"))),
-		available: commitment.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
+		id:         id,
+		protocol:   man.protocol.Prefix([]byte(id + "/")),
+		connection: man.protocol.Value([]byte(id)),
+		sendable:   commitment.NewBoolean(man.protocol.Value([]byte(id + "/sendable"))),
+		receivable: commitment.NewBoolean(man.protocol.Value([]byte(id + "/receivable"))),
 
 		kind: commitment.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
@@ -97,12 +101,17 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) ClientID(ctx sdk.Context) string {
-	return obj.clientid.Get(ctx)
+func (obj Object) Connection(ctx sdk.Context) (res Connection) {
+	obj.connection.Get(ctx, &res)
+	return
 }
 
-func (obj Object) Available(ctx sdk.Context) bool {
-	return obj.available.Get(ctx)
+func (obj Object) Sendable(ctx sdk.Context) bool {
+	return obj.sendable.Get(ctx)
+}
+
+func (obj Object) Receivable(ctx sdk.Context) bool {
+	return obj.receivable.Get(ctx)
 }
 
 func (obj Object) Client() client.Object {
@@ -110,26 +119,27 @@ func (obj Object) Client() client.Object {
 }
 
 func (obj Object) remove(ctx sdk.Context) {
-	obj.clientid.Delete(ctx)
-	obj.available.Delete(ctx)
+	obj.connection.Delete(ctx)
+	obj.sendable.Delete(ctx)
+	obj.receivable.Delete(ctx)
 	obj.kind.Delete(ctx)
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
-	return obj.clientid.Exists(ctx)
+	return obj.connection.Exists(ctx)
 }
 
 func (man Manager) Cdc() *codec.Codec {
 	return man.protocol.Cdc()
 }
 
-func (man Manager) create(ctx sdk.Context, id, clientid string, kind string) (obj Object, err error) {
+func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (obj Object, err error) {
 	obj = man.object(id)
 	if obj.exists(ctx) {
 		err = errors.New("Object already exists")
 		return
 	}
-	obj.clientid.Set(ctx, clientid)
+	obj.connection.Set(ctx, connection)
 	obj.kind.Set(ctx, kind)
 	return
 }
@@ -142,7 +152,7 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, e
 		err = errors.New("Object not exists")
 		return
 	}
-	obj.client, err = man.client.Query(ctx, obj.ClientID(ctx))
+	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).Client)
 	if err != nil {
 		return
 	}
@@ -159,10 +169,6 @@ func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
 		err = errors.New("Object not exists")
 		return
 	}
-	if !obj.Available(ctx) {
-		err = errors.New("object not available")
-		return
-	}
-	obj.client, err = man.client.Query(ctx, obj.ClientID(ctx))
+	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).Client)
 	return
 }

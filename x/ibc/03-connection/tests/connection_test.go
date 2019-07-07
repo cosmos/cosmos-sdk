@@ -38,23 +38,23 @@ func TestHandshake(t *testing.T) {
 	// counterparty.OpenTry
 	node.Counterparty.UpdateClient(t, header)
 	cliobj := node.CLIObject()
-	_, phand := node.Query(t, cliobj.HandshakeKey)
+	_, pconn := node.Query(t, cliobj.ConnectionKey)
 	_, pstate := node.Query(t, cliobj.StateKey)
 	_, ptimeout := node.Query(t, cliobj.TimeoutKey)
-	_, pclientid := node.Query(t, cliobj.ClientIDKey)
+	_, pcounterclient := node.Query(t, cliobj.CounterpartyClientKey)
 	// TODO: implement consensus state checking
 	// _, pclient := node.Query(t, cliobj.Client.ConsensusStateKey)
-	node.Counterparty.OpenTry(t, phand, pstate, ptimeout, pclientid)
+	node.Counterparty.OpenTry(t, pconn, pstate, ptimeout, pcounterclient)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
 	node.UpdateClient(t, header)
 	cliobj = node.Counterparty.CLIObject()
-	_, phand = node.Counterparty.Query(t, cliobj.HandshakeKey)
+	_, pconn = node.Counterparty.Query(t, cliobj.ConnectionKey)
 	_, pstate = node.Counterparty.Query(t, cliobj.StateKey)
 	_, ptimeout = node.Counterparty.Query(t, cliobj.TimeoutKey)
-	_, pclientid = node.Counterparty.Query(t, cliobj.ClientIDKey)
-	node.OpenAck(t, phand, pstate, ptimeout, pclientid)
+	_, pcounterclient = node.Counterparty.Query(t, cliobj.CounterpartyClientKey)
+	node.OpenAck(t, pconn, pstate, ptimeout, pcounterclient)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm

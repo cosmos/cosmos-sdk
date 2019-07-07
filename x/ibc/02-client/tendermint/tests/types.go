@@ -1,7 +1,7 @@
 package tendermint
 
 import (
-	"math/rand"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,6 +22,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
+
+// nolint: unused
+func newRoot() merkle.Root {
+	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, []byte{0x12, 0x34})
+}
 
 const chainid = "testchain"
 
@@ -147,6 +152,7 @@ func (node *Node) Set(k, value []byte) {
 	node.Store.Set(node.Root.Key(k), value)
 }
 
+// nolint:deadcode,unused
 func testProof(t *testing.T) {
 	node := NewNode(NewMockValidators(100, 10), newRoot())
 
@@ -157,8 +163,10 @@ func testProof(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			k := make([]byte, 32)
 			v := make([]byte, 32)
-			rand.Read(k)
-			rand.Read(v)
+			_, err := rand.Read(k)
+			require.NoError(t, err)
+			_, err = rand.Read(v)
+			require.NoError(t, err)
 			kvps = append(kvps, cmn.KVPair{Key: k, Value: v})
 			node.Set(k, v)
 		}
@@ -166,7 +174,7 @@ func testProof(t *testing.T) {
 		proofs := []commitment.Proof{}
 		root := node.Root.Update(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, root.(merkle.Root), []byte(kvp.Key))
+			v, p := node.Query(t, root.(merkle.Root), kvp.Key)
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}

@@ -52,7 +52,7 @@ type Node struct {
 	Root merkle.Root
 }
 
-func NewNode(valset MockValidators) *Node {
+func NewNode(valset MockValidators, root merkle.Root) *Node {
 	key, ctx, cms, _ := defaultComponents()
 	return &Node{
 		Valset:  valset,
@@ -60,6 +60,7 @@ func NewNode(valset MockValidators) *Node {
 		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
+		Root:    root,
 	}
 }
 
@@ -147,7 +148,7 @@ func (node *Node) Set(k, value []byte) {
 }
 
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10))
+	node := NewNode(NewMockValidators(100, 10), newRoot())
 
 	node.Commit()
 

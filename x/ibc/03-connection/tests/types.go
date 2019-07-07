@@ -57,7 +57,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 }
 
 func (node *Node) CreateClient(t *testing.T) {
-	ctx := node.Context()
+	ctx := node.Context(t, nil)
 	climan, _ := node.Manager()
 	obj, err := climan.Create(ctx, node.Counterparty.LastStateVerifier().ConsensusState)
 	require.NoError(t, err)
@@ -66,7 +66,7 @@ func (node *Node) CreateClient(t *testing.T) {
 }
 
 func (node *Node) UpdateClient(t *testing.T, header client.Header) {
-	ctx := node.Context()
+	ctx := node.Context(t, nil)
 	climan, _ := node.Manager()
 	obj, err := climan.Query(ctx, node.Connection.Client)
 	require.NoError(t, err)
@@ -79,11 +79,16 @@ func (node *Node) SetState(state connection.State) {
 	node.Counterparty.State = state
 }
 
-func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, connection.Handshaker) {
-	ctx := node.Context()
+func (node *Node) Context(t *testing.T, proofs []commitment.Proof) sdk.Context {
+	ctx := node.Node.Context()
 	store, err := commitment.NewStore(node.Counterparty.Root, proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
+	return ctx
+}
+
+func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, connection.Handshaker) {
+	ctx := node.Context(t, proofs)
 	_, man := node.Manager()
 	return ctx, connection.NewHandshaker(man)
 }

@@ -131,7 +131,7 @@ func (vals MockValidators) Sign(header tmtypes.Header) tmtypes.SignedHeader {
 			Height:           header.Height,
 			Type:             tmtypes.PrecommitType,
 		}
-		val.MockPV.SignVote(chainid, vote)
+		_ = val.MockPV.SignVote(chainid, vote)
 		precommits[i] = vote.CommitSig()
 	}
 

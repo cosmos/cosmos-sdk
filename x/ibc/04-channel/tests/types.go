@@ -54,7 +54,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 }
 
 func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, channel.Handshaker) {
-	ctx := node.Context()
+	ctx := node.Context(t, proofs)
 	store, err := commitment.NewStore(node.Counterparty.Root, proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
@@ -152,18 +152,18 @@ func (node *Node) Handshake(t *testing.T) {
 }
 
 func (node *Node) Send(t *testing.T, packet channel.Packet) {
-	ctx, man := node.Context(), node.Manager()
+	ctx, man := node.Context(t, nil), node.Manager()
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqSend(ctx)
 	err = obj.Send(ctx, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqSend(ctx))
-	require.Equal(t, packet, obj.Packet(ctx, seq+1))
+	require.Equal(t, packet.Commit(), obj.PacketCommit(ctx, seq+1))
 }
 
-func (node *Node) Receive(t *testing.T, packet channel.Packet) {
-	ctx, man := node.Context(), node.Manager()
+func (node *Node) Receive(t *testing.T, packet channel.Packet, proofs ...commitment.Proof) {
+	ctx, man := node.Context(t, proofs), node.Manager()
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqRecv(ctx)

@@ -94,6 +94,10 @@ func (ix Indexer) Set(ctx Context, index uint64, o interface{}) {
 	ix.Value(index).Set(ctx, o)
 }
 
+func (ix Indexer) SetRaw(ctx Context, index uint64, value []byte) {
+	ix.Value(index).SetRaw(ctx, value)
+}
+
 // Has() returns true if the stored value is not nil
 func (ix Indexer) Has(ctx Context, index uint64) bool {
 	return ix.Value(index).Exists(ctx)

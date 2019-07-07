@@ -70,7 +70,7 @@ func (man CounterpartyManager) object(connid, chanid string) CounterObject {
 
 		seqsend: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceSend")), state.Dec),
 		seqrecv: commitment.NewInteger(man.protocol.Value([]byte(key+"/nextSequenceRecv")), state.Dec),
-		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets")), state.Dec),
+		packets: commitment.NewIndexer(man.protocol.Prefix([]byte(key+"/packets/")), state.Dec),
 	}
 }
 
@@ -236,9 +236,8 @@ func (obj Object) SeqRecv(ctx sdk.Context) uint64 {
 	return obj.seqrecv.Get(ctx)
 }
 
-func (obj Object) Packet(ctx sdk.Context, index uint64) (res Packet) {
-	obj.packets.Value(index).Get(ctx, &res)
-	return
+func (obj Object) PacketCommit(ctx sdk.Context, index uint64) []byte {
+	return obj.packets.Value(index).GetRaw(ctx)
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
@@ -254,7 +253,7 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.packets.Set(ctx, obj.seqsend.Incr(ctx), packet)
+	obj.packets.SetRaw(ctx, obj.seqsend.Incr(ctx), packet.Commit())
 
 	return nil
 }
@@ -270,7 +269,7 @@ func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
 	}
 
 	// XXX: increment should happen before verification, reflect on the spec
-	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet.Commit()) {
+	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).IsRaw(ctx, packet.Commit()) {
 		return errors.New("verification failed")
 	}
 

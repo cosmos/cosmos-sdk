@@ -14,7 +14,7 @@ func (v String) Get(ctx Context) (res string) {
 }
 
 func (v String) GetSafe(ctx Context) (res string, err error) {
-	v.Value.GetSafe(ctx, &res)
+	err = v.Value.GetSafe(ctx, &res)
 	return
 }
 

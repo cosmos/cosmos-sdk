@@ -93,6 +93,7 @@ func (man CounterpartyManager) object(id string) CounterObject {
 		// CONTRACT: client should be filled by the caller
 	}
 }
+
 func (obj Object) ID() string {
 	return obj.id
 }

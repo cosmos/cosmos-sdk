@@ -186,7 +186,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
 		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
@@ -250,22 +250,21 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, uint64(timeoutHeight)) {
+	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
 		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
 
-	// TODO: commented out, implement in v1
+	// TODO: implement in v1
 	/*
 		var expected client.ConsensusState
-		obj.self.Get(ctx, expheight, &expected)
+		// obj.self.Get(ctx, expheight, &expected)
 		if !obj.counterparty.client.Is(ctx, expected) {
-			return errors.New("unexpected counterparty client value")
+			// return errors.New("unexpected counterparty client value")
 		}
 	*/
-
 	obj.available.Set(ctx, true)
-	obj.nextTimeout.Set(ctx, uint64(nextTimeoutHeight))
+	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return
 }
@@ -304,7 +303,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context, id string, timeoutHeight uint
 }
 
 func (obj HandshakeObject) OpenTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nextTimeout.Get(ctx)) {
+	if !(obj.client.ConsensusState(ctx).GetHeight() > obj.nextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
@@ -387,7 +386,7 @@ func (obj HandshakeObject) CloseAck(ctx sdk.Context, timeoutHeight uint64) error
 }
 
 func (obj HandshakeObject) CloseTimeout(ctx sdk.Context) error {
-	if !(uint64(obj.client.ConsensusState(ctx).GetHeight()) > obj.nextTimeout.Get(ctx)) {
+	if !(obj.client.ConsensusState(ctx).GetHeight() > obj.nextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 

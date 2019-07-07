@@ -4,13 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
-
-func newRoot() merkle.Root {
-	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, []byte{0x12, 0x34})
-}
 
 func testUpdate(t *testing.T, interval int, ok bool) {
 	node := NewNode(NewMockValidators(100, 10), newRoot())

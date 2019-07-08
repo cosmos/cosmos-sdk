@@ -6,7 +6,6 @@ import (
 
 // InitGenesis sets distribution information for genesis.
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-
 	k.SetOwners(ctx, data.Owners)
 
 	for _, c := range data.Collections {

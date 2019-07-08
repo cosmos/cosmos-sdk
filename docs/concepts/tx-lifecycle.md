@@ -55,6 +55,7 @@ appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Each full node that receives `tx` performs local checks to ensure it is not invalid. If approved, `tx` is held in the nodes' [**Mempool**](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#external-functionality)s (memory pools unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
 =======
 Each full node that receives `tx` performs local checks to ensure it is not invalid. If `tx` passes the checks, it is held in the nodes' [**Mempool**](https://github.com/tendermint/tendermint/blob/a0234affb6959a0aec285eebf3a3963251d2d186/state/services.go#L17-L34)s (memory pools unique to each node) pending inclusion in a block. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
@@ -68,14 +69,17 @@ Each full node that receives `Tx` performs local checks to ensure it is not inva
 =======
 Each full node that receives `Tx` performs local checks to ensure it is not invalid. If the transaction passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block. Honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 >>>>>>> comments and new consensus+commit section
+=======
+Each full node that receives `Tx` performs local checks using an ABCI procedure, `CheckTx`, to check for invalidity. If the transaction passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+>>>>>>> final edits
 
 ### Types of Checks
 
-The full-node performs stateless, then stateful checks on `Tx`, with the goal to identify and reject an invalid transaction as early on as possible to avoid wasted computation. ***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do them - and are thus less computationally expensive. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
+The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to identify and reject an invalid transaction as early on as possible to avoid wasted computation. ***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do them - and are thus less computationally expensive. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
 
 ***Stateful*** checks validate transactions and messages based on a committed state. Examples include checking that the relevant values exist and are able to be transacted with, the address has sufficient funds, and the sender is authorized or has the correct ownership to transact. At any given moment, full-nodes typically have [multiple versions](./baseapp.md#volatile-states) of the application's internal state for different purposes. For example, nodes will execute state changes while in the process of verifying transactions, but still need a copy of the last committed state in order to answer queries - they should not respond using state with uncommitted changes.
 
-In order to verify `Tx`, full-nodes call an ABCI validation function, `CheckTx`, which includes both _stateless_ and _stateful_ checks. `CheckTx` goes through several steps, beginning with decoding `Tx`:
+In order to verify `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_ checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes through several steps, beginning with decoding `Tx`:
 
 ### Decoding
 
@@ -150,14 +154,18 @@ Messages are extracted from `Tx` and [`validateBasic`](./msg-tx.md#validatebasic
 >>>>>>> comments and new consensus+commit section
 =======
 
+<<<<<<< HEAD
 [Messages](./tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](./msg-tx.md#validatebasic), a function defined for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 >>>>>>> links and minor changes
+=======
+[Messages](./tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](./msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+>>>>>>> final edits
 
 ### AnteHandler
 
 The [`AnteHandler`](./baseapp.md#antehandler), which is technically optional but should be defined for each application, is run. A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the handler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the `auth` module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`. 
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/auth) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`. 
 
 ### Gas
 
@@ -321,7 +329,7 @@ The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk
 The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
 
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
-* **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid ones. One difference here is that the `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices`since that value is local to each node.
+* **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid ones. One difference here is that the `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices`since that value is local to each node - differing values across nodes would yield nondeterministic results.
 * **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](./baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
 >>>>>>> links and minor changes
 * **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.

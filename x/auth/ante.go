@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -32,13 +31,13 @@ func init() {
 // and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result
 
-// NewAnteHandler returns an AnteHandler that checks and increments sequence
-// numbers, checks signatures & account numbers, and deducts fees from the first
-// signer.
+// AnteHandler checks and increments sequence
+// numbers, checks signatures & account numbers
 func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer,
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
+	newCtx = ctx
 	// all transactions must be of type auth.StdTx
 	stdTx, ok := tx.(StdTx)
 	if !ok {
@@ -58,6 +57,8 @@ func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsum
 		return newCtx, res, true
 	}
 
+	newCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(newCtx.TxBytes())), "txSize")
+
 	if res := ValidateMemo(stdTx, params); !res.IsOK() {
 		return newCtx, res, true
 	}
@@ -73,7 +74,6 @@ func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsum
 	stdSigs := stdTx.GetSignatures()
 
 	for i := 0; i < len(stdSigs); i++ {
-		// skip the fee payer, account is cached and fees were deducted already
 		signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
 		if !res.IsOK() {
 			return newCtx, res, true
@@ -86,7 +86,6 @@ func AnteHandler(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsum
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
-
 		ak.SetAccount(newCtx, signerAccs[i])
 	}
 

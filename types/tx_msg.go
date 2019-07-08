@@ -41,6 +41,8 @@ type Tx interface {
 
 	// Gas returns the amount of Gas this tx is allowed to consume
 	Gas() uint64
+
+	FeeCoins() []Coin
 }
 
 //__________________________________________________________

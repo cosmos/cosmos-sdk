@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -42,7 +41,7 @@ type StakingKeeper interface {
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
-	GetAllSDKDelegations(ctx sdk.Context) []staking.Delegation
+	GetAllSDKDelegations(ctx sdk.Context) []stakingexported.DelegationI
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

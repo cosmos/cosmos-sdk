@@ -18,6 +18,7 @@ const (
 	CodeNoDistributionInfo           = types.CodeNoDistributionInfo
 	CodeNoValidatorCommission        = types.CodeNoValidatorCommission
 	CodeSetWithdrawAddrDisabled      = types.CodeSetWithdrawAddrDisabled
+	FeeCollectorName                 = types.FeeCollectorName
 	ModuleName                       = types.ModuleName
 	StoreKey                         = types.StoreKey
 	TStoreKey                        = types.TStoreKey

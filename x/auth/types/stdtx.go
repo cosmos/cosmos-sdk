@@ -64,6 +64,11 @@ func (tx StdTx) Gas() uint64 {
 	return tx.Fee.Gas
 }
 
+// Returns the Fee coins this tx is paying
+func (tx StdTx) FeeCoins() []sdk.Coin {
+	return tx.Fee.Amount
+}
+
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
 	v, ok := pub.(multisig.PubKeyMultisigThreshold)

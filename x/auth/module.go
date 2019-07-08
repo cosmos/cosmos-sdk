@@ -73,10 +73,11 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) AppModule {
+func NewAppModule(accountKeeper AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
+		sigGasConsumer: sigGasConsumer,
 	}
 }
 

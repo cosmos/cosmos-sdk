@@ -121,12 +121,12 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName, types.ModuleName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+		[]string{types.FeeCollectorName, types.ModuleName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace, auth.FeeCollectorName)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, types.DefaultCodespace, types.FeeCollectorName)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
@@ -139,7 +139,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create module accounts
-	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(types.FeeCollectorName, supply.Basic)
 	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
 	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Basic)

@@ -125,3 +125,8 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
+
+// module ante-handle
+func (AppModule) AnteHandle(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, sdk.Result, bool) {
+	return ctx, sdk.Result{}, false
+}

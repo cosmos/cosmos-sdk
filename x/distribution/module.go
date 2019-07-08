@@ -70,14 +70,16 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper       Keeper
+	accountKeeper auth.AccountKeeper
 	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper auth.AccountKeeper, supplyKeeper types.SupplyKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		accountKeeper:  accountKeeper,
 		supplyKeeper:   supplyKeeper,
 	}
 }
@@ -128,7 +130,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 
 // module ante-handle
 func (am AppModule) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-	return AnteHandler(am.fck, ctx, tx, simulate)
+	return AnteHandler(am.accountKeeper, am.supplyKeeper, ctx, tx, simulate)
 }
 
 // module begin-block

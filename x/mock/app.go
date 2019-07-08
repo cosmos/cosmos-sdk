@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"sort"
-	"encoding/json"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -18,7 +17,6 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -35,10 +33,10 @@ type App struct {
 	KeyAccount       *sdk.KVStoreKey
 	KeyParams        *sdk.KVStoreKey
 	TKeyParams       *sdk.TransientStoreKey
-	Manager          *module.Manager
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
+	SupplyKeeper        DummySupplyKeeper
 	ParamsKeeper        params.Keeper
 
 	GenesisAccounts  []auth.Account
@@ -47,7 +45,7 @@ type App struct {
 
 // NewApp partially constructs a new app on the memstore for module and genesis
 // testing.
-func NewApp(m *module.Manager) *App {
+func NewApp() *App {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
 
@@ -62,7 +60,6 @@ func NewApp(m *module.Manager) *App {
 		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
-		Manager:          m,
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
@@ -76,12 +73,12 @@ func NewApp(m *module.Manager) *App {
 		auth.ProtoBaseAccount,
 	)
 
-	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
+	app.SupplyKeeper = NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(m.AnteHandler)
+	app.SetAnteHandler(app.AnteHandler)
 
 	// Not sealing for custom extension
 
@@ -123,15 +120,36 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
-	// Load GenesisState with Defaults genesis of all registered modules
-	genmap := make(map[string]json.RawMessage)
-	for name, module := range app.Manager.Modules {
-		genmap[name] = module.DefaultGenesis()
+	auth.InitGenesis(ctx, app.AccountKeeper, auth.DefaultGenesisState())
+
+	return abci.ResponseInitChain{}
+}
+
+// AnteHandler calls auth.AnteHandler and then simply deducts fees without transfer
+func (app *App) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	newCtx, res, abort = auth.AnteHandler(app.AccountKeeper, auth.DefaultSigVerificationGasConsumer, ctx, tx, simulate)
+	if abort {
+		return newCtx, res, abort
 	}
 
-	res := app.Manager.InitGenesis(ctx, genmap)
+	// casting already checked in auth
+	stdTx, _ := tx.(auth.StdTx)
+	signerAddrs := stdTx.GetSigners()
+	acc := app.AccountKeeper.GetAccount(ctx, signerAddrs[0])
+	spendableCoins := acc.SpendableCoins(ctx.BlockHeader().Time)
 
-	return res
+	var newCoins []sdk.Coin
+	var hasNeg bool
+	if newCoins, hasNeg = spendableCoins.SafeSub(tx.FeeCoins()); hasNeg {
+		return ctx, sdk.ErrInsufficientFunds(
+			fmt.Sprintf("insufficient funds to pay for fees; %s < %s", spendableCoins, tx.FeeCoins()),
+		).Result(), true
+	}
+
+	// remove fee coins and return
+	acc.SetCoins(newCoins)
+	app.AccountKeeper.SetAccount(ctx, acc)
+	return ctx, sdk.Result{}, false
 }
 
 // Type that combines an Address with the privKey and pubKey to that address

@@ -296,7 +296,7 @@ func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 
 // perform antehandle functionality for modules
 func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-	ctx = sdk.SetGasMeter(simulate, ctx, tx.Gas())
+	newCtx = sdk.SetGasMeter(simulate, ctx, tx.Gas())
 
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
 	// to know how much gas was used! This is because the GasMeter is created in
@@ -323,12 +323,12 @@ func (m *Manager) AnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx
 
 	// must somehow consume gas cost for validating tx (tx size cost/byte)
 	for _, moduleName := range m.OrderAnteHandlers {
-		ctx, res, abort = m.Modules[moduleName].AnteHandle(ctx, tx, simulate)
+		newCtx, res, abort = m.Modules[moduleName].AnteHandle(newCtx, tx, simulate)
 		if abort {
-			return ctx, res, abort
+			return newCtx, res, abort
 		}
 	}
-	return ctx, res, abort
+	return newCtx, res, abort
 }
 
 // BeginBlock performs begin block functionality for all modules. It creates a

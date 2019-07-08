@@ -1,5 +1,5 @@
 // nolint
-package auth
+package distribution
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -10,26 +10,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
 type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
-	ak  AccountKeeper
+	ak  auth.AccountKeeper
+	sk  types.SupplyKeeper
 	m   module.Manager
 }
 
 func setupTestInput() testInput {
-	return setupTestInputGasConsumer(DefaultSigVerificationGasConsumer)
-}
-
-func setupTestInputGasConsumer(sigGasConsumer SignatureVerificationGasConsumer) testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
-	types.RegisterCodec(cdc)
+	authTypes.RegisterCodec(cdc)
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
+	cdc.RegisterConcrete(&mock.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
@@ -42,15 +46,13 @@ func setupTestInputGasConsumer(sigGasConsumer SignatureVerificationGasConsumer) 
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
-	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, types.DefaultParamspace)
-	ak := NewAccountKeeper(cdc, authCapKey, ps, types.ProtoBaseAccount)
+	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, authTypes.DefaultParamspace)
+	ak := auth.NewAccountKeeper(cdc, authCapKey, ps, authTypes.ProtoBaseAccount)
+	sk := mock.NewDummySupplyKeeper(ak)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	ak.SetParams(ctx, types.DefaultParams())
+	ak.SetParams(ctx, authTypes.DefaultParams())
 
-	am := NewAppModule(ak, sigGasConsumer)
-	m := module.NewManager(am)
-
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, m: *m}
+	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}
 }

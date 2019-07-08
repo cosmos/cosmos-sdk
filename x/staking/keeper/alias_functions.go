@@ -126,7 +126,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 
 // return all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
-func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Delegation) {
+func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []exported.DelegationI) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()

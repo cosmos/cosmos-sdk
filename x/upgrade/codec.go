@@ -10,10 +10,3 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
 	cdc.RegisterConcrete(CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal", nil)
 }
-
-// module codec
-var moduleCdc = codec.New()
-
-func init() {
-	RegisterCodec(moduleCdc)
-}

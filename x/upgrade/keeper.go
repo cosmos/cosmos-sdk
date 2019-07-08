@@ -14,6 +14,11 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 )
 
+const (
+	ModuleName = "upgrade"
+	StoreKey   = ModuleName
+)
+
 // Keeper of the upgrade module
 type Keeper interface {
 	// ScheduleUpgrade schedules an upgrade based on the specified plan

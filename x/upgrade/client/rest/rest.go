@@ -17,7 +17,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 
 func getUpgradePlanHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, request *http.Request) {
-		res, err := cliCtx.QueryStore([]byte(upgrade.PlanKey), storeName)
+		// ignore height for now
+		res, _, err := cliCtx.QueryStore([]byte(upgrade.PlanKey), storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -35,6 +36,6 @@ func getUpgradePlanHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeNam
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, plan, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, plan)
 	}
 }

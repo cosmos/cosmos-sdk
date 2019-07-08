@@ -2,17 +2,18 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"strings"
 	time2 "time"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
@@ -33,10 +34,11 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+				WithCodec(cdc)
+				// removed due to #4588 (verifyt his didn't break anything)
+				// WithAccountDecoder(cdc)
 
 			from := cliCtx.GetFromAddress()
 
@@ -132,10 +134,11 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+				WithCodec(cdc)
+				// removed due to #4588 (verifyt his didn't break anything)
+				// WithAccountDecoder(cdc)
 
 			from := cliCtx.GetFromAddress()
 

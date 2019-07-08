@@ -11,7 +11,7 @@ import (
 //
 // - Colections: 0x00<denom_bytes_key> :<Collection>
 //
-// - Owners: 0x01<address_bytes_key><denom_bytes_key>: <Collections>
+// - Owners: 0x01<address_bytes_key><denom_bytes_key>: <Owner>
 var (
 	CollectionsKeyPrefix = []byte{0x00} // key for NFT collections
 	OwnersKeyPrefix      = []byte{0x01} // key for balance of NFTs held by an address

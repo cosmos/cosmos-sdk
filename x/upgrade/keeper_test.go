@@ -114,13 +114,13 @@ func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 }
 
 func (s *TestSuite) TestCustomCallbacks() {
-	s.T().Log("Set custom WillUpgrader and OnUpgrader")
-	onUpgraderCalled := false
-	s.keeper.SetOnUpgrader(func(ctx sdk.Context, plan Plan) {
-		onUpgraderCalled = true
+	s.T().Log("Set custom OnShutdowner")
+	onShutdownerCalled := false
+	s.keeper.SetOnShutdowner(func(ctx sdk.Context, plan Plan) {
+		onShutdownerCalled = true
 	})
 
-	s.T().Log("Run an upgrade and verify that the custom OnUpgrader is called")
+	s.T().Log("Run an upgrade and verify that the custom OnShutdowner is called")
 	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 2})
 	s.Require().Nil(err)
 
@@ -130,7 +130,7 @@ func (s *TestSuite) TestCustomCallbacks() {
 	s.Require().NotPanics(func() {
 		s.keeper.BeginBlocker(newCtx, req)
 	})
-	s.Require().False(onUpgraderCalled)
+	s.Require().False(onShutdownerCalled)
 
 	header = abci.Header{Height: s.ctx.BlockHeight() + 2}
 	newCtx = sdk.NewContext(s.cms, header, false, log.NewNopLogger())
@@ -138,7 +138,7 @@ func (s *TestSuite) TestCustomCallbacks() {
 	s.Require().Panics(func() {
 		s.keeper.BeginBlocker(newCtx, req)
 	})
-	s.Require().True(onUpgraderCalled)
+	s.Require().True(onShutdownerCalled)
 }
 
 func (s *TestSuite) TestNoSpuriousUpgrades() {

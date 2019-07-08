@@ -31,9 +31,9 @@ type Keeper interface {
 	// upgrade or false if there is none
 	GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 
-	// SetOnUpgrader sets a custom function to be called right before the chain halts and the
+	// SetOnShutdowner sets a custom function to be called right before the chain halts and the
 	// upgrade needs to be applied. This can be used to initiate an automatic upgrade process.
-	SetOnUpgrader(onUpgrader func(ctx sdk.Context, plan Plan))
+	SetOnShutdowner(OnShutdowner func(ctx sdk.Context, plan Plan))
 
 	// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
 	// plans are cached in memory so the overhead of this method is trivial.
@@ -45,7 +45,7 @@ type keeper struct {
 	cdc             *codec.Codec
 	upgradeHandlers map[string]Handler
 	haveCache       bool
-	onUpgrader      func(ctx sdk.Context, plan Plan)
+	onShutdowner    func(ctx sdk.Context, plan Plan)
 }
 
 const (
@@ -66,8 +66,8 @@ func (keeper *keeper) SetUpgradeHandler(name string, upgradeHandler Handler) {
 	keeper.upgradeHandlers[name] = upgradeHandler
 }
 
-func (keeper *keeper) SetOnUpgrader(onUpgrader func(ctx sdk.Context, plan Plan)) {
-	keeper.onUpgrader = onUpgrader
+func (keeper *keeper) SetOnShutdowner(OnShutdowner func(ctx sdk.Context, plan Plan)) {
+	keeper.onShutdowner = OnShutdowner
 }
 
 func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
@@ -153,20 +153,20 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", plan.Name, blockHeight, plan.Info))
-			if keeper.onUpgrader != nil {
-				keeper.onUpgrader(ctx, plan)
+			if keeper.onShutdowner != nil {
+				keeper.onShutdowner(ctx, plan)
 			} else {
-				DefaultOnUpgrader(ctx, plan)
+				DefaultOnShutdowner(ctx, plan)
 			}
 			panic("UPGRADE REQUIRED!")
 		}
 	}
 }
 
-// DefaultOnUpgrader synchronously runs a script called do-upgrade from $COSMOS_HOME/config if such a script exists,
+// DefaultOnShutdowner synchronously runs a script called do-upgrade from $COSMOS_HOME/config if such a script exists,
 // with plan serialized to JSON as the first argument and the current block height as the second argument.
 // The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
-func DefaultOnUpgrader(ctx sdk.Context, plan Plan) {
+func DefaultOnShutdowner(ctx sdk.Context, plan Plan) {
 	CallUpgradeScript(ctx, plan, "do-upgrade", false)
 }
 

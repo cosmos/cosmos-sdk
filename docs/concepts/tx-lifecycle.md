@@ -6,7 +6,7 @@
 
 ## Synopsis
 
-This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](./tx-msgs.md#transactions). The transaction will be referred to as `Tx`.
+This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](./transactions.md). The transaction will be referred to as `Tx`.
 
 1. [Creation](#creation)
 2. [Addition to Mempool](#addition-to-mempool)

@@ -7,6 +7,30 @@ Without software support for upgrades, upgrading a live chain is risky because a
 their state machines at exactly the same point in the process. If this is not done correctly, there can be state
 inconsistencies which are hard to recover from.
 
+General Workflow
+
+Let's assume we are running v0.34.0 of our software in our testnet and want to upgrade to v0.36.0.
+How would this look in practice? First of all, we want to finalize the v0.36.0 release candidate
+and there install a specially named upgrade handler (eg. "testnet-v2" or even "v0.36.0"). Once
+this code is public, we can have a governance vote to approve this upgrade at some future blocktime
+or blockheight (known as an upgrade.Plan). The v0.34.0 code will not know of this handler, but will
+continue to run until block 200000, when the plan kicks in at BeginBlock. It will check for existence
+of the handler, and finding it missing, know that it is running the obsolete software, and kill itself.
+Shortly before killing itself, it will check if there is a script in `<home_dir>/config/do-upgrade`
+and run it if present.
+
+Generally the gaiad/regend/etc binary will restart on crash, but then will execute this BeginBlocker
+again and crash, causing a restart loop. Either the operator can manually install the new software,
+or you can make use of the `do-upgrade` script to eg. dump state to json (backup), download new binary
+(from a location I trust - script written by operator), install binary.
+
+When the binary restarts with the upgraded version (here v0.36.0), it will detect we have registered the
+"testnet-v2" upgrade handler in the code, and realize it is the new version. It then will run the script
+and *migrate the database in-place*. Once finished, it marks the upgrade as done, and continues processing
+the rest of the block as normal. Once 2/3 of the voting power has upgraded, the blockchain will immediately
+resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
+be a matter of minutes and not even require them to be awake at that time.
+
 Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a BeginBlocker that calls the upgrade
@@ -54,6 +78,8 @@ callback will be called in the BeginBlocker of the first block after an upgrade 
 will be called in the BeginBlocker at the block where an upgrade is needed right before the state machine is halted.
 The will upgrade callback can be used to notify some external process that an upgrade is needed so that it can
 prepare binaries, etc. The on upgrade callback can notify some external process to actually begin the upgrade process.
+
+BUG(aaronc): will upgrade callbacks are temporarily disabled
 
 */
 package upgrade

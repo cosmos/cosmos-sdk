@@ -1,6 +1,9 @@
 package upgrade
 
 import (
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,8 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
-	"testing"
-	"time"
 )
 
 type TestSuite struct {
@@ -112,18 +113,14 @@ func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
-func (s *TestSuite) TestDoShutdowner() {
+func (s *TestSuite) TestCustomCallbacks() {
 	s.T().Log("Set custom WillUpgrader and OnUpgrader")
-	willUpgraderCalled := false
 	onUpgraderCalled := false
-	s.keeper.SetWillUpgrader(func(ctx sdk.Context, plan Plan) {
-		willUpgraderCalled = true
-	})
 	s.keeper.SetOnUpgrader(func(ctx sdk.Context, plan Plan) {
 		onUpgraderCalled = true
 	})
 
-	s.T().Log("Run an upgrade and verify that the custom WillUpgrader and OnUpgrader's are called")
+	s.T().Log("Run an upgrade and verify that the custom OnUpgrader is called")
 	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 2})
 	s.Require().Nil(err)
 
@@ -133,10 +130,8 @@ func (s *TestSuite) TestDoShutdowner() {
 	s.Require().NotPanics(func() {
 		s.keeper.BeginBlocker(newCtx, req)
 	})
-	s.Require().True(willUpgraderCalled)
 	s.Require().False(onUpgraderCalled)
 
-	willUpgraderCalled = false
 	header = abci.Header{Height: s.ctx.BlockHeight() + 2}
 	newCtx = sdk.NewContext(s.cms, header, false, log.NewNopLogger())
 	req = abci.RequestBeginBlock{Header: header}
@@ -144,7 +139,6 @@ func (s *TestSuite) TestDoShutdowner() {
 		s.keeper.BeginBlocker(newCtx, req)
 	})
 	s.Require().True(onUpgraderCalled)
-	s.Require().False(willUpgraderCalled)
 }
 
 func (s *TestSuite) TestNoSpuriousUpgrades() {

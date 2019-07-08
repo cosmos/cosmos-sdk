@@ -16,5 +16,5 @@ const (
 type FeeAllowance interface {
 	// Accept checks whether this allowance allows the provided fees to be spent,
 	// and optionally updates the allowance or deletes it entirely
-	Accept(fee sdk.Coins, block abci.Header) (allow bool, updated FeeAllowance, delete bool)
+	Accept(fee sdk.Coins, block abci.Header) (allow bool, updated FeeAllowance, remove bool)
 }

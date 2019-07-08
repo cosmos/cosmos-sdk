@@ -7,8 +7,9 @@
 ## Synopsis
 
 This doc describes how transactions and messages are defined. 
-1. [Transactions](#transactions)
-2. [Messages](#messages)
+1. [Transaction Definition](#transaction-definition)
+2. [Encoding and Decoding](#encoding-and-decoding)
+4. [Messages](#messages)
 
 ## Transactions
 
@@ -18,14 +19,14 @@ TODO: Role of tx
 
 To learn about the lifecycle of a transaction, read [this doc](./tx-lifecycle.md).
 
-### Transaction Definition
+## Transaction Definition
 
 TODO: what should be implemented, role of tx
 link handler, keeper, antehandler
 
 CLI transaction subcommands are defined in the `tx.go` file. 
 
-### Encoding and Decoding
+## Encoding and Decoding
 
 All nodes running Tendermint only handle transactions in `[]byte` form. Transactions are always encoded (i.e. using [`Amino`](./amino.md), a protocol buffer which serializes application data structures into compact `[]byte`s for efficient transmission) prior to consensus engine processing, and decoded for application processing. Thus, ABCI calls `CheckTx` and `DeliverTx` to an application provide transactions in the form `txBytes []byte` which are first unmarshaled into the application's specific transaction data structure using `app.txDecoder`. 
 

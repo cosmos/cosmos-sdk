@@ -168,7 +168,7 @@ func (s stringArray) String() string { return strings.Join(s[:], ",") }
 func GetCmdQueryDenoms(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "denoms",
-		Short: "queries all denoms of all NFTs",
+		Short: "queries all denominations of all the available collections of NFTs",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

@@ -7,17 +7,16 @@
 ## Synopsis
 
 This doc describes how transactions and messages are defined. 
-1. [Transaction Definition](#transaction-definition)
-2. [Encoding and Decoding](#encoding-and-decoding)
-4. [Messages](#messages)
+1. [Transactions](#transactions)
+2. [Messages](#messages)
 
 ## Transactions
 
 [**Transactions**](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f7186a80bf7cb140e2/types/tx_msg.go#L36-L43)  trigger state changes. They are comprised of metadata and [messages](./modules.md#messages) that instruct modules to perform various actions. 
 
-When users interact with an application and make state changes (e.g. sending coins or changing stored values), transactions are created. These transactions must then be included in a block, validated, and approved by the network through the consensus process. To learn about the lifecycle of a transaction, click [here](./tx-lifecycle.md).
+When users interact with an application and make state changes (e.g. sending coins or changing stored values), transactions are created. Transactions must be signed by the appropriate account holders as specified in the transaction definitions, then broadcast to the network. These transactions must then be included in a block, validated, and approved by the network through the consensus process. To learn about the lifecycle of a transaction, click [here](./tx-lifecycle.md).
 
-## Transaction Interface 
+### Transaction Definition
 
 Transactions are defined by module developers and application developers. They must implement the [`Tx`](https://github.com/cosmos/cosmos-sdk/blob/73700df8c39d1fe6c3d3a1a635ac03d4bacecf55/types/tx_msg.go#L34-L41) interface and include an encoder and decoder. 
 
@@ -28,17 +27,7 @@ Transactions are defined by module developers and application developers. They m
 
 ### CLI and REST Interfaces
 
-The module developer can specify possible user interactions by defining HTTP Request Handlers or Cobra [commands](https://github.com/spf13/cobra) accessible through command-line, typically found in the module's `/client` folder. An application developer creates entrypoints to the application by creating a [command-line interface](./interfaces.md#cli) or [REST API](./interfaces.md#rest), typically found in the application's `/cmd` folder. 
-
-#### CLI 
-
-One of the main entrypoints for an application is the command-line interface. Transactions are typically created in applications, but some SDK modules define module-specific transactions such as `tx sign` from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module and transaction subcommands, such as `tx gov vote` and `tx staking delegate` which are from the [`gov`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/gov) and [`staking`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/staking) modules, respectively. 
-
-The application developer defines application-specific transactions and creates an entrypoint to the application by indicating which commands users may utilize to make changes in the state machine. The general practice is to define a function `txCmd` in the `main.go` file that adds commands for each type of transaction possible for this application as subcommands to the `rootCmd`. This function is called in `main()`.  Note that an application may utilize transactions from multiple modules. 
-
-#### REST
-
-
+The module developer can specify possible user interactions by defining HTTP Request Handlers or Cobra [commands](https://github.com/spf13/cobra) accessible through command-line, typically found in the module's `/client` folder. An application developer creates entrypoints to the application by creating a [command-line interface](./interfaces.md#cli) or [REST interface](./interfaces.md#rest), typically found in the application's `/cmd` folder. 
 
 ## Messages
 

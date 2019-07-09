@@ -23,7 +23,7 @@ func NewLogWriter(testingmode bool) LogWriter {
 
 // log writter
 type StandardLogWriter struct {
-	OpEntries []OperationEntry `json:"op_entries"`
+	OpEntries []OperationEntry `json:"op_entries" yaml:"op_entries"`
 }
 
 // add an entry to the log writter

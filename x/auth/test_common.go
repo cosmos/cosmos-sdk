@@ -3,6 +3,7 @@ package auth
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
-	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 type testInput struct {
@@ -22,12 +22,40 @@ type testInput struct {
 	sk  types.SupplyKeeper
 }
 
+// moduleAccount defines an account for modules that holds coins on a pool
+type moduleAccount struct {
+	*types.BaseAccount
+	name        string   `json:"name" yaml:"name"`              // name of the module
+	permissions []string `json:"permissions" yaml"permissions"` // permissions of module account
+}
+
+// HasPermission returns whether or not the module account has permission.
+func (ma moduleAccount) HasPermission(permission string) bool {
+	for _, perm := range ma.permissions {
+		if perm == permission {
+			return true
+		}
+	}
+	return false
+}
+
+// GetName returns the the name of the holder's module
+func (ma moduleAccount) GetName() string {
+	return ma.name
+}
+
+// GetPermissions returns permissions granted to the module account
+func (ma moduleAccount) GetPermissions() []string {
+	return ma.permissions
+}
+
 func setupTestInput() testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
-	supplytypes.RegisterCodec(cdc)
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
+	cdc.RegisterConcrete(&moduleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
@@ -101,8 +129,16 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 		}
 	}
 
+	moduleAddress := sk.GetModuleAddress(moduleName)
+	baseAcc := types.NewBaseAccountWithAddress(moduleAddress)
+
 	// create a new module account
-	macc := supplytypes.NewEmptyModuleAccount(moduleName, "basic")
+	macc := &moduleAccount{
+		BaseAccount: &baseAcc,
+		name:        moduleName,
+		permissions: []string{"basic"},
+	}
+
 	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)
 	sk.ak.SetAccount(ctx, maccI)
 	return maccI
@@ -110,5 +146,5 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 
 // GetModuleAddress for dummy supply keeper
 func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
-	return supplytypes.NewModuleAddress(moduleName)
+	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 }

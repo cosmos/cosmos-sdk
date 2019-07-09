@@ -11,15 +11,15 @@ type (
 	// Commission defines a commission parameters for a given validator.
 	Commission struct {
 		CommissionRates
-		UpdateTime time.Time `json:"update_time"` // the last time the commission rate was changed
+		UpdateTime time.Time `json:"update_time" yaml:"update_time"` // the last time the commission rate was changed
 	}
 
 	// CommissionRates defines the initial commission rates to be used for creating a
 	// validator.
 	CommissionRates struct {
-		Rate          sdk.Dec `json:"rate"`            // the commission rate charged to delegators, as a fraction
-		MaxRate       sdk.Dec `json:"max_rate"`        // maximum commission rate which validator can ever charge, as a fraction
-		MaxChangeRate sdk.Dec `json:"max_change_rate"` // maximum daily increase of the validator commission, as a fraction
+		Rate          sdk.Dec `json:"rate" yaml:"rate"`                       // the commission rate charged to delegators, as a fraction
+		MaxRate       sdk.Dec `json:"max_rate" yaml:"max_rate"`               // maximum commission rate which validator can ever charge, as a fraction
+		MaxChangeRate sdk.Dec `json:"max_change_rate" yaml:"max_change_rate"` // maximum daily increase of the validator commission, as a fraction
 	}
 )
 

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -50,4 +51,21 @@ func TestEventManager(t *testing.T) {
 
 	require.Len(t, em.Events(), 2)
 	require.Equal(t, em.Events(), events.AppendEvent(event))
+}
+
+func TestStringifyEvents(t *testing.T) {
+	e := Events{
+		NewEvent("message", NewAttribute("sender", "foo")),
+		NewEvent("message", NewAttribute("module", "bank")),
+	}
+	se := StringifyEvents(e.ToABCIEvents())
+
+	expectedTxtStr := "\t\t- message\n\t\t\t- sender: foo\n\t\t\t- module: bank"
+	require.Equal(t, expectedTxtStr, se.String())
+
+	bz, err := json.Marshal(se)
+	require.NoError(t, err)
+
+	expectedJSONStr := "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"},{\"key\":\"module\",\"value\":\"bank\"}]}]"
+	require.Equal(t, expectedJSONStr, string(bz))
 }

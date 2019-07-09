@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -65,11 +66,6 @@ func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	if params.Limit == 0 {
-		// set the default limit to max bonded if no limit was provided
-		params.Limit = int(k.sk.MaxValidators(ctx))
-	}
-
 	var signingInfos []ValidatorSigningInfo
 
 	k.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
@@ -77,15 +73,8 @@ func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 		return false
 	})
 
-	// get pagination bounds
-	start := (params.Page - 1) * params.Limit
-	end := params.Limit + start
-	if end >= len(signingInfos) {
-		end = len(signingInfos)
-	}
-
-	if start >= len(signingInfos) {
-		// page is out of bounds
+	start, end := client.Paginate(len(signingInfos), params.Page, params.Limit, int(k.sk.MaxValidators(ctx)))
+	if start < 0 || end < 0 {
 		signingInfos = []ValidatorSigningInfo{}
 	} else {
 		signingInfos = signingInfos[start:end]

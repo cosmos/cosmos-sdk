@@ -18,13 +18,13 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ### Transaction Creation
 
-The transaction `Tx` is created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
+One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
 ```
 [modulename] tx [command] [args] [flags]
 ``` 
 
- This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node. 
+This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node. 
 
 There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees.md#accounts) the transaction is orginating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
 
@@ -41,7 +41,7 @@ The ultimate value of the fees paid is equal to the gas multiplied by the gas pr
 
 Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` will be rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
 
-#### Example
+#### CLI Example
 
 Users of application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas. 
 
@@ -49,9 +49,13 @@ Users of application `app` can enter the following command into their CLI to gen
 appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
 ```
 
+#### Other Transaction Creation Methods
+
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [REST interface](./interfaces.md#rest) or some other entrypoint defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](lunie.io) and signing it with a Ledger Nano S). 
+
 ## Addition to Mempool
 
-Each full node that receives `Tx` performs local checks using an ABCI procedure, `CheckTx`, to check for invalidity. If the transaction passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+Each full-node (running Tendermint) that receives `Tx` sends an [ABCI message](https://tendermint.com/docs/spec/abci/abci.html#messages), `CheckTx`, to the application layer to check for invalidity, and receives a Response. If `Tx` passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -125,12 +129,7 @@ The next step of consensus is to execute the transactions to fully validate them
 		          |			
 			  v			
 		-----------------------
-		| PreVote	      |         
-		-----------------------
-		          |			
-			  v			
-		-----------------------
-		| PreCommit	      |         
+		| Consensus	      |         
 		-----------------------
 		          |			
 			  v			
@@ -155,17 +154,13 @@ If there are any failed state changes resulting from `Tx` being invalid or `GasM
 
 The final step is for validator-nodes participating in consensus to commit the block and state changes. Validator-nodes perform the previous step of executing state changes in order to validate the transactions, then sign the block to confirm and vote for them. Full-nodes that are not validators do not participate in consensus - i.e. they cannot vote - but listen for votes to understand whether or not they should commit the state changes.
 
-#### Prevote and Precommit
+#### Consensus
 
-In the **Prevote** stage, validators broadcast a signed prevote for the block they have accepted, then wait for +2/3 Prevotes from the rest of the nodes. 
-
-In the **Precommit** stage, validators broadcast a signed precommit vote, then wait +2/3 Precommits from the rest of the nodes. If +2/3 Precommits are recieved, the block moves into the commit stage. 
-
-For full details on how the consensus algorithm works, click [here](https://tendermint.com/docs/spec/consensus/consensus.html). 
+The consensus layer may technically run any consensus algorithm to come to agreement on which block to accept. In [Tendermint BFT](https://tendermint.com/docs/spec/consensus/consensus.html), validator-nodes go through a Prevote stage and a Precommit stage, and the block requires +2/3 Precommits from the validator-nodes to move into the commit stage. This phase is purely in the consensus layer; `Tx` is represented as a `[]byte`.
 
 #### Commit
 
-In the **Commit** stage, full-nodes finalize the state changes. A new state root is generated to serve as a merkle proof for the state change. Applications that inherit from [Baseapp](./baseapp.md) use its [`Commit`](./baseapp.md#commit) ABCI method; it syncs all the states by writing the `deliverState` into the application's internal state. As soon as the state changes are committed, `checkState` and `queryState` start afresh from the most recently committed state and `deliverState` resets to `nil` in order to be consistent and reflect the changes.
+In the **Commit** stage, full-nodes commit to a new block to be added to the blockchain and finalize the state changes on the application layer. A new state root is generated to serve as a merkle proof for the state change. Applications that inherit from [Baseapp](./baseapp.md) use its [`Commit`](./baseapp.md#commit) ABCI method; it syncs all the states by writing the `deliverState` into the application's internal state. As soon as the state changes are committed, `checkState` and `queryState` start afresh from the most recently committed state and `deliverState` resets to `nil` in order to be consistent and reflect the changes.
 
 Note that not all blocks have the same number of transactions and it is possible for consensus to result in a `nil` block or one with none at all. In a public blockchain network, it is also possible for validators to be **byzantine**, or malicious, which may prevent `Tx` from being committed in the blockchain. Possible malicious behaviors include the proposer deciding to censor `Tx` by excluding it from the block or a validator voting against the block.
 

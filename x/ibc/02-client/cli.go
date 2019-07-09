@@ -17,9 +17,10 @@ type CLIObject struct {
 	Cdc  *codec.Codec
 }
 
-func (obj Object) CLI(root merkle.Root) CLIObject {
+func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
+	obj := man.object(id)
 	return CLIObject{
-		ID:                obj.id,
+		ID:                id,
 		ConsensusStateKey: obj.consensusState.Key(),
 		FrozenKey:         obj.frozen.Key(),
 
@@ -42,12 +43,12 @@ func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) 
 
 }
 
-func (obj CLIObject) ConsensusState(ctx context.CLIContext, root merkle.Root) (res ConsensusState, proof merkle.Proof, err error) {
+func (obj CLIObject) ConsensusState(ctx context.CLIContext) (res ConsensusState, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.ConsensusStateKey, &res)
 	return
 }
 
-func (obj CLIObject) Frozen(ctx context.CLIContext, root merkle.Root) (res bool, proof merkle.Proof, err error) {
+func (obj CLIObject) Frozen(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.FrozenKey, &res)
 	return
 }

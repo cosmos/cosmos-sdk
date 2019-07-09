@@ -15,13 +15,19 @@ type Base struct {
 }
 
 func EmptyBase() Base {
-	return NewBase(nil, nil)
+	return NewBase(nil, nil, nil)
 }
 
-func NewBase(cdc *codec.Codec, key sdk.StoreKey) Base {
+func NewBase(cdc *codec.Codec, key sdk.StoreKey, rootkey []byte) Base {
+	if len(rootkey) == 0 {
+		return Base{
+			cdc:     cdc,
+			storefn: func(ctx Context) KVStore { return ctx.KVStore(key) },
+		}
+	}
 	return Base{
 		cdc:     cdc,
-		storefn: func(ctx Context) KVStore { return ctx.KVStore(key) },
+		storefn: func(ctx Context) KVStore { return prefix.NewStore(ctx.KVStore(key), rootkey) },
 	}
 }
 

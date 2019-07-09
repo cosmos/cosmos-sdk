@@ -20,3 +20,20 @@ func TestSupply(t *testing.T) {
 
 	require.Equal(t, expectedTotal, total)
 }
+
+func TestValidatePermissions(t *testing.T) {
+	nAccs := int64(0)
+	initialPower := int64(100)
+	_, _, keeper := createTestInput(t, false, initialPower, nAccs)
+
+	err := keeper.ValidatePermissions(multiPermAcc)
+	require.NoError(t, err)
+
+	err = keeper.ValidatePermissions(randomPermAcc)
+	require.NoError(t, err)
+
+	// add unregistered permissions
+	randomPermAcc.AddPermissions("other")
+	err = keeper.ValidatePermissions(randomPermAcc)
+	require.Error(t, err)
+}

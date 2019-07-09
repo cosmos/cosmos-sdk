@@ -6,30 +6,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
-// GetModuleAddress returns a an address based on the module name
+// GetModuleAddress returns an address based on the module name
 func (k Keeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	permAddr, ok := k.permAddrs[moduleName]
 	if !ok {
 		return nil
 	}
-	return permAddr.address
+	return permAddr.GetAddress()
 }
 
-// GetModuleAddressAndPermission returns an address and permission based on the module name
-func (k Keeper) GetModuleAddressAndPermission(moduleName string) (addr sdk.AccAddress, permission string) {
+// GetModuleAddressAndPermissions returns an address and permissions based on the module name
+func (k Keeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
 	permAddr, ok := k.permAddrs[moduleName]
 	if !ok {
-		return nil, ""
+		return addr, permissions
 	}
-	return permAddr.address, permAddr.permission
+	return permAddr.GetAddress(), permAddr.GetPermissions()
 }
 
-// GetModuleAccountAndPermission gets the module account from the auth account store and its
-// registered permission
-func (k Keeper) GetModuleAccountAndPermission(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, string) {
-	addr, perm := k.GetModuleAddressAndPermission(moduleName)
+// GetModuleAccountAndPermissions gets the module account from the auth account store and its
+// registered permissions
+func (k Keeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string) {
+	addr, perms := k.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {
-		return nil, ""
+		return nil, []string{}
 	}
 
 	acc := k.ak.GetAccount(ctx, addr)
@@ -38,20 +38,20 @@ func (k Keeper) GetModuleAccountAndPermission(ctx sdk.Context, moduleName string
 		if !ok {
 			panic("account is not a module account")
 		}
-		return macc, perm
+		return macc, perms
 	}
 
 	// create a new module account
-	macc := types.NewEmptyModuleAccount(moduleName, perm)
+	macc := types.NewEmptyModuleAccount(moduleName, perms...)
 	maccI := (k.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
 	k.SetModuleAccount(ctx, maccI)
 
-	return maccI, perm
+	return maccI, perms
 }
 
 // GetModuleAccount gets the module account from the auth account store
 func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
-	acc, _ := k.GetModuleAccountAndPermission(ctx, moduleName)
+	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc
 }
 

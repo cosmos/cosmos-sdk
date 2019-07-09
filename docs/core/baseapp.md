@@ -31,7 +31,7 @@ This document describes `baseapp`, the abstraction that implements most of the c
     
 ## Introduction
 
-`baseapp` is an abstraction that implements the core of an SDK application, namely:
+`baseapp` is a base class that implements the core of an SDK application, namely:
 
 - The [Application-Blockchain Interface](#abci), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint). 
 - A [Router](#routing), to route [messages](./tx-msgs.md) and [queries](./querier.md) to the appropriate [module](../building-modules/modules.md).
@@ -62,14 +62,14 @@ The [`baseapp` type](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/ba
 
 First, the important parameters that are initialized during the initialization of the application:
 
-- A [`CommitMultiStore`](./store.md#commit-multi-store). This is the main store of the application, which holds the canonical state that is committed at the [end of each block](#commit). This store is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state. 
-- A [database](./store.md#database) `db`, which is used by the `CommitMultiStore` to handle data storage.
-- A [router](#message-routing). The `router` facilitates the routing of [messages](./tx-msgs.md) to the appropriate module for it to be processed.
-- A [query router](#query-routing). The `query router` facilitates the routing of [queries](./querier.md) to the appropriate module for it to be processed.
-- A [`txDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder), used to decode transaction `[]byte` relayed by the underlying Tendermint engine.
-- A [`baseKey`], to access the [main store](./store.md#main-store) in the `CommitMultiStore`. The main store is used to persist data related to the core of the application, like consensus parameters.  
-- A [`anteHandler`](#antehandler), to handle signature verification and fee paiement when a transaction is received.
-- An [`initChainer`](../basics/app-anatomy.md#initchainer), [`beginBlocker` and `endBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker), which are the functions executed when the application received the [InitChain], [BeginBlock] and [EndBlock] messages from the underlying Tendermint engine. 
+- [`CommitMultiStore`](./store.md#commit-multi-store): This is the main store of the application, which holds the canonical state that is committed at the [end of each block](#commit). This store is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state. 
+- [Database](./store.md#database): The `db` is used by the `CommitMultiStore` to handle data storage.
+- [Router](#message-routing): The `router` facilitates the routing of [`messages`](./tx-msgs.md) to the appropriate module for it to be processed. Here `message` refers to the transaction components that need to be processed by the application in order to update the state, and not to ABCI messages which implement the interface between the application and the underlying consensus engine. 
+- [Query Router](#query-routing): The `query router` facilitates the routing of [queries](./querier.md) to the appropriate module for it to be processed. These `queries` are not ABCI messages themselves, but they are relayed to the application from the underlying consensus engine via the ABCI message [`Query`](#query).
+- [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode transaction `[]byte` relayed by the underlying Tendermint engine.
+- [`DaseKey`]: This key is used to access the [main store](./store.md#main-store) in the `CommitMultiStore`. The main store is used to persist data related to the core of the application, like consensus parameters.  
+- [`AnteHandler`](#antehandler): This handler is used to handle signature verification and fee payment when a transaction is received.
+- [`initChainer`](../basics/app-anatomy.md#initchainer), [`beginBlocker` and `endBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker): These  are the functions executed when the application receives the [InitChain], [BeginBlock] and [EndBlock] ABCI messages from the underlying Tendermint engine. 
 
 Then, parameters used to define [volatile states](#volatile-states) (i.e. cached states):
 
@@ -79,24 +79,26 @@ Then, parameters used to define [volatile states](#volatile-states) (i.e. cached
 Finally, a few more important parameterd:
 
 - `voteInfos`: This parameter carries the list of validators whose precommit is missing, either because they did not vote or because the proposer did not include their vote. This information is carried by the [context](#context) and can be used by the application for various things like punishing absent validators.
-- `minGasPrices`: This parameter defines the minimum [gas prices](./accounts-fees-gas.md#gas) accepted by the node. This is a local parameter, meaning each full-node can set a different `minGasPrices`. It is run by the [`anteHandler`](./accounts-fees-gas.md#antehandler) during `CheckTx`, mainly as a spam protection mechanism. The transaction enters the [mempool](https://tendermint.com/docs/tendermint-core/mempool.html#transaction-ordering) only if the gas price of the transaction is superior to one of the minimum gas price in `minGasPrices` (i.e. if `minGasPrices == 1uatom, 1upho`, the `gas-price` of the transaction must be superior to `1uatom` OR `1upho`).
+- `minGasPrices`: This parameter defines the minimum [gas prices](./accounts-fees-gas.md#gas) accepted by the node. This is a local parameter, meaning each full-node can set a different `minGasPrices`. It is run by the [`anteHandler`](./accounts-fees-gas.md#antehandler) during `CheckTx`, mainly as a spam protection mechanism. The transaction enters the [mempool](https://tendermint.com/docs/tendermint-core/mempool.html#transaction-ordering) only if the gas prices of the transaction is superior to one of the minimum gas price in `minGasPrices` (i.e. if `minGasPrices == 1uatom, 1upho`, the `gas-price` of the transaction must be superior to `1uatom` OR `1upho`).
 - `appVersion`: Version of the application. It is set in the [application's constructor function](../basics/app-anatomy.md#constructor-function).
 
 ## Constructor
 
 `NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),)` is the constructor function for `baseapp`. It is called from the [application's constructor function](../basics/app-anatomy.md#constructor-function) each time the full-node is started. 
 
-`baseapp`'s constructor function is pretty straightforward. The only thing worth noting is the possibility to add additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go) to `baseapp` by passing `options functions` to the constructor function, which will execute them in order. `options` are generally `setters` function for important parameters, like `SetPruning()` to active pruning or `SetMinGasPrices()` to set the node's `min-gas-prices`. 
+`baseapp`'s constructor function is pretty straightforward. The only thing worth noting is the possibility to add additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go) to `baseapp` by passing `options functions` to the constructor function, which will execute them in order. `options` are generally `setter` functions for important parameters, like `SetPruning()` to active pruning or `SetMinGasPrices()` to set the node's `min-gas-prices`. 
 
-A list of `options` example can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go). Naturally, developers can add additional `options` based on their application's needs. 
+A list of `options` examples can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go). Naturally, developers can add additional `options` based on their application's needs. 
 
 ## States 
 
-`baseapp` handles various parallel states for different purposes. There is the [main state](#main-state), which is the canonical state of the application, and volatile states like [`checkState`](#checkState) and [`deliverState`](#deliverstate), which are used to handle temporary states inbetween updates of the main state.
+`baseapp` handles various parallel states for different purposes. There is the [main state](#main-state), which is the canonical state of the application, and volatile states like [`checkState`](#checkState) and [`deliverState`](#deliverstate), which are used to handle temporary states inbetween updates of the main state made during [`Commit`](#commit).
 
 ```
-                To perform stateful checks        To execute state                To serve queries
-                on received transactions     transitions during DeliverTx   on last-committed state
+            Updated whenever an unconfirmed   Updated whenever a transaction         To serve user queries relayed
+            transaction is received from the  is received from the underlying        from the underlying consensus
+            underlying consensus engine via   consensus engine (as part of a block)  engine via the Query ABCI message
+            CheckTx                           proposal via DeliverTx                   
                 +----------------------+      +----------------------+       +----------------------+
                 |   CheckState(t)(0)   |      |  DeliverState(t)(0)  |       |    QueryState(t)     |
                 +----------------------+      |                      |       |                      |
@@ -173,7 +175,7 @@ When messages and queries are received by the application, they must be routed t
 
 ### Message Routing
 
-Messages need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](./handler.md). Usually, the `path` is the name of the module.
+[`Message`s](../building-modules/messages.md) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](./handler.md). Usually, the `path` is the name of the module.
 
 The application's `router` is initilalized with all the routes using the application's [module manager](./modules.md#module-manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 
@@ -194,7 +196,7 @@ The consensus engine handles two main tasks:
 
 It is **not** the role of the consensus engine to define the state or the validity of transactions. Generally, transactions are handled by the consensus engine in the form of `[]bytes`, and relayed to the application via the ABCI to be decoded and processed. At keys moments in the networking and consensus processes (e.g. beginning of a block, commit of a block, reception of an unconfirmed transaction, ...), the consensus engine emits ABCI messages for the state-machine to act on. 
 
-Developers building on top of the Cosmos SDK need not implement the ABCI themselves, as `baseapp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `baseapp` implements: [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx)
+Developers building on top of the Cosmos SDK need not implement the ABCI themselves, as all the ABCI messages are implemented as a set of `baseapp`'s methods in the Cosmos SDK. Let us go through the main ABCI messages that `baseapp` implements: [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx). Note that these ABCI messages are different from the [`message`s](../building-modules/messages.md)  contained in [`transactions`](../basics/transactions.md), the purpose of which is to trigger state-transitions. 
 
 ### CheckTx
 
@@ -268,11 +270,11 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 - Perform preliminary *stateful* validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees. 
 - Play a role in the incentivisation of stakeholders via the collection of transaction fees. 
 
-`baseapp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go).
+`baseapp` holds an `anteHandler` as parameter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go).
 
 ### RunMsgs
 
-`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `message`s. 
+`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message contained in the transaction, and with `runTxModeDeliver` to actually process the `message`s. 
 
 First, it retreives the `message`'s `route` using the `Msg.Route()` method. Then, using the application's [`router`](#routing) and the `route`, it checks for the existence of a `handler`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`handler`](../building-modules.md#handler) function for the message is executed, before `RunMsgs` returns. 
 

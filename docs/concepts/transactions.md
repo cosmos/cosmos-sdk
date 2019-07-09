@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* [Baseapp](./baseapp.md)
+* [Anatomy of an SDK Application](./app-anatomy.md)
 
 ## Synopsis
 
@@ -13,24 +13,32 @@ This doc describes how transactions and messages are defined.
 
 ## Transactions
 
-[**Transactions**](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f7186a80bf7cb140e2/types/tx_msg.go#L36-L43) are comprised of one or multiple [messages](#messages) and trigger state changes. 
+[**Transactions**](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f7186a80bf7cb140e2/types/tx_msg.go#L36-L43)  trigger state changes. They are comprised of metadata and [messages](./modules.md#messages) that instruct modules to perform various actions. 
 
-TODO: Role of tx
+When users interact with an application and make state changes (e.g. sending coins or changing stored values), transactions are created. These transactions must then be included in a block, validated, and approved by the network through the consensus process. To learn about the lifecycle of a transaction, click [here](./tx-lifecycle.md).
 
-To learn about the lifecycle of a transaction, read [this doc](./tx-lifecycle.md).
+## Transaction Interface 
 
-## Transaction Definition
+Transactions are defined by module developers and application developers. They must implement the [`Tx`](https://github.com/cosmos/cosmos-sdk/blob/73700df8c39d1fe6c3d3a1a635ac03d4bacecf55/types/tx_msg.go#L34-L41) interface and include an encoder and decoder. 
 
-TODO: what should be implemented, role of tx
-link handler, keeper, antehandler
+* **GetMsgs:** unwraps the transaction and returns a list of its message(s) - one transaction may have one or multiple messages. 
+* **ValidateBasic:** includes lightweight, stateless checks on the validity of a transaction. 
+* **TxEncoder:** Nodes running the consensus engine (e.g. Tendermint Core) process transactions in the `[]byte` form, so transactions are always encoded before being handled by Tendermint processes. The Cosmos SDK allows developers to specify any deterministic encoding format for their applications; the default is [`Amino`](./amino.md).
+* **TxDecoder:** [ABCI](https://tendermint.com/docs/spec/abci/) calls such as `CheckTx` and `DeliverTx` can be used to process transaction data at the application layer; they are passed in as `txBytes []byte` an first unmarshaled (decoded) using `TxDecoder` before any logic is applied. 
 
-CLI transaction subcommands are defined in the `tx.go` file. 
+### CLI and REST Interfaces
 
-## Encoding and Decoding
+The module developer can specify possible user interactions by defining HTTP Request Handlers or Cobra [commands](https://github.com/spf13/cobra) accessible through command-line, typically found in the module's `/client` folder. An application developer creates entrypoints to the application by creating a [command-line interface](./interfaces.md#cli) or [REST API](./interfaces.md#rest), typically found in the application's `/cmd` folder. 
 
-All nodes running Tendermint only handle transactions in `[]byte` form. Transactions are always encoded (i.e. using [`Amino`](./amino.md), a protocol buffer which serializes application data structures into compact `[]byte`s for efficient transmission) prior to consensus engine processing, and decoded for application processing. Thus, ABCI calls `CheckTx` and `DeliverTx` to an application provide transactions in the form `txBytes []byte` which are first unmarshaled into the application's specific transaction data structure using `app.txDecoder`. 
+#### CLI 
 
-TODO: specifying encoding
+One of the main entrypoints for an application is the command-line interface. Transactions are typically created in applications, but some SDK modules define module-specific transactions such as `tx sign` from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module and transaction subcommands, such as `tx gov vote` and `tx staking delegate` which are from the [`gov`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/gov) and [`staking`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/staking) modules, respectively. 
+
+The application developer defines application-specific transactions and creates an entrypoint to the application by indicating which commands users may utilize to make changes in the state machine. The general practice is to define a function `txCmd` in the `main.go` file that adds commands for each type of transaction possible for this application as subcommands to the `rootCmd`. This function is called in `main()`.  Note that an application may utilize transactions from multiple modules. 
+
+#### REST
+
+
 
 ## Messages
 
@@ -47,4 +55,6 @@ The [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/97d10210beb55ad4bd6722f718
 * **ValidateBasic** implements a set of stateless sanity checks for the message and returns an `Error`. For example, the `validateBasic` method for `MsgSend`, the message which sends coins from one account to another, checks that both sender and recipient addresses are valid and the amount is nonnegative. 
 * **GetSignBytes** returns a `[]byte` representation of the message. 
 * **GetSigners** returns a list of addresses whose corresponding signatures are required for the message to be valid. For example, `MsgSend` requires a signature from the sender.
+
+Module developers also define a [`Handler`](./app-anatomy.md#handler) to process module messages and a [`Keeper`](./app-anatomy.md#keeper) to manage stores accessed by messages. 
 

@@ -1,4 +1,4 @@
-# Transactions and Messages
+# Transactions 
 
 ## Prerequisites
 

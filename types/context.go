@@ -166,61 +166,6 @@ func (c Context) IsZero() bool {
 	return c.ms == nil
 }
 
-// // context value for the provided key
-// func (c Context) Value(key interface{}) interface{} {
-// 	value := c.Context.Value(key)
-// 	if cloner, ok := value.(cloner); ok {
-// 		return cloner.Clone()
-// 	}
-// 	if message, ok := value.(proto.Message); ok {
-// 		return proto.Clone(message)
-// 	}
-// 	return value
-// }
-
-// ----------------------------------------------------------------------------
-// Setters
-// ----------------------------------------------------------------------------
-
-// func (c Context) WithValue(key interface{}, value interface{}) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithCloner(key interface{}, value cloner) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithCacheWrapper(key interface{}, value CacheWrapper) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithString(key interface{}, value string) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithInt32(key interface{}, value int32) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithUint32(key interface{}, value uint32) Context {
-// 	return c.withValue(key, value)
-// }
-// func (c Context) WithUint64(key interface{}, value uint64) Context {
-// 	return c.withValue(key, value)
-// }
-
-// func (c Context) withValue(key interface{}, value interface{}) Context {
-// 	c.pst.bump(Op{
-// 		gen:   c.gen + 1,
-// 		key:   key,
-// 		value: value,
-// 	}) // increment version for all relatives.
-
-// 	return Context{
-// 		Context: context.WithValue(c.Context, key, value),
-// 		pst:     c.pst,
-// 		gen:     c.gen + 1,
-// 	}
-// }
-
 // ----------------------------------------------------------------------------
 // Store / Caching
 // ----------------------------------------------------------------------------

@@ -8,11 +8,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/99designs/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 )
 
 func TestNewKeybaseKeyringFileOnly(t *testing.T) {
@@ -24,7 +23,6 @@ func TestNewKeybaseKeyringFileOnly(t *testing.T) {
 	require.Equal(t, lazykb.name, "keybasename")
 }
 
-
 // New creates a new instance of a lazy keybase.
 func NewKeybaseKeyringFileOnly(name string, dir string) Keybase {
 
@@ -32,15 +30,14 @@ func NewKeybaseKeyringFileOnly(name string, dir string) Keybase {
 		AllowedBackends: []keyring.BackendType{"file"},
 		//Keyring with encrypted application data
 		ServiceName: name,
-		FileDir:dir,
+		FileDir:     dir,
 	})
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
-	return lazyKeybaseKeyring{name: name, dir:dir}
+	return lazyKeybaseKeyring{name: name, dir: dir}
 }
-
 
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
@@ -337,7 +334,7 @@ func TestLazySeedPhraseKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, 0)
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())

@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
-	
+
 	bip39 "github.com/cosmos/go-bip39"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -54,7 +54,7 @@ const (
 )
 
 const (
-	// used for deriving seed from mnemonic
+	// DefaultBIP39Passphrase used for deriving seed from mnemonic
 	DefaultBIP39Passphrase = ""
 
 	// bits of entropy to draw when creating a mnemonic
@@ -77,15 +77,12 @@ type dbKeybase struct {
 	db dbm.DB
 }
 
-
 // newDbKeybase creates a new keybase instance using the passed DB for reading and writing keys.
 func newDbKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
 		db: db,
 	}
 }
-
-
 
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
@@ -470,7 +467,6 @@ func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase
 	return info
 }
 
-
 func (kb dbKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(name, info)
@@ -497,8 +493,6 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
-
-
 
 func addrKey(address types.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))

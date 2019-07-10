@@ -1,0 +1,6 @@
+#4588 Context does not depend on x/auth anymore. client/context is stripped out of the following features:
+- GetAccountDecoder()
+- CLIContext.WithAccountDecoder()
+- CLIContext.WithAccountStore()
+
+x/auth.AccountDecoder is unnecessary and consequently removed.

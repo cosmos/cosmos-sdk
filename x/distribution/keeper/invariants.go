@@ -5,22 +5,25 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // register all distribution invariants
-func RegisterInvariants(c types.CrisisKeeper, k Keeper, stk types.StakingKeeper) {
-	c.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
+func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
+	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
-	c.RegisterRoute(types.ModuleName, "can-withdraw",
-		CanWithdrawInvariant(k, stk))
-	c.RegisterRoute(types.ModuleName, "reference-count",
-		ReferenceCountInvariant(k, stk))
+	ir.RegisterRoute(types.ModuleName, "can-withdraw",
+		CanWithdrawInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "reference-count",
+		ReferenceCountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "module-account",
+		ModuleAccountInvariant(k))
 }
 
 // AllInvariants runs all invariants of the distribution module
-func AllInvariants(k Keeper, stk types.StakingKeeper) sdk.Invariant {
+func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		err := CanWithdrawInvariant(k, stk)(ctx)
+		err := CanWithdrawInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
@@ -28,11 +31,11 @@ func AllInvariants(k Keeper, stk types.StakingKeeper) sdk.Invariant {
 		if err != nil {
 			return err
 		}
-		err = ReferenceCountInvariant(k, stk)(ctx)
+		err = ReferenceCountInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
-		return nil
+		return ModuleAccountInvariant(k)(ctx)
 	}
 }
 
@@ -60,7 +63,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
+func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		// cache, we don't want to write changes
@@ -69,13 +72,13 @@ func CanWithdrawInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
 		var remaining sdk.DecCoins
 
 		valDelegationAddrs := make(map[string][]sdk.AccAddress)
-		for _, del := range sk.GetAllSDKDelegations(ctx) {
+		for _, del := range k.stakingKeeper.GetAllSDKDelegations(ctx) {
 			valAddr := del.GetValidatorAddr().String()
 			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
 		}
 
 		// iterate over all validators
-		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val exported.ValidatorI) (stop bool) {
 			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 
 			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
@@ -104,15 +107,15 @@ func CanWithdrawInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
 }
 
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
-func ReferenceCountInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
+func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		valCount := uint64(0)
-		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val exported.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})
-		dels := sk.GetAllSDKDelegations(ctx)
+		dels := k.stakingKeeper.GetAllSDKDelegations(ctx)
 		slashCount := uint64(0)
 		k.IterateValidatorSlashEvents(ctx,
 			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
@@ -129,6 +132,32 @@ func ReferenceCountInvariant(k Keeper, sk types.StakingKeeper) sdk.Invariant {
 			return fmt.Errorf("unexpected number of historical rewards records: "+
 				"expected %v (%v vals + %v dels + %v slashes), got %v",
 				expected, valCount, len(dels), slashCount, count)
+		}
+
+		return nil
+	}
+}
+
+// ModuleAccountInvariant checks that the coins held by the distr ModuleAccount
+// is consistent with the sum of validator outstanding rewards
+func ModuleAccountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) error {
+
+		var expectedCoins sdk.DecCoins
+		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+			expectedCoins = expectedCoins.Add(rewards)
+			return false
+		})
+
+		communityPool := k.GetFeePoolCommunityCoins(ctx)
+		expectedInt, _ := expectedCoins.Add(communityPool).TruncateDecimal()
+
+		macc := k.GetDistributionAccount(ctx)
+
+		if !macc.GetCoins().IsEqual(expectedInt) {
+			return fmt.Errorf("distribution ModuleAccount coins invariance:\n"+
+				"\texpected ModuleAccount coins: %s\n"+
+				"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins())
 		}
 
 		return nil

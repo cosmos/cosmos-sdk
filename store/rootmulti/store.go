@@ -102,39 +102,38 @@ func (rs *Store) LoadLatestVersion() error {
 
 // Implements CommitMultiStore.
 func (rs *Store) LoadVersion(ver int64) error {
-
-	// Special logic for version 0
 	if ver == 0 {
+		// Special logic for version 0 where there is no need to get commit
+		// information.
 		for key, storeParams := range rs.storesParams {
-			id := types.CommitID{}
-			store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
 			if err != nil {
 				return fmt.Errorf("failed to load Store: %v", err)
 			}
+
 			rs.stores[key] = store
 		}
 
 		rs.lastCommitID = types.CommitID{}
 		return nil
 	}
-	// Otherwise, version is 1 or greater
 
-	// Get commitInfo
 	cInfo, err := getCommitInfo(rs.db, ver)
 	if err != nil {
 		return err
 	}
 
-	// Convert StoreInfos slice to map
+	// convert StoreInfos slice to map
 	infos := make(map[types.StoreKey]storeInfo)
 	for _, storeInfo := range cInfo.StoreInfos {
 		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
 	}
 
-	// Load each Store
+	// load each Store
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
 		var id types.CommitID
+
 		info, ok := infos[key]
 		if ok {
 			id = info.Core.CommitID
@@ -144,12 +143,13 @@ func (rs *Store) LoadVersion(ver int64) error {
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
+
 		newStores[key] = store
 	}
 
-	// Success.
 	rs.lastCommitID = cInfo.CommitID()
 	rs.stores = newStores
+
 	return nil
 }
 
@@ -198,6 +198,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// Need to update atomically.
 	batch := rs.db.NewBatch()
+	defer batch.Close()
 	setCommitInfo(batch, version, commitInfo)
 	setLatestVersion(batch, version)
 	batch.Write()
@@ -230,7 +231,34 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
+
 	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+}
+
+// CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
+// attempts to load stores at a given version (height). An error is returned if
+// any store cannot be loaded. This should only be used for querying and
+// iterating at past heights.
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
+	for key, store := range rs.stores {
+		switch store.GetStoreType() {
+		case types.StoreTypeIAVL:
+			// Attempt to lazy-load an already saved IAVL store version. If the
+			// version does not exist or is pruned, an error should be returned.
+			iavlStore, err := store.(*iavl.Store).GetImmutable(version)
+			if err != nil {
+				return nil, err
+			}
+
+			cachedStores[key] = iavlStore
+
+		default:
+			cachedStores[key] = store
+		}
+	}
+
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
 // Implements MultiStore.
@@ -291,6 +319,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		msg := fmt.Sprintf("no such store: %s", storeName)
 		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
+
 	queryable, ok := store.(types.Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
@@ -348,30 +377,31 @@ func parsePath(path string) (storeName string, subpath string, err errors.Error)
 
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitStore, err error) {
 	var db dbm.DB
+
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
 	} else {
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
+
 	switch params.typ {
 	case types.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
-		// TODO: id?
-		// return NewCommitMultiStore(db, id)
+
 	case types.StoreTypeIAVL:
-		store, err = iavl.LoadStore(db, id, rs.pruningOpts)
-		return
+		return iavl.LoadStore(db, id, rs.pruningOpts)
+
 	case types.StoreTypeDB:
-		store = commitDBStoreAdapter{dbadapter.Store{db}}
-		return
+		return commitDBStoreAdapter{dbadapter.Store{db}}, nil
+
 	case types.StoreTypeTransient:
 		_, ok := key.(*types.TransientStoreKey)
 		if !ok {
-			err = fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
-			return
+			return store, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
 		}
-		store = transient.NewStore()
-		return
+
+		return transient.NewStore(), nil
+
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
@@ -447,7 +477,7 @@ type storeCore struct {
 func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
-	bz, _ := cdc.MarshalBinaryLengthPrefixed(si.Core)
+	bz := si.Core.CommitID.Hash
 	hasher := tmhash.New()
 
 	_, err := hasher.Write(bz)

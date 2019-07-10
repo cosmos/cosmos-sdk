@@ -106,14 +106,14 @@ func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string,
 	return newDbKeybase(db).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
 }
 
-func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error) {
+func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	return newDbKeybase(db).CreateLedger(name, algo, account, index)
+	return newDbKeybase(db).CreateLedger(name, algo, hrp, account, index)
 }
 
 func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
@@ -156,6 +156,16 @@ func (lkb lazyKeybase) Import(name string, armor string) (err error) {
 	return newDbKeybase(db).Import(name, armor)
 }
 
+func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return newDbKeybase(db).ImportPrivKey(name, armor, passphrase)
+}
+
 func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
@@ -194,6 +204,18 @@ func (lkb lazyKeybase) ExportPrivateKeyObject(name string, passphrase string) (c
 	defer db.Close()
 
 	return newDbKeybase(db).ExportPrivateKeyObject(name, passphrase)
+}
+
+func (lkb lazyKeybase) ExportPrivKey(name string, decryptPassphrase string,
+	encryptPassphrase string) (armor string, err error) {
+
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	return newDbKeybase(db).ExportPrivKey(name, decryptPassphrase, encryptPassphrase)
 }
 
 func (lkb lazyKeybase) CloseDB() {}

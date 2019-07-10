@@ -22,12 +22,12 @@ tools-stamp
 # Data - ideally these don't exist
 baseapp/data/*
 client/lcd/keys/*
-client/lcd/statik/statik.go
 mytestnet
 
 # Testing
 coverage.txt
 profile.out
+sim_log_file
 
 # Vagrant
 .vagrant/

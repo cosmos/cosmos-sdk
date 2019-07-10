@@ -17,8 +17,8 @@ endif
 
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
-GOLANGCI_LINT_VERSION := v1.15.0
-GOLANGCI_LINT_HASHSUM := ac897cadc180bf0c1a4bf27776c410debad27205b22856b861d41d39d06509cf
+GOLANGCI_LINT_VERSION := v1.17.1
+GOLANGCI_LINT_HASHSUM := f5fa647a12f658924d9f7d6b9628d505ab118e8e049e43272de6526053ebe08d
 
 ###
 # Functions
@@ -41,29 +41,38 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 ###
 # tools
 ###
+
+TOOLS_DESTDIR  ?= $(GOPATH)/bin
+
+GOLANGCI_LINT   = $(TOOLS_DESTDIR)/golangci-lint
+STATIK          = $(TOOLS_DESTDIR)/statik
+GOIMPORTS       = $(TOOLS_DESTDIR)/goimports
+CLOG            = $(TOOLS_DESTDIR)/clog
+
 all: tools
 
 tools: tools-stamp
-tools-stamp: $(GOBIN)/golangci-lint $(GOBIN)/statik $(GOBIN)/goimports $(GOBIN)/gosum $(GOBIN)/clog
+	go mod tidy
+
+tools-stamp: $(STATIK) $(GOIMPORTS)
 	touch $@
 
-$(GOBIN)/golangci-lint: $(mkfile_dir)/install-golangci-lint.sh $(GOBIN)/gosum
-	bash $(mkfile_dir)/install-golangci-lint.sh $(GOBIN) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
+$(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
+	bash $(mkfile_dir)/install-golangci-lint.sh $(TOOLS_DESTDIR) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
-$(GOBIN)/statik:
+$(STATIK):
 	$(call go_install,rakyll,statik,v0.1.5)
 
-$(GOBIN)/goimports:
-	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190114222345-bf090417da8b
+$(GOIMPORTS):
+	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
 
-$(GOBIN)/gosum:
-	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/gosum/
+$(CLOG):
+	go get github.com/cosmos/tools/cmd/clog/
 
-$(GOBIN)/clog:
-	go install -mod=readonly github.com/cosmos/cosmos-sdk/contrib/devtools/clog/
+golangci-lint: $(GOLANGCI_LINT)
 
 tools-clean:
-	cd $(GOBIN) && rm -f golangci-lint statik goimports gosum clog
+	rm -f $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

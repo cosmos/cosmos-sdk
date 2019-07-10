@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -31,8 +32,9 @@ type Result struct {
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed uint64
 
-	// Tags are used for transaction indexing and pubsub.
-	Tags Tags
+	// Events contains a slice of Event objects that were emitted during some
+	// execution.
+	Events Events
 }
 
 // TODO: In the future, more codes may be OK.
@@ -45,7 +47,7 @@ type ABCIMessageLogs []ABCIMessageLog
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
-	MsgIndex int    `json:"msg_index"`
+	MsgIndex uint16 `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 }
@@ -74,7 +76,7 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Tags      StringTags      `json:"tags,omitempty"`
+	Events    StringEvents    `json:"events,omitempty"`
 	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
@@ -98,7 +100,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
-		Tags:      TagsToStringTags(res.TxResult.Tags),
+		Events:    StringifyEvents(res.TxResult.Events),
 		Tx:        tx,
 		Timestamp: timestamp,
 	}
@@ -140,7 +142,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.CheckTx.Info,
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
-		Tags:      TagsToStringTags(res.CheckTx.Tags),
+		Events:    StringifyEvents(res.CheckTx.Events),
 		Codespace: res.CheckTx.Codespace,
 	}
 }
@@ -167,7 +169,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
-		Tags:      TagsToStringTags(res.DeliverTx.Tags),
+		Events:    StringifyEvents(res.DeliverTx.Events),
 		Codespace: res.DeliverTx.Codespace,
 	}
 }
@@ -229,10 +231,6 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
 	}
 
-	if len(r.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
-	}
-
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
 	}
@@ -241,12 +239,37 @@ func (r TxResponse) String() string {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
 	}
 
+	if len(r.Events) > 0 {
+		sb.WriteString(fmt.Sprintf("  Events: \n%s\n", r.Events.String()))
+	}
+
 	return strings.TrimSpace(sb.String())
 }
 
 // Empty returns true if the response is empty
 func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
+}
+
+// SearchTxsResult defines a structure for querying txs pageable
+type SearchTxsResult struct {
+	TotalCount int          `json:"total_count"` // Count of all txs
+	Count      int          `json:"count"`       // Count of txs in current page
+	PageNumber int          `json:"page_number"` // Index of current page, start from 1
+	PageTotal  int          `json:"page_total"`  // Count of total pages
+	Limit      int          `json:"limit"`       // Max count txs per page
+	Txs        []TxResponse `json:"txs"`         // List of txs in current page
+}
+
+func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) SearchTxsResult {
+	return SearchTxsResult{
+		TotalCount: totalCount,
+		Count:      count,
+		PageNumber: page,
+		PageTotal:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		Limit:      limit,
+		Txs:        txs,
+	}
 }
 
 // ParseABCILogs attempts to parse a stringified ABCI tx log into a slice of

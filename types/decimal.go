@@ -46,8 +46,9 @@ func precisionInt() *big.Int {
 }
 
 // nolint - common values
-func ZeroDec() Dec { return Dec{new(big.Int).Set(zeroInt)} }
-func OneDec() Dec  { return Dec{precisionInt()} }
+func ZeroDec() Dec     { return Dec{new(big.Int).Set(zeroInt)} }
+func OneDec() Dec      { return Dec{precisionInt()} }
+func SmallestDec() Dec { return Dec{new(big.Int).Set(oneInt)} }
 
 // calculate the precision multiplier
 func calcPrecisionMultiplier(prec int64) *big.Int {
@@ -594,6 +595,9 @@ func (d *Dec) UnmarshalJSON(bz []byte) error {
 	d.Int = newDec.Int
 	return nil
 }
+
+// MarshalYAML returns Ythe AML representation.
+func (d Dec) MarshalYAML() (interface{}, error) { return d.String(), nil }
 
 //___________________________________________________________________________________
 // helpers

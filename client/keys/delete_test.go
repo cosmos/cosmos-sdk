@@ -5,13 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -29,7 +27,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
-	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
 	kb, err := NewKeyBaseFromHomeFlag()
@@ -53,10 +51,9 @@ func Test_runDeleteCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Now there is a confirmation
-		cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\n")))
-		defer cleanUp()
-		err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
-		require.NoError(t, err)
+		mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
+		mockIn.Reset("y\n")
+		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
 		require.Error(t, err) // Key1 is gone

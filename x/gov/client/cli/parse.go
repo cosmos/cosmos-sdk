@@ -7,22 +7,22 @@ import (
 
 	"github.com/spf13/viper"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 func parseSubmitProposalFlags() (*proposal, error) {
 	proposal := &proposal{}
-	proposalFile := viper.GetString(flagProposal)
+	proposalFile := viper.GetString(FlagProposal)
 
 	if proposalFile == "" {
-		proposal.Title = viper.GetString(flagTitle)
-		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
-		proposal.Deposit = viper.GetString(flagDeposit)
+		proposal.Title = viper.GetString(FlagTitle)
+		proposal.Description = viper.GetString(FlagDescription)
+		proposal.Type = govutils.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Deposit = viper.GetString(FlagDeposit)
 		return proposal, nil
 	}
 
-	for _, flag := range proposalFlags {
+	for _, flag := range ProposalFlags {
 		if viper.GetString(flag) != "" {
 			return nil, fmt.Errorf("--%s flag provided alongside --proposal, which is a noop", flag)
 		}

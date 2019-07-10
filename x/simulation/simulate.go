@@ -21,16 +21,6 @@ import (
 // AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
 type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
-// Simulate tests application by sending random messages.
-func Simulate(t *testing.T, app *baseapp.BaseApp,
-	appStateFn AppStateFn, ops WeightedOperations,
-	invariants sdk.Invariants, numBlocks, blockSize int, commit, lean bool) (bool, error) {
-
-	time := time.Now().UnixNano()
-	return SimulateFromSeed(t, os.Stdout, app, appStateFn, time, ops,
-		invariants, numBlocks, blockSize, commit, lean)
-}
-
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []Account,
@@ -56,7 +46,7 @@ func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, blockSize int, commit, lean bool,
+	numBlocks, blockSize int, commit, lean, onOperation bool,
 ) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -64,12 +54,14 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 
 	r := rand.New(rand.NewSource(seed))
-	params := RandomParams(r) // := DefaultParams()
-	fmt.Fprintf(w, "Randomized simulation params: %+v\n", params)
+	params := RandomParams(r)
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	genesisTimestamp := RandTimestamp(r)
-	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix())
+	fmt.Printf(
+		"Starting the simulation from time %v, unixtime %v\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
@@ -116,7 +108,7 @@ func SimulateFromSeed(
 	blockSimulator := createBlockSimulator(
 		testingMode, tb, t, w, params, eventStats.tally, invariants,
 		ops, operationQueue, timeOperationQueue,
-		numBlocks, blockSize, logWriter, lean)
+		numBlocks, blockSize, logWriter, lean, onOperation)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -229,7 +221,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
 	event func(string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
-	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean bool) blockSimFn {
+	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean, onOperation bool) blockSimFn {
 
 	lastBlocksizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -274,10 +266,11 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 			if testingMode {
 				if onOperation {
+					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
+						header.Height, totalNumBlocks, opCount, blocksize)
 					eventStr := fmt.Sprintf("operation: %v", opMsg.String())
 					assertAllInvariants(t, app, invariants, eventStr, logWriter)
-				}
-				if opCount%50 == 0 {
+				} else if opCount%50 == 0 {
 					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 						header.Height, totalNumBlocks, opCount, blocksize)
 				}

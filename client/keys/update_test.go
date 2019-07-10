@@ -1,18 +1,13 @@
 package keys
 
 import (
-	"bufio"
-	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/cosmos/cosmos-sdk/tests"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
@@ -28,21 +23,18 @@ func Test_runUpdateCmd(t *testing.T) {
 	cmd := updateKeyCommand()
 
 	// fails because it requests a password
-	err := runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "EOF")
-
-	cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))
-	defer cleanUp()
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
 
 	// try again
-	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "Key runUpdateCmd_Key1 not found")
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn.Reset("pass1234\n")
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
 
 	// Prepare a key base
 	// Now add a temporary keybase
 	kbHome, cleanUp1 := tests.NewTestCaseDir(t)
 	defer cleanUp1()
-	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(flags.FlagHome, kbHome)
 
 	kb, err := NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
@@ -52,13 +44,10 @@ func Test_runUpdateCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try again now that we have keys
-	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\nNew1234\nNew1234")))
-	defer cleanUp2()
-
 	// Incorrect key type
+	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
 	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
 
 	// TODO: Check for other type types?
-
 }

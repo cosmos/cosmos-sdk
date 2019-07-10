@@ -3,12 +3,10 @@ package keys
 import (
 	"bufio"
 	"errors"
-	"fmt"
-	"os"
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
@@ -27,8 +25,7 @@ func deleteKeyCommand() *cobra.Command {
 
 Note that removing offline or ledger keys will remove
 only the public key references stored locally, i.e.
-private keys stored in a ledger device cannot be deleted with
-gaiacli.
+private keys stored in a ledger device cannot be deleted with the CLI.
 `,
 		RunE: runDeleteCmd,
 		Args: cobra.ExactArgs(1),
@@ -54,7 +51,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := client.BufferStdin()
+	buf := bufio.NewReader(cmd.InOrStdin())
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
 		if !viper.GetBool(flagYes) {
 			if err := confirmDeletion(buf); err != nil {
@@ -64,7 +61,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		if err := kb.Delete(name, "", true); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, "Public key reference deleted")
+		cmd.PrintErrln("Public key reference deleted")
 		return nil
 	}
 
@@ -72,7 +69,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
 	if !skipPass {
-		if oldpass, err = client.GetPassword(
+		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {
 			return err
 		}
@@ -82,12 +79,12 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stderr, "Key deleted forever (uh oh!)")
+	cmd.PrintErrln("Key deleted forever (uh oh!)")
 	return nil
 }
 
 func confirmDeletion(buf *bufio.Reader) error {
-	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
+	answer, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf)
 	if err != nil {
 		return err
 	}

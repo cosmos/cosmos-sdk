@@ -32,6 +32,10 @@ The BaseApp is responsible for managing the context passed into handlers -
 it makes the block header available and provides the right stores for `CheckTx`
 and `DeliverTx`. BaseApp is completely agnostic to serialization formats.
 
+## Routing
+
+TODO
+
 ## Transaction Life Cycle
 
 During the execution of a transaction, it may pass through both `CheckTx` and

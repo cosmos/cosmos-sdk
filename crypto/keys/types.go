@@ -35,7 +35,7 @@ type Keybase interface {
 	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
-	CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error)
+	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -46,9 +46,11 @@ type Keybase interface {
 	// The following operations will *only* work on locally-stored keys
 	Update(name, oldpass string, getNewpass func() (string, error)) error
 	Import(name string, armor string) (err error)
+	ImportPrivKey(name, armor, passphrase string) error
 	ImportPubKey(name string, armor string) (err error)
 	Export(name string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
+	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 
 	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)

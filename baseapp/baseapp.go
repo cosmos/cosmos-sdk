@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime/debug"
+	"sort"
 	"strings"
 
 	"errors"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Key to store the consensus params in the main store.
@@ -48,8 +48,8 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
-	router      Router               // handle any kind of message
-	queryRouter QueryRouter          // router for redirecting query calls
+	router      sdk.Router           // handle any kind of message
+	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	// set upon LoadVersion or LoadLatestVersion.
@@ -85,6 +85,9 @@ type BaseApp struct {
 
 	// height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// application's version string
+	appVersion string
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -118,6 +121,11 @@ func NewBaseApp(
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// AppVersion returns the application's version string.
+func (app *BaseApp) AppVersion() string {
+	return app.appVersion
 }
 
 // Logger returns the logger of the BaseApp.
@@ -223,7 +231,7 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 		app.setConsensusParams(consensusParams)
 	}
 
-	// needed for `gaiad export`, which inits from store but never calls initchain
+	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
 	app.Seal()
 
@@ -239,7 +247,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 }
 
 // Router returns the router of the BaseApp.
-func (app *BaseApp) Router() Router {
+func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
 		// We cannot return a router when the app is sealed because we can't have
 		// any routes modified which would cause unexpected routing behavior.
@@ -249,7 +257,7 @@ func (app *BaseApp) Router() Router {
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.
-func (app *BaseApp) QueryRouter() QueryRouter { return app.queryRouter }
+func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
@@ -361,6 +369,22 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(res.Validators) {
+			panic(fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(res.Validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(res.Validators))
+		for i, val := range res.Validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
+	}
+
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
 	return
@@ -439,7 +463,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
-				Value:     []byte(version.Version),
+				Value:     []byte(app.appVersion),
 			}
 
 		default:
@@ -511,6 +535,15 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	ctx := sdk.NewContext(
 		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
+
+	if req.Height > 0 {
+		cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+		if err != nil {
+			return sdk.ErrInternal(fmt.Sprintf("failed to load state at height %d; %s", req.Height, err)).QueryResult()
+		}
+
+		ctx = ctx.WithMultiStore(cacheMS)
+	}
 
 	// Passes the rest of the path as an argument to the querier.
 	//
@@ -594,14 +627,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 // the route match to see whether a handler exists.
 //
 // NOTE:CheckTx does not run the actual Msg handler function(s).
-func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
+func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	var result sdk.Result
 
-	tx, err := app.txDecoder(txBytes)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeCheck, txBytes, tx)
+		result = app.runTx(runTxModeCheck, req.Tx, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -610,19 +643,19 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Log:       result.Log,
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
-		Tags:      result.Tags,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
 // DeliverTx implements the ABCI interface.
-func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	var result sdk.Result
 
-	tx, err := app.txDecoder(txBytes)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeDeliver, txBytes, tx)
+		result = app.runTx(runTxModeDeliver, req.Tx, tx)
 	}
 
 	return abci.ResponseDeliverTx{
@@ -632,7 +665,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		Log:       result.Log,
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
-		Tags:      result.Tags,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
@@ -668,14 +701,19 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
+// nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
-	var data []byte   // NOTE: we just append them all (?!)
-	var tags sdk.Tags // also just append them all
-	var code sdk.CodeType
-	var codespace sdk.CodespaceType
+	var (
+		data      []byte
+		code      sdk.CodeType
+		codespace sdk.CodespaceType
+	)
 
+	events := sdk.EmptyEvents()
+
+	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIdx, msg := range msgs {
 		// match message route
 		msgRoute := msg.Route()
@@ -691,14 +729,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 			msgResult = handler(ctx, msg)
 		}
 
-		// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-
-		// Result.Data must be length prefixed in order to separate each result
+		// Each message result's Data must be length prefixed in order to separate
+		// each result.
 		data = append(data, msgResult.Data...)
-		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
-		tags = append(tags, msgResult.Tags...)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: msgIdx, Log: msgResult.Log}
+		// append events from the message's execution and a message action event
+		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
+		events = events.AppendEvents(msgResult.Events)
+
+		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
@@ -721,7 +760,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Data:      data,
 		Log:       strings.TrimSpace(string(logJSON)),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Tags:      tags,
+		Events:    events,
 	}
 
 	return result
@@ -758,7 +797,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-// runTx processes a transaction. The transactions is proccessed via an
+// runTx processes a transaction. The transactions is processed via an
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
@@ -773,8 +812,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
-		return
+		return sdk.ErrOutOfGas("no block gas left to run tx").Result()
 	}
 
 	var startingGas uint64
@@ -859,7 +897,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	if mode == runTxModeCheck {
-		return
+		return result
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped
@@ -869,7 +907,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasWanted = gasWanted
 
 	if mode == runTxModeSimulate {
-		return
+		return result
 	}
 
 	// only update state if all messages pass
@@ -877,7 +915,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	return
+	return result
 }
 
 // EndBlock implements the ABCI interface.

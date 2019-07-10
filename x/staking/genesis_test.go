@@ -17,11 +17,9 @@ import (
 )
 
 func TestInitGenesis(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
 
-	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.TokensFromTendermintPower(2)
-	valTokens := sdk.TokensFromTendermintPower(1)
+	valTokens := sdk.TokensFromConsensusPower(1)
 
 	params := keeper.GetParams(ctx)
 	validators := make([]Validator, 2)
@@ -41,12 +39,10 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
 
-	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	genesisState := types.NewGenesisState(params, validators, delegations)
+	vals := InitGenesis(ctx, keeper, accKeeper, supplyKeeper, genesisState)
 
 	actualGenesis := ExportGenesis(ctx, keeper)
-	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
@@ -72,12 +68,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
-
-	// Assigning 2 to the first 100 vals, 1 to the rest
-	pool := keeper.GetPool(ctx)
-	bondedTokens := sdk.TokensFromTendermintPower(int64(200 + (size - 100)))
-	pool.BondedTokens = bondedTokens
+	ctx, accKeeper, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
@@ -89,17 +80,16 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 		validators[i].Status = sdk.Bonded
 
-		tokens := sdk.TokensFromTendermintPower(1)
+		tokens := sdk.TokensFromConsensusPower(1)
 		if i < 100 {
-			tokens = sdk.TokensFromTendermintPower(2)
+			tokens = sdk.TokensFromConsensusPower(2)
 		}
 		validators[i].Tokens = tokens
 		validators[i].DelegatorShares = tokens.ToDec()
 	}
 
-	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	vals, err := InitGenesis(ctx, keeper, genesisState)
-	require.NoError(t, err)
+	genesisState := types.NewGenesisState(params, validators, delegations)
+	vals := InitGenesis(ctx, keeper, accKeeper, supplyKeeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

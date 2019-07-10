@@ -24,6 +24,6 @@ func TestParseABCILog(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, res[0].Log, "")
-	require.Equal(t, res[0].MsgIndex, 1)
+	require.Equal(t, res[0].MsgIndex, uint16(1))
 	require.True(t, res[0].Success)
 }

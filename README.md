@@ -1,9 +1,8 @@
 # Cosmos SDK
-![banner](docs/cosmos-sdk-image.png)
+![banner](docs/cosmos-sdk-image.jpg)
 
 [![version](https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/releases/latest)
 [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master)
-[![Snap Status](https://build.snapcraft.io/badge/cosmos/cosmos-sdk.svg)](https://build.snapcraft.io/user/cosmos/cosmos-sdk)
 [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk)](https://goreportcard.com/report/github.com/cosmos/cosmos-sdk)
 [![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE)
@@ -18,15 +17,7 @@ It is being used to build `Gaia`, the first implementation of the Cosmos Hub.
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.12.1+](https://golang.org/dl/)
-
-## Cosmos Hub Mainnet
-
-To run a full-node for the mainnet of the Cosmos Hub, first [install `gaia`](./docs/cosmos-hub/installation.md), then follow [the guide](./docs/cosmos-hub/join-mainnet.md).
-
-For status updates and genesis file, see the
-[launch repo](https://github.com/cosmos/launch).
-
+**Note**: Requires [Go 1.12+](https://golang.org/dl/)
 
 ## Quick Start
 
@@ -35,6 +26,10 @@ To learn how the SDK works from a high-level perspective, go to the [SDK Intro](
 If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
 
 For more, please go to the [Cosmos SDK Docs](./docs/README.md)
+
+## Cosmos Hub Mainnet
+
+The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
 
 ## Disambiguation
 

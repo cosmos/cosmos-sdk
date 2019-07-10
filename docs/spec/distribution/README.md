@@ -79,8 +79,7 @@ to set up a script to periodically withdraw and rebond rewards.
 
 1. **[Concepts](01_concepts.md)**
     - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
-2. **[02_state.md](02_state.md)**
-    - [State](02_state.md#state)
+2. **[State](02_state.md)**
 3. **[End Block](03_end_block.md)**
 4. **[Messages](04_messages.md)**
     - [MsgWithdrawDelegationRewardsAll](04_messages.md#msgwithdrawdelegationrewardsall)
@@ -91,5 +90,7 @@ to set up a script to periodically withdraw and rebond rewards.
     - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
     - [Commission rate change](05_hooks.md#commission-rate-change)
     - [Change in Validator State](05_hooks.md#change-in-validator-state)
-6. **[Tags](06_tags.md)**
-    - [Handlers](06_tags.md#handlers)
+6. **[Events](06_events.md)**
+    - [BeginBlocker](06_events.md#beginblocker)
+    - [Handlers](06_events.md#handlers)
+7. **[Parameters](07_params.md)**

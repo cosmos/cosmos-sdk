@@ -1,11 +1,11 @@
 package keys
 
 import (
-	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"bufio"
 
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -21,27 +21,25 @@ func updateKeyCommand() *cobra.Command {
 func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	buf := client.BufferStdin()
+	buf := bufio.NewReader(cmd.InOrStdin())
 	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
-	oldpass, err := client.GetPassword(
-		"Enter the current passphrase:", buf)
+	oldpass, err := input.GetPassword("Enter the current passphrase:", buf)
 	if err != nil {
 		return err
 	}
 
 	getNewpass := func() (string, error) {
-		return client.GetCheckPassword(
+		return input.GetCheckPassword(
 			"Enter the new passphrase:",
 			"Repeat the new passphrase:", buf)
 	}
-
-	err = kb.Update(name, oldpass, getNewpass)
-	if err != nil {
+	if err := kb.Update(name, oldpass, getNewpass); err != nil {
 		return err
 	}
-	fmt.Println("Password successfully updated!")
+
+	cmd.PrintErrln("Password successfully updated!")
 	return nil
 }

@@ -3,7 +3,7 @@ package keys
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // Commands registers a sub-tree of commands to interact with
@@ -21,11 +21,14 @@ func Commands() *cobra.Command {
 	cmd.AddCommand(
 		mnemonicKeyCommand(),
 		addKeyCommand(),
+		exportKeyCommand(),
+		importKeyCommand(),
 		listKeysCmd(),
 		showKeysCmd(),
-		client.LineBreak,
+		flags.LineBreak,
 		deleteKeyCommand(),
 		updateKeyCommand(),
+		parseKeyStringCommand(),
 	)
 	return cmd
 }

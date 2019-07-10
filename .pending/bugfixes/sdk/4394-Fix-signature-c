@@ -1,0 +1,2 @@
+#4394 Fix signature count check to use the TxSigLimit param instead of
+a default.

@@ -1,21 +1,21 @@
 package keys
 
 import (
+	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
-	"os"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -31,11 +31,9 @@ const (
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
-)
 
-const (
-	maxValidAccountValue = int(0x80000000 - 1)
-	maxValidIndexalue    = int(0x80000000 - 1)
+	// DefaultKeyPass contains the default key password for genesis transactions
+	DefaultKeyPass = "12345678"
 )
 
 func addKeyCommand() *cobra.Command {
@@ -67,13 +65,13 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
 	cmd.Flags().String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
-	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
+	cmd.Flags().Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -86,12 +84,12 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(_ *cobra.Command, args []string) error {
+func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
 	var encryptPassword string
 
-	buf := client.BufferStdin()
+	inBuf := bufio.NewReader(cmd.InOrStdin())
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
@@ -101,7 +99,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = keys.NewInMemory()
-		encryptPassword = client.DefaultKeyPass
+		encryptPassword = DefaultKeyPass
 	} else {
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -111,9 +109,12 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation
-			if response, err2 := client.GetConfirmation(
-				fmt.Sprintf("override the existing name %s", name), buf); err2 != nil || !response {
+			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
+			if err2 != nil {
 				return err2
+			}
+			if !response {
+				return errors.New("aborted")
 			}
 		}
 
@@ -146,15 +147,15 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 				return err
 			}
 
-			fmt.Fprintf(os.Stderr, "Key %q saved to disk.\n", name)
+			cmd.PrintErrf("Key %q saved to disk.\n", name)
 			return nil
 		}
 
 		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(client.FlagUseLedger) {
-			encryptPassword, err = client.GetCheckPassword(
+		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
+			encryptPassword, err = input.GetCheckPassword(
 				"Enter a passphrase to encrypt your key to disk:",
-				"Repeat the passphrase:", buf)
+				"Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}
@@ -176,14 +177,15 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
 
-	// If we're using ledger, only thing we need is the path. So generate key and we're done.
-	if viper.GetBool(client.FlagUseLedger) {
-		info, err := kb.CreateLedger(name, keys.Secp256k1, account, index)
+	// If we're using ledger, only thing we need is the path and the bech32 prefix.
+	if viper.GetBool(flags.FlagUseLedger) {
+		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
 			return err
 		}
 
-		return printCreate(info, false, "")
+		return printCreate(cmd, info, false, "")
 	}
 
 	// Get bip39 mnemonic
@@ -196,9 +198,13 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 			bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."
 		}
 
-		mnemonic, err = client.GetString(bip39Message, buf)
+		mnemonic, err = input.GetString(bip39Message, inBuf)
 		if err != nil {
 			return err
+		}
+
+		if !bip39.IsMnemonicValid(mnemonic) {
+			return errors.New("invalid mnemonic")
 		}
 	}
 
@@ -215,23 +221,18 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	if !bip39.IsMnemonicValid(mnemonic) {
-		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid.\n")
-		return nil
-	}
-
 	// override bip39 passphrase
 	if interactive {
-		bip39Passphrase, err = client.GetString(
+		bip39Passphrase, err = input.GetString(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
-				"Most users should just hit enter to use the default, \"\"", buf)
+				"Most users should just hit enter to use the default, \"\"", inBuf)
 		if err != nil {
 			return err
 		}
 
 		// if they use one, make them re-enter it
 		if len(bip39Passphrase) != 0 {
-			p2, err := client.GetString("Repeat the passphrase:", buf)
+			p2, err := input.GetString("Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}
@@ -254,23 +255,23 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		mnemonic = ""
 	}
 
-	return printCreate(info, showMnemonic, mnemonic)
+	return printCreate(cmd, info, showMnemonic, mnemonic)
 }
 
-func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
+func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
 	case OutputFormatText:
-		fmt.Fprintln(os.Stderr)
+		cmd.PrintErrln()
 		printKeyInfo(info, keys.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			fmt.Fprintln(os.Stderr, "\n**Important** write this mnemonic phrase in a safe place.")
-			fmt.Fprintln(os.Stderr, "It is the only way to recover your account if you ever forget your password.")
-			fmt.Fprintln(os.Stderr, "")
-			fmt.Fprintln(os.Stderr, mnemonic)
+			cmd.PrintErrln("\n**Important** write this mnemonic phrase in a safe place.")
+			cmd.PrintErrln("It is the only way to recover your account if you ever forget your password.")
+			cmd.PrintErrln("")
+			cmd.PrintErrln(mnemonic)
 		}
 	case OutputFormatJSON:
 		out, err := keys.Bech32KeyOutput(info)
@@ -283,7 +284,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 		}
 
 		var jsonString []byte
-		if viper.GetBool(client.FlagIndentResponse) {
+		if viper.GetBool(flags.FlagIndentResponse) {
 			jsonString, err = cdc.MarshalJSONIndent(out, "", "  ")
 		} else {
 			jsonString, err = cdc.MarshalJSON(out)
@@ -292,7 +293,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, string(jsonString))
+		cmd.PrintErrln(string(jsonString))
 	default:
 		return fmt.Errorf("I can't speak: %s", output)
 	}

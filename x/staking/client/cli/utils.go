@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionMsg, err error) {
+func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionRates, err error) {
 	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
 		return commission, errors.New("must specify all validator commission parameters")
 	}
@@ -27,6 +27,6 @@ func buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr string) (commissio
 		return commission, err
 	}
 
-	commission = types.NewCommissionMsg(rate, maxRate, maxChangeRate)
+	commission = types.NewCommissionRates(rate, maxRate, maxChangeRate)
 	return commission, nil
 }

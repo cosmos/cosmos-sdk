@@ -38,7 +38,7 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	kb := NewInMemory()
-	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
+	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
 }
@@ -50,7 +50,7 @@ func TestCreateLedger(t *testing.T) {
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
-	ledger, err := kb.CreateLedger("some_account", Secp256k1, 3, 1)
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
 
 	if err != nil {
 		assert.Error(t, err)
@@ -383,7 +383,7 @@ func TestSeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, 0)
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
@@ -406,8 +406,8 @@ func ExampleNew() {
 		// return info here just like in List
 		fmt.Println(bob.GetName())
 	}
-	cstore.CreateMnemonic("Alice", English, "secret", sec)
-	cstore.CreateMnemonic("Carl", English, "mitm", sec)
+	_, _, _ = cstore.CreateMnemonic("Alice", English, "secret", sec)
+	_, _, _ = cstore.CreateMnemonic("Carl", English, "mitm", sec)
 	info, _ := cstore.List()
 	for _, i := range info {
 		fmt.Println(i.GetName())

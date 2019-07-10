@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,6 +45,26 @@ func TestIsEqualCoin(t *testing.T) {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
 			require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
 		}
+	}
+}
+
+func TestCoinIsValid(t *testing.T) {
+	cases := []struct {
+		coin       Coin
+		expectPass bool
+	}{
+		{Coin{testDenom1, NewInt(-1)}, false},
+		{Coin{testDenom1, NewInt(0)}, true},
+		{Coin{testDenom1, NewInt(1)}, true},
+		{Coin{"Atom", NewInt(1)}, false},
+		{Coin{"a", NewInt(1)}, false},
+		{Coin{"a very long coin denom", NewInt(1)}, false},
+		{Coin{"atOm", NewInt(1)}, false},
+		{Coin{"     ", NewInt(1)}, false},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
 }
 
@@ -200,7 +221,7 @@ func TestEqualCoins(t *testing.T) {
 			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+			require.Equal(t, tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 		}
 	}
 }
@@ -571,6 +592,85 @@ func TestNewCoins(t *testing.T) {
 			}
 			got := NewCoins(tt.coins...)
 			require.True(t, got.IsEqual(tt.want))
+		})
+	}
+}
+
+func TestCoinsIsAnyGT(t *testing.T) {
+	twoAtom := NewInt64Coin("atom", 2)
+	fiveAtom := NewInt64Coin("atom", 5)
+	threeEth := NewInt64Coin("eth", 3)
+	sixEth := NewInt64Coin("eth", 6)
+	twoBtc := NewInt64Coin("btc", 2)
+
+	require.False(t, Coins{}.IsAnyGT(Coins{}))
+
+	require.False(t, Coins{fiveAtom}.IsAnyGT(Coins{}))
+	require.False(t, Coins{}.IsAnyGT(Coins{fiveAtom}))
+	require.True(t, Coins{fiveAtom}.IsAnyGT(Coins{twoAtom}))
+	require.False(t, Coins{twoAtom}.IsAnyGT(Coins{fiveAtom}))
+
+	require.True(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom, threeEth}))
+	require.False(t, Coins{twoBtc, twoAtom, threeEth}.IsAnyGT(Coins{fiveAtom, sixEth}))
+	require.False(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom}))
+}
+
+func TestFindDup(t *testing.T) {
+	abc := NewInt64Coin("abc", 10)
+	def := NewInt64Coin("def", 10)
+	ghi := NewInt64Coin("ghi", 10)
+
+	type args struct {
+		coins Coins
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"empty", args{NewCoins()}, -1},
+		{"one coin", args{NewCoins(NewInt64Coin("xyz", 10))}, -1},
+		{"no dups", args{Coins{abc, def, ghi}}, -1},
+		{"dup at first position", args{Coins{abc, abc, def}}, 1},
+		{"dup after first position", args{Coins{abc, def, def}}, 2},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := findDup(tt.args.coins); got != tt.want {
+				t.Errorf("findDup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMarshalJSONCoins(t *testing.T) {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+
+	testCases := []struct {
+		name      string
+		input     Coins
+		strOutput string
+	}{
+		{"nil coins", nil, `[]`},
+		{"empty coins", Coins{}, `[]`},
+		{"non-empty coins", NewCoins(NewInt64Coin("foo", 50)), `[{"denom":"foo","amount":"50"}]`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bz, err := cdc.MarshalJSON(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.strOutput, string(bz))
+
+			var newCoins Coins
+			require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+
+			if tc.input.Empty() {
+				require.Nil(t, newCoins)
+			} else {
+				require.Equal(t, tc.input, newCoins)
+			}
 		})
 	}
 }

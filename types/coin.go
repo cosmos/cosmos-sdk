@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -27,10 +28,8 @@ type Coin struct {
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
-	mustValidateDenom(denom)
-
-	if amount.LT(ZeroInt()) {
-		panic(fmt.Errorf("negative coin amount: %v", amount))
+	if err := validate(denom, amount); err != nil {
+		panic(err)
 	}
 
 	return Coin{
@@ -48,6 +47,28 @@ func NewInt64Coin(denom string, amount int64) Coin {
 // String provides a human-readable representation of a coin
 func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+// validate returns an error if the Coin has a negative amount or if
+// the denom is invalid.
+func validate(denom string, amount Int) error {
+	if err := validateDenom(denom); err != nil {
+		return err
+	}
+
+	if amount.LT(ZeroInt()) {
+		return fmt.Errorf("negative coin amount: %v", amount)
+	}
+
+	return nil
+}
+
+// IsValid returns true if the Coin has a non-negative amount and the denom is vaild.
+func (coin Coin) IsValid() bool {
+	if err := validate(coin.Denom, coin.Amount); err != nil {
+		return false
+	}
+	return true
 }
 
 // IsZero returns if this represents no money
@@ -149,6 +170,18 @@ func NewCoins(coins ...Coin) Coins {
 	}
 
 	return newCoins
+}
+
+type coinsJSON Coins
+
+// MarshalJSON implements a custom JSON marshaller for the Coins type to allow
+// nil Coins to be encoded as an empty array.
+func (coins Coins) MarshalJSON() ([]byte, error) {
+	if coins == nil {
+		return json.Marshal(coinsJSON(Coins{}))
+	}
+
+	return json.Marshal(coinsJSON(coins))
 }
 
 func (coins Coins) String() string {
@@ -368,6 +401,29 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
 }
 
+// IsAnyGT returns true iff for any denom in coins, the denom is present at a
+// greater amount in coinsB.
+//
+// e.g.
+// {2A, 3B}.IsAnyGT{A} = true
+// {2A, 3B}.IsAnyGT{5C} = false
+// {}.IsAnyGT{5C} = false
+// {2A, 3B}.IsAnyGT{} = false
+func (coins Coins) IsAnyGT(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GT(amt) && !amt.IsZero() {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IsAnyGTE returns true iff coins contains at least one denom that is present
 // at a greater or equal amount in coinsB; it returns false otherwise.
 //
@@ -513,12 +569,6 @@ func removeZeroCoins(coins Coins) Coins {
 	return coins[:i]
 }
 
-func copyCoins(coins Coins) Coins {
-	copyCoins := make(Coins, len(coins))
-	copy(copyCoins, coins)
-	return copyCoins
-}
-
 //-----------------------------------------------------------------------------
 // Sort interface
 
@@ -623,11 +673,12 @@ func findDup(coins Coins) int {
 		return -1
 	}
 
-	prevDenom := coins[0]
+	prevDenom := coins[0].Denom
 	for i := 1; i < len(coins); i++ {
-		if coins[i] == prevDenom {
+		if coins[i].Denom == prevDenom {
 			return i
 		}
+		prevDenom = coins[i].Denom
 	}
 
 	return -1

@@ -7,12 +7,14 @@ transaction.
 
 ```go
 type TxGovSubmitProposal struct {
-  Title           string        //  Title of the proposal
-  Description     string        //  Description of the proposal
-  Type            ProposalType  //  Type of proposal
-  InitialDeposit  sdk.Coins     //  Initial deposit paid by sender. Must be strictly positive.
+	Content        Content
+	InitialDeposit sdk.Coins
+	Proposer       sdk.AccAddress
 }
 ```
+
+The `Content` of a `TxGovSubmitProposal` message must have an appropriate router
+set in the governance module.
 
 **State modifications:**
 * Generate new `proposalID`
@@ -21,6 +23,7 @@ type TxGovSubmitProposal struct {
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueue`
+* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `TxGovSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -86,6 +89,7 @@ type TxGovDeposit struct {
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueueEnd`
+* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `TxGovDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.

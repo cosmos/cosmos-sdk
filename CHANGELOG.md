@@ -1,5 +1,70 @@
 # Changelog
 
+## 0.34.7
+
+### Bug Fixes
+
+#### SDK
+
+* Fix gas consumption bug in `Undelegate` preventing the ability to sync from
+genesis.
+
+## 0.34.6
+
+### Bug Fixes
+
+#### SDK
+
+* Unbonding from a validator is now only considered "complete" after the full
+unbonding period has elapsed regardless of the validator's status.
+
+## 0.34.5
+
+### Bug Fixes
+
+#### SDK
+
+* [\#4273](https://github.com/cosmos/cosmos-sdk/issues/4273) Fix usage of `AppendTags` in x/staking/handler.go
+
+### Improvements
+
+### SDK
+
+* [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of `CacheKVStore` iterator.
+* [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
+* [\#4384](https://github.com/cosmos/cosmos-sdk/issues/4384) Allow splitting withdrawal transaction in several chunks.
+
+#### Gaia CLI
+
+* [\#4227](https://github.com/cosmos/cosmos-sdk/issues/4227) Support for Ledger App v1.5.
+* [#4345](https://github.com/cosmos/cosmos-sdk/pull/4345) Update `ledger-cosmos-go`
+to v0.10.3.
+
+## 0.34.4
+
+### Bug Fixes
+
+#### SDK
+
+* [#4234](https://github.com/cosmos/cosmos-sdk/pull/4234) Allow `tx send --generate-only` to
+actually work offline.
+
+#### Gaia
+
+* [\#4219](https://github.com/cosmos/cosmos-sdk/issues/4219) Return an error when an empty mnemonic is provided during key recovery.
+
+### Improvements
+
+#### Gaia
+
+* [\#2007](https://github.com/cosmos/cosmos-sdk/issues/2007) Return 200 status code on empty results
+
+### New features
+
+#### SDK
+
+* [\#3850](https://github.com/cosmos/cosmos-sdk/issues/3850) Add `rewards` and `commission` to distribution tx tags.
+
 ## 0.34.3
 
 ### Bug Fixes

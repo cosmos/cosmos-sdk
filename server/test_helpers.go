@@ -7,17 +7,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 // Get a free address for a test tendermint server
 // protocol is either tcp, http, etc
 func FreeTCPAddr() (addr, port string, err error) {
-	l, err := net.Listen("tcp", "0.0.0.0:0")
+	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return "", "", err
 	}
@@ -43,8 +42,8 @@ func FreeTCPAddr() (addr, port string, err error) {
 func SetupViper(t *testing.T) func() {
 	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
-	viper.Set(cli.HomeFlag, rootDir)
-	viper.Set(client.FlagName, "moniker")
+	viper.Set(flags.FlagHome, rootDir)
+	viper.Set(flags.FlagName, "moniker")
 	return func() {
 		err := os.RemoveAll(rootDir)
 		if err != nil {
@@ -53,3 +52,5 @@ func SetupViper(t *testing.T) func() {
 		}
 	}
 }
+
+// DONTCOVER

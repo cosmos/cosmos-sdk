@@ -4,7 +4,7 @@ package types
 // If the invariant has been broken, it should return an error
 // containing a descriptive message about what happened.
 // The simulator will then halt and print the logs.
-type Invariant func(ctx Context) error
+type Invariant func(ctx Context) (string, bool)
 
 // Invariants defines a group of invariants
 type Invariants []Invariant

@@ -22,18 +22,18 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 
 // AllInvariants runs all invariants of the distribution module
 func AllInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
-		err := CanWithdrawInvariant(k)(ctx)
-		if err != nil {
-			return err
+	return func(ctx sdk.Context) (string, bool) {
+		res, stop := CanWithdrawInvariant(k)(ctx)
+		if stop {
+			return res, stop
 		}
-		err = NonNegativeOutstandingInvariant(k)(ctx)
-		if err != nil {
-			return err
+		res, stop = NonNegativeOutstandingInvariant(k)(ctx)
+		if stop {
+			return res, stop
 		}
-		err = ReferenceCountInvariant(k)(ctx)
-		if err != nil {
-			return err
+		res, stop = ReferenceCountInvariant(k)(ctx)
+		if stop {
+			return res, stop
 		}
 		return ModuleAccountInvariant(k)(ctx)
 	}
@@ -41,7 +41,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
 func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 
 		var outstanding sdk.DecCoins
 
@@ -54,17 +54,17 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 		})
 
 		if outstanding.IsAnyNegative() {
-			return fmt.Errorf("negative outstanding coins: %v", outstanding)
+			return fmt.Sprintf("negative outstanding coins: %v", outstanding), true
 		}
 
-		return nil
+		return "no outstanding unwithdrawn fees are negative", false
 
 	}
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
 func CanWithdrawInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
@@ -99,16 +99,16 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		})
 
 		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("negative remaining coins: %v", remaining)
+			return fmt.Sprintf("negative remaining coins: %v", remaining), true
 		}
 
-		return nil
+		return "all current rewards can be completely withdrawn", false
 	}
 }
 
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 
 		valCount := uint64(0)
 		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val exported.ValidatorI) (stop bool) {
@@ -128,20 +128,16 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		expected := valCount + uint64(len(dels)) + slashCount
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
 
-		if count != expected {
-			return fmt.Errorf("unexpected number of historical rewards records: "+
-				"expected %v (%v vals + %v dels + %v slashes), got %v",
-				expected, valCount, len(dels), slashCount, count)
-		}
-
-		return nil
+		return fmt.Sprintf("unexpected number of historical rewards records: "+
+			"expected %v (%v vals + %v dels + %v slashes), got %v",
+			expected, valCount, len(dels), slashCount, count), count != expected
 	}
 }
 
 // ModuleAccountInvariant checks that the coins held by the distr ModuleAccount
 // is consistent with the sum of validator outstanding rewards
 func ModuleAccountInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 
 		var expectedCoins sdk.DecCoins
 		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
@@ -154,12 +150,9 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 
 		macc := k.GetDistributionAccount(ctx)
 
-		if !macc.GetCoins().IsEqual(expectedInt) {
-			return fmt.Errorf("distribution ModuleAccount coins invariance:\n"+
+		return fmt.Sprintf("distribution ModuleAccount coins invariance:\n"+
 				"\texpected ModuleAccount coins: %s\n"+
-				"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins())
-		}
-
-		return nil
+				"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()),
+			!macc.GetCoins().IsEqual(expectedInt)
 	}
 }

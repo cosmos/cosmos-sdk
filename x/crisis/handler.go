@@ -41,9 +41,10 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 	msgFullRoute := msg.FullInvariantRoute()
 
 	var invarianceErr string
+	var stop bool
 	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
-			invarianceErr, _ = invarRoute.Invar(cacheCtx)
+			invarianceErr, stop = invarRoute.Invar(cacheCtx)
 			found = true
 			break
 		}
@@ -53,7 +54,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
 	}
 
-	if invarianceErr != "" {
+	if stop {
 		// NOTE currently, because the chain halts here, this transaction will never be included
 		// in the blockchain thus the constant fee will have never been deducted. Thus no
 		// refund is required.

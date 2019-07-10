@@ -5,24 +5,23 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strings"
 	"sort"
+	"strings"
 
 	"github.com/pkg/errors"
 
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/99designs/keyring"
 
 	bip39 "github.com/cosmos/go-bip39"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	
 )
 
 type keyringKeybase struct {
@@ -54,7 +53,7 @@ func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd s
 	// default number of words (24):
 	// this generates a mnemonic directly from the number of words by reading system entropy.
 	entropy, err := bip39.NewEntropy(defaultEntropySize)
-	if err != nil{
+	if err != nil {
 		return
 	}
 
@@ -74,7 +73,6 @@ func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPassw
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
-
 func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
@@ -84,7 +82,6 @@ func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd s
 	info, err = kb.persistDerivedKey(seed, encryptPasswd, name, params.String())
 	return
 }
-
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
@@ -109,14 +106,12 @@ func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, 
 	return kb.writeOfflineKey(name, pub), nil
 }
 
-
 // CreateMulti creates a new reference to a multisig (offline) keypair. It
 // returns the created key info.
 //CreateMulti for keyring
 func (kb keyringKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
 	return kb.writeMultisigKey(name, pub), nil
 }
-
 
 func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
 	//create master key and derive first key for keyring:
@@ -128,7 +123,7 @@ func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPat
 
 	if passwd != "" {
 		info = kb.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
-	}else {
+	} else {
 		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
 		info = kb.writeOfflineKey(name, pubk)
 	}
@@ -138,54 +133,51 @@ func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPat
 // List returns the keys from storage in alphabetical order.
 func (kb keyringKeybase) List() ([]Info, error) {
 	var res []Info
-	keys,err:= kb.db.Keys() 
+	keys, err := kb.db.Keys()
 	if err != nil {
 		return nil, err
 	}
 	sort.Strings(keys)
 
-	for _, key :=range keys {
+	for _, key := range keys {
 		if strings.HasSuffix(key, infoSuffix) {
-			rawInfo, err := kb.db.Get(key)   
+			rawInfo, err := kb.db.Get(key)
 			if err != nil {
 				return nil, err
 			}
 
-			if len (rawInfo.Data) == 0 {
+			if len(rawInfo.Data) == 0 {
 				return nil, keyerror.NewErrKeyNotFound(key)
 			}
-	
 
 			info, err := readInfo(rawInfo.Data)
 			if err != nil {
 				return nil, err
 			}
 
-
 			res = append(res, info)
-			
+
 		}
 	}
 	return res, nil
 }
 
 // Get returns the public information about one key.
-func (kb keyringKeybase) Get(name string) (Info, error){
+func (kb keyringKeybase) Get(name string) (Info, error) {
 	key := infoKey(name)
 	bs, err := kb.db.Get(string(key))
-		if err != nil {
-			return nil, err
-		}
-	if len (bs.Data) == 0 {
+	if err != nil {
+		return nil, err
+	}
+	if len(bs.Data) == 0 {
 		return nil, keyerror.NewErrKeyNotFound(name)
 	}
 	return readInfo(bs.Data)
 }
 
-
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	ik, err := kb.db.Get(string(addrKey(address)))
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -214,7 +206,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 			return
 		}
 
-		priv,err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -260,8 +252,6 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	return sig, pub, nil
 }
 
-
-
 func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
@@ -272,12 +262,12 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 
 	switch info.(type) {
 	case localInfo:
-		linfo :=info.(localInfo)
+		linfo := info.(localInfo)
 		if linfo.PrivKeyArmor == "" {
 			err = fmt.Errorf("private key not available")
 			return nil, err
 		}
-		
+
 		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
@@ -285,11 +275,10 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 
 	case ledgerInfo, offlineInfo, multiInfo:
 		return nil, errors.New("only works on local private keys")
-		}
-	
+	}
+
 	return priv, nil
 }
-
 
 func (kb keyringKeybase) Export(name string) (armor string, err error) {
 	bz, err := kb.db.Get(string(infoKey(name)))
@@ -299,10 +288,9 @@ func (kb keyringKeybase) Export(name string) (armor string, err error) {
 	if bz.Data == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
-	
+
 	return mintkey.ArmorInfoBytes(bz.Data), nil
 }
-
 
 // ExportPubKey returns public keys in ASCII armored format.
 // Retrieve a Info object by its name and return the public key in
@@ -316,7 +304,6 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes()), nil
 }
 
-
 func (kb keyringKeybase) Import(name string, armor string) (err error) {
 	bz, err := kb.Get(name)
 
@@ -325,7 +312,7 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 
 		if len(pubkey.Bytes()) > 0 {
 			return errors.New("Cannot overwrite data for name " + name)
-	}
+		}
 	}
 
 	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
@@ -333,7 +320,7 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 		return
 	}
 	kb.db.Set(keyring.Item{
-		Key: string(infoKey(name)),
+		Key:  string(infoKey(name)),
 		Data: infoBytes,
 	})
 	return nil
@@ -351,7 +338,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) (err error) {
 		if len(pubkey.Bytes()) > 0 {
 			return errors.New("Cannot overwrite data for name " + name)
 		}
-		
+
 	}
 	pubBytes, err := mintkey.UnarmorPubKeyBytes(armor)
 	if err != nil {
@@ -377,12 +364,11 @@ func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
 	if err != nil {
 		return err
 	}
-	
+
 	kb.db.Remove(string(addrKey(info.GetAddress())))
 	kb.db.Remove(string(infoKey(name)))
 	return nil
 }
-
 
 // Update changes the passphrase with which an already stored key is
 // encrypted.
@@ -417,8 +403,7 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 func (kb keyringKeybase) CloseDB() {
 }
 
-
-func (kb keyringKeybase) writeLocalKey (name string, priv tmcrypto.PrivKey, passphrase string) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info {
 	//encrypt private key using keyring
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(priv.Bytes()))
@@ -427,13 +412,11 @@ func (kb keyringKeybase) writeLocalKey (name string, priv tmcrypto.PrivKey, pass
 
 }
 
-
 func (kb keyringKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(name, info)
 	return info
 }
-
 
 func (kb keyringKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
 	info := newOfflineInfo(name, pub)
@@ -441,37 +424,31 @@ func (kb keyringKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info 
 	return info
 }
 
-
 func (kb keyringKeybase) writeMultisigKey(name string, pub tmcrypto.PubKey) Info {
 	info := NewMultiInfo(name, pub)
 	kb.writeInfo(name, info)
 	return info
 }
 
-
-func (kb keyringKeybase) writeInfo (name string, info Info){
+func (kb keyringKeybase) writeInfo(name string, info Info) {
 	//write the info by key
 	key := infoKey(name)
 	serializedInfo := writeInfo(info)
 	err := kb.db.Set(keyring.Item{
-		Key: string(key),
+		Key:  string(key),
 		Data: serializedInfo,
-		
 	})
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = kb.db.Set(keyring.Item {
-		Key: string(addrKey(info.GetAddress())),
+	err = kb.db.Set(keyring.Item{
+		Key:  string(addrKey(info.GetAddress())),
 		Data: key,
 	})
 
-
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 }
-
-

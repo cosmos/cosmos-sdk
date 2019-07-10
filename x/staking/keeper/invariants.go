@@ -76,12 +76,12 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 
 		poolBonded := bondedPool.GetCoins().AmountOf(bondDenom)
 		poolNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
+		broken := !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded)
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
-		return fmt.Sprintf(
-			"bonded token invariance:\n"+
-				"\tPool's bonded tokens: %v\n"+
+		return sdk.PrintInvariant(types.ModuleName, "bonded and not bonded module account coins", fmt.Sprintf(
+			"\tPool's bonded tokens: %v\n"+
 				"\tsum of bonded tokens: %v\n"+
 				"not bonded token invariance:\n"+
 				"\tPool's not bonded tokens: %v\n"+
@@ -90,13 +90,16 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 				"\tModule Accounts' tokens: %v\n"+
 				"\tsum tokens:              %v\n",
 			poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded),
-		), !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded)
+		), broken), broken
 	}
 }
 
 // NonNegativePowerInvariant checks that all stored validators have >= 0 power.
 func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
+		var msg string
+		var broken bool
+
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 
 		for ; iterator.Valid(); iterator.Next() {
@@ -108,34 +111,43 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			powerKey := types.GetValidatorsByPowerIndexKey(validator)
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
-				return fmt.Sprintf("power store invariance:\n\tvalidator.Power: %v"+
+				broken = true
+				msg += fmt.Sprintf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v",
-					validator.GetConsensusPower(), powerKey, iterator.Key()), true
+					validator.GetConsensusPower(), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {
-				return fmt.Sprintf("negative tokens for validator: %v", validator), true
+				broken = true
+				msg += fmt.Sprintf("negative tokens for validator: %v", validator)
 			}
 		}
 		iterator.Close()
-		return "all stored validator have non-negative power", false
+		return sdk.PrintInvariant(types.ModuleName, "nonnegative power", msg, broken), broken
 	}
 }
 
 // PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
 func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
+		var msg string
+		var amt int
+
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
 			if delegation.Shares.IsNegative() {
-				return fmt.Sprintf("delegation with negative shares: %+v", delegation), true
+				amt++
+				msg += fmt.Sprintf("\tdelegation with negative shares: %+v\n", delegation)
 			}
 			if delegation.Shares.IsZero() {
-				return fmt.Sprintf("delegation with zero shares: %+v", delegation), true
+				amt++
+				msg += fmt.Sprintf("\tdelegation with zero shares: %+v\n", delegation)
 			}
 		}
+		broken := amt != 0
 
-		return "all stored delegations have positive shares", false
+		return sdk.PrintInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
+			"%d invalid delegations found\n%s", amt, msg), broken), broken
 	}
 }
 

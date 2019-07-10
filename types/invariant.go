@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 // An Invariant is a function which tests a particular invariant.
 // If the invariant has been broken, it should return an error
 // containing a descriptive message about what happened.
@@ -12,4 +14,9 @@ type Invariants []Invariant
 // expected interface for registering invariants
 type InvariantRegistry interface {
 	RegisterRoute(moduleName, route string, invar Invariant)
+}
+
+func PrintInvariant(module, name, msg string, broken bool) string {
+	return fmt.Sprintf("%s: %s invariant\n\t%s\n\tInvariant Broken: %v\n",
+		module, name, msg, broken)
 }

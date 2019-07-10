@@ -40,11 +40,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 	found := false
 	msgFullRoute := msg.FullInvariantRoute()
 
-	var invarianceErr string
+	var res string
 	var stop bool
 	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
-			invarianceErr, stop = invarRoute.Invar(cacheCtx)
+			res, stop = invarRoute.Invar(cacheCtx)
 			found = true
 			break
 		}
@@ -71,7 +71,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 		//}
 
 		// TODO replace with circuit breaker
-		panic(invarianceErr)
+		panic(res)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

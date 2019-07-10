@@ -73,7 +73,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t tx crisis invariant-broken %v %v", res, ir.ModuleName, ir.Route))
+				"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route))
 		}
 	}
 

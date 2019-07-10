@@ -42,23 +42,22 @@ func AllInvariants(k Keeper) sdk.Invariant {
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
 func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-
+		var msg string
+		var amt int
 		var outstanding sdk.DecCoins
 
-		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
+		k.IterateValidatorOutstandingRewards(ctx, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = rewards
 			if outstanding.IsAnyNegative() {
-				return true
+				amt++
+				msg += "\t%v has negative outstanding coins: %v\n"
 			}
 			return false
 		})
+		broken := amt != 0
 
-		if outstanding.IsAnyNegative() {
-			return fmt.Sprintf("negative outstanding coins: %v", outstanding), true
-		}
-
-		return "no outstanding unwithdrawn fees are negative", false
-
+		return sdk.PrintInvariant(types.ModuleName, "nonnegative outstanding",
+			fmt.Sprintf("found %d validators with negaitve outstanding rewards\n%s", amt, msg), broken), broken
 	}
 }
 
@@ -98,11 +97,9 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
-			return fmt.Sprintf("negative remaining coins: %v", remaining), true
-		}
-
-		return "all current rewards can be completely withdrawn", false
+		broken := len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec())
+		return sdk.PrintInvariant(types.ModuleName, "can withdraw",
+			fmt.Sprintf("remaining coins: %v", remaining), broken), broken
 	}
 }
 
@@ -127,10 +124,11 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		// delegation (previous period), one record per slash (previous period)
 		expected := valCount + uint64(len(dels)) + slashCount
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
+		broken := count != expected
 
-		return fmt.Sprintf("unexpected number of historical rewards records: "+
+		return sdk.PrintInvariant(types.ModuleName, "reference count", fmt.Sprintf("unexpected number of historical rewards records: "+
 			"expected %v (%v vals + %v dels + %v slashes), got %v",
-			expected, valCount, len(dels), slashCount, count), count != expected
+			expected, valCount, len(dels), slashCount, count), broken), broken
 	}
 }
 
@@ -150,9 +148,8 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 
 		macc := k.GetDistributionAccount(ctx)
 
-		return fmt.Sprintf("distribution ModuleAccount coins invariance:\n"+
-				"\texpected ModuleAccount coins: %s\n"+
-				"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()),
-			!macc.GetCoins().IsEqual(expectedInt)
+		broken := !macc.GetCoins().IsEqual(expectedInt)
+		return sdk.PrintInvariant(types.ModuleName, "ModuleAccount coins", fmt.Sprintf("expected ModuleAccount coins: %s\n"+
+			"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()), broken), broken
 	}
 }

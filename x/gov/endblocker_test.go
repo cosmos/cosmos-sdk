@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -309,7 +310,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
-	ctx = ctx.WithValue(contextKeyBadProposal, true)
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, true))
 	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
 	require.NoError(t, err)
 
@@ -327,7 +328,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	// Set the contextKeyBadProposal value to false so that the handler will fail
 	// during the processing of the proposal in the EndBlocker.
-	ctx = ctx.WithValue(contextKeyBadProposal, false)
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))
 
 	// validate that the proposal fails/has been rejected
 	EndBlocker(ctx, input.keeper)

@@ -178,7 +178,10 @@ func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
 
-const contextKeyBadProposal = "contextKeyBadProposal"
+type contextKey string
+
+// use custom private type for context keys
+const contextKeyBadProposal contextKey = "badProposal"
 
 // badProposalHandler implements a governance proposal handler that is identical
 // to the actual handler except this fails if the context doesn't contain a value

@@ -5,8 +5,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -54,22 +52,29 @@ func (c Context) EventManager() *EventManager { return c.evtManager }
 
 // clone the header before returning
 func (c Context) BlockHeader() abci.Header {
-	var msg = proto.Clone(&c.header).(*abci.Header)
-	return *msg
+	// TODO: figure out clone better
+	return c.header
+	// var msg = proto.Clone(&c.header).(*abci.Header)
+	// return *msg
 }
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return proto.Clone(c.consParams).(*abci.ConsensusParams)
+	return c.consParams
+	// return proto.Clone(c.consParams).(*abci.ConsensusParams)
 }
 
 // create a new context
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	return Context{
-		ctx:     context.Background(),
-		ms:      ms,
-		header:  header,
-		checkTx: isCheckTx,
-		logger:  logger,
+		ctx:         context.Background(),
+		ms:          ms,
+		header:      header,
+		chainID:     header.ChainID,
+		checkTx:     isCheckTx,
+		logger:      logger,
+		gasMeter:    stypes.NewInfiniteGasMeter(),
+		minGasPrice: DecCoins{},
+		evtManager:  NewEventManager(),
 	}
 }
 

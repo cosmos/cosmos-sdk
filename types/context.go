@@ -2,6 +2,7 @@
 package types
 
 import (
+	"context"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -18,6 +19,7 @@ Context is an immutable object contains all information needed to
 process a request.
 */
 type Context struct {
+	ctx           context.Context
 	ms            MultiStore
 	header        abci.Header
 	chainID       string
@@ -36,6 +38,7 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
+func (c Context) Context() context.Context    { return c.ctx }
 func (c Context) MultiStore() MultiStore      { return c.ms }
 func (c Context) BlockHeight() int64          { return c.header.Height }
 func (c Context) BlockTime() time.Time        { return c.header.Time }
@@ -62,11 +65,17 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 // create a new context
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	return Context{
+		ctx:     context.Background(),
 		ms:      ms,
 		header:  header,
 		checkTx: isCheckTx,
 		logger:  logger,
 	}
+}
+
+func (c Context) WithContext(ctx context.Context) Context {
+	c.ctx = ctx
+	return c
 }
 
 func (c Context) WithMultiStore(ms MultiStore) Context {

@@ -186,7 +186,7 @@ const contextKeyBadProposal = "contextKeyBadProposal"
 func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	switch c.ProposalType() {
 	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
-		v := ctx.Value(contextKeyBadProposal)
+		v := ctx.Context().Value(contextKeyBadProposal)
 
 		if v == nil || !v.(bool) {
 			return sdk.ErrInternal("proposal failed")

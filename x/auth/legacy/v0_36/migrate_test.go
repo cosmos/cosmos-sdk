@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMigratePanic(t *testing.T) {
+func TestMigrate(t *testing.T) {
 	var genesisState GenesisState
 	require.NotPanics(t, func() {
 		genesisState = Migrate(v034auth.GenesisState{

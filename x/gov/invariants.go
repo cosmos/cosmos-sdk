@@ -33,8 +33,8 @@ func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 		macc := keeper.GetGovernanceAccount(ctx)
 		broken := !macc.GetCoins().IsEqual(expectedDeposits)
 
-		return sdk.PrintInvariant(types.ModuleName, "deposits",
+		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts: %s",
-				macc.GetCoins(), expectedDeposits), broken), broken
+				macc.GetCoins(), expectedDeposits), broken)
 	}
 }

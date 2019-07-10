@@ -56,8 +56,8 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 		})
 		broken := amt != 0
 
-		return sdk.PrintInvariant(types.ModuleName, "nonnegative outstanding",
-			fmt.Sprintf("found %d validators with negaitve outstanding rewards\n%s", amt, msg), broken), broken
+		return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding",
+			fmt.Sprintf("found %d validators with negative outstanding rewards\n%s", amt, msg), broken)
 	}
 }
 
@@ -98,8 +98,8 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		})
 
 		broken := len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec())
-		return sdk.PrintInvariant(types.ModuleName, "can withdraw",
-			fmt.Sprintf("remaining coins: %v", remaining), broken), broken
+		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
+			fmt.Sprintf("remaining coins: %v", remaining), broken)
 	}
 }
 
@@ -126,9 +126,9 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
 		broken := count != expected
 
-		return sdk.PrintInvariant(types.ModuleName, "reference count", fmt.Sprintf("unexpected number of historical rewards records: "+
+		return sdk.FormatInvariant(types.ModuleName, "reference count", fmt.Sprintf("unexpected number of historical rewards records: "+
 			"expected %v (%v vals + %v dels + %v slashes), got %v",
-			expected, valCount, len(dels), slashCount, count), broken), broken
+			expected, valCount, len(dels), slashCount, count), broken)
 	}
 }
 
@@ -149,7 +149,7 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 		macc := k.GetDistributionAccount(ctx)
 
 		broken := !macc.GetCoins().IsEqual(expectedInt)
-		return sdk.PrintInvariant(types.ModuleName, "ModuleAccount coins", fmt.Sprintf("expected ModuleAccount coins: %s\n"+
-			"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()), broken), broken
+		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins", fmt.Sprintf("expected ModuleAccount coins: %s\n"+
+			"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()), broken)
 	}
 }

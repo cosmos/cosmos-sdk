@@ -29,7 +29,9 @@ func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
 					coins.String())
 			}
 		}
-		return sdk.PrintInvariant(types.ModuleName, "nonnegative-outstanding",
-			fmt.Sprintf("amount of negative accounts found %d\n%s", amt, msg), false), false
+		broken := amt != 0
+
+		return sdk.FormatInvariant(types.ModuleName, "nonnegative-outstanding",
+			fmt.Sprintf("amount of negative accounts found %d\n%s", amt, msg), broken)
 	}
 }

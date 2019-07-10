@@ -80,7 +80,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
-		return sdk.PrintInvariant(types.ModuleName, "bonded and not bonded module account coins", fmt.Sprintf(
+		return sdk.FormatInvariant(types.ModuleName, "bonded and not bonded module account coins", fmt.Sprintf(
 			"\tPool's bonded tokens: %v\n"+
 				"\tsum of bonded tokens: %v\n"+
 				"not bonded token invariance:\n"+
@@ -89,8 +89,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 				"module accounts total (bonded + not bonded):\n"+
 				"\tModule Accounts' tokens: %v\n"+
 				"\tsum tokens:              %v\n",
-			poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded),
-		), broken), broken
+			poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded)), broken)
 	}
 }
 
@@ -123,7 +122,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			}
 		}
 		iterator.Close()
-		return sdk.PrintInvariant(types.ModuleName, "nonnegative power", msg, broken), broken
+		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", msg, broken)
 	}
 }
 
@@ -146,16 +145,19 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 		}
 		broken := amt != 0
 
-		return sdk.PrintInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
-			"%d invalid delegations found\n%s", amt, msg), broken), broken
+		return sdk.FormatInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
+			"%d invalid delegations found\n%s", amt, msg), broken)
 	}
 }
 
 // DelegatorSharesInvariant checks whether all the delegator shares which persist
 // in the delegator object add up to the correct total delegator shares
-// amount stored in each validator
+// amount stored in each validator.
 func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
+		var msg string
+		var broken bool
+
 		validators := k.GetAllValidators(ctx)
 		for _, validator := range validators {
 
@@ -168,11 +170,12 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 			}
 
 			if !valTotalDelShares.Equal(totalDelShares) {
-				return fmt.Sprintf("broken delegator shares invariance:\n"+
+				broken = true
+				msg += fmt.Sprintf("broken delegator shares invariance:\n"+
 					"\tvalidator.DelegatorShares: %v\n"+
-					"\tsum of Delegator.Shares: %v", valTotalDelShares, totalDelShares), true
+					"\tsum of Delegator.Shares: %v", valTotalDelShares, totalDelShares)
 			}
 		}
-		return "all delegator shares persisted equal delegator shares stored in each validator", false
+		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg, broken)
 	}
 }

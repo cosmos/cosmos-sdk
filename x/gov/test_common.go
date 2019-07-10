@@ -178,10 +178,7 @@ func testProposal() Content {
 	return NewTextProposal("Test", "description")
 }
 
-type contextKey string
-
-// use custom private type for context keys
-const contextKeyBadProposal contextKey = "badProposal"
+const contextKeyBadProposal = "contextKeyBadProposal"
 
 // badProposalHandler implements a governance proposal handler that is identical
 // to the actual handler except this fails if the context doesn't contain a value
@@ -189,7 +186,7 @@ const contextKeyBadProposal contextKey = "badProposal"
 func badProposalHandler(ctx sdk.Context, c Content) sdk.Error {
 	switch c.ProposalType() {
 	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
-		v := ctx.Context().Value(contextKeyBadProposal)
+		v := ctx.Value(contextKeyBadProposal)
 
 		if v == nil || !v.(bool) {
 			return sdk.ErrInternal("proposal failed")

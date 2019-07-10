@@ -63,13 +63,14 @@ func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd s
 	}
 
 	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
+	info, err = kb.persistDerivedKey(seed, passwd, name, types.GetConfig().GetFullFundraiserPath())
 	return
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := hd.NewFundraiserParams(account, index)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -85,13 +86,14 @@ func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd s
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb keyringKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (Info, error) {
+func (kb keyringKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	hdPath := hd.NewFundraiserParams(account, index)
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath)
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
+	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +215,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 
 	case ledgerInfo:
 		linfo := info.(ledgerInfo)
-		priv, err = crypto.NewPrivKeyLedgerSecp256k1(linfo.Path)
+		priv, err = crypto.NewPrivKeyLedgerSecp256k1Unsafe(linfo.Path)
 		if err != nil {
 			return
 		}
@@ -323,6 +325,35 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 		Key:  string(infoKey(name)),
 		Data: infoBytes,
 	})
+	return nil
+}
+
+// ExportPrivKey returns a private key in ASCII armored format.
+// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
+func (kb keyringKeybase) ExportPrivKey(name string, decryptPassphrase string,
+	encryptPassphrase string) (armor string, err error) {
+	priv, err := kb.ExportPrivateKeyObject(name, decryptPassphrase)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase), nil
+}
+
+// ImportPrivKey imports a private key in ASCII armor format.
+// It returns an error if a key with the same name exists or a wrong encryption passphrase is
+// supplied.
+func (kb keyringKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+	if _, err := kb.Get(name); err == nil {
+		return errors.New("Cannot overwrite key " + name)
+	}
+
+	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	if err != nil {
+		return errors.Wrap(err, "couldn't import private key")
+	}
+
+	kb.writeLocalKey(name, privKey, passphrase)
 	return nil
 }
 

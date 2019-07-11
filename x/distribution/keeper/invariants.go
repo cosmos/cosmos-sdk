@@ -128,7 +128,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 
 		return sdk.FormatInvariant(types.ModuleName, "reference count",
 			fmt.Sprintf("expected historical reference count: %d = %v validators + %v delegations + %v slashes\n"+
-				"total validator historical refernce count: %d\n",
+				"total validator historical reference count: %d\n",
 				expected, valCount, len(dels), slashCount, count), broken)
 	}
 }

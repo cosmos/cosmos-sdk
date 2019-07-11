@@ -102,6 +102,10 @@ type SimApp struct {
 
 	// the module manager
 	mm *module.Manager
+
+	// to prevent random account generation from
+	// colliding with module account addresses
+	blackListedAccs []sdk.AccAddress
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
@@ -165,6 +169,10 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
+
+	for acc, _ := range maccPerms {
+		app.blackListedAccs = append(app.blackListedAccs, app.supplyKeeper.GetModuleAddress(acc))
+	}
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -249,4 +257,9 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 // load a particular height
 func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
+}
+
+// return an array of module account addresses
+func (app *SimApp) BlackListedAccs() []sdk.AccAddress {
+	return app.blackListedAccs
 }

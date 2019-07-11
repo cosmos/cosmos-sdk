@@ -47,6 +47,7 @@ func SimulateFromSeed(
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
 	numBlocks, blockSize int, commit, lean, onOperation, allInvariants bool,
+	blackListedAccs []sdk.AccAddress,
 ) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -64,7 +65,7 @@ func SimulateFromSeed(
 	)
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := RandomAccounts(r, params.NumKeys)
+	accs := RandomAccounts(r, params.NumKeys, blackListedAccs)
 	eventStats := newEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since

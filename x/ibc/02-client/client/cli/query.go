@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-func defaultRoot(storeKey string, root []byte) merkle.Root {
-	return merkle.NewRoot(root, [][]byte{[]byte(storeKey)}, []byte("protocol"))
+func defaultPath(storeKey string) merkle.Path {
+	return merkle.NewPath([][]byte{[]byte(storeKey)}, []byte("protocol"))
 }
 
 func defaultBase(cdc *codec.Codec) (state.Base, state.Base) {
@@ -51,10 +51,10 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 			man := client.NewManager(defaultBase(cdc))
-			root := defaultRoot(storeKey, nil)
+			path := defaultPath(storeKey)
 			id := args[0]
 
-			state, _, err := man.CLIObject(root, id).ConsensusState(ctx)
+			state, _, err := man.CLIObject(path, id).ConsensusState(ctx)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command
 			state := tendermint.ConsensusState{
 				ChainID:          commit.ChainID,
 				Height:           uint64(commit.Height),
-				Root:             defaultRoot(storeKey, []byte(commit.AppHash)),
+				Root:             merkle.NewRoot(commit.AppHash),
 				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 			}
 

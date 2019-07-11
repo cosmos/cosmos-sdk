@@ -23,11 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
+// nolint: unused
+func newPath() merkle.Path {
+	return merkle.NewPath([][]byte{[]byte("test")}, []byte{0x12, 0x34})
+}
+
 const chainid = "testchain"
 
-func NewRoot(keyPrefix []byte) merkle.Root {
-	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, keyPrefix)
-}
 func defaultComponents() (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
 	key := sdk.NewKVStoreKey("test")
 	db := dbm.NewMemDB()
@@ -52,10 +54,10 @@ type Node struct {
 
 	Commits []tmtypes.SignedHeader
 
-	Root merkle.Root
+	Path merkle.Path
 }
 
-func NewNode(valset MockValidators, root merkle.Root) *Node {
+func NewNode(valset MockValidators, path merkle.Path) *Node {
 	key, ctx, cms, _ := defaultComponents()
 	return &Node{
 		Valset:  valset,
@@ -63,7 +65,7 @@ func NewNode(valset MockValidators, root merkle.Root) *Node {
 		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
-		Root:    root,
+		Path:    path,
 	}
 }
 
@@ -97,7 +99,6 @@ func (node *Node) Commit() tendermint.Header {
 	node.PrevValset = node.Valset
 	node.Valset = nextvalset
 	node.Commits = append(node.Commits, commit)
-	node.Root = node.Root.Update(header.AppHash).(merkle.Root)
 
 	return tendermint.Header{
 		SignedHeader:     commit,
@@ -107,7 +108,11 @@ func (node *Node) Commit() tendermint.Header {
 }
 
 func (node *Node) LastStateVerifier() *Verifier {
-	return NewVerifier(node.Last(), node.Valset, node.Root)
+	return NewVerifier(node.Last(), node.Valset, node.Root())
+}
+
+func (node *Node) Root() merkle.Root {
+	return merkle.NewRoot(node.Last().AppHash)
 }
 
 func (node *Node) Context() sdk.Context {
@@ -123,13 +128,13 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root me
 		tendermint.ConsensusState{
 			ChainID:          chainid,
 			Height:           uint64(header.Height),
-			Root:             root.Update(header.AppHash),
+			Root:             merkle.NewRoot(header.AppHash),
 			NextValidatorSet: nextvalset.ValidatorSet(),
 		},
 	}
 }
 
-func (v *Verifier) Validate(header tendermint.Header) error {
+func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockValidators) error {
 	newcs, err := v.ConsensusState.Validate(header)
 	if err != nil {
 		return err
@@ -140,19 +145,18 @@ func (v *Verifier) Validate(header tendermint.Header) error {
 }
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	qres, proof, err := node.Root.QueryMultiStore(node.Cms, k)
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), qres.Code)
-	return qres.Value, proof
+	code, value, proof := node.Path.QueryMultiStore(node.Cms, k)
+	require.Equal(t, uint32(0), code)
+	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(node.Root.Key(k), value)
+	node.Store.Set(node.Path.Key(k), value)
 }
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), NewRoot([]byte{0x34, 0x90, 0xDA}))
+	node := NewNode(NewMockValidators(100, 10), newPath())
 
 	node.Commit()
 
@@ -168,14 +172,16 @@ func testProof(t *testing.T) {
 			kvps = append(kvps, cmn.KVPair{Key: k, Value: v})
 			node.Set(k, v)
 		}
-		_ = node.Commit()
+
+		header := node.Commit()
 		proofs := []commitment.Proof{}
+		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
 			v, p := node.Query(t, kvp.Key)
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(node.Root, proofs)
+		cstore, err := commitment.NewStore(root, node.Path, proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,25 +11,16 @@ import (
 
 // XXX: implement spec: ClientState.verifiedRoots
 
-type IDGenerator func(sdk.Context /*Header,*/, state.Value) string
-
-func IntegerIDGenerator(ctx sdk.Context, v state.Value) string {
-	id := state.NewInteger(v, state.Dec).Incr(ctx)
-	return strconv.FormatUint(id, 10)
-}
-
 type Manager struct {
 	protocol state.Mapping
 
 	idval state.Value
-	idgen IDGenerator
 }
 
-func NewManager(protocol, free state.Base, idgen IDGenerator) Manager {
+func NewManager(protocol, free state.Base) Manager {
 	return Manager{
 		protocol: state.NewMapping(protocol, []byte("/client")),
 		idval:    state.NewValue(free, []byte("/client/id")),
-		idgen:    idgen,
 	}
 }
 
@@ -61,8 +51,7 @@ func (man Manager) object(id string) Object {
 	}
 }
 
-func (man Manager) Create(ctx sdk.Context, cs ConsensusState) (Object, error) {
-	id := man.idgen(ctx, man.idval)
+func (man Manager) Create(ctx sdk.Context, id string, cs ConsensusState) (Object, error) {
 	obj := man.object(id)
 	if obj.exists(ctx) {
 		return Object{}, errors.New("Create client on already existing id")

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 type Node struct {
@@ -29,8 +30,8 @@ type Node struct {
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Name: "self",                                                           // hard coded, doesnt matter
-		Node: tendermint.NewNode(self, tendermint.NewRoot([]byte("protocol"))), // TODO: test with key prefix
+		Name: "self",                                                            // hard coded, doesnt matter
+		Node: tendermint.NewNode(self, merkle.NewPath(nil, []byte("protocol"))), // TODO: test with key prefix
 
 		State: connection.Idle,
 		Cdc:   cdc,
@@ -38,7 +39,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 	res.Counterparty = &Node{
 		Name:         "counterparty",
-		Node:         tendermint.NewNode(counter, tendermint.NewRoot([]byte("protocol"))),
+		Node:         tendermint.NewNode(counter, merkle.NewPath(nil, []byte("protocol"))),
 		Counterparty: res,
 
 		State: connection.Idle,
@@ -59,7 +60,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 func (node *Node) CreateClient(t *testing.T) {
 	ctx := node.Context(t, nil)
 	climan, _ := node.Manager()
-	obj, err := climan.Create(ctx, node.Counterparty.LastStateVerifier().ConsensusState)
+	obj, err := climan.Create(ctx, node.Name, node.Counterparty.LastStateVerifier().ConsensusState)
 	require.NoError(t, err)
 	node.Connection.Client = obj.ID()
 	node.Counterparty.CounterpartyClient = obj.ID()
@@ -81,7 +82,7 @@ func (node *Node) SetState(state connection.State) {
 
 func (node *Node) Context(t *testing.T, proofs []commitment.Proof) sdk.Context {
 	ctx := node.Node.Context()
-	store, err := commitment.NewStore(node.Counterparty.Root, proofs)
+	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Path, proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
 	return ctx
@@ -95,7 +96,7 @@ func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Conte
 
 func (node *Node) CLIObject() connection.CLIHandshakeObject {
 	_, man := node.Manager()
-	return connection.NewHandshaker(man).CLIObject(node.Root, node.Name)
+	return connection.NewHandshaker(man).CLIObject(node.Path, node.Name, node.Name)
 }
 
 func base(cdc *codec.Codec, key sdk.StoreKey) (state.Base, state.Base) {
@@ -106,7 +107,7 @@ func base(cdc *codec.Codec, key sdk.StoreKey) (state.Base, state.Base) {
 
 func (node *Node) Manager() (client.Manager, connection.Manager) {
 	protocol, free := base(node.Cdc, node.Key)
-	clientman := client.NewManager(protocol, free, client.IntegerIDGenerator)
+	clientman := client.NewManager(protocol, free)
 	return clientman, connection.NewManager(protocol, clientman)
 }
 

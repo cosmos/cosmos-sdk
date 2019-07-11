@@ -10,35 +10,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+const merkleKind = "merkle"
+
 // merkle.Proof implementation of Proof
 // Applied on SDK-based IBC implementation
-
 var _ commitment.Root = Root{}
 
 type Root struct {
-	Hash      []byte
-	KeyPath   [][]byte
-	KeyPrefix []byte
+	Hash []byte
 }
 
-func NewRoot(hash []byte, keypath [][]byte, prefix []byte) Root {
+func NewRoot(hash []byte) Root {
 	return Root{
-		Hash:      hash,
-		KeyPath:   keypath,
-		KeyPrefix: prefix,
+		Hash: hash,
 	}
 }
 
 func (Root) CommitmentKind() string {
-	return "merkle"
+	return merkleKind
 }
 
-func (r Root) Update(hash []byte) commitment.Root {
-	return Root{
-		Hash:      hash,
-		KeyPath:   r.KeyPath,
-		KeyPrefix: r.KeyPrefix,
+var _ commitment.Path = Path{}
+
+type Path struct {
+	KeyPath   [][]byte
+	KeyPrefix []byte
+}
+
+func NewPath(keypath [][]byte, keyprefix []byte) Path {
+	return Path{
+		KeyPath:   keypath,
+		KeyPrefix: keyprefix,
 	}
+}
+
+func (Path) CommitmentKind() string {
+	return merkleKind
 }
 
 var _ commitment.Proof = Proof{}
@@ -49,24 +56,29 @@ type Proof struct {
 }
 
 func (Proof) CommitmentKind() string {
-	return "merkle"
+	return merkleKind
 }
 
 func (proof Proof) GetKey() []byte {
 	return proof.Key
 }
 
-func (proof Proof) Verify(croot commitment.Root, value []byte) error {
+func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []byte) error {
 	root, ok := croot.(Root)
 	if !ok {
 		return errors.New("invalid commitment root type")
 	}
 
+	path, ok := cpath.(Path)
+	if !ok {
+		return errors.New("invalid commitment path type")
+	}
+
 	keypath := merkle.KeyPath{}
-	for _, key := range root.KeyPath {
+	for _, key := range path.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-	keypath = keypath.AppendKey(append(root.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
+	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
 
 	// Hard coded for now
 	runtime := rootmulti.DefaultProofRuntime()

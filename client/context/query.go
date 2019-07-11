@@ -49,15 +49,6 @@ func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, in
 	return ctx.queryStore(key, storeName, "key")
 }
 
-// QueryProof performs a query to a Tendermint node with the provided key and
-// store name. It returns the result, the proof, and height of the query
-// upon success or an error if the query fails.
-func (ctx CLIContext) QueryProof(key cmn.HexBytes, storeName string) (val []byte, proof *merkle.Proof, height int64, err error) {
-	path := fmt.Sprintf("/store/%s/%s", storeName, "key")
-	resp, err := ctx.queryABCI(abci.RequestQuery{Data: key, Path: path})
-	return resp.Value, resp.Proof, resp.Height, err
-}
-
 // QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
 // It returns the ResultQuery obtained from the query.
 func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {

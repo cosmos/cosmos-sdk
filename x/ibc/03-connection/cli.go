@@ -17,11 +17,11 @@ type CLIObject struct {
 
 	Client client.CLIObject
 
-	Root merkle.Root
+	Path merkle.Path
 	Cdc  *codec.Codec
 }
 
-func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
+func (man Manager) CLIObject(path merkle.Path, id string, clientid string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
 		ID:            obj.id,
@@ -29,16 +29,15 @@ func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
 		AvailableKey:  obj.available.Key(),
 		KindKey:       obj.kind.Key(),
 
-		// TODO: unify man.CLIObject() <=> obj.CLI()
-		Client: obj.client.CLI(root),
+		Client: man.client.CLIObject(path, clientid),
 
-		Root: root,
+		Path: path,
 		Cdc:  obj.connection.Cdc(),
 	}
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(obj.Root.RequestQuery(key))
+	resp, err := ctx.QueryABCI(obj.Path.RequestQuery(key))
 	if err != nil {
 		return merkle.Proof{}, err
 	}
@@ -74,10 +73,10 @@ type CLIHandshakeObject struct {
 	TimeoutKey            []byte
 }
 
-func (man Handshaker) CLIObject(root merkle.Root, id string) CLIHandshakeObject {
+func (man Handshaker) CLIObject(path merkle.Path, id string, clientid string) CLIHandshakeObject {
 	obj := man.object(man.man.object(id))
 	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(root, id),
+		CLIObject: man.man.CLIObject(path, id, clientid),
 
 		StateKey:              obj.state.Key(),
 		CounterpartyClientKey: obj.counterpartyClient.Key(),

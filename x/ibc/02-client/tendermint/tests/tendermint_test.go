@@ -7,9 +7,9 @@ import (
 )
 
 func testUpdate(t *testing.T, interval int, ok bool) {
-	node := NewNode(NewMockValidators(100, 10), NewRoot([]byte("qwertyuiop")))
+	node := NewNode(NewMockValidators(100, 10), newPath())
 
-	node.Commit()
+	_ = node.Commit()
 
 	verifier := node.LastStateVerifier()
 
@@ -17,7 +17,7 @@ func testUpdate(t *testing.T, interval int, ok bool) {
 		header := node.Commit()
 
 		if i%interval == 0 {
-			err := verifier.Validate(header)
+			err := verifier.Validate(header, node.PrevValset, node.Valset)
 			if ok {
 				require.NoError(t, err)
 			} else {

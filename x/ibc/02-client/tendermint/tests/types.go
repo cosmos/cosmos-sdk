@@ -24,8 +24,8 @@ import (
 )
 
 // nolint: unused
-func newRoot() merkle.Root {
-	return merkle.NewRoot(nil, [][]byte{[]byte("test")}, []byte{0x12, 0x34})
+func newPath() merkle.Path {
+	return merkle.NewPath([][]byte{[]byte("test")}, []byte{0x12, 0x34})
 }
 
 const chainid = "testchain"
@@ -54,10 +54,10 @@ type Node struct {
 
 	Commits []tmtypes.SignedHeader
 
-	Root merkle.Root
+	Path merkle.Path
 }
 
-func NewNode(valset MockValidators, root merkle.Root) *Node {
+func NewNode(valset MockValidators, path merkle.Path) *Node {
 	key, ctx, cms, _ := defaultComponents()
 	return &Node{
 		Valset:  valset,
@@ -65,7 +65,7 @@ func NewNode(valset MockValidators, root merkle.Root) *Node {
 		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
-		Root:    root,
+		Path:    path,
 	}
 }
 
@@ -120,7 +120,7 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root me
 		tendermint.ConsensusState{
 			ChainID:          chainid,
 			Height:           uint64(header.Height),
-			Root:             root.Update(header.AppHash),
+			Root:             merkle.NewRoot(header.AppHash),
 			NextValidatorSet: nextvalset.ValidatorSet(),
 		},
 	}
@@ -142,19 +142,19 @@ func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset Mock
 	return nil
 }
 
-func (node *Node) Query(t *testing.T, root merkle.Root, k []byte) ([]byte, commitment.Proof) {
-	code, value, proof := root.QueryMultiStore(node.Cms, k)
+func (node *Node) Query(t *testing.T, path merkle.Path, k []byte) ([]byte, commitment.Proof) {
+	code, value, proof := path.QueryMultiStore(node.Cms, k)
 	require.Equal(t, uint32(0), code)
 	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(node.Root.Key(k), value)
+	node.Store.Set(node.Path.Key(k), value)
 }
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), newRoot())
+	node := NewNode(NewMockValidators(100, 10), newPath())
 
 	node.Commit()
 
@@ -172,13 +172,13 @@ func testProof(t *testing.T) {
 		}
 		header := node.Commit()
 		proofs := []commitment.Proof{}
-		root := node.Root.Update(header.AppHash)
+		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, root.(merkle.Root), kvp.Key)
+			v, p := node.Query(t, node.Path, kvp.Key)
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(root, proofs)
+		cstore, err := commitment.NewStore(root, node.Path, proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

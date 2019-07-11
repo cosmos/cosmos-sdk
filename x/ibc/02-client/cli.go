@@ -13,24 +13,24 @@ type CLIObject struct {
 	ConsensusStateKey []byte
 	FrozenKey         []byte
 
-	Root merkle.Root
+	Path merkle.Path
 	Cdc  *codec.Codec
 }
 
-func (man Manager) CLIObject(root merkle.Root, id string) CLIObject {
+func (man Manager) CLIObject(path merkle.Path, id string) CLIObject {
 	obj := man.object(id)
 	return CLIObject{
 		ID:                id,
 		ConsensusStateKey: obj.consensusState.Key(),
 		FrozenKey:         obj.frozen.Key(),
 
-		Root: root,
+		Path: path,
 		Cdc:  obj.consensusState.Cdc(),
 	}
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(obj.Root.RequestQuery(key))
+	resp, err := ctx.QueryABCI(obj.Path.RequestQuery(key))
 	if err != nil {
 		return merkle.Proof{}, err
 	}

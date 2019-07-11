@@ -126,9 +126,10 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
 		broken := count != expected
 
-		return sdk.FormatInvariant(types.ModuleName, "reference count", fmt.Sprintf("unexpected number of historical rewards records: "+
-			"expected %v (%v vals + %v dels + %v slashes), got %v\n",
-			expected, valCount, len(dels), slashCount, count), broken)
+		return sdk.FormatInvariant(types.ModuleName, "reference count",
+			fmt.Sprintf("expected historical reference count: %d = %v validators + %v delegations + %v slashes\n"+
+				"total validator historical refernce count: %d\n",
+				expected, valCount, len(dels), slashCount, count), broken)
 	}
 }
 
@@ -150,8 +151,8 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 
 		broken := !macc.GetCoins().IsEqual(expectedInt)
 		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins",
-			fmt.Sprintf("\texpected ModuleAccount coins:      %s\n"+
-				"\tdistribution ModuleAccount coins : %s\n",
+			fmt.Sprintf("\texpected ModuleAccount coins:     %s\n"+
+				"\tdistribution ModuleAccount coins: %s\n",
 				expectedInt, macc.GetCoins()), broken)
 	}
 }

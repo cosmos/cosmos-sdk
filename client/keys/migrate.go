@@ -49,11 +49,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	legacyKeyList, err := legacykb.List()
 	for _, key := range legacyKeyList {
 
-		leg_key_info, err := legacykb.Export(key.GetName())
+		legKeyInfo, err := legacykb.Export(key.GetName())
 		if err != nil {
 			return err
 		}
-		keyringkb.Import(key.GetName(), leg_key_info)
+
+		keyringkb.Import(key.GetName(), legKeyInfo)
 
 		switch key.GetType() {
 		case keys.TypeLocal:
@@ -64,9 +65,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			priv_data, err := legacykb.ExportPrivKey(key.GetName(), decryptPassword, "abc")
+			privData, err := legacykb.ExportPrivKey(key.GetName(), decryptPassword, "abc")
 
-			keyringkb.ImportPrivKey(key.GetName(), priv_data, "abc")
+			keyringkb.ImportPrivKey(key.GetName(), privData, "abc")
 
 		case keys.TypeOffline, keys.TypeMulti, keys.TypeLedger:
 

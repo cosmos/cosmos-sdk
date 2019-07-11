@@ -50,7 +50,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 			outstanding = rewards
 			if outstanding.IsAnyNegative() {
 				amt++
-				msg += "\t%v has negative outstanding coins: %v\n"
+				msg += fmt.Sprintf("\t%v has negative outstanding coins: %v\n", addr, outstanding)
 			}
 			return false
 		})

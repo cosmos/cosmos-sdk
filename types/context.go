@@ -63,6 +63,8 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 
 // create a new context
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
+	// https://github.com/gogo/protobuf/issues/519
+	header.Time = header.Time.UTC()
 	return Context{
 		ctx:         context.Background(),
 		ms:          ms,
@@ -87,13 +89,16 @@ func (c Context) WithMultiStore(ms MultiStore) Context {
 }
 
 func (c Context) WithBlockHeader(header abci.Header) Context {
+	// https://github.com/gogo/protobuf/issues/519
+	header.Time = header.Time.UTC()
 	c.header = header
 	return c
 }
 
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
-	newHeader.Time = newTime
+	// https://github.com/gogo/protobuf/issues/519
+	newHeader.Time = newTime.UTC()
 	return c.WithBlockHeader(newHeader)
 }
 

@@ -149,7 +149,7 @@ func TestContextHeader(t *testing.T) {
 		WithProposer(proposer)
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, height, ctx.BlockHeader().Height)
-	require.Equal(t, time, ctx.BlockHeader().Time)
+	require.Equal(t, time.UTC(), ctx.BlockHeader().Time)
 	require.Equal(t, proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }
 
@@ -170,7 +170,6 @@ func TestContextHeaderClone(t *testing.T) {
 				Time: time.Unix(12345677, 12345),
 			},
 		},
-		// https://github.com/gogo/protobuf/issues/519
 		"zero time": {
 			h: abci.Header{
 				Time: time.Unix(0, 0),
@@ -197,15 +196,14 @@ func TestContextHeaderClone(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			ctx := types.NewContext(nil, tc.h, false, nil)
-			require.Equal(t, tc.h, ctx.BlockHeader())
 			require.Equal(t, tc.h.Height, ctx.BlockHeight())
-			require.Equal(t, tc.h.Time, ctx.BlockTime())
+			require.Equal(t, tc.h.Time.UTC(), ctx.BlockTime())
 
 			// update only changes one field
 			var newHeight int64 = 17
 			ctx = ctx.WithBlockHeight(newHeight)
 			require.Equal(t, newHeight, ctx.BlockHeight())
-			require.Equal(t, tc.h.Time, ctx.BlockTime())
+			require.Equal(t, tc.h.Time.UTC(), ctx.BlockTime())
 		})
 	}
 }

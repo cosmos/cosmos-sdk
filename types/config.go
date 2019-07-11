@@ -14,6 +14,7 @@ type Config struct {
 	fullFundraiserPath  string
 	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
+	keyringServiceName  string
 }
 
 var (
@@ -31,6 +32,7 @@ var (
 		coinType:           CoinType,
 		fullFundraiserPath: FullFundraiserPath,
 		txEncoder:          nil,
+		keyringServiceName: "gaia",
 	}
 )
 
@@ -97,6 +99,12 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
+// Set the keyringServiceName (BIP44Prefix) on the config
+func (config *Config) SetKeyringServiceName(keyringServiceName string) {
+	config.assertNotSealed()
+	config.keyringServiceName = keyringServiceName
+}
+
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -154,4 +162,9 @@ func (config *Config) GetCoinType() uint32 {
 // Get the FullFundraiserPath (BIP44Prefix) on the config
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
+}
+
+// Get the keyringServiceName on the config
+func (config *Config) GetKeyringServiceName() string {
+	return config.keyringServiceName
 }

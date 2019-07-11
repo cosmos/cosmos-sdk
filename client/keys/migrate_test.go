@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,13 +28,15 @@ func Test_runMigrateCmd(t *testing.T) {
 	err := runAddCmd(cmdAddKey, []string{"keyname1"})
 	assert.NoError(t, err)
 
+	fmt.Println("Key Generated")
+
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	cmd := migrateKeyCommand()
 	assert.NotNil(t, cmd)
 
+	mockIn, _, _ = tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\n")
-
 	err = runMigrateCmd(cmd, []string{""})
 	assert.NoError(t, err)
 

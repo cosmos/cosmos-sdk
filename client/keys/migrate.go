@@ -59,8 +59,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		switch key.GetType() {
 		case keys.TypeLocal:
 			buf := bufio.NewReader(cmd.InOrStdin())
-			fmt.Printf("%s \n", key.GetName())
-			decryptPassword, err := input.GetPassword("Enter pxassphrase to decrypt your key:", buf)
+			fmt.Printf(" Migrating %s \n", key.GetName())
+			decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+
 			if err != nil {
 				return err
 			}
@@ -70,6 +71,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			keyringkb.ImportPrivKey(key.GetName(), privData, "abc")
 
 		case keys.TypeOffline, keys.TypeMulti, keys.TypeLedger:
+			continue
 
 		}
 	}

@@ -49,8 +49,8 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 }
 
 func fakePrompt(prompt string) (string, error) {
-	fmt.Printf("%s: ", prompt)
 
+	fmt.Println("Fake Prompt for passphase. Testing only")
 	return "test", nil
 }
 

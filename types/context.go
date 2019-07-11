@@ -5,6 +5,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -52,15 +53,12 @@ func (c Context) EventManager() *EventManager { return c.evtManager }
 
 // clone the header before returning
 func (c Context) BlockHeader() abci.Header {
-	// TODO: figure out clone better
-	return c.header
-	// var msg = proto.Clone(&c.header).(*abci.Header)
-	// return *msg
+	var msg = proto.Clone(&c.header).(*abci.Header)
+	return *msg
 }
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return c.consParams
-	// return proto.Clone(c.consParams).(*abci.ConsensusParams)
+	return proto.Clone(c.consParams).(*abci.ConsensusParams)
 }
 
 // create a new context

@@ -152,3 +152,54 @@ func TestContextHeader(t *testing.T) {
 	require.Equal(t, time, ctx.BlockHeader().Time)
 	require.Equal(t, proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }
+
+func TestContextHeaderClone(t *testing.T) {
+	cases := map[string]struct {
+		h abci.Header
+	}{
+		"empty": {
+			h: abci.Header{},
+		},
+		"height": {
+			h: abci.Header{
+				Height: 77,
+			},
+		},
+		"time": {
+			h: abci.Header{
+				Time: time.Unix(12345677, 12345),
+			},
+		},
+		"many items": {
+			h: abci.Header{
+				Height:  823,
+				Time:    time.Unix(9999999999, 0),
+				ChainID: "silly-demo",
+			},
+		},
+		"many items with hash": {
+			h: abci.Header{
+				Height:        823,
+				Time:          time.Unix(9999999999, 0),
+				ChainID:       "silly-demo",
+				AppHash:       []byte{5, 34, 11, 3, 23},
+				ConsensusHash: []byte{11, 3, 23, 87, 3, 1},
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := types.NewContext(nil, tc.h, false, nil)
+			require.Equal(t, tc.h, ctx.BlockHeader())
+			require.Equal(t, tc.h.Height, ctx.BlockHeight())
+			require.Equal(t, tc.h.Time, ctx.BlockTime())
+
+			// update only changes one field
+			var newHeight int64 = 17
+			ctx = ctx.WithBlockHeight(newHeight)
+			require.Equal(t, newHeight, ctx.BlockHeight())
+			require.Equal(t, tc.h.Time, ctx.BlockTime())
+		})
+	}
+}

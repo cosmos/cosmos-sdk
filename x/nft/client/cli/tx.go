@@ -73,7 +73,6 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 		Use:   "edit-metadata [denom] [tokenID]",
 		Short: "transfer a token of some denom with some tokenID to some recipient",
 		Args:  cobra.ExactArgs(2),
-
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := authtypes.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))

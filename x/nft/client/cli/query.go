@@ -15,7 +15,6 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	// Group nameservice queries under a subcommand
 	nftQueryCmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "Querying commands for the NFT module",

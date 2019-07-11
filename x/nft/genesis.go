@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// InitGenesis sets distribution information for genesis.
+// InitGenesis sets nft information for genesis.
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.SetOwners(ctx, data.Owners)
 

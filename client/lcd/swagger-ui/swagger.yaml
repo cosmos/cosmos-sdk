@@ -1862,7 +1862,7 @@ paths:
         200:
           description: OK
           schema:
-             type: integer
+             type: string
         400:
           description: Invalid coin denomination
         500:

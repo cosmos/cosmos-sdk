@@ -20,9 +20,10 @@ const (
 	feeCollectorName  = "fee_collector"
 	mintModuleName    = "mint"
 
-	basic  = "basic"
-	minter = "minter"
-	burner = "burner"
+	basic   = "basic"
+	minter  = "minter"
+	burner  = "burner"
+	staking = "staking"
 )
 
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
@@ -63,7 +64,7 @@ func Migrate(
 				NewGenesisAccount(
 					acc.Address, acc.Coins, acc.Sequence,
 					acc.OriginalVesting, acc.DelegatedFree, acc.DelegatedVesting,
-					acc.StartTime, acc.EndTime, "", "",
+					acc.StartTime, acc.EndTime, "", []string{},
 				),
 			)
 		}
@@ -126,32 +127,32 @@ func Migrate(
 	feeCollectorModuleAcc := NewGenesisAccount(
 		feeCollectorAddr, fees, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, feeCollectorName, basic,
+		0, 0, feeCollectorName, []string{basic},
 	)
 	govModuleAcc := NewGenesisAccount(
 		govAddr, govCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, govModuleName, burner,
+		0, 0, govModuleName, []string{burner},
 	)
 	distrModuleAcc := NewGenesisAccount(
 		distrAddr, distrCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, distrModuleName, basic,
+		0, 0, distrModuleName, []string{basic},
 	)
 	bondedModuleAcc := NewGenesisAccount(
 		bondedAddr, bondedCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, bondedPoolName, burner,
+		0, 0, bondedPoolName, []string{burner, staking},
 	)
 	notBondedModuleAcc := NewGenesisAccount(
 		notBondedAddr, notBondedCoins, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, notBondedPoolName, burner,
+		0, 0, notBondedPoolName, []string{burner, staking},
 	)
 	mintModuleAcc := NewGenesisAccount(
 		mintAddr, sdk.Coins{}, 0,
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
-		0, 0, mintModuleName, minter,
+		0, 0, mintModuleName, []string{minter},
 	)
 
 	newGenState = append(

@@ -4,14 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 func testUpdate(t *testing.T, interval int, ok bool) {
-	node := NewNode(NewMockValidators(100, 10), newRoot())
+	node := NewNode(NewMockValidators(100, 10), newPath())
 
-	node.Commit()
+	header := node.Commit()
 
-	verifier := node.LastStateVerifier(newRoot())
+	verifier := node.LastStateVerifier(merkle.NewRoot(header.AppHash))
 
 	for i := 0; i < 100; i++ {
 		header := node.Commit()

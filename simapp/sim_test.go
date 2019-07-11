@@ -42,15 +42,16 @@ func init() {
 	flag.BoolVar(&commit, "SimulationCommit", false, "have the simulation commit")
 	flag.IntVar(&period, "SimulationPeriod", 1, "run slow invariants only once every period assertions")
 	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
+	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 }
 
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool) {
+	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool, bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation
+		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation, allInvariants
 }
 
 func appStateFn(
@@ -602,6 +603,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 				false,
 				false,
+				false,
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -627,7 +629,7 @@ func BenchmarkInvariants(b *testing.B) {
 	// 2. Run parameterized simulation (w/o invariants)
 	_, err := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation,
+		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation, false,
 	)
 	if err != nil {
 		fmt.Println(err)
@@ -642,8 +644,8 @@ func BenchmarkInvariants(b *testing.B) {
 	// their respective metadata which makes it useful for testing/benchmarking.
 	for _, cr := range app.crisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
-			if err := cr.Invar(ctx); err != nil {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, err)
+			if res, stop := cr.Invar(ctx); stop {
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)
 				b.FailNow()
 			}
 		})

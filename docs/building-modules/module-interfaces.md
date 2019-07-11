@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Module Interfaces
 
 ## Prerequisites
@@ -281,3 +282,10 @@ A few things to note:
 ## Next
 
 Read about the next topic in building modules.
+=======
+# Module Manager
+
+## Application Module Interface
+
+## Module Manager
+>>>>>>> finish intro

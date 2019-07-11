@@ -33,7 +33,7 @@ type Context struct {
 	checkTx       bool
 	minGasPrice   DecCoins
 	consParams    *abci.ConsensusParams
-	evtManager    *EventManager
+	eventManager  *EventManager
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -52,7 +52,7 @@ func (c Context) GasMeter() GasMeter          { return c.gasMeter }
 func (c Context) BlockGasMeter() GasMeter     { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool             { return c.checkTx }
 func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
-func (c Context) EventManager() *EventManager { return c.evtManager }
+func (c Context) EventManager() *EventManager { return c.eventManager }
 
 // clone the header before returning
 func (c Context) BlockHeader() abci.Header {
@@ -69,15 +69,15 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
-		ctx:         context.Background(),
-		ms:          ms,
-		header:      header,
-		chainID:     header.ChainID,
-		checkTx:     isCheckTx,
-		logger:      logger,
-		gasMeter:    stypes.NewInfiniteGasMeter(),
-		minGasPrice: DecCoins{},
-		evtManager:  NewEventManager(),
+		ctx:          context.Background(),
+		ms:           ms,
+		header:       header,
+		chainID:      header.ChainID,
+		checkTx:      isCheckTx,
+		logger:       logger,
+		gasMeter:     stypes.NewInfiniteGasMeter(),
+		minGasPrice:  DecCoins{},
+		eventManager: NewEventManager(),
 	}
 }
 
@@ -163,7 +163,7 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 }
 
 func (c Context) WithEventManager(em *EventManager) Context {
-	c.evtManager = em
+	c.eventManager = em
 	return c
 }
 

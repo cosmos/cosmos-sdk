@@ -1,14 +1,12 @@
 package cli
 
 import (
-	"errors"
 	"io/ioutil"
 	//	"os"
 
 	"github.com/spf13/cobra"
 
 	//	"github.com/tendermint/tendermint/libs/log"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -20,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 const (
@@ -113,32 +110,4 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	}
 
 	return cmd
-}
-
-// Copied from client/context/query.go
-func query(ctx context.CLIContext, key []byte) ([]byte, merkle.Proof, error) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		return nil, merkle.Proof{}, err
-	}
-
-	opts := rpcclient.ABCIQueryOptions{
-		Height: ctx.Height,
-		Prove:  true,
-	}
-
-	result, err := node.ABCIQueryWithOptions("/store/ibc/key", key, opts)
-	if err != nil {
-		return nil, merkle.Proof{}, err
-	}
-
-	resp := result.Response
-	if !resp.IsOK() {
-		return nil, merkle.Proof{}, errors.New(resp.Log)
-	}
-
-	return resp.Value, merkle.Proof{
-		Key:   key,
-		Proof: resp.Proof,
-	}, nil
 }

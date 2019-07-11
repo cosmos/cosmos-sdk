@@ -112,17 +112,17 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				broken = true
 				msg += fmt.Sprintf("power store invariance:\n\tvalidator.Power: %v"+
-					"\n\tkey should be: %v\n\tkey in store: %v",
+					"\n\tkey should be: %v\n\tkey in store: %v\n",
 					validator.GetConsensusPower(), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {
 				broken = true
-				msg += fmt.Sprintf("negative tokens for validator: %v", validator)
+				msg += fmt.Sprintf("\tnegative tokens for validator: %v\n", validator)
 			}
 		}
 		iterator.Close()
-		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", msg, broken)
+		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", fmt.Sprintf("found invalid validator powers\n%s", msg), broken)
 	}
 }
 
@@ -130,23 +130,23 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var msg string
-		var amt int
+		var count int
 
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
 			if delegation.Shares.IsNegative() {
-				amt++
+				count++
 				msg += fmt.Sprintf("\tdelegation with negative shares: %+v\n", delegation)
 			}
 			if delegation.Shares.IsZero() {
-				amt++
+				count++
 				msg += fmt.Sprintf("\tdelegation with zero shares: %+v\n", delegation)
 			}
 		}
-		broken := amt != 0
+		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
-			"%d invalid delegations found\n%s", amt, msg), broken)
+			"%d invalid delegations found\n%s", count, msg), broken)
 	}
 }
 
@@ -173,7 +173,7 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+
 					"\tvalidator.DelegatorShares: %v\n"+
-					"\tsum of Delegator.Shares: %v", valTotalDelShares, totalDelShares)
+					"\tsum of Delegator.Shares: %v\n", valTotalDelShares, totalDelShares)
 			}
 		}
 		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg, broken)

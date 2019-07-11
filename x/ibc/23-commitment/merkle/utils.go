@@ -6,23 +6,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func (root Root) RequestQuery(key []byte) abci.RequestQuery {
-	path := ""
-	for _, inter := range root.KeyPath {
-		path = path + "/" + string(inter)
+func (path Path) RequestQuery(key []byte) abci.RequestQuery {
+	pathstr := ""
+	for _, inter := range path.KeyPath {
+		pathstr = pathstr + "/" + string(inter)
 	}
-	path = path + "/key"
+	pathstr = pathstr + "/key"
 
-	data := append(root.KeyPrefix, key...)
+	data := append(path.KeyPrefix, key...)
 
-	return abci.RequestQuery{Path: path, Data: data, Prove: true}
+	return abci.RequestQuery{Path: pathstr, Data: data, Prove: true}
 }
 
-func (root Root) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
-	qres := cms.(types.Queryable).Query(root.RequestQuery(key))
+func (path Path) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
+	qres := cms.(types.Queryable).Query(path.RequestQuery(key))
 	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
 }
 
-func (root Root) Key(key []byte) []byte {
-	return append(root.KeyPrefix, key...) // XXX: cloneAppend
+func (path Path) Key(key []byte) []byte {
+	return append(path.KeyPrefix, key...) // XXX: cloneAppend
 }

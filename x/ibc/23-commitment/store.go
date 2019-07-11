@@ -31,14 +31,21 @@ var _ Store = store{}
 
 type store struct {
 	root     Root
+	path     Path
 	proofs   map[string]Proof
 	verified map[string][]byte
 }
 
 // Proofs must be provided
-func NewStore(root Root, proofs []Proof) (res store, err error) {
+func NewStore(root Root, path Path, proofs []Proof) (res store, err error) {
+	if root.CommitmentKind() != path.CommitmentKind() {
+		err = errors.New("path type not matching with root's")
+		return
+	}
+
 	res = store{
 		root:     root,
+		path:     path,
 		proofs:   make(map[string]Proof),
 		verified: make(map[string][]byte),
 	}
@@ -68,7 +75,7 @@ func (store store) Prove(key, value []byte) bool {
 	if !ok {
 		return false
 	}
-	err := proof.Verify(store.root, value)
+	err := proof.Verify(store.root, store.path, value)
 	if err != nil {
 		return false
 	}

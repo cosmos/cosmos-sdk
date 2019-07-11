@@ -44,8 +44,9 @@ func Migrate(
 	// coins from rejected proposals add six new module accounts:
 	// distribution, gov, mint, fee collector, bonded and not bonded pool
 	var (
-		newGenState GenesisState
-		govCoins    sdk.Coins
+		newGenState   GenesisState
+		govCoins      sdk.Coins
+		extraAccounts = 5
 	)
 
 	for _, acc := range oldGenState {
@@ -54,7 +55,7 @@ func Migrate(
 			govCoins = acc.Coins
 
 		case acc.Address.Equals(burnedDepositCoinsAccAddr):
-			// do nothing
+			extraAccounts -= 1
 
 		default:
 			newGenState = append(
@@ -162,11 +163,11 @@ func Migrate(
 	)
 
 	// verify the total number of accounts is correct
-	if len(newGenState) != len(oldGenState)+4 {
+	if len(newGenState) != len(oldGenState)+extraAccounts {
 		panic(
 			fmt.Sprintf(
 				"invalid total number of genesis accounts; got: %d, expected: %d",
-				len(newGenState), len(oldGenState)+4),
+				len(newGenState), len(oldGenState)+extraAccounts),
 		)
 	}
 

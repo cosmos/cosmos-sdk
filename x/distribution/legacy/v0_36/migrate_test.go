@@ -13,7 +13,6 @@ var (
 	priv       = secp256k1.GenPrivKey()
 	addr       = types.AccAddress(priv.PubKey().Address())
 	valAddr, _ = types.ValAddressFromBech32(addr.String())
-	coins      = types.Coins{types.NewInt64Coin("foocoin", 10)}
 
 	event = v034distr.ValidatorSlashEvent{
 		ValidatorPeriod: 1,
@@ -44,9 +43,21 @@ func TestMigrate(t *testing.T) {
 }
 
 func TestMigrateEmptyRecord(t *testing.T) {
+	var genesisState GenesisState
+
 	require.NotPanics(t, func() {
-		Migrate(v034distr.GenesisState{
+		genesisState = Migrate(v034distr.GenesisState{
 			ValidatorSlashEvents: []v034distr.ValidatorSlashEventRecord{{}},
 		})
+	})
+
+	require.Equal(t, genesisState.ValidatorSlashEvents[0], ValidatorSlashEventRecord{
+		ValidatorAddress: valAddr,
+		Height:           0,
+		Period:           0,
+		Event: v034distr.ValidatorSlashEvent{
+			ValidatorPeriod: 0,
+			Fraction:        types.Dec{},
+		},
 	})
 }

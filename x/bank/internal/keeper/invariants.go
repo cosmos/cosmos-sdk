@@ -24,7 +24,7 @@ func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
 			coins := acc.GetCoins()
 			if coins.IsAnyNegative() {
 				count++
-				msg += fmt.Sprintf("\n\t%s has a negative denomination of %s",
+				msg += fmt.Sprintf("\t%s has a negative denomination of %s\n",
 					acc.GetAddress().String(),
 					coins.String())
 			}
@@ -32,6 +32,6 @@ func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative-outstanding",
-			fmt.Sprintf("amount of negative accounts found %d%s", count, msg), broken)
+			fmt.Sprintf("amount of negative accounts found %d\n%s", count, msg), broken)
 	}
 }

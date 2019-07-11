@@ -170,6 +170,12 @@ func TestContextHeaderClone(t *testing.T) {
 				Time: time.Unix(12345677, 12345),
 			},
 		},
+		// https://github.com/gogo/protobuf/issues/519
+		"zero time": {
+			h: abci.Header{
+				Time: time.Unix(0, 0),
+			},
+		},
 		"many items": {
 			h: abci.Header{
 				Height:  823,

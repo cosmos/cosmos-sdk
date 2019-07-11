@@ -44,7 +44,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	rootDir := viper.GetString(flags.FlagHome)
 
-	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir)
+	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, nil, true)
 
 	legacyKeyList, err := legacykb.List()
 	for _, key := range legacyKeyList {

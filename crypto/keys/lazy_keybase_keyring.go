@@ -1,9 +1,12 @@
 package keys
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 
 	"github.com/99designs/keyring"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -12,12 +15,14 @@ import (
 var _ Keybase = lazyKeybaseKeyring{}
 
 type lazyKeybaseKeyring struct {
-	name string
-	dir  string
+	name      string
+	dir       string
+	test      bool
+	userInput io.Reader
 }
 
 // NewKeybaseKeyring creates a new instance of a lazy keybase.
-func NewKeybaseKeyring(name string, dir string) Keybase {
+func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) Keybase {
 
 	_, err := keyring.Open(keyring.Config{
 		//Keyring with encrypted application data
@@ -27,12 +32,11 @@ func NewKeybaseKeyring(name string, dir string) Keybase {
 		panic(err)
 	}
 
-	return lazyKeybaseKeyring{name: name, dir: dir}
+	return lazyKeybaseKeyring{name: name, dir: dir, userInput: userInput, test: test}
 }
 
 func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
-
-	if lkb.dir != "" {
+	if lkb.test {
 		return keyring.Config{
 			AllowedBackends: []keyring.BackendType{"file"},
 			//Keyring with encrypted application data
@@ -42,9 +46,16 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 		}
 	}
 
+	realPrompt := func(prompt string) (string, error) {
+		buf := bufio.NewReader(lkb.userInput)
+		return input.GetPassword("Enter passphrase to decrypt your key:", buf)
+	}
+
 	return keyring.Config{
 		//Keyring with encrypted application data
-		ServiceName: lkb.name,
+		ServiceName:      lkb.name,
+		FileDir:          lkb.dir,
+		FilePasswordFunc: realPrompt,
 	}
 }
 

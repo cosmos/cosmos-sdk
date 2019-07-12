@@ -77,6 +77,22 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store.Delete(types.ProposalKey(proposalID))
 }
 
+// IterateProposals iterates over the all the proposals and performs a callback function
+func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var proposal types.Proposal
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
+
+		if cb(proposal) {
+			break
+		}
+	}
+}
+
 // GetProposals returns all the proposals from store
 func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {

@@ -73,7 +73,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// Router returns the gov Keeper Router
+// Router returns the gov Keeper's Router
 func (keeper Keeper) Router() types.Router {
 	return keeper.router
 }
@@ -81,44 +81,6 @@ func (keeper Keeper) Router() types.Router {
 // GetGovernanceAccount returns the governance ModuleAccount
 func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccountI {
 	return keeper.supplyKeeper.GetModuleAccount(ctx, types.ModuleName)
-}
-
-// Params
-
-// GetDepositParams returns the current DepositParams from the global param store
-func (keeper Keeper) GetDepositParams(ctx sdk.Context) types.DepositParams {
-	var depositParams types.DepositParams
-	keeper.paramSpace.Get(ctx, types.ParamStoreKeyDepositParams, &depositParams)
-	return depositParams
-}
-
-// GetVotingParams returns the current VotingParams from the global param store
-func (keeper Keeper) GetVotingParams(ctx sdk.Context) types.VotingParams {
-	var votingParams types.VotingParams
-	keeper.paramSpace.Get(ctx, types.ParamStoreKeyVotingParams, &votingParams)
-	return votingParams
-}
-
-// GetTallyParams returns the current TallyParam from the global param store
-func (keeper Keeper) GetTallyParams(ctx sdk.Context) types.TallyParams {
-	var tallyParams types.TallyParams
-	keeper.paramSpace.Get(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
-	return tallyParams
-}
-
-// SetDepositParams sets DepositParams to the global param store
-func (keeper Keeper) SetDepositParams(ctx sdk.Context, depositParams types.DepositParams) {
-	keeper.paramSpace.Set(ctx, types.ParamStoreKeyDepositParams, &depositParams)
-}
-
-// SetVotingParams sets VotingParams to the global param store
-func (keeper Keeper) SetVotingParams(ctx sdk.Context, votingParams types.VotingParams) {
-	keeper.paramSpace.Set(ctx, types.ParamStoreKeyVotingParams, &votingParams)
-}
-
-// SetTallyParams sets TallyParams to the global param store
-func (keeper Keeper) SetTallyParams(ctx sdk.Context, tallyParams types.TallyParams) {
-	keeper.paramSpace.Set(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
 }
 
 // ProposalQueues
@@ -150,22 +112,6 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 }
 
 // Iterators
-
-// IterateProposals iterates over the all the proposals and performs a callback function
-func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var proposal types.Proposal
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
-
-		if cb(proposal) {
-			break
-		}
-	}
-}
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
@@ -200,68 +146,6 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 		}
 
 		if cb(proposal) {
-			break
-		}
-	}
-}
-
-// IterateAllDeposits iterates over the all the stored deposits and performs a callback function
-func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
-
-		if cb(deposit) {
-			break
-		}
-	}
-}
-
-// IterateDeposits iterates over the all the proposals deposits and performs a callback function
-func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit types.Deposit) (stop bool)) {
-	iterator := keeper.GetDepositsIterator(ctx, proposalID)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
-
-		if cb(deposit) {
-			break
-		}
-	}
-}
-
-// IterateAllVotes iterates over the all the stored votes and performs a callback function
-func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var vote types.Vote
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
-
-		if cb(vote) {
-			break
-		}
-	}
-}
-
-// IterateVotes iterates over the all the proposals votes and performs a callback function
-func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote types.Vote) (stop bool)) {
-	iterator := keeper.GetVotesIterator(ctx, proposalID)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var vote types.Vote
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
-
-		if cb(vote) {
 			break
 		}
 	}

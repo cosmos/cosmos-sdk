@@ -78,6 +78,37 @@ func (keeper Keeper) GetVotesIterator(ctx sdk.Context, proposalID uint64) sdk.It
 	return sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 }
 
+// IterateAllVotes iterates over the all the stored votes and performs a callback function
+func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote types.Vote
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
+
+		if cb(vote) {
+			break
+		}
+	}
+}
+
+// IterateVotes iterates over the all the proposals votes and performs a callback function
+func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote types.Vote) (stop bool)) {
+	iterator := keeper.GetVotesIterator(ctx, proposalID)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote types.Vote
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vote)
+
+		if cb(vote) {
+			break
+		}
+	}
+}
+
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.VoteKey(proposalID, voterAddr))

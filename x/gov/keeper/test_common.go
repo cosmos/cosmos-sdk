@@ -1,6 +1,9 @@
+// nolint
+// DONTCOVER
 package keeper // noalias
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +28,6 @@ import (
 )
 
 // dummy addresses used for testing
-// nolint: unused deadcode
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
 	delPk2   = ed25519.GenPrivKey().PubKey()
@@ -54,14 +56,6 @@ var (
 	emptyPubkey  crypto.PubKey
 )
 
-type testInput struct {
-	keeper Keeper
-	router types.Router
-	ak     auth.AccountKeeper
-	sk     types.StakingKeeper
-}
-
-// nolint: deadcode unused
 func makeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 	auth.RegisterCodec(cdc)
@@ -74,10 +68,7 @@ func makeTestCodec() *codec.Codec {
 	return cdc
 }
 
-// nolint: deadcode unused
 func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
-
-	// FIXME: update tests
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
@@ -146,4 +137,14 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.supplyKeeper.SetModuleAccount(ctx, govAcc)
 
 	return ctx, accountKeeper, keeper, supplyKeeper
+}
+
+func TestProposal() types.Content {
+	return types.NewTextProposal("Test", "description")
+}
+
+// ProposalEqual checks if two proposals are equal (note: slow, for tests only)
+func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
+	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
+		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }

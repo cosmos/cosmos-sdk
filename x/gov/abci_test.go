@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -195,7 +196,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg := NewMsgSubmitProposal(testProposal(), proposalCoins, input.addrs[0])
+	newProposalMsg := NewMsgSubmitProposal(keep.TestProposal(), proposalCoins, input.addrs[0])
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
@@ -259,7 +260,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := macc.GetCoins()
 
-	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal())
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
@@ -311,7 +312,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal())
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))

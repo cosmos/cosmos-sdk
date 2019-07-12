@@ -25,8 +25,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.NotNil(t, bz)
 
 	var depositParams types.DepositParams
-	err2 := cdc.UnmarshalJSON(bz, &depositParams)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &depositParams))
 
 	query = abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamVoting}, "/"),
@@ -38,8 +37,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.NotNil(t, bz)
 
 	var votingParams types.VotingParams
-	err2 = cdc.UnmarshalJSON(bz, &votingParams)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &votingParams))
 
 	query = abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamTallying}, "/"),
@@ -51,8 +49,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.NotNil(t, bz)
 
 	var tallyParams types.TallyParams
-	err2 = cdc.UnmarshalJSON(bz, &tallyParams)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &tallyParams))
 
 	return depositParams, votingParams, tallyParams
 }
@@ -68,8 +65,8 @@ func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 	require.NotNil(t, bz)
 
 	var proposal types.Proposal
-	err2 := cdc.UnmarshalJSON(bz, proposal)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, proposal))
+
 	return proposal
 }
 
@@ -84,8 +81,8 @@ func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querie
 	require.NotNil(t, bz)
 
 	var proposals types.Proposals
-	err2 := cdc.UnmarshalJSON(bz, &proposals)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &proposals))
+
 	return proposals
 }
 
@@ -100,8 +97,8 @@ func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier 
 	require.NotNil(t, bz)
 
 	var deposit types.Deposit
-	err2 := cdc.UnmarshalJSON(bz, &deposit)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &deposit))
+
 	return deposit
 }
 
@@ -116,8 +113,8 @@ func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 	require.NotNil(t, bz)
 
 	var deposits []types.Deposit
-	err2 := cdc.UnmarshalJSON(bz, &deposits)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &deposits))
+
 	return deposits
 }
 
@@ -132,8 +129,8 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk
 	require.NotNil(t, bz)
 
 	var vote types.Vote
-	err2 := cdc.UnmarshalJSON(bz, &vote)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &vote))
+
 	return vote
 }
 
@@ -148,8 +145,8 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 	require.NotNil(t, bz)
 
 	var votes []types.Vote
-	err2 := cdc.UnmarshalJSON(bz, &votes)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &votes))
+
 	return votes
 }
 
@@ -164,8 +161,8 @@ func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 	require.NotNil(t, bz)
 
 	var tally types.TallyResult
-	err2 := cdc.UnmarshalJSON(bz, &tally)
-	require.Nil(t, err2)
+	require.NoError(t, cdc.UnmarshalJSON(bz, &tally))
+
 	return tally
 }
 
@@ -184,16 +181,10 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
-	input := getMockApp(t, 1000, types.GenesisState{}, nil)
-	querier := NewQuerier(input.keeper)
-	handler := NewHandler(input.keeper)
+	types.RegisterCodec(cdc)
+	// ctx, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
 
 	types.RegisterCodec(cdc)
-
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	ctx := input.mApp.NewContext(false, abci.Header{})
 
 	depositParams, _, _ := getQueriedParams(t, ctx, cdc, querier)
 

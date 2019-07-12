@@ -1,4 +1,5 @@
 // nolint:deadcode unused
+// DONTCOVER
 package gov
 
 import (
@@ -168,15 +169,10 @@ func (b sortByteArrays) Swap(i, j int) {
 	b[j], b[i] = b[i], b[j]
 }
 
-// Public
 func SortByteArrays(src [][]byte) [][]byte {
 	sorted := sortByteArrays(src)
 	sort.Sort(sorted)
 	return sorted
-}
-
-func testProposal() types.Content {
-	return types.NewTextProposal("Test", "description")
 }
 
 const contextKeyBadProposal = "contextKeyBadProposal"
@@ -199,12 +195,6 @@ func badProposalHandler(ctx sdk.Context, c types.Content) sdk.Error {
 		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
 		return sdk.ErrUnknownRequest(errMsg)
 	}
-}
-
-// ProposalEqual checks if two proposals are equal (note: slow, for tests only)
-func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
-	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
-		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }
 
 var (

@@ -4,16 +4,19 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/tags"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 // RouterKey
-const RouterKey = ModuleName
+const RouterKey = types.ModuleName
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
-		case MsgVerifyInvariant:
+		case types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
@@ -23,42 +26,42 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper) sdk.Result {
-
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) sdk.Result {
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
-	_, err := k.bankKeeper.SubtractCoins(ctx, msg.Sender, constantFee)
-	if err != nil {
+
+	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
 		return err.Result()
 	}
-	_ = k.feeCollectionKeeper.AddCollectedFees(ctx, constantFee)
 
 	// use a cached context to avoid gas costs during invariants
 	cacheCtx, _ := ctx.CacheContext()
 
 	found := false
-	var invarianceErr error
 	msgFullRoute := msg.FullInvariantRoute()
-	for _, invarRoute := range k.routes {
+
+	var res string
+	var stop bool
+	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
-			invarianceErr = invarRoute.Invar(cacheCtx)
+			res, stop = invarRoute.Invar(cacheCtx)
 			found = true
 			break
 		}
 	}
+
 	if !found {
-		return ErrUnknownInvariant(DefaultCodespace).Result()
+		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
 	}
 
-	if invarianceErr != nil {
-
+	if stop {
 		// NOTE currently, because the chain halts here, this transaction will never be included
 		// in the blockchain thus the constant fee will have never been deducted. Thus no
 		// refund is required.
 
 		// TODO uncomment the following code block with implementation of the circuit breaker
 		//// refund constant fee
-		//err := k.distrKeeper.DistributeFeePool(ctx, constantFee, msg.Sender)
+		//err := k.distrKeeper.DistributeFromFeePool(ctx, constantFee, msg.Sender)
 		//if err != nil {
 		//// if there are insufficient coins to refund, log the error,
 		//// but still halt the chain.
@@ -68,14 +71,20 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg MsgVerifyInvariant, k Keeper)
 		//}
 
 		// TODO replace with circuit breaker
-		panic(invarianceErr)
+		panic(res)
 	}
 
-	resTags := sdk.NewTags(
-		tags.Sender, msg.Sender.String(),
-		tags.Invariant, msg.InvariantRoute,
-	)
-	return sdk.Result{
-		Tags: resTags,
-	}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeInvariant,
+			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
+		),
+	})
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

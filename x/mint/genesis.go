@@ -6,8 +6,8 @@ import (
 
 // GenesisState - minter state
 type GenesisState struct {
-	Minter Minter `json:"minter"` // minter object
-	Params Params `json:"params"` // inflation params
+	Minter Minter `json:"minter" yaml:"minter"` // minter object
+	Params Params `json:"params" yaml:"params"` // inflation params
 }
 
 // NewGenesisState creates a new GenesisState object
@@ -26,7 +26,7 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// new mint genesis
+// InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
@@ -34,7 +34,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-
 	minter := keeper.GetMinter(ctx)
 	params := keeper.GetParams(ctx)
 	return NewGenesisState(minter, params)
@@ -43,13 +42,15 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants holds.
 func ValidateGenesis(data GenesisState) error {
-	err := validateParams(data.Params)
+	err := ValidateParams(data.Params)
 	if err != nil {
 		return err
 	}
-	err = validateMinter(data.Minter)
+
+	err = ValidateMinter(data.Minter)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

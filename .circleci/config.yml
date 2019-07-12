@@ -50,22 +50,6 @@ jobs:
             - bin
             - profiles
 
-  lint:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Lint source
-          command: |
-            export PATH=/tmp/workspace/bin:$PATH
-            make ci-lint
-
   test_sim_app_nondeterminism:
     <<: *linux_defaults
     parallelism: 1
@@ -284,9 +268,6 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - lint:
-          requires:
-            - setup_dependencies
       - test_sim_app_nondeterminism:
           requires:
             - setup_dependencies

@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 const msgRoute = "testMsg"
@@ -51,6 +52,7 @@ func getMockApp(t *testing.T) *App {
 func TestCheckAndDeliverGenTx(t *testing.T) {
 	mApp := getMockApp(t)
 	mApp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
+	mApp.Cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 
 	SetGenesis(mApp, accs)
 	ctxCheck := mApp.BaseApp.NewContext(true, abci.Header{})
@@ -90,6 +92,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 func TestCheckGenTx(t *testing.T) {
 	mApp := getMockApp(t)
 	mApp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
+	mApp.Cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 
 	SetGenesis(mApp, accs)
 

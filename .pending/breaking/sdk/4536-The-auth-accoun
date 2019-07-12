@@ -1,0 +1,2 @@
+#4536 The `/auth/accounts/{address}` now returns a `height` in the response.
+The account is now nested under `account`.

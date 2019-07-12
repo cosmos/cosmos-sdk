@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // initialize starting info for a new delegation
@@ -27,7 +28,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Validator,
+func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val exported.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
@@ -52,7 +53,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -97,14 +98,16 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// when multiplied by slash fractions (see above). We could only use equals if
 	// we had arbitrary-precision rationals.
 	currentStake := val.TokensFromShares(del.GetShares())
-	if stake.GT(currentStake) {
 
+	if stake.GT(currentStake) {
 		// Account for rounding inconsistencies between:
+		//
 		//     currentStake: calculated as in staking with a single computation
 		//     stake:        calculated as an accumulation of stake
 		//                   calculations across validator's distribution periods
+		//
 		// These inconsistencies are due to differing order of operations which
-		// will inevitably have  different accumulated rounding and may lead to
+		// will inevitably have different accumulated rounding and may lead to
 		// the smallest decimal place being one greater in stake than
 		// currentStake. When we calculated slashing by period, even if we
 		// round down for each slash fraction, it's possible due to how much is
@@ -117,7 +120,8 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 		// A small amount of this error is tolerated and corrected for,
 		// however any greater amount should be considered a breach in expected
 		// behaviour.
-		if stake.Equal(currentStake.Add(sdk.SmallestDec().MulInt64(3))) {
+		marginOfErr := sdk.SmallestDec().MulInt64(3)
+		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {
 			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
@@ -132,7 +136,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) (sdk.Coins, sdk.Error) {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI) (sdk.Coins, sdk.Error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
 		return nil, types.ErrNoDelegationDistInfo(k.codespace)
@@ -169,7 +173,8 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	// add coins to user account
 	if !coins.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		if _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		if err != nil {
 			return nil, err
 		}
 	}

@@ -4,12 +4,14 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
-	"strings"
-
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -91,6 +93,23 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 		require.Equal(t, valPub, accPub)
 		require.Equal(t, valPub, consPub)
 	}
+}
+
+func TestYAMLMarshalers(t *testing.T) {
+	addr := secp256k1.GenPrivKey().PubKey().Address()
+
+	acc := types.AccAddress(addr)
+	val := types.ValAddress(addr)
+	cons := types.ConsAddress(addr)
+
+	got, _ := yaml.Marshal(&acc)
+	require.Equal(t, acc.String()+"\n", string(got))
+
+	got, _ = yaml.Marshal(&val)
+	require.Equal(t, val.String()+"\n", string(got))
+
+	got, _ = yaml.Marshal(&cons)
+	require.Equal(t, cons.String()+"\n", string(got))
 }
 
 func TestRandBech32AccAddrConsistency(t *testing.T) {

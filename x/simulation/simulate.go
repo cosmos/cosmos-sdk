@@ -46,7 +46,7 @@ func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, blockSize int, commit, lean, onOperation bool,
+	numBlocks, blockSize int, commit, lean, onOperation, allInvariants bool,
 ) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -54,12 +54,14 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 
 	r := rand.New(rand.NewSource(seed))
-	params := RandomParams(r) // := DefaultParams()
-	fmt.Fprintf(w, "Randomized simulation params: %+v\n", params)
+	params := RandomParams(r)
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	genesisTimestamp := RandTimestamp(r)
-	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix())
+	fmt.Printf(
+		"Starting the simulation from time %v, unixtime %v\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
@@ -106,7 +108,7 @@ func SimulateFromSeed(
 	blockSimulator := createBlockSimulator(
 		testingMode, tb, t, w, params, eventStats.tally, invariants,
 		ops, operationQueue, timeOperationQueue,
-		numBlocks, blockSize, logWriter, lean, onOperation)
+		numBlocks, blockSize, logWriter, lean, onOperation, allInvariants)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -135,7 +137,7 @@ func SimulateFromSeed(
 		app.BeginBlock(request)
 
 		if testingMode {
-			assertAllInvariants(t, app, invariants, "BeginBlock", logWriter)
+			assertAllInvariants(t, app, invariants, "BeginBlock", logWriter, allInvariants)
 		}
 
 		ctx := app.NewContext(false, header)
@@ -150,14 +152,14 @@ func SimulateFromSeed(
 			tb, r, app, ctx, accs, logWriter, eventStats.tally, lean)
 
 		if testingMode && onOperation {
-			assertAllInvariants(t, app, invariants, "QueuedOperations", logWriter)
+			assertAllInvariants(t, app, invariants, "QueuedOperations", logWriter, allInvariants)
 		}
 
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, header)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 		if testingMode {
-			assertAllInvariants(t, app, invariants, "StandardOperations", logWriter)
+			assertAllInvariants(t, app, invariants, "StandardOperations", logWriter, allInvariants)
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
@@ -170,7 +172,7 @@ func SimulateFromSeed(
 		logWriter.AddEntry(EndBlockEntry(int64(height)))
 
 		if testingMode {
-			assertAllInvariants(t, app, invariants, "EndBlock", logWriter)
+			assertAllInvariants(t, app, invariants, "EndBlock", logWriter, allInvariants)
 		}
 		if commit {
 			app.Commit()
@@ -219,7 +221,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
 	event func(string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
-	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean, onOperation bool) blockSimFn {
+	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean, onOperation, allInvariants bool) blockSimFn {
 
 	lastBlocksizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -267,7 +269,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 						header.Height, totalNumBlocks, opCount, blocksize)
 					eventStr := fmt.Sprintf("operation: %v", opMsg.String())
-					assertAllInvariants(t, app, invariants, eventStr, logWriter)
+					assertAllInvariants(t, app, invariants, eventStr, logWriter, allInvariants)
 				} else if opCount%50 == 0 {
 					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 						header.Height, totalNumBlocks, opCount, blocksize)

@@ -477,7 +477,7 @@ type storeCore struct {
 func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
-	bz, _ := cdc.MarshalBinaryLengthPrefixed(si.Core)
+	bz := si.Core.CommitID.Hash
 	hasher := tmhash.New()
 
 	_, err := hasher.Write(bz)

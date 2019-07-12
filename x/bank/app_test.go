@@ -1,11 +1,15 @@
-package bank
+package bank_test
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/stretchr/testify/require"
 
@@ -45,43 +49,43 @@ var (
 	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
 	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
-	sendMsg1 = NewMsgSend(addr1, addr2, coins)
+	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
 
-	multiSendMsg1 = MsgMultiSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
-		Outputs: []Output{NewOutput(addr2, coins)},
+	multiSendMsg1 = types.MsgMultiSend{
+		Inputs:  []types.Input{types.NewInput(addr1, coins)},
+		Outputs: []types.Output{types.NewOutput(addr2, coins)},
 	}
-	multiSendMsg2 = MsgMultiSend{
-		Inputs: []Input{NewInput(addr1, coins)},
-		Outputs: []Output{
-			NewOutput(addr2, halfCoins),
-			NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr1, coins),
-			NewInput(addr4, coins),
-		},
-		Outputs: []Output{
-			NewOutput(addr2, coins),
-			NewOutput(addr3, coins),
+	multiSendMsg2 = types.MsgMultiSend{
+		Inputs: []types.Input{types.NewInput(addr1, coins)},
+		Outputs: []types.Output{
+			types.NewOutput(addr2, halfCoins),
+			types.NewOutput(addr3, halfCoins),
 		},
 	}
-	multiSendMsg4 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr2, coins),
+	multiSendMsg3 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr1, coins),
+			types.NewInput(addr4, coins),
 		},
-		Outputs: []Output{
-			NewOutput(addr1, coins),
+		Outputs: []types.Output{
+			types.NewOutput(addr2, coins),
+			types.NewOutput(addr3, coins),
 		},
 	}
-	multiSendMsg5 = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(addr1, manyCoins),
+	multiSendMsg4 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr2, coins),
 		},
-		Outputs: []Output{
-			NewOutput(addr2, manyCoins),
+		Outputs: []types.Output{
+			types.NewOutput(addr1, coins),
+		},
+	}
+	multiSendMsg5 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr1, manyCoins),
+		},
+		Outputs: []types.Output{
+			types.NewOutput(addr2, manyCoins),
 		},
 	}
 )
@@ -89,16 +93,17 @@ var (
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
 	mapp, err := getBenchmarkMockApp()
+	supply.RegisterCodec(mapp.Cdc)
 	require.NoError(t, err)
 	return mapp
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper BaseKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper keeper.BaseKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		bankGenesis := DefaultGenesisState()
-		InitGenesis(ctx, keeper, bankGenesis)
+		bankGenesis := bank.DefaultGenesisState()
+		bank.InitGenesis(ctx, keeper, bankGenesis)
 
 		return abci.ResponseInitChain{}
 	}
@@ -122,7 +127,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	sendMsg := NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
 	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 
@@ -271,12 +276,14 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 func TestMsgMultiSendDependent(t *testing.T) {
 	mapp := getMockApp(t)
 
-	acc1 := &auth.BaseAccount{
-		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
-	}
+	acc1 := auth.NewBaseAccountWithAddress(addr1)
+	acc2 := auth.NewBaseAccountWithAddress(addr2)
+	err := acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
 
-	mock.SetGenesis(mapp, []auth.Account{acc1})
+	mock.SetGenesis(mapp, []auth.Account{&acc1, &acc2})
 
 	testCases := []appTestCase{
 		{

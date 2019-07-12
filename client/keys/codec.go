@@ -9,6 +9,7 @@ var cdc *codec.Codec
 func init() {
 	cdc = codec.New()
 	codec.RegisterCrypto(cdc)
+	cdc.Seal()
 }
 
 // marshal keys

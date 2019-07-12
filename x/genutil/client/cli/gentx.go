@@ -24,9 +24,10 @@ import (
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -34,12 +35,12 @@ import (
 type StakingMsgBuildingHelpers interface {
 	CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string)
 	PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey)
-	BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error)
+	BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error)
 }
 
 // GenTxCmd builds the application's gentx command.
 // nolint: errcheck
-func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager, smbh StakingMsgBuildingHelpers,
+func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, smbh StakingMsgBuildingHelpers,
 	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 
 	ipDefault, _ := server.ExternalIP()
@@ -117,10 +118,10 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 				return err
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(client.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := client.NewCLIContext().WithCodec(cdc)
 
-			// XXX: Set the generate-only flag here after the CLI context has
+			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
 			//
 			// TODO: Consider removing the manual setting of generate-only in
@@ -140,14 +141,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 
 			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
 				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
-				return client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
 
-			if err = client.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
+			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
 				return err
 			}
 
@@ -158,7 +159,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
 			}
 
 			// sign the transaction and write it to the output file
-			signedTx, err := client.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
+			signedTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
 			if err != nil {
 				return err
 			}
@@ -213,10 +214,10 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 
 func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	defer outputFile.Close()
 	if err != nil {
 		return err
 	}
+	defer outputFile.Close()
 	json, err := cdc.MarshalJSON(tx)
 	if err != nil {
 		return err

@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"fmt"
+	"bufio"
 
 	"github.com/spf13/cobra"
 
@@ -19,13 +19,13 @@ func exportKeyCommand() *cobra.Command {
 	return cmd
 }
 
-func runExportCmd(_ *cobra.Command, args []string) error {
+func runExportCmd(cmd *cobra.Command, args []string) error {
 	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
 
-	buf := input.BufferStdin()
+	buf := bufio.NewReader(cmd.InOrStdin())
 	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err
@@ -40,6 +40,6 @@ func runExportCmd(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(armored)
+	cmd.Println(armored)
 	return nil
 }

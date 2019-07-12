@@ -1,13 +1,14 @@
 package keys
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -63,7 +64,7 @@ func GetPassphrase(name string) (string, error) {
 // ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
 // error upon failure.
 func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := input.BufferStdin()
+	buf := bufio.NewReader(os.Stdin)
 	prompt := fmt.Sprintf("Password to sign with '%s':", name)
 
 	passphrase, err := input.GetPassword(prompt, buf)
@@ -90,22 +91,6 @@ func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
-}
-
-func printMultiSigKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
-	ko, err := bechKeyOut(keyInfo)
-	if err != nil {
-		panic(err)
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"WEIGHT", "THRESHOLD", "ADDRESS", "PUBKEY"})
-	threshold := fmt.Sprintf("%d", ko.Threshold)
-	for _, pk := range ko.PubKeys {
-		weight := fmt.Sprintf("%d", pk.Weight)
-		table.Append([]string{weight, threshold, pk.Address, pk.PubKey})
-	}
-	table.Render()
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -157,17 +142,16 @@ func printInfos(infos []keys.Info) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(string(out))
+		fmt.Printf("%s", out)
 	}
 }
 
 func printTextInfos(kos []keys.KeyOutput) {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"NAME", "TYPE", "ADDRESS", "PUBKEY"})
-	for _, ko := range kos {
-		table.Append([]string{ko.Name, ko.Type, ko.Address, ko.PubKey})
+	out, err := yaml.Marshal(&kos)
+	if err != nil {
+		panic(err)
 	}
-	table.Render()
+	fmt.Println(string(out))
 }
 
 func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {

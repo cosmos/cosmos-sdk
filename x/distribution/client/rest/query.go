@@ -6,128 +6,132 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
-	cdc *codec.Codec, queryRoute string) {
-
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
 	// Get the total rewards balance from all delegations
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
-		delegatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
+		delegatorRewardsHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Query a delegation reward
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}",
-		delegationRewardsHandlerFn(cliCtx, cdc, queryRoute),
+		delegationRewardsHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Get the rewards withdrawal address
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/withdraw_address",
-		delegatorWithdrawalAddrHandlerFn(cliCtx, cdc, queryRoute),
+		delegatorWithdrawalAddrHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Validator distribution information
 	r.HandleFunc(
 		"/distribution/validators/{validatorAddr}",
-		validatorInfoHandlerFn(cliCtx, cdc, queryRoute),
+		validatorInfoHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Commission and self-delegation rewards of a single a validator
 	r.HandleFunc(
 		"/distribution/validators/{validatorAddr}/rewards",
-		validatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
+		validatorRewardsHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Outstanding rewards of a single validator
 	r.HandleFunc(
 		"/distribution/validators/{validatorAddr}/outstanding_rewards",
-		outstandingRewardsHandlerFn(cliCtx, cdc, queryRoute),
+		outstandingRewardsHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Get the current distribution parameter values
 	r.HandleFunc(
 		"/distribution/parameters",
-		paramsHandlerFn(cliCtx, cdc, queryRoute),
+		paramsHandlerFn(cliCtx, queryRoute),
 	).Methods("GET")
 
 	// Get the amount held in the community pool
 	r.HandleFunc(
 		"/distribution/community_pool",
-		communityPoolHandler(cliCtx, cdc, queryRoute),
+		communityPoolHandler(cliCtx, queryRoute),
 	).Methods("GET")
 
 }
 
 // HTTP request handler to query the total rewards balance from all delegations
-func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		// query for rewards from a particular delegator
-		res, ok := checkResponseQueryDelegatorTotalRewards(w, cliCtx, cdc, queryRoute,
-			mux.Vars(r)["delegatorAddr"])
+		res, ok := checkResponseQueryDelegatorTotalRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"])
 		if !ok {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // HTTP request handler to query a delegation rewards
-func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// query for rewards from a particular delegation
-		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute,
-			mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		// query for rewards from a particular delegation
+		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
+		if !ok {
+			return
+		}
+
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // HTTP request handler to query a delegation rewards
-func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
 		if !ok {
 			return
 		}
 
-		bz := cdc.MustMarshalJSON(distribution.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		bz := cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // ValidatorDistInfo defines the properties of
 // validator distribution information response.
 type ValidatorDistInfo struct {
-	OperatorAddress     sdk.AccAddress                       `json:"operator_address"`
-	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards"`
-	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission"`
+	OperatorAddress     sdk.AccAddress                       `json:"operator_address" yaml:"operator_address"`
+	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards" yaml:"self_bond_rewards"`
+	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission" yaml:"val_commission"`
 }
 
 // NewValidatorDistInfo creates a new instance of ValidatorDistInfo.
@@ -141,9 +145,7 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 }
 
 // HTTP request handler to query validator's distribution information
-func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr := mux.Vars(r)["validatorAddr"]
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
@@ -151,37 +153,39 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		// query commission
-		commissionRes, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
+		commissionRes, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		var valCom types.ValidatorAccumulatedCommission
-		cdc.MustUnmarshalJSON(commissionRes, &valCom)
+		cliCtx.Codec.MustUnmarshalJSON(commissionRes, &valCom)
 
 		// self bond rewards
 		delAddr := sdk.AccAddress(validatorAddr)
-		rewardsRes, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute,
-			delAddr.String(), valAddr)
+		rewardsRes, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr.String(), valAddr)
 		if !ok {
 			return
 		}
 
 		var rewards sdk.DecCoins
-		cdc.MustUnmarshalJSON(rewardsRes, &rewards)
+		cliCtx.Codec.MustUnmarshalJSON(rewardsRes, &rewards)
 
 		// Prepare response
-		res := cdc.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // HTTP request handler to query validator's commission and self-delegation rewards
-func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr := mux.Vars(r)["validatorAddr"]
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
@@ -189,74 +193,93 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
-		delAddr := sdk.AccAddress(validatorAddr).String()
-		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute, delAddr, valAddr)
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		delAddr := sdk.AccAddress(validatorAddr).String()
+		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr, valAddr)
+		if !ok {
+			return
+		}
+
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
 // HTTP request handler to query the distribution params values
-func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
 		params, err := common.QueryParams(cliCtx, queryRoute)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cdc, params, cliCtx.Indent)
+
+		rest.PostProcessResponse(w, cliCtx, params)
 	}
 }
 
-func communityPoolHandler(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		var result sdk.DecCoins
-		if err := cdc.UnmarshalJSON(res, &result); err != nil {
+		if err := cliCtx.Codec.UnmarshalJSON(res, &result); err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, result, cliCtx.Indent)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, result)
 	}
 }
 
 // HTTP request handler to query the outstanding rewards
-func outstandingRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute string) http.HandlerFunc {
-
+func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
 		if !ok {
 			return
 		}
 
-		bin := cdc.MustMarshalJSON(distribution.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
+		cliCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		bin := cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
-func checkResponseQueryDelegatorTotalRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr string) (res []byte, ok bool) {
+func checkResponseQueryDelegatorTotalRewards(
+	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr string,
+) (res []byte, ok bool) {
 
-	res, err := common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, delAddr)
+	res, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, delAddr)
 	if err != nil {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return nil, false
@@ -265,10 +288,11 @@ func checkResponseQueryDelegatorTotalRewards(w http.ResponseWriter, cliCtx conte
 	return res, true
 }
 
-func checkResponseQueryDelegationRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr, valAddr string) (res []byte, ok bool) {
+func checkResponseQueryDelegationRewards(
+	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr, valAddr string,
+) (res []byte, ok bool) {
 
-	res, err := common.QueryDelegationRewards(cliCtx, cdc, queryRoute, delAddr, valAddr)
+	res, err := common.QueryDelegationRewards(cliCtx, queryRoute, delAddr, valAddr)
 	if err != nil {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return nil, false

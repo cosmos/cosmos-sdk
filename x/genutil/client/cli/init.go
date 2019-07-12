@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -26,11 +26,11 @@ const (
 )
 
 type printInfo struct {
-	Moniker    string          `json:"moniker"`
-	ChainID    string          `json:"chain_id"`
-	NodeID     string          `json:"node_id"`
-	GenTxsDir  string          `json:"gentxs_dir"`
-	AppMessage json.RawMessage `json:"app_message"`
+	Moniker    string          `json:"moniker" yaml:"moniker"`
+	ChainID    string          `json:"chain_id" yaml:"chain_id"`
+	NodeID     string          `json:"node_id" yaml:"node_id"`
+	GenTxsDir  string          `json:"gentxs_dir" yaml:"gentxs_dir"`
+	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
 }
 
 func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
@@ -57,7 +57,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm sdk.ModuleBasicManager,
+func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 	defaultNodeHome string) *cobra.Command { // nolint: golint
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",

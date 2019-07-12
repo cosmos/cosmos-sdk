@@ -14,15 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var (
-	defaultTokens                  = sdk.TokensFromTendermintPower(100)
-	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
-	defaultCommissionRate          = "0.1"
-	defaultCommissionMaxRate       = "0.2"
-	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
-)
-
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
@@ -75,7 +66,7 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	return nil
 }
 
-type deliverTxfn func([]byte) abci.ResponseDeliverTx
+type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 
 // deliver a genesis transaction
 func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
@@ -85,7 +76,7 @@ func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
 		var tx auth.StdTx
 		cdc.MustUnmarshalJSON(genTx, &tx)
 		bz := cdc.MustMarshalBinaryLengthPrefixed(tx)
-		res := deliverTx(bz)
+		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {
 			panic(res.Log)
 		}

@@ -29,7 +29,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := sdk.TokensFromTendermintPower(power)
+	amount := sdk.TokensFromConsensusPower(power)
 	slashAmountDec := amount.ToDec().Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
@@ -48,7 +48,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// should not be slashing an unbonded validator
-	if validator.Status == sdk.Unbonded {
+	if validator.IsUnbonded() {
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 
@@ -89,8 +89,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 		}
 
-		// Iterate through redelegations from slashed validator
-		redelegations := k.GetRedelegationsFromValidator(ctx, operatorAddress)
+		// Iterate through redelegations from slashed source validator
+		redelegations := k.GetRedelegationsFromSrcValidator(ctx, operatorAddress)
 		for _, redelegation := range redelegations {
 			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
@@ -116,13 +116,21 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.
-	// The deducted tokens are returned to pool.NotBondedTokens.
-	// TODO: Move the token accounting outside of `RemoveValidatorTokens` so it is less confusing
+	// Burn the slashed tokens from the pool account and decrease the total supply.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
-	pool := k.GetPool(ctx)
-	// Burn the slashed tokens, which are now loose.
-	pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
-	k.SetPool(ctx, pool)
+
+	switch validator.GetStatus() {
+	case sdk.Bonded:
+		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
+			panic(err)
+		}
+	case sdk.Unbonding, sdk.Unbonded:
+		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
+			panic(err)
+		}
+	default:
+		panic("invalid validator status")
+	}
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
@@ -163,6 +171,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
+	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
@@ -192,15 +201,15 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		if unbondingSlashAmount.IsZero() {
 			continue
 		}
+
+		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
 		unbondingDelegation.Entries[i] = entry
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
-		pool := k.GetPool(ctx)
+	}
 
-		// Burn not-bonded tokens
-		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-		pool.NotBondedTokens = pool.NotBondedTokens.Sub(unbondingSlashAmount)
-		k.SetPool(ctx, pool)
+	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount
@@ -211,12 +220,13 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
-// nolint: unparam
-func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
+// NOTE this is only slashing for prior infractions from the source validator
+func (k Keeper) slashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
+	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
@@ -255,10 +265,29 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
 
-		// Burn not-bonded tokens
-		pool := k.GetPool(ctx)
-		pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
-		k.SetPool(ctx, pool)
+		dstValidator, found := k.GetValidator(ctx, redelegation.ValidatorDstAddress)
+		if !found {
+			panic("destination validator not found")
+		}
+
+		// tokens of a redelegation currently live in the destination validator
+		// therefor we must burn tokens from the destination-validator's bonding status
+		switch {
+		case dstValidator.IsBonded():
+			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
+		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
+			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
+		default:
+			panic("unknown validator status")
+		}
+	}
+
+	if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
+		panic(err)
+	}
+
+	if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
+		panic(err)
 	}
 
 	return totalSlashAmount

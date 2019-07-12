@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 func parseSubmitProposalFlags() (*proposal, error) {
@@ -17,7 +17,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 	if proposalFile == "" {
 		proposal.Title = viper.GetString(FlagTitle)
 		proposal.Description = viper.GetString(FlagDescription)
-		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Type = govutils.NormalizeProposalType(viper.GetString(flagProposalType))
 		proposal.Deposit = viper.GetString(FlagDeposit)
 		return proposal, nil
 	}

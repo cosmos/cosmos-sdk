@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -13,16 +14,29 @@ import (
 
 // assertAll asserts the all invariants against application state
 func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
-	event string, logWriter LogWriter) {
+	event string, logWriter LogWriter, allInvariants bool) {
 
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 
+	var broken bool
+	var invariantResults []string
 	for i := 0; i < len(invs); i++ {
-		if err := invs[i](ctx); err != nil {
-			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
-			logWriter.PrintLogs()
-			t.Fatal()
+		res, stop := invs[i](ctx)
+		if stop {
+			broken = true
+			invariantResults = append(invariantResults, res)
+		} else if allInvariants {
+			invariantResults = append(invariantResults, res)
 		}
+	}
+
+	if broken {
+		fmt.Printf("Invariants broken after %s\n\n", event)
+		for _, res := range invariantResults {
+			fmt.Printf("%s\n", res)
+		}
+		logWriter.PrintLogs()
+		t.Fatal()
 	}
 }
 
@@ -60,34 +74,27 @@ func getBlockSize(r *rand.Rand, params Params,
 	return state, blocksize
 }
 
-// PeriodicInvariant returns an Invariant function closure that asserts a given
-// invariant if the mock application's last block modulo the given period is
-// congruent to the given offset.
-//
-// NOTE this function is intended to be used manually used while running
-// computationally heavy simulations.
-// TODO reference this function in the codebase probably through use of a switch
-func PeriodicInvariant(invariant sdk.Invariant, period int, offset int) sdk.Invariant {
-	return func(ctx sdk.Context) error {
-		if int(ctx.BlockHeight())%period == offset {
-			return invariant(ctx)
-		}
-		return nil
-	}
-}
-
 // PeriodicInvariants  returns an array of wrapped Invariants. Where each
 // invariant function is only executed periodically defined by period and offset.
-func PeriodicInvariants(invariants []sdk.Invariant, period int, offset int) []sdk.Invariant {
+func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {
-		outInvariant := func(ctx sdk.Context) error {
+		outInvariant := func(ctx sdk.Context) (string, bool) {
 			if int(ctx.BlockHeight())%period == offset {
 				return invariant(ctx)
 			}
-			return nil
+			return "", false
 		}
 		outInvariants = append(outInvariants, outInvariant)
 	}
 	return outInvariants
+}
+
+func mustMarshalJSONIndent(o interface{}) []byte {
+	bz, err := json.MarshalIndent(o, "", "  ")
+	if err != nil {
+		panic(fmt.Sprintf("failed to JSON encode: %s", err))
+	}
+
+	return bz
 }

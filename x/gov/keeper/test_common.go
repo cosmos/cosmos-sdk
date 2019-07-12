@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -24,26 +27,39 @@ import (
 // dummy addresses used for testing
 // nolint: unused deadcode
 var (
-	Addrs = createTestAddrs(500)
-	PKs   = createTestPubKeys(500)
+	delPk1   = ed25519.GenPrivKey().PubKey()
+	delPk2   = ed25519.GenPrivKey().PubKey()
+	delPk3   = ed25519.GenPrivKey().PubKey()
+	delAddr1 = sdk.AccAddress(delPk1.Address())
+	delAddr2 = sdk.AccAddress(delPk2.Address())
+	delAddr3 = sdk.AccAddress(delPk3.Address())
 
-	addrDels = []sdk.AccAddress{
-		Addrs[0],
-		Addrs[1],
-	}
-	addrVals = []sdk.ValAddress{
-		sdk.ValAddress(Addrs[2]),
-		sdk.ValAddress(Addrs[3]),
-		sdk.ValAddress(Addrs[4]),
-		sdk.ValAddress(Addrs[5]),
-		sdk.ValAddress(Addrs[6]),
-	}
+	valOpPk1    = ed25519.GenPrivKey().PubKey()
+	valOpPk2    = ed25519.GenPrivKey().PubKey()
+	valOpPk3    = ed25519.GenPrivKey().PubKey()
+	valOpAddr1  = sdk.ValAddress(valOpPk1.Address())
+	valOpAddr2  = sdk.ValAddress(valOpPk2.Address())
+	valOpAddr3  = sdk.ValAddress(valOpPk3.Address())
+	valAccAddr1 = sdk.AccAddress(valOpPk1.Address()) // generate acc addresses for these validator keys too
+	valAccAddr2 = sdk.AccAddress(valOpPk2.Address())
+	valAccAddr3 = sdk.AccAddress(valOpPk3.Address())
 
 	TestAddrs = []sdk.AccAddress{
-		addrDels[0], addrDels[1], addrDels[2],
-		addrVals[0], addrVals[1], addrVals[2],
+		delAddr1, delAddr2, delAddr3,
+		valAccAddr1, valAccAddr2, valAccAddr3,
 	}
+
+	emptyDelAddr sdk.AccAddress
+	emptyValAddr sdk.ValAddress
+	emptyPubkey  crypto.PubKey
 )
+
+type testInput struct {
+	keeper Keeper
+	router types.Router
+	ak     auth.AccountKeeper
+	sk     types.StakingKeeper
+}
 
 // nolint: deadcode unused
 func makeTestCodec() *codec.Codec {
@@ -61,12 +77,14 @@ func makeTestCodec() *codec.Codec {
 // nolint: deadcode unused
 func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
 
-// FIXME: update tests 
+	// FIXME: update tests
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
-	keyGov:= sdk.NewKVStoreKey(types.StoreKey)
+	keyGov := sdk.NewKVStoreKey(types.StoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -81,7 +99,6 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	require.Nil(t, ms.LoadLatestVersion())
 
-
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "gov-chain"}, isCheckTx, log.NewNopLogger())
 	ctx = ctx.WithConsensusParams(
 		&abci.ConsensusParams{
@@ -92,11 +109,17 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 	cdc := makeTestCodec()
 
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     []string{supply.Basic},
+		types.ModuleName:          []string{supply.Basic},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
+	}
+
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{}, []string{types.ModuleName})
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetParams(ctx, staking.DefaultParams())
@@ -104,7 +127,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	rtr := types.NewRouter().
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
-	keeper := keep.NewKeeper(mApp.Cdc, keyGov, pk.Subspace(types.DefaultParamspace), supplyKeeper, sk, types.DefaultCodespace, rtr)
+	keeper := NewKeeper(cdc, keyGov, pk.Subspace(types.DefaultParamspace), supplyKeeper, sk, types.DefaultCodespace, rtr)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
@@ -122,7 +145,5 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, govAcc)
 
-
 	return ctx, accountKeeper, keeper, supplyKeeper
 }
-

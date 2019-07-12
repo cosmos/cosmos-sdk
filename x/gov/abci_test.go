@@ -154,7 +154,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID uint64
-	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	input.mApp.Cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -200,7 +200,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID uint64
-	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	input.mApp.Cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
@@ -223,7 +223,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	var activeProposalID uint64
 
-	require.NoError(t, input.keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID))
+	require.NoError(t, input.mApp.Cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID))
 	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)
@@ -293,6 +293,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	SortAddresses(input.addrs)
 
 	// hijack the router to one that will fail in a proposal's handler
+	// TODO: set router or add route
 	input.keeper.router = NewRouter().AddRoute(RouterKey, badProposalHandler)
 
 	handler := NewHandler(input.keeper)

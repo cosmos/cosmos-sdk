@@ -14,7 +14,7 @@ import (
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -39,7 +39,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
@@ -47,7 +47,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -75,13 +75,13 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, _ := input.keeper.Tally(ctx, proposal)
 	require.False(t, passes)
 	require.True(t, burnDeposits)
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -111,7 +111,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -119,7 +119,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -149,14 +149,14 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, _ := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -188,7 +188,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -196,7 +196,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -228,7 +228,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
@@ -237,7 +237,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -269,7 +269,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -277,7 +277,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -309,7 +309,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -317,7 +317,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -347,7 +347,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -355,7 +355,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -393,7 +393,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -401,7 +401,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -437,7 +437,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -445,7 +445,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -485,7 +485,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -493,7 +493,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -544,7 +544,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -552,7 +552,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, types.GenesisState{}, nil)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -597,7 +597,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	proposal, ok := input.keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults :=  input.keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := input.keeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)

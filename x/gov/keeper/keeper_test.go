@@ -335,7 +335,7 @@ func TestSubmitProposal(t *testing.T) {
 	input.mApp.InitChainer(ctx, abci.RequestInitChain{})
 
 	testCases := []struct {
-		content     Content
+		content     types.Content
 		expectedErr sdk.Error
 	}{
 		{validProposal{}, nil},
@@ -345,7 +345,7 @@ func TestSubmitProposal(t *testing.T) {
 		{invalidProposalDesc1{}, nil},
 		{invalidProposalDesc2{}, nil},
 		// error only when invalid route
-		{invalidProposalRoute{}, ErrNoProposalHandlerExists(DefaultCodespace, invalidProposalRoute{})},
+		{invalidProposalRoute{}, types.ErrNoProposalHandlerExists(types.DefaultCodespace, invalidProposalRoute{})},
 		// Keeper does not call ValidateBasic, msg.ValidateBasic does
 		{invalidProposalValidation{}, nil},
 	}

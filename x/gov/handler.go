@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,8 +58,11 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		)
 	}
 
+	proposalIDBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(proposalIDBz, proposal.ProposalID)
+
 	return sdk.Result{
-		// Data:   keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.ProposalID),
+		Data:   proposalIDBz,
 		Events: ctx.EventManager().Events(),
 	}
 }

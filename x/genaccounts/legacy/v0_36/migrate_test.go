@@ -47,100 +47,50 @@ var (
 		StartTime:        0,
 		EndTime:          0,
 	}
+
+	deposit = v034gov.DepositWithMetadata{
+		ProposalID: 1,
+		Deposit: v034gov.Deposit{
+			ProposalID: 1,
+			Depositor:  addr,
+			Amount:     coins,
+		},
+	}
 )
 
 func TestMigrateEmptyRecord(t *testing.T) {
-	// invalid total number of genesis accounts; got: 6, expected: 4
-	require.NotPanics(t, func() {
-		Migrate(
-			v034accounts.GenesisState{},
-			types.Coins{},
-			types.DecCoins{},
-			[]v034gov.DepositWithMetadata{},
-			v034staking.Validators{},
-			[]v034staking.UnbondingDelegation{},
-			[]v034distr.ValidatorOutstandingRewardsRecord{},
-			types.DefaultBondDenom,
-			v034distr.ModuleName,
-			v034gov.ModuleName,
-		)
-	})
-}
 
-func TestMigrateDepositedOnly(t *testing.T) {
-	require.NotPanics(t, func() {
-		Migrate(
-			v034accounts.GenesisState{
-				accountDeposited,
-			},
-			types.Coins{},
-			types.DecCoins{},
-			[]v034gov.DepositWithMetadata{
-				{
-					ProposalID: 1,
-					Deposit: v034gov.Deposit{
-						ProposalID: 1,
-						Depositor:  addr,
-						Amount:     coins,
-					},
-				},
-			},
-			v034staking.Validators{},
-			[]v034staking.UnbondingDelegation{},
-			[]v034distr.ValidatorOutstandingRewardsRecord{},
-			types.DefaultBondDenom,
-			v034distr.ModuleName,
-			v034gov.ModuleName,
-		)
-	})
-}
-
-func TestMigrateBurnedOnly(t *testing.T) {
-	require.NotPanics(t, func() {
-		Migrate(
-			v034accounts.GenesisState{
-				accountBurned,
-			},
-			types.Coins{},
-			types.DecCoins{},
-			[]v034gov.DepositWithMetadata{},
-			v034staking.Validators{},
-			[]v034staking.UnbondingDelegation{},
-			[]v034distr.ValidatorOutstandingRewardsRecord{},
-			types.DefaultBondDenom,
-			v034distr.ModuleName,
-			v034gov.ModuleName,
-		)
-	})
-}
-
-func TestMigrateBasic(t *testing.T) {
-	require.NotPanics(t, func() {
-		Migrate(
-			v034accounts.GenesisState{
-				accountDeposited,
-				accountBurned,
-			},
-			types.Coins{},
-			types.DecCoins{},
-			[]v034gov.DepositWithMetadata{
-				{
-					ProposalID: 1,
-					Deposit: v034gov.Deposit{
-						ProposalID: 1,
-						Depositor:  addr,
-						Amount:     coins,
-					},
-				},
-			},
-			v034staking.Validators{},
-			[]v034staking.UnbondingDelegation{},
-			[]v034distr.ValidatorOutstandingRewardsRecord{},
-			types.DefaultBondDenom,
-			v034distr.ModuleName,
-			v034gov.ModuleName,
-		)
-	})
+	type args struct {
+		accounts v034accounts.GenesisState
+		deposits []v034gov.DepositWithMetadata
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{"No Accounts", args{v034accounts.GenesisState{}, []v034gov.DepositWithMetadata{}}},
+		{"Deposited account", args{v034accounts.GenesisState{accountDeposited}, []v034gov.DepositWithMetadata{deposit}}},
+		{"Burned account", args{v034accounts.GenesisState{accountBurned}, []v034gov.DepositWithMetadata{}}},
+		{"Burned and deposited accounts", args{v034accounts.GenesisState{accountDeposited, accountBurned}, []v034gov.DepositWithMetadata{deposit}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.NotPanics(t, func() {
+				Migrate(
+					tt.args.accounts,
+					types.Coins{},
+					types.DecCoins{},
+					tt.args.deposits,
+					v034staking.Validators{},
+					[]v034staking.UnbondingDelegation{},
+					[]v034distr.ValidatorOutstandingRewardsRecord{},
+					types.DefaultBondDenom,
+					v034distr.ModuleName,
+					v034gov.ModuleName,
+				)
+			})
+		})
+	}
 }
 
 func TestMigrateWrongDeposit(t *testing.T) {

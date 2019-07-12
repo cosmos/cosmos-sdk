@@ -1,7 +1,8 @@
+//noalias
 package types
 
 // Slashing module event types
-var (
+const (
 	EventTypeSlash    = "slash"
 	EventTypeLiveness = "liveness"
 

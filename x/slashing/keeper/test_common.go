@@ -111,10 +111,6 @@ func createTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, types.DefaultCodespace)
 	sk.SetHooks(keeper.Hooks())
 
-	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, sk, types.GenesisState{defaults, nil, nil})
-	})
-
 	return ctx, bk, sk, paramstore, keeper
 }
 

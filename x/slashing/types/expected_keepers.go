@@ -1,4 +1,5 @@
-package types // noalias
+// noalias
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +34,7 @@ type StakingKeeper interface {
 	MaxValidators(sdk.Context) uint16
 }
 
-// StakingHooks event hooks for staking validator object
+// StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
 	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) // Must be called when a validator is deleted

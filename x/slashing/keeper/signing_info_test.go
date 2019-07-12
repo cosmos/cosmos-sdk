@@ -33,9 +33,9 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 
 func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, types.DefaultParams())
-	missed := keeper.getValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
+	missed := keeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
 	require.False(t, missed) // treat empty key as not missed
-	keeper.setValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0, true)
-	missed = keeper.getValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
+	keeper.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0, true)
+	missed = keeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
 	require.True(t, missed) // now should be missed
 }

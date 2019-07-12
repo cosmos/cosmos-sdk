@@ -6,28 +6,29 @@
 package slashing
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 const (
-	DefaultCodespace            = types.DefaultCodespace
-	CodeInvalidValidator        = types.CodeInvalidValidator
-	CodeValidatorJailed         = types.CodeValidatorJailed
-	CodeValidatorNotJailed      = types.CodeValidatorNotJailed
-	CodeMissingSelfDelegation   = types.CodeMissingSelfDelegation
-	CodeSelfDelegationTooLow    = types.CodeSelfDelegationTooLow
-	CodeMissingSigningInfo      = types.CodeMissingSigningInfo
-	ModuleName                  = types.ModuleName
-	StoreKey                    = types.StoreKey
-	RouterKey                   = types.RouterKey
-	QuerierRoute                = types.QuerierRoute
-	QueryParameters             = types.QueryParameters
-	QuerySigningInfo            = types.QuerySigningInfo
-	QuerySigningInfos           = types.QuerySigningInfos
-	DefaultParamspace           = types.DefaultParamspace
-	DefaultMaxEvidenceAge       = types.DefaultMaxEvidenceAge
-	DefaultSignedBlocksWindow   = types.DefaultSignedBlocksWindow
-	DefaultDowntimeJailDuration = types.DefaultDowntimeJailDuration
+	DefaultCodespace               = types.DefaultCodespace
+	CodeInvalidValidator           = types.CodeInvalidValidator
+	CodeValidatorJailed            = types.CodeValidatorJailed
+	CodeValidatorNotJailed         = types.CodeValidatorNotJailed
+	CodeMissingSelfDelegation      = types.CodeMissingSelfDelegation
+	CodeSelfDelegationTooLow       = types.CodeSelfDelegationTooLow
+	CodeMissingSigningInfo         = types.CodeMissingSigningInfo
+	ModuleName                     = types.ModuleName
+	StoreKey                       = types.StoreKey
+	RouterKey                      = types.RouterKey
+	QuerierRoute                   = types.QuerierRoute
+	DefaultParamspace              = types.DefaultParamspace
+	DefaultMaxEvidenceAge          = types.DefaultMaxEvidenceAge
+	DefaultSignedBlocksWindow      = types.DefaultSignedBlocksWindow
+	DefaultDowntimeJailDuration    = types.DefaultDowntimeJailDuration
+	QueryParameters                = types.QueryParameters
+	QuerySigningInfo               = types.QuerySigningInfo
+	QuerySigningInfos              = types.QuerySigningInfos
 )
 
 var (
@@ -55,6 +56,9 @@ var (
 	NewQuerySigningInfoParams                = types.NewQuerySigningInfoParams
 	NewQuerySigningInfosParams               = types.NewQuerySigningInfosParams
 	NewValidatorSigningInfo                  = types.NewValidatorSigningInfo
+	NewKeeper                                = keeper.NewKeeper
+	NewQuerier                               = keeper.NewQuerier
+	NewTestMsgCreateValidator                = keeper.NewTestMsgCreateValidator
 
 	// variable aliases
 	ModuleCdc                       = types.ModuleCdc
@@ -82,4 +86,6 @@ type (
 	QuerySigningInfoParams  = types.QuerySigningInfoParams
 	QuerySigningInfosParams = types.QuerySigningInfosParams
 	ValidatorSigningInfo    = types.ValidatorSigningInfo
+	Hooks                   = keeper.Hooks
+	Keeper                  = keeper.Keeper
 )

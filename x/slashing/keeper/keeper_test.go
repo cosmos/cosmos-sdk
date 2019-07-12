@@ -68,9 +68,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
 
 	// Still shouldn't be able to unjail
-	msgUnjail := types.NewMsgUnjail(operatorAddr)
-	res := handleMsgUnjail(ctx, msgUnjail, keeper)
-	require.False(t, res.IsOK())
+	require.Error(t, keeper.Unjail(ctx, operatorAddr))
 
 	// Should be able to unbond now
 	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
@@ -78,7 +76,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(sk.GetParams(ctx).BondDenom, totalBond))
-	res = staking.NewHandler(sk)(ctx, msgUnbond)
+	res := staking.NewHandler(sk)(ctx, msgUnbond)
 	require.True(t, res.IsOK())
 }
 
@@ -290,7 +288,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.Equal(t, int64(0), signInfo.IndexOffset)
 	// array should be cleared
 	for offset := int64(0); offset < keeper.SignedBlocksWindow(ctx); offset++ {
-		missed := keeper.getValidatorMissedBlockBitArray(ctx, consAddr, offset)
+		missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, offset)
 		require.False(t, missed)
 	}
 

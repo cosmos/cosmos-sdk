@@ -26,44 +26,11 @@ func NewHandler(k Keeper) sdk.Handler {
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
-	validator := k.sk.Validator(ctx, msg.ValidatorAddr)
-	if validator == nil {
-		return ErrNoValidatorForAddress(k.codespace).Result()
+		
+	err := k.Unjail(ctx, msg.ValidatorAddr)
+	if err != nil {
+		return err.Result()
 	}
-
-	// cannot be unjailed if no self-delegation exists
-	selfDel := k.sk.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
-	if selfDel == nil {
-		return ErrMissingSelfDelegation(k.codespace).Result()
-	}
-
-	if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-		return ErrSelfDelegationTooLowToUnjail(k.codespace).Result()
-	}
-
-	// cannot be unjailed if not jailed
-	if !validator.IsJailed() {
-		return ErrValidatorNotJailed(k.codespace).Result()
-	}
-
-	consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
-
-	info, found := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		return ErrNoValidatorForAddress(k.codespace).Result()
-	}
-
-	// cannot be unjailed if tombstoned
-	if info.Tombstoned {
-		return ErrValidatorJailed(k.codespace).Result()
-	}
-
-	// cannot be unjailed until out of jail
-	if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-		return ErrValidatorJailed(k.codespace).Result()
-	}
-
-	k.sk.Unjail(ctx, consAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -51,7 +51,7 @@ var (
 
 func TestMigrateEmptyRecord(t *testing.T) {
 	// invalid total number of genesis accounts; got: 6, expected: 4
-	require.Panics(t, func() {
+	require.NotPanics(t, func() {
 		Migrate(
 			v034accounts.GenesisState{},
 			types.Coins{},
@@ -85,6 +85,25 @@ func TestMigrateDepositedOnly(t *testing.T) {
 					},
 				},
 			},
+			v034staking.Validators{},
+			[]v034staking.UnbondingDelegation{},
+			[]v034distr.ValidatorOutstandingRewardsRecord{},
+			types.DefaultBondDenom,
+			v034distr.ModuleName,
+			v034gov.ModuleName,
+		)
+	})
+}
+
+func TestMigrateBurnedOnly(t *testing.T) {
+	require.NotPanics(t, func() {
+		Migrate(
+			v034accounts.GenesisState{
+				accountBurned,
+			},
+			types.Coins{},
+			types.DecCoins{},
+			[]v034gov.DepositWithMetadata{},
 			v034staking.Validators{},
 			[]v034staking.UnbondingDelegation{},
 			[]v034distr.ValidatorOutstandingRewardsRecord{},

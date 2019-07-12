@@ -47,15 +47,18 @@ func Migrate(
 	var (
 		newGenState   GenesisState
 		govCoins      sdk.Coins
-		extraAccounts = 5
+		extraAccounts = 6
 	)
 
 	for _, acc := range oldGenState {
 		switch {
 		case acc.Address.Equals(depositedCoinsAccAddr):
+			// remove gov deposits base account
 			govCoins = acc.Coins
+			extraAccounts -= 1
 
 		case acc.Address.Equals(burnedDepositCoinsAccAddr):
+			// remove gov burned deposits base account
 			extraAccounts -= 1
 
 		default:

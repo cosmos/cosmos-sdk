@@ -5,7 +5,8 @@ import (
 )
 
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
-// genesis state.
+// genesis state. This migration flattens the deposits and votes and updates the
+// proposal content to the new
 func Migrate(oldGenState v034gov.GenesisState) GenesisState {
 	deposits := make(v034gov.Deposits, len(oldGenState.Deposits))
 	for i, deposit := range oldGenState.Deposits {

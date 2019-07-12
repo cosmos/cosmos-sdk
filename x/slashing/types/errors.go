@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DONTCOVER
+
 // Local code type
 type CodeType = sdk.CodeType
 

@@ -64,6 +64,7 @@ func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 	}
 }
 
+// String implements the stringer interface for Params 
 func (p Params) String() string {
 	return fmt.Sprintf(`Slashing Params:
   MaxEvidenceAge:          %s
@@ -77,7 +78,7 @@ func (p Params) String() string {
 		p.SlashFractionDowntime)
 }
 
-// Implements params.ParamSet
+// ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
@@ -89,7 +90,7 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	}
 }
 
-// Default parameters for this module
+// DefaultParams defines the parameters for this module
 func DefaultParams() Params {
 	return Params{
 		MaxEvidenceAge:          DefaultMaxEvidenceAge,

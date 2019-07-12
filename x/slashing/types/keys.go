@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// module name
+	// ModuleName is the name of the module
 	ModuleName = "slashing"
 
 	// StoreKey is the store key string for slashing
@@ -18,13 +18,6 @@ const (
 
 	// QuerierRoute is the querier route for slashing
 	QuerierRoute = ModuleName
-)
-
-// Query endpoints supported by the slashing querier
-const (
-	QueryParameters   = "parameters"
-	QuerySigningInfo  = "signingInfo"
-	QuerySigningInfos = "signingInfos"
 )
 
 // Keys for slashing store
@@ -41,12 +34,12 @@ var (
 	AddrPubkeyRelationKey           = []byte{0x03} // Prefix for address-pubkey relation
 )
 
-// stored by *Consensus* address (not operator address)
+// GetValidatorSigningInfoKey - stored by *Consensus* address (not operator address)
 func GetValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKey, v.Bytes()...)
 }
 
-// extract the address from a validator signing info key
+// GetValidatorSigningInfoAddress - extract the address from a validator signing info key
 func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	addr := key[1:]
 	if len(addr) != sdk.AddrLen {
@@ -55,19 +48,19 @@ func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	return sdk.ConsAddress(addr)
 }
 
-// stored by *Consensus* address (not operator address)
+// GetValidatorMissedBlockBitArrayPrefixKey - stored by *Consensus* address (not operator address)
 func GetValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorMissedBlockBitArrayKey, v.Bytes()...)
 }
 
-// stored by *Consensus* address (not operator address)
+// GetValidatorMissedBlockBitArrayKey - stored by *Consensus* address (not operator address)
 func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
 	return append(GetValidatorMissedBlockBitArrayPrefixKey(v), b...)
 }
 
-// get pubkey relation key used to get the pubkey from the address
+// GetAddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
 func GetAddrPubkeyRelationKey(address []byte) []byte {
 	return append(AddrPubkeyRelationKey, address...)
 }

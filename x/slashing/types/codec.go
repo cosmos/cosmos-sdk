@@ -4,12 +4,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register concrete types on codec codec
+// RegisterCodec registers concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
 }
 
-// module codec
+// ModuleCdc defines the module codec
 var ModuleCdc *codec.Codec
 
 func init() {

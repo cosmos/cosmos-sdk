@@ -1,4 +1,4 @@
-package slashing
+package keeper
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func TestNewQuerier(t *testing.T) {
@@ -26,7 +27,7 @@ func TestQueryParams(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, _, _, keeper := createTestInput(t, keeperTestParams())
 
-	var params Params
+	var params types.Params
 
 	res, errRes := queryParams(ctx, keeper)
 	require.NoError(t, errRes)

@@ -1,4 +1,4 @@
-package slashing
+package keeper
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, param
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
-		paramspace: paramspace.WithKeyTable(ParamKeyTable()),
+		paramspace: paramspace.WithKeyTable(types.ParamKeyTable()),
 		codespace:  codespace,
 	}
 	return keeper
@@ -83,7 +83,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	}
 
 	// fetch the validator signing info
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
@@ -155,7 +155,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	// fetch signing info
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}

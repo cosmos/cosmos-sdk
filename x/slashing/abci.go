@@ -9,7 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// slashing begin block functionality
+// BeginBlocker check for infraction evidence or downtime of validators 
+// on every begin block
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) {
 	// Iterate over all the validators which *should* have signed this block
 	// store whether or not they have actually signed it and slash/unbond any

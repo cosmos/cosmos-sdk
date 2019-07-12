@@ -1,5 +1,6 @@
 // nolint:deadcode unused
-package slashing
+// DONTCOVER
+package keeper
 
 import (
 	"encoding/hex"
@@ -20,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -52,11 +54,11 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
+func createTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
-	keySlashing := sdk.NewKVStoreKey(StoreKey)
+	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -105,12 +107,12 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 		_, err = bk.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
 	}
 	require.Nil(t, err)
-	paramstore := paramsKeeper.Subspace(DefaultParamspace)
-	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace)
+	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, types.DefaultCodespace)
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, sk, GenesisState{defaults, nil, nil})
+		InitGenesis(ctx, keeper, sk, types.GenesisState{defaults, nil, nil})
 	})
 
 	return ctx, bk, sk, paramstore, keeper

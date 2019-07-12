@@ -1,5 +1,5 @@
 // nolint
-package slashing
+package keeper
 
 import (
 	"time"
@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
-	_, found := k.getValidatorSigningInfo(ctx, address)
+	_, found := k.GetValidatorSigningInfo(ctx, address)
 	if !found {
 		signingInfo := types.NewValidatorSigningInfo(
 			address,

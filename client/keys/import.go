@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io/ioutil"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ func importKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
+	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
 	return cmd
 }
 

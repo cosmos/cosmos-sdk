@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -15,6 +16,7 @@ func updateKeyCommand() *cobra.Command {
 		RunE:  runUpdateCmd,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
 	return cmd
 }
 

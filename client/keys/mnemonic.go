@@ -8,6 +8,7 @@ import (
 	bip39 "github.com/bartekn/go-bip39"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -25,6 +26,7 @@ func mnemonicKeyCommand() *cobra.Command {
 		RunE:  runMnemonicCmd,
 	}
 	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the user to supply their own entropy, instead of relying on the system")
+	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
 	return cmd
 }
 

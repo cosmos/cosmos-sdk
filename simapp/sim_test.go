@@ -48,7 +48,7 @@ func init() {
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool, bool, []sdk.AccAddress) {
+	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool, bool, map[sdk.AccAddress]bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit,

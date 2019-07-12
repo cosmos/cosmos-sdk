@@ -32,7 +32,7 @@ func RandomAcc(r *rand.Rand, accs []Account) Account {
 }
 
 // RandomAccounts generates n random accounts
-func RandomAccounts(r *rand.Rand, n int, blackList []sdk.AccAddress) []Account {
+func RandomAccounts(r *rand.Rand, n int, blackList map[string]bool) []Account {
 	accs := make([]Account, n)
 	for i := 0; i < n; i++ {
 		for {
@@ -51,13 +51,7 @@ func RandomAccounts(r *rand.Rand, n int, blackList []sdk.AccAddress) []Account {
 
 			// if the address does not match any black listed address
 			// then break out of the loop
-			var match bool
-			for _, addr := range blackList {
-				if addr.Equals(accs[i].Address) {
-					match = true
-				}
-			}
-			if !match {
+			if blackList[string(accs[i].Address)] {
 				break
 			}
 		}

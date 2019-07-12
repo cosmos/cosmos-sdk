@@ -14,16 +14,29 @@ import (
 
 // assertAll asserts the all invariants against application state
 func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
-	event string, logWriter LogWriter) {
+	event string, logWriter LogWriter, allInvariants bool) {
 
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 
+	var broken bool
+	var invariantResults []string
 	for i := 0; i < len(invs); i++ {
-		if err := invs[i](ctx); err != nil {
-			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
-			logWriter.PrintLogs()
-			t.Fatal()
+		res, stop := invs[i](ctx)
+		if stop {
+			broken = true
+			invariantResults = append(invariantResults, res)
+		} else if allInvariants {
+			invariantResults = append(invariantResults, res)
 		}
+	}
+
+	if broken {
+		fmt.Printf("Invariants broken after %s\n\n", event)
+		for _, res := range invariantResults {
+			fmt.Printf("%s\n", res)
+		}
+		logWriter.PrintLogs()
+		t.Fatal()
 	}
 }
 
@@ -66,11 +79,11 @@ func getBlockSize(r *rand.Rand, params Params,
 func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {
-		outInvariant := func(ctx sdk.Context) error {
+		outInvariant := func(ctx sdk.Context) (string, bool) {
 			if int(ctx.BlockHeight())%period == offset {
 				return invariant(ctx)
 			}
-			return nil
+			return "", false
 		}
 		outInvariants = append(outInvariants, outInvariant)
 	}

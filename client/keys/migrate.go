@@ -76,8 +76,5 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	//no private key, write data into keyring
-	//has private key, prompt for passphrase, decrypt, add keyingo plus private data
-
 	return err
 }

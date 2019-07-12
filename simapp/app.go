@@ -172,7 +172,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 
 	app.blackListedAccs = make(map[string]bool)
 	for acc, _ := range maccPerms {
-		app.blackListedAccs[string(app.supplyKeeper.GetModuleAddress(acc))] = true
+		app.blackListedAccs[app.supplyKeeper.GetModuleAddress(acc).String()] = true
 	}
 
 	// register the proposal types

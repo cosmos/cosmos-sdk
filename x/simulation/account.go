@@ -51,7 +51,7 @@ func RandomAccounts(r *rand.Rand, n int, blackList map[string]bool) []Account {
 
 			// if the address does not match any black listed address
 			// then break out of the loop
-			if blackList[string(accs[i].Address)] {
+			if !blackList[string(accs[i].Address)] {
 				break
 			}
 		}

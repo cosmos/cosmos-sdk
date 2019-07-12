@@ -65,7 +65,7 @@ func SimulateFromSeed(
 	)
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := RandomAccounts(r, params.NumKeys, blackListedAccs)
+	accs := RandomAccounts(r, params.NumKeys)
 	eventStats := newEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since

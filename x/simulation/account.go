@@ -32,29 +32,21 @@ func RandomAcc(r *rand.Rand, accs []Account) Account {
 }
 
 // RandomAccounts generates n random accounts
-func RandomAccounts(r *rand.Rand, n int, blackList map[string]bool) []Account {
+func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
 	for i := 0; i < n; i++ {
-		for {
-			// don't need that much entropy for simulation
-			privkeySeed := make([]byte, 15)
-			r.Read(privkeySeed)
-			useSecp := r.Int63()%2 == 0
-			if useSecp {
-				accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
-			} else {
-				accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
-			}
-
-			accs[i].PubKey = accs[i].PrivKey.PubKey()
-			accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-
-			// if the address does not match any black listed address
-			// then break out of the loop
-			if !blackList[string(accs[i].Address)] {
-				break
-			}
+		// don't need that much entropy for simulation
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		useSecp := r.Int63()%2 == 0
+		if useSecp {
+			accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		} else {
+			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
 		}
+
+		accs[i].PubKey = accs[i].PrivKey.PubKey()
+		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
 	}
 
 	return accs

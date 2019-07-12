@@ -14,7 +14,7 @@ along with their associated name and address.`,
 		RunE: runListCmd,
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 

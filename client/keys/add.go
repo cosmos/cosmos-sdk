@@ -72,7 +72,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 

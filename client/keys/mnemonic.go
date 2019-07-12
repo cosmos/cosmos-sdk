@@ -26,7 +26,7 @@ func mnemonicKeyCommand() *cobra.Command {
 		RunE:  runMnemonicCmd,
 	}
 	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the user to supply their own entropy, instead of relying on the system")
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 

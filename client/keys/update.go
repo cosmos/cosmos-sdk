@@ -16,7 +16,7 @@ func updateKeyCommand() *cobra.Command {
 		RunE:  runUpdateCmd,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 

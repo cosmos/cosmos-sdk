@@ -7,6 +7,8 @@ import (
 )
 
 // InitGenesis sets supply information for genesis.
+//
+// CONTRACT: all types of accounts must have been already initialized/created
 func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data GenesisState) {
 	// manually set the total supply based on accounts if not provided
 	if data.Supply.Total.Empty() {

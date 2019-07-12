@@ -10,10 +10,10 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamspace                         = ModuleName
-	DefaultMaxEvidenceAge       time.Duration = 60 * 2 * time.Second
-	DefaultSignedBlocksWindow   int64         = 100
-	DefaultDowntimeJailDuration time.Duration = 60 * 10 * time.Second
+	DefaultParamspace           = ModuleName
+	DefaultMaxEvidenceAge       = 60 * 2 * time.Second
+	DefaultSignedBlocksWindow   = int64(100)
+	DefaultDowntimeJailDuration = 60 * 10 * time.Second
 )
 
 // The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
@@ -41,12 +41,12 @@ func ParamKeyTable() params.KeyTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge          time.Duration `json:"max_evidence_age"`
-	SignedBlocksWindow      int64         `json:"signed_blocks_window"`
-	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window"`
-	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration"`
-	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign"`
-	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime"`
+	MaxEvidenceAge          time.Duration `json:"max_evidence_age" yaml:"max_evidence_age"`
+	SignedBlocksWindow      int64         `json:"signed_blocks_window" yaml:"signed_blocks_window"`
+	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window" yaml:"min_signed_per_window"`
+	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration" yaml:"downtime_jail_duration"`
+	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign" yaml:"slash_fraction_double_sign"`
+	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime" yaml:"slash_fraction_downtime"`
 }
 
 // NewParams creates a new Params object

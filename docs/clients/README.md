@@ -16,3 +16,11 @@ Light-clients enable users to interact with your application without having to d
 
 - [Command-Line interface for SDK-based blockchain](./cli.md)
 - [Service provider doc](./service-providers.md)
+
+## Genesis upgrade
+
+If you need to upgrade your node you could export the genesis and migrate it to the new version through this script:
+
+```bash
+<appbinary> migrate v0.36 genesis_0_34.json [--time "2019-04-22T17:00:11Z"] [--chain-id test] > ~/.gaiad/genesis.json 
+```

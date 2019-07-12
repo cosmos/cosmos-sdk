@@ -60,8 +60,12 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 
 	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace,
-		[]string{}, []string{}, []string{types.ModuleName, staking.NotBondedPoolName, staking.BondedPoolName})
+	maccPerms := map[string][]string{
+		types.ModuleName:          []string{supply.Burner},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
+	}
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, supply.DefaultCodespace, maccPerms)
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
 	keeper := keep.NewKeeper(mApp.Cdc, keyGov, pk.Subspace("testgov"), supplyKeeper, sk, types.DefaultCodespace, rtr)
@@ -109,8 +113,8 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 
 		// set module accounts
 		govAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Burner)
-		notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)
+		notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
+		bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
 
 		supplyKeeper.SetModuleAccount(ctx, govAcc)
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)

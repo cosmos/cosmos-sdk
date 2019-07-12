@@ -10,11 +10,11 @@ import (
 type (
 	// CommunityPoolSpendProposalJSON defines a CommunityPoolSpendProposal with a deposit
 	CommunityPoolSpendProposalJSON struct {
-		Title       string         `json:"title"`
-		Description string         `json:"description"`
-		Recipient   sdk.AccAddress `json:"recipient"`
-		Amount      sdk.Coins      `json:"amount"`
-		Deposit     sdk.Coins      `json:"deposit"`
+		Title       string         `json:"title" yaml:"title"`
+		Description string         `json:"description" yaml:"description"`
+		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
+		Amount      sdk.Coins      `json:"amount" yaml:"amount"`
+		Deposit     sdk.Coins      `json:"deposit" yaml:"deposit"`
 	}
 )
 

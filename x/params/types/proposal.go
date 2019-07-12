@@ -24,9 +24,9 @@ func init() {
 // ParameterChangeProposal defines a proposal which contains multiple parameter
 // changes.
 type ParameterChangeProposal struct {
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Changes     []ParamChange `json:"changes"`
+	Title       string        `json:"title" yaml:"title"`
+	Description string        `json:"description" yaml:"description"`
+	Changes     []ParamChange `json:"changes" yaml:"changes"`
 }
 
 func NewParameterChangeProposal(title, description string, changes []ParamChange) ParameterChangeProposal {
@@ -79,10 +79,10 @@ func (pcp ParameterChangeProposal) String() string {
 
 // ParamChange defines a parameter change.
 type ParamChange struct {
-	Subspace string `json:"subspace"`
-	Key      string `json:"key"`
-	Subkey   string `json:"subkey,omitempty"`
-	Value    string `json:"value"`
+	Subspace string `json:"subspace" yaml:"subspace"`
+	Key      string `json:"key" yaml:"key"`
+	Subkey   string `json:"subkey,omitempty" yaml:"subkey,omitempty"`
+	Value    string `json:"value" yaml:"value"`
 }
 
 func NewParamChange(subspace, key, value string) ParamChange {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,15 +28,13 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 	}
 }
 
-// TallyResult represents the current or final tally of a Proposal
 type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
+	Yes        sdk.Int `json:"yes" yaml:"yes"`
+	Abstain    sdk.Int `json:"abstain" yaml:"abstain"`
+	No         sdk.Int `json:"no" yaml:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto" yaml:"no_with_veto"`
 }
 
-// NewTallyResult creates a new TallyResult instance
 func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 	return TallyResult{
 		Yes:        yes,
@@ -45,7 +44,6 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 	}
 }
 
-// NewTallyResultFromMap creates a new TallyResult from map
 func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 	return TallyResult{
 		Yes:        results[OptionYes].TruncateInt(),

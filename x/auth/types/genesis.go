@@ -6,7 +6,7 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params Params `json:"params"`
+	Params Params `json:"params" yaml:"params"`
 }
 
 // NewGenesisState - Create a new genesis state

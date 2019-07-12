@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -16,36 +17,17 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	ak        types.AccountKeeper
 	bk        types.BankKeeper
-	permAddrs map[string]permAddr
-}
-
-type permAddr struct {
-	permission string // basic/minter/burner
-	address    sdk.AccAddress
-}
-
-// NewpermAddr creates a new permAddr object
-func newPermAddr(permission, name string) permAddr {
-	return permAddr{
-		permission: permission,
-		address:    types.NewModuleAddress(name),
-	}
+	permAddrs map[string]types.PermissionsForAddress
 }
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	codespace sdk.CodespaceType, basicModuleAccs, minterModuleAccs, burnerModuleAccs []string) Keeper {
+	codespace sdk.CodespaceType, maccPerms map[string][]string) Keeper {
 
 	// set the addresses
-	permAddrs := make(map[string]permAddr)
-	for _, name := range basicModuleAccs {
-		permAddrs[name] = newPermAddr(types.Basic, name)
-	}
-	for _, name := range minterModuleAccs {
-		permAddrs[name] = newPermAddr(types.Minter, name)
-	}
-	for _, name := range burnerModuleAccs {
-		permAddrs[name] = newPermAddr(types.Burner, name)
+	permAddrs := make(map[string]types.PermissionsForAddress)
+	for name, perms := range maccPerms {
+		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
 	return Keeper{
@@ -78,4 +60,16 @@ func (k Keeper) SetSupply(ctx sdk.Context, supply types.Supply) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(supply)
 	store.Set(SupplyKey, b)
+}
+
+// ValidatePermissions validates that the module account has been granted
+// permissions within its set of allowed permissions.
+func (k Keeper) ValidatePermissions(macc exported.ModuleAccountI) error {
+	permAddr := k.permAddrs[macc.GetName()]
+	for _, perm := range macc.GetPermissions() {
+		if !permAddr.HasPermission(perm) {
+			return fmt.Errorf("invalid module permission %s", perm)
+		}
+	}
+	return nil
 }

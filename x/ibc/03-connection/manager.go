@@ -78,7 +78,6 @@ type CounterObject struct {
 
 	kind commitment.String
 
-	// TODO: prove counterparty client in v1
 	client client.CounterObject // nolint: unused
 }
 

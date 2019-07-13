@@ -2,11 +2,14 @@ package keys
 
 import (
 	"bufio"
+	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 func exportKeyCommand() *cobra.Command {
@@ -17,14 +20,22 @@ func exportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  runExportCmd,
 	}
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return err
+	var kb keys.Keybase
+
+	if viper.GetBool(flags.FlagSecretStore) == true {
+		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+		var err error
+		kb, err = NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return err
+		}
+	} else {
+		kb = NewKeyringKeybase()
 	}
 
 	buf := bufio.NewReader(cmd.InOrStdin())

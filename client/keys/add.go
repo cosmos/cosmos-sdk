@@ -102,11 +102,16 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
-		if err != nil {
-			return err
+		// c.Flags().Bool(FlagSecretSore, false, "Use legacy secret store")
+		if viper.GetBool(flags.FlagSecretStore) == true {
+			fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+			kb, err = NewKeyBaseFromHomeFlag()
+			if err != nil {
+				return err
+			}
+		} else {
+			kb = NewKeyringKeybase()
 		}
-
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation

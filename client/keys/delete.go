@@ -3,6 +3,7 @@ package keys
 import (
 	"bufio"
 	"errors"
+	"fmt"
 
 	"github.com/spf13/viper"
 
@@ -36,16 +37,22 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 		"Skip confirmation prompt when deleting offline or ledger key references")
 	cmd.Flags().BoolP(flagForce, "f", false,
 		"Remove the key unconditionally without asking for the passphrase")
-	cmd.Flags().Bool(flags.FlagSecretSore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
-
-	kb, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return err
+	var kb keys.Keybase
+	if viper.GetBool(flags.FlagSecretStore) == true {
+		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+		var err error
+		kb, err = NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return err
+		}
+	} else {
+		kb = NewKeyringKeybase()
 	}
 
 	info, err := kb.Get(name)

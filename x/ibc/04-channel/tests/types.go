@@ -54,7 +54,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 }
 
 func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, channel.Handshaker) {
-	ctx := node.Context(t, proofs)
+	ctx := node.Context()
 	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Path, proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
@@ -90,7 +90,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, node.Name, node.Name, node.Channel, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs[0], proofs[1], proofs[2], node.Name, node.Name, node.Channel, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.OpenTry, obj.State(ctx))
 	require.Equal(t, node.Channel, obj.Channel(ctx))
@@ -100,7 +100,7 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, node.Name, node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs[0], proofs[1], proofs[2], node.Name, node.Name, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State(ctx))
 	require.Equal(t, node.Channel, obj.Channel(ctx))
@@ -110,7 +110,7 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, node.Name, node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs[0], proofs[1], node.Name, node.Name, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State(ctx))
 	require.Equal(t, node.Channel, obj.Channel(ctx))
@@ -152,7 +152,7 @@ func (node *Node) Handshake(t *testing.T) {
 }
 
 func (node *Node) Send(t *testing.T, packet channel.Packet) {
-	ctx, man := node.Context(t, nil), node.Manager()
+	ctx, man := node.Context(), node.Manager()
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqSend(ctx)
@@ -163,11 +163,11 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 }
 
 func (node *Node) Receive(t *testing.T, packet channel.Packet, proofs ...commitment.Proof) {
-	ctx, man := node.Context(t, proofs), node.Manager()
+	ctx, man := node.Context(), node.Manager()
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqRecv(ctx)
-	err = obj.Receive(ctx, packet)
+	err = obj.Receive(ctx, proofs[0], packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqRecv(ctx))
 }

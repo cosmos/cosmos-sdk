@@ -154,8 +154,10 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 	return obj, nil
 }
 
-// Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
+// Using proofs: counterparty.{connection,state,nextTimeout,counterpartyClient, client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
+	// TODO: proofs should be manually passed
+	// connectionp, statep, timeoutp, counterpartyClientp, clientp commitment.Proof,
 	id string, connection Connection, counterpartyClient string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.create(ctx, id, connection, counterpartyClient)
@@ -213,8 +215,10 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	return
 }
 
-// Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
+// Using proofs: counterparty.{connection, state, timeout, counterpartyClient, client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
+	// TODO: proofs should be manually passed
+	// connectionp, statep, timeoutp, counterpartyClientp, clientp commitment.Proof
 	id string /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, id)
@@ -270,7 +274,11 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 }
 
 // Using proofs: counterparty.{connection,state, nextTimeout}
-func (man Handshaker) OpenConfirm(ctx sdk.Context, id string, timeoutHeight uint64) (obj HandshakeObject, err error) {
+func (man Handshaker) OpenConfirm(ctx sdk.Context,
+	// TODO: proofs should be manually passed
+	// statep, timeoutp, commitment.Proof,
+	id string, timeoutHeight uint64) (obj HandshakeObject, err error) {
+
 	obj, err = man.query(ctx, id)
 	if err != nil {
 		return

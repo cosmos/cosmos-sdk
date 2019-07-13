@@ -200,6 +200,10 @@ type CounterObject struct {
 	connection connection.CounterObject
 }
 
+func (obj Object) Context(ctx sdk.Context, proofs ...commitment.Proof) (sdk.Context, error) {
+	return obj.connection.Context(ctx, nil, proofs...)
+}
+
 func (obj Object) ChanID() string {
 	return obj.chanid
 }
@@ -257,12 +261,17 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 	return nil
 }
 
-func (obj Object) Receive(ctx sdk.Context, packet Packet) error {
+func (obj Object) Receive(ctx sdk.Context, ppacket commitment.Proof, packet Packet) error {
 	if !obj.Receivable(ctx) {
 		return errors.New("cannot receive packets on this channel")
 	}
 
-	err := assertTimeout(ctx, packet.Timeout())
+	ctx, err := obj.Context(ctx, ppacket)
+	if err != nil {
+		return err
+	}
+
+	err = assertTimeout(ctx, packet.Timeout())
 	if err != nil {
 		return err
 	}

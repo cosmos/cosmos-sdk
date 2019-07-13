@@ -58,3 +58,7 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 func (m Mapping) Cdc() *Codec {
 	return m.base.Cdc()
 }
+
+func (m Mapping) StoreName() string {
+	return m.base.StoreName()
+}

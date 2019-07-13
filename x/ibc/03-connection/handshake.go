@@ -189,6 +189,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	if !obj.counterparty.connection.Is(ctx, Connection{
 		Client:       counterpartyClient,
 		Counterparty: id,
+		Path:         obj.path,
 	}) {
 		err = errors.New("wrong counterparty connection")
 		return
@@ -261,6 +262,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 	if !obj.counterparty.connection.Is(ctx, Connection{
 		Client:       obj.CounterpartyClient(ctx),
 		Counterparty: obj.ID(),
+		Path:         obj.path,
 	}) {
 		err = errors.New("wrong counterparty")
 		return

@@ -48,10 +48,12 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 	res.Connection = connection.Connection{
 		Counterparty: res.Counterparty.Name,
+		Path:         res.Counterparty.Path,
 	}
 
 	res.Counterparty.Connection = connection.Connection{
 		Counterparty: res.Name,
+		Path:         res.Path,
 	}
 
 	return res

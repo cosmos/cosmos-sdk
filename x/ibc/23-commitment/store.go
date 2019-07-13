@@ -72,11 +72,12 @@ func (store *store) Get(key []byte) ([]byte, bool) {
 }
 
 func (store *store) Prove(key, value []byte) bool {
-	stored, ok := store.Get(key)
+	pathkey := store.path.Pathify(key)
+	stored, ok := store.Get(pathkey)
 	if ok && bytes.Equal(stored, value) {
 		return true
 	}
-	proof, ok := store.proofs[string(key)]
+	proof, ok := store.proofs[string(pathkey)]
 	if !ok {
 		return false
 	}
@@ -84,7 +85,7 @@ func (store *store) Prove(key, value []byte) bool {
 	if err != nil {
 		return false
 	}
-	store.verified[string(key)] = value
+	store.verified[string(pathkey)] = value
 
 	return true
 }

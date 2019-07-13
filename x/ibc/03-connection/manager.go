@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 type Manager struct {
@@ -17,6 +18,8 @@ type Manager struct {
 	client client.Manager
 
 	counterparty CounterpartyManager
+
+	path merkle.Path
 }
 
 func NewManager(protocol state.Base, client client.Manager) Manager {
@@ -24,6 +27,7 @@ func NewManager(protocol state.Base, client client.Manager) Manager {
 		protocol:     state.NewMapping(protocol, ([]byte("/connection/"))),
 		client:       client,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
+		path:         merkle.NewPath([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
 	}
 }
 
@@ -53,6 +57,8 @@ type Object struct {
 	kind state.String
 
 	client client.Object
+
+	path merkle.Path
 }
 
 func (man Manager) object(id string) Object {
@@ -66,6 +72,8 @@ func (man Manager) object(id string) Object {
 		kind: state.NewString(man.protocol.Value([]byte(id + "/kind"))),
 
 		// CONTRACT: client must be filled by the caller
+
+		path: man.path,
 	}
 }
 
@@ -137,6 +145,10 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 	obj = man.object(id)
 	if obj.exists(ctx) {
 		err = errors.New("Object already exists")
+		return
+	}
+	obj.client, err = man.client.Query(ctx, connection.Client)
+	if err != nil {
 		return
 	}
 	obj.connection.Set(ctx, connection)

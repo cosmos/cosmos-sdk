@@ -9,9 +9,9 @@ import (
 )
 
 type Base struct {
-	cdc     *codec.Codec
-	storefn func(Context) KVStore
-	prefix  []byte
+	storeKey sdk.StoreKey
+	cdc      *codec.Codec
+	prefix   []byte
 }
 
 func EmptyBase() Base {
@@ -19,20 +19,15 @@ func EmptyBase() Base {
 }
 
 func NewBase(cdc *codec.Codec, key sdk.StoreKey, rootkey []byte) Base {
-	if len(rootkey) == 0 {
-		return Base{
-			cdc:     cdc,
-			storefn: func(ctx Context) KVStore { return ctx.KVStore(key) },
-		}
-	}
 	return Base{
-		cdc:     cdc,
-		storefn: func(ctx Context) KVStore { return prefix.NewStore(ctx.KVStore(key), rootkey) },
+		storeKey: key,
+		cdc:      cdc,
+		prefix:   rootkey,
 	}
 }
 
 func (base Base) Store(ctx Context) KVStore {
-	return prefix.NewStore(base.storefn(ctx), base.prefix)
+	return prefix.NewStore(ctx.KVStore(base.storeKey), base.prefix)
 }
 
 func join(a, b []byte) (res []byte) {
@@ -44,9 +39,9 @@ func join(a, b []byte) (res []byte) {
 
 func (base Base) Prefix(prefix []byte) (res Base) {
 	res = Base{
-		cdc:     base.cdc,
-		storefn: base.storefn,
-		prefix:  join(base.prefix, prefix),
+		storeKey: base.storeKey,
+		cdc:      base.cdc,
+		prefix:   join(base.prefix, prefix),
 	}
 	return
 }
@@ -57,4 +52,12 @@ func (base Base) Cdc() *codec.Codec {
 
 func (base Base) key(key []byte) []byte {
 	return join(base.prefix, key)
+}
+
+func (base Base) StoreName() string {
+	return base.storeKey.Name()
+}
+
+func (base Base) PrefixBytes() []byte {
+	return base.prefix
 }

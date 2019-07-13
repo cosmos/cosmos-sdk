@@ -1,6 +1,8 @@
 package connection
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -17,8 +19,8 @@ type CLIObject struct {
 
 	Client client.CLIObject
 
-	Path merkle.Path
-	Cdc  *codec.Codec
+	StoreName string
+	Cdc       *codec.Codec
 }
 
 func (man Manager) CLIObject(path merkle.Path, id string, clientid string) CLIObject {
@@ -31,13 +33,16 @@ func (man Manager) CLIObject(path merkle.Path, id string, clientid string) CLIOb
 
 		Client: man.client.CLIObject(path, clientid),
 
-		Path: path,
-		Cdc:  obj.connection.Cdc(),
+		StoreName: man.protocol.StoreName(),
+		Cdc:       obj.connection.Cdc(),
 	}
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(obj.Path.RequestQuery(key))
+	resp, err := ctx.QueryABCI(abci.RequestQuery{
+		Path: "/store/" + obj.StoreName + "/key",
+		Data: key,
+	})
 	if err != nil {
 		return merkle.Proof{}, err
 	}

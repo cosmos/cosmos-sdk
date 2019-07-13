@@ -6,6 +6,7 @@ type Root interface {
 
 type Path interface {
 	CommitmentKind() string
+	Pathify([]byte) []byte
 }
 
 type Proof interface {

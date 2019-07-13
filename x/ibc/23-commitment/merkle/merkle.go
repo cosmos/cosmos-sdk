@@ -48,6 +48,13 @@ func (Path) CommitmentKind() string {
 	return merkleKind
 }
 
+func (path Path) Pathify(key []byte) (res []byte) {
+	res = make([]byte, len(path.KeyPrefix)+len(key))
+	copy(res, path.KeyPrefix)
+	copy(res[len(path.KeyPrefix):], key)
+	return
+}
+
 var _ commitment.Proof = Proof{}
 
 type Proof struct {
@@ -78,7 +85,8 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 	for _, key := range path.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
+	// KeyPrefix is not appended, we assume that the proof.Key already contains it
+	keypath = keypath.AppendKey(proof.Key, merkle.KeyEncodingHex)
 
 	// Hard coded for now
 	runtime := rootmulti.DefaultProofRuntime()

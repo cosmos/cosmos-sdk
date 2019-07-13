@@ -58,7 +58,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 }
 
 func (node *Node) CreateClient(t *testing.T) {
-	ctx := node.Context(t, nil)
+	ctx := node.Context()
 	climan, _ := node.Manager()
 	obj, err := climan.Create(ctx, node.Name, node.Counterparty.LastStateVerifier().ConsensusState)
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func (node *Node) CreateClient(t *testing.T) {
 }
 
 func (node *Node) UpdateClient(t *testing.T, header client.Header) {
-	ctx := node.Context(t, nil)
+	ctx := node.Context()
 	climan, _ := node.Manager()
 	obj, err := climan.Query(ctx, node.Connection.Client)
 	require.NoError(t, err)
@@ -80,16 +80,8 @@ func (node *Node) SetState(state connection.State) {
 	node.Counterparty.State = state
 }
 
-func (node *Node) Context(t *testing.T, proofs []commitment.Proof) sdk.Context {
-	ctx := node.Node.Context()
-	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Path, proofs)
-	require.NoError(t, err)
-	ctx = commitment.WithStore(ctx, store)
-	return ctx
-}
-
 func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, connection.Handshaker) {
-	ctx := node.Context(t, proofs)
+	ctx := node.Context()
 	_, man := node.Manager()
 	return ctx, connection.NewHandshaker(man)
 }
@@ -124,7 +116,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs[0], proofs[1], proofs[2], proofs[3], node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.OpenTry, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
@@ -135,7 +127,7 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs[0], proofs[1], proofs[2], proofs[3], node.Name, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
@@ -145,7 +137,7 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs[0], proofs[1], node.Name, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))

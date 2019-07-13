@@ -156,14 +156,25 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection,state,nextTimeout,counterpartyClient, client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
-	// TODO: proofs should be manually passed
-	// connectionp, statep, timeoutp, counterpartyClientp, clientp commitment.Proof,
+	connectionp, statep, timeoutp, counterpartyClientp /*, clientp*/ commitment.Proof,
 	id string, connection Connection, counterpartyClient string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.create(ctx, id, connection, counterpartyClient)
 	if err != nil {
 		return
 	}
+
+	store, err := commitment.NewStore(
+		// TODO: proof root should be able to be obtained from the past
+		obj.client.ConsensusState(ctx).GetRoot(),
+		connection.Path,
+		[]commitment.Proof{connectionp, statep, timeoutp, counterpartyClientp},
+	)
+	if err != nil {
+		return
+	}
+
+	ctx = commitment.WithStore(ctx, store)
 
 	err = assertTimeout(ctx, timeoutHeight)
 	if err != nil {
@@ -217,14 +228,25 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection, state, timeout, counterpartyClient, client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
-	// TODO: proofs should be manually passed
-	// connectionp, statep, timeoutp, counterpartyClientp, clientp commitment.Proof
+	connectionp, statep, timeoutp, counterpartyClientp /*, clientp*/ commitment.Proof,
 	id string /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, id)
 	if err != nil {
 		return
 	}
+
+	store, err := commitment.NewStore(
+		// TODO: proof root should be able to be obtained from the past
+		obj.client.ConsensusState(ctx).GetRoot(),
+		obj.Connection(ctx).Path,
+		[]commitment.Proof{connectionp, statep, timeoutp, counterpartyClientp},
+	)
+	if err != nil {
+		return
+	}
+
+	ctx = commitment.WithStore(ctx, store)
 
 	if !obj.state.Transit(ctx, Init, Open) {
 		err = errors.New("ack on non-init connection")
@@ -275,14 +297,25 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
-	// TODO: proofs should be manually passed
-	// statep, timeoutp, commitment.Proof,
+	statep, timeoutp commitment.Proof,
 	id string, timeoutHeight uint64) (obj HandshakeObject, err error) {
 
 	obj, err = man.query(ctx, id)
 	if err != nil {
 		return
 	}
+
+	store, err := commitment.NewStore(
+		// TODO: proof root should be able to be obtained from the past
+		obj.client.ConsensusState(ctx).GetRoot(),
+		obj.Connection(ctx).Path,
+		[]commitment.Proof{statep, timeoutp},
+	)
+	if err != nil {
+		return
+	}
+
+	ctx = commitment.WithStore(ctx, store)
 
 	if !obj.state.Transit(ctx, OpenTry, Open) {
 		err = errors.New("confirm on non-try connection")

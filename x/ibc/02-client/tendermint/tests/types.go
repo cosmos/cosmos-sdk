@@ -27,6 +27,7 @@ const chainid = "testchain"
 
 func defaultComponents(storename string) (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
 	key := sdk.NewKVStoreKey(storename)
+
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
@@ -54,6 +55,7 @@ type Node struct {
 
 func NewNode(valset MockValidators, path merkle.Path) *Node {
 	key, ctx, cms, _ := defaultComponents(string(path.KeyPath[0]))
+
 	return &Node{
 		Valset:  valset,
 		Cms:     cms,
@@ -108,6 +110,7 @@ func (node *Node) LastStateVerifier() *Verifier {
 
 func (node *Node) Root() merkle.Root {
 	return merkle.NewRoot(node.Last().AppHash)
+
 }
 
 func (node *Node) Context() sdk.Context {
@@ -173,6 +176,7 @@ func testProof(t *testing.T) {
 		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
 			v, p := node.Query(t, kvp.Key)
+
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}

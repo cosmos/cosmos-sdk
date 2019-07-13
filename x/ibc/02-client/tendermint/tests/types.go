@@ -23,15 +23,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-// nolint: unused
-func newPath() merkle.Path {
-	return merkle.NewPath([][]byte{[]byte("test")}, []byte{0x12, 0x34})
-}
-
 const chainid = "testchain"
 
-func defaultComponents() (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
-	key := sdk.NewKVStoreKey("test")
+func defaultComponents(storename string) (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
+	key := sdk.NewKVStoreKey(storename)
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
@@ -58,7 +53,7 @@ type Node struct {
 }
 
 func NewNode(valset MockValidators, path merkle.Path) *Node {
-	key, ctx, cms, _ := defaultComponents()
+	key, ctx, cms, _ := defaultComponents(string(path.KeyPath[0]))
 	return &Node{
 		Valset:  valset,
 		Cms:     cms,
@@ -156,7 +151,7 @@ func (node *Node) Set(k, value []byte) {
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), newPath())
+	node := NewNode(NewMockValidators(100, 10), merkle.NewPath([][]byte{[]byte("1")}, []byte{0x00, 0x01}))
 
 	node.Commit()
 

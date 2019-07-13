@@ -233,7 +233,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 	}
 
 	if !obj.counterparty.connection.Is(ctx, Connection{
-		Client:       obj.Connection(ctx).Client,
+		Client:       obj.CounterpartyClient(ctx),
 		Counterparty: obj.ID(),
 	}) {
 		err = errors.New("wrong counterparty")

@@ -30,8 +30,8 @@ type Node struct {
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Name: "self",                                                            // hard coded, doesnt matter
-		Node: tendermint.NewNode(self, merkle.NewPath(nil, []byte("protocol"))), // TODO: test with key prefix
+		Name: "self",                                                                                          // hard coded, doesnt matter
+		Node: tendermint.NewNode(self, merkle.NewPath([][]byte{[]byte("teststoreself")}, []byte("protocol"))), // TODO: test with key prefix
 
 		State: connection.Idle,
 		Cdc:   cdc,
@@ -39,7 +39,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 	res.Counterparty = &Node{
 		Name:         "counterparty",
-		Node:         tendermint.NewNode(counter, merkle.NewPath(nil, []byte("protocol"))),
+		Node:         tendermint.NewNode(counter, merkle.NewPath([][]byte{[]byte("teststorecounterparty")}, []byte("protocol"))),
 		Counterparty: res,
 
 		State: connection.Idle,

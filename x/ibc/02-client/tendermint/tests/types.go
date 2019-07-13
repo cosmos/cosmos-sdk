@@ -183,7 +183,7 @@ func testProof(t *testing.T) {
 		proofs := []commitment.Proof{}
 		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, kvp.Key)
+			v, p := node.Query(t, node.Path.Key(kvp.Key))
 
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)

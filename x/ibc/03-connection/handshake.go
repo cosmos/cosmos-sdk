@@ -164,17 +164,10 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	store, err := commitment.NewStore(
-		// TODO: proof root should be able to be obtained from the past
-		obj.client.ConsensusState(ctx).GetRoot(),
-		connection.Path,
-		[]commitment.Proof{connectionp, statep, timeoutp, counterpartyClientp},
-	)
+	ctx, err = obj.Context(ctx, connection.Path, connectionp, statep, timeoutp, counterpartyClientp)
 	if err != nil {
 		return
 	}
-
-	ctx = commitment.WithStore(ctx, store)
 
 	err = assertTimeout(ctx, timeoutHeight)
 	if err != nil {
@@ -237,17 +230,10 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	store, err := commitment.NewStore(
-		// TODO: proof root should be able to be obtained from the past
-		obj.client.ConsensusState(ctx).GetRoot(),
-		obj.Connection(ctx).Path,
-		[]commitment.Proof{connectionp, statep, timeoutp, counterpartyClientp},
-	)
+	ctx, err = obj.Context(ctx, nil, connectionp, statep, timeoutp, counterpartyClientp)
 	if err != nil {
 		return
 	}
-
-	ctx = commitment.WithStore(ctx, store)
 
 	if !obj.state.Transit(ctx, Init, Open) {
 		err = errors.New("ack on non-init connection")
@@ -307,17 +293,10 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	store, err := commitment.NewStore(
-		// TODO: proof root should be able to be obtained from the past
-		obj.client.ConsensusState(ctx).GetRoot(),
-		obj.Connection(ctx).Path,
-		[]commitment.Proof{statep, timeoutp},
-	)
+	ctx, err = obj.Context(ctx, nil, statep, timeoutp)
 	if err != nil {
 		return
 	}
-
-	ctx = commitment.WithStore(ctx, store)
 
 	if !obj.state.Transit(ctx, OpenTry, Open) {
 		err = errors.New("confirm on non-try connection")

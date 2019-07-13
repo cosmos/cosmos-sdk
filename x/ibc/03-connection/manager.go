@@ -102,6 +102,24 @@ func (man CounterpartyManager) object(id string) CounterObject {
 	}
 }
 
+func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, proofs ...commitment.Proof) (sdk.Context, error) {
+	if optpath == nil {
+		optpath = obj.Connection(ctx).Path
+	}
+
+	store, err := commitment.NewStore(
+		// TODO: proof root should be able to be obtained from the past
+		obj.client.ConsensusState(ctx).GetRoot(),
+		optpath,
+		proofs,
+	)
+	if err != nil {
+		return ctx, err
+	}
+
+	return commitment.WithStore(ctx, store), nil
+}
+
 func (obj Object) ID() string {
 	return obj.id
 }

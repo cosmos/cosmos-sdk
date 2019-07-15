@@ -116,7 +116,9 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err == nil {
 			// account exists, ask for user confirmation
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
+
 			if err2 != nil {
+				fmt.Println("testing error")
 				return err2
 			}
 			if !response {
@@ -158,7 +160,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
+		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) && viper.GetBool(flags.FlagSecretStore) {
 			encryptPassword, err = input.GetCheckPassword(
 				"Enter a passphrase to encrypt your key to disk:",
 				"Repeat the passphrase:", inBuf)

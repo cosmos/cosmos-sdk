@@ -30,16 +30,15 @@ func Test_runDeleteCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	kb := NewKeyringKeybase()
+	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
-	require.Equal(t, "Key blah not found", err.Error())
+	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})

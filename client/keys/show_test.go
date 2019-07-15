@@ -38,10 +38,10 @@ func Test_runShowCmd(t *testing.T) {
 	cmd := showKeysCmd()
 
 	err := runShowCmd(cmd, []string{"invalid"})
-	assert.EqualError(t, err, "Key invalid not found")
+	assert.EqualError(t, err, "The specified item could not be found in the keyring")
 
 	err = runShowCmd(cmd, []string{"invalid1", "invalid2"})
-	assert.EqualError(t, err, "Key invalid1 not found")
+	assert.EqualError(t, err, "The specified item could not be found in the keyring")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -51,8 +51,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
+	kb := NewKeyringKeybase()
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)

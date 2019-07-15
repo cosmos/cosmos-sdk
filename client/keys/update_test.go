@@ -28,7 +28,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	// try again
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("pass1234\n")
-	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "locally stored key required. Received: keys.offlineInfo")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -36,9 +36,8 @@ func Test_runUpdateCmd(t *testing.T) {
 	defer cleanUp1()
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	kb := NewKeyringKeybase()
+	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)

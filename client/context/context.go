@@ -281,11 +281,7 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, "", err
-	}
-
+	keybase := keys.NewKeyringKeybase()
 	var info cryptokeys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)

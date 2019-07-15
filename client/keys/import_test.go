@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
+// Note: this test will fail locally with new keyring keybase, but should succeed in CI
 func Test_runImportCmd(t *testing.T) {
 	importKeyCommand := importKeyCommand()
 

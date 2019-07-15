@@ -19,9 +19,8 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
+	kb := NewKeyringKeybase()
+	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
 	assert.NoError(t, err)
 
 	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)

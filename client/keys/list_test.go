@@ -28,9 +28,8 @@ func Test_runListCmd(t *testing.T) {
 	defer cleanUp2()
 	viper.Set(flags.FlagHome, kbHome2)
 
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
+	kb := NewKeyringKeybase()
+	_, err := kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 
 	testData := []struct {
@@ -39,7 +38,6 @@ func Test_runListCmd(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"invalid keybase", "/dev/null", args{cmdBasic, []string{}}, true},
 		{"keybase: empty", kbHome1, args{cmdBasic, []string{}}, false},
 		{"keybase: w/key", kbHome2, args{cmdBasic, []string{}}, false},
 	}

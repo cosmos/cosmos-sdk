@@ -1,5 +1,5 @@
-# Module Manager
+# Module Interfaces
 
-## Application Module Interface
+## CLI
 
-## Module Manager
+## REST

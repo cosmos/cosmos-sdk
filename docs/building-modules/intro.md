@@ -79,7 +79,7 @@ While there is no definitive guidelines for writing modules, here are some impor
 
 ## Main Components of SDK Module
 
-Modules generally share the same core components:
+Modules are by convention defined in the `.x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 
 - Custom [`message` types](./message.md) to trigger state-transitions. 
 - A [`handler`](./handler.md) used to process messages when they are routed to the module by [`baseapp`](../core/baseapp.md#message-routing). 
@@ -87,9 +87,9 @@ Modules generally share the same core components:
 - A [`querier`](./querier.md), used to process user queries when they are routed to the module by [`baseapp`](../core/baseapp.md#query-routing).
 - Interfaces, for end users to query the subset of the state defined by the module and create `message`s of the custom types defined in the module.
 
-In addition to these components, modules implement the `module` interface in order to be managed by the [`module manager`](./module-manager.md). 
+In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./module-manager.md). 
 
 ## Next
 
-Read more on the [`module interface` and the `module manager`](./module-manager.md)
+Read more on the [`AppModule` interface and the `module manager`](./module-manager.md)
 

@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"encoding/binary"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -63,7 +64,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -131,7 +132,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -154,8 +155,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID uint64
-	input.mApp.Cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	proposalID := binary.LittleEndian.Uint64(res.Data)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -179,7 +179,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -200,8 +200,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID uint64
-	input.mApp.Cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	proposalID := binary.LittleEndian.Uint64(res.Data)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
@@ -241,7 +240,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	input := getMockApp(t, 1, GenesisState{}, nil)
+	input := getMockApp(t, 1, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
@@ -290,12 +289,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	input := getMockApp(t, 1, GenesisState{}, nil)
-	SortAddresses(input.addrs)
-
 	// hijack the router to one that will fail in a proposal's handler
-	// TODO: set router or add route
-	input.keeper.router = NewRouter().AddRoute(RouterKey, badProposalHandler)
+	input := getMockApp(t, 1, GenesisState{}, nil, badProposalHandler)
+	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
 	stakingHandler := keep.StakingHandler(input.sk)

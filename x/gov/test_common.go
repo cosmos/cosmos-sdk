@@ -42,7 +42,8 @@ type testInput struct {
 	privKeys []crypto.PrivKey
 }
 
-func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []auth.Account) testInput {
+func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []auth.Account,
+	handler func (ctx sdk.Context, c types.Content) sdk.Error) testInput {
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
@@ -57,7 +58,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	pk := mApp.ParamsKeeper
 
 	rtr := types.NewRouter().
-		AddRoute(types.RouterKey, types.ProposalHandler)
+		AddRoute(types.RouterKey, handler)
 
 	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 

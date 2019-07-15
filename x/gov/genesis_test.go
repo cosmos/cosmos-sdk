@@ -11,7 +11,7 @@ import (
 
 func TestImportExportQueues(t *testing.T) {
 	// Generate mock app and keepers
-	input := getMockApp(t, 2, GenesisState{}, nil)
+	input := getMockApp(t, 2, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -44,7 +44,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	// Export the state and import it into a new Mock App
 	genState := ExportGenesis(ctx, input.keeper)
-	input2 := getMockApp(t, 2, genState, genAccs)
+	input2 := getMockApp(t, 2, genState, genAccs, ProposalHandler)
 
 	header = abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input2.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -76,7 +76,7 @@ func TestImportExportQueues(t *testing.T) {
 
 func TestEqualProposals(t *testing.T) {
 	// Generate mock app and keepers
-	input := getMockApp(t, 2, GenesisState{}, nil)
+	input := getMockApp(t, 2, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}

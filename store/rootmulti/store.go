@@ -148,7 +148,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
-			deleteKVStore(store.(types.KVStore))
+			if err := deleteKVStore(store.(types.KVStore)); err != nil {
+				return fmt.Errorf("failed to delete store %s: %v", key.Name(), err)
+			}
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
 			// make an unregistered key to satify loadCommitStore params
@@ -163,7 +165,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			}
 
 			// move all data
-			moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore))
+			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+				return fmt.Errorf("failed to move store %s -> %s: %v", oldName, key.Name(), err)
+			}
 		}
 	}
 

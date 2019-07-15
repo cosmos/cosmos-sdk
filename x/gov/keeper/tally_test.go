@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +41,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -62,9 +61,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -86,9 +85,9 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -109,11 +108,11 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -135,11 +134,11 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNoWithVeto)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNoWithVeto)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -162,11 +161,11 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionAbstain)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -188,11 +187,11 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionAbstain)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -214,9 +213,9 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -232,7 +231,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	ctx, _, keeper, _ := createTestInput(t, false, 100)
 
 	delTokens := sdk.TokensFromConsensusPower(30)
-	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
 	tp := TestProposal()
@@ -242,13 +241,13 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[3], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[3], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -264,7 +263,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	ctx, _, keeper, _ := createTestInput(t, false, 100)
 
 	delTokens := sdk.TokensFromConsensusPower(30)
-	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
 	tp := TestProposal()
@@ -274,11 +273,11 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -294,9 +293,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	ctx, _, keeper, _ := createTestInput(t, false, 100)
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
-	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
 	tp := TestProposal()
@@ -306,13 +305,13 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[3], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[3], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -326,36 +325,31 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	ctx, _, keeper, _ := createTestInput(t, false, 100)
-
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 	stakingHandler := staking.NewHandler(input.sk)
 
 	valTokens1 := sdk.TokensFromConsensusPower(25)
 	val1CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(input.addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionRates, sdk.OneInt(),
+		sdk.ValAddress(TestAddrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionRates, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val1CreateMsg)
 
 	valTokens2 := sdk.TokensFromConsensusPower(6)
 	val2CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(input.addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionRates, sdk.OneInt(),
+		sdk.ValAddress(TestAddrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionRates, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val2CreateMsg)
 
 	valTokens3 := sdk.TokensFromConsensusPower(7)
 	val3CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(input.addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionRates, sdk.OneInt(),
+		sdk.ValAddress(TestAddrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionRates, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val3CreateMsg)
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
 	staking.EndBlocker(ctx, input.sk)
@@ -367,11 +361,11 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -387,13 +381,13 @@ func TestTallyJailedValidator(t *testing.T) {
 	ctx, _, keeper, _ := createTestInput(t, false, 100)
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
+	delegator1Msg2 := staking.NewMsgDelegate(TestAddrs[3], sdk.ValAddress(TestAddrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 	stakingHandler(ctx, delegator1Msg2)
 
-	val2, found := input.sk.GetValidator(ctx, sdk.ValAddress(input.addrs[1]))
+	val2, found := input.sk.GetValidator(ctx, sdk.ValAddress(TestAddrs[1]))
 	require.True(t, found)
 	input.sk.Jail(ctx, sdk.ConsAddress(val2.ConsPubKey.Address()))
 
@@ -406,11 +400,11 @@ func TestTallyJailedValidator(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, input.addrs[0], types.OptionYes)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[1], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
 	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, input.addrs[2], types.OptionNo)
+	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
 	require.Nil(t, err)
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)

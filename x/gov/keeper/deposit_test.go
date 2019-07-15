@@ -1,15 +1,12 @@
 package keeper
 
 import (
-	"strings"
-	"testing"
 	"time"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestDeposits(t *testing.T) {
@@ -23,58 +20,58 @@ func TestDeposits(t *testing.T) {
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))
 
-	addr0Initial := ak.GetAccount(ctx, input.addrs[0]).GetCoins()
-	addr1Initial := ak.GetAccount(ctx, input.addrs[1]).GetCoins()
+	addr0Initial := ak.GetAccount(ctx, TestAddrs[0]).GetCoins()
+	addr1Initial := ak.GetAccount(ctx, TestAddrs[1]).GetCoins()
 
 	expTokens := sdk.TokensFromConsensusPower(42)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, expTokens)), addr0Initial)
 	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
-	deposit, found := keeper.GetDeposit(ctx, proposalID, input.addrs[1])
+	deposit, found := keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.False(t, found)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	// Check first deposit
-	err, votingStarted := keeper.AddDeposit(ctx, proposalID, input.addrs[0], fourStake)
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 	require.Nil(t, err)
 	require.False(t, votingStarted)
-	deposit, found = keeper.GetDeposit(ctx, proposalID, input.addrs[0])
+	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
-	require.Equal(t, input.addrs[0], deposit.Depositor)
+	require.Equal(t, TestAddrs[0], deposit.Depositor)
 	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake, proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(fourStake), ak.GetAccount(ctx, input.addrs[0]).GetCoins())
+	require.Equal(t, addr0Initial.Sub(fourStake), ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
 
 	// Check a second deposit from same address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, input.addrs[0], fiveStake)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
 	require.Nil(t, err)
 	require.False(t, votingStarted)
-	deposit, found = keeper.GetDeposit(ctx, proposalID, input.addrs[0])
+	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
 	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
-	require.Equal(t, input.addrs[0], deposit.Depositor)
+	require.Equal(t, TestAddrs[0], deposit.Depositor)
 	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake), proposal.TotalDeposit)
-	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), ak.GetAccount(ctx, input.addrs[0]).GetCoins())
+	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
 
 	// Check third deposit from a new address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, input.addrs[1], fourStake)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[1], fourStake)
 	require.Nil(t, err)
 	require.True(t, votingStarted)
-	deposit, found = keeper.GetDeposit(ctx, proposalID, input.addrs[1])
+	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
-	require.Equal(t, input.addrs[1], deposit.Depositor)
+	require.Equal(t, TestAddrs[1], deposit.Depositor)
 	require.Equal(t, fourStake, deposit.Amount)
 	proposal, ok = keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake).Add(fourStake), proposal.TotalDeposit)
-	require.Equal(t, addr1Initial.Sub(fourStake), ak.GetAccount(ctx, input.addrs[1]).GetCoins())
+	require.Equal(t, addr1Initial.Sub(fourStake), ak.GetAccount(ctx, TestAddrs[1]).GetCoins())
 
 	// Check that proposal moved to voting period
 	proposal, ok = keeper.GetProposal(ctx, proposalID)
@@ -85,24 +82,24 @@ func TestDeposits(t *testing.T) {
 	depositsIterator := keeper.GetDepositsIterator(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, input.addrs[0], deposit.Depositor)
+	require.Equal(t, TestAddrs[0], deposit.Depositor)
 	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
 	depositsIterator.Next()
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, input.addrs[1], deposit.Depositor)
+	require.Equal(t, TestAddrs[1], deposit.Depositor)
 	require.Equal(t, fourStake, deposit.Amount)
 	depositsIterator.Next()
 	require.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
 
 	// Test Refund Deposits
-	deposit, found = keeper.GetDeposit(ctx, proposalID, input.addrs[1])
+	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
 	keeper.RefundDeposits(ctx, proposalID)
-	deposit, found = keeper.GetDeposit(ctx, proposalID, input.addrs[1])
+	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.False(t, found)
-	require.Equal(t, addr0Initial, ak.GetAccount(ctx, input.addrs[0]).GetCoins())
-	require.Equal(t, addr1Initial, ak.GetAccount(ctx, input.addrs[1]).GetCoins())
+	require.Equal(t, addr0Initial, ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
+	require.Equal(t, addr1Initial, ak.GetAccount(ctx, TestAddrs[1]).GetCoins())
 
 }

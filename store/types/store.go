@@ -39,14 +39,14 @@ type Queryable interface {
 // MultiStore
 
 type StoreUpgrades struct {
-	New     []StoreKey
+	New     []string
 	Renamed []StoreRename
-	Deleted []StoreKey
+	Deleted []string
 }
 
 type StoreRename struct {
-	OldKey StoreKey
-	NewKey StoreKey
+	OldKey string
+	NewKey string
 }
 
 type MultiStore interface { //nolint

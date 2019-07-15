@@ -156,6 +156,70 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 }
 
+func TestMultistoreLoadWithUpgrade(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db)
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// write some data in all stores
+	k1, v1 := []byte("first"), []byte("store")
+	s1, _ := store.getStoreByName("store1").(types.KVStore)
+	require.NotNil(t, s1)
+	s1.Set(k1, v1)
+
+	k2, v2 := []byte("second"), []byte("restore")
+	s2, _ := store.getStoreByName("store2").(types.KVStore)
+	require.NotNil(t, s2)
+	s2.Set(k2, v2)
+
+	k3, v3 := []byte("third"), []byte("dropped")
+	s3, _ := store.getStoreByName("store3").(types.KVStore)
+	require.NotNil(t, s3)
+	s3.Set(k3, v3)
+
+	// do one commit
+	commitID := store.Commit()
+	expectedCommitID := getExpectedCommitID(store, 1)
+	checkStore(t, store, expectedCommitID, commitID)
+
+	// Load without changes and make sure it is sensible
+	store = newMultiStoreWithMounts(db)
+	err = store.LoadLatestVersion()
+	require.Nil(t, err)
+	commitID = getExpectedCommitID(store, 1)
+	checkStore(t, store, commitID, commitID)
+
+	// let's query data to see it was saved properly
+	s2, _ = store.getStoreByName("store2").(types.KVStore)
+	require.NotNil(t, s2)
+	require.Equal(t, v2, s2.Get(k2))
+
+	// now, let's load with upgrades...
+	restore, upgrades := newMultiStoreWithModifiedMounts(db)
+	err = restore.LoadLatestVersionAndUpgrade(upgrades)
+	require.Nil(t, err)
+
+	// s1 was not changed
+	s1, _ = restore.getStoreByName("store1").(types.KVStore)
+	require.NotNil(t, s1)
+	require.Equal(t, v1, s1.Get(k1))
+
+	// store3 is mounted, but data deleted are gone
+	s3, _ = restore.getStoreByName("store3").(types.KVStore)
+	require.NotNil(t, s3)
+	require.Equal(t, nil, s3.Get(k3)) // data was deleted
+
+	// store2 is no longer mounted
+	st2 := restore.getStoreByName("store2")
+	require.Nil(t, st2)
+
+	// restore2 has the old data
+	rs1, _ := restore.getStoreByName("restore2").(types.KVStore)
+	require.NotNil(t, rs1)
+	require.Equal(t, v1, rs1.Get(k1))
+}
+
 func TestParsePath(t *testing.T) {
 	_, _, err := parsePath("foo")
 	require.Error(t, err)
@@ -260,6 +324,28 @@ func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store.MountStoreWithDB(
 		types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
 	return store
+}
+
+// store2 -> restore2
+// store3 dropped data (but mount still there to test)
+func newMultiStoreWithModifiedMounts(db dbm.DB) (*Store, *types.StoreUpgrades) {
+	store := NewStore(db)
+	store.pruningOpts = types.PruneSyncable
+	store.MountStoreWithDB(
+		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(
+		types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(
+		types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+
+	upgrades := &types.StoreUpgrades{
+		Renamed: []types.StoreRename{{
+			OldKey: "store2",
+			NewKey: "restore2",
+		}},
+		Deleted: []string{"store3"},
+	}
+	return store, upgrades
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {

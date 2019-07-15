@@ -80,7 +80,7 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
-	storeLoader StoreLoader          // function to handle store loading, may be overriden with SetStoreLoader()
+	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx

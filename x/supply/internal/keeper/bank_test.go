@@ -118,7 +118,7 @@ func TestBurnCoins(t *testing.T) {
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	require.Error(t, keeper.BurnCoins(ctx, "", initCoins), "no module account")
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
 	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Minter, initCoins) }, "invalid permission")
 	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.Total) }, "random permission")
 	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Burner, initialSupply.Total) }, "insufficient coins")

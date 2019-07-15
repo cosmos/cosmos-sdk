@@ -44,12 +44,22 @@ const (
 	MainStoreKey = "main"
 )
 
+// StoreLoader defines a customizable function to control how we load the CommitMultiStore
+// from disk
 type StoreLoader func(ms sdk.CommitMultiStore) error
 
+// DefaultStoreLoader will be used by default and loads the latest version
 func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
+// UpgradeableStoreLoader can be configured by SetStoreLoader() to check for the
+// existence of a given upgrade file - json encoded StoreUpgrades data.
+// If the file if present, parse it and execute those upgrades
+// (rename or delete stores), while loading the data.
+//
+// This is useful for in place migrations when a store key is renamed between
+// two versions of the software.
 func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		_, err := os.Stat(upgradeInfoPath)

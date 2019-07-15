@@ -145,8 +145,8 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 
 	// account permissions
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:     []string{supply.Basic},
-		distr.ModuleName:          []string{supply.Basic},
+		auth.FeeCollectorName:     nil,
+		distr.ModuleName:          nil,
 		mint.ModuleName:           []string{supply.Minter},
 		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},

@@ -23,19 +23,24 @@ type CLIObject struct {
 	Cdc       *codec.Codec
 }
 
-func (man Manager) CLIObject(path merkle.Path, id string, clientid string) CLIObject {
+func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, id string) CLIObject {
 	obj := man.object(id)
-	return CLIObject{
+	res := CLIObject{
 		ID:            obj.id,
 		ConnectionKey: obj.connection.Key(),
 		AvailableKey:  obj.available.Key(),
 		KindKey:       obj.kind.Key(),
 
-		Client: man.client.CLIObject(path, clientid),
-
 		StoreName: man.protocol.StoreName(),
 		Cdc:       obj.connection.Cdc(),
 	}
+
+	connection, _, err := res.Connection(ctx)
+	if err != nil {
+		return res
+	}
+	res.Client = man.client.CLIObject(path, connection.Client)
+	return res
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
@@ -78,10 +83,10 @@ type CLIHandshakeObject struct {
 	TimeoutKey            []byte
 }
 
-func (man Handshaker) CLIObject(path merkle.Path, id string, clientid string) CLIHandshakeObject {
+func (man Handshaker) CLIObject(ctx context.CLIContext, path merkle.Path, id string) CLIHandshakeObject {
 	obj := man.object(man.man.object(id))
 	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(path, id, clientid),
+		CLIObject: man.man.CLIObject(ctx, path, id),
 
 		StateKey:              obj.state.Key(),
 		CounterpartyClientKey: obj.counterpartyClient.Key(),

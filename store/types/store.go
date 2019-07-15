@@ -38,6 +38,17 @@ type Queryable interface {
 //----------------------------------------
 // MultiStore
 
+type StoreUpgrades struct {
+	New     []StoreKey
+	Renamed []StoreRename
+	Deleted []StoreKey
+}
+
+type StoreRename struct {
+	OldKey StoreKey
+	NewKey StoreKey
+}
+
 type MultiStore interface { //nolint
 	Store
 
@@ -93,6 +104,11 @@ type CommitMultiStore interface {
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
+
+	// LoadLatestVersionAndUpgrade will load the latest version, but also
+	// rename/delete/create sub-store keys, before registering all the keys
+	// in order to handle breaking formats in migrations
+	LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
 
 	// Load a specific persisted version. When you load an old version, or when
 	// the last commit attempt didn't complete, the next commit after loading

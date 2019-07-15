@@ -100,14 +100,24 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key].(types.CommitKVStore)
 }
 
-// Implements CommitMultiStore.
-func (rs *Store) LoadLatestVersion() error {
+// LoadLatestVersionAndUpgrade implements CommitMultiStore
+func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
 	ver := getLatestVersion(rs.db)
-	return rs.LoadVersion(ver)
+	return rs.loadVersion(ver, upgrades)
 }
 
-// Implements CommitMultiStore.
+// LoadLatestVersion implements CommitMultiStore.
+func (rs *Store) LoadLatestVersion() error {
+	ver := getLatestVersion(rs.db)
+	return rs.loadVersion(ver, nil)
+}
+
+// LoadVersion implements CommitMultiStore.
 func (rs *Store) LoadVersion(ver int64) error {
+	return rs.loadVersion(ver, nil)
+}
+
+func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	if ver == 0 {
 		// Special logic for version 0 where there is no need to get commit
 		// information.
@@ -127,6 +137,11 @@ func (rs *Store) LoadVersion(ver int64) error {
 	cInfo, err := getCommitInfo(rs.db, ver)
 	if err != nil {
 		return err
+	}
+
+	if upgrades != nil {
+		// TODO: run upgrades if present
+
 	}
 
 	// convert StoreInfos slice to map

@@ -13,14 +13,11 @@ import (
 
 type Manager struct {
 	protocol state.Mapping
-
-	idval state.Value
 }
 
-func NewManager(protocol, free state.Base) Manager {
+func NewManager(protocol state.Base) Manager {
 	return Manager{
 		protocol: state.NewMapping(protocol, []byte("/client")),
-		idval:    state.NewValue(free, []byte("/client/id")),
 	}
 }
 

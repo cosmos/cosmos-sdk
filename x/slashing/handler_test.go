@@ -9,17 +9,17 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := keep.CreateTestInput(t, DefaultParams())
+	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amt := sdk.TokensFromConsensusPower(100)
-	addr, val := keep.Addrs[0], keep.Pks[0]
+	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := staking.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK(), "%v", got)
@@ -27,7 +27,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, keep.InitTokens.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -40,10 +40,10 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := keep.CreateTestInput(t, DefaultParams())
+	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
-	addr, val, amt := keep.Addrs[0], keep.Pks[0], sdk.TokensFromConsensusPower(amtInt)
+	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	got := staking.NewHandler(sk)(ctx, msg)
@@ -52,7 +52,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, keep.InitTokens.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))},
 	)
 
 	unbondAmt := sdk.NewCoin(sk.GetParams(ctx).BondDenom, sdk.OneInt())
@@ -69,7 +69,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
-	ctx, _, stakingKeeper, _, slashingKeeper := keep.CreateTestInput(t, DefaultParams())
+	ctx, _, stakingKeeper, _, slashingKeeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 
 	stakingParams := stakingKeeper.GetParams(ctx)
 	stakingParams.UnbondingTime = 0
@@ -77,8 +77,8 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// create a validator
 	bondAmount := sdk.TokensFromConsensusPower(10)
-	valPubKey := keep.Pks[0]
-	valAddr, consAddr := keep.Addrs[1], sdk.ConsAddress(keep.Addrs[0])
+	valPubKey := slashingkeeper.Pks[0]
+	valAddr, consAddr := slashingkeeper.Addrs[1], sdk.ConsAddress(slashingkeeper.Addrs[0])
 
 	msgCreateVal := NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := staking.NewHandler(stakingKeeper)(ctx, msgCreateVal)
@@ -92,8 +92,8 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
-	delAddr := sdk.AccAddress(keep.Addrs[2])
-	msgDelegate := keep.NewTestMsgDelegate(delAddr, valAddr, bondAmount)
+	delAddr := sdk.AccAddress(slashingkeeper.Addrs[2])
+	msgDelegate := slashingkeeper.NewTestMsgDelegate(delAddr, valAddr, bondAmount)
 	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
@@ -117,7 +117,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.False(t, got.IsOK(), "expected jailed validator to not be able to unjail, got: %v", got)
 
 	// self-delegate to validator
-	msgSelfDelegate := keep.NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
+	msgSelfDelegate := slashingkeeper.NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = staking.NewHandler(stakingKeeper)(ctx, msgSelfDelegate)
 	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
 
@@ -140,10 +140,10 @@ func TestInvalidMsg(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := keep.CreateTestInput(t, keep.TestParams())
+	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashingkeeper.TestParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := keep.Addrs[0], keep.Pks[0]
+	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
@@ -152,7 +152,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, keep.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 

@@ -9,15 +9,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, _, keeper := keep.CreateTestInput(t, keep.TestParams())
+	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, pk := keep.Addrs[2], keep.Pks[2]
+	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
 
 	// bond the validator
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
@@ -25,7 +25,7 @@ func TestBeginBlocker(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, keep.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 

@@ -110,6 +110,8 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	require.Nil(t, err)
 	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
 	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, types.DefaultCodespace)
+
+	keeper.SetParams(ctx, defaults)
 	sk.SetHooks(keeper.Hooks())
 
 	return ctx, bk, sk, paramstore, keeper

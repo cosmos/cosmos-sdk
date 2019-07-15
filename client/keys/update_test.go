@@ -22,13 +22,15 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	cmd := updateKeyCommand()
 
+	viper.Set(flags.FlagSecretStore, true)
+
 	// fails because it requests a password
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
 
 	// try again
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("pass1234\n")
-	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "locally stored key required. Received: keys.offlineInfo")
+	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -46,7 +48,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	// Incorrect key type
 	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
+	assert.EqualError(t, err, "Key runUpdateCmd_Key1 not found")
 
 	// TODO: Check for other type types?
 }

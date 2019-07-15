@@ -170,6 +170,9 @@ func TestQueries(t *testing.T) {
 	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
 	querier := NewQuerier(keeper)
 
+	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
+	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
+
 	tp := TestProposal
 
 	depositParams, _, _ := getQueriedParams(t, ctx, keeper.cdc, querier)
@@ -177,25 +180,47 @@ func TestQueries(t *testing.T) {
 	// TestAddrs[0] proposes (and deposits) proposals #1 and #2
 	proposal1, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	deposit1 := types.NewDeposit(proposal1.ProposalID, TestAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
-	keeper.SetDeposit(ctx, deposit1)
+	deposit1 := types.NewDeposit(proposal1.ProposalID, TestAddrs[0], oneCoins)
+	err, _ = keeper.AddDeposit(ctx, deposit1.ProposalID, deposit1.Depositor, deposit1.Amount)
+	require.NoError(t, err)
+
+	proposal1.TotalDeposit = proposal1.TotalDeposit.Add(deposit1.Amount)
 
 	proposal2, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	deposit2 := types.NewDeposit(proposal2.ProposalID, TestAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000)))
-	keeper.SetDeposit(ctx, deposit2)
+	deposit2 := types.NewDeposit(proposal2.ProposalID, TestAddrs[0], consCoins)
+	err, _ = keeper.AddDeposit(ctx, deposit2.ProposalID, deposit2.Depositor, deposit2.Amount)
+	require.NoError(t, err)
+
+	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit2.Amount)
 
 	// TestAddrs[1] proposes (and deposits) on proposal #3
 	proposal3, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	deposit3 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
-	keeper.SetDeposit(ctx, deposit3)
+	deposit3 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], oneCoins)
+	err, _ = keeper.AddDeposit(ctx, deposit3.ProposalID, deposit3.Depositor, deposit3.Amount)
+	require.NoError(t, err)
+
+	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit3.Amount)
 
 	// TestAddrs[1] deposits on proposals #2 & #3
 	deposit4 := types.NewDeposit(proposal2.ProposalID, TestAddrs[1], depositParams.MinDeposit)
+	err, _ = keeper.AddDeposit(ctx, deposit4.ProposalID, deposit4.Depositor, deposit4.Amount)
+	require.NoError(t, err)
+
+	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount)
+	proposal2.Status = types.StatusVotingPeriod
+	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(types.DefaultPeriod)
+
 	deposit5 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], depositParams.MinDeposit)
-	keeper.SetDeposit(ctx, deposit4)
-	keeper.SetDeposit(ctx, deposit5)
+	err, _ = keeper.AddDeposit(ctx, deposit5.ProposalID, deposit5.Depositor, deposit5.Amount)
+	require.NoError(t, err)
+
+	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount)
+	proposal3.Status = types.StatusVotingPeriod
+	proposal3.VotingEndTime = proposal3.VotingEndTime.Add(types.DefaultPeriod)
+	// total deposit of TestAddrs[1] on proposal #3 is worth the proposal deposit + individual deposit
+	deposit5.Amount = deposit5.Amount.Add(deposit3.Amount)
 
 	// check deposits on proposal1 match individual deposits
 	deposits := getQueriedDeposits(t, ctx, keeper.cdc, querier, proposal1.ProposalID)
@@ -208,9 +233,9 @@ func TestQueries(t *testing.T) {
 	// check deposits on proposal2 match individual deposits
 	deposits = getQueriedDeposits(t, ctx, keeper.cdc, querier, proposal2.ProposalID)
 	require.Len(t, deposits, 2)
-	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
-
+	require.Equal(t, deposit2, deposits[0])
+	
 	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[0])
 	require.Equal(t, deposit2, deposits[0])
 	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[1])

@@ -128,10 +128,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			return err
 		}
 
-		if upgrades != nil {
-			// TODO: run upgrades if present
-		}
-
 		// convert StoreInfos slice to map
 		for _, storeInfo := range cInfo.StoreInfos {
 			infos[storeInfo.Name] = storeInfo
@@ -139,7 +135,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		lastCommitID = cInfo.CommitID()
 	}
 
-	// load each Store
+	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
 		var id types.CommitID
@@ -155,9 +151,40 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		newStores[key] = store
 	}
 
+	if upgrades != nil {
+		// NewStore is a no-op I believe
+
+		// DeleteStore
+		for _, deleted := range upgrades.Deleted {
+			// only worry about registered stores
+			if key, ok := rs.keysByName[deleted]; ok {
+				store := newStores[key].(types.KVStore)
+				deleteKVStore(store)
+			}
+		}
+
+		// TODO: run upgrades if present
+	}
+
 	rs.lastCommitID = lastCommitID
 	rs.stores = newStores
 
+	return nil
+}
+
+func deleteKVStore(kv types.KVStore) error {
+	// Note that we cannot write while iterating, so load all keys here, delete below
+	var keys [][]byte
+	itr := kv.Iterator(nil, nil)
+	for itr.Valid() {
+		keys = append(keys, itr.Key())
+		itr.Next()
+	}
+	itr.Close()
+
+	for _, k := range keys {
+		kv.Delete(k)
+	}
 	return nil
 }
 

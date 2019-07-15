@@ -208,7 +208,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	// store3 is mounted, but data deleted are gone
 	s3, _ = restore.getStoreByName("store3").(types.KVStore)
 	require.NotNil(t, s3)
-	require.Equal(t, nil, s3.Get(k3)) // data was deleted
+	require.Nil(t, s3.Get(k3)) // data was deleted
 
 	// store2 is no longer mounted
 	st2 := restore.getStoreByName("store2")

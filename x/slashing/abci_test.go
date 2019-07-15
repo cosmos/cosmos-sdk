@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -20,7 +20,7 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
 
 	// bond the validator
-	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
+	got := staking.NewHandler(sk)(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(

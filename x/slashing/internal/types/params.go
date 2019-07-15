@@ -64,7 +64,7 @@ func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 	}
 }
 
-// String implements the stringer interface for Params 
+// String implements the stringer interface for Params
 func (p Params) String() string {
 	return fmt.Sprintf(`Slashing Params:
   MaxEvidenceAge:          %s
@@ -81,23 +81,19 @@ func (p Params) String() string {
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
-		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
-		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
-		{KeyDowntimeJailDuration, &p.DowntimeJailDuration},
-		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
-		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
+		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge),
+		params.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow),
+		params.NewParamSetPair(KeyMinSignedPerWindow, &p.MinSignedPerWindow),
+		params.NewParamSetPair(KeyDowntimeJailDuration, &p.DowntimeJailDuration),
+		params.NewParamSetPair(KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign),
+		params.NewParamSetPair(KeySlashFractionDowntime, &p.SlashFractionDowntime),
 	}
 }
 
 // DefaultParams defines the parameters for this module
 func DefaultParams() Params {
-	return Params{
-		MaxEvidenceAge:          DefaultMaxEvidenceAge,
-		SignedBlocksWindow:      DefaultSignedBlocksWindow,
-		MinSignedPerWindow:      DefaultMinSignedPerWindow,
-		DowntimeJailDuration:    DefaultDowntimeJailDuration,
-		SlashFractionDoubleSign: DefaultSlashFractionDoubleSign,
-		SlashFractionDowntime:   DefaultSlashFractionDowntime,
-	}
+	return NewParams(
+		DefaultMaxEvidenceAge, DefaultSignedBlocksWindow, DefaultMinSignedPerWindow,
+		DefaultDowntimeJailDuration, DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,
+	)
 }

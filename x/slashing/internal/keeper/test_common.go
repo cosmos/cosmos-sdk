@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -125,11 +125,6 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	var pkEd ed25519.PubKeyEd25519
 	copy(pkEd[:], pkBytes[:])
 	return pkEd
-}
-
-func testAddr(addr string) sdk.AccAddress {
-	res := []byte(addr)
-	return res
 }
 
 // Have to change these parameters for tests

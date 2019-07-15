@@ -9,8 +9,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -20,7 +20,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	slh := NewHandler(keeper)
 	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
-	msg := NewTestMsgCreateValidator(addr, val, amt)
+	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
 	got := staking.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK(), "%v", got)
 	staking.EndBlocker(ctx, sk)
@@ -44,7 +44,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
-	msg := NewTestMsgCreateValidator(addr, val, amt)
+	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	got := staking.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
@@ -80,7 +80,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	valPubKey := slashingkeeper.Pks[0]
 	valAddr, consAddr := slashingkeeper.Addrs[1], sdk.ConsAddress(slashingkeeper.Addrs[0])
 
-	msgCreateVal := NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
+	msgCreateVal := slashingkeeper.NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := staking.NewHandler(stakingKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
 
@@ -146,7 +146,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	got := sh(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 

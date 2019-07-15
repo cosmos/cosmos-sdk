@@ -249,7 +249,6 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, int64(2), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
 	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3"})
-	require.Equal(t, "restore2", ci.StoreInfos[1].Name)
 }
 
 func TestParsePath(t *testing.T) {

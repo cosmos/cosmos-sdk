@@ -138,48 +138,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
-		var id types.CommitID
-
-		// handle renames specially
-		if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
-			info, ok := infos[oldName]
-			if ok {
-				id = info.Core.CommitID
-			}
-			// make an unregistered key to satify loadCommitStore params
-			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := storeParams
-			oldParams.key = oldKey
-
-			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, id, oldParams)
-			if err != nil {
-				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
-			}
-
-			// create in the new name
-			newStore, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
-			if err != nil {
-				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
-			}
-
-			// move all data
-			moveKVStoreData(oldStore.(types.KVStore), newStore.(types.KVStore))
-
-			// keep the new store
-			newStores[key] = newStore
-
-			// and skip the rest of this loop
-			continue
-		}
-
-		info, ok := infos[key.Name()]
-		if ok {
-			id = info.Core.CommitID
-		}
 
 		// Load it
-		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
@@ -188,6 +149,21 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
 			deleteKVStore(store.(types.KVStore))
+		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+			// handle renames specially
+			// make an unregistered key to satify loadCommitStore params
+			oldKey := types.NewKVStoreKey(oldName)
+			oldParams := storeParams
+			oldParams.key = oldKey
+
+			// load from the old name
+			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+			if err != nil {
+				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
+			}
+
+			// move all data
+			moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore))
 		}
 	}
 
@@ -195,6 +171,14 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	rs.stores = newStores
 
 	return nil
+}
+
+func (rs *Store) getCommitID(infos map[string]storeInfo, name string) types.CommitID {
+	info, ok := infos[name]
+	if !ok {
+		return types.CommitID{}
+	}
+	return info.Core.CommitID
 }
 
 func deleteKVStore(kv types.KVStore) error {

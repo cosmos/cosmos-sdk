@@ -12,7 +12,7 @@ import (
 const initialPower = int64(100)
 
 var (
-	holderAcc     = types.NewEmptyModuleAccount(basic)
+	holderAcc     = types.NewEmptyModuleAccount(holder)
 	burnerAcc     = types.NewEmptyModuleAccount(types.Burner, types.Burner)
 	minterAcc     = types.NewEmptyModuleAccount(types.Minter, types.Minter)
 	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)

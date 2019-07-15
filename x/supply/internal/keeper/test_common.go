@@ -25,7 +25,7 @@ import (
 var (
 	multiPerm  = "multiple permissions account"
 	randomPerm = "random permission"
-	basic      = "basic"
+	holder     = "holder"
 )
 
 // nolint: deadcode unused
@@ -79,7 +79,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	createTestAccs(ctx, int(nAccs), initialCoins, &ak)
 
 	maccPerms := map[string][]string{
-		basic:        nil,
+		holder:       nil,
 		types.Minter: []string{types.Minter},
 		types.Burner: []string{types.Burner},
 		multiPerm:    []string{types.Minter, types.Burner, types.Staking},

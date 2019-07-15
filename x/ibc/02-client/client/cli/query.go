@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -11,26 +12,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-func defaultPath(storeKey string) merkle.Path {
-	return merkle.NewPath([][]byte{[]byte(storeKey)}, []byte("protocol"))
-}
-
-func defaultBase(cdc *codec.Codec) (state.Base, state.Base) {
-	protocol := state.NewBase(cdc, nil, []byte("protocol"))
-	free := state.NewBase(cdc, nil, []byte("free"))
-	return protocol, free
+func components(cdc *codec.Codec, storeKey string, version int64) (path merkle.Path, base state.Base) {
+	prefix := []byte(strconv.FormatInt(version, 10) + "/")
+	path = merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
+	base = state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
+	return
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcQueryCmd := &cobra.Command{
-		Use:                        "ibc",
-		Short:                      "IBC query subcommands",
+		Use:                        "client",
+		Short:                      "IBC client query subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
@@ -50,8 +50,8 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			man := client.NewManager(defaultBase(cdc))
-			path := defaultPath(storeKey)
+			path, base := components(cdc, storeKey, ibc.Version)
+			man := client.NewManager(base)
 			id := args[0]
 
 			state, _, err := man.CLIObject(path, id).ConsensusState(ctx)

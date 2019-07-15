@@ -1,8 +1,10 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"runtime/debug"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,6 +44,35 @@ const (
 	MainStoreKey = "main"
 )
 
+type StoreLoader func(ms sdk.CommitMultiStore) error
+
+func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
+	return ms.LoadLatestVersion()
+}
+
+func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		_, err := os.Stat(upgradeInfoPath)
+		if os.IsNotExist(err) {
+			return DefaultStoreLoader(ms)
+		} else if err != nil {
+			return err
+		}
+
+		// there is a migration file, let's execute
+		data, err := ioutil.ReadFile(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("Cannot read upgrade file: %v", err)
+		}
+		var upgrades storeTypes.StoreUpgrades
+		err = json.Unmarshal(data, &upgrades)
+		if err != nil {
+			return fmt.Errorf("Cannot parse upgrade file: %v", err)
+		}
+		return ms.LoadLatestVersionAndUpgrade(&upgrades)
+	}
+}
+
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
@@ -48,6 +80,7 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
+	storeLoader StoreLoader          // function to handle store loading, may be overriden with SetStoreLoader()
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
@@ -106,6 +139,7 @@ func NewBaseApp(
 		name:           name,
 		db:             db,
 		cms:            store.NewCommitMultiStore(db),
+		storeLoader:    DefaultStoreLoader,
 		router:         NewRouter(),
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
@@ -137,6 +171,11 @@ func (app *BaseApp) Logger() log.Logger {
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.SetTracer(w)
+}
+
+// SetStoreLoader allows us to customize the rootMultiStore initialization.
+func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
+	app.storeLoader = loader
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -197,7 +236,7 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
-	err := app.cms.LoadLatestVersion()
+	err := app.storeLoader(app.cms)
 	if err != nil {
 		return err
 	}

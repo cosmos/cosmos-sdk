@@ -2,14 +2,6 @@ package types
 
 import (
 	"bytes"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	// Default period for deposits & voting
-	DefaultPeriod time.Duration = 86400 * 2 * time.Second // 2 days
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -33,35 +25,24 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 	}
 }
 
-// get raw genesis raw message for testing
+// DefaultGenesisState defines the default governance genesis state
 func DefaultGenesisState() GenesisState {
-	minDepositTokens := sdk.TokensFromConsensusPower(10)
-	return GenesisState{
-		StartingProposalID: 1,
-		DepositParams: DepositParams{
-			MinDeposit:       sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minDepositTokens)),
-			MaxDepositPeriod: DefaultPeriod,
-		},
-		VotingParams: VotingParams{
-			VotingPeriod: DefaultPeriod,
-		},
-		TallyParams: TallyParams{
-			Quorum:    sdk.NewDecWithPrec(334, 3),
-			Threshold: sdk.NewDecWithPrec(5, 1),
-			Veto:      sdk.NewDecWithPrec(334, 3),
-		},
-	}
+	return NewGenesisState(
+		DefaultStartingProposalID,
+		DefaultDepositParams(),
+		DefaultVotingParams(),
+		DefaultTallyParams(),
+	)
 }
 
-// Checks whether 2 GenesisState structs are equivalent.
+// Equal checks whether two gov GenesisState structs are equivalent
 func (data GenesisState) Equal(data2 GenesisState) bool {
 	b1 := ModuleCdc.MustMarshalBinaryBare(data)
 	b2 := ModuleCdc.MustMarshalBinaryBare(data2)
 	return bytes.Equal(b1, b2)
 }
 
-// Returns if a GenesisState is empty or has data in it
+// IsEmpty returns true if a GenesisState is empty
 func (data GenesisState) IsEmpty() bool {
-	emptyGenState := GenesisState{}
-	return data.Equal(emptyGenState)
+	return data.Equal(GenesisState{})
 }

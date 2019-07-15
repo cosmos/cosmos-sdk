@@ -12,9 +12,9 @@ import (
 )
 
 func TestGetSetProposal(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
-	tp := TestProposal()
+	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
@@ -26,9 +26,9 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
-	tp := TestProposal()
+	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 
@@ -95,7 +95,7 @@ func registerTestCodec(cdc *codec.Codec) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
 	registerTestCodec(keeper.cdc)
 

@@ -7,9 +7,9 @@ import (
 )
 
 func TestIncrementProposalNumber(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
-	tp := TestProposal()
+	tp := TestProposal
 	keeper.SubmitProposal(ctx, tp)
 	keeper.SubmitProposal(ctx, tp)
 	keeper.SubmitProposal(ctx, tp)
@@ -22,10 +22,10 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
 	// create test proposals
-	tp := TestProposal()
+	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 

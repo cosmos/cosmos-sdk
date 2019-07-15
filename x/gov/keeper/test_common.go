@@ -56,6 +56,13 @@ var (
 	emptyPubkey  crypto.PubKey
 )
 
+// TODO: remove dependency with staking
+var (
+	TestProposal = types.NewTextProposal("Test", "description")
+	TestDescription     = staking.NewDescription("T", "E", "S", "T")
+	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+)
+
 func makeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 	auth.RegisterCodec(cdc)
@@ -68,7 +75,7 @@ func makeTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
+func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
@@ -120,6 +127,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	keeper := NewKeeper(cdc, keyGov, pk.Subspace(types.DefaultParamspace), supplyKeeper, sk, types.DefaultCodespace, rtr)
 
+	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)
+	keeper.SetDepositParams(ctx, types.DefaultDepositParams())
+	keeper.SetVotingParams(ctx, types.DefaultVotingParams())
+	keeper.SetTallyParams(ctx, types.DefaultTallyParams())
+
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
@@ -136,11 +148,12 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, govAcc)
 
-	return ctx, accountKeeper, keeper, supplyKeeper
+	return ctx, accountKeeper, keeper, sk, supplyKeeper
 }
 
-func TestProposal() types.Content {
-	return types.NewTextProposal("Test", "description")
+// TODO: remove dependency with staking
+func StakingHandler(sk staking.Keeper) sdk.Handler{
+	return staking.NewHandler(sk)
 }
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)

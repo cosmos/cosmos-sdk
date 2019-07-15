@@ -203,9 +203,6 @@ var (
 		ed25519.GenPrivKey().PubKey(),
 		ed25519.GenPrivKey().PubKey(),
 	}
-
-	testDescription     = staking.NewDescription("T", "E", "S", "T")
-	testCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
@@ -216,7 +213,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			testDescription, testCommissionRates, sdk.OneInt(),
+			keep.TestDescription, keep.TestCommissionRates, sdk.OneInt(),
 		)
 
 		res := stakingHandler(ctx, valCreateMsg)

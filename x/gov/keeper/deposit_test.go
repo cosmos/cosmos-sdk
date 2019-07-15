@@ -10,9 +10,9 @@ import (
 )
 
 func TestDeposits(t *testing.T) {
-	ctx, ak, keeper, _ := createTestInput(t, false, 100)
+	ctx, ak, keeper, _, _ := createTestInput(t, false, 100)
 
-	tp := TestProposal()
+	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID

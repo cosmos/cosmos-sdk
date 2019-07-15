@@ -20,7 +20,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Create two proposals, put the second into the voting period
-	proposal := keep.TestProposal()
+	proposal := keep.TestProposal
 	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalID
@@ -85,7 +85,7 @@ func TestEqualProposals(t *testing.T) {
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Submit two proposals
-	proposal := keep.TestProposal()
+	proposal := keep.TestProposal
 	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposal2, err := input.keeper.SubmitProposal(ctx, proposal)

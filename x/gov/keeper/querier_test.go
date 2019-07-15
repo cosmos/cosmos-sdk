@@ -167,24 +167,27 @@ func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 }
 
 func TestQueries(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 1000)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
 	querier := NewQuerier(keeper)
 
-	tp := TestProposal()
+	tp := TestProposal
 
 	depositParams, _, _ := getQueriedParams(t, ctx, keeper.cdc, querier)
 
 	// TestAddrs[0] proposes (and deposits) proposals #1 and #2
 	proposal1, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 	deposit1 := types.NewDeposit(proposal1.ProposalID, TestAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
 	keeper.SetDeposit(ctx, deposit1)
 
 	proposal2, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 	deposit2 := types.NewDeposit(proposal2.ProposalID, TestAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000)))
 	keeper.SetDeposit(ctx, deposit2)
 
 	// TestAddrs[1] proposes (and deposits) on proposal #3
 	proposal3, err := keeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 	deposit3 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
 	keeper.SetDeposit(ctx, deposit3)
 
@@ -219,7 +222,7 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, deposit5, deposits[0])
 
 	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal3.ProposalID, TestAddrs[1])
-	require.Equal(t, deposi5, deposit)
+	require.Equal(t, deposit5, deposit)
 
 	// Only proposal #1 should be in types.Deposit Period
 	proposals := getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusDepositPeriod, 0)

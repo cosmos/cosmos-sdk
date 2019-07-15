@@ -9,9 +9,9 @@ import (
 )
 
 func TestVotes(t *testing.T) {
-	ctx, _, keeper, _ := createTestInput(t, false, 100)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
 
-	tp := TestProposal()
+	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID

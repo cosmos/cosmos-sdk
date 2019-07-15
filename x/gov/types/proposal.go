@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DefaultStartingProposalID is 1
+const DefaultStartingProposalID uint64 = 1
+
 // Proposal defines a struct used by the governance module to allow for voting
 // on network changes.
 type Proposal struct {
@@ -26,6 +29,7 @@ type Proposal struct {
 	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
+// NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
 		Content:          content,
@@ -38,7 +42,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 	}
 }
 
-// nolint
+// String implements stringer interface
 func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:
   Title:              %s
@@ -71,7 +75,7 @@ func (p Proposals) String() string {
 }
 
 type (
-	// ProposalQueue
+	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
 
 	// ProposalStatus is a type alias that represents a proposal status as a byte
@@ -88,7 +92,7 @@ const (
 	StatusFailed        ProposalStatus = 0x05
 )
 
-// ProposalStatusToString turns a string into a ProposalStatus
+// ProposalStatusFromString turns a string into a ProposalStatus
 func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	switch str {
 	case "DepositPeriod":
@@ -138,12 +142,12 @@ func (status *ProposalStatus) Unmarshal(data []byte) error {
 	return nil
 }
 
-// Marshals to JSON using string
+// MarshalJSON Marshals to JSON using string representation of the status
 func (status ProposalStatus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(status.String())
 }
 
-// Unmarshals from JSON assuming Bech32 encoding
+// UnmarshalJSON Unmarshals from JSON assuming Bech32 encoding
 func (status *ProposalStatus) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
@@ -207,11 +211,12 @@ type TextProposal struct {
 	Description string `json:"description" yaml:"description"`
 }
 
+// NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {
 	return TextProposal{title, description}
 }
 
-// Implements Proposal Interface
+// Implements Content Interface
 var _ Content = TextProposal{}
 
 // nolint
@@ -236,11 +241,12 @@ type SoftwareUpgradeProposal struct {
 	Description string `json:"description" yaml:"description"`
 }
 
+// NewTextProposal creates a software upgrade proposal Content
 func NewSoftwareUpgradeProposal(title, description string) Content {
 	return SoftwareUpgradeProposal{title, description}
 }
 
-// Implements Proposal Interface
+// Implements Content Interface
 var _ Content = SoftwareUpgradeProposal{}
 
 // nolint

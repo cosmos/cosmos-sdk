@@ -218,6 +218,25 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	rs2, _ := restore.getStoreByName("restore2").(types.KVStore)
 	require.NotNil(t, rs2)
 	require.Equal(t, v2, rs2.Get(k2))
+
+	// store this migrated data, and load it again without migrations
+	migratedID := restore.Commit()
+	require.Equal(t, migratedID.Version, int64(2))
+
+	reload, _ := newMultiStoreWithModifiedMounts(db)
+	err = reload.LoadLatestVersion()
+	require.Nil(t, err)
+	require.Equal(t, migratedID, reload.LastCommitID())
+
+	// query this new store
+	rl1, _ := reload.getStoreByName("store1").(types.KVStore)
+	require.NotNil(t, rl1)
+	require.Equal(t, v1, rl1.Get(k1))
+
+	rl2, _ := reload.getStoreByName("restore2").(types.KVStore)
+	require.NotNil(t, rl2)
+	require.Equal(t, v2, rl2.Get(k2))
+
 }
 
 func TestParsePath(t *testing.T) {

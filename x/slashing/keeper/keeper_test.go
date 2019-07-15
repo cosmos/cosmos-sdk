@@ -12,15 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// Have to change these parameters for tests
-// lest the tests take forever
-func keeperTestParams() types.Params {
-	params := types.DefaultParams()
-	params.SignedBlocksWindow = 1000
-	params.DowntimeJailDuration = 60 * 60
-	return params
-}
-
 // ______________________________________________________________
 
 // Test that a validator is slashed correctly
@@ -28,18 +19,18 @@ func keeperTestParams() types.Params {
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := addrs[0], pks[0]
+	operatorAddr, val := Addrs[0], Pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -87,18 +78,18 @@ func TestHandleDoubleSign(t *testing.T) {
 func TestPastMaxEvidenceAge(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := addrs[0], pks[0]
+	operatorAddr, val := Addrs[0], Pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -124,8 +115,8 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
-	addr, val := addrs[0], pks[0]
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
+	addr, val := Addrs[0], Pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
 	sh := staking.NewHandler(sk)
 
@@ -139,7 +130,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -168,10 +159,10 @@ func TestHandleNewValidator(t *testing.T) {
 func TestHandleAlreadyJailed(t *testing.T) {
 
 	// initial setup
-	ctx, _, sk, _, keeper := createTestInput(t, types.DefaultParams())
+	ctx, _, sk, _, keeper := CreateTestInput(t, types.DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := addrs[0], pks[0]
+	addr, val := Addrs[0], Pks[0]
 	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
@@ -217,14 +208,14 @@ func TestHandleAlreadyJailed(t *testing.T) {
 func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup
-	// keeperTestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	ctx, _, sk, _, keeper := createTestInput(t, keeperTestParams())
+	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
+	ctx, _, sk, _, keeper := CreateTestInput(t, TestParams())
 	params := sk.GetParams(ctx)
 	params.MaxValidators = 1
 	sk.SetParams(ctx, params)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := addrs[0], pks[0]
+	addr, val := Addrs[0], Pks[0]
 	consAddr := sdk.ConsAddress(addr)
 	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
@@ -240,7 +231,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// kick first validator out of validator set
 	newAmt := sdk.TokensFromConsensusPower(101)
-	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
+	got = sh(ctx, NewTestMsgCreateValidator(Addrs[1], Pks[1], newAmt))
 	require.True(t, got.IsOK())
 	validatorUpdates := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
@@ -253,7 +244,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator added back in
 	delTokens := sdk.TokensFromConsensusPower(50)
-	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
+	got = sh(ctx, NewTestMsgDelegate(sdk.AccAddress(Addrs[2]), Addrs[0], delTokens))
 	require.True(t, got.IsOK())
 	validatorUpdates = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))

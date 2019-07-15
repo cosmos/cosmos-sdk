@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	ctx, _, _, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, _, _, _, keeper := CreateTestInput(t, TestParams())
 	querier := NewQuerier(keeper)
 
 	query := abci.RequestQuery{
@@ -25,7 +25,7 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, _, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, _, _, _, keeper := CreateTestInput(t, TestParams())
 
 	var params types.Params
 

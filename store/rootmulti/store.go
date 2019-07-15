@@ -118,44 +118,32 @@ func (rs *Store) LoadVersion(ver int64) error {
 }
 
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
-	if ver == 0 {
-		// Special logic for version 0 where there is no need to get commit
-		// information.
-		for key, storeParams := range rs.storesParams {
-			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
-			if err != nil {
-				return fmt.Errorf("failed to load Store: %v", err)
-			}
+	infos := make(map[string]storeInfo)
+	var lastCommitID types.CommitID
 
-			rs.stores[key] = store
+	// load old data if we are not version 0
+	if ver != 0 {
+		cInfo, err := getCommitInfo(rs.db, ver)
+		if err != nil {
+			return err
 		}
 
-		rs.lastCommitID = types.CommitID{}
-		return nil
-	}
+		if upgrades != nil {
+			// TODO: run upgrades if present
+		}
 
-	cInfo, err := getCommitInfo(rs.db, ver)
-	if err != nil {
-		return err
-	}
-
-	if upgrades != nil {
-		// TODO: run upgrades if present
-
-	}
-
-	// convert StoreInfos slice to map
-	infos := make(map[types.StoreKey]storeInfo)
-	for _, storeInfo := range cInfo.StoreInfos {
-		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
+		// convert StoreInfos slice to map
+		for _, storeInfo := range cInfo.StoreInfos {
+			infos[storeInfo.Name] = storeInfo
+		}
+		lastCommitID = cInfo.CommitID()
 	}
 
 	// load each Store
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
 		var id types.CommitID
-
-		info, ok := infos[key]
+		info, ok := infos[key.Name()]
 		if ok {
 			id = info.Core.CommitID
 		}
@@ -164,11 +152,10 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
-
 		newStores[key] = store
 	}
 
-	rs.lastCommitID = cInfo.CommitID()
+	rs.lastCommitID = lastCommitID
 	rs.stores = newStores
 
 	return nil

@@ -183,6 +183,12 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 
+	ci, err := getCommitInfo(db, 1)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), ci.Version)
+	require.Equal(t, 3, len(ci.StoreInfos))
+	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
+
 	// Load without changes and make sure it is sensible
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
@@ -237,6 +243,13 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, rl2)
 	require.Equal(t, v2, rl2.Get(k2))
 
+	// check commitInfo in storage
+	ci, err = getCommitInfo(db, 2)
+	require.NoError(t, err)
+	require.Equal(t, int64(2), ci.Version)
+	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
+	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3"})
+	require.Equal(t, "restore2", ci.StoreInfos[1].Name)
 }
 
 func TestParsePath(t *testing.T) {
@@ -371,6 +384,24 @@ func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 
+}
+
+func checkContains(t testing.TB, info []storeInfo, wanted []string) {
+	t.Helper()
+
+	for _, want := range wanted {
+		checkHas(t, info, want)
+	}
+}
+
+func checkHas(t testing.TB, info []storeInfo, want string) {
+	t.Helper()
+	for _, i := range info {
+		if i.Name == want {
+			return
+		}
+	}
+	t.Fatalf("storeInfo doesn't contain %s", want)
 }
 
 func getExpectedCommitID(store *Store, ver int64) types.CommitID {

@@ -139,31 +139,56 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
 		var id types.CommitID
+
+		// handle renames specially
+		if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+			info, ok := infos[oldName]
+			if ok {
+				id = info.Core.CommitID
+			}
+			// make an unregistered key to satify loadCommitStore params
+			oldKey := types.NewKVStoreKey(oldName)
+			oldParams := storeParams
+			oldParams.key = oldKey
+
+			// load from the old name
+			oldStore, err := rs.loadCommitStoreFromParams(oldKey, id, oldParams)
+			if err != nil {
+				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
+			}
+
+			// create in the new name
+			newStore, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
+			if err != nil {
+				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
+			}
+
+			// move all data
+			moveKVStoreData(oldStore.(types.KVStore), newStore.(types.KVStore))
+
+			// keep the new store
+			newStores[key] = newStore
+
+			// and skip the rest of this loop
+			continue
+		}
+
 		info, ok := infos[key.Name()]
 		if ok {
 			id = info.Core.CommitID
 		}
 
+		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
 		newStores[key] = store
-	}
 
-	if upgrades != nil {
-		// NewStore is a no-op I believe
-
-		// DeleteStore
-		for _, deleted := range upgrades.Deleted {
-			// only worry about registered stores
-			if key, ok := rs.keysByName[deleted]; ok {
-				store := newStores[key].(types.KVStore)
-				deleteKVStore(store)
-			}
+		// If it was deleted, remove all data
+		if upgrades.IsDeleted(key.Name()) {
+			deleteKVStore(store.(types.KVStore))
 		}
-
-		// TODO: run upgrades if present
 	}
 
 	rs.lastCommitID = lastCommitID
@@ -186,6 +211,20 @@ func deleteKVStore(kv types.KVStore) error {
 		kv.Delete(k)
 	}
 	return nil
+}
+
+// we simulate move by a copy and delete
+func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
+	// we read from one and write to another
+	itr := oldDB.Iterator(nil, nil)
+	for itr.Valid() {
+		newDB.Set(itr.Key(), itr.Value())
+		itr.Next()
+	}
+	itr.Close()
+
+	// then delete the old store
+	return deleteKVStore(oldDB)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -409,14 +448,15 @@ func parsePath(path string) (storeName string, subpath string, err errors.Error)
 }
 
 //----------------------------------------
-
+// Note: why do we use key and params.key in different places. Seems like there should be only one key used.
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitStore, err error) {
 	var db dbm.DB
 
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
 	} else {
-		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
+		prefix := "s/k:" + params.key.Name() + "/"
+		db = dbm.NewPrefixDB(rs.db, []byte(prefix))
 	}
 
 	switch params.typ {

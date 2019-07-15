@@ -49,6 +49,34 @@ type StoreRename struct {
 	NewKey string
 }
 
+// IsDeleted returns true if the given key should be deleted
+func (s *StoreUpgrades) IsDeleted(key string) bool {
+	if s == nil {
+		return false
+	}
+	for _, d := range s.Deleted {
+		if d == key {
+			return true
+		}
+	}
+	return false
+}
+
+// RenamedFrom returns the oldKey if it was renamed
+// Returns "" if it was not renamed
+func (s *StoreUpgrades) RenamedFrom(key string) string {
+	if s == nil {
+		return ""
+	}
+	for _, re := range s.Renamed {
+		if re.NewKey == key {
+			return re.OldKey
+		}
+	}
+	return ""
+
+}
+
 type MultiStore interface { //nolint
 	Store
 

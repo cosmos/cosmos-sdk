@@ -215,9 +215,9 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Nil(t, st2)
 
 	// restore2 has the old data
-	rs1, _ := restore.getStoreByName("restore2").(types.KVStore)
-	require.NotNil(t, rs1)
-	require.Equal(t, v1, rs1.Get(k1))
+	rs2, _ := restore.getStoreByName("restore2").(types.KVStore)
+	require.NotNil(t, rs2)
+	require.Equal(t, v2, rs2.Get(k2))
 }
 
 func TestParsePath(t *testing.T) {

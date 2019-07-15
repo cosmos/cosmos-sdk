@@ -56,7 +56,6 @@ permissions to that specific account and perform or not the action.
 
 The available permissions are:
 
-- `Basic`: is allowed to only transfer its coins to other accounts.
-- `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Basic` permissioned actions.
-- `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Basic` permissioned actions.
+- `Minter`: allows for a module to mint a specific amount of coins.
+- `Burner`: allows for a module to burn a specific amount of coins.
 - `Staking`: allows for a module to delegate and undelegate a specific amount of coins.

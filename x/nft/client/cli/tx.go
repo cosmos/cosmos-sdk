@@ -130,7 +130,7 @@ $ %s tx %s edit-metadata cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd42
 func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mint [denom] [tokenID] [recipient]",
-		Short: "mint an NFT and set the owner to the recepient",
+		Short: "mint an NFT and set the owner to the recipient",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Mint an NFT from a given collection that has a 
 			specific id (SHA-256 hex hash) and set the ownership to a specific address.

@@ -21,7 +21,7 @@ This document describes the lifecycle of a transaction from creation to committe
 One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
 ```
-[modulename] tx [command] [args] [flags]
+[appname] tx [command] [args] [flags]
 ``` 
 
 This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node. 

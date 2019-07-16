@@ -181,8 +181,8 @@ func TestSubspace(t *testing.T) {
 }
 
 type paramJSON struct {
-	Param1 int64  `json:"param1,omitempty"`
-	Param2 string `json:"param2,omitempty"`
+	Param1 int64  `json:"param1,omitempty" yaml:"param1,omitempty"`
+	Param2 string `json:"param2,omitempty" yaml:"param2,omitempty"`
 }
 
 func TestJSONUpdate(t *testing.T) {

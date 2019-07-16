@@ -2,7 +2,7 @@ package types
 
 // GenesisState is the supply state that must be provided at genesis.
 type GenesisState struct {
-	Supply Supply `json:"supply"`
+	Supply Supply `json:"supply" yaml:"supply"`
 }
 
 // NewGenesisState creates a new genesis state.

@@ -1,3 +1,4 @@
+// DONTCOVER
 package keeper
 
 import (
@@ -18,16 +19,18 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 
 // AllInvariants runs all invariants of the nfts module.
 func AllInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		return SupplyInvariant(k)(ctx)
 	}
 }
 
 // SupplyInvariant checks that the total amount of nfts on collections matches the total amount owned by addresses
 func SupplyInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		var collectionsSupply map[string]int
 		var ownersCollectionsSupply map[string]int
+		var msg string
+		count := 0
 
 		k.IterateCollections(ctx, func(collection types.Collection) bool {
 			collectionsSupply[collection.Denom] = collection.Supply()
@@ -43,11 +46,15 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 
 		for denom, supply := range collectionsSupply {
 			if supply != ownersCollectionsSupply[denom] {
-				return fmt.Errorf("total NFTs supply invariance:\n"+
+				count++
+				msg += fmt.Sprintf("total %s NFTs supply invariance:\n"+
 					"\ttotal %s NFTs supply: %d\n"+
-					"\tsum of %s NFTs by owner: %d", denom, supply, denom, ownersCollectionsSupply[denom])
+					"\tsum of %s NFTs by owner: %d", denom, denom, supply, denom, ownersCollectionsSupply[denom])
 			}
 		}
-		return nil
+		broken := count != 0
+
+		return sdk.FormatInvariant(types.ModuleName, "supply", fmt.Sprintf(
+			"%d NFT supply invariants found\n%s", count, msg), broken)
 	}
 }

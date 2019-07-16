@@ -15,14 +15,14 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 
 // AllInvariants runs all invariants of the supply module.
 func AllInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		return TotalSupply(k)(ctx)
 	}
 }
 
 // TotalSupply checks that the total supply reflects all the coins held in accounts
 func TotalSupply(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		var expectedTotal sdk.Coins
 		supply := k.GetSupply(ctx)
 
@@ -31,12 +31,12 @@ func TotalSupply(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		if !expectedTotal.IsEqual(supply.Total) {
-			return fmt.Errorf("total supply invariance:\n"+
-				"\tsum of accounts coins: %v\n"+
-				"\tsupply.Total:          %v", expectedTotal, supply.Total)
-		}
+		broken := !expectedTotal.IsEqual(supply.Total)
 
-		return nil
+		return sdk.FormatInvariant(types.ModuleName, "total supply",
+			fmt.Sprintf(
+				"\tsum of accounts coins: %v\n"+
+					"\tsupply.Total:          %v\n",
+				expectedTotal, supply.Total), broken)
 	}
 }

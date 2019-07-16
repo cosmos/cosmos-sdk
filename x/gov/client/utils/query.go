@@ -17,8 +17,8 @@ const (
 // Proposer contains metadata of a governance proposal used for querying a
 // proposer.
 type Proposer struct {
-	ProposalID uint64 `json:"proposal_id"`
-	Proposer   string `json:"proposer"`
+	ProposalID uint64 `json:"proposal_id" yaml:"proposal_id"`
+	Proposer   string `json:"proposer" yaml:"proposer"`
 }
 
 // NewProposer returns a new Proposer given id and proposer

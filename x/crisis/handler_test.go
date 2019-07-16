@@ -1,7 +1,6 @@
 package crisis_test
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -17,8 +16,8 @@ import (
 
 var (
 	testModuleName        = "dummy"
-	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) error { return nil })
-	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) error { return errors.New("whoops") })
+	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
+	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
 	addrs                 = distr.TestAddrs
 )
 

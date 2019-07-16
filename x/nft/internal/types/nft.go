@@ -26,12 +26,12 @@ var _ NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
-	ID          string         `json:"id,omitempty"` // id of the token; not exported to clients
-	Owner       sdk.AccAddress `json:"owner"`        // account address that owns the NFT
-	Name        string         `json:"name"`         // name of the token
-	Description string         `json:"description"`  // unique description of the NFT
-	Image       string         `json:"image"`        // image path
-	TokenURI    string         `json:"token_uri"`    // optional extra properties available for querying
+	ID          string         `json:"id,omitempty" yaml:"id"` // id of the token; not exported to clients
+	Owner       sdk.AccAddress `json:"owner" yaml:"owner"`        // account address that owns the NFT
+	Name        string         `json:"name" yaml:"name"`         // name of the token
+	Description string         `json:"description" yaml:"description"`  // unique description of the NFT
+	Image       string         `json:"image" yaml:"image"`        // image path
+	TokenURI    string         `json:"token_uri" yaml:"token_uri"`    // optional extra properties available for querying
 }
 
 // NewBaseNFT creates a new NFT instance

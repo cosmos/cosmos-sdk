@@ -67,13 +67,13 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	start := time.Now()
 	invarRoutes := k.Routes()
 	for _, ir := range invarRoutes {
-		if err := ir.Invar(ctx); err != nil {
+		if res, stop := ir.Invar(ctx); stop {
 
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
+				"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route))
 		}
 	}
 

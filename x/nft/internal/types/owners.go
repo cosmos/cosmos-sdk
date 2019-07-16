@@ -9,8 +9,8 @@ import (
 
 // IDCollection of non fungible tokens
 type IDCollection struct {
-	Denom string   `json:"denom"`
-	IDs   []string `json:"IDs"`
+	Denom string   `json:"denom" yaml:"denom"`
+	IDs   []string `json:"ids" yaml:"ids"`
 }
 
 // StringArray is an array of strings whose sole purpose is to help with find

@@ -6,8 +6,8 @@ import (
 
 // GenesisState - minter state
 type GenesisState struct {
-	Minter Minter `json:"minter"` // minter object
-	Params Params `json:"params"` // inflation params
+	Minter Minter `json:"minter" yaml:"minter"` // minter object
+	Params Params `json:"params" yaml:"params"` // inflation params
 }
 
 // NewGenesisState creates a new GenesisState object

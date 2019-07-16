@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"time"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -76,6 +76,20 @@ func TestDeposits(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
+	// Test deposit iterator
+	depositsIterator := keeper.GetDepositsIterator(ctx, proposalID)
+	require.True(t, depositsIterator.Valid())
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
+	require.Equal(t, TestAddrs[0], deposit.Depositor)
+	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
+	depositsIterator.Next()
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
+	require.Equal(t, TestAddrs[1], deposit.Depositor)
+	require.Equal(t, fourStake, deposit.Amount)
+	depositsIterator.Next()
+	require.False(t, depositsIterator.Valid())
+	depositsIterator.Close()
+
 	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
@@ -85,8 +99,4 @@ func TestDeposits(t *testing.T) {
 	require.False(t, found)
 	require.Equal(t, addr0Initial, ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
 	require.Equal(t, addr1Initial, ak.GetAccount(ctx, TestAddrs[1]).GetCoins())
-}
-
-func TestDepositIterators(t *testing.T) {
-	// TODO:
 }

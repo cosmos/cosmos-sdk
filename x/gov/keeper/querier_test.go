@@ -236,7 +236,7 @@ func TestQueries(t *testing.T) {
 	// FIXME: non determinism on the order of the deposits
 	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
-	
+
 	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[0])
 	require.Equal(t, deposit2, deposits[0])
 	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[1])
@@ -265,7 +265,7 @@ func TestQueries(t *testing.T) {
 	vote1 := types.NewVote(proposal2.ProposalID, TestAddrs[0], types.OptionYes)
 	vote2 := types.NewVote(proposal3.ProposalID, TestAddrs[0], types.OptionYes)
 	keeper.SetVote(ctx, vote1)
-	keeper.SetVote(ctx, vote2)	
+	keeper.SetVote(ctx, vote2)
 
 	// Addrs[1] votes on proposal #3
 	vote3 := types.NewVote(proposal3.ProposalID, TestAddrs[1], types.OptionYes)

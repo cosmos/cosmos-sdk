@@ -58,7 +58,7 @@ var (
 
 // TODO: remove dependency with staking
 var (
-	TestProposal = types.NewTextProposal("Test", "description")
+	TestProposal        = types.NewTextProposal("Test", "description")
 	TestDescription     = staking.NewDescription("T", "E", "S", "T")
 	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
@@ -90,9 +90,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	require.Nil(t, ms.LoadLatestVersion())
@@ -152,7 +154,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 }
 
 // TODO: remove dependency with staking
-func StakingHandler(sk staking.Keeper) sdk.Handler{
+func StakingHandler(sk staking.Keeper) sdk.Handler {
 	return staking.NewHandler(sk)
 }
 

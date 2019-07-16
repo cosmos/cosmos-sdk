@@ -48,41 +48,6 @@ const (
 // from disk
 type StoreLoader func(ms sdk.CommitMultiStore) error
 
-// DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
-	return ms.LoadLatestVersion()
-}
-
-// UpgradeableStoreLoader can be configured by SetStoreLoader() to check for the
-// existence of a given upgrade file - json encoded StoreUpgrades data.
-// If the file if present, parse it and execute those upgrades
-// (rename or delete stores), while loading the data.
-//
-// This is useful for in place migrations when a store key is renamed between
-// two versions of the software.
-func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
-	return func(ms sdk.CommitMultiStore) error {
-		_, err := os.Stat(upgradeInfoPath)
-		if os.IsNotExist(err) {
-			return DefaultStoreLoader(ms)
-		} else if err != nil {
-			return err
-		}
-
-		// there is a migration file, let's execute
-		data, err := ioutil.ReadFile(upgradeInfoPath)
-		if err != nil {
-			return fmt.Errorf("Cannot read upgrade file: %v", err)
-		}
-		var upgrades storeTypes.StoreUpgrades
-		err = json.Unmarshal(data, &upgrades)
-		if err != nil {
-			return fmt.Errorf("Cannot parse upgrade file: %v", err)
-		}
-		return ms.LoadLatestVersionAndUpgrade(&upgrades)
-	}
-}
-
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
@@ -251,6 +216,58 @@ func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
 		return err
 	}
 	return app.initFromMainStore(baseKey)
+}
+
+// DefaultStoreLoader will be used by default and loads the latest version
+func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
+	return ms.LoadLatestVersion()
+}
+
+// StoreLoaderWithUpgrade is used to prepare baseapp with a fixed StoreLoader
+// pattern. This is useful in test cases, or with custom upgrade loading logic.
+func StoreLoaderWithUpgrade(upgrades *storeTypes.StoreUpgrades) StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		return ms.LoadLatestVersionAndUpgrade(upgrades)
+	}
+}
+
+// UpgradeableStoreLoader can be configured by SetStoreLoader() to check for the
+// existence of a given upgrade file - json encoded StoreUpgrades data.
+// If the file if present, parse it and execute those upgrades
+// (rename or delete stores), while loading the data.
+//
+// This is useful for in place migrations when a store key is renamed between
+// two versions of the software.
+func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		_, err := os.Stat(upgradeInfoPath)
+		if os.IsNotExist(err) {
+			return DefaultStoreLoader(ms)
+		} else if err != nil {
+			return err
+		}
+
+		// there is a migration file, let's execute
+		data, err := ioutil.ReadFile(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("Cannot read upgrade file %s: %v", upgradeInfoPath, err)
+		}
+		var upgrades storeTypes.StoreUpgrades
+		err = json.Unmarshal(data, &upgrades)
+		if err != nil {
+			return fmt.Errorf("Cannot parse upgrade file: %v", err)
+		}
+		err = ms.LoadLatestVersionAndUpgrade(&upgrades)
+		if err != nil {
+			return fmt.Errorf("Load and upgrade database: %v", err)
+		}
+		// if we have a successful load, we delete the file
+		err = os.Remove(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("Deleting upgrade file %s: %v", upgradeInfoPath, err)
+		}
+		return nil
+	}
 }
 
 // LoadVersion loads the BaseApp application version. It will panic if called

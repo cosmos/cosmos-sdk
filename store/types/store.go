@@ -38,15 +38,18 @@ type Queryable interface {
 //----------------------------------------
 // MultiStore
 
+// StoreUpgrades defines a series of transformations to apply the multistore db upon load
 type StoreUpgrades struct {
-	New     []string
-	Renamed []StoreRename
-	Deleted []string
+	Renamed []StoreRename `json:"renamed"`
+	Deleted []string      `json:"deleted"`
 }
 
+// StoreRename defines a name change of a sub-store.
+// All data previously under a PrefixStore with OldKey will be copied
+// to a PrefixStore with NewKey, then deleted from OldKey store.
 type StoreRename struct {
-	OldKey string
-	NewKey string
+	OldKey string `json:"old"`
+	NewKey string `json:"new"`
 }
 
 // IsDeleted returns true if the given key should be deleted

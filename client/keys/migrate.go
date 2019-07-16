@@ -23,7 +23,7 @@ func migrateKeyCommand() *cobra.Command {
 		preferentially store secrets in the secret manager of many Operating Systems. This is intended to provide stronger security guarantees than the 
 		custom secret store is provided. 
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(0),
 		RunE: runMigrateCmd,
 	}
 
@@ -44,7 +44,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	rootDir := viper.GetString(flags.FlagHome)
 
-	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, nil, true)
+	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, nil, false)
 
 	legacyKeyList, err := legacykb.List()
 	for _, key := range legacyKeyList {
@@ -54,7 +54,10 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		keyringkb.Import(key.GetName(), legKeyInfo)
+		err = keyringkb.Import(key.GetName(), legKeyInfo)
+		if err != nil {
+			return err
+		}
 
 		switch key.GetType() {
 		case keys.TypeLocal:

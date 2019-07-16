@@ -328,14 +328,7 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 		return
 	}
 
-	err = kb.db.Set(keyring.Item{
-		Key:  string(infoKey(name)),
-		Data: infoBytes,
-	})
-
-	if err != nil {
-		return
-	}
+	kb.writeInfo(name, info)
 
 	err = kb.db.Set(keyring.Item{
 		Key:  string(addrKey(info.GetAddress())),

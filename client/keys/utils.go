@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -81,7 +82,7 @@ func NewKeyringKeybase() keys.Keybase {
 	rootDir := viper.GetString(flags.FlagHome)
 	buf := bufio.NewReader(os.Stdin)
 
-	return keys.NewKeybaseKeyring("gaiacli_keys", rootDir, buf, false)
+	return keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf, false)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.

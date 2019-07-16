@@ -1,6 +1,7 @@
 package nft
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -57,6 +58,8 @@ func TestTransferNFTMsg(t *testing.T) {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
 			switch key := string(attribute.Key); key {
+			case "module":
+				require.Equal(t, value, types.ModuleName)
 			case "denom":
 				require.Equal(t, value, denom)
 			case "nft-id":
@@ -66,7 +69,7 @@ func TestTransferNFTMsg(t *testing.T) {
 			case "recipient":
 				require.Equal(t, value, address2.String())
 			default:
-				require.Fail(t, "unrecognized event %s", key)
+				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}
 		}
 	}
@@ -148,22 +151,16 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
 			switch key := string(attribute.Key); key {
+			case "module":
+				require.Equal(t, value, types.ModuleName)
 			case "denom":
 				require.Equal(t, value, denom)
 			case "nft-id":
 				require.Equal(t, value, id)
-			case "nft-name":
-				require.Equal(t, value, name2)
-			case "nft-description":
-				require.Equal(t, value, description2)
-			case "nft-image":
-				require.Equal(t, value, image2)
-			case "nft-tokenURI":
-				require.Equal(t, value, tokenURI2)
 			case "sender":
 				require.Equal(t, value, address.String())
 			default:
-				require.Fail(t, "unrecognized event %s", key)
+				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}
 		}
 	}
@@ -203,24 +200,18 @@ func TestMintNFTMsg(t *testing.T) {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
 			switch key := string(attribute.Key); key {
+			case "module":
+				require.Equal(t, value, types.ModuleName)
 			case "denom":
 				require.Equal(t, value, denom)
 			case "nft-id":
 				require.Equal(t, value, id)
-			case "nft-name":
-				require.Equal(t, value, name)
-			case "nft-description":
-				require.Equal(t, value, description)
-			case "nft-image":
-				require.Equal(t, value, image)
-			case "nft-tokenURI":
-				require.Equal(t, value, tokenURI)
 			case "sender":
 				require.Equal(t, value, address.String())
 			case "recipient":
 				require.Equal(t, value, address.String())
 			default:
-				require.Fail(t, "unrecognized event %s", key)
+				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}
 		}
 	}
@@ -297,6 +288,8 @@ func TestBurnNFTMsg(t *testing.T) {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
 			switch key := string(attribute.Key); key {
+			case "module":
+				require.Equal(t, value, types.ModuleName)
 			case "denom":
 				require.Equal(t, value, denom)
 			case "nft-id":
@@ -304,7 +297,7 @@ func TestBurnNFTMsg(t *testing.T) {
 			case "sender":
 				require.Equal(t, value, address.String())
 			default:
-				require.Fail(t, "unrecognized event %s", key)
+				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}
 		}
 	}

@@ -52,6 +52,7 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransfer,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipient, msg.Recipient.String()),
 			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
@@ -85,13 +86,10 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeEditNFTMetadata,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeySender, msg.Owner.String()),
 			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
 			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
-			sdk.NewAttribute(types.AttributeKeyNFTName, msg.Name),
-			sdk.NewAttribute(types.AttributeKeyNFTDescription, msg.Description),
-			sdk.NewAttribute(types.AttributeKeyNFTImage, msg.Image),
-			sdk.NewAttribute(types.AttributeKeyNFTTokenURI, msg.TokenURI),
 		),
 	)
 	return sdk.Result{Events: ctx.EventManager().Events()}
@@ -110,14 +108,11 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeMintNFT,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipient, msg.Recipient.String()),
 			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
 			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),
-			sdk.NewAttribute(types.AttributeKeyNFTName, msg.Name),
-			sdk.NewAttribute(types.AttributeKeyNFTDescription, msg.Description),
-			sdk.NewAttribute(types.AttributeKeyNFTImage, msg.Image),
-			sdk.NewAttribute(types.AttributeKeyNFTTokenURI, msg.TokenURI),
 		),
 	)
 	return sdk.Result{Events: ctx.EventManager().Events()}
@@ -147,6 +142,7 @@ func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeBurnNFT,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyDenom, msg.Denom),
 			sdk.NewAttribute(types.AttributeKeyNFTID, msg.ID),

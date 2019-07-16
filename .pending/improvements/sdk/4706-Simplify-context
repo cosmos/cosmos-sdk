@@ -1,0 +1,11 @@
+4706 - Simplify context
+
+Replace complex Context construct with a simpler immutible struct.
+Only breaking change is not to support `Value` and `GetValue` as first class calls.
+We do embed ctx.Context() as a raw context.Context instead to be used as you see fit.
+
+Migration guide:
+`ctx = ctx.WithValue(contextKeyBadProposal, false)` ->
+`ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))`
+A bit more verbose, but also allows `context.WithTimeout()`, etc and only used
+in one function in this repo, in test code.

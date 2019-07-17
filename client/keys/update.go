@@ -29,7 +29,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	if viper.GetBool(flags.FlagSecretStore) == true {
+	if viper.GetBool(flags.FlagSecretStore) {
 		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()

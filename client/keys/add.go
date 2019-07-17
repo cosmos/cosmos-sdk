@@ -103,7 +103,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		encryptPassword = DefaultKeyPass
 	} else {
 		// c.Flags().Bool(FlagSecretSore, false, "Use legacy secret store")
-		if viper.GetBool(flags.FlagSecretStore) == true {
+		if viper.GetBool(flags.FlagSecretStore) {
 			fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {

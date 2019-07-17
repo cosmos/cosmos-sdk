@@ -93,9 +93,12 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(fromName)
-	if err != nil {
-		return err
+	var passphrase string
+	if txBldr.LegacySecretStore() {
+		passphrase, err = keys.GetPassphrase(fromName)
+		if err != nil {
+			return err
+		}
 	}
 
 	// build and sign the transaction
@@ -191,10 +194,12 @@ func SignStdTx(
 			return signedStdTx, err
 		}
 	}
-
-	passphrase, err := keys.GetPassphrase(name)
-	if err != nil {
-		return signedStdTx, err
+	var passphrase string
+	if txBldr.LegacySecretStore() {
+		passphrase, err = keys.GetPassphrase(name)
+		if err != nil {
+			return signedStdTx, err
+		}
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
@@ -219,9 +224,12 @@ func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLICo
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
-	if err != nil {
-		return signedStdTx, err
+	var passphrase string
+	if txBldr.LegacySecretStore() {
+		passphrase, err = keys.GetPassphrase(name)
+		if err != nil {
+			return signedStdTx, err
+		}
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, false)

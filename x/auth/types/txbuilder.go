@@ -26,6 +26,7 @@ type TxBuilder struct {
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	legacySecretStore  bool
 }
 
 // NewTxBuilder returns a new initialized TxBuilder.
@@ -46,13 +47,24 @@ func NewTxBuilder(
 		memo:               memo,
 		fees:               fees,
 		gasPrices:          gasPrices,
+		legacySecretStore:  false,
 	}
 }
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI() TxBuilder {
-	kb := keys.NewKeyringKeybase()
+
+	var kb crkeys.Keybase
+	if viper.GetBool(flags.FlagSecretStore) {
+		var err error
+		kb, err = keys.NewKeyBaseFromHomeFlag()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		kb = keys.NewKeyringKeybase()
+	}
 	txbldr := TxBuilder{
 		keybase:            kb,
 		accountNumber:      uint64(viper.GetInt64(flags.FlagAccountNumber)),
@@ -62,6 +74,7 @@ func NewTxBuilderFromCLI() TxBuilder {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
+		legacySecretStore:  viper.GetBool(flags.FlagSecretStore),
 	}
 
 	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))
@@ -97,6 +110,9 @@ func (bldr TxBuilder) ChainID() string { return bldr.chainID }
 
 // Memo returns the memo message
 func (bldr TxBuilder) Memo() string { return bldr.memo }
+
+// LegacySecretStore returns if use the legacy secret Store
+func (bldr TxBuilder) LegacySecretStore() bool { return bldr.legacySecretStore }
 
 // Fees returns the fees for the transaction
 func (bldr TxBuilder) Fees() sdk.Coins { return bldr.fees }

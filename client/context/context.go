@@ -51,6 +51,7 @@ type CLIContext struct {
 	FromName      string
 	Indent        bool
 	SkipConfirm   bool
+	SecretStore   bool
 }
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
@@ -61,7 +62,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly)
+	fromAddress, fromName, err := GetFromFields(from, genOnly, viper.GetBool((flags.FlagSecretStore)))
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -80,7 +81,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		verifierHome = viper.GetString(flags.FlagHome)
 	}
 
-	return CLIContext{
+	return CLIContext{ //assign value to new boolean var based on parsing the flag
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
@@ -97,6 +98,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
+		SecretStore:   viper.GetBool(flags.FlagSecretStore),
 	}
 }
 
@@ -267,7 +269,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, genOnly, legacySecretStore bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
@@ -281,8 +283,17 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 		return addr, "", nil
 	}
 
-	keybase := keys.NewKeyringKeybase()
-	var info cryptokeys.Info
+	var keybase cryptokeys.Keybase
+	if legacySecretStore {
+		var err error
+		keybase, err = keys.NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		keybase = keys.NewKeyringKeybase() //if flag is set, add flag to struct, then boolean variable.
+	}
+	var info cryptokeys.Info //chedck boolean var if true - do old keyring, else the new one
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

@@ -77,7 +77,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	// skip passphrase check if run with --force
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
-	if !skipPass {
+	if !skipPass && viper.GetBool(flags.FlagSecretStore) {
 		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {
 			return err

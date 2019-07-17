@@ -23,17 +23,8 @@ type CLIObject struct {
 	Cdc       *codec.Codec
 }
 
-func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, id string) CLIObject {
-	obj := man.object(id)
-	res := CLIObject{
-		ID:            obj.id,
-		ConnectionKey: obj.connection.Key(),
-		AvailableKey:  obj.available.Key(),
-		KindKey:       obj.kind.Key(),
-
-		StoreName: man.protocol.StoreName(),
-		Cdc:       obj.connection.Cdc(),
-	}
+func (man Manager) CLIQuery(ctx context.CLIContext, path merkle.Path, id string) CLIObject {
+	res := man.CLIObject(path, id, "")
 
 	connection, _, err := res.Connection(ctx)
 	if err != nil {
@@ -41,6 +32,21 @@ func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, id string
 	}
 	res.Client = man.client.CLIObject(path, connection.Client)
 	return res
+}
+
+func (man Manager) CLIObject(path merkle.Path, id, clientid string) CLIObject {
+	obj := man.object(id)
+	return CLIObject{
+		ID:            obj.id,
+		ConnectionKey: obj.connection.Key(),
+		AvailableKey:  obj.available.Key(),
+		KindKey:       obj.kind.Key(),
+
+		Client: man.client.CLIObject(path, clientid),
+
+		StoreName: man.protocol.StoreName(),
+		Cdc:       obj.connection.Cdc(),
+	}
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
@@ -83,15 +89,27 @@ type CLIHandshakeObject struct {
 	TimeoutKey            []byte
 }
 
-func (man Handshaker) CLIObject(ctx context.CLIContext, path merkle.Path, id string) CLIHandshakeObject {
+func (man Handshaker) CLIQuery(ctx context.CLIContext, path merkle.Path, id string) CLIHandshakeObject {
 	obj := man.object(man.man.object(id))
 	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(ctx, path, id),
+		CLIObject: man.man.CLIQuery(ctx, path, id),
 
 		StateKey:              obj.state.Key(),
 		CounterpartyClientKey: obj.counterpartyClient.Key(),
 		TimeoutKey:            obj.nextTimeout.Key(),
 	}
+}
+
+func (man Handshaker) CLIObject(path merkle.Path, id, clientid string) CLIHandshakeObject {
+	obj := man.object(man.man.object(id))
+	return CLIHandshakeObject{
+		CLIObject: man.man.CLIObject(path, id, clientid),
+
+		StateKey:              obj.state.Key(),
+		CounterpartyClientKey: obj.counterpartyClient.Key(),
+		TimeoutKey:            obj.nextTimeout.Key(),
+	}
+
 }
 
 func (obj CLIHandshakeObject) State(ctx context.CLIContext) (res byte, proof merkle.Proof, err error) {

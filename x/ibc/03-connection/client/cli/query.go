@@ -30,7 +30,7 @@ func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version i
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
-	return man.CLIObject(ctx, path, id)
+	return man.CLIQuery(ctx, path, id)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {

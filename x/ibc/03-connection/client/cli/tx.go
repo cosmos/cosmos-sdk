@@ -39,7 +39,7 @@ func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, versio
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)
 	man := connection.NewHandshaker(connection.NewManager(base, climan))
-	return man.CLIObject(ctx, path, id)
+	return man.CLIQuery(ctx, path, id)
 }
 
 func lastheight(ctx context.CLIContext) (uint64, error) {

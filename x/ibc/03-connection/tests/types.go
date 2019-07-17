@@ -93,15 +93,14 @@ func (node *Node) CLIObject() connection.CLIHandshakeObject {
 	return connection.NewHandshaker(man).CLIObject(node.Path, node.Name, node.Name)
 }
 
-func base(cdc *codec.Codec, key sdk.StoreKey) (state.Base, state.Base) {
+func base(cdc *codec.Codec, key sdk.StoreKey) state.Base {
 	protocol := state.NewBase(cdc, key, []byte("protocol"))
-	free := state.NewBase(cdc, key, []byte("free"))
-	return protocol, free
+	return protocol
 }
 
 func (node *Node) Manager() (client.Manager, connection.Manager) {
-	protocol, free := base(node.Cdc, node.Key)
-	clientman := client.NewManager(protocol, free)
+	protocol := base(node.Cdc, node.Key)
+	clientman := client.NewManager(protocol)
 	return clientman, connection.NewManager(protocol, clientman)
 }
 
@@ -118,7 +117,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, proofs[0], proofs[1], proofs[2], proofs[3], node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs, node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.OpenTry, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
@@ -129,7 +128,7 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, proofs[0], proofs[1], proofs[2], proofs[3], node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs, node.Name, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))
@@ -139,7 +138,7 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, proofs[0], proofs[1], node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs, node.Name, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State(ctx))
 	require.Equal(t, node.Connection, obj.Connection(ctx))

@@ -33,6 +33,12 @@ import (
 func init() {
 	flag.StringVar(&genesisFile, "SimulationGenesis", "", "custom simulation genesis file; cannot be used with params file")
 	flag.StringVar(&paramsFile, "SimulationParams", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
+	flag.BoolVar(&exportParams, "SimulationExportParams", false, "export the randomly generated params to JSON at a export height")
+	flag.StringVar(&exportParamsPath, "SimulationExportParamsPath", "./sim_params.json", "custom path to save the exported params JSON")
+	flag.IntVar(&exportParamsHeight, "SimulationExportParamsHeight", 0, "height to which export the randomly generated params")
+	flag.BoolVar(&exportState, "SimulationExportState", false, "height to which export the randomly generated params to JSON")
+	flag.StringVar(&exportParamsPath, "SimulationExportParamsPath", "./genesis.json", "custom path to save the exported app state JSON")
+	flag.IntVar(&exportStateHeight, "SimulationExportStateHeight", 0, "height to which export the app state")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "operations per block")
@@ -48,10 +54,13 @@ func init() {
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, bool, bool, bool, bool) {
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, int,
+	bool, bool, bool, bool, bool, bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit, lean, onOperation, allInvariants
+		testAndRunTxs(app), invariants(app),
+		numBlocks, exportStateHeight, exportParamsHeight, blockSize,
+		exportState, exportParams, commit, lean, onOperation, allInvariants
 }
 
 func appStateFn(
@@ -135,6 +144,7 @@ func appStateRandomizedFn(
 	return appState, accs, "simulation"
 }
 
+// TODO: add description
 func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 	cdc := MakeCodec()
 	ap := make(simulation.AppParams)
@@ -358,15 +368,45 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
+	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 	if err != nil {
 		fmt.Println(err)
 		b.Fail()
 	}
+
 	if commit {
 		fmt.Println("GoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+
+	if exportState {
+		fmt.Println("Exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+	}
+
+	if exportParams {
+		fmt.Println("Exporting simulation params...")
+		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+
+		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
 	}
 }
 
@@ -396,7 +436,9 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	require.NoError(t, err)
+
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
@@ -405,7 +447,24 @@ func TestFullAppSimulation(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
-	require.Nil(t, err)
+	if exportState {
+		fmt.Println("Exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		require.NoError(t, err)
+	}
+
+	if exportParams {
+		fmt.Println("Exporting simulation params...")
+		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		require.NoError(t, err)
+	}
+
 }
 
 func TestAppImportExport(t *testing.T) {
@@ -433,7 +492,8 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	require.NoError(t, err)
 
 	if commit {
 		// for memdb:
@@ -443,7 +503,24 @@ func TestAppImportExport(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
-	require.Nil(t, err)
+	if exportState {
+		fmt.Println("Exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		require.NoError(t, err)
+	}
+
+	if exportParams {
+		fmt.Println("Exporting simulation params...")
+		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		require.NoError(t, err)
+	}
+
 	fmt.Printf("Exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
@@ -529,7 +606,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	stopEarly, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	require.NoError(t, err)
 
 	if commit {
 		// for memdb:
@@ -539,12 +617,28 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
-	require.Nil(t, err)
-
 	if stopEarly {
 		// we can't export or import a zero-validator genesis
 		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
 		return
+	}
+
+	if exportState {
+		fmt.Println("Exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		require.NoError(t, err)
+	}
+
+	if exportParams {
+		fmt.Println("Exporting simulation params...")
+		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		require.NoError(t, err)
+
+		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		require.NoError(t, err)
 	}
 
 	fmt.Printf("Exporting genesis...\n")
@@ -571,7 +665,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
+	_, _, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
 }
 
@@ -596,14 +690,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			// Run randomized simulation
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
-				testAndRunTxs(app),
-				[]sdk.Invariant{},
-				50,
-				100,
-				true,
-				false,
-				false,
-				false,
+				testAndRunTxs(app), []sdk.Invariant{},
+				50, 100, 0, 0,
+				false, false, true, false, false, false,
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -627,13 +716,43 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, 0)
 
 	// 2. Run parameterized simulation (w/o invariants)
-	_, err := simulation.SimulateFromSeed(
+	_, app, params, err := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation, false,
+		[]sdk.Invariant{}, numBlocks, exportStateHeight, exportParamsHeight, blockSize,
+		exportState, exportParams, commit, lean, onOperation, false,
 	)
 	if err != nil {
 		fmt.Println(err)
 		b.FailNow()
+	}
+
+	if exportState {
+		fmt.Println("Exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+	}
+
+	if exportParams {
+		fmt.Println("Exporting simulation params...")
+		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
+
+		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		if err != nil {
+			fmt.Println(err)
+			b.Fail()
+		}
 	}
 
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})

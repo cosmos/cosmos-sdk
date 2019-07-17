@@ -24,7 +24,7 @@ type CLIObject struct {
 	Cdc  *codec.Codec
 }
 
-func (man Manager) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIObject {
+func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIObject {
 	obj := man.object(connid, chanid)
 	return CLIObject{
 		ChanID:     chanid,
@@ -37,7 +37,7 @@ func (man Manager) CLIObject(path merkle.Path, chanid, connid, clientid string) 
 			return obj.packets.Value(index).Key()
 		},
 
-		Connection: man.connection.CLIObject(path, connid, clientid),
+		Connection: man.connection.CLIObject(ctx, path, connid),
 
 		Path: path,
 		Cdc:  obj.channel.Cdc(),
@@ -85,10 +85,10 @@ type CLIHandshakeObject struct {
 	TimeoutKey []byte
 }
 
-func (man Handshaker) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIHandshakeObject {
+func (man Handshaker) CLIObject(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIHandshakeObject {
 	obj := man.object(man.man.object(connid, chanid))
 	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(path, chanid, connid, clientid),
+		CLIObject: man.man.CLIObject(ctx, path, chanid, connid),
 
 		StateKey:   obj.state.Key(),
 		TimeoutKey: obj.nextTimeout.Key(),

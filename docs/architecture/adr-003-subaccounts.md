@@ -21,18 +21,17 @@ Introduce two new interfaces:
 * `MultiAccount`
 * `SubAccount`
 
-MultiAccount implements the `Account` interface.
-It maintains a list of its subaccounts as well as a list of permissions defined upon initialization of supply keeper (permAddrs).
-`SetCoins` returns an error. This prevents MultiAccount address from having a balance.
-MultiAccount has no pubkey for ModuleAccounts. MultiAccount for non ModuleAccounts could perhaps be a subkey account. MultiAccount pubkey would be master pubkey.
+MultiAccount maintains a list of its subaccounts as well as a list of permissions defined upon initialization of supply keeper (permAddrs).
+MultiAccount has no pubkey for ModuleAccounts and for non ModuleAccounts MultiAccount could be a subkey account. In this case, MultiAccount pubkey would be master pubkey.
 Upon initialization of a MultiAccounts, a limit can be set on the max number of sub accounts can be set. There should also be the option to set the max number of sub accounts as unbonded.
 MultiAccount Constructor returns a MultiAccount with no sub accounts.
-MultiAccount `GetCoins` returns sum of sub account balances.
-SubAccounts can only be appended. To invalidate an account we would add `SetAccountDisabled` which sets the `disabled` field to true. 
-A disabled account could allow for withdraws, but cannot recieve any coins.
-Passively tracks the sum of all account balances.
+To invalidate an account we would add `SetAccountDisabled` which sets the `disabled` field to true. 
 
-```
+```go
+// Implements the `Account` interface. SetCoins returns an error to prevent MultiAccount address from having a balance.
+// GetCoins returns sum of sub account balances. SubAccounts can only be appended. 
+// A disabled account can do withdraws, but cannot recieve any coins.
+// Passively tracks the sum of all account balances.
 type MultiAccount interface {
     // MultiAccount interface functions
     CreateSubAccount(pubkey, address) int // returns id of subaccount
@@ -62,7 +61,9 @@ type MultiAccount interface {
 }
 ```
 
-```
+```go
+// Implements the `Account` interface. Address is the multi account address with the id appended.
+// Permissions must be a subset of its multi account's permissions.
 type SubAccount interface {
     // SubAccount interface functions    
     SetAccountDisabled()
@@ -97,8 +98,8 @@ type SubAccount interface {
 }
 ```
 
+```go
 // possible implementation of MultiAccount
-```
 type ModuleMultiAccount struct {
     subaccs []SubAccount
     permissions []string
@@ -109,12 +110,8 @@ type ModuleMultiAccount struct {
 ```
 
 
-SubAccount implements the `Account` interface.
-SubAccount's address is the multi account address with the id appended
-SubAccount permissions must be a sub set of its multi account's permissions.
-
+```go
 // possible implementation of SubAccount
-```
 type SubAccount struct {
     address sdk.AccAddress // MultiAccount (parent) address with index appended
     pubkey

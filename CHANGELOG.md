@@ -12,7 +12,8 @@
     * `gaiacli keys migrate`
   * Support for legacay keystore is available through the secret store flag:
     * `gaiacli keys add <key_name> --legacy-secret-store` 
-  * Signing transactions is allowed on the legacy store if you pass in the legacy secret store flag 
+  * Signing transactions is allowed on the legacy store if you pass in the legacy secret store flag
+  * Running the tests locally may require entering your user password to access your keystore large amount of times (if anyone has a workaround, please leave a comment, thanks) 
    
 
 ## 0.34.7

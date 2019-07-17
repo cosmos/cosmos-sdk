@@ -12,7 +12,7 @@
     * `gaiacli keys migrate`
   * Support for legacay keystore is available through the secret store flag:
     * `gaiacli keys add <key_name> --legacy-secret-store` 
-  * Signing transactions uses keystore... 
+  * Signing transactions is allowed on the legacy store if you pass in the legacy secret store flag 
    
 
 ## 0.34.7

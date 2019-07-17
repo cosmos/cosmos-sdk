@@ -41,21 +41,21 @@ type MultiAccount interface {
     GetAddress() sdk.AccAddress
     SetAddress(sdk.AccAddress) error 
 
-	GetPubKey() crypto.PubKey 
-	SetPubKey(crypto.PubKey) error
+    GetPubKey() crypto.PubKey 
+    SetPubKey(crypto.PubKey) error
 
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
+    GetAccountNumber() uint64
+    SetAccountNumber(uint64) error
 
-	GetSequence() uint64
-	SetSequence(uint64) error
+    GetSequence() uint64
+    SetSequence(uint64) error
 
-	GetCoins() sdk.Coins
-	SetCoins(sdk.Coins) error
+    GetCoins() sdk.Coins
+    SetCoins(sdk.Coins) error
 
-	SpendableCoins(blockTime time.Time) sdk.Coins
+    SpendableCoins(blockTime time.Time) sdk.Coins
 
-	String() string
+    String() string
 
         
 }
@@ -76,23 +76,23 @@ type SubAccount interface {
 
     // account interface functions
     GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error 
+    SetAddress(sdk.AccAddress) error 
 
-	GetPubKey() crypto.PubKey 
-	SetPubKey(crypto.PubKey) error
+    GetPubKey() crypto.PubKey 
+    SetPubKey(crypto.PubKey) error
 
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
+    GetAccountNumber() uint64
+    SetAccountNumber(uint64) error
 
-	GetSequence() uint64
-	SetSequence(uint64) error
+    GetSequence() uint64
+    SetSequence(uint64) error
 
-	GetCoins() sdk.Coins
-	SetCoins(sdk.Coins) error
+    GetCoins() sdk.Coins
+    SetCoins(sdk.Coins) error
 
-	SpendableCoins(blockTime time.Time) sdk.Coins
+    SpendableCoins(blockTime time.Time) sdk.Coins
 
-	String() string
+    String() string
 
      
 }

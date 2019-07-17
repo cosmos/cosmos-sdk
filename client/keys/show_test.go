@@ -52,6 +52,12 @@ func Test_runShowCmd(t *testing.T) {
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
 	kb := NewKeyringKeybase()
+
+	defer func() {
+		kb.Delete("runShowCmd_Key1", "", false)
+		kb.Delete("runShowCmd_Key2", "", false)
+
+	}()
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)

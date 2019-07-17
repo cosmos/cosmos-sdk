@@ -32,6 +32,10 @@ func Test_runListCmd(t *testing.T) {
 	_, err := kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 
+	defer func() {
+		kb.Delete("something", "", false)
+	}()
+
 	testData := []struct {
 		name    string
 		kbDir   string

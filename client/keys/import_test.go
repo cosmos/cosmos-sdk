@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-// Note: this test will fail locally with new keyring keybase, but should succeed in CI
 func Test_runImportCmd(t *testing.T) {
 	importKeyCommand := importKeyCommand()
 
@@ -21,6 +20,12 @@ func Test_runImportCmd(t *testing.T) {
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
+
+	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("keyname1", "", false)
+
+	}()
 
 	keyfile := filepath.Join(kbHome, "key.asc")
 	armoredKey := `-----BEGIN TENDERMINT PRIVATE KEY-----

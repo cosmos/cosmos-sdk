@@ -24,13 +24,20 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
+	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("runDeleteCmd_Key1", "", false)
+		kb.Delete("runDeleteCmd_Key2", "", false)
+
+	}()
+
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb := NewKeyringKeybase()
+	kb = NewKeyringKeybase()
 	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)

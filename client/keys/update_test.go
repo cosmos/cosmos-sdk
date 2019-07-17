@@ -39,6 +39,11 @@ func Test_runUpdateCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	kb := NewKeyringKeybase()
+
+	defer func() {
+		kb.Delete("runUpdateCmd_Key1", "", false)
+		kb.Delete("runUpdateCmd_Key2", "", false)
+	}()
 	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)

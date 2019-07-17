@@ -36,6 +36,10 @@ func Test_runAddCmdLedger(t *testing.T) {
 
 	// Now check that it has been stored properly
 	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("keyname1", "", false)
+	}()
+
 	assert.NotNil(t, kb)
 	key1, err := kb.Get("keyname1")
 	assert.NoError(t, err)

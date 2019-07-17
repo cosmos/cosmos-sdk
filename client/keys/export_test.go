@@ -20,6 +20,10 @@ func Test_runExportCmd(t *testing.T) {
 
 	// create a key
 	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("keyname1", "", false)
+	}()
+
 	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
 	assert.NoError(t, err)
 

@@ -22,6 +22,11 @@ func Test_runMigrateCmd(t *testing.T) {
 	defer kbCleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
+	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("keyname1", "", false)
+	}()
+
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	viper.Set(flags.FlagSecretStore, true)

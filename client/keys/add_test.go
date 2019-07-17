@@ -13,6 +13,14 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
+
+	kb := NewKeyringKeybase()
+	defer func() {
+		kb.Delete("keyname1", "", false)
+		kb.Delete("keyname2", "", false)
+
+	}()
+
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
@@ -45,4 +53,5 @@ func Test_runAddCmdBasic(t *testing.T) {
 	mockIn.Reset("y\n")
 	err = runAddCmd(cmd, []string{"keyname2"})
 	assert.NoError(t, err)
+
 }

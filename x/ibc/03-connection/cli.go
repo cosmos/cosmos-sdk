@@ -94,17 +94,17 @@ func (man Handshaker) CLIObject(ctx context.CLIContext, path merkle.Path, id str
 	}
 }
 
-func (obj CLIHandshakeObject) State(ctx context.CLIContext, root merkle.Root) (res byte, proof merkle.Proof, err error) {
+func (obj CLIHandshakeObject) State(ctx context.CLIContext) (res byte, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.StateKey, &res)
 	return
 }
 
-func (obj CLIHandshakeObject) CounterpartyClient(ctx context.CLIContext, root merkle.Root) (res string, proof merkle.Proof, err error) {
+func (obj CLIHandshakeObject) CounterpartyClient(ctx context.CLIContext) (res string, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.CounterpartyClientKey, &res)
 	return
 }
 
-func (obj CLIHandshakeObject) Timeout(ctx context.CLIContext, root merkle.Root) (res uint64, proof merkle.Proof, err error) {
+func (obj CLIHandshakeObject) NextTimeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
 	return
 }

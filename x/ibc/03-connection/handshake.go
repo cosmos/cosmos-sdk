@@ -156,7 +156,7 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection,state,nextTimeout,counterpartyClient, client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
-	connectionp, statep, timeoutp, counterpartyClientp /*, clientp*/ commitment.Proof,
+	proofs []commitment.Proof,
 	id string, connection Connection, counterpartyClient string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.create(ctx, id, connection, counterpartyClient)
@@ -164,7 +164,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, connection.Path, connectionp, statep, timeoutp, counterpartyClientp)
+	ctx, err = obj.Context(ctx, connection.Path, proofs)
 	if err != nil {
 		return
 	}
@@ -222,7 +222,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection, state, timeout, counterpartyClient, client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
-	connectionp, statep, timeoutp, counterpartyClientp /*, clientp*/ commitment.Proof,
+	proofs []commitment.Proof,
 	id string /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, id)
@@ -230,7 +230,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, nil, connectionp, statep, timeoutp, counterpartyClientp)
+	ctx, err = obj.Context(ctx, nil, proofs)
 	if err != nil {
 		return
 	}
@@ -285,7 +285,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
-	statep, timeoutp commitment.Proof,
+	proofs []commitment.Proof,
 	id string, timeoutHeight uint64) (obj HandshakeObject, err error) {
 
 	obj, err = man.query(ctx, id)
@@ -293,7 +293,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, nil, statep, timeoutp)
+	ctx, err = obj.Context(ctx, nil, proofs)
 	if err != nil {
 		return
 	}

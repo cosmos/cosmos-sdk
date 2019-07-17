@@ -592,7 +592,7 @@ var (
 	// Denominations can be 3 ~ 16 characters long.
 	reDnmString = `[a-z][a-z0-9]{2,15}`
 	reAmt       = `[[:digit:]]+`
-	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]*\.?[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
 	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
 	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))

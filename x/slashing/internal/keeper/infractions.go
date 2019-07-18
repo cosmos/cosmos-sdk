@@ -21,7 +21,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
-	pubkey, err := k.getPubkey(ctx, addr)
+	pubkey, err := k.GetPubkey(ctx, addr)
 	if err != nil {
 		// Ignore evidence that cannot be handled.
 		// NOTE:
@@ -114,11 +114,12 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
-	// TODO: refactor to take in a consensus address, additionally should maybe just take in the pubkey too
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
+
+	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
-	pubkey, err := k.getPubkey(ctx, addr)
+	pubkey, err := k.GetPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
 	}

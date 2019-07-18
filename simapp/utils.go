@@ -44,7 +44,6 @@ var (
 	exportParamsHeight int
 	exportState        bool
 	exportStatePath    string
-	exportStateHeight  int
 	seed               int64
 	numBlocks          int
 	blockSize          int

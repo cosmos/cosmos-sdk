@@ -76,7 +76,7 @@ func SimulateFromSeed(
 	}
 
 	// remove module account address if they exist in accs
-	var temp_accs []Account
+	var tmpAccs []Account
 	for _, acc := range accs {
 		if !blackListedAccs[acc.Address.String()] {
 			temp_accs = append(temp_accs, acc)

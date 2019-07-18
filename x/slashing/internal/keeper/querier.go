@@ -62,7 +62,7 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QuerySigningInfosParams
 
-	err :=types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}

@@ -86,7 +86,7 @@ func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 
-// clearValidatorMissedBlockBitArray deletes every intance of ValidatorMissedBlockBitArray in the store
+// clearValidatorMissedBlockBitArray deletes every instance of ValidatorMissedBlockBitArray in the store
 func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetValidatorMissedBlockBitArrayPrefixKey(address))

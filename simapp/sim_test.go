@@ -499,9 +499,8 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
 		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
-		kvsLen := len(failedKVs)
-		fmt.Printf("Compared %d key/value pairs between %s and %s\n", kvsLen/2, storeKeyA, storeKeyB)
-		require.True(t, kvsLen == 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
+		require.Len(t, 0, failedKVs, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
 	}
 
 }

@@ -1,128 +1,67 @@
-# ADR 3: Subaccounts
+# ADR 3: Module SubAccounts
 
 ## Changelog
 
 ## Context
 
-Currently module accounts must be declared upon supply keeper initialization. Furthermore, they don't allow for separation of fungible coins within an account.
+Currently `ModuleAccount`s must be declared upon supply keeper initialization. In addition to this they don't allow for separation of fungible coins within an account.
 
-The account structure should be modified so a `ModuleAccount` can dynamically add accounts.
+New structs should be added so a `ModuleAccount` can dynamically add accounts.
 
 ## Decision
 
-Add the following interfaces and permissions into `x/auth`.
-
-MultiAccounts and SubAccounts could be subkey accounts by having subkey account implement the interface functions.
+Add the following structs into `x/supply`.
 
 ### Implementation Changes
 
-Introduce two new interfaces:
+Introduce two new structs:
 
-* `MultiAccount`
+* `ModuleMultiAccount`
 * `SubAccount`
 
-MultiAccount maintains a list of its subaccounts as well as a list of permissions defined upon initialization of supply keeper (permAddrs).
-MultiAccount has no pubkey for ModuleAccounts. MultiAccount could be a subkey account. In this case, MultiAccount pubkey would be master pubkey.
-Upon initialization of a MultiAccounts, a limit can be set on the max number of sub accounts can be set. There should also be the option to set the max number of sub accounts as unbonded.
-MultiAccount constructor returns a MultiAccount with no sub accounts.
-To invalidate an account we would add `SetAccountDisabled` which sets the `disabled` field to true. 
+`ModuleMultiAccount` maintains an array of `SubAccount` as well as a list of permissions defined upon initialization of supply keeper (permAddrs).
+It has no pubkey and no limit on the number of `SubAccount`s that can be created.
+Its constructor returns a `ModuleMultiAccount` with no `SubAccount`s.
+`MultiModuleAccount` will implement the Account interface.
 
 ```go
-// Implements the Account interface. SetCoins returns an error to prevent MultiAccount address from having a balance.
-// GetCoins returns sum of sub account balances. SubAccounts can only be appended. 
-// A disabled account can do withdraws, but cannot recieve any coins.
-// Passively tracks the sum of all account balances.
-type MultiAccount interface {
-    // MultiAccount interface functions
+// SetCoins will return an error to prevent ModuleMultiAccount address from having a balance.
+// SubAccounts can only be appended to the SubAccount array.
+// Passively tracks the sum of all SubAccount balances.
+type ModuleMultiAccount struct {
+    Subaccs []SubAccount
+    Permissions []string
+    Coins sdk.Coins // passively track all sub account balances
+
     CreateSubAccount(pubkey, address) int // returns id of subaccount
     GetSubAccount(id int) SubAccount
-   
-    // account interface functions
-    GetAddress() sdk.AccAddress
-    SetAddress(sdk.AccAddress) error 
-
-    GetPubKey() crypto.PubKey 
-    SetPubKey(crypto.PubKey) error
-
-    GetAccountNumber() uint64
-    SetAccountNumber(uint64) error
-
-    GetSequence() uint64
-    SetSequence(uint64) error
-
-    GetCoins() sdk.Coins
-    SetCoins(sdk.Coins) error
-
-    SpendableCoins(blockTime time.Time) sdk.Coins
-
-    String() string
-
-        
 }
 ```
 
+To invalidate a `SubAccount` the `ModuleMultiAccount` calls `SetAccountDisabled` for a `SubAccount`
+
 ```go
-// Implements the Account interface. Address is the multi account address with the id appended.
-// Permissions must be a subset of its multi account's permissions.
-type SubAccount interface {
-    // SubAccount interface functions    
+// Implements the Account interface. Address is the ModuleMultiAccount address with the id appended.
+// Permissions must be a subset of its ModuleMultiAccount permissions.
+// A disabled account can do withdraws, but cannot recieve any coins.
+type SubAccount struct {
+    Address sdk.AccAddress // MultiAccount (parent) address with index appended
+    ID uint // index of subaccount
+    Permissions []string
+    Disabled bool
+
     SetAccountDisabled()
-    SetAccountEnabled()
-    
+
     AddPermissions(perms ...string)
     RemovePermissions(perms ...string)
 
     GetPermissions() []string
-
-    // account interface functions
-    GetAddress() sdk.AccAddress
-    SetAddress(sdk.AccAddress) error 
-
-    GetPubKey() crypto.PubKey 
-    SetPubKey(crypto.PubKey) error
-
-    GetAccountNumber() uint64
-    SetAccountNumber(uint64) error
-
-    GetSequence() uint64
-    SetSequence(uint64) error
-
-    GetCoins() sdk.Coins
-    SetCoins(sdk.Coins) error
-
-    SpendableCoins(blockTime time.Time) sdk.Coins
-
-    String() string
-
-     
-}
-```
-
-```go
-// possible implementation of MultiAccount
-type ModuleMultiAccount struct {
-    subaccs []SubAccount
-    permissions []string
-    maxNumSubAccs uint
-    coins sdk.Coins // passively track all sub account balances
-    disabled bool
-}
-```
-
-
-```go
-// possible implementation of SubAccount
-type SubAccount struct {
-    address sdk.AccAddress // MultiAccount (parent) address with index appended
-    pubkey
-    id uint // index of subaccount
-    permissions []string
 }
 ```
 
 **Other changes**
 
-Add an invariant check for MultiAccount `GetCoins`, which iterates over all subaccs to see if the sum of the subacc balances equals the passive tracking which is returned in `GetCoins`
+Add an invariant check for MultiAccount `GetCoins`, which iterates over all `SubAccount`s to see if the sum of the `SubAccount` balances equals the passive tracking which is returned in `GetCoins`
 
 Update BankKeepers SetCoins function to return an error instead of calling panic on the account's SetCoins error.
 
@@ -134,12 +73,11 @@ Proposed
 
 ### Positive
 
-* Accounts can now separate fungible coins
-* Accounts can distribute permissions to sub accounts.
+* ModuleAccount can separate fungible coins.
+* ModuleAccount can dynamically add accounts.
+* ModuleAccount can distribute permissions to SubAccounts.
 
 ### Negative
-
-* Brings permissions into `x/auth`
 
 ### Neutral
 
@@ -148,4 +86,3 @@ Proposed
 ## References
 
 Issues: [4657] (https://github.com/cosmos/cosmos-sdk/issues/4657)
-

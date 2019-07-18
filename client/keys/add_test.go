@@ -45,7 +45,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	if runningOnServer {
 		fmt.Println("Running on Server")
-		mockIn.Reset("testpass\ny\n")
+		mockIn.Reset("testpass1\ny\n")
 
 	} else {
 		mockIn.Reset("y\n")

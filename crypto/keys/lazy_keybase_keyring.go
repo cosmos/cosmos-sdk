@@ -86,7 +86,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 					continue
 				}
 
-				passwordHash, err := bcrypt.GenerateFromPassword([]byte("Cosmos Key Hash"), []byte(pass), 2)
+				passwordHash, err := bcrypt.GenerateFromPassword([]byte("Cosmos Key Hash Salt"), []byte(pass), 2)
 				if err != nil {
 					fmt.Println(err)
 					continue

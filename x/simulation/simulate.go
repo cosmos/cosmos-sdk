@@ -79,7 +79,7 @@ func SimulateFromSeed(
 	var tmpAccs []Account
 	for _, acc := range accs {
 		if !blackListedAccs[acc.Address.String()] {
-			temp_accs = append(temp_accs, acc)
+			tmpAccs = append(tmpAccs, acc)
 		}
 	}
 

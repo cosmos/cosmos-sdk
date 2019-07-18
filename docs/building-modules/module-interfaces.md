@@ -2,4 +2,8 @@
 
 ## CLI
 
+### Tx
+
+### Query
+
 ## REST

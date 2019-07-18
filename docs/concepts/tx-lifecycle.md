@@ -61,6 +61,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Each full node that receives `tx` performs local checks to ensure it is not invalid. If approved, `tx` is held in the nodes' [**Mempool**](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#external-functionality)s (memory pools unique to each node) pending approval from the rest of the network. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously validate incoming transactions and gossip them to their peers.
 =======
 Each full node that receives `tx` performs local checks to ensure it is not invalid. If `tx` passes the checks, it is held in the nodes' [**Mempool**](https://github.com/tendermint/tendermint/blob/a0234affb6959a0aec285eebf3a3963251d2d186/state/services.go#L17-L34)s (memory pools unique to each node) pending inclusion in a block. Honest nodes will discard any transactions they find invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
@@ -80,6 +81,9 @@ Each full node that receives `Tx` performs local checks using an ABCI procedure,
 =======
 Each full-node (running Tendermint) that receives `Tx` sends an [ABCI message](https://tendermint.com/docs/spec/abci/abci.html#messages), `CheckTx`, to the application layer to check for invalidity, and receives a Response. If `Tx` passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 >>>>>>> hans comments
+=======
+Each full-node (running Tendermint) that receives `Tx` sends an [ABCI message](https://tendermint.com/docs/spec/abci/abci.html#messages), `CheckTx`, to the application layer to check for invalidity, and receives a Response. If `Tx` passes the checks, it is held in the nodes' [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool)s (memory pools of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 
 ### Types of Checks
 
@@ -93,6 +97,7 @@ In order to verify `Tx`, full-nodes call `CheckTx`, which includes both _statele
 
 When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its encoded (i.e. using [Amino](https://tendermint.com/docs/spec/blockchain/encoding.html#amino)) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](./baseapp.md#runtx-and-runmsgs) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 ```
 		To perform state checks	  	   To execute state 		   To answer queries
@@ -168,6 +173,11 @@ Messages are extracted from `Tx` and [`validateBasic`](./msg-tx.md#validatebasic
 =======
 [Messages](./tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](./msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 >>>>>>> final edits
+=======
+### ValidateBasic
+
+[Messages](./tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](./msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 
 ### AnteHandler
 
@@ -183,6 +193,7 @@ The [`Context`](./context.md) used to keep track of important data while `AnteHa
 
 If at any point during the checking stage `Tx` fails a check, it is discarded and the transaction lifecycle ends here. Otherwise, if it passes `CheckTx` successfully, the default protocol is to relay it to peer nodes and add it to the Mempool so that `Tx` becomes a candidate to be included in the next block. 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -218,6 +229,11 @@ The **mempool** serves the purpose of keeping track of transactions seen by all 
 
 Validator-nodes keep a mempool to prevent replay attacks, just as a full-node do, but also use it as a pool of unconfirmed transactions in preparation to include them in a block. Note that even if `Tx` passes all checks at this stage, it is still possible to be found invalid later on, because `CheckTx` does not fully validate the transaction.
 >>>>>>> links and minor changes
+=======
+The **mempool** serves the purpose of keeping track of transactions seen by all full-nodes. Full-nodes that are not validators (and thus do not participate in creating blocks) keep a **mempool cache** of the last `[mempool] cache_size` transactions they have seen, as a first line of defense to prevent replay attacks. Ideally, `[mempool] cache_size` is large enough to encompass all of the transactions in the full mempool. If the the mempool cache is too small to keep track of all the transactions, `CheckTx` is responsible for identifying and rejecting replayed transactions. Currently existing preventative measures include fees and a `sequence` counter to distinguish replayed transactions from identical but valid ones. If an attacker tries to spam nodes with many copies of `Tx`, full-nodes keeping a mempool cache will reject identical copies instead of running `CheckTx` on all of them. Even if the copies have incremented `sequence` numbers, attackers are disincentivized by the need to pay fees. 
+
+Validator-nodes keep a mempool to prevent replay attacks, just as a full-node do, but also use it as a pool of unconfirmed transactions in preparation to include them in a block. Note that even if `Tx` passes all checks at this stage, it is still possible to be found invalid later on, because `CheckTx` does not fully validate the transaction.
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 
 ## Inclusion in a Block
 
@@ -227,6 +243,7 @@ The first step of consensus is the **block proposal**. One proposer amongst the 
 
 ## State Changes
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -249,6 +266,10 @@ The next step of consensus is to execute the transactions to fully validate them
 >>>>>>> links and minor changes
 
 >>>>>>> comments and new consensus+commit section
+=======
+The next step of consensus is to execute the transactions to fully validate them. All full-nodes that receive a block proposal execute the transactions by calling the ABCI functions [`BeginBlock`](./app-anatomy.md#beginblocker-and-endblocker), `DeliverTx` for each transaction, and [`EndBlock`](./app-anatomy.md#beginblocker-and-endblocker). While full-nodes each run everything individually, since the messages' state transitions are deterministic and transactions are explicitly ordered in the block proposal, this process yields a single, unambiguous result.
+
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 ```
 		-----------------------		
 		|Receive Block Proposal|        
@@ -291,6 +312,7 @@ The next step of consensus is to execute the transactions to fully validate them
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx) function in deliver mode instead of check mode. Instead of using their `checkTxState` or `queryState`, nodes select a new copy, `deliverTxState`, to deliver transactions:
 
 <<<<<<< HEAD
@@ -329,15 +351,22 @@ The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk
 >>>>>>> comments and new consensus+commit section
 * **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run `runMsgs` to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
 =======
+=======
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
 
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 * **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid ones. One difference here is that the `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices`since that value is local to each node - differing values across nodes would yield nondeterministic results.
 * **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](./baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
+<<<<<<< HEAD
 >>>>>>> links and minor changes
 * **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.
 * **Gas:** While `Tx` is being delivered, a `GasMeter` is used to keep track of how much gas is left for each transaction; if execution completes, `GasUsed` is set and returned in the `Response`. If execution halts because `GasMeter` has run out or something else goes wrong, a deferred function at the end appropriately errors or panics.
 >>>>>>> comments update
+=======
+* **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.
+* **Gas:** While `Tx` is being delivered, a `GasMeter` is used to keep track of how much gas is left for each transaction; if execution completes, `GasUsed` is set and returned in the `Response`. If execution halts because `GasMeter` has run out or something else goes wrong, a deferred function at the end appropriately errors or panics.
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 
 If there are any failed state changes resulting from `Tx` being invalid or `GasMeter` running out, the transaction processing terminates and any state changes are reverted. Invalid transactions in a block proposal cause validator-nodes to reject the block and vote for a `nil` block instead. If `Tx` is delivered successfully, any leftover gas is returned to the user and the transaction is validated.
 
@@ -351,6 +380,7 @@ The consensus layer may technically run any consensus algorithm to come to agree
 
 #### Commit
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -427,6 +457,14 @@ Note that not all blocks have the same number of transactions and it is possible
 At this point, the transaction lifecycle of `Tx` is over: nodes have verified its validity, delivered it by executing its state changes, and committed those changes. The `Tx` itself, in `[]byte` form, is stored in a block and appended to the blockchain.
 
 >>>>>>> comments
+=======
+In the **Commit** stage, full-nodes commit to a new block to be added to the blockchain and finalize the state changes on the application layer. A new state root is generated to serve as a merkle proof for the state change. Applications that inherit from [Baseapp](./baseapp.md) use its [`Commit`](./baseapp.md#commit) ABCI method; it syncs all the states by writing the `deliverState` into the application's internal state. As soon as the state changes are committed, `checkState` and `queryState` start afresh from the most recently committed state and `deliverState` resets to `nil` in order to be consistent and reflect the changes.
+
+Note that not all blocks have the same number of transactions and it is possible for consensus to result in a `nil` block or one with none at all. In a public blockchain network, it is also possible for validators to be **byzantine**, or malicious, which may prevent `Tx` from being committed in the blockchain. Possible malicious behaviors include the proposer deciding to censor `Tx` by excluding it from the block or a validator voting against the block.
+
+At this point, the transaction lifecycle of `Tx` is over: nodes have verified its validity, delivered it by executing its state changes, and committed those changes. The `Tx` itself, in `[]byte` form, is stored in a block and appended to the blockchain.
+
+>>>>>>> c64b9ad58e2c452c16b641d508c8a25ad35286ba
 ## Next
 
 Learn about [Baseapp](./baseapp.md).

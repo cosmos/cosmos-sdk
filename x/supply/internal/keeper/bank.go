@@ -73,8 +73,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 	recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 
 	acc := k.GetModuleAccount(ctx, senderModule)
-	senderAddr := acc.GetAddress()
-	if senderAddr == nil {
+	if acc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", senderModule))
 	}
 
@@ -82,7 +81,7 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule
 		panic(fmt.Sprintf("module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
-	return k.bk.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
+	return k.bk.UndelegateCoins(ctx, acc.GetAddress(), recipientAddr, amt)
 }
 
 // MintCoins creates new coins from thin air and adds it to the module account.
@@ -95,13 +94,11 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
-	addr := acc.GetAddress()
-
 	if !acc.HasPermission(types.Minter) {
 		panic(fmt.Sprintf("module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	_, err := k.bk.AddCoins(ctx, addr, amt)
+	_, err := k.bk.AddCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		panic(err)
 	}
@@ -121,9 +118,9 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 // Panics if the name maps to a non-burner module account or if the amount is invalid.
 func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error {
 
+	// create the account if it doesn't yet exist
 	acc := k.GetModuleAccount(ctx, moduleName)
-	addr := acc.GetAddress()
-	if addr == nil {
+	if acc == nil {
 		return sdk.ErrUnknownAddress(fmt.Sprintf("module account %s does not exist", moduleName))
 	}
 
@@ -131,7 +128,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 		panic(fmt.Sprintf("module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	_, err := k.bk.SubtractCoins(ctx, addr, amt)
+	_, err := k.bk.SubtractCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		panic(err)
 	}

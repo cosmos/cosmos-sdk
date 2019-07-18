@@ -159,7 +159,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 			return simulation.NoOpMsg(), nil, nil
 		}
 
-		msg := staking.NewMsgDelegate(
+		msg := staking.NewMsgUndelegate(
 			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
 		)
 		if msg.ValidateBasic() != nil {

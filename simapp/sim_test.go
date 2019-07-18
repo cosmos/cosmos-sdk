@@ -55,12 +55,12 @@ func init() {
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, int,
-	bool, bool, bool, bool, bool) {
+	bool, bool, bool, bool, bool, map[string]bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
 		numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, allInvariants
+		exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
 func appStateFn(
@@ -699,7 +699,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
 				50, 100, 0,
-				false, true, false, false, false,
+				false, true, false, false, false, app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -726,7 +726,7 @@ func BenchmarkInvariants(b *testing.B) {
 	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, false,
+		exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)
 
 	// export state and params before the simulation error is checked

@@ -157,18 +157,8 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 			val.GetOperator(), del.GetDelegatorAddr(), rewardsRaw, rewards))
 	}
 
-	// decrement reference count of starting period
-	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
-	startingPeriod := startingInfo.PreviousPeriod
-	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
-
 	// truncate coins, return remainder to community pool
 	coins, remainder := rewards.TruncateDecimal()
-
-	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
-	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
-	k.SetFeePool(ctx, feePool)
 
 	// add coins to user account
 	if !coins.IsZero() {
@@ -178,6 +168,18 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 			return nil, err
 		}
 	}
+
+	// update the outstanding rewards and the community pool only if the
+	// transaction was successful
+	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
+	feePool := k.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
+	k.SetFeePool(ctx, feePool)
+
+	// decrement reference count of starting period
+	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	startingPeriod := startingInfo.PreviousPeriod
+	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
 
 	// remove delegator starting info
 	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())

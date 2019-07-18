@@ -370,6 +370,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	// TODO: parameterize numbers, save for a later PR
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 
+	// export state and params before the simulation error is checked
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -439,6 +440,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// Run randomized simulation
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
+	// export state and params before the simulation error is checked
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -494,6 +496,8 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+
+	// export state and params before the simulation error is checked
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -609,6 +613,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation
 	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
+	// export state and params before the simulation error is checked
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -724,6 +729,7 @@ func BenchmarkInvariants(b *testing.B) {
 		exportParams, commit, lean, onOperation, false,
 	)
 
+	// export state and params before the simulation error is checked
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)

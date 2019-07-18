@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Module Interfaces
 
 ## Prerequisites
@@ -19,6 +18,7 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## CLI
 
+<<<<<<< HEAD
 One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint created by the application developer will add commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md) and [**queries**](./messages-and-queries.md).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.
 
 ### Transaction Commands
@@ -282,10 +282,3 @@ A few things to note:
 ## Next
 
 Read about the next topic in building modules.
-=======
-# Module Manager
-
-## Application Module Interface
-
-## Module Manager
->>>>>>> finish intro

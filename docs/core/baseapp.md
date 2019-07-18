@@ -64,8 +64,8 @@ First, the important parameters that are initialized during the initialization o
 
 - A [`CommitMultiStore`](./store.md#commit-multi-store). This is the main store of the application, which holds the canonical state that is committed at the [end of each block](#commit). This store is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
 - A [database](./store.md#database) `db`, which is used by the `CommitMultiStore` to handle data storage.
-- A [router](#message-routing). The `router` facilitates the routing of [messages](./tx-msgs.md) to the appropriate module for it to be processed.
-- A [query router](#query-routing). The `query router` facilitates the routing of [queries](./querier.md) to the appropriate module for it to be processed.
+- A [router](#message-routing). The `router` facilitates the routing of [messages](../building-modules/messages-and-queries.md#messages) to the appropriate module for it to be processed.
+- A [query router](#query-routing). The `query router` facilitates the routing of [queries](../building-modules/messages-and-queries.md#queries) to the appropriate module for it to be processed.
 - A [`txDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder), used to decode transaction `[]byte` relayed by the underlying Tendermint engine.
 - A [`baseKey`], to access the [main store](./store.md#main-store) in the `CommitMultiStore`. The main store is used to persist data related to the core of the application, like consensus parameters.  
 - A [`anteHandler`](#antehandler), to handle signature verification and fee paiement when a transaction is received.
@@ -226,7 +226,7 @@ The application's `router` is initilalized with all the routes using the applica
 
 ### Query Routing
 
-Similar to messages, queries need to be routed to the appropriate module's [querier](./querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps `paths` (`string`) to the appropriate module [`querier`](./querier.md). Usually, the `path` is the name of the module.
+Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps `paths` (`string`) to the appropriate module `querier`. Usually, the `path` is the name of the module.
 
 Just like the `router`, the `query router` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 

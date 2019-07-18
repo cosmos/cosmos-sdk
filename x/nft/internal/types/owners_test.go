@@ -16,12 +16,6 @@ func TestNewIDCollection(t *testing.T) {
 	require.Equal(t, len(idCollection.IDs), 3)
 }
 
-func TestEmptyIDCollection(t *testing.T) {
-	idCollection := EmptyIDCollection()
-	require.Empty(t, idCollection.Denom)
-	require.Empty(t, idCollection.IDs)
-}
-
 func TestIDCollectionExistsMethod(t *testing.T) {
 	ids := []string{id, id2}
 	idCollection := NewIDCollection(denom, ids)
@@ -53,7 +47,7 @@ func TestIDCollectionSupplyMethod(t *testing.T) {
 	idCollection := NewIDCollection(denom, ids)
 	require.Equal(t, 2, idCollection.Supply())
 
-	idCollection = EmptyIDCollection()
+	idCollection = IDCollection{}
 	require.Equal(t, 0, idCollection.Supply())
 }
 
@@ -120,7 +114,7 @@ func TestOwnerGetIDCollectionMethod(t *testing.T) {
 	require.False(t, found)
 	require.Equal(t, gotCollection.Denom, "")
 	require.Equal(t, len(gotCollection.IDs), 0)
-	require.Equal(t, gotCollection.String(), EmptyIDCollection().String())
+	require.Equal(t, gotCollection.String(), IDCollection{}.String())
 
 	gotCollection, found = owner.GetIDCollection(denom)
 	require.True(t, found)

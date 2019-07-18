@@ -1,36 +1,14 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
-// SwapOwners swaps the owners of a NFT ID
-func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress sdk.AccAddress, newAddress sdk.AccAddress) (err sdk.Error) {
-	oldOwnerIDCollection, found := k.GetOwnerByDenom(ctx, oldAddress, denom)
-	if !found {
-		return types.ErrUnknownCollection(types.DefaultCodespace,
-			fmt.Sprintf("id collection %s doesn't exist for owner %s", denom, oldAddress),
-		)
-	}
-	oldOwnerIDCollection, err = oldOwnerIDCollection.DeleteID(id)
-	if err != nil {
-		return err
-	}
-	k.SetOwnerByDenom(ctx, oldAddress, denom, oldOwnerIDCollection.IDs)
-
-	newOwnerIDCollection, _ := k.GetOwnerByDenom(ctx, newAddress, denom)
-	newOwnerIDCollection.AddID(id)
-	k.SetOwnerByDenom(ctx, newAddress, denom, newOwnerIDCollection.IDs)
-	return nil
-}
-
 // IterateCollections iterates over collections and performs a function
 func (k Keeper) IterateCollections(ctx sdk.Context, handler func(collection types.Collection) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, CollectionsKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.CollectionsKeyPrefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var collection types.Collection
@@ -44,7 +22,7 @@ func (k Keeper) IterateCollections(ctx sdk.Context, handler func(collection type
 // SetCollection sets the entire collection of a single denom
 func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Collection) {
 	store := ctx.KVStore(k.storeKey)
-	collectionKey := GetCollectionKey(denom)
+	collectionKey := types.GetCollectionKey(denom)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(collection)
 	store.Set(collectionKey, bz)
 }
@@ -52,7 +30,7 @@ func (k Keeper) SetCollection(ctx sdk.Context, denom string, collection types.Co
 // GetCollection returns a collection of NFTs
 func (k Keeper) GetCollection(ctx sdk.Context, denom string) (collection types.Collection, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	collectionKey := GetCollectionKey(denom)
+	collectionKey := types.GetCollectionKey(denom)
 	bz := store.Get(collectionKey)
 	if bz == nil {
 		return

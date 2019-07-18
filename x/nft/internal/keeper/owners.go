@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
-
 
 // GetOwners returns all the Owners ID Collections
 func (k Keeper) GetOwners(ctx sdk.Context) (owners []types.Owner) {
@@ -24,7 +25,7 @@ func (k Keeper) GetOwners(ctx sdk.Context) (owners []types.Owner) {
 // GetOwner gets all the ID Collections owned by an address
 func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress) (owner types.Owner) {
 	var idCollections []types.IDCollection
-	k.IterateIDCollections(ctx, GetOwnersKey(address),
+	k.IterateIDCollections(ctx, types.GetOwnersKey(address),
 		func(_ sdk.AccAddress, idCollection types.IDCollection) (stop bool) {
 			idCollections = append(idCollections, idCollection)
 			return false
@@ -37,7 +38,7 @@ func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress) (owner types.O
 func (k Keeper) GetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom string) (idCollection types.IDCollection, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(GetOwnerKey(owner, denom))
+	b := store.Get(types.GetOwnerKey(owner, denom))
 	if b == nil {
 		return types.NewIDCollection(denom, []string{}), false
 	}
@@ -48,7 +49,7 @@ func (k Keeper) GetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom str
 // SetOwnerByDenom sets a collection of NFT IDs owned by an address
 func (k Keeper) SetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom string, ids []string) {
 	store := ctx.KVStore(k.storeKey)
-	key := GetOwnerKey(owner, denom)
+	key := types.GetOwnerKey(owner, denom)
 
 	var idCollection types.IDCollection
 	idCollection.Denom = denom
@@ -83,7 +84,7 @@ func (k Keeper) IterateIDCollections(ctx sdk.Context, prefix []byte,
 		var idCollection types.IDCollection
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &idCollection)
 
-		owner, _ := SplitOwnerKey(iterator.Key())
+		owner, _ := types.SplitOwnerKey(iterator.Key())
 		if handler(owner, idCollection) {
 			break
 		}
@@ -93,16 +94,36 @@ func (k Keeper) IterateIDCollections(ctx sdk.Context, prefix []byte,
 // IterateOwners iterates over all Owners and performs a function
 func (k Keeper) IterateOwners(ctx sdk.Context, handler func(owner types.Owner) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, OwnersKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.OwnersKeyPrefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var owner types.Owner
 
-		address, _ := SplitOwnerKey(iterator.Key())
+		address, _ := types.SplitOwnerKey(iterator.Key())
 		owner = k.GetOwner(ctx, address)
 
 		if handler(owner) {
 			break
 		}
 	}
+}
+
+// SwapOwners swaps the owners of a NFT ID
+func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress sdk.AccAddress, newAddress sdk.AccAddress) (err sdk.Error) {
+	oldOwnerIDCollection, found := k.GetOwnerByDenom(ctx, oldAddress, denom)
+	if !found {
+		return types.ErrUnknownCollection(types.DefaultCodespace,
+			fmt.Sprintf("id collection %s doesn't exist for owner %s", denom, oldAddress),
+		)
+	}
+	oldOwnerIDCollection, err = oldOwnerIDCollection.DeleteID(id)
+	if err != nil {
+		return err
+	}
+	k.SetOwnerByDenom(ctx, oldAddress, denom, oldOwnerIDCollection.IDs)
+
+	newOwnerIDCollection, _ := k.GetOwnerByDenom(ctx, newAddress, denom)
+	newOwnerIDCollection.AddID(id)
+	k.SetOwnerByDenom(ctx, newAddress, denom, newOwnerIDCollection.IDs)
+	return nil
 }

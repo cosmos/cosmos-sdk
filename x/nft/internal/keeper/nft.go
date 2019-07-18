@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
-
 // IsNFT returns whether an NFT exists
 func (k Keeper) IsNFT(ctx sdk.Context, denom, id string) (exists bool) {
 	_, err := k.GetNFT(ctx, denom, id)

@@ -94,10 +94,10 @@ func TestQueryCollection(t *testing.T) {
 	query.Data = bz
 	res, err = querier(ctx, []string{"collection"}, query)
 
-	var collection types.Collection
-	types.ModuleCdc.MustUnmarshalJSON(res, &collection)
-
-	require.Equal(t, len(collection.NFTs), 1)
+	var collections types.Collections
+	types.ModuleCdc.MustUnmarshalJSON(res, &collections)
+	require.Len(t, collections, 1)
+	require.Len(t, collections[0].NFTs, 1)
 }
 
 func TestQueryOwner(t *testing.T) {

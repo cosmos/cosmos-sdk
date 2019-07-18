@@ -3,6 +3,7 @@ package keys
 import (
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -13,6 +14,13 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
+
+	backends := keyring.AvailableBackends()
+
+	runningOnServer := false
+	if len(backends) == 1 && backends[0] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
 
 	kb := NewKeyringKeybase()
 	defer func() {
@@ -32,7 +40,12 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	mockIn.Reset("y\n")
+	if runningOnServer {
+		mockIn.Reset("testpass\ny\n")
+
+	} else {
+		mockIn.Reset("y\n")
+	}
 	err := runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
 

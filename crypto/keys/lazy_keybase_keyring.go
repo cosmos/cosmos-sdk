@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/crypto/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -47,8 +50,53 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 	}
 
 	realPrompt := func(prompt string) (string, error) {
+
 		buf := bufio.NewReader(lkb.userInput)
-		return input.GetPassword("Enter passphrase to decrypt your key:", buf)
+
+		var keyhash []byte
+		keyhashStored := false
+
+		if _, err := os.Stat(lkb.dir + "/keyhash"); err == nil {
+			keyhash, err = ioutil.ReadFile(lkb.dir + "/keyhash")
+			keyhashStored = true
+		} else if os.IsNotExist(err) {
+			keyhashStored = false
+		} else {
+			return "", err
+		}
+		for {
+
+			pass, err := input.GetPassword("Enter keyring files passphrase for your keys:", buf)
+
+			if !keyhashStored {
+
+				reEnteredPass, err := input.GetPassword("Renter keyring files passphrase for your keys:", buf)
+
+				if pass != reEnteredPass {
+					fmt.Println("Passwords do no match")
+					continue
+				}
+
+				passwordHash, err := bcrypt.GenerateFromPassword([]byte("Cosmos Key Hash"), []byte(pass), 30)
+				if err != nil {
+					continue
+				}
+				err = ioutil.WriteFile(lkb.dir+"/keyhash", passwordHash, 0555)
+				if err != nil {
+					return "", err
+				}
+				return pass, nil
+
+			} else {
+				err = bcrypt.CompareHashAndPassword(keyhash, []byte(pass))
+				if err != nil {
+					fmt.Println("incorrect password")
+					continue
+				}
+				return pass, nil
+			}
+		}
+
 	}
 
 	return keyring.Config{

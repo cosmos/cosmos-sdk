@@ -82,7 +82,8 @@ func SimulateFromSeed(
 			temp_accs = append(temp_accs, acc)
 		}
 	}
-	accs = temp_accs
+
+	accs = tmpAccs
 
 	nextValidators := validators
 

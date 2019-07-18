@@ -368,17 +368,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
-	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
-	if err != nil {
-		fmt.Println(err)
-		b.Fail()
-	}
-
-	if commit {
-		fmt.Println("GoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
+	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 
 	if exportState {
 		fmt.Println("Exporting app state...")
@@ -407,6 +397,17 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 			fmt.Println(err)
 			b.Fail()
 		}
+	}
+
+	if simErr != nil {
+		fmt.Println(simErr)
+		b.FailNow()
+	}
+
+	if commit {
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 }
 
@@ -436,16 +437,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
-	require.NoError(t, err)
-
-	if commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
+	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if exportState {
 		fmt.Println("Exporting app state...")
@@ -465,6 +457,15 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	require.NoError(t, simErr)
+
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
 }
 
 func TestAppImportExport(t *testing.T) {
@@ -492,17 +493,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
-	require.NoError(t, err)
-
-	if commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
-
+	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	if exportState {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -519,6 +510,16 @@ func TestAppImportExport(t *testing.T) {
 
 		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
+	}
+
+	require.NoError(t, simErr)
+
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
 	fmt.Printf("Exporting genesis...\n")
@@ -606,22 +607,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
-	require.NoError(t, err)
-
-	if commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
-
-	if stopEarly {
-		// we can't export or import a zero-validator genesis
-		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
-		return
-	}
+	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	if exportState {
 		fmt.Println("Exporting app state...")
@@ -639,6 +625,22 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
+	}
+
+	require.NoError(t, simErr)
+
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+
+	if stopEarly {
+		// we can't export or import a zero-validator genesis
+		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
+		return
 	}
 
 	fmt.Printf("Exporting genesis...\n")
@@ -716,15 +718,11 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, 0)
 
 	// 2. Run parameterized simulation (w/o invariants)
-	_, params, err := simulation.SimulateFromSeed(
+	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
 		exportParams, commit, lean, onOperation, false,
 	)
-	if err != nil {
-		fmt.Println(err)
-		b.FailNow()
-	}
 
 	if exportState {
 		fmt.Println("Exporting app state...")
@@ -753,6 +751,11 @@ func BenchmarkInvariants(b *testing.B) {
 			fmt.Println(err)
 			b.Fail()
 		}
+	}
+
+	if simErr != nil {
+		fmt.Println(simErr)
+		b.FailNow()
 	}
 
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})

@@ -1,36 +1,42 @@
 package utils
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type JSONObject struct {
-	Connection      connection.Connection `json:"connection"`
-	ConnectionProof commitment.Proof      `json:"connection_proof,omitempty"`
-	Available       bool                  `json:"available"`
-	AvailableProof  commitment.Proof      `json:"available_proof,omitempty"`
-	Kind            string                `json:"kind"`
-	KindProof       commitment.Proof      `json:"kind_proof,omitempty"`
+	Channel              channel.Channel  `json:"channel"`
+	ChannelProof         commitment.Proof `json:"channel_proof,omitempty"`
+	Available            bool             `json:"available"`
+	AvailableProof       commitment.Proof `json:"available_proof,omitempty"`
+	SequenceSend         uint64           `json:"sequence_send"`
+	SequenceSendProof    commitment.Proof `json:"sequence_send_proof,omitempty"`
+	SequenceReceive      uint64           `json:"sequence_receive"`
+	SequenceReceiveProof commitment.Proof `json:"sequence_receive_proof,omitempty"`
+	//	Kind                 string           `json:"kind"`
+	//	KindProof            commitment.Proof `json:"kind_proof,omitempty"`
 }
 
 func NewJSONObject(
-	conn connection.Connection, connp commitment.Proof,
+	channel channel.Channel, channelp commitment.Proof,
 	avail bool, availp commitment.Proof,
-	kind string, kindp commitment.Proof,
+	//	kind string, kindp commitment.Proof,
+	seqsend uint64, seqsendp commitment.Proof,
+	seqrecv uint64, seqrecvp commitment.Proof,
 ) JSONObject {
 	return JSONObject{
-		Connection:      conn,
-		ConnectionProof: connp,
-		Available:       avail,
-		AvailableProof:  availp,
-		Kind:            kind,
-		KindProof:       kindp,
+		Channel:        channel,
+		ChannelProof:   channelp,
+		Available:      avail,
+		AvailableProof: availp,
+		//	Kind:           kind,
+		//	KindProof:      kindp,
 	}
 }
 
 type HandshakeJSONObject struct {
-	JSONObject              `json:"connection"`
+	JSONObject              `json:"channel"`
 	State                   byte             `json:"state"`
 	StateProof              commitment.Proof `json:"state_proof,omitempty"`
 	CounterpartyClient      string           `json:"counterparty_client"`
@@ -40,20 +46,20 @@ type HandshakeJSONObject struct {
 }
 
 func NewHandshakeJSONObject(
-	conn connection.Connection, connp commitment.Proof,
+	channel channel.Channel, channelp commitment.Proof,
 	avail bool, availp commitment.Proof,
-	kind string, kindp commitment.Proof,
+	//	kind string, kindp commitment.Proof,
+	seqsend uint64, seqsendp commitment.Proof,
+	seqrecv uint64, seqrecvp commitment.Proof,
+
 	state byte, statep commitment.Proof,
-	cpclient string, cpclientp commitment.Proof,
 	timeout uint64, timeoutp commitment.Proof,
 ) HandshakeJSONObject {
 	return HandshakeJSONObject{
-		JSONObject:              NewJSONObject(conn, connp, avail, availp, kind, kindp),
-		State:                   state,
-		StateProof:              statep,
-		CounterpartyClient:      cpclient,
-		CounterpartyClientProof: cpclientp,
-		NextTimeout:             timeout,
-		NextTimeoutProof:        timeoutp,
+		JSONObject:       NewJSONObject(channel, channelp, avail, availp, seqsend, seqsendp, seqrecv, seqrecvp),
+		State:            state,
+		StateProof:       statep,
+		NextTimeout:      timeout,
+		NextTimeoutProof: timeoutp,
 	}
 }

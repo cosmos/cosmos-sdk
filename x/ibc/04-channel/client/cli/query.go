@@ -15,8 +15,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -24,13 +25,14 @@ const (
 	FlagProve = "prove"
 )
 
-func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) channel.CLIObject {
+func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIObject {
 	prefix := []byte(strconv.FormatInt(version, 10) + "/")
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)
-	man := channel.NewManager(base, climan)
-	return man.CLIObject(ctx, path, id)
+	connman := connection.NewManager(base, climan)
+	man := channel.NewManager(base, connman)
+	return man.CLIQuery(ctx, path, connid, chanid)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -56,7 +58,18 @@ func QueryChannel(ctx context.CLIContext, obj channel.CLIObject, prove bool) (re
 	if err != nil {
 		return
 	}
-	kind, kindp, err := obj.Kind(ctx)
+	/*
+		kind, kindp, err := obj.Kind(ctx)
+		if err != nil {
+			return
+		}
+	*/
+	seqsend, seqsendp, err := obj.SeqSend(ctx)
+	if err != nil {
+		return
+	}
+
+	seqrecv, seqrecvp, err := obj.SeqRecv(ctx)
 	if err != nil {
 		return
 	}
@@ -65,14 +78,17 @@ func QueryChannel(ctx context.CLIContext, obj channel.CLIObject, prove bool) (re
 		return utils.NewJSONObject(
 			conn, connp,
 			avail, availp,
-			kind, kindp,
+			//			kind, kindp,
+			seqsend, seqsendp,
+			seqrecv, seqrecvp,
 		), nil
 	}
 
 	return utils.NewJSONObject(
 		conn, nil,
 		avail, nil,
-		kind, nil,
+		seqsend, nil,
+		seqrecv, nil,
 	), nil
 }
 
@@ -83,7 +99,7 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(ctx, cdc, storeKey, ibc.Version, args[0])
+			obj := object(ctx, cdc, storeKey, ibc.Version, args[0], args[1])
 			jsonobj, err := QueryChannel(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

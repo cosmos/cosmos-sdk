@@ -132,3 +132,33 @@ func (msg MsgOpenConfirm) GetSignBytes() []byte {
 func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
+
+type MsgReceive struct {
+	ConnectionID string
+	ChannelID    string
+	Packet       Packet
+	Proofs       []commitment.Proof
+	Signer       sdk.AccAddress
+}
+
+var _ sdk.Msg = MsgReceive{}
+
+func (msg MsgReceive) Route() string {
+	return Route
+}
+
+func (msg MsgReceive) Type() string {
+	return "receive"
+}
+
+func (msg MsgReceive) ValidateBasic() sdk.Error {
+	return nil // TODO
+}
+
+func (msg MsgReceive) GetSignBytes() []byte {
+	return nil // TODO
+}
+
+func (msg MsgReceive) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}

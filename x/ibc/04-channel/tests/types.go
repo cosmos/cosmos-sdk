@@ -159,7 +159,7 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 	err = obj.Send(ctx, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqSend(ctx))
-	require.Equal(t, packet.Commit(), obj.PacketCommit(ctx, seq+1))
+	require.Equal(t, node.Cdc.MustMarshalBinaryBare(packet), obj.PacketCommit(ctx, seq+1))
 }
 
 func (node *Node) Receive(t *testing.T, packet channel.Packet, proofs ...commitment.Proof) {
@@ -167,7 +167,7 @@ func (node *Node) Receive(t *testing.T, packet channel.Packet, proofs ...commitm
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqRecv(ctx)
-	err = obj.Receive(ctx, proofs, packet)
+	err = man.Receive(ctx, proofs, node.Name, node.Name, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqRecv(ctx))
 }

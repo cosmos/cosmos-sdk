@@ -35,3 +35,14 @@ func HandleMsgOpenConfirm(ctx sdk.Context, msg MsgOpenConfirm, man Handshaker) s
 	}
 	return sdk.Result{}
 }
+
+type Handler func(sdk.Context, Packet) sdk.Result
+
+func HandleMsgReceive(ctx sdk.Context, msg MsgReceive, man Manager) sdk.Result {
+	err := man.Receive(ctx, msg.Proofs, msg.ConnectionID, msg.ChannelID, msg.Packet)
+	if err != nil {
+		return sdk.NewError(sdk.CodespaceType("ibc"), 500, "").Result()
+	}
+	handler := man.router.Route(msg.Packet.Route())
+	return handler(ctx, msg.Packet)
+}

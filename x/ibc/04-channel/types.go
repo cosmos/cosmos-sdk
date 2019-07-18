@@ -16,7 +16,8 @@ type Packet struct {
 
 type Packet interface {
 	Timeout() uint64
-	Commit() []byte // Can be a commit message
+	//	Commit() []byte // Can be a commit message
+	Route() string
 }
 
 type Channel struct {

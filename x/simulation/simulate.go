@@ -47,6 +47,7 @@ func SimulateFromSeed(
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
 	numBlocks, blockSize int, commit, lean, onOperation, allInvariants bool,
+	blackListedAccs map[string]bool,
 ) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -73,6 +74,16 @@ func SimulateFromSeed(
 	if len(accs) == 0 {
 		return true, fmt.Errorf("must have greater than zero genesis accounts")
 	}
+
+	// remove module account address if they exist in accs
+	var tmpAccs []Account
+	for _, acc := range accs {
+		if !blackListedAccs[acc.Address.String()] {
+			tmpAccs = append(tmpAccs, acc)
+		}
+	}
+
+	accs = tmpAccs
 
 	nextValidators := validators
 

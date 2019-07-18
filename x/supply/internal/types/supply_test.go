@@ -21,7 +21,7 @@ func TestSupplyMarshalYAML(t *testing.T) {
 	bzCoins, err := yaml.Marshal(coins)
 	require.NoError(t, err)
 
-	want := fmt.Sprintf(`total_supply:
+	want := fmt.Sprintf(`total:
 %s`, string(bzCoins))
 
 	require.Equal(t, want, string(bz))

@@ -120,7 +120,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr.String()))
+		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
 	}
 
 	// fetch signing info
@@ -162,7 +162,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			),
 		)
 
-		logger.Info(fmt.Sprintf("Absent validator %s (%s) at height %d, %d missed, threshold %d", addr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Info(
+			fmt.Sprintf("Absent validator %s (%s) at height %d, %d missed, threshold %d", consAddr, pubkey, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
@@ -175,7 +176,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
-				sdk.ConsAddress(pubkey.Address()), minHeight, k.MinSignedPerWindow(ctx)))
+				consAddr, minHeight, k.MinSignedPerWindow(ctx)))
 
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
@@ -204,8 +205,9 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
-				sdk.ConsAddress(pubkey.Address())))
+			logger.Info(
+				fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed", consAddr),
+			)
 		}
 	}
 

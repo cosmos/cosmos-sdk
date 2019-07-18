@@ -19,6 +19,8 @@ func Test_runAddCmdBasic(t *testing.T) {
 	backends := keyring.AvailableBackends()
 
 	runningOnServer := false
+
+	fmt.Println(backends)
 	if len(backends) == 1 && backends[0] == keyring.BackendType("file") {
 		runningOnServer = true
 	}

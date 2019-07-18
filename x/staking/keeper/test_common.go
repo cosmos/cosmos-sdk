@@ -125,7 +125,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:   []string{supply.Basic},
+		auth.FeeCollectorName:   nil,
 		types.NotBondedPoolName: []string{supply.Burner, supply.Staking},
 		types.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
@@ -141,7 +141,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
 	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 

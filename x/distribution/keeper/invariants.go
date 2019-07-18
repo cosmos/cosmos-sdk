@@ -43,21 +43,21 @@ func AllInvariants(k Keeper) sdk.Invariant {
 func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var msg string
-		var amt int
+		var count int
 		var outstanding sdk.DecCoins
 
 		k.IterateValidatorOutstandingRewards(ctx, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = rewards
 			if outstanding.IsAnyNegative() {
-				amt++
+				count++
 				msg += fmt.Sprintf("\t%v has negative outstanding coins: %v\n", addr, outstanding)
 			}
 			return false
 		})
-		broken := amt != 0
+		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding",
-			fmt.Sprintf("found %d validators with negative outstanding rewards\n%s", amt, msg), broken)
+			fmt.Sprintf("found %d validators with negative outstanding rewards\n%s", count, msg), broken)
 	}
 }
 
@@ -99,7 +99,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		broken := len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec())
 		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
-			fmt.Sprintf("remaining coins: %v", remaining), broken)
+			fmt.Sprintf("remaining coins: %v\n", remaining), broken)
 	}
 }
 
@@ -126,9 +126,10 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
 		broken := count != expected
 
-		return sdk.FormatInvariant(types.ModuleName, "reference count", fmt.Sprintf("unexpected number of historical rewards records: "+
-			"expected %v (%v vals + %v dels + %v slashes), got %v",
-			expected, valCount, len(dels), slashCount, count), broken)
+		return sdk.FormatInvariant(types.ModuleName, "reference count",
+			fmt.Sprintf("expected historical reference count: %d = %v validators + %v delegations + %v slashes\n"+
+				"total validator historical reference count: %d\n",
+				expected, valCount, len(dels), slashCount, count), broken)
 	}
 }
 
@@ -149,7 +150,9 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 		macc := k.GetDistributionAccount(ctx)
 
 		broken := !macc.GetCoins().IsEqual(expectedInt)
-		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins", fmt.Sprintf("expected ModuleAccount coins: %s\n"+
-			"\tdistribution ModuleAccount coins : %s", expectedInt, macc.GetCoins()), broken)
+		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins",
+			fmt.Sprintf("\texpected ModuleAccount coins:     %s\n"+
+				"\tdistribution ModuleAccount coins: %s\n",
+				expectedInt, macc.GetCoins()), broken)
 	}
 }

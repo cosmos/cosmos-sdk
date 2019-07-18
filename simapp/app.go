@@ -57,10 +57,10 @@ var (
 		supply.AppModuleBasic{},
 	)
 
-	// account permissions
+	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:     {supply.Basic},
-		distr.ModuleName:          {supply.Basic},
+		auth.FeeCollectorName:     nil,
+		distr.ModuleName:          nil,
 		mint.ModuleName:           {supply.Minter},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},

@@ -9,7 +9,6 @@ import (
 
 // permissions
 const (
-	Basic   = "basic"
 	Minter  = "minter"
 	Burner  = "burner"
 	Staking = "staking"

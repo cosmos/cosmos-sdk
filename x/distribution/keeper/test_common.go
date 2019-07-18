@@ -121,8 +121,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:     []string{supply.Basic},
-		types.ModuleName:          []string{supply.Basic},
+		auth.FeeCollectorName:     nil,
+		types.ModuleName:          nil,
 		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
 		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
@@ -144,10 +144,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 
 	// create module accounts
-	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
-	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Basic)
+	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName)
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)

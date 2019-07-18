@@ -17,7 +17,7 @@ type ValidatorSigningInfo struct {
 	MissedBlocksCounter int64           `json:"missed_blocks_counter" yaml:"missed_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
 }
 
-// NewValidatorSigningInfo crates a new ValidatorSigningInfo instance
+// NewValidatorSigningInfo creates a new ValidatorSigningInfo instance
 func NewValidatorSigningInfo(
 	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
 	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,

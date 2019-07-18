@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/99designs/keyring"
@@ -41,6 +42,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
+		fmt.Println("Running on Server")
 		mockIn.Reset("testpass\ny\n")
 
 	} else {

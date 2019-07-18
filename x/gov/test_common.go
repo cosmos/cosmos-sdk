@@ -1,4 +1,4 @@
-// nolint:deadcode unused
+// nolint
 // DONTCOVER
 package gov
 
@@ -43,7 +43,7 @@ type testInput struct {
 }
 
 func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []auth.Account,
-	handler func (ctx sdk.Context, c types.Content) sdk.Error) testInput {
+	handler func(ctx sdk.Context, c types.Content) sdk.Error) testInput {
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
@@ -134,7 +134,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 	}
 }
 
-// Sorts Addresses
+// SortAddresses - Sorts Addresses
 func SortAddresses(addrs []sdk.AccAddress) {
 	var byteAddrs [][]byte
 	for _, addr := range addrs {
@@ -170,6 +170,7 @@ func (b sortByteArrays) Swap(i, j int) {
 	b[j], b[i] = b[i], b[j]
 }
 
+// SortByteArrays -
 func SortByteArrays(src [][]byte) [][]byte {
 	sorted := sortByteArrays(src)
 	sort.Sort(sorted)
@@ -193,8 +194,8 @@ func badProposalHandler(ctx sdk.Context, c types.Content) sdk.Error {
 		return nil
 
 	default:
-		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
-		return sdk.ErrUnknownRequest(errMsg)
+		msg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
+		return sdk.ErrUnknownRequest(msg)
 	}
 }
 

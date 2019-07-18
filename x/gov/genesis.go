@@ -79,25 +79,3 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		TallyParams:        tallyParams,
 	}
 }
-
-// ValidateGenesis checks if parameters are within valid ranges
-func ValidateGenesis(data GenesisState) error {
-	threshold := data.TallyParams.Threshold
-	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote threshold should be positive and less or equal to one, is %s",
-			threshold.String())
-	}
-
-	veto := data.TallyParams.Veto
-	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
-			veto.String())
-	}
-
-	if !data.DepositParams.MinDeposit.IsValid() {
-		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
-			data.DepositParams.MinDeposit.String())
-	}
-
-	return nil
-}

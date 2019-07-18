@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
@@ -33,13 +34,14 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.CLIHandshakeObject {
+func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIHandshakeObject {
 	prefix := []byte(strconv.FormatInt(version, 10) + "/")
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)
-	man := connection.NewHandshaker(connection.NewManager(base, climan))
-	return man.CLIObject(ctx, path, id)
+	connman := connection.NewManager(base, climan)
+	man := channel.NewHandshaker(channel.NewManager(base, connman))
+	return man.CLIQuery(ctx, path, connid, chanid)
 }
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
@@ -56,12 +58,12 @@ func lastheight(ctx context.CLIContext) (uint64, error) {
 	return uint64(info.Response.LastBlockHeight), nil
 }
 
-func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
-		Short: "initiate connection handshake between two chains",
+		Short: "initiate channel handshake between two chains",
 		Args:  cobra.ExactArgs(4),
-		// Args: []string{connid1, connfilepath1, connid2, connfilepath2}
+		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContext().
@@ -75,28 +77,30 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				WithFrom(viper.GetString(FlagFrom2))
 
 			conn1id := args[0]
-			conn1bz, err := ioutil.ReadFile(args[1])
+			chan1id := args[1]
+			conn1bz, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
 			}
-			var conn1 connection.Connection
+			var conn1 channel.Channel
 			if err := cdc.UnmarshalJSON(conn1bz, &conn1); err != nil {
 				return err
 			}
 
-			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id)
+			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
 
-			conn2id := args[2]
-			conn2bz, err := ioutil.ReadFile(args[3])
+			conn2id := args[3]
+			chan2id := args[4]
+			conn2bz, err := ioutil.ReadFile(args[5])
 			if err != nil {
 				return err
 			}
-			var conn2 connection.Connection
+			var conn2 channel.Channel
 			if err := cdc.UnmarshalJSON(conn2bz, &conn2); err != nil {
 				return err
 			}
 
-			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id)
+			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id, chan1id)
 
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
@@ -104,12 +108,12 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout := height + 1000 // TODO: parameterize
-			msginit := connection.MsgOpenInit{
-				ConnectionID:       conn1id,
-				Connection:         conn1,
-				CounterpartyClient: conn2.Client,
-				NextTimeout:        nextTimeout,
-				Signer:             ctx1.GetFromAddress(),
+			msginit := channel.MsgOpenInit{
+				ConnectionID: conn1id,
+				ChannelID:    chan1id,
+				Channel:      conn1,
+				NextTimeout:  nextTimeout,
+				Signer:       ctx1.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msginit})
@@ -123,7 +127,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err := obj1.Connection(ctx1)
+			_, pconn, err := obj1.Channel(ctx1)
 			if err != nil {
 				return err
 			}
@@ -135,19 +139,15 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 			if err != nil {
 				return err
 			}
-			_, pcounter, err := obj1.CounterpartyClient(ctx1)
-			if err != nil {
-				return err
-			}
 
-			msgtry := connection.MsgOpenTry{
-				ConnectionID:       conn2id,
-				Connection:         conn2,
-				CounterpartyClient: conn1.Client,
-				Timeout:            timeout,
-				NextTimeout:        nextTimeout,
-				Proofs:             []commitment.Proof{pconn, pstate, ptimeout, pcounter},
-				Signer:             ctx2.GetFromAddress(),
+			msgtry := channel.MsgOpenTry{
+				ConnectionID: conn2id,
+				ChannelID:    chan2id,
+				Channel:      conn2,
+				Timeout:      timeout,
+				NextTimeout:  nextTimeout,
+				Proofs:       []commitment.Proof{pconn, pstate, ptimeout},
+				Signer:       ctx2.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
@@ -161,7 +161,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err = obj2.Connection(ctx2)
+			_, pconn, err = obj2.Channel(ctx2)
 			if err != nil {
 				return err
 			}
@@ -173,16 +173,12 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 			if err != nil {
 				return err
 			}
-			_, pcounter, err = obj2.CounterpartyClient(ctx2)
-			if err != nil {
-				return err
-			}
 
-			msgack := connection.MsgOpenAck{
+			msgack := channel.MsgOpenAck{
 				ConnectionID: conn1id,
+				ChannelID:    chan1id,
 				Timeout:      timeout,
-				NextTimeout:  nextTimeout,
-				Proofs:       []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Proofs:       []commitment.Proof{pconn, pstate, ptimeout},
 				Signer:       ctx1.GetFromAddress(),
 			}
 
@@ -201,8 +197,9 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			msgconfirm := connection.MsgOpenConfirm{
+			msgconfirm := channel.MsgOpenConfirm{
 				ConnectionID: conn2id,
+				ChannelID:    chan2id,
 				Timeout:      timeout,
 				Proofs:       []commitment.Proof{pstate, ptimeout},
 				Signer:       ctx2.GetFromAddress(),

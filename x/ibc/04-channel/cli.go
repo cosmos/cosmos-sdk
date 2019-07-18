@@ -24,7 +24,7 @@ type CLIObject struct {
 	Cdc  *codec.Codec
 }
 
-func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIObject {
+func (man Manager) cliObject(path merkle.Path, chanid, connid string) CLIObject {
 	obj := man.object(connid, chanid)
 	return CLIObject{
 		ChanID:     chanid,
@@ -37,11 +37,21 @@ func (man Manager) CLIObject(ctx context.CLIContext, path merkle.Path, chanid, c
 			return obj.packets.Value(index).Key()
 		},
 
-		Connection: man.connection.CLIObject(ctx, path, connid),
-
 		Path: path,
 		Cdc:  obj.channel.Cdc(),
 	}
+}
+
+func (man Manager) CLIQuery(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIObject {
+	obj := man.cliObject(path, chanid, connid)
+	obj.Connection = man.connection.CLIQuery(ctx, path, connid)
+	return obj
+}
+
+func (man Manager) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIObject {
+	obj := man.cliObject(path, chanid, connid)
+	obj.Connection = man.connection.CLIObject(path, connid, clientid)
+	return obj
 }
 
 func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
@@ -60,6 +70,11 @@ func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) 
 
 func (obj CLIObject) Channel(ctx context.CLIContext) (res Channel, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.ChannelKey, &res)
+	return
+}
+
+func (obj CLIObject) Available(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
+	proof, err = obj.query(ctx, obj.AvailableKey, &res)
 	return
 }
 
@@ -85,10 +100,20 @@ type CLIHandshakeObject struct {
 	TimeoutKey []byte
 }
 
-func (man Handshaker) CLIObject(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIHandshakeObject {
+func (man Handshaker) CLIQuery(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIHandshakeObject {
 	obj := man.object(man.man.object(connid, chanid))
 	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(ctx, path, chanid, connid),
+		CLIObject: man.man.CLIQuery(ctx, path, chanid, connid),
+
+		StateKey:   obj.state.Key(),
+		TimeoutKey: obj.nextTimeout.Key(),
+	}
+}
+
+func (man Handshaker) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIHandshakeObject {
+	obj := man.object(man.man.object(connid, chanid))
+	return CLIHandshakeObject{
+		CLIObject: man.man.CLIObject(path, chanid, connid, clientid),
 
 		StateKey:   obj.state.Key(),
 		TimeoutKey: obj.nextTimeout.Key(),
@@ -100,7 +125,7 @@ func (obj CLIHandshakeObject) State(ctx context.CLIContext) (res State, proof me
 	return
 }
 
-func (obj CLIHandshakeObject) Timeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
+func (obj CLIHandshakeObject) NextTimeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
 	return
 }

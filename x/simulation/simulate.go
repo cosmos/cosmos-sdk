@@ -46,9 +46,9 @@ func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, exportStateHeight, exportParamsHeight, blockSize int,
-	exportState, exportParams, commit, lean, onOperation, allInvariants bool,
-) (stopEarly bool, exportedApp *baseapp.BaseApp, exportedParams Params, err error) {
+	numBlocks, exportParamsHeight, blockSize int,
+	exportParams, commit, lean, onOperation, allInvariants bool,
+) (stopEarly bool, exportedParams Params, err error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
@@ -72,7 +72,7 @@ func SimulateFromSeed(
 	// TM 0.24) Initially this is the same as the initial validator set
 	validators, accs := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
 	if len(accs) == 0 {
-		return true, app, params, fmt.Errorf("must have greater than zero genesis accounts")
+		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
 	nextValidators := validators
@@ -126,8 +126,7 @@ func SimulateFromSeed(
 		}()
 	}
 
-	// export the app and params initial state
-	exportedApp = app
+	// set exported params to the initial state
 	exportedParams = params
 
 	// TODO: split up the contents of this for loop into new functions
@@ -200,26 +199,15 @@ func SimulateFromSeed(
 		nextValidators = updateValidators(tb, r, params,
 			validators, res.ValidatorUpdates, eventStats.tally)
 
-		// update the exported params and app state
+		// update the exported params
 		if exportParams && exportParamsHeight == height {
 			exportedParams = params
 		}
-		if exportState && exportStateHeight == height {
-			exportedApp = app
-		}
-	}
-
-	// set the state and params to their final values if not exported
-	if !exportState {
-		exportedApp = app
-	}
-	if !exportParams {
-		exportedParams = params
 	}
 
 	if stopEarly {
 		eventStats.Print(w)
-		return true, exportedApp, exportedParams, err
+		return true, exportedParams, err
 	}
 
 	fmt.Fprintf(
@@ -230,7 +218,7 @@ func SimulateFromSeed(
 
 	eventStats.Print(w)
 
-	return false, exportedApp, exportedParams, nil
+	return false, exportedParams, nil
 }
 
 //______________________________________________________________________________

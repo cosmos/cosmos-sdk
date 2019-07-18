@@ -31,14 +31,14 @@ import (
 )
 
 func init() {
+	// TODO: remove "Simulation" prefix as it's verbose
 	flag.StringVar(&genesisFile, "SimulationGenesis", "", "custom simulation genesis file; cannot be used with params file")
 	flag.StringVar(&paramsFile, "SimulationParams", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
 	flag.BoolVar(&exportParams, "SimulationExportParams", false, "export the randomly generated params to JSON at a export height")
 	flag.StringVar(&exportParamsPath, "SimulationExportParamsPath", "./sim_params.json", "custom path to save the exported params JSON")
 	flag.IntVar(&exportParamsHeight, "SimulationExportParamsHeight", 0, "height to which export the randomly generated params")
 	flag.BoolVar(&exportState, "SimulationExportState", false, "height to which export the randomly generated params to JSON")
-	flag.StringVar(&exportParamsPath, "SimulationExportParamsPath", "./genesis.json", "custom path to save the exported app state JSON")
-	flag.IntVar(&exportStateHeight, "SimulationExportStateHeight", 0, "height to which export the app state")
+	flag.StringVar(&exportStatePath, "SimulationExportStatePath", "./genesis.json", "custom path to save the exported app state JSON")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "operations per block")
@@ -54,13 +54,13 @@ func init() {
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, int,
-	bool, bool, bool, bool, bool, bool) {
+	simulation.WeightedOperations, sdk.Invariants, int, int, int,
+	bool, bool, bool, bool, bool) {
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
-		numBlocks, exportStateHeight, exportParamsHeight, blockSize,
-		exportState, exportParams, commit, lean, onOperation, allInvariants
+		numBlocks, exportParamsHeight, blockSize,
+		exportParams, commit, lean, onOperation, allInvariants
 }
 
 func appStateFn(
@@ -367,8 +367,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, 0)
 
 	// Run randomized simulation
-	// TODO parameterize numbers, save for a later PR
-	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
+	// TODO: parameterize numbers, save for a later PR
+	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 	if err != nil {
 		fmt.Println(err)
 		b.Fail()
@@ -436,7 +436,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	require.NoError(t, err)
 
 	if commit {
@@ -492,7 +492,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	require.NoError(t, err)
 
 	if commit {
@@ -606,7 +606,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, app, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	stopEarly, params, err := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 	require.NoError(t, err)
 
 	if commit {
@@ -665,7 +665,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, _, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
+	_, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
 	require.Nil(t, err)
 }
 
@@ -691,8 +691,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
-				50, 100, 0, 0,
-				false, false, true, false, false, false,
+				50, 100, 0,
+				false, true, false, false, false,
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -716,10 +716,10 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, 0)
 
 	// 2. Run parameterized simulation (w/o invariants)
-	_, app, params, err := simulation.SimulateFromSeed(
+	_, params, err := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, exportStateHeight, exportParamsHeight, blockSize,
-		exportState, exportParams, commit, lean, onOperation, false,
+		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
+		exportParams, commit, lean, onOperation, false,
 	)
 	if err != nil {
 		fmt.Println(err)

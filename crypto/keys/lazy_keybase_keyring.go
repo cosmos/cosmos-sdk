@@ -68,9 +68,18 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 
 			pass, err := input.GetPassword("Enter keyring files passphrase for your keys:", buf)
 
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
 			if !keyhashStored {
 
 				reEnteredPass, err := input.GetPassword("Renter keyring files passphrase for your keys:", buf)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
 
 				if pass != reEnteredPass {
 					fmt.Println("Passwords do no match")

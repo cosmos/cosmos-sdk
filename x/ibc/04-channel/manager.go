@@ -18,6 +18,8 @@ type Manager struct {
 	connection connection.Manager
 
 	counterparty CounterpartyManager
+
+	router Router
 }
 
 type CounterpartyManager struct {
@@ -256,17 +258,22 @@ func (obj Object) Send(ctx sdk.Context, packet Packet) error {
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.packets.SetRaw(ctx, obj.seqsend.Incr(ctx), packet.Commit())
+	obj.packets.Set(ctx, obj.seqsend.Incr(ctx), packet)
 
 	return nil
 }
 
-func (obj Object) Receive(ctx sdk.Context, proofs []commitment.Proof, packet Packet) error {
+func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, connid, chanid string, packet Packet) error {
+	obj, err := man.Query(ctx, connid, chanid)
+	if err != nil {
+		return err
+	}
+
 	if !obj.Receivable(ctx) {
 		return errors.New("cannot receive packets on this channel")
 	}
 
-	ctx, err := obj.Context(ctx, proofs)
+	ctx, err = obj.Context(ctx, proofs)
 	if err != nil {
 		return err
 	}
@@ -277,7 +284,8 @@ func (obj Object) Receive(ctx sdk.Context, proofs []commitment.Proof, packet Pac
 	}
 
 	// XXX: increment should happen before verification, reflect on the spec
-	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).IsRaw(ctx, packet.Commit()) {
+	// TODO: packet should be custom marshalled
+	if !obj.counterparty.packets.Value(obj.seqrecv.Incr(ctx)).Is(ctx, packet) {
 		return errors.New("verification failed")
 	}
 

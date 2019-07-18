@@ -216,3 +216,54 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+
+func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "relay",
+		Short: "relay pakcets between two channels",
+		Args:  cobra.ExactArgs(4),
+		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx1 := context.NewCLIContext().
+				WithCodec(cdc).
+				WithNodeURI(viper.GetString(FlagNode1)).
+				WithFrom(viper.GetString(FlagFrom1))
+
+			ctx2 := context.NewCLIContext().
+				WithCodec(cdc).
+				WithNodeURI(viper.GetString(FlagNode2)).
+				WithFrom(viper.GetString(FlagFrom2))
+
+			conn1id, chan1id, conn2id, chan2id := args[0], args[1], args[2], args[3]
+
+			obj1 := object(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			obj2 := object(ctx2, cdc, storeKey, ibc.Version, conn2id, chan2id)
+		},
+	}
+
+	return cmd
+}
+
+func relay(ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.Object) error {
+	seq, _, err := objTo.SeqRecv(ctxTo)
+	if err != nil {
+		return err
+	}
+
+	sent, _, err := objFrom.SeqSend(ctxFrom)
+	if err != nil {
+		return err
+	}
+
+	if seq == sent {
+		return nil
+	}
+
+	packet, proof, err := query(ctxFrom, objFrom.Packet(seq))
+	if err != nil {
+		return err
+	}
+
+	msg := channel.MsgReceive{}
+}

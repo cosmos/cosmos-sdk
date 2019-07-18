@@ -56,6 +56,16 @@ var (
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
+
+	// account permissions
+	maccPerms = map[string][]string{
+		auth.FeeCollectorName:     {supply.Basic},
+		distr.ModuleName:          {supply.Basic},
+		mint.ModuleName:           {supply.Minter},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		gov.ModuleName:            {supply.Burner},
+	}
 )
 
 // custom tx codec
@@ -102,15 +112,13 @@ type SimApp struct {
 
 	// the module manager
 	mm *module.Manager
-
-	// to prevent random account generation from
-	// colliding with module account addresses
-	blackListedAccs map[string]bool
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
-func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp)) *SimApp {
+func NewSimApp(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
+	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
+) *SimApp {
 
 	cdc := MakeCodec()
 
@@ -118,7 +126,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 
-	var app = &SimApp{
+	app := &SimApp{
 		BaseApp:        bApp,
 		cdc:            cdc,
 		invCheckPeriod: invCheckPeriod,
@@ -147,16 +155,6 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 
-	// account permissions
-	maccPerms := map[string][]string{
-		auth.FeeCollectorName:     []string{supply.Basic},
-		distr.ModuleName:          []string{supply.Basic},
-		mint.ModuleName:           []string{supply.Minter},
-		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
-		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
-		gov.ModuleName:            []string{supply.Burner},
-	}
-
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, app.keyAccount, authSubspace, auth.ProtoBaseAccount)
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper, bankSubspace, bank.DefaultCodespace)
@@ -169,11 +167,6 @@ func NewSimApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bo
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
-
-	app.blackListedAccs = make(map[string]bool)
-	for acc, _ := range maccPerms {
-		app.blackListedAccs[app.supplyKeeper.GetModuleAddress(acc).String()] = true
-	}
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -260,7 +253,12 @@ func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }
 
-// return an array of module account addresses
-func (app *SimApp) BlackListedAccs() map[string]bool {
-	return app.blackListedAccs
+// ModuleAccountAddrs returns all the app's module account addresses.
+func (app *SimApp) ModuleAccountAddrs() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range maccPerms {
+		modAccAddrs[app.supplyKeeper.GetModuleAddress(acc).String()] = true
+	}
+
+	return modAccAddrs
 }

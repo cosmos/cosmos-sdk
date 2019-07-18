@@ -52,7 +52,7 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app), numBlocks, blockSize, commit,
-		lean, onOperation, allInvariants, app.BlackListedAccs()
+		lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
 func appStateFn(
@@ -605,7 +605,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				false,
 				false,
 				false,
-				app.BlackListedAccs(),
+				app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -632,7 +632,7 @@ func BenchmarkInvariants(b *testing.B) {
 	_, err := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, blockSize, commit, lean, onOperation, false,
-		app.BlackListedAccs(),
+		app.ModuleAccountAddrs(),
 	)
 	if err != nil {
 		fmt.Println(err)

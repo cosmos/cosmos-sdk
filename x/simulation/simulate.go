@@ -19,15 +19,16 @@ import (
 )
 
 // AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
-type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
+type AppStateFn func(
+	r *rand.Rand, accs []Account,
+) (appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time)
 
 // initialize the chain for the simulation
 func initChain(
-	r *rand.Rand, params Params, accounts []Account,
-	app *baseapp.BaseApp, appStateFn AppStateFn, genesisTimestamp time.Time,
-) (mockValidators, []Account) {
+	r *rand.Rand, params Params, accounts []Account, app *baseapp.BaseApp, appStateFn AppStateFn,
+) (mockValidators, time.Time, []Account) {
 
-	appState, accounts, chainID := appStateFn(r, accounts, genesisTimestamp)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts)
 
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
@@ -36,7 +37,7 @@ func initChain(
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators, accounts
+	return validators, genesisTimestamp, accounts
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -58,22 +59,21 @@ func SimulateFromSeed(
 	params := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
-	genesisTimestamp := RandTimestamp(r)
-	fmt.Printf(
-		"Starting the simulation from time %v, unixtime %v\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
-	)
-
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
 	eventStats := newEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, accs := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
+	validators, genesisTimestamp, accs := initChain(r, params, accs, app, appStateFn)
 	if len(accs) == 0 {
 		return true, fmt.Errorf("must have greater than zero genesis accounts")
 	}
+
+	fmt.Printf(
+		"Starting the simulation from time %v (unixtime %v)\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
 
 	// remove module account address if they exist in accs
 	var tmpAccs []Account

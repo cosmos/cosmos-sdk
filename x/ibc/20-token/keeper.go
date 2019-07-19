@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-token/types"
 )
 
 type Keeper struct {
@@ -24,7 +25,7 @@ func (k Keeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.A
 	if err != nil {
 		return err
 	}
-	err = k.channel.Send(ctx, toConn, toChan, PacketSend{toAddr, amt})
+	err = k.channel.Send(ctx, toConn, toChan, types.PacketSend{toAddr, amt})
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-token"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-token/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -50,7 +50,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := token.NewMsgSend(cliCtx.GetFromAddress(), to, args[2], args[3], coins)
+			msg := types.NewMsgSend(cliCtx.GetFromAddress(), to, args[2], args[3], coins)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

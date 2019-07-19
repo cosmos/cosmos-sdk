@@ -156,7 +156,7 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 	obj, err := man.Query(ctx, node.Name, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqSend(ctx)
-	err = obj.Send(ctx, packet)
+	err = man.Send(ctx, node.Name, node.Name, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqSend(ctx))
 	require.Equal(t, node.Cdc.MustMarshalBinaryBare(packet), obj.PacketCommit(ctx, seq+1))

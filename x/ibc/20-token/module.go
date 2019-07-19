@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-token/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-token/types"
 )
 
 type AppModuleBasic struct{}
@@ -26,7 +27,7 @@ func (AppModuleBasic) Name() string {
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
@@ -79,7 +80,7 @@ func (AppModule) Route() string {
 func (am AppModule) NewHandler() sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case MsgSend:
+		case types.MsgSend:
 			err := am.keeper.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.ToConnection, msg.ToChannel, msg.Amount)
 			if err != nil {
 				return err.Result()
@@ -94,7 +95,7 @@ func (am AppModule) NewHandler() sdk.Handler {
 func (am AppModule) NewIBCHandler() channel.Handler {
 	return func(ctx sdk.Context, packet channel.Packet) sdk.Result {
 		switch packet := packet.(type) {
-		case PacketSend:
+		case types.PacketSend:
 			err := am.keeper.receiveCoins(ctx, packet.ToAddress, packet.Amount)
 			if err != nil {
 				return err.Result()

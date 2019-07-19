@@ -32,6 +32,14 @@ type MissedBlock struct {
 	Missed bool  `json:"missed" yaml:"missed"`
 }
 
+// NewMissedBlock creates a new MissedBlock instance
+func NewMissedBlock(index int64, missed bool) MissedBlock {
+	return MissedBlock{
+		Index:  index,
+		Missed: missed,
+	}
+}
+
 // DefaultGenesisState - default GenesisState used by Cosmos Hub
 func DefaultGenesisState() GenesisState {
 	return GenesisState{

@@ -46,6 +46,7 @@ func init() {
 	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
 	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
+	flag.Int64Var(&genesisTime, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
 }
 
 // helper function for populating input for SimulateFromSeed
@@ -63,10 +64,16 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 }
 
 func appStateFn(
-	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time,
-) (appState json.RawMessage, simAccs []simulation.Account, chainID string) {
+	r *rand.Rand, accs []simulation.Account,
+) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
 	cdc := MakeCodec()
+
+	if genesisTime == 0 {
+		genesisTimestamp = simulation.RandTimestamp(r)
+	} else {
+		genesisTimestamp = time.Unix(genesisTime, 0)
+	}
 
 	switch {
 	case paramsFile != "" && genesisFile != "":
@@ -90,7 +97,7 @@ func appStateFn(
 		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
 	}
 
-	return appState, simAccs, chainID
+	return appState, simAccs, chainID, genesisTimestamp
 }
 
 // TODO refactor out random initialization code to the modules

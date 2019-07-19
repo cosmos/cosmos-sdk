@@ -54,7 +54,7 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	simulation.WeightedOperations, sdk.Invariants, int, int, int,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
-	exportParams := exportParamsPath == ""
+	exportParams := exportParamsPath != ""
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),

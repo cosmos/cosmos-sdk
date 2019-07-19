@@ -67,9 +67,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(
-	r *rand.Rand, _ []simulation.Account, _ time.Time,
-) (json.RawMessage, []simulation.Account, string) {
+func AppStateFromGenesisFileFn(r *rand.Rand) (json.RawMessage, []simulation.Account, string) {
 
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()

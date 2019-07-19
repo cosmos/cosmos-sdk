@@ -73,7 +73,7 @@ func appStateFn(
 		panic("cannot provide both a genesis file and a params file")
 
 	case genesisFile != "":
-		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
+		appState, simAccs, chainID = AppStateFromGenesisFileFn(r)
 
 	case paramsFile != "":
 		appParams := make(simulation.AppParams)

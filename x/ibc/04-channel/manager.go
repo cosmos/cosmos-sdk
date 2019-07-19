@@ -34,9 +34,6 @@ func NewManager(protocol state.Base, connection connection.Manager) Manager {
 		connection:   connection,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
-	for _, module := range modules {
-		res.router.AddRoute(module.Name(), module.NewIBCHandler())
-	}
 
 	return res
 }

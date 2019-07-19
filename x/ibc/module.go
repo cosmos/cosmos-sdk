@@ -101,7 +101,10 @@ type AppModule struct {
 }
 
 func NewAppModule(keeper Keeper, modules ...channel.IBCModule) AppModule {
-	keeper.channel.RegisterModules(modules...)
+	keeper.channel.Manager().RegisterModules(modules...)
+	return AppModule{
+		keeper: keeper,
+	}
 }
 
 func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {

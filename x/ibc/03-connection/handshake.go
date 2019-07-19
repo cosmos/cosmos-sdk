@@ -28,6 +28,10 @@ type Handshaker struct {
 	counterparty CounterpartyHandshaker
 }
 
+func (man Handshaker) Manager() Manager {
+	return man.man
+}
+
 // TODO: ocapify Manager; an actor who holds Manager
 // should not be able to construct creaters from it
 // or add Seal() method to Manager?

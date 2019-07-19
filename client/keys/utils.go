@@ -28,10 +28,15 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// GetKeyInfo returns key info for a given name. An error is returned if the
+// GetKeyInfoLegacy returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string, buf io.Reader) (keys.Info, error) {
-	keybase := NewKeyringKeybase(buf)
+func GetKeyInfoLegacy(name string) (keys.Info, error) {
+	keybase, _ := NewKeyBaseFromHomeFlag()
+	return keybase.Get(name)
+}
+
+func GetKeyInfo(name string, input io.Reader) (keys.Info, error) {
+	keybase := NewKeyringKeybase(input)
 	return keybase.Get(name)
 }
 
@@ -39,10 +44,10 @@ func GetKeyInfo(name string, buf io.Reader) (keys.Info, error) {
 // the key info for that name if the type is local, it'll fetch input from
 // STDIN. Otherwise, an empty passphrase is returned. An error is returned if
 // the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string, buf io.Reader) (string, error) {
+func GetPassphrase(name string) (string, error) {
 	var passphrase string
 
-	keyInfo, err := GetKeyInfo(name, buf)
+	keyInfo, err := GetKeyInfoLegacy(name)
 	if err != nil {
 		return passphrase, err
 	}
@@ -79,10 +84,10 @@ func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	return NewKeyBaseFromDir(rootDir)
 }
 
-func NewKeyringKeybase(buf io.Reader) keys.Keybase {
+func NewKeyringKeybase(input io.Reader) keys.Keybase {
 	rootDir := viper.GetString(flags.FlagHome)
 
-	return keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf, false)
+	return keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, input, false)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.

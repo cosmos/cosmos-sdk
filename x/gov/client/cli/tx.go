@@ -105,8 +105,8 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			proposal, err := parseSubmitProposalFlags()
 			if err != nil {
@@ -155,8 +155,8 @@ $ %s tx gov deposit 1 10stake --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -202,8 +202,8 @@ $ %s tx gov vote 1 yes --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			// Get voting address
 			from := cliCtx.GetFromAddress()

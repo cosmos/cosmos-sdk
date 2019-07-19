@@ -29,7 +29,7 @@ Read a transaction from <file>, serialize it to the Amino wire protocol, and out
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			stdTx, err := utils.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {

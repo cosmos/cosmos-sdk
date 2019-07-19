@@ -45,7 +45,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 			params, err := common.QueryParams(cliCtx, queryRoute)
 			if err != nil {
 				return err
@@ -72,7 +72,7 @@ $ %s query distr validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc6
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -119,7 +119,7 @@ $ %s query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -154,7 +154,7 @@ $ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -206,7 +206,7 @@ $ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosval
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			if len(args) == 2 {
 				// query for rewards from a particular delegation
@@ -249,7 +249,7 @@ $ %s query distr community-pool
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 			if err != nil {

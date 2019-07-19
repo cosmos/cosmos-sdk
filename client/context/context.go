@@ -36,6 +36,7 @@ type CLIContext struct {
 	Client        rpcclient.Client
 	Keybase       cryptokeys.Keybase
 	Output        io.Writer
+	Input         io.Reader
 	OutputFormat  string
 	Height        int64
 	NodeURI       string
@@ -57,12 +58,12 @@ type CLIContext struct {
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly.
-func NewCLIContextWithFrom(from string) CLIContext {
+func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly, viper.GetBool((flags.FlagSecretStore)))
+	fromAddress, fromName, err := GetFromFields(from, genOnly, viper.GetBool((flags.FlagSecretStore)), input)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -84,6 +85,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	return CLIContext{ //assign value to new boolean var based on parsing the flag
 		Client:        rpc,
 		Output:        os.Stdout,
+		Input:         input,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
@@ -104,7 +106,9 @@ func NewCLIContextWithFrom(from string) CLIContext {
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
-func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
+func NewCLIContext(input io.Reader) CLIContext {
+	return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom), input)
+}
 
 func createVerifier() tmlite.Verifier {
 	trustNodeDefined := viper.IsSet(flags.FlagTrustNode)
@@ -269,7 +273,7 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(from string, genOnly, legacySecretStore bool) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, genOnly, legacySecretStore bool, input io.Reader) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
@@ -291,7 +295,7 @@ func GetFromFields(from string, genOnly, legacySecretStore bool) (sdk.AccAddress
 			return nil, "", err
 		}
 	} else {
-		keybase = keys.NewKeyringKeybase() //if flag is set, add flag to struct, then boolean variable.
+		keybase = keys.NewKeyringKeybase(input) //if flag is set, add flag to struct, then boolean variable.
 	}
 	var info cryptokeys.Info //chedck boolean var if true - do old keyring, else the new one
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {

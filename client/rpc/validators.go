@@ -43,7 +43,7 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			result, err := GetValidators(cliCtx, height)
 			if err != nil {

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	cdc := codec.New()
-	ctx := context.NewCLIContext().WithCodec(cdc)
+	ctx := context.NewCLIContext(os.Stdin).WithCodec(cdc)
 	type args struct {
 		delAddr string
 		valAddr string

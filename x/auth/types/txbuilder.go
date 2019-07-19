@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -27,12 +28,13 @@ type TxBuilder struct {
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
 	legacySecretStore  bool
+	buf                io.Reader
 }
 
 // NewTxBuilder returns a new initialized TxBuilder.
 func NewTxBuilder(
 	txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64,
-	simulateAndExecute bool, chainID, memo string, fees sdk.Coins, gasPrices sdk.DecCoins,
+	simulateAndExecute bool, chainID, memo string, fees sdk.Coins, gasPrices sdk.DecCoins, input io.Reader,
 ) TxBuilder {
 
 	return TxBuilder{
@@ -48,12 +50,13 @@ func NewTxBuilder(
 		fees:               fees,
 		gasPrices:          gasPrices,
 		legacySecretStore:  false,
+		buf:                input,
 	}
 }
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
-func NewTxBuilderFromCLI() TxBuilder {
+func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 
 	var kb crkeys.Keybase
 	if viper.GetBool(flags.FlagSecretStore) {
@@ -63,7 +66,7 @@ func NewTxBuilderFromCLI() TxBuilder {
 			panic(err)
 		}
 	} else {
-		kb = keys.NewKeyringKeybase()
+		kb = keys.NewKeyringKeybase(input)
 	}
 	txbldr := TxBuilder{
 		keybase:            kb,
@@ -222,7 +225,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
 func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, error) {
-	sig, err := MakeSignature(bldr.keybase, name, passphrase, msg)
+	sig, err := MakeSignature(bldr.keybase, name, passphrase, msg, bldr.buf)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +271,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 		Fee:           stdTx.Fee,
 		Msgs:          stdTx.GetMsgs(),
 		Memo:          stdTx.GetMemo(),
-	})
+	}, bldr.buf)
 	if err != nil {
 		return
 	}
@@ -285,9 +288,9 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
 func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
-	msg StdSignMsg) (sig StdSignature, err error) {
+	msg StdSignMsg, input io.Reader) (sig StdSignature, err error) {
 	if keybase == nil {
-		keybase = keys.NewKeyringKeybase()
+		keybase = keys.NewKeyringKeybase(input)
 		if err != nil {
 			return
 		}

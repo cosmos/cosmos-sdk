@@ -40,8 +40,8 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 $ <appcli> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			valAddr := cliCtx.GetFromAddress()
 

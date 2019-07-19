@@ -34,8 +34,8 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Create and sign a send tx",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithFrom(args[0], cmd.InOrStdin()).WithCodec(cdc)
 
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {

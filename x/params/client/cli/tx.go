@@ -64,8 +64,8 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			proposal, err := paramscutils.ParseParamChangeProposalJSON(cdc, args[0])
 			if err != nil {

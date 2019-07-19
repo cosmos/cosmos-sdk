@@ -61,11 +61,17 @@ func Test_runDeleteCmd(t *testing.T) {
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
@@ -75,8 +81,11 @@ func Test_runDeleteCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Now there is a confirmation
-		mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
-		mockIn.Reset("y\n")
+		if runningOnServer {
+			mockIn.Reset("testpass1\ny\n")
+		} else {
+			mockIn.Reset("y\n")
+		}
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
@@ -86,6 +95,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	viper.Set(flagYes, true)
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
 	_, err = kb.Get(fakeKeyName2)

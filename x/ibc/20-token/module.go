@@ -18,12 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-token/types"
 )
 
+const Token = "token"
+
 type AppModuleBasic struct{}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
 func (AppModuleBasic) Name() string {
-	return "token"
+	return Token
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
@@ -66,7 +68,7 @@ func NewAppModule(keeper Keeper) AppModule {
 }
 
 func (AppModule) Name() string {
-	return "token"
+	return Token
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -74,7 +76,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 func (AppModule) Route() string {
-	return "token"
+	return Token
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
@@ -108,7 +110,7 @@ func (am AppModule) NewIBCHandler() channel.Handler {
 }
 
 func (am AppModule) QuerierRoute() string {
-	return "token"
+	return Token
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {

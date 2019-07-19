@@ -37,18 +37,21 @@ import (
 )
 
 var (
-	genesisFile   string
-	paramsFile    string
-	seed          int64
-	numBlocks     int
-	blockSize     int
-	enabled       bool
-	verbose       bool
-	lean          bool
-	commit        bool
-	period        int
-	onOperation   bool // TODO Remove in favor of binary search for invariant violation
-	allInvariants bool
+	genesisFile        string
+	paramsFile         string
+	exportParamsPath   string
+	exportParamsHeight int
+	exportStatePath    string
+	seed               int64
+	numBlocks          int
+	blockSize          int
+	enabled            bool
+	verbose            bool
+	lean               bool
+	commit             bool
+	period             int
+	onOperation        bool // TODO Remove in favor of binary search for invariant violation
+	allInvariants      bool
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.

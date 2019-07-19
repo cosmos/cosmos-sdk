@@ -33,6 +33,7 @@ func NewManager(protocol state.Base, connection connection.Manager) Manager {
 		protocol:     state.NewMapping(protocol, []byte("/connection/")),
 		connection:   connection,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
+		router:       NewRouter(),
 	}
 
 	return res

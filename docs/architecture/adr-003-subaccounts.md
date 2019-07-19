@@ -17,7 +17,7 @@ Each sub-account will utilize the existing permissioned properties of `ModuleAcc
 There is no limit on the number of `ModuleAccount`s that a `ModuleMultiAccount` can have.
 A `ModuleMultiAccount` has no permissions since it cannot hold any coins.
 Its constructor returns a `ModuleMultiAccount` with no `ModuleAccount`s.
-A sub-account can only be removed from a `MultiModuleAccount` if its balance is zero.
+A sub-account cannot be removed from a `MultiModuleAccount`.
 
 ### Implementation Changes
 
@@ -45,19 +45,19 @@ The `ModuleAccount` implementation will remain unchanged, but we will add the fo
 // the hash of the module's name with the sub-account number appended.
 func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...string) sdk.AccAddress {
     bz := make([]byte, 8)
-   	binary.LittleEndian.PutUint64(bz, subAccNumber)
+    binary.LittleEndian.PutUint64(bz, subAccNumber)
     moduleAddress := append(NewModuleAddress(name), bz...)
-	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
+    baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-	if err := validatePermissions(permissions...); err != nil {
-		panic(err)
-	}
+    if err := validatePermissions(permissions...); err != nil {
+        panic(err)
+    }
 
-	return &ModuleAccount{
-		BaseAccount: &baseAcc,
-		Name:        name,
-		Permissions: permissions,
-	} 
+    return &ModuleAccount{
+        BaseAccount: &baseAcc,
+        Name:        name,
+        Permissions: permissions,
+    } 
 }
 ```
 
@@ -69,7 +69,7 @@ Since `ModuleAccount`s that are sub-accounts have the same name as its parent `M
 
 **Other changes**
 
-We will add an invariant check for the `ModuleMultiAccount` `GetCoins()` function, which will iterate over all SubAccounts to see if the sum of the `ModuleAccount` balances equal the passive tracking which is returned in `GetCoins()`
+We will add an invariant check for the `ModuleMultiAccount` `GetCoins()` function, which will iterate over all SubAccounts to see if the sum of the `ModuleAccount` balances equals the passive tracking which is returned in `GetCoins()`
 
 Bank Keepers `SetCoins()` function will be updated to return an error instead of calling panic on the account's SetCoins error.
 
@@ -96,5 +96,6 @@ Proposed
 
 ## References
 
-Spec: [ModuleAccount](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/supply/01_concepts.md#module-accounts)
+Specs: [ModuleAccount](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/supply/01_concepts.md#module-accounts)
+
 Issues: [4657] (https://github.com/cosmos/cosmos-sdk/issues/4657)

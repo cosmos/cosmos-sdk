@@ -88,7 +88,7 @@ func (obj CLIObject) SeqRecv(ctx context.CLIContext) (res uint64, proof merkle.P
 	return
 }
 
-func (obj CLIObject) PacketCommit(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
+func (obj CLIObject) Packet(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
 	proof, err = obj.query(ctx, obj.PacketCommitKey(index), &res)
 	return
 }

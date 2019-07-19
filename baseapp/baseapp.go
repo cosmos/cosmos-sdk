@@ -63,14 +63,16 @@ type BaseApp struct {
 	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
-	// --------------------
-	// Volatile state
-	// checkState is set on initialization and reset on Commit.
-	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
-	// See methods setCheckState and setDeliverState.
-	checkState   *state          // for CheckTx
-	deliverState *state          // for DeliverTx
-	voteInfos    []abci.VoteInfo // absent validators from begin block
+	// volatile state:
+	//
+	// checkState is set on initialization and reset on Commit
+	// deliverState is set in InitChain and BeginBlock and cleared on Commit
+	//
+	// see methods setCheckState and setDeliverState
+	checkState   *state // for CheckTx
+	deliverState *state // for DeliverTx
+
+	voteInfos []abci.VoteInfo // absent validators from begin block
 
 	// consensus params
 	// TODO: Move this in the future to baseapp param store on main store.
@@ -265,27 +267,21 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// setCheckState sets checkState with the cached multistore and
-// the context wrapping it.
-// It is called by InitChain() and Commit()
+// setCheckState sets the CheckTx state context with a cached multi-store. It is
+// called by InitChain and Commit.
 func (app *BaseApp) setCheckState(header abci.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
-	}
+	app.checkState = newState(
+		sdk.NewContext(app.cms.CacheMultiStore(), header, true, app.logger).
+			WithMinGasPrices(app.minGasPrices),
+	)
 }
 
-// setCheckState sets checkState with the cached multistore and
-// the context wrapping it.
-// It is called by InitChain() and BeginBlock(),
-// and deliverState is set nil on Commit().
+// setDeliverState sets the DeliverTx state context with a cached multi-store.
+// It is called by InitChain and BeginBlock. It is reset (set to nil) on Commit.
 func (app *BaseApp) setDeliverState(header abci.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.deliverState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
-	}
+	app.deliverState = newState(
+		sdk.NewContext(app.cms.CacheMultiStore(), header, false, app.logger),
+	)
 }
 
 // setConsensusParams memoizes the consensus params.
@@ -364,11 +360,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.
-		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	app.deliverState = newState(app.deliverState.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
 
-	res = app.initChainer(app.deliverState.ctx, req)
-
+	res = app.initChainer(app.deliverState.Context, req)
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(res.Validators) {
@@ -376,8 +370,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 				"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
 				len(req.Validators), len(res.Validators)))
 		}
+
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
+
 		for i, val := range res.Validators {
 			if !val.Equal(req.Validators[i]) {
 				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
@@ -533,7 +529,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 	// cache wrap the commit-multistore for safety
 	ctx := sdk.NewContext(
-		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
+		app.cms.CacheMultiStore(), app.checkState.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
 
 	if req.Height > 0 {
@@ -595,11 +591,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	} else {
-		// In the first block, app.deliverState.ctx will already be initialized
+		// In the first block, app.deliverState will already be initialized
 		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height)
+		app.deliverState = newState(app.deliverState.WithBlockHeader(req.Header).WithBlockHeight(req.Header.Height))
 	}
 
 	// add block gas meter
@@ -610,10 +604,10 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		gasMeter = sdk.NewInfiniteGasMeter()
 	}
 
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
+	app.deliverState = newState(app.deliverState.WithBlockGasMeter(gasMeter))
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		res = app.beginBlocker(app.deliverState.Context, req)
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -688,7 +682,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	ctx = app.getState(mode).ctx.
+	ctx = app.getState(mode).
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos).
 		WithConsensusParams(app.consensusParams)
@@ -920,12 +914,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+	if app.deliverState.MultiStore().TracingEnabled() {
+		app.deliverState = newState(app.deliverState.WithMultiStore(app.deliverState.MultiStore().SetTracingContext(nil)))
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		res = app.endBlocker(app.deliverState.Context, req)
 	}
 
 	return
@@ -939,10 +933,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-	header := app.deliverState.ctx.BlockHeader()
+	header := app.deliverState.BlockHeader()
 
-	// write the Deliver state and commit the MultiStore
-	app.deliverState.ms.Write()
+	// write the DeliverTx state and commit the multi-store
+	app.deliverState.MultiStore().(store.CacheMultiStore).Write()
+
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
 
@@ -970,15 +965,18 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 // ----------------------------------------------------------------------------
 // State
 
+// state is a simple wrapper around a Context object. There is a unique state
+// for both CheckTx and DeliverTx respectively.
 type state struct {
-	ms  sdk.CacheMultiStore
-	ctx sdk.Context
+	sdk.Context
 }
 
+func newState(ctx sdk.Context) *state {
+	return &state{ctx}
+}
+
+// CacheMultiStore returns a cache-wrapped version of the state context's
+// multi-store.
 func (st *state) CacheMultiStore() sdk.CacheMultiStore {
-	return st.ms.CacheMultiStore()
-}
-
-func (st *state) Context() sdk.Context {
-	return st.ctx
+	return st.MultiStore().CacheMultiStore()
 }

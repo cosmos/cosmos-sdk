@@ -12,7 +12,7 @@ import (
 
 // EncodeResp defines a tx encoding response.
 type EncodeResp struct {
-	Tx string `json:"tx"`
+	Tx string `json:"tx" yaml:"tx"`
 }
 
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,

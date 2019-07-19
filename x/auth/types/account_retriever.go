@@ -29,22 +29,30 @@ func NewAccountRetriever(querier NodeQuerier) AccountRetriever {
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
 func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, error) {
+	account, _, err := ar.GetAccountWithHeight(addr)
+	return account, err
+}
+
+// GetAccountWithHeight queries for an account given an address. Returns the
+// height of the query with the account. An error is returned if the query
+// or decoding fails.
+func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
 	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	res, _, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
+	res, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var account exported.Account
 	if err := ModuleCdc.UnmarshalJSON(res, &account); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return account, nil
+	return account, height, nil
 }
 
 // EnsureExists returns an error if no account exists for the given address else nil.

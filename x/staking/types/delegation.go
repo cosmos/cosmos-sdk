@@ -36,9 +36,9 @@ var _ exported.DelegationI = Delegation{}
 // owned by one delegator, and is associated with the voting power of one
 // validator.
 type Delegation struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Shares           sdk.Dec        `json:"shares"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	Shares           sdk.Dec        `json:"shares" yaml:"shares"`
 }
 
 // NewDelegation creates a new delegation object
@@ -106,17 +106,17 @@ func (d Delegations) String() (out string) {
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
 // for a single validator in an time-ordered list
 type UnbondingDelegation struct {
-	DelegatorAddress sdk.AccAddress             `json:"delegator_address"` // delegator
-	ValidatorAddress sdk.ValAddress             `json:"validator_address"` // validator unbonding from operator addr
-	Entries          []UnbondingDelegationEntry `json:"entries"`           // unbonding delegation entries
+	DelegatorAddress sdk.AccAddress             `json:"delegator_address" yaml:"delegator_address"` // delegator
+	ValidatorAddress sdk.ValAddress             `json:"validator_address" yaml:"validator_address"` // validator unbonding from operator addr
+	Entries          []UnbondingDelegationEntry `json:"entries" yaml:"entries"`                     // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry - entry to an UnbondingDelegation
 type UnbondingDelegationEntry struct {
-	CreationHeight int64     `json:"creation_height"` // height which the unbonding took place
-	CompletionTime time.Time `json:"completion_time"` // time at which the unbonding delegation will complete
-	InitialBalance sdk.Int   `json:"initial_balance"` // atoms initially scheduled to receive at completion
-	Balance        sdk.Int   `json:"balance"`         // atoms to receive at completion
+	CreationHeight int64     `json:"creation_height" yaml:"creation_height"` // height which the unbonding took place
+	CompletionTime time.Time `json:"completion_time" yaml:"completion_time"` // time at which the unbonding delegation will complete
+	InitialBalance sdk.Int   `json:"initial_balance" yaml:"initial_balance"` // atoms initially scheduled to receive at completion
+	Balance        sdk.Int   `json:"balance" yaml:"balance"`                 // atoms to receive at completion
 }
 
 // IsMature - is the current entry mature
@@ -220,18 +220,18 @@ func (ubds UnbondingDelegations) String() (out string) {
 // redelegating bonds from a particular source validator to a
 // particular destination validator
 type Redelegation struct {
-	DelegatorAddress    sdk.AccAddress      `json:"delegator_address"`     // delegator
-	ValidatorSrcAddress sdk.ValAddress      `json:"validator_src_address"` // validator redelegation source operator addr
-	ValidatorDstAddress sdk.ValAddress      `json:"validator_dst_address"` // validator redelegation destination operator addr
-	Entries             []RedelegationEntry `json:"entries"`               // redelegation entries
+	DelegatorAddress    sdk.AccAddress      `json:"delegator_address" yaml:"delegator_address"`         // delegator
+	ValidatorSrcAddress sdk.ValAddress      `json:"validator_src_address" yaml:"validator_src_address"` // validator redelegation source operator addr
+	ValidatorDstAddress sdk.ValAddress      `json:"validator_dst_address" yaml:"validator_dst_address"` // validator redelegation destination operator addr
+	Entries             []RedelegationEntry `json:"entries" yaml:"entries"`                             // redelegation entries
 }
 
 // RedelegationEntry - entry to a Redelegation
 type RedelegationEntry struct {
-	CreationHeight int64     `json:"creation_height"` // height at which the redelegation took place
-	CompletionTime time.Time `json:"completion_time"` // time at which the redelegation will complete
-	InitialBalance sdk.Int   `json:"initial_balance"` // initial balance when redelegation started
-	SharesDst      sdk.Dec   `json:"shares_dst"`      // amount of destination-validator shares created by redelegation
+	CreationHeight int64     `json:"creation_height" yaml:"creation_height"` // height at which the redelegation took place
+	CompletionTime time.Time `json:"completion_time" yaml:"completion_time"` // time at which the redelegation will complete
+	InitialBalance sdk.Int   `json:"initial_balance" yaml:"initial_balance"` // initial balance when redelegation started
+	SharesDst      sdk.Dec   `json:"shares_dst" yaml:"shares_dst"`           // amount of destination-validator shares created by redelegation
 }
 
 // NewRedelegation - create a new redelegation object
@@ -352,7 +352,7 @@ func (d Redelegations) String() (out string) {
 // in addition to shares which is more suitable for client responses.
 type DelegationResponse struct {
 	Delegation
-	Balance sdk.Int `json:"balance"`
+	Balance sdk.Int `json:"balance" yaml:"balance"`
 }
 
 func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Int) DelegationResponse {
@@ -394,7 +394,7 @@ func (d DelegationResponses) String() (out string) {
 // responses.
 type RedelegationResponse struct {
 	Redelegation
-	Entries []RedelegationEntryResponse `json:"entries"` // nolint: structtag
+	Entries []RedelegationEntryResponse `json:"entries" yaml:"entries"` // nolint: structtag
 }
 
 // RedelegationEntryResponse is equivalent to a RedelegationEntry except that it

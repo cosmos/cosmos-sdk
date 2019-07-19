@@ -36,11 +36,3 @@
 [API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)를 확인하세요.
 
 관렉 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance)에서 확인하실 수 있습니다.
-
-# IBC
-
-`x/ibc` 모듈은 블록체인간 통신(InterBlockchain Communication)에서 사용됩니다.
-
-[API 문서를](https://godoc.org/github.com/cosmos/cosmos-sdk/x/ibc) 확인하세요.
-
-관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/ibc)에서 확인하실 수 있습니다.

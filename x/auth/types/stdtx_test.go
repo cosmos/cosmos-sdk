@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -132,4 +133,32 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, cdcBytes, encoderBytes)
+}
+
+func TestStdSignatureMarshalYAML(t *testing.T) {
+	_, pubKey, _ := KeyTestPubAddr()
+
+	testCases := []struct {
+		sig    StdSignature
+		output string
+	}{
+		{
+			StdSignature{},
+			"|\n  pubkey: \"\"\n  signature: \"\"\n",
+		},
+		{
+			StdSignature{PubKey: pubKey, Signature: []byte("dummySig")},
+			fmt.Sprintf("|\n  pubkey: %s\n  signature: dummySig\n", sdk.MustBech32ifyAccPub(pubKey)),
+		},
+		{
+			StdSignature{PubKey: pubKey, Signature: nil},
+			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyAccPub(pubKey)),
+		},
+	}
+
+	for i, tc := range testCases {
+		bz, err := yaml.Marshal(tc.sig)
+		require.NoError(t, err)
+		require.Equal(t, tc.output, string(bz), "test case #%d", i)
+	}
 }

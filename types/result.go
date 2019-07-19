@@ -240,7 +240,7 @@ func (r TxResponse) String() string {
 	}
 
 	if len(r.Events) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Events.String()))
+		sb.WriteString(fmt.Sprintf("  Events: \n%s\n", r.Events.String()))
 	}
 
 	return strings.TrimSpace(sb.String())

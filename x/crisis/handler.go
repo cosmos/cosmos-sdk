@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 // RouterKey
-const RouterKey = ModuleName
+const RouterKey = types.ModuleName
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
@@ -25,12 +26,11 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k Keeper) sdk.Result {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) sdk.Result {
 	// remove the constant fee
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
-	err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, msg.Sender, k.feeCollectorName, constantFee)
-	if err != nil {
+	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
 		return err.Result()
 	}
 
@@ -40,10 +40,11 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 	found := false
 	msgFullRoute := msg.FullInvariantRoute()
 
-	var invarianceErr error
-	for _, invarRoute := range k.routes {
+	var res string
+	var stop bool
+	for _, invarRoute := range k.Routes() {
 		if invarRoute.FullRoute() == msgFullRoute {
-			invarianceErr = invarRoute.Invar(cacheCtx)
+			res, stop = invarRoute.Invar(cacheCtx)
 			found = true
 			break
 		}
@@ -53,7 +54,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
 	}
 
-	if invarianceErr != nil {
+	if stop {
 		// NOTE currently, because the chain halts here, this transaction will never be included
 		// in the blockchain thus the constant fee will have never been deducted. Thus no
 		// refund is required.
@@ -70,7 +71,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k K
 		//}
 
 		// TODO replace with circuit breaker
-		panic(invarianceErr)
+		panic(res)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

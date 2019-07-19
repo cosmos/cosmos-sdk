@@ -43,12 +43,12 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute strin
 
 type (
 	withdrawRewardsReq struct {
-		BaseReq rest.BaseReq `json:"base_req"`
+		BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 	}
 
 	setWithdrawalAddrReq struct {
-		BaseReq         rest.BaseReq   `json:"base_req"`
-		WithdrawAddress sdk.AccAddress `json:"withdraw_address"`
+		BaseReq         rest.BaseReq   `json:"base_req" yaml:"base_req"`
+		WithdrawAddress sdk.AccAddress `json:"withdraw_address" yaml:"withdraw_address"`
 	}
 )
 

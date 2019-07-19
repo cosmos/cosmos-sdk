@@ -5,7 +5,8 @@
 package crisis
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
 const (
@@ -25,6 +26,7 @@ var (
 	NewMsgVerifyInvariant = types.NewMsgVerifyInvariant
 	ParamKeyTable         = types.ParamKeyTable
 	NewInvarRoute         = types.NewInvarRoute
+	NewKeeper             = keeper.NewKeeper
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc
@@ -35,4 +37,5 @@ type (
 	GenesisState       = types.GenesisState
 	MsgVerifyInvariant = types.MsgVerifyInvariant
 	InvarRoute         = types.InvarRoute
+	Keeper             = keeper.Keeper
 )

@@ -57,8 +57,13 @@ func newTestInput(t *testing.T) testInput {
 	paramsKeeper := params.NewKeeper(types.ModuleCdc, keyParams, tkeyParams, params.DefaultCodespace)
 	accountKeeper := auth.NewAccountKeeper(types.ModuleCdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(types.ModuleCdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{types.ModuleName}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     nil,
+		types.ModuleName:          []string{supply.Minter},
+		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
+		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
+	}
+	supplyKeeper := supply.NewKeeper(types.ModuleCdc, keySupply, accountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
 
 	stakingKeeper := staking.NewKeeper(
@@ -67,7 +72,7 @@ func newTestInput(t *testing.T) testInput {
 	mintKeeper := NewKeeper(types.ModuleCdc, keyMint, paramsKeeper.Subspace(types.DefaultParamspace), &stakingKeeper, supplyKeeper, auth.FeeCollectorName)
 
 	// set module accounts
-	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	minterAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Minter)
 	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner)
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner)

@@ -1,5 +1,7 @@
 // nolint:deadcode unused
-package slashing
+// DONTCOVER
+// noalias
+package keeper
 
 import (
 	"encoding/hex"
@@ -20,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -27,18 +30,18 @@ import (
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
 var (
-	pks = []crypto.PubKey{
+	Pks = []crypto.PubKey{
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	addrs = []sdk.ValAddress{
-		sdk.ValAddress(pks[0].Address()),
-		sdk.ValAddress(pks[1].Address()),
-		sdk.ValAddress(pks[2].Address()),
+	Addrs = []sdk.ValAddress{
+		sdk.ValAddress(Pks[0].Address()),
+		sdk.ValAddress(Pks[1].Address()),
+		sdk.ValAddress(Pks[2].Address()),
 	}
-	initTokens = sdk.TokensFromConsensusPower(200)
-	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	InitTokens = sdk.TokensFromConsensusPower(200)
+	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens))
 )
 
 func createTestCodec() *codec.Codec {
@@ -52,11 +55,11 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
+func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
-	keySlashing := sdk.NewKVStoreKey(StoreKey)
+	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -84,7 +87,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace, maccPerms)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(addrs)))))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens.MulRaw(int64(len(Addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
@@ -101,17 +104,15 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 
 	_ = staking.InitGenesis(ctx, sk, accountKeeper, supplyKeeper, genesis)
 
-	for _, addr := range addrs {
+	for _, addr := range Addrs {
 		_, err = bk.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
 	}
 	require.Nil(t, err)
-	paramstore := paramsKeeper.Subspace(DefaultParamspace)
-	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace)
-	sk.SetHooks(keeper.Hooks())
+	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, types.DefaultCodespace)
 
-	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, sk, GenesisState{defaults, nil, nil})
-	})
+	keeper.SetParams(ctx, defaults)
+	sk.SetHooks(keeper.Hooks())
 
 	return ctx, bk, sk, paramstore, keeper
 }
@@ -126,9 +127,13 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pkEd
 }
 
-func testAddr(addr string) sdk.AccAddress {
-	res := []byte(addr)
-	return res
+// Have to change these parameters for tests
+// lest the tests take forever
+func TestParams() types.Params {
+	params := types.DefaultParams()
+	params.SignedBlocksWindow = 1000
+	params.DowntimeJailDuration = 60 * 60
+	return params
 }
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
@@ -139,7 +144,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	)
 }
 
-func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
+func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

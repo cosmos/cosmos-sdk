@@ -1,10 +1,10 @@
-package slashing
+package keeper
 
 import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 // MaxEvidenceAge - max age for evidence
@@ -19,7 +19,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	return
 }
 
-// Downtime slashing threshold
+// MinSignedPerWindow - minimum blocks signed per window
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, types.KeyMinSignedPerWindow, &minSignedPerWindow)
@@ -30,19 +30,19 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }
 
-// Downtime unbond duration
+// DowntimeJailDuration - Downtime unbond duration
 func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 	k.paramspace.Get(ctx, types.KeyDowntimeJailDuration, &res)
 	return
 }
 
-// SlashFractionDoubleSign
+// SlashFractionDoubleSign - fraction of power slashed in case of double sign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, types.KeySlashFractionDoubleSign, &res)
 	return
 }
 
-// SlashFractionDowntime
+// SlashFractionDowntime - fraction of power slashed for downtime
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, types.KeySlashFractionDowntime, &res)
 	return
@@ -52,4 +52,9 @@ func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramspace.GetParamSet(ctx, &params)
 	return params
+}
+
+// SetParams sets the slashing parameters to the param space.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramspace.SetParamSet(ctx, &params)
 }

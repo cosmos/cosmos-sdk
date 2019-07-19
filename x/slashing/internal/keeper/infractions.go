@@ -1,47 +1,16 @@
-package slashing
+package keeper
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
-// Keeper of the slashing store
-type Keeper struct {
-	storeKey   sdk.StoreKey
-	cdc        *codec.Codec
-	sk         types.StakingKeeper
-	paramspace params.Subspace
-
-	// codespace
-	codespace sdk.CodespaceType
-}
-
-// NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
-	keeper := Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		sk:         sk,
-		paramspace: paramspace.WithKeyTable(ParamKeyTable()),
-		codespace:  codespace,
-	}
-	return keeper
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// handle a validator signing two blocks at the same height
+// HandleDoubleSign handles a validator signing two blocks at the same height.
 // power: power of the double-signing validator at the height of infraction
 func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := k.Logger(ctx)
@@ -52,7 +21,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
-	pubkey, err := k.getPubkey(ctx, addr)
+	pubkey, err := k.GetPubkey(ctx, addr)
 	if err != nil {
 		// Ignore evidence that cannot be handled.
 		// NOTE:
@@ -83,7 +52,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	}
 
 	// fetch the validator signing info
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
@@ -143,19 +112,20 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
-// handle a validator signature, must be called once per validator per block
-// TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
+// HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
+
+	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
-	pubkey, err := k.getPubkey(ctx, addr)
+	pubkey, err := k.GetPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
 	}
 
 	// fetch signing info
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
@@ -168,16 +138,16 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
-	previous := k.getValidatorMissedBlockBitArray(ctx, consAddr, index)
+	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
 	missed := !signed
 	switch {
 	case !previous && missed:
 		// Array value has changed from not missed to missed, increment counter
-		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, true)
 		signInfo.MissedBlocksCounter++
 	case previous && !missed:
 		// Array value has changed from missed to not missed, decrement counter
-		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, false)
 		signInfo.MissedBlocksCounter--
 	default:
 		// Array value at this index has not changed, no need to update counter
@@ -244,30 +214,4 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 	// Set the updated signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
-}
-
-func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
-	addr := pubkey.Address()
-	k.setAddrPubkeyRelation(ctx, addr, pubkey)
-}
-
-func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
-	store := ctx.KVStore(k.storeKey)
-	var pubkey crypto.PubKey
-	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
-	if err != nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
-	}
-	return pubkey, nil
-}
-
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(pubkey)
-	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetAddrPubkeyRelationKey(addr))
 }

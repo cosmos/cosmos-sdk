@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Signing info for a validator
+// ValidatorSigningInfo defines the signing info for a validator
 type ValidatorSigningInfo struct {
 	Address             sdk.ConsAddress `json:"address" yaml:"address"`                             // validator consensus address
 	StartHeight         int64           `json:"start_height" yaml:"start_height"`                   // height at which validator was first a candidate OR was unjailed
@@ -17,7 +17,7 @@ type ValidatorSigningInfo struct {
 	MissedBlocksCounter int64           `json:"missed_blocks_counter" yaml:"missed_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
 }
 
-// Construct a new `ValidatorSigningInfo` struct
+// NewValidatorSigningInfo creates a new ValidatorSigningInfo instance
 func NewValidatorSigningInfo(
 	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
 	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,
@@ -33,7 +33,7 @@ func NewValidatorSigningInfo(
 	}
 }
 
-// Return human readable signing info
+// String implements the stringer interface for ValidatorSigningInfo
 func (i ValidatorSigningInfo) String() string {
 	return fmt.Sprintf(`Validator Signing Info:
   Address:               %s

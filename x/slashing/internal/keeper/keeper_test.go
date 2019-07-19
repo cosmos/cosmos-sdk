@@ -1,4 +1,4 @@
-package slashing
+package keeper
 
 import (
 	"testing"
@@ -8,18 +8,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-// Have to change these parameters for tests
-// lest the tests take forever
-func keeperTestParams() types.Params {
-	params := types.DefaultParams()
-	params.SignedBlocksWindow = 1000
-	params.DowntimeJailDuration = 60 * 60
-	return params
-}
 
 // ______________________________________________________________
 
@@ -28,18 +19,18 @@ func keeperTestParams() types.Params {
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := addrs[0], pks[0]
+	operatorAddr, val := Addrs[0], Pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -68,9 +59,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
 
 	// Still shouldn't be able to unjail
-	msgUnjail := types.NewMsgUnjail(operatorAddr)
-	res := handleMsgUnjail(ctx, msgUnjail, keeper)
-	require.False(t, res.IsOK())
+	require.Error(t, keeper.Unjail(ctx, operatorAddr))
 
 	// Should be able to unbond now
 	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
@@ -78,7 +67,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(sk.GetParams(ctx).BondDenom, totalBond))
-	res = staking.NewHandler(sk)(ctx, msgUnbond)
+	res := staking.NewHandler(sk)(ctx, msgUnbond)
 	require.True(t, res.IsOK())
 }
 
@@ -89,18 +78,18 @@ func TestHandleDoubleSign(t *testing.T) {
 func TestPastMaxEvidenceAge(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := addrs[0], pks[0]
+	operatorAddr, val := Addrs[0], Pks[0]
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
 
@@ -121,164 +110,13 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	require.Equal(t, oldPower, sk.Validator(ctx, operatorAddr).GetConsensusPower())
 }
 
-// Test a validator through uptime, downtime, revocation,
-// unrevocation, starting height reset, and revocation again
-func TestHandleAbsentValidator(t *testing.T) {
-
-	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
-	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := addrs[0], pks[0]
-	sh := staking.NewHandler(sk)
-	slh := NewHandler(keeper)
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
-	require.True(t, got.IsOK())
-	staking.EndBlocker(ctx, sk)
-
-	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
-	)
-	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
-
-	// will exist since the validator has been bonded
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, int64(0), info.IndexOffset)
-	require.Equal(t, int64(0), info.MissedBlocksCounter)
-	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
-	height := int64(0)
-
-	// 1000 first blocks OK
-	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
-		ctx = ctx.WithBlockHeight(height)
-		keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
-	}
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, int64(0), info.MissedBlocksCounter)
-
-	// 500 blocks missed
-	for ; height < keeper.SignedBlocksWindow(ctx)+(keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)); height++ {
-		ctx = ctx.WithBlockHeight(height)
-		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	}
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.MissedBlocksCounter)
-
-	// validator should be bonded still
-	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	bondPool := sk.GetBondedPool(ctx)
-	require.True(sdk.IntEq(t, amt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx))))
-
-	// 501st block missed
-	ctx = ctx.WithBlockHeight(height)
-	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	// counter now reset to zero
-	require.Equal(t, int64(0), info.MissedBlocksCounter)
-
-	// end block
-	staking.EndBlocker(ctx, sk)
-
-	// validator should have been jailed
-	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
-
-	slashAmt := amt.ToDec().Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
-
-	// validator should have been slashed
-	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
-
-	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
-	height++
-	ctx = ctx.WithBlockHeight(height)
-	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, int64(1), info.MissedBlocksCounter)
-
-	// end block
-	staking.EndBlocker(ctx, sk)
-
-	// validator should not have been slashed any more, since it was already jailed
-	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
-
-	// unrevocation should fail prior to jail expiration
-	got = slh(ctx, NewMsgUnjail(addr))
-	require.False(t, got.IsOK())
-
-	// unrevocation should succeed after jail expiration
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeJailDuration(ctx))})
-	got = slh(ctx, NewMsgUnjail(addr))
-	require.True(t, got.IsOK())
-
-	// end block
-	staking.EndBlocker(ctx, sk)
-
-	// validator should be rebonded now
-	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
-
-	// validator should have been slashed
-	bondPool = sk.GetBondedPool(ctx)
-	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
-
-	// Validator start height should not have been changed
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(0), info.StartHeight)
-	// we've missed 2 blocks more than the maximum, so the counter was reset to 0 at 1 block more and is now 1
-	require.Equal(t, int64(1), info.MissedBlocksCounter)
-
-	// validator should not be immediately jailed again
-	height++
-	ctx = ctx.WithBlockHeight(height)
-	keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
-
-	// 500 signed blocks
-	nextHeight := height + keeper.MinSignedPerWindow(ctx) + 1
-	for ; height < nextHeight; height++ {
-		ctx = ctx.WithBlockHeight(height)
-		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	}
-
-	// end block
-	staking.EndBlocker(ctx, sk)
-
-	// validator should be jailed again after 500 unsigned blocks
-	nextHeight = height + keeper.MinSignedPerWindow(ctx) + 1
-	for ; height <= nextHeight; height++ {
-		ctx = ctx.WithBlockHeight(height)
-		keeper.HandleValidatorSignature(ctx, val.Address(), power, false)
-	}
-
-	// end block
-	staking.EndBlocker(ctx, sk)
-
-	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
-}
-
 // Test a new validator entering the validator set
 // Ensure that SigningInfo.StartHeight is set correctly
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
-	addr, val := addrs[0], pks[0]
+	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
+	addr, val := Addrs[0], Pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
 	sh := staking.NewHandler(sk)
 
@@ -292,7 +130,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -301,7 +139,7 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 2)
 	keeper.HandleValidatorSignature(ctx, val.Address(), 100, false)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
+	info, found := keeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)+1, info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)
@@ -321,10 +159,10 @@ func TestHandleNewValidator(t *testing.T) {
 func TestHandleAlreadyJailed(t *testing.T) {
 
 	// initial setup
-	ctx, _, sk, _, keeper := createTestInput(t, DefaultParams())
+	ctx, _, sk, _, keeper := CreateTestInput(t, types.DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := addrs[0], pks[0]
+	addr, val := Addrs[0], Pks[0]
 	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
@@ -370,14 +208,14 @@ func TestHandleAlreadyJailed(t *testing.T) {
 func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup
-	// keeperTestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	ctx, _, sk, _, keeper := createTestInput(t, keeperTestParams())
+	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
+	ctx, _, sk, _, keeper := CreateTestInput(t, TestParams())
 	params := sk.GetParams(ctx)
 	params.MaxValidators = 1
 	sk.SetParams(ctx, params)
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, val := addrs[0], pks[0]
+	addr, val := Addrs[0], Pks[0]
 	consAddr := sdk.ConsAddress(addr)
 	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
@@ -393,7 +231,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// kick first validator out of validator set
 	newAmt := sdk.TokensFromConsensusPower(101)
-	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], newAmt))
+	got = sh(ctx, NewTestMsgCreateValidator(Addrs[1], Pks[1], newAmt))
 	require.True(t, got.IsOK())
 	validatorUpdates := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
@@ -406,7 +244,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator added back in
 	delTokens := sdk.TokensFromConsensusPower(50)
-	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
+	got = sh(ctx, NewTestMsgDelegate(sdk.AccAddress(Addrs[2]), Addrs[0], delTokens))
 	require.True(t, got.IsOK())
 	validatorUpdates = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
@@ -435,13 +273,13 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.Equal(t, sdk.Unbonding, validator.Status)
 
 	// check all the signing information
-	signInfo, found := keeper.getValidatorSigningInfo(ctx, consAddr)
+	signInfo, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
 	require.True(t, found)
 	require.Equal(t, int64(0), signInfo.MissedBlocksCounter)
 	require.Equal(t, int64(0), signInfo.IndexOffset)
 	// array should be cleared
 	for offset := int64(0); offset < keeper.SignedBlocksWindow(ctx); offset++ {
-		missed := keeper.getValidatorMissedBlockBitArray(ctx, consAddr, offset)
+		missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, offset)
 		require.False(t, missed)
 	}
 

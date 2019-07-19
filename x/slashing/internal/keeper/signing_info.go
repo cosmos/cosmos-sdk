@@ -1,12 +1,13 @@
-package slashing
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
-// Stored by *validator* address (not operator address)
-func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
+// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator 
+// ConsAddress
+func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorSigningInfoKey(address))
 	if bz == nil {
@@ -18,7 +19,15 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 	return
 }
 
-// Stored by *validator* address (not operator address)
+// SetValidatorSigningInfo sets the validator signing info to a consensus address key
+func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
+	store.Set(types.GetValidatorSigningInfoKey(address), bz)
+}
+
+
+// IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
 func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool)) {
 
@@ -35,15 +44,8 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	}
 }
 
-// Stored by *validator* address (not operator address)
-func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
-	store.Set(types.GetValidatorSigningInfoKey(address), bz)
-}
-
-// Stored by *validator* address (not operator address)
-func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
+// GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
+func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
 	if bz == nil {
@@ -55,7 +57,8 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 	return
 }
 
-// Stored by *validator* address (not operator address)
+// IterateValidatorMissedBlockBitArray iterates over the signed blocks window
+// and performs a callback function
 func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
 
@@ -75,14 +78,15 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	}
 }
 
-// Stored by *validator* address (not operator address)
-func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
+// SetValidatorMissedBlockBitArray sets the bit that checks if the validator has
+// missed a block in the current window
+func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
 	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 
-// Stored by *validator* address (not operator address)
+// clearValidatorMissedBlockBitArray deletes every instance of ValidatorMissedBlockBitArray in the store
 func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetValidatorMissedBlockBitArrayPrefixKey(address))

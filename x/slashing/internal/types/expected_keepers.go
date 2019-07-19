@@ -1,14 +1,25 @@
-package types // noalias
+// noalias
+// DONTCOVER
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
+}
+
+// ParamSubspace defines the expected Subspace interfacace
+type ParamSubspace interface {
+	WithKeyTable(table params.KeyTable) params.Subspace
+	Get(ctx sdk.Context, key []byte, ptr interface{})
+	GetParamSet(ctx sdk.Context, ps params.ParamSet)
+	SetParamSet(ctx sdk.Context, ps params.ParamSet)
 }
 
 // StakingKeeper expected staking keeper
@@ -33,7 +44,7 @@ type StakingKeeper interface {
 	MaxValidators(sdk.Context) uint16
 }
 
-// StakingHooks event hooks for staking validator object
+// StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
 	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) // Must be called when a validator is deleted

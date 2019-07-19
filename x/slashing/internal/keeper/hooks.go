@@ -1,5 +1,5 @@
 // nolint
-package slashing
+package keeper
 
 import (
 	"time"
@@ -7,12 +7,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
-	_, found := k.getValidatorSigningInfo(ctx, address)
+	_, found := k.GetValidatorSigningInfo(ctx, address)
 	if !found {
 		signingInfo := types.NewValidatorSigningInfo(
 			address,
@@ -29,7 +29,7 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 // When a validator is created, add the address-pubkey relation.
 func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	validator := k.sk.Validator(ctx, valAddr)
-	k.addPubkey(ctx, validator.GetConsPubKey())
+	k.AddPubkey(ctx, validator.GetConsPubKey())
 }
 
 // When a validator is removed, delete the address-pubkey relation.

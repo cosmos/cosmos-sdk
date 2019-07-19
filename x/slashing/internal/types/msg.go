@@ -12,6 +12,7 @@ type MsgUnjail struct {
 	ValidatorAddr sdk.ValAddress `json:"address" yaml:"address"` // address of the validator operator
 }
 
+// NewMsgUnjail creates a new MsgUnjail instance
 func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 	return MsgUnjail{
 		ValidatorAddr: validatorAddr,
@@ -25,13 +26,13 @@ func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }
 
-// get the bytes for the message signer to sign on
+// GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgUnjail) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-// quick validity check
+// ValidateBasic validity check for the AnteHandler
 func (msg MsgUnjail) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr.Empty() {
 		return ErrBadValidatorAddr(DefaultCodespace)

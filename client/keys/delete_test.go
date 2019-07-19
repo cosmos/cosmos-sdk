@@ -77,6 +77,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	{
+		if runningOnServer {
+			mockIn.Reset("testpass1\ny\n")
+		}
 		_, err = kb.Get(fakeKeyName1)
 		require.NoError(t, err)
 

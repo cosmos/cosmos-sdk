@@ -98,4 +98,4 @@ Proposed
 
 Specs: [ModuleAccount](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/supply/01_concepts.md#module-accounts)
 
-Issues: [4657] (https://github.com/cosmos/cosmos-sdk/issues/4657)
+Issues: [4657](https://github.com/cosmos/cosmos-sdk/issues/4657)

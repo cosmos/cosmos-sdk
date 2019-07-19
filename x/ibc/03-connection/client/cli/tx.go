@@ -58,7 +58,7 @@ func lastheight(ctx context.CLIContext) (uint64, error) {
 
 func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "handshake",
+		Use:   "connection-handshake [connid1] [connpath1] [connid2] [connpath2]",
 		Short: "initiate connection handshake between two chains",
 		Args:  cobra.ExactArgs(4),
 		// Args: []string{connid1, connfilepath1, connid2, connfilepath2}

@@ -61,7 +61,7 @@ func lastheight(ctx context.CLIContext) (uint64, error) {
 
 func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "handshake",
+		Use:   "channel-handshake [connID1] [chanID1] [chanPath1] [connID2] [chanID2] [chanPath2]",
 		Short: "initiate channel handshake between two chains",
 		Args:  cobra.ExactArgs(4),
 		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
@@ -220,7 +220,7 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "relay",
+		Use:   "relay [connid1] [chanid1] [connid2] [chanid2]",
 		Short: "relay pakcets between two channels",
 		Args:  cobra.ExactArgs(4),
 		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}

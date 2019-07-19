@@ -63,7 +63,7 @@ func QueryConnection(ctx context.CLIContext, obj connection.CLIObject, prove boo
 
 func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connection",
+		Use:   "connection [connid]",
 		Short: "Query stored connection",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

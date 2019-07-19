@@ -61,11 +61,12 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "StoreKey tx subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
+		RunE:                       cli.ValidateCmd,
 	}
 
 	storeKey := StoreKey
 
-	cmd.AddCommand(cli.GetCommands(
+	cmd.AddCommand(cli.PostCommands(
 		clientcli.GetCmdCreateClient(cdc),
 		clientcli.GetCmdUpdateClient(cdc),
 		connectioncli.GetCmdConnectionHandshake(storeKey, cdc),
@@ -107,7 +108,8 @@ var _ module.AppModule = AppModule{}
 func NewAppModule(keeper Keeper, modules ...channel.IBCModule) AppModule {
 	keeper.channel.Manager().RegisterModules(modules...)
 	return AppModule{
-		keeper: keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 

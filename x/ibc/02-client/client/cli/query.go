@@ -28,7 +28,7 @@ func components(cdc *codec.Codec, storeKey string, version int64) (path merkle.P
 
 func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "client",
+		Use:   "client [clientid]",
 		Short: "Query stored client",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

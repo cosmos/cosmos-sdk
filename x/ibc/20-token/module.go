@@ -114,7 +114,7 @@ func (am AppModule) QuerierRoute() string {
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	panic("TODO")
+	return nil
 }
 
 func (am AppModule) BeginBlock(sdk.Context, abci.RequestBeginBlock) {

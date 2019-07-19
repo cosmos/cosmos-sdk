@@ -52,6 +52,7 @@ var (
 	period             int
 	onOperation        bool // TODO Remove in favor of binary search for invariant violation
 	allInvariants      bool
+	genesisTime        int64
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.

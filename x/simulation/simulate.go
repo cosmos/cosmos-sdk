@@ -41,14 +41,15 @@ func initChain(
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
-// TODO split this monster function up
+// TODO: split this monster function up
 func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, blockSize int, commit, lean, onOperation, allInvariants bool,
+	numBlocks, exportParamsHeight, blockSize int,
+	exportParams, commit, lean, onOperation, allInvariants bool,
 	blackListedAccs map[string]bool,
-) (stopEarly bool, simError error) {
+) (stopEarly bool, exportedParams Params, err error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
@@ -72,7 +73,7 @@ func SimulateFromSeed(
 	// TM 0.24) Initially this is the same as the initial validator set
 	validators, accs := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
 	if len(accs) == 0 {
-		return true, fmt.Errorf("must have greater than zero genesis accounts")
+		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
 	// remove module account address if they exist in accs
@@ -100,7 +101,7 @@ func SimulateFromSeed(
 	go func() {
 		receivedSignal := <-c
 		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
-		simError = fmt.Errorf("Exited due to %s", receivedSignal)
+		err = fmt.Errorf("Exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
 
@@ -131,12 +132,15 @@ func SimulateFromSeed(
 				stackTrace := string(debug.Stack())
 				fmt.Println(stackTrace)
 				logWriter.PrintLogs()
-				simError = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
+				err = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
 			}
 		}()
 	}
 
-	// TODO split up the contents of this for loop into new functions
+	// set exported params to the initial state
+	exportedParams = params
+
+	// TODO: split up the contents of this for loop into new functions
 	for height := 1; height <= numBlocks && !stopEarly; height++ {
 
 		// Log the header time for future lookup
@@ -205,11 +209,16 @@ func SimulateFromSeed(
 		validators = nextValidators
 		nextValidators = updateValidators(tb, r, params,
 			validators, res.ValidatorUpdates, eventStats.tally)
+
+		// update the exported params
+		if exportParams && exportParamsHeight == height {
+			exportedParams = params
+		}
 	}
 
 	if stopEarly {
 		eventStats.Print(w)
-		return true, simError
+		return true, exportedParams, err
 	}
 
 	fmt.Fprintf(
@@ -219,7 +228,8 @@ func SimulateFromSeed(
 	)
 
 	eventStats.Print(w)
-	return false, nil
+
+	return false, exportedParams, nil
 }
 
 //______________________________________________________________________________

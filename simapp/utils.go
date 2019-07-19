@@ -39,10 +39,8 @@ import (
 var (
 	genesisFile        string
 	paramsFile         string
-	exportParams       bool
 	exportParamsPath   string
 	exportParamsHeight int
-	exportState        bool
 	exportStatePath    string
 	seed               int64
 	numBlocks          int

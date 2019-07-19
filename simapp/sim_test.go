@@ -31,22 +31,19 @@ import (
 )
 
 func init() {
-	// TODO: remove "Simulation" prefix as it's verbose
-	flag.StringVar(&genesisFile, "SimulationGenesis", "", "custom simulation genesis file; cannot be used with params file")
-	flag.StringVar(&paramsFile, "SimulationParams", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
-	flag.BoolVar(&exportParams, "SimulationExportParams", false, "export the randomly generated params to JSON at a export height")
-	flag.StringVar(&exportParamsPath, "SimulationExportParamsPath", "./sim_params.json", "custom path to save the exported params JSON")
-	flag.IntVar(&exportParamsHeight, "SimulationExportParamsHeight", 0, "height to which export the randomly generated params")
-	flag.BoolVar(&exportState, "SimulationExportState", false, "height to which export the randomly generated params to JSON")
-	flag.StringVar(&exportStatePath, "SimulationExportStatePath", "./genesis.json", "custom path to save the exported app state JSON")
-	flag.Int64Var(&seed, "SimulationSeed", 42, "simulation random seed")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "number of blocks")
-	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "operations per block")
-	flag.BoolVar(&enabled, "SimulationEnabled", false, "enable the simulation")
-	flag.BoolVar(&verbose, "SimulationVerbose", false, "verbose log output")
-	flag.BoolVar(&lean, "SimulationLean", false, "lean simulation log output")
-	flag.BoolVar(&commit, "SimulationCommit", false, "have the simulation commit")
-	flag.IntVar(&period, "SimulationPeriod", 1, "run slow invariants only once every period assertions")
+	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
+	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
+	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
+	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
+	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
+	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks")
+	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
+	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
+	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
+	flag.BoolVar(&lean, "Lean", false, "lean simulation log output")
+	flag.BoolVar(&commit, "Commit", false, "have the simulation commit")
+	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
 	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 }
@@ -56,6 +53,8 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
 	simulation.WeightedOperations, sdk.Invariants, int, int, int,
 	bool, bool, bool, bool, bool, map[string]bool) {
+
+	exportParams := exportParamsPath == ""
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
@@ -371,7 +370,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
 
 	// export state and params before the simulation error is checked
-	if exportState {
+	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
@@ -385,7 +384,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}
 
-	if exportParams {
+	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
 		if err != nil {
@@ -441,7 +440,7 @@ func TestFullAppSimulation(t *testing.T) {
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	// export state and params before the simulation error is checked
-	if exportState {
+	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
@@ -450,7 +449,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	if exportParams {
+	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
 		require.NoError(t, err)
@@ -498,7 +497,7 @@ func TestAppImportExport(t *testing.T) {
 	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	// export state and params before the simulation error is checked
-	if exportState {
+	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
@@ -507,7 +506,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	if exportParams {
+	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
 		require.NoError(t, err)
@@ -614,7 +613,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
 	// export state and params before the simulation error is checked
-	if exportState {
+	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
@@ -623,7 +622,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	if exportParams {
+	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
 		require.NoError(t, err)
@@ -730,7 +729,7 @@ func BenchmarkInvariants(b *testing.B) {
 	)
 
 	// export state and params before the simulation error is checked
-	if exportState {
+	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
@@ -744,7 +743,7 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}
 
-	if exportParams {
+	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
 		if err != nil {

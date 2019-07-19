@@ -36,6 +36,10 @@ func Test_runExportCmd(t *testing.T) {
 			kb.Delete("keyname1", "", false)
 		}()
 	}
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
 	assert.NoError(t, err)
 

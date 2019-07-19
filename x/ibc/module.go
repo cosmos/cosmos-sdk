@@ -23,14 +23,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-const IBC = "ibc"
+const StoreKey = "ibc"
 
 type AppModuleBasic struct{}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
 func (AppModuleBasic) Name() string {
-	return IBC
+	return StoreKey
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
@@ -55,13 +55,13 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, router *mux.Rou
 
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        IBC,
-		Short:                      "IBC tx subcommands",
+		Use:                        StoreKey,
+		Short:                      "StoreKey tx subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	storeKey := IBC
+	storeKey := StoreKey
 
 	cmd.AddCommand(cli.GetCommands(
 		clientcli.GetCmdCreateClient(cdc),
@@ -76,13 +76,13 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   IBC,
-		Short: "IBC query subcommands",
+		Use:   StoreKey,
+		Short: "StoreKey query subcommands",
 		//	DisableFlagParsing:         true,
 		//		SuggestionsMinumumDistance: 2,
 	}
 
-	storeKey := IBC
+	storeKey := StoreKey
 
 	cmd.AddCommand(cli.GetCommands(
 		clientcli.GetCmdQueryConsensusState(storeKey, cdc),
@@ -100,16 +100,20 @@ type AppModule struct {
 	keeper Keeper
 }
 
+func NewAppModule(keeper Keeper, modules ...channel.IBCModule) AppModule {
+	keeper.channel.RegisterModules(modules...)
+}
+
 func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	// TODO
 }
 
 func (AppModule) Route() string {
-	return IBC
+	return StoreKey
 }
 
 func (AppModule) QuerierRoute() string {
-	return IBC
+	return StoreKey
 }
 
 func (am AppModule) NewHandler() sdk.Handler {

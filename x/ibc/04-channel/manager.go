@@ -28,7 +28,7 @@ type CounterpartyManager struct {
 	connection connection.CounterpartyManager
 }
 
-func NewManager(protocol state.Base, connection connection.Manager, modules ...IBCModule) Manager {
+func NewManager(protocol state.Base, connection connection.Manager) Manager {
 	res := Manager{
 		protocol:     state.NewMapping(protocol, []byte("/connection/")),
 		connection:   connection,
@@ -39,6 +39,12 @@ func NewManager(protocol state.Base, connection connection.Manager, modules ...I
 	}
 
 	return res
+}
+
+func (man Manager) RegisterModules(modules ...IBCModule) {
+	for _, module := range modules {
+		man.router.AddRoute(module.Name(), module.NewIBCHandler())
+	}
 }
 
 func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {

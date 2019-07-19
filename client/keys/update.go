@@ -37,7 +37,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase()
+		kb = NewKeyringKeybase(cmd.InOrStdin())
 	}
 
 	oldpass, err := input.GetPassword("Enter the current passphrase:", buf)

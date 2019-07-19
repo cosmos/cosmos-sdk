@@ -33,7 +33,7 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase()
+		kb = NewKeyringKeybase(cmd.InOrStdin())
 	}
 
 	infos, err := kb.List()

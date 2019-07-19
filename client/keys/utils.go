@@ -3,6 +3,7 @@ package keys
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -29,8 +30,8 @@ type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase := NewKeyringKeybase()
+func GetKeyInfo(name string, buf io.Reader) (keys.Info, error) {
+	keybase := NewKeyringKeybase(buf)
 	return keybase.Get(name)
 }
 
@@ -38,10 +39,10 @@ func GetKeyInfo(name string) (keys.Info, error) {
 // the key info for that name if the type is local, it'll fetch input from
 // STDIN. Otherwise, an empty passphrase is returned. An error is returned if
 // the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string) (string, error) {
+func GetPassphrase(name string, buf io.Reader) (string, error) {
 	var passphrase string
 
-	keyInfo, err := GetKeyInfo(name)
+	keyInfo, err := GetKeyInfo(name, buf)
 	if err != nil {
 		return passphrase, err
 	}
@@ -78,9 +79,8 @@ func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	return NewKeyBaseFromDir(rootDir)
 }
 
-func NewKeyringKeybase() keys.Keybase {
+func NewKeyringKeybase(buf io.Reader) keys.Keybase {
 	rootDir := viper.GetString(flags.FlagHome)
-	buf := bufio.NewReader(os.Stdin)
 
 	return keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf, false)
 }

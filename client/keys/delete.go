@@ -52,7 +52,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase()
+		kb = NewKeyringKeybase(cmd.InOrStdin())
 	}
 
 	info, err := kb.Get(name)

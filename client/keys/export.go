@@ -35,7 +35,7 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase()
+		kb = NewKeyringKeybase(cmd.InOrStdin())
 	}
 
 	buf := bufio.NewReader(cmd.InOrStdin())

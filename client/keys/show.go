@@ -58,14 +58,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
 	if len(args) == 1 {
-		info, err = GetKeyInfo(args[0])
+		info, err = GetKeyInfo(args[0], cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
-			info, err := GetKeyInfo(keyName)
+			info, err := GetKeyInfo(keyName, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}

@@ -377,7 +377,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -445,7 +445,7 @@ func TestFullAppSimulation(t *testing.T) {
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
@@ -502,7 +502,7 @@ func TestAppImportExport(t *testing.T) {
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
@@ -618,7 +618,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
@@ -737,7 +737,7 @@ func BenchmarkInvariants(b *testing.B) {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportParamsPath, []byte(appState), 0644)
+		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()

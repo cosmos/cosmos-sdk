@@ -720,6 +720,7 @@ func BenchmarkInvariants(b *testing.B) {
 	}()
 
 	app := NewSimApp(logger, db, nil, true, 0)
+	exportParams := exportParamsPath != ""
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(

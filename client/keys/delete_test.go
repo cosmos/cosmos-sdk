@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,21 +24,31 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
+	backends := keyring.AvailableBackends()
 
-	kb := NewKeyringKeybase()
-	defer func() {
-		kb.Delete("runDeleteCmd_Key1", "", false)
-		kb.Delete("runDeleteCmd_Key2", "", false)
+	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
 
-	}()
+	runningOnServer := false
 
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
+	if !runningOnServer {
+		kb := NewKeyringKeybase(mockIn)
+		defer func() {
+			kb.Delete("runDeleteCmd_Key1", "", false)
+			kb.Delete("runDeleteCmd_Key2", "", false)
+
+		}()
+	}
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb = NewKeyringKeybase()
+	kb := NewKeyringKeybase(mockIn)
 	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)

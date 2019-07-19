@@ -37,6 +37,8 @@ func Test_showKeysCmd(t *testing.T) {
 func Test_runShowCmd(t *testing.T) {
 	cmd := showKeysCmd()
 
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+
 	err := runShowCmd(cmd, []string{"invalid"})
 	assert.EqualError(t, err, "The specified item could not be found in the keyring")
 
@@ -51,7 +53,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb := NewKeyringKeybase()
+	kb := NewKeyringKeybase(mockIn)
 
 	defer func() {
 		kb.Delete("runShowCmd_Key1", "", false)

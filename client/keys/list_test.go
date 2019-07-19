@@ -28,7 +28,9 @@ func Test_runListCmd(t *testing.T) {
 	defer cleanUp2()
 	viper.Set(flags.FlagHome, kbHome2)
 
-	kb := NewKeyringKeybase()
+	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
+
+	kb := NewKeyringKeybase(mockIn)
 	_, err := kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 

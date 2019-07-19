@@ -20,20 +20,12 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	runningOnServer := false
 
-	fmt.Println(backends)
 	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
 		runningOnServer = true
 	}
-
-	kb := NewKeyringKeybase()
-	defer func() {
-		kb.Delete("keyname1", "", false)
-		kb.Delete("keyname2", "", false)
-
-	}()
-
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
+
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
@@ -49,6 +41,11 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	} else {
 		mockIn.Reset("y\n")
+		kb := NewKeyringKeybase(mockIn)
+		defer func() {
+			kb.Delete("keyname1", "", false)
+			kb.Delete("keyname2", "", false)
+		}()
 	}
 	err := runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)

@@ -38,7 +38,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	defer cleanUp1()
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb := NewKeyringKeybase()
+	kb := NewKeyringKeybase(mockIn)
 
 	defer func() {
 		kb.Delete("runUpdateCmd_Key1", "", false)

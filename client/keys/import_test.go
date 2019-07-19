@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,11 +22,23 @@ func Test_runImportCmd(t *testing.T) {
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb := NewKeyringKeybase()
-	defer func() {
-		kb.Delete("keyname1", "", false)
+	backends := keyring.AvailableBackends()
 
-	}()
+	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
+
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
+	if !runningOnServer {
+		kb := NewKeyringKeybase(mockIn)
+		defer func() {
+			kb.Delete("keyname1", "", false)
+
+		}()
+	}
 
 	keyfile := filepath.Join(kbHome, "key.asc")
 	armoredKey := `-----BEGIN TENDERMINT PRIVATE KEY-----
@@ -40,7 +53,6 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 	// Now enter password
-	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
 	mockIn.Reset("123456789\n")
 	assert.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
 }

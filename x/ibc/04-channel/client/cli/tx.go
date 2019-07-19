@@ -3,6 +3,7 @@ package cli
 import (
 	"io/ioutil"
 	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -224,7 +225,6 @@ func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContext().
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
@@ -239,13 +239,33 @@ func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			obj1 := object(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
 			obj2 := object(ctx2, cdc, storeKey, ibc.Version, conn2id, chan2id)
+
+			return relayLoop(cdc, ctx1, ctx2, obj1, obj2, conn1id, chan1id, conn2id, chan2id)
 		},
 	}
 
 	return cmd
 }
 
-func relay(ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.Object) error {
+func relayLoop(cdc *codec.Codec,
+	ctx1, ctx2 context.CLIContext,
+	obj1, obj2 channel.CLIObject,
+	conn1id, chan1id, conn2id, chan2id string,
+) error {
+	for {
+		// TODO: relay() should be goroutine and return error by channel
+		err := relay(cdc, ctx1, ctx2, obj1, obj2, conn2id, chan2id)
+		// TODO: relayBetween() should retry several times before halt
+		if err != nil {
+			return err
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func relay(cdc *codec.Codec, ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.CLIObject, connidTo, chanidTo string) error {
+	txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
 	seq, _, err := objTo.SeqRecv(ctxTo)
 	if err != nil {
 		return err
@@ -256,14 +276,25 @@ func relay(ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.Object) err
 		return err
 	}
 
-	if seq == sent {
-		return nil
+	for i := seq; i <= sent; i++ {
+		packet, proof, err := objFrom.Packet(ctxFrom, seq)
+		if err != nil {
+			return err
+		}
+
+		msg := channel.MsgReceive{
+			ConnectionID: connidTo,
+			ChannelID:    chanidTo,
+			Packet:       packet,
+			Proofs:       []commitment.Proof{proof},
+			Signer:       ctxTo.GetFromAddress(),
+		}
+
+		err = utils.GenerateOrBroadcastMsgs(ctxTo, txBldr, []sdk.Msg{msg})
+		if err != nil {
+			return err
+		}
 	}
 
-	packet, proof, err := query(ctxFrom, objFrom.Packet(seq))
-	if err != nil {
-		return err
-	}
-
-	msg := channel.MsgReceive{}
+	return nil
 }

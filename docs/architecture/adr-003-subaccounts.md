@@ -4,66 +4,74 @@
 
 ## Context
 
-Currently `ModuleAccount`s must be declared upon supply keeper initialization. In addition to this they don't allow for separation of fungible coins within an account.
+Currently `ModuleAccount`s must be declared upon Supply Keeper initialization. In addition to this they don't allow for separation of fungible coins within an account.
 
-New structs should be added so a `ModuleAccount` can dynamically add accounts.
+We want to support the ability to define and manage sub-module-accounts.
 
 ## Decision
 
-Add the following structs into `x/supply`.
+We will use the type `ModuleMultiAccount` to manage sub-accounts of type `ModuleAccount`.
+A `ModuleMultiAccount` may have zero or more `ModuleAccount`s.
+Each sub-account will utilize the existing permissioned properties of `ModuleAccount`.
+`ModuleMultiAccount` and `ModuleAccount` have no pubkeys.
+There is no limit on the number of `ModuleAccount`s that a `ModuleMultiAccount` can have.
+A `ModuleMultiAccount` has no permissions since it cannot hold any coins.
+Its constructor returns a `ModuleMultiAccount` with no `ModuleAccount`s.
+A sub-account can only be removed from a `MultiModuleAccount` if its balance is zero.
 
 ### Implementation Changes
 
-Introduce two new structs:
+Introduce a new type into `x/supply`:
 
 * `ModuleMultiAccount`
-* `SubAccount`
-
-`ModuleMultiAccount` maintains an array of `SubAccount` as well as a list of permissions defined upon initialization of supply keeper (permAddrs).
-It has no pubkey and no limit on the number of `SubAccount`s that can be created.
-Its constructor returns a `ModuleMultiAccount` with no `SubAccount`s.
-`MultiModuleAccount` will implement the Account interface.
 
 ```go
+// Implements the Account interface.
 // SetCoins will return an error to prevent ModuleMultiAccount address from having a balance.
-// SubAccounts can only be appended to the SubAccount array.
-// Passively tracks the sum of all SubAccount balances.
+// ModuleAccounts are appended to the SubAccounts array.
+// Passively tracks the sum of all ModuleAccount balances.
 type ModuleMultiAccount struct {
-    Subaccs []SubAccount
-    Permissions []string
+    SubAccounts []ModuleAccount
     Coins sdk.Coins // passively track all sub account balances
 
-    CreateSubAccount(pubkey, address) int // returns id of subaccount
-    GetSubAccount(id int) SubAccount
+    CreateSubAccount(address sdk.AccAddress) int // returns account number of sub-account
+    GetSubAccount(subAccNumber int64) SubAccount
 }
 ```
 
-To invalidate a `SubAccount` the `ModuleMultiAccount` calls `SetAccountDisabled` for a `SubAccount`
-
+The `ModuleAccount` implementation will remain unchanged, but we will add the following constructor function:
 ```go
-// Implements the Account interface. Address is the ModuleMultiAccount address with the id appended.
-// Permissions must be a subset of its ModuleMultiAccount permissions.
-// A disabled account can do withdraws, but cannot recieve any coins.
-type SubAccount struct {
-    Address sdk.AccAddress // MultiAccount (parent) address with index appended
-    ID uint // index of subaccount
-    Permissions []string
-    Disabled bool
+// NewEmptyModuleSubAccount creates an sub-account ModuleAccount which has an address created from
+// the hash of the module's name with the sub-account number appended.
+func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...string) sdk.AccAddress {
+    bz := make([]byte, 8)
+   	binary.LittleEndian.PutUint64(bz, subAccNumber)
+    moduleAddress := append(NewModuleAddress(name), bz...)
+	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-    SetAccountDisabled()
+	if err := validatePermissions(permissions...); err != nil {
+		panic(err)
+	}
 
-    AddPermissions(perms ...string)
-    RemovePermissions(perms ...string)
-
-    GetPermissions() []string
+	return &ModuleAccount{
+		BaseAccount: &baseAcc,
+		Name:        name,
+		Permissions: permissions,
+	} 
 }
 ```
+
+**Permissions**:
+
+A `ModuleMultiAccount` has no permissions.
+
+Since `ModuleAccount`s that are sub-accounts have the same name as its parent `ModuleMultiAccount`, a sub-account should only be granted a subset of the permissions registered with the Supply Keeper under its name.
 
 **Other changes**
 
-Add an invariant check for MultiAccount `GetCoins`, which iterates over all `SubAccount`s to see if the sum of the `SubAccount` balances equals the passive tracking which is returned in `GetCoins`
+We will add an invariant check for the `ModuleMultiAccount` `GetCoins()` function, which will iterate over all SubAccounts to see if the sum of the `ModuleAccount` balances equal the passive tracking which is returned in `GetCoins()`
 
-Update BankKeepers SetCoins function to return an error instead of calling panic on the account's SetCoins error.
+Bank Keepers `SetCoins()` function will be updated to return an error instead of calling panic on the account's SetCoins error.
 
 ## Status
 
@@ -73,16 +81,20 @@ Proposed
 
 ### Positive
 
-* ModuleAccount can separate fungible coins.
-* ModuleAccount can dynamically add accounts.
-* ModuleAccount can distribute permissions to SubAccounts.
+* ModuleMultiAccount can separate fungible coins.
+* ModuleMultiAccount can dynamically add accounts.
+* ModuleMultiAccount can distribute permissions to sub-accounts.
 
 ### Negative
 
+* sub-accounts cannot be removed from `ModuleMultiAccount`
+
 ### Neutral
 
-* Adds a new Account types
+* Use `ModuleAccount` type as a sub-account for `ModuleMultiAccount`
+* Adds a new Account type
 
 ## References
 
+Spec: [ModuleAccount](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/supply/01_concepts.md#module-accounts)
 Issues: [4657] (https://github.com/cosmos/cosmos-sdk/issues/4657)

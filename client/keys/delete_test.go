@@ -49,8 +49,15 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	// Now
 	kb := NewKeyringKeybase(mockIn)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 

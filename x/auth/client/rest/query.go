@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	genutilRest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
 // query accountREST Handler
@@ -48,6 +49,20 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, account)
 	}
+}
+
+// QueryTxsHandlerFn implements a REST handler that searches for transactions.
+// Genesis transactions are returned if the height parameter is set to zero,
+// otherwise the transactions are searched for by events.
+func QueryTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	heightStr := r.FormValue("height")
+	if heightStr != "" {
+		if height, err := strconv.ParseInt(heightStr, 10, 64); err != nil && height == 0 {
+			return genutilRest.QueryGenesisTxs(cliCtx)
+		}
+	}
+
+	return QueryTxsByEventsRequestHandlerFn(cliCtx)
 }
 
 // QueryTxsByEventsRequestHandlerFn implements a REST handler that searches for

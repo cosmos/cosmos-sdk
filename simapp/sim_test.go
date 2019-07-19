@@ -386,7 +386,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -451,7 +451,8 @@ func TestFullAppSimulation(t *testing.T) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		fmt.Println(params)
+		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
 		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
@@ -508,7 +509,7 @@ func TestAppImportExport(t *testing.T) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
 		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
@@ -624,7 +625,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
 		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
@@ -746,7 +747,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := app.cdc.MarshalJSONIndent(params, "", " ")
+		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()

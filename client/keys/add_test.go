@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/99designs/keyring"
@@ -36,7 +35,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
-		fmt.Println("Running on Server")
 		mockIn.Reset("testpass1\ntestpass1\ny\n")
 
 	} else {
@@ -52,19 +50,34 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	mockIn.Reset("n\n")
+	if runningOnServer {
+		mockIn.Reset("testpass1\nn\n")
+
+	} else {
+		mockIn.Reset("n\n")
+	}
 	err = runAddCmd(cmd, []string{"keyname1"})
 	assert.Error(t, err)
 
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	mockIn.Reset("y\n")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\n")
+
+	} else {
+		mockIn.Reset("y\n")
+	}
 	err = runAddCmd(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
 
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 
-	mockIn.Reset("y\n")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\n")
+
+	} else {
+		mockIn.Reset("y\n")
+	}
 	err = runAddCmd(cmd, []string{"keyname2"})
 	assert.NoError(t, err)
 

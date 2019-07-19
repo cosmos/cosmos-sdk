@@ -6,6 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -100,6 +102,8 @@ type AppModule struct {
 	keeper Keeper
 }
 
+var _ module.AppModule = AppModule{}
+
 func NewAppModule(keeper Keeper, modules ...channel.IBCModule) AppModule {
 	keeper.channel.Manager().RegisterModules(modules...)
 	return AppModule{
@@ -148,4 +152,22 @@ func (am AppModule) NewHandler() sdk.Handler {
 			return sdk.ErrUnknownRequest("unrecognized msg type").Result()
 		}
 	}
+}
+
+func (AppModule) NewQuerierHandler() sdk.Querier {
+	return nil
+}
+
+func (AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+func (AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	return nil
+}
+
+func (AppModule) BeginBlock(sdk.Context, abci.RequestBeginBlock) {}
+
+func (AppModule) EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

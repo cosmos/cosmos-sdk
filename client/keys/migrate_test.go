@@ -24,8 +24,6 @@ func Test_runMigrateCmd(t *testing.T) {
 
 	cmd := migrateKeyCommand()
 
-	mockIn, _, _ = tests.ApplyMockIO(cmd)
-
 	kb := NewKeyringKeybase(mockIn)
 	defer func() {
 		kb.Delete("keyname1", "", false)
@@ -44,6 +42,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	assert.NotNil(t, cmd)
+	mockIn, _, _ = tests.ApplyMockIO(cmd)
 
 	mockIn.Reset("test1234\n")
 	err = runMigrateCmd(cmd, []string{""})

@@ -7,17 +7,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 const (
@@ -31,20 +30,6 @@ func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version i
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
 	return man.CLIQuery(ctx, path, id)
-}
-
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
-		Use:                        "connection",
-		Short:                      "Connection query subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ibcQueryCmd.AddCommand(cli.GetCommands(
-		GetCmdQueryConnection(storeKey, cdc),
-	)...)
-	return ibcQueryCmd
 }
 
 func QueryConnection(ctx context.CLIContext, obj connection.CLIObject, prove bool) (res utils.JSONObject, err error) {
@@ -83,7 +68,7 @@ func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(ctx, cdc, storeKey, ibc.Version, args[0])
+			obj := object(ctx, cdc, storeKey, version.Version, args[0])
 			jsonobj, err := QueryConnection(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

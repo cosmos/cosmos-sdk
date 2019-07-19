@@ -26,6 +26,10 @@ type Handshaker struct {
 	counterparty CounterpartyHandshaker
 }
 
+func (man Handshaker) Manager() Manager {
+	return man.man
+}
+
 func (man Handshaker) Kind() string {
 	return "handshake"
 }

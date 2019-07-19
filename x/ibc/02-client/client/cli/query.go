@@ -8,16 +8,15 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 func components(cdc *codec.Codec, storeKey string, version int64) (path merkle.Path, base state.Base) {
@@ -27,22 +26,6 @@ func components(cdc *codec.Codec, storeKey string, version int64) (path merkle.P
 	return
 }
 
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
-		Use:                        "client",
-		Short:                      "IBC client query subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ibcQueryCmd.AddCommand(cli.GetCommands(
-		GetCmdQueryConsensusState(storeKey, cdc),
-		GetCmdQueryHeader(cdc),
-		GetCmdQueryClient(storeKey, cdc),
-	)...)
-	return ibcQueryCmd
-}
-
 func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "client",
@@ -50,7 +33,7 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			path, base := components(cdc, storeKey, ibc.Version)
+			path, base := components(cdc, storeKey, version.Version)
 			man := client.NewManager(base)
 			id := args[0]
 

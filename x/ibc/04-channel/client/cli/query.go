@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 const (
@@ -99,7 +99,7 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(ctx, cdc, storeKey, ibc.Version, args[0], args[1])
+			obj := object(ctx, cdc, storeKey, version.Version, args[0], args[1])
 			jsonobj, err := QueryChannel(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

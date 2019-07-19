@@ -14,11 +14,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 /*
@@ -84,7 +84,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id)
+			obj1 := handshake(ctx1, cdc, storeKey, version.Version, conn1id)
 
 			conn2id := args[2]
 			conn2bz, err := ioutil.ReadFile(args[3])
@@ -96,7 +96,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id)
+			obj2 := handshake(ctx2, cdc, storeKey, version.Version, conn1id)
 
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)

@@ -15,12 +15,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 /*
@@ -88,7 +88,7 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			obj1 := handshake(ctx1, cdc, storeKey, version.Version, conn1id, chan1id)
 
 			conn2id := args[3]
 			chan2id := args[4]
@@ -101,7 +101,7 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			obj2 := handshake(ctx2, cdc, storeKey, version.Version, conn1id, chan1id)
 
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
@@ -237,8 +237,8 @@ func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			conn1id, chan1id, conn2id, chan2id := args[0], args[1], args[2], args[3]
 
-			obj1 := object(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
-			obj2 := object(ctx2, cdc, storeKey, ibc.Version, conn2id, chan2id)
+			obj1 := object(ctx1, cdc, storeKey, version.Version, conn1id, chan1id)
+			obj2 := object(ctx2, cdc, storeKey, version.Version, conn2id, chan2id)
 
 			return relayLoop(cdc, ctx1, ctx2, obj1, obj2, conn1id, chan1id, conn2id, chan2id)
 		},

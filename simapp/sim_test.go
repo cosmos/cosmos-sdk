@@ -500,7 +500,7 @@ func TestAppImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, 0, failedKVs, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
 	}
 
 }

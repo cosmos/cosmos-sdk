@@ -87,7 +87,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		clientcli.GetCmdQueryHeader(cdc),
 		clientcli.GetCmdQueryClient(storeKey, cdc),
 		connectioncli.GetCmdQueryConnection(storeKey, cdc),
-		channelcli.GetCmdQueryChannel(stoerKey, cdc),
+		channelcli.GetCmdQueryChannel(storeKey, cdc),
 	)...)
 
 	return cmd

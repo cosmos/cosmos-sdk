@@ -28,12 +28,17 @@ type CounterpartyManager struct {
 	connection connection.CounterpartyManager
 }
 
-func NewManager(protocol state.Base, connection connection.Manager) Manager {
-	return Manager{
+func NewManager(protocol state.Base, connection connection.Manager, modules ...IBCModule) Manager {
+	res := Manager{
 		protocol:     state.NewMapping(protocol, []byte("/connection/")),
 		connection:   connection,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 	}
+	for _, module := range modules {
+		res.router.AddRoute(module.Name(), module.NewIBCHandler())
+	}
+
+	return res
 }
 
 func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
@@ -249,13 +254,18 @@ func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.channel.Exists(ctx)
 }
 
-func (obj Object) Send(ctx sdk.Context, packet Packet) error {
+func (man Manager) Send(ctx sdk.Context, connid, chanid string, packet Packet) sdk.Error {
+	obj, err := man.Query(ctx, connid, chanid)
+	if err != nil {
+		return sdk.NewError(sdk.CodespaceType("ibc"), 1234, err.Error())
+	}
+
 	if !obj.Sendable(ctx) {
-		return errors.New("cannot send packets on this channel")
+		return sdk.NewError(sdk.CodespaceType("ibc"), 5678, "cannot send packets on this channel")
 	}
 
 	if obj.connection.Client().ConsensusState(ctx).GetHeight() >= packet.Timeout() {
-		return errors.New("timeout height higher than the latest known")
+		return sdk.NewError(sdk.CodespaceType("ibc"), 89098, "timeout height higher than the latest known")
 	}
 
 	obj.packets.Set(ctx, obj.seqsend.Incr(ctx), packet)

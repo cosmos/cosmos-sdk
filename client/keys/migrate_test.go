@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/spf13/viper"
@@ -12,7 +13,13 @@ import (
 )
 
 func Test_runMigrateCmd(t *testing.T) {
+	backends := keyring.AvailableBackends()
 
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
 	cmdAddKey := addKeyCommand()
 	assert.NotNil(t, cmdAddKey)
 	mockIn, _, _ := tests.ApplyMockIO(cmdAddKey)
@@ -25,6 +32,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	cmd := migrateKeyCommand()
 
 	kb := NewKeyringKeybase(mockIn)
+
 	defer func() {
 		kb.Delete("keyname1", "", false)
 	}()
@@ -34,6 +42,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	viper.Set(flags.FlagSecretStore, true)
 
 	mockIn.Reset("test1234\ntest1234\n")
+
 	err := runAddCmd(cmdAddKey, []string{"keyname1"})
 	assert.NoError(t, err)
 
@@ -44,7 +53,11 @@ func Test_runMigrateCmd(t *testing.T) {
 	assert.NotNil(t, cmd)
 	mockIn, _, _ = tests.ApplyMockIO(cmd)
 
-	mockIn.Reset("test1234\n")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\ntest1234\ntestpass1\n")
+	} else {
+		mockIn.Reset("test1234\n")
+	}
 	err = runMigrateCmd(cmd, []string{""})
 	assert.NoError(t, err)
 

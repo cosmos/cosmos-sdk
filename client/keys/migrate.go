@@ -44,7 +44,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	rootDir := viper.GetString(flags.FlagHome)
 
-	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, nil, false)
+	buf := bufio.NewReader(cmd.InOrStdin())
+
+	keyringkb = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf, false)
 
 	legacyKeyList, err := legacykb.List()
 	for _, key := range legacyKeyList {
@@ -61,7 +63,6 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		switch key.GetType() {
 		case keys.TypeLocal:
-			buf := bufio.NewReader(cmd.InOrStdin())
 			fmt.Printf(" Migrating %s \n", key.GetName())
 			decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 

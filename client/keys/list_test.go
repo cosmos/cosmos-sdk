@@ -3,6 +3,7 @@ package keys
 import (
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -30,8 +31,26 @@ func Test_runListCmd(t *testing.T) {
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
 
+	backends := keyring.AvailableBackends()
+
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
 	kb := NewKeyringKeybase(mockIn)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+
 	_, err := kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	} else {
+	}
+
 	assert.NoError(t, err)
 
 	defer func() {

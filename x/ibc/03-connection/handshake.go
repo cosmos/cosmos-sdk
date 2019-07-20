@@ -155,9 +155,14 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 	obj.state.Set(ctx, Init)
 
+	//
+	obj.available.Set(ctx, true)
+	obj.state.Set(ctx, Open)
+
 	return obj, nil
 }
 
+/*
 // Using proofs: counterparty.{connection,state,nextTimeout,counterpartyClient, client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
 	proofs []commitment.Proof,
@@ -205,13 +210,13 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	// TODO: commented out, need to check whether the stored client is compatible
 	// make a separate module that manages recent n block headers
 	// ref #4647
-	/*
+
 		var expected client.ConsensusState
 		obj.self.Get(ctx, expheight, &expected)
 		if !obj.counterparty.client.Is(ctx, expected) {
 			return errors.New("unexpected counterparty client value")
 		}
-	*/
+
 
 	// CONTRACT: OpenTry() should be called after man.Create(), not man.Query(),
 	// which will ensure
@@ -223,11 +228,13 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 
 	return
 }
+*/
 
 // Using proofs: counterparty.{connection, state, timeout, counterpartyClient, client}
+/*
 func (man Handshaker) OpenAck(ctx sdk.Context,
 	proofs []commitment.Proof,
-	id string /*expheight uint64, */, timeoutHeight, nextTimeoutHeight uint64,
+	id string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, id)
 	if err != nil {
@@ -274,19 +281,21 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 	}
 
 	// TODO: implement in v1
-	/*
+
 		var expected client.ConsensusState
 		// obj.self.Get(ctx, expheight, &expected)
 		if !obj.counterparty.client.Is(ctx, expected) {
 			// return errors.New("unexpected counterparty client value")
 		}
-	*/
+
 	obj.available.Set(ctx, true)
 	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return
 }
+*/
 
+/*
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
 	proofs []commitment.Proof,
@@ -327,7 +336,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 
 	return
 }
-
+*/
 func (obj HandshakeObject) OpenTimeout(ctx sdk.Context) error {
 	if !(obj.client.ConsensusState(ctx).GetHeight() > obj.nextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")

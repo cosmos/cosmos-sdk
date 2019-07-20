@@ -20,7 +20,7 @@ import (
 )
 
 func components(cdc *codec.Codec, storeKey string, version int64) (path merkle.Path, base state.Base) {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
+	prefix := []byte("v" + strconv.FormatInt(version, 10))
 	path = merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 	base = state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	return
@@ -37,6 +37,7 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 			man := client.NewManager(base)
 			id := args[0]
 
+			fmt.Println(string(man.CLIObject(path, id).ConsensusStateKey))
 			state, _, err := man.CLIObject(path, id).ConsensusState(ctx)
 			if err != nil {
 				return err
@@ -93,6 +94,43 @@ func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command
 	}
 }
 
+func QueryHeader(ctx context.CLIContext) (res tendermint.Header, err error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return
+	}
+
+	info, err := node.ABCIInfo()
+	if err != nil {
+		return
+	}
+
+	height := info.Response.LastBlockHeight
+	prevheight := height - 1
+
+	commit, err := node.Commit(&height)
+	if err != nil {
+		return
+	}
+
+	validators, err := node.Validators(&prevheight)
+	if err != nil {
+		return
+	}
+
+	nextvalidators, err := node.Validators(&height)
+	if err != nil {
+		return
+	}
+
+	return tendermint.Header{
+		SignedHeader:     commit.SignedHeader,
+		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
+		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+	}, nil
+
+}
+
 func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "header",
@@ -100,38 +138,9 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 
-			node, err := ctx.GetNode()
+			header, err := QueryHeader(ctx)
 			if err != nil {
 				return err
-			}
-
-			info, err := node.ABCIInfo()
-			if err != nil {
-				return err
-			}
-
-			height := info.Response.LastBlockHeight
-			prevheight := height - 1
-
-			commit, err := node.Commit(&height)
-			if err != nil {
-				return err
-			}
-
-			validators, err := node.Validators(&prevheight)
-			if err != nil {
-				return err
-			}
-
-			nextvalidators, err := node.Validators(&height)
-			if err != nil {
-				return err
-			}
-
-			header := tendermint.Header{
-				SignedHeader:     commit.SignedHeader,
-				ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-				NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
 			}
 
 			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, header))

@@ -21,7 +21,7 @@ type Packet interface {
 }
 
 type Channel struct {
-	Port             string
-	Counterparty     string
-	CounterpartyPort string
+	Port             string `json:"port"`
+	Counterparty     string `json:"counterparty"`
+	CounterpartyPort string `json:"counterparty_port"`
 }

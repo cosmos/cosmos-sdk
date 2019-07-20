@@ -52,7 +52,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		Short: "create new client with a consensus state",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc)
 

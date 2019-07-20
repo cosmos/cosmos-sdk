@@ -160,6 +160,8 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
 	obj.state.Set(ctx, Init)
 
+	obj.available.Set(ctx, true)
+	obj.state.Set(ctx, Open)
 	return obj, nil
 }
 

@@ -24,7 +24,7 @@ const (
 )
 
 func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.CLIObject {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
+	prefix := []byte("v" + strconv.FormatInt(version, 10))
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)
@@ -59,6 +59,22 @@ func QueryConnection(ctx context.CLIContext, obj connection.CLIObject, prove boo
 		avail, nil,
 		kind, nil,
 	), nil
+}
+
+func GetCmdQueryPath(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "path",
+		Short: "Query Merkle path",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			prefix := []byte("v" + strconv.FormatInt(version.Version, 10))
+			path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
+
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
+
+			return nil
+		},
+	}
+	return cmd
 }
 
 func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {

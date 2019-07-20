@@ -7,8 +7,7 @@ import (
 )
 
 func (path Path) RequestQuery(key []byte) abci.RequestQuery {
-	req := path.RequestQueryMultiStore(key)
-	req.Path = "/store" + req.Path
+	req := abci.RequestQuery{Path: "/store" + path.Path() + "/key", Data: key, Prove: true}
 	return req
 }
 

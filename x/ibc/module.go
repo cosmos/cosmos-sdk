@@ -40,6 +40,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	merkle.RegisterCodec(cdc)
 	client.RegisterCodec(cdc)
 	tendermint.RegisterCodec(cdc)
+	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
 }
 
@@ -91,6 +92,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		clientcli.GetCmdQueryConsensusState(storeKey, cdc),
 		clientcli.GetCmdQueryHeader(cdc),
 		clientcli.GetCmdQueryClient(storeKey, cdc),
+		connectioncli.GetCmdQueryPath(storeKey, cdc),
 		connectioncli.GetCmdQueryConnection(storeKey, cdc),
 		channelcli.GetCmdQueryChannel(storeKey, cdc),
 	)...)

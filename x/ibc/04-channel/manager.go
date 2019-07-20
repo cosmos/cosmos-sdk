@@ -36,6 +36,9 @@ func NewManager(protocol state.Base, connection connection.Manager) Manager {
 		router:       NewRouter(),
 	}
 
+	// type Packet is interface and could be implemented by external modules
+	MsgCdc = protocol.Cdc()
+
 	return res
 }
 

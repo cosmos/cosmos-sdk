@@ -61,6 +61,9 @@ func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) 
 		Key:   key,
 		Proof: resp.Proof,
 	}
+	if resp.Value == nil {
+		return proof, nil
+	}
 	err = obj.Cdc.UnmarshalBinaryBare(resp.Value, ptr)
 	return proof, err
 

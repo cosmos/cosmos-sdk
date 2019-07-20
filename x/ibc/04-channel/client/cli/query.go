@@ -26,7 +26,7 @@ const (
 )
 
 func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIObject {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
+	prefix := []byte("v" + strconv.FormatInt(version, 10))
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
 	climan := client.NewManager(base)

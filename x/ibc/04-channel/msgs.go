@@ -9,12 +9,11 @@ import (
 const Route = "ibc"
 
 type MsgOpenInit struct {
-	ConnectionID       string
-	ChannelID          string
-	Channel            Channel
-	CounterpartyClient string
-	NextTimeout        uint64
-	Signer             sdk.AccAddress
+	ConnectionID string         `json:"connection_id"`
+	ChannelID    string         `json:"channel_id"`
+	Channel      Channel        `json:"channel"`
+	NextTimeout  uint64         `json:"next_timeout"`
+	Signer       sdk.AccAddress `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenInit{}
@@ -32,7 +31,7 @@ func (msg MsgOpenInit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenInit) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
@@ -40,14 +39,13 @@ func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenTry struct {
-	ConnectionID       string
-	ChannelID          string
-	Channel            Channel
-	CounterpartyClient string
-	Timeout            uint64
-	NextTimeout        uint64
-	Proofs             []commitment.Proof
-	Signer             sdk.AccAddress
+	ConnectionID string
+	ChannelID    string
+	Channel      Channel
+	Timeout      uint64
+	NextTimeout  uint64
+	Proofs       []commitment.Proof
+	Signer       sdk.AccAddress
 }
 
 var _ sdk.Msg = MsgOpenTry{}
@@ -65,7 +63,7 @@ func (msg MsgOpenTry) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenTry) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
@@ -96,7 +94,7 @@ func (msg MsgOpenAck) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenAck) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
@@ -126,7 +124,7 @@ func (msg MsgOpenConfirm) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenConfirm) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {
@@ -156,7 +154,7 @@ func (msg MsgReceive) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgReceive) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgReceive) GetSigners() []sdk.AccAddress {

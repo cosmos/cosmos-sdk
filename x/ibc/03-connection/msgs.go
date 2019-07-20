@@ -31,7 +31,7 @@ func (msg MsgOpenInit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenInit) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
@@ -63,7 +63,7 @@ func (msg MsgOpenTry) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenTry) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
@@ -93,7 +93,7 @@ func (msg MsgOpenAck) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenAck) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
@@ -122,7 +122,7 @@ func (msg MsgOpenConfirm) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenConfirm) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {

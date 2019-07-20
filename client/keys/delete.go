@@ -44,6 +44,8 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	var kb keys.Keybase
+	buf := bufio.NewReader(cmd.InOrStdin())
+
 	if viper.GetBool(flags.FlagSecretStore) {
 		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 		var err error
@@ -52,7 +54,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase(cmd.InOrStdin())
+		kb = NewKeyringKeybase(buf)
 	}
 
 	info, err := kb.Get(name)
@@ -60,7 +62,6 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
 		if !viper.GetBool(flagYes) {
 			if err := confirmDeletion(buf); err != nil {

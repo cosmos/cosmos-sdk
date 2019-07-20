@@ -35,7 +35,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 
 	} else {
 		mockIn.Reset("y\n")

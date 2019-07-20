@@ -65,7 +65,7 @@ func Test_runListCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			if runningOnServer {
-				mockIn.Reset("testpass1\n")
+				mockIn.Reset("testpass1\ntestpass1\n")
 			} else {
 			}
 			viper.Set(flags.FlagHome, tt.kbDir)

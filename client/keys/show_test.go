@@ -99,7 +99,7 @@ func Test_runShowCmd(t *testing.T) {
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "threshold must be a positive integer")
@@ -108,7 +108,7 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
@@ -118,21 +118,21 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
 	if runningOnServer {
-		mockIn.Reset("testpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")

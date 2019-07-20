@@ -3,6 +3,7 @@ package keys
 import (
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -39,6 +40,13 @@ func Test_runShowCmd(t *testing.T) {
 
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
+	backends := keyring.AvailableBackends()
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
 	err := runShowCmd(cmd, []string{"invalid"})
 	assert.EqualError(t, err, "The specified item could not be found in the keyring")
 
@@ -62,6 +70,10 @@ func Test_runShowCmd(t *testing.T) {
 	}()
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
